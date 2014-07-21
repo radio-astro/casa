@@ -277,10 +277,11 @@ public:
                       const IPosition& shapeThis,
                       const IPosition& shapeThat);
 
-    void checkBeamSet (const CoordinateSystem& coords,
-                           const IPosition& shape,
-                           const String& imageName,
-                           LogIO& logSink) const;
+    void checkBeamSet(
+    	const CoordinateSystem& coords,
+    	const IPosition& shape,
+    	const String& imageName
+    ) const;
 
     // Check if the beam shape matches the coordinates.
     void checkBeamShape (uInt& nchan, uInt& npol,
@@ -338,6 +339,10 @@ public:
     Double getBeamAreaInPixels(
     	Int channel, Int stokes, const DirectionCoordinate& dc
     ) const;
+
+    static Double getBeamAreaInPixels(
+    	const GaussianBeam& beam, const DirectionCoordinate& dc
+    );
 
 private:
     ImageBeamSet _beams;

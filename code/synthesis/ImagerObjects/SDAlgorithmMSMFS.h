@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     
     // Empty constructor
-    SDAlgorithmMSMFS(uInt nTaylorTerms);
+    SDAlgorithmMSMFS(uInt nTaylorTerms, Vector<Float> scalesizes);
     virtual  ~SDAlgorithmMSMFS();
     
     void restore( CountedPtr<SIImageStore> imagestore );
@@ -87,6 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     */
 
     uInt itsNTerms;
+    Vector<Float> itsScaleSizes;
 
     MultiTermMatrixCleaner itsMTCleaner;
 

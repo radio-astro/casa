@@ -57,15 +57,15 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 
-#include <synthesis/MSVis/SubMS.h>
-#include <synthesis/MSVis/MSUtil.h>
+#include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/MSUtil.h>
 
 #include <sys/types.h>
 #include <unistd.h>
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  
+ 
   SynthesisUtilMethods::SynthesisUtilMethods()
   {
     
@@ -73,8 +73,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisUtilMethods::~SynthesisUtilMethods() 
   {
-    LogIO os( LogOrigin("SynthesisUtilMethods","destructor",WHERE) );
-    os << "SynthesisUtilMethods destroyed" << LogIO::POST;
   }
   
   // Data partitioning rules for CONTINUUM imaging
@@ -422,13 +420,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if( rec.isDefined( id ) )
       {
-	if( rec.dataType( id )==TpArrayFloat || rec.dataType( id )==TpArrayDouble ) 
-	  { rec.get( id , val ); return String(""); }
+	if( rec.dataType( id )==TpArrayFloat )
+	  { 
+	    rec.get( id , val ); return String(""); 
+	    /*
+	    Array<Float> vec; rec.get(id, vec );
+	    cout << " vec : " << vec << endl;
+	    if( vec.shape().nelements()==1 )
+	      {
+		val.resize( vec.shape()[0] );
+		for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec(IPosition(1,i));}
+		return String("");
+	      }
+	    else { return String(id + " must be a 1D vector of floats"); }
+	    */
+	  }
+	else if ( rec.dataType( id ) ==TpArrayDouble ) 
+	  {
+	    Vector<Double> vec; rec.get( id, vec );
+	    val.resize(vec.nelements());
+	    for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec[i];}
+	    return String("");
+	  }
+	else if ( rec.dataType( id ) ==TpArrayInt ) 
+	  {
+	    Vector<Int> vec; rec.get( id, vec );
+	    val.resize(vec.nelements());
+	    for(uInt i=0;i<val.nelements();i++){val[i]=(Float)vec[i];}
+	    return String("");
+	  }
 	else if ( rec.dataType( id ) == TpArrayBool ) // An empty python vector [] comes in as this.
 	  {
 	    Vector<Bool> vec; rec.get( id, vec );
-	    if( vec.nelements()==0 ){val.resize(0); return String("");}
+	    if( vec.shape().product()==0 ){val.resize(0); return String("");}
 	    else{ return String(id + " must be a vector of strings.\n"); }
+	    // val.resize(0); return String("");
 	  }
 	else { return String(id + " must be a vector of floats\n"); }
       }
@@ -532,7 +558,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Convert Quantity to String
   String SynthesisParams::QuantityToString(Quantity val)
   {
-    return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
+    std::ostringstream ss;
+    //use digits10 to ensure the conersions involve use full decimal digits guranteed to be 
+    //correct plus extra digits to deal with least significant digits (or replace with
+    // max_digits10 when it is available)
+    ss.precision(std::numeric_limits<double>::digits10+2);
+    ss << val;
+    return ss.str();
+    //return String::toString( val.getValue(val.getUnit()) ) + val.getUnit() ;
   }
   
   // Convert Record contains Quantity or Measure quantities to String
@@ -602,6 +635,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("uvdist"),uvdist);
 	err += readVal( inrec, String("taql"),taql);
 
+	err += readVal( inrec, String("datacolumn"),datacolumn);
+
 	err += verify();
 
       }
@@ -652,6 +687,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     usescratch=True;
     readonly=False;
     incrmodel=False;
+    datacolumn="corrected";
   }
 
   Record SynthesisParamsSelect::toRecord()
@@ -673,6 +709,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     selpar.define("usescratch",usescratch);
     selpar.define("readonly",readonly);
     selpar.define("incrmodel",incrmodel);
+    selpar.define("datacolumn",datacolumn);
 
     return selpar;
   }
@@ -836,8 +873,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		String pstr;
 		inrec.get("projection",pstr);
+
 		try
 		  {
+		    if( pstr.matches("NCP") )
+		      {
+			pstr ="SIN";
+			useNCP=True;
+		      }
 		    projection=Projection::type( pstr );
 		  }
 		catch(AipsError &x)
@@ -1079,7 +1122,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	        err += stringToQuantity( rfreqs[fr], restFreq[fr] );
 	      }
             } 
-       
+	
 	//String freqframestr( MFrequency::showType(freqFrame) );
 	//err += readVal( inrec, String("frame"), freqframestr);
 	//if( ! MFrequency::getType(freqFrame, freqframestr) )
@@ -1155,7 +1198,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	! stokes.matches("IQUV") ) 
       { err += "Stokes " + stokes + " is an unsupported option \n";}
 
-    
     ///    err += verifySpectralSetup();  
     
 	return err;
@@ -1181,6 +1223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     phaseCenter=MDirection();
     phaseCenterFieldId=-1;
     projection=Projection::SIN;
+    useNCP=False;
     startModel=String("");
     overwrite=False;
 
@@ -1225,13 +1268,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     impar.define("ntaylorterms", nTaylorTerms);
     impar.define("phasecenter", MDirectionToString( phaseCenter ) );
     impar.define("phasecenterfieldid",phaseCenterFieldId);
-    impar.define("projection", projection.name() );
+    impar.define("projection", (useNCP? "NCP" : projection.name()) );
 
     impar.define("mode", mode );
     // start and step can be one of these types
     if( start!="" )
       { 
-        if(String::toInt(start) == chanStart )
+        if( !start.contains("Hz") && !start.contains("m/s") && 
+           String::toInt(start) == chanStart )
           {
             impar.define("start",chanStart); 
           }
@@ -1249,7 +1293,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     if( step!="" )
       {
-        if( String::toInt(step) == chanStep )
+        if( !step.contains("Hz") && !step.contains("m/s") && 
+           String::toInt(step) == chanStep )
           {
             impar.define("step", chanStep);
           }
@@ -1312,7 +1357,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi) const
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi)
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
@@ -1348,9 +1393,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     deltas(1)=cellsize[1].get("rad").getValue();
     Matrix<Double> xform(2,2);
     xform=0.0;xform.diagonal()=1.0;
+
+    Vector<Double> projparams(2); 
+    projparams = 0.0;
+    if( useNCP==True ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
+    Projection projTo( projection.type(), projparams );
+
     DirectionCoordinate
       myRaDec(MDirection::Types(phaseCenterToUse.getRefPtr()->getType()),
-	      projection,
+	      //	      projection,
+	      projTo,
 	      refCoord(0), refCoord(1),
 	      deltas(0), deltas(1),
 	      xform,
@@ -1387,7 +1439,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /////////////////// Spectral Coordinate
 
     //Make sure frame conversion is switched off for REST frame data.
-    Bool freqFrameValid=(freqFrame != MFrequency::REST);
+    //Bool freqFrameValid=(freqFrame != MFrequency::REST);
+
+    //freqFrameValid=(freqFrame != MFrequency::REST );
+    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
 
     // *** get selected spw ids ***
     Vector<Int> spwids;
@@ -1429,6 +1484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> chanFreqStep;
     String specmode;
 
+    //for mfs 
     Double freqmin=0, freqmax=0;
     rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
 
@@ -1464,38 +1520,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Double restf=qrestfreq.getValue("Hz");
         //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
         // once NOFRAME is implemented do this 
-        //if(mode=="cubedata") 
-        //  {
-        //     mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::NOFRAME : MFrequency::REST, 
-        //	 startf, stepf, refPix, restf);
-        //  }
-        //else 
-        //  {
-        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
+        if(mode=="cubedata") 
+          {
+      //       mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST, 
+             mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST? 
+                                             MFrequency::REST : MFrequency::Undefined, 
+        	                             startf, stepf, refPix, restf);
+          }
+        else 
+          {
+             mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
 		startf, stepf, refPix, restf);
-        //  }
+          }
       }
     else 
       { // nonlinear freq coords - use tabular setting
         // once NOFRAME is implemented do this 
-        //if(mode=="cubedata") 
-        //  {
-        //    subMS::calcChanFreqs cannot handle NOFRAME  
-        //    mySpectral = SpectralCoordinate(freqFrameValid ? MFrequnecy::NOFRAME : MFrequency::REST,
-        //             chanFreq, (Double)qrestfreq.getValue("Hz"));
-        //  }
-        //else 
-        //  {
-        mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
+        if(mode=="cubedata") 
+          {
+            //mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST,
+            mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST ? 
+                                            MFrequency::REST : MFrequency::Undefined,
+                                            chanFreq, (Double)qrestfreq.getValue("Hz"));
+          }
+        else 
+          {
+            mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
                  chanFreq, (Double)qrestfreq.getValue("Hz"));
-        //  }
+          }
       }
     //cout << "Rest Freq : " << restFreq << endl;
 
     for(uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
 
-    if (freqFrameValid) {
+    if ( freqFrameValid ) {
       mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
     }
 
@@ -1558,7 +1617,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                        const Vector<Double>& dataChanWidth,
                                        const MFrequency::Types& dataFrame, 
                                        const Quantity& qrestfreq, const Double& freqmin, const Double& freqmax,
-				       const MDirection& phaseCenter) const
+				       const MDirection& phaseCenter) 
   {
 
     String inStart, inStep; 
@@ -1566,8 +1625,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String freqframe;
     Bool verbose("true"); // verbose logging messages from calcChanFreqs
     LogIO os( LogOrigin("SynthesisParamsImage","getImFreq",WHERE) );
-    //cerr<<"qrestfreq="<<qrestfreq<<endl;
-    //cerr<<" freqframe="<<MFrequency::showType(freqFrame)<<endl;
 
     refPix=0.0; 
     Bool descendingfreq(false);
@@ -1588,7 +1645,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             // negative step -> descending channel indices 
             if (inStep.contains(casa::Regex("^-"))) descendingfreq=true;
             // input frame is the data frame
-            freqframe = MFrequency::showType(dataFrame);
+            //freqframe = MFrequency::showType(dataFrame);
           }
         else if( specmode=="frequency" ) 
           {
@@ -1641,7 +1698,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             {  mSysVel=MRadialVelocity();}
         }
       // cubedata mode: input start, step are those of the input data frame
-      if ( mode=="cubedata" ) freqframe=MFrequency::showType(dataFrame); 
+      if ( mode=="cubedata" ) 
+        {
+          freqframe=MFrequency::showType(dataFrame);
+          freqFrameValid=False; // no conversion for vb.lsrfrequency()
+        }
+      //if ( mode=="cubedata" ) freqframe=MFrequency::REST;
       
       // *** NOTE *** 
       // calcChanFreqs alway returns chanFreq in
@@ -1650,8 +1712,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // contains start freq. in its last element of the vector. 
       //
       os << LogIO::DEBUG1<<"mode="<<mode<<" specmode="<<specmode<<" inStart="<<inStart
-         <<" restfreq="<<restfreq<<" freqframe="<<freqframe<<" veltype="<<veltype
+         <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe
+         <<" dataFrame="<<dataFrame <<" veltype="<<veltype
          << LogIO::POST;
+
       Bool rst=SubMS::calcChanFreqs(os,
                            chanFreq, 
                            chanFreqStep,
@@ -1671,6 +1735,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                            verbose, 
                            mSysVel
                            );
+
+      if( nchan==-1 ) 
+	{ 
+	  nchan = chanFreq.nelements(); 
+	  os << LogIO::DEBUG1 << "Setting nchan to number of selected channels : " << nchan << LogIO::POST;
+	}
 
       if (!rst) {
         os << LogIO::SEVERE << "calcChanFreqs failed, check input start and width parameters"
@@ -1706,6 +1776,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         chanFreq[0] = refFreq.getValue("Hz"); 
         refPix  = (refFreq.getValue("Hz") - freqmean)/chanFreqStep[0];
       }
+      if( nchan==-1 ) nchan=1;
     }
     else {
        // unrecognized mode, error
@@ -1780,7 +1851,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   IPosition SynthesisParamsImage::shp() const
   {
-    return IPosition( 4, imsize[0], imsize[1], ( decideNPolPlanes(stokes) ).nelements(), nchan );
+    uInt nStokes = ( decideNPolPlanes(stokes) ).nelements();
+
+    if( imsize[0]<=0 || imsize[1]<=0 || nStokes<=0 || nchan<=0 )
+      {
+	throw(AipsError("Internal Error : Image shape is invalid : [" + String::toString(imsize[0]) + "," + String::toString(imsize[1]) + "," + String::toString(nStokes) + "," + String::toString(nchan) + "]" )); 
+      }
+
+    return IPosition( 4, imsize[0], imsize[1], nStokes, nchan );
   }
 
 
@@ -1816,6 +1894,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	// facets	
 	err += readVal( inrec, String("facets"), facets);
+
+	// Spectral interpolation
+	err += readVal( inrec, String("interpolation"), interpolation );// not used in SI yet...
 
 	// Track moving source ?
 	err += readVal( inrec, String("distance"), distance );
@@ -1856,6 +1937,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Check for valid FTMachine type.
     // Valid other params per FTM type, etc... ( check about nterms>1 )
 
+    if( ftmachine != "gridft" && ftmachine != "wprojectft" && ftmachine != "mosaicft" && ftmachine != "awprojectft" && ftmachine != "mawprojectft" && ftmachine != "protoft")
+      { err += "Invalid ftmachine name. Must be one of 'gridft', 'wprojectft', 'mosaicft', 'awprojectft', 'mawpojectft'";   }
+
     if( ftmachine=="mosaicft" && mType=="imagemosaic"  || 
 	ftmachine=="awprojectft" && mType=="imagemosaic" )
       {  err +=  "Cannot use " + ftmachine + " with " + mType + " because it is a redundant choice for mosaicing. In the future, we may support the combination to signal the use of single-pointing sized image grids during gridding and iFT, and only accumulating it on the large mosaic image. For now, please set either mappertype='default' to get mosaic gridding  or ftmachine='ft' or 'wprojectft' to get image domain mosaics. \n"; }
@@ -1876,7 +1960,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // FTMachine parameters
     ftmachine="GridFT";
-    padding=1.0;
+    padding=1.2;
     useAutoCorr=False;
     useDoublePrec=True; 
     wprojplanes=1; 
@@ -1884,6 +1968,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // facets
     facets=1;
+
+    // Spectral Axis interpolation
+    interpolation=String("nearest");
 
     // Moving phase center ?
     distance=Quantity(0,"m");
@@ -1920,6 +2007,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     gridpar.define("convfunc", convFunc);
 
     gridpar.define("facets", facets);
+    
+    gridpar.define("interpolation",interpolation);
 
     gridpar.define("distance", QuantityToString(distance));
     gridpar.define("tracksource", trackSource);
@@ -1941,6 +2030,135 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return gridpar;
   }
 
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ /////////////////////// Deconvolver Parameters
+
+  SynthesisParamsDeconv::SynthesisParamsDeconv():SynthesisParams()
+  {
+    setDefaults();
+  }
+
+  SynthesisParamsDeconv::~SynthesisParamsDeconv()
+  {
+  }
+
+
+  void SynthesisParamsDeconv::fromRecord(Record &inrec)
+  {
+    setDefaults();
+
+    String err("");
+
+    try
+      {
+	
+	err += readVal( inrec, String("imagename"), imageName );
+	err += readVal( inrec, String("deconvolver"), algorithm );
+	err += readVal( inrec, String("startmodel"), startModel );
+
+	err += readVal( inrec, String("id"), deconvolverId );
+	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
+
+	err += readVal( inrec, String("scales"), scales );
+
+	err += readVal( inrec, String("mask"), maskType );
+
+        if( inrec.isDefined("restoringbeam") )     
+	  {
+            if( inrec.dataType("restoringbeam")==TpString )     
+	      {
+	        err += readVal( inrec, String("restoringbeam"), usebeam); 
+		if( ! usebeam.matches("common") && ! usebeam.length()==0 )  
+		  {
+		    Quantity bsize;
+		    err += readVal( inrec, String("restoringbeam"), bsize );
+		    restoringbeam.setMajorMinor( bsize, bsize );
+		    usebeam = String("");
+		  }
+              }
+            else if( inrec.dataType("restoringbeam")==TpArrayString )
+	      {
+		Vector<String> bpars;
+		err += readVal( inrec, String("restoringbeam"), bpars );
+		try {
+		  if( bpars.nelements()==1 && bpars[0].length()>0 ) { 
+		    if( bpars[0]=="common") { usebeam="common"; }
+		    else {
+		      Quantity axis; stringToQuantity( bpars[0] , axis);
+		      restoringbeam.setMajorMinor( axis, axis ); 
+		    }
+		  }else if( bpars.nelements()==2 ) { 
+		    Quantity majaxis, minaxis;
+		    stringToQuantity( bpars[0], majaxis ); stringToQuantity( bpars[1], minaxis );
+		    restoringbeam.setMajorMinor( majaxis, minaxis );
+		  }else if( bpars.nelements()==3 ) {
+		    Quantity majaxis, minaxis, pa;
+		    stringToQuantity( bpars[0], majaxis ); stringToQuantity( bpars[1], minaxis ); stringToQuantity( bpars[2], pa );
+		    restoringbeam.setMajorMinor( majaxis, minaxis );
+		    restoringbeam.setPA( pa );
+		  }else {
+		    restoringbeam = GaussianBeam();
+		    usebeam = String("");
+		  }
+		} catch( AipsError &x) {
+		  err += "Cannot construct a restoringbeam from supplied parameters. Please check that majoraxis >= minoraxis and all entries are strings.";
+		  restoringbeam = GaussianBeam();
+		  usebeam = String("");
+		}
+	      }
+	  }// if isdefined(restoringbeam)
+	
+	err += verify();
+	
+      }
+    catch(AipsError &x)
+      {
+	err = err + x.getMesg() + "\n";
+      }
+      
+      if( err.length()>0 ) throw(AipsError("Invalid Deconvolver Parameter set : " + err));
+      
+  }
+
+  String SynthesisParamsDeconv::verify()
+  {
+    String err;
+
+
+    return err;
+  }
+
+  void SynthesisParamsDeconv::setDefaults()
+  {
+    imageName="";
+    algorithm="clark";
+    startModel="";
+    deconvolverId=0;
+    nTaylorTerms=1;
+    scales.resize(1); scales[0]=0.0;
+    maskType="none";
+    
+  }
+
+  Record SynthesisParamsDeconv::toRecord()
+  {
+    Record decpar;
+
+    decpar.define("imagename", imageName);
+    decpar.define("deconvolver", algorithm);
+    decpar.define("startmodel",startModel);
+    decpar.define("id",deconvolverId);
+    decpar.define("ntaylorterms",nTaylorTerms);
+    decpar.define("scales",scales);
+    decpar.define("mask",maskType);
+
+    return decpar;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } //# NAMESPACE CASA - END

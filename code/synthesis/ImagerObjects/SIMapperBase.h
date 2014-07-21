@@ -35,10 +35,10 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisBufferImpl2.h>
-#include <synthesis/MSVis/VisBuffer2Adapter.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBufferImpl2.h>
+#include <msvis/MSVis/VisBuffer2Adapter.h>
 
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
@@ -78,7 +78,7 @@ class SIMapperBase
   virtual void degrid(VisBuffer& )=0;
 
   ////////////////////////////////////Return value is false if no valid ftm or CompList is available
-  virtual Bool getFTMRecord(Record & rec)=0;
+  virtual Bool getFTMRecord(Record & rec, const String diskimage=String(""))=0;
   virtual Bool getCLRecord(Record & rec)=0;
 
   virtual String getImageName()=0;//{return itsImages->getName();};

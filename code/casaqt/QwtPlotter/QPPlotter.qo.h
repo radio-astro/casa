@@ -87,6 +87,7 @@ public:
    
     // Implements Plotter::showGUI().
     void showGUI(bool showGUI = true);
+    bool isGuiShown() const;
     
     //Kludge for updating the plot when we are in Non-GUI mode.
     void updateScriptGui();
@@ -253,6 +254,7 @@ private:
     
     // Flag for whether a resize event should be emitted.
     bool m_emitResize;
+    bool m_guiShown;
     
     // Date formats.
     // <group>

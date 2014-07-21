@@ -113,9 +113,11 @@ namespace ScanIntentMod
      ,
     SYSTEM_CONFIGURATION /*!< Requested by EVLA. */
      ,
-    CALIBRATE_APPPHASE_ACTIVE /*!< Calculate phase errors and assess phasing efficiency. Requested by the APP project. */
+    CALIBRATE_APPPHASE_ACTIVE /*!< Calculate and apply phasing solutions. Applicable at ALMA. */
      ,
-    CALIBRATE_APPPHASE_PASSIVE /*!< Assess phasing efficiency. Requested by the APP project. */
+    CALIBRATE_APPPHASE_PASSIVE /*!< Apply previously obtained phasing solutions. Applicable at ALMA. */
+     ,
+    OBSERVE_CHECK_SOURCE /*!<  */
      
   };
   typedef ScanIntent &ScanIntent_out;
@@ -193,6 +195,8 @@ class CScanIntent {
 	static const std::string& sCALIBRATE_APPPHASE_ACTIVE; /*!< A const string equal to "CALIBRATE_APPPHASE_ACTIVE".*/
 	
 	static const std::string& sCALIBRATE_APPPHASE_PASSIVE; /*!< A const string equal to "CALIBRATE_APPPHASE_PASSIVE".*/
+	
+	static const std::string& sOBSERVE_CHECK_SOURCE; /*!< A const string equal to "OBSERVE_CHECK_SOURCE".*/
 	
 
 	/**

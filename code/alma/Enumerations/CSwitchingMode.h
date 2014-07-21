@@ -56,7 +56,7 @@ namespace SwitchingModeMod
   //! SwitchingMode.
   //!  Switching modes: there are two categories of switching modes, those at high rate (chopper wheel, nutator and frequency switch) which involve the BIN axis and those at low  rate (frequency, position, load and phase switching) unrelated to the bin axis. Note that in case of  frequency switching mode it is the context which tells in which of these two categories it is used.
   
-  const char *const revision = "1.10";
+  const char *const revision = "-1";
   const int version = 1;
   
   enum SwitchingMode

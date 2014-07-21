@@ -120,6 +120,14 @@ public:
 
 private:
 
+	// disallow copy constructor and = operator
+
+	CasacRegionManager(const CasacRegionManager&) : RegionManager() {}
+
+	CasacRegionManager& operator=(const CasacRegionManager&) {
+		ThrowCc("=operator disallowed");
+	}
+
 	String _pairsToString(const vector<uInt>& pairs) const;
 
 	vector<uInt> _setPolarizationRanges(

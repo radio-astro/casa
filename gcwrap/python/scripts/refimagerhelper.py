@@ -47,16 +47,16 @@ class PySynthesisImager:
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
 
-        isvalid = self.checkParameters()
-        if isvalid==False:
-            print 'Invalid parameters'
+#        isvalid = self.checkParameters()
+#        if isvalid==False:
+#            print 'Invalid parameters'
 
 #############################################
-    def checkParameters(self):
-        # Copy the imagename from impars to decpars, for each field.
-        for immod in range(0,self.NF):
-            self.alldecpars[str(immod)]['imagename'] = self.allimpars[str(immod)]['imagename']
-        return True
+#    def checkParameters(self):
+#        # Copy the imagename from impars to decpars, for each field.
+#        for immod in range(0,self.NF):
+#            self.alldecpars[str(immod)]['imagename'] = self.allimpars[str(immod)]['imagename']
+#        return True
 
 #############################################
 #############################################
@@ -167,11 +167,15 @@ class PySynthesisImager:
               initrec =  self.SDtools[immod].initminorcycle() 
               self.IBtool.mergeinitrecord( initrec );
               print "Peak res of field ",immod, " : " ,initrec['peakresidual']
+              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
          stopflag = self.IBtool.cleanComplete()
          print 'Converged : ', stopflag
-         return stopflag
+         if( stopflag>0 ):
+             stopreasons = ['iteration limit', 'threshold', 'force stop']
+             casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+         return (stopflag>0)
 
 #############################################
     def makePSF(self):
@@ -190,7 +194,11 @@ class PySynthesisImager:
             self.PStools[immod].dividemodelbyweight()
             self.PStools[immod].scattermodel() 
 
-        self.runMajorCycleCore()
+        if self.IBtool != None:
+            lastcycle = (self.IBtool.cleanComplete() > 0)
+        else:
+            lastcycle = True
+        self.runMajorCycleCore(lastcycle)
 
         if self.IBtool != None:
             self.IBtool.endmajorcycle()
@@ -211,9 +219,9 @@ class PySynthesisImager:
 
 #############################################
 ## Overloaded for parallel runs
-    def runMajorCycleCore(self):
+    def runMajorCycleCore(self, lastcycle):
         ### Run major cycle
-        self.SItool.executemajorcycle(controls={})
+        self.SItool.executemajorcycle(controls={'lastcycle':lastcycle})
 #############################################
 
     def runMinorCycle(self):
@@ -321,7 +329,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
-                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
 
                 joblist.append( self.PH.runcmd("toolsi.defineimage( impars=" + str( nimpars[str(fld)] ) + ", gridpars=" + str( ngridpars[str(fld)] )   + ")", node ) )
@@ -349,8 +358,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
+                if not shutil.os.path.exists(normpars['workdir']):
+                    shutil.os.system('mkdir '+normpars['workdir'])
                 for node in range(0,self.NN):
-                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+                    partnames.append( normpars['workdir'] + '/' + self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+##                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
                 normpars['partimagenames'] = partnames
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -373,11 +385,11 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 
 #############################################
 
-    def runMajorCycleCore(self):
+    def runMajorCycleCore(self, lastcycle):
         ### Run major cycle
         joblist=[]
         for node in range(0,self.PH.NN):
-             joblist.append( self.PH.runcmd("toolsi.executemajorcycle(controls={})",node) )
+             joblist.append( self.PH.runcmd("toolsi.executemajorcycle(controls={'lastcycle':"+str(lastcycle)+"})",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
@@ -541,11 +553,16 @@ class PyParallelDeconvolver(PySynthesisImager):
              retrec = self.PH.pullval("initrec", immod )
              self.IBtool.mergeinitrecord( retrec[immod] )
              print "Peak res of field ",immod, " on node ", immod , ": " ,retrec[immod]['peakresidual']
+             casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
         stopflag = self.IBtool.cleanComplete()
         print 'Converged : ', stopflag
-        return stopflag
+        if( stopflag>0 ):
+            stopreasons = ['iteration limit', 'threshold', 'force stop']
+            casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
+        return (stopflag>0)
+
 
 #############################################
 
@@ -701,41 +718,47 @@ class PyParallelImagerHelper():
 class ImagerParameters():
 
     def __init__(self,
+                 ## Data Selection
                  msname='',
                  field='',
                  spw='',
+                 timestr='',
+                 uvdist='',
+                 antenna='',
                  scan='',
-                 usescratch=True,
-                 readonly=True,
-                 
-                 imagename='', 
-                 mode='mfs', 
-                 ntaylorterms=1, 
-                 mtype='default',
-                 nchan=1, 
-                 start='', 
-                 step='',
-                 veltype='radio', 
-                 frame='LSRK', 
-                 reffreq='',
-                 restfreq=[''],
-                 sysvel='', 
-                 sysvelframe='',
+                 obs='',
+                 state='',
+                 datacolumn='corrected',
 
+                 ## Image Definition
+                 imagename='', 
                  imsize=[1,1], 
-                 facets=1, 
                  cellsize=[10.0,10.0],
                  phasecenter='',
                  stokes='I',
-                 outlierfile='',
-                 startmodel='', 
-                 weighting='natural', 
+                 projection='SIN',
 
-                 ftmachine='ft', 
+                 ## Spectral Parameters
+                 mode='mfs', 
+                 reffreq='',
+                 nchan=1, 
+                 start='', 
+                 step='',
+                 frame='LSRK', 
+                 veltype='radio', 
+                 restfreq=[''],
+                 sysvel='', 
+                 sysvelframe='',
+                 interpolation='nearest',
+
+                 ftmachine='gridft', 
+                 facets=1, 
+
+                 wprojplanes=1,
 
                  aterm=True,
                  psterm=True,
-                 mterm=False,
+                 mterm=True,
                  wbawp = True,
                  cfcache = "",
                  dopointing = False,
@@ -747,15 +770,41 @@ class ImagerParameters():
                  pblimit=0.01,
                  normtype='flatnoise',
 
-                 algo='test',
-                 niter=0, cycleniter=0, cyclefactor=1.0,
-                 minpsffraction=0.1,maxpsffraction=0.8,
-                 threshold='0.0Jy',loopgain=0.1,
-                 interactive=False):
+                 outlierfile='',
+                 overwrite=True,
+                 startmodel='', 
+
+                 weighting='natural', 
+                 robust=0.5,
+                 npixels=0,
+                 uvtaper=[],
+
+                 niter=0, 
+                 cycleniter=0, 
+                 loopgain=0.1,
+                 threshold='0.0Jy',
+                 cyclefactor=1.0,
+                 minpsffraction=0.1,
+                 maxpsffraction=0.8,
+                 interactive=False,
+
+                 deconvolver='hogbom',
+                 scales=[],
+                 ntaylorterms=1, 
+                 restoringbeam=[],
+                 mtype='default',
+
+                 usescratch=True,
+                 readonly=True,
+
+                 workdir='',
+                 ):
 
         ## Selection params. For multiple MSs, all are lists.
         ## For multiple nodes, the selection parameters are modified inside PySynthesisImager
         self.allselpars = {'msname':msname, 'field':field, 'spw':spw, 'scan':scan,
+                           'timestr':timestr, 'uvdist':uvdist, 'antenna':antenna, 'obs':obs,'state':state,
+                           'datacolumn':datacolumn,
                            'usescratch':usescratch, 'readonly':readonly}
 
         ## Imaging/deconvolution parameters
@@ -772,40 +821,51 @@ class ImagerParameters():
                                  #'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
                                  'mode':mode, 'start':start, 'step':step, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
-                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe  }      }
+                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
+                                 'projection':projection,
+                                 'overwrite':overwrite }    }
         ######### Gridding
         self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
                                    'rotatepastep':rotatepastep, 'mtype':mtype, # 'weightlimit':weightlimit,
-                                   'facets':facets   }     }
+                                   'facets':facets, 'interpolation':interpolation, 'wprojplanes':wprojplanes   }     }
         ######### weighting
-        self.weightpars = {'type':weighting } 
-        
+        self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
+
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-        self.allnormpars = { '0' : {'imagename':imagename, 'mtype': mtype,
+        self.allnormpars = { '0' : {'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
-                                 'normtype':normtype }     }
+                                 'normtype':normtype, 'workdir':workdir }     }
 
         ######### Deconvolution
-        self.alldecpars = { '0' : { 'id':0, 'algo':algo, 'ntaylorterms':ntaylorterms } }
-
+        self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
+                                    'scales':scales, 'restoringbeam':restoringbeam } }
 
         ######### Iteration control. 
-        self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
+        self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
+                          'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
 
+
+        #self.reusename=reuse
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
         self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
                              'start','step',
-                             'ntaylorterms','restfreq']
+                             'ntaylorterms','reffreq','mode']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
-        self.outdecparlist=['algo','startmodel','ntaylorterms']
-        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
+        self.outdecparlist=['deconvolver','startmodel','ntaylorterms']
+        self.outnormparlist=['mtype','weightlimit','ntaylorterms']
+#        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 
+        ret = self.checkParameters()
+        if ret==False:
+            casalog.post('Found errors in input parameters. Please check.', 'WARN')
+
+        self.printParameters()
 
     def getSelPars(self):
         return self.allselpars
@@ -840,22 +900,35 @@ class ImagerParameters():
 
 
     def checkParameters(self):
-        casalog.origin('tclean.checkParameters')
+        casalog.origin('refimagerhelper.checkParameters')
         casalog.post('Verifying Input Parameters')
         # Init the error-string
         errs = "" 
         errs += self.checkAndFixSelectionPars()
         errs += self.makeImagingParamLists()
-        #errs += self.checkAndFixImagingPars()
         errs += self.checkAndFixIterationPars()
+        errs += self.checkAndFixNormPars()
 
+        ### Copy them from 'impars' to 'normpars' and 'decpars'
+        for immod in self.allimpars.keys() :
+            self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            if len(self.allnormpars[immod]['workdir'])==0:
+                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
+
+#        for modelid in self.allnormpars.keys():
+
+
+        
         ## If there are errors, print a message and exit.
         if len(errs) > 0:
-            casalog.post('Parameter Errors : \n' + errs,'WARN')
-            return False
+#            casalog.post('Parameter Errors : \n' + errs,'WARN')
+            raise Exception("Parameter Errors : \n" + errs)
+ #           return False
         return True
 
     ###### Start : Parameter-checking functions ##################
+
 
     def checkAndFixSelectionPars(self):
         errs=""
@@ -941,9 +1014,43 @@ class ImagerParameters():
             self.allimpars[immod] = synu.checkimageparams( self.allimpars[immod] )
             synu.done()
 
+        ## Check for name increments, and copy from impars to decpars and normpars.
+        self.handleImageNames()
 
         return errs
 
+    def handleImageNames(self):
+
+            for immod in self.allimpars.keys() :
+                inpname = self.allimpars[immod]['imagename']
+
+                ### If a directory name is embedded in the image name, check that the dir exists.
+                if inpname.count('/'):
+                    splitname = inpname.split('/')
+                    prefix = splitname[ len(splitname)-1 ]
+                    dirname = './' + inpname[0: len(inpname)-len(prefix)]   # has '/' at end
+                    if not os.path.exists( dirname ):
+                        casalog.post('Making directory : ' + dirname, 'INFO')
+                        os.mkdir( dirname )
+                    
+            ### Check for name increments 
+            #if self.reusename == False:
+            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
+                ## Get a list of image names for all fields (to sync name increment ids across fields)
+                inpnamelist={}
+                for immod in self.allimpars.keys() :
+                    inpnamelist[immod] = self.allimpars[immod]['imagename'] 
+
+                newnamelist = self.incrementImageNameList( inpnamelist )
+
+                if len(newnamelist) != len(self.allimpars.keys()) :
+                    casalog.post('Internal Error : Non matching list lengths in refimagerhelper::handleImageNames. Not updating image names','WARN')
+                else : 
+                    for immod in self.allimpars.keys() :
+                        self.allimpars[immod]['imagename'] = newnamelist[immod]
+                
+#                newname = self.incrementImageName( inpname )
+#                self.allimpars[immod]['imagename'] = newname
 
     def checkAndFixIterationPars(self ):
         errs=""
@@ -953,6 +1060,15 @@ class ImagerParameters():
             # Make sure cycleniter is less than or equal to niter. 
             if self.iterpars['cycleniter']<=0 or self.iterpars['cycleniter'] > self.iterpars['niter']:
                 self.iterpars['cycleniter'] = self.iterpars['niter']
+
+        return errs
+
+    def checkAndFixNormPars(self):  
+        errs=""
+
+#        for modelid in self.allnormpars.keys():
+#            if len(self.allnormpars[modelid]['workdir'])==0:
+#                self.allnormpars[modelid]['workdir'] = self.allnormpars['0']['imagename'] + '.workdir'
 
         return errs
 
@@ -1019,7 +1135,7 @@ class ImagerParameters():
         returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
-        returnlist = self.evalToTarget( returnlist, 'impars', 'restfreq', 'strvec' )
+#        returnlist = self.evalToTarget( returnlist, 'impars', 'reffreq', 'strvec' )
 
         ## Extra parsing for a few parameters.
         ## imsize
@@ -1106,4 +1222,96 @@ class ImagerParameters():
         casalog.post('Weightpars : ' + str(self.weightpars), 'INFO')
         casalog.post('DecPars : ' + str(self.alldecpars), 'INFO')
         casalog.post('IterPars : ' + str(self.iterpars), 'INFO')
+
+
+    def incrementImageName(self,imagename):
+        dirname = '.'
+        prefix = imagename
+
+        if imagename.count('/'):
+            splitname = imagename.split('/')
+            prefix = splitname[ len(splitname)-1 ]
+            dirname = './' + imagename[0: len(imagename)-len(prefix)]   # has '/' at end
+
+        inamelist = [fn for fn in os.listdir(dirname) if any([fn.startswith(prefix)])];
+
+        if len(inamelist)==0:
+            newimagename = dirname[2:] + prefix
+        else:
+            nlen = len(prefix)
+            maxid=1
+            for iname in inamelist:
+                startind = iname.find( prefix+'_' )
+                if startind==0:
+                    idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
+                    if idstr.isdigit() :
+                        val = eval(idstr)
+                        if val > maxid : 
+                            maxid = val
+            newimagename = dirname[2:] + prefix + '_' + str(maxid+1)
+
+        print 'Using : ',  newimagename
+        return newimagename
+
+    def incrementImageNameList(self, inpnamelist ):
+
+        dirnames={}
+        prefixes={}
+
+        for immod in inpnamelist.keys() : 
+            imagename = inpnamelist[immod]
+            dirname = '.'
+            prefix = imagename
+
+            if imagename.count('/'):
+                splitname = imagename.split('/')
+                prefix = splitname[ len(splitname)-1 ]
+                dirname = './' + imagename[0: len(imagename)-len(prefix)]   # has '/' at end
+
+            dirnames[immod] = dirname
+            prefixes[immod] = prefix
+
+
+        maxid=0
+        for immod in inpnamelist.keys() : 
+            prefix = prefixes[immod]
+            inamelist = [fn for fn in os.listdir(dirnames[immod]) if any([fn.startswith(prefix)])];
+            nlen = len(prefix)
+
+            if len(inamelist)==0 : 
+                locmax=0
+            else: 
+                locmax=1
+
+            for iname in inamelist:
+                startind = iname.find( prefix+'_' )
+                if startind==0:
+                    idstr = ( iname[nlen+1:len(iname)] ).split('.')[0]
+                    if idstr.isdigit() :
+                        val = eval(idstr)
+                        if val > locmax : 
+                            locmax = val
+                            
+            if locmax > maxid:
+                maxid = locmax
+
+        
+        newimagenamelist={}
+        for immod in inpnamelist.keys() : 
+            if maxid==0 : 
+                newimagenamelist[immod] = inpnamelist[immod]
+            else:
+                newimagenamelist[immod] = dirnames[immod][2:] + prefixes[immod] + '_' + str(maxid+1) 
+
+        print 'Input : ',  inpnamelist
+        print 'Dirs : ', dirnames
+        print 'Pre : ', prefixes
+        print 'Max id : ', maxid
+        print 'Using : ',  newimagenamelist
+        return newimagenamelist
+
+
+
+
+
 

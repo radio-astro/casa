@@ -33,9 +33,9 @@
 #include <ms/MeasurementSets/MSProcessorColumns.h>
 
 // VI/VB infrastructure
-#include <synthesis/MSVis/StokesVector.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
 
 // .casarc interface
 #include <casa/System/AipsrcValue.h>

@@ -49,7 +49,7 @@
 
 #include <casa/System/Choice.h>
 
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <synthesis/MeasurementEquations/IncCEMemModel.h>
 #include <synthesis/MeasurementEquations/CEMemProgress.h>

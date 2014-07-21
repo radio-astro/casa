@@ -105,7 +105,7 @@ namespace casa {
 		CanvasCurve getCurve( const QString& curveName );
 		int getLineCount();
 		void curveLabelsChanged();
-		void clearCurve();
+		void clearCurve( bool inDtor=false );
 		void clearFitCurves();
 		void clearEverything();
 		void clearMolecularLines( bool refresh = true );
@@ -244,6 +244,9 @@ namespace casa {
 		int getCurZoom();
 		int getZoomStackSize();
 
+		//Force a repaint
+		void refreshPixmap();
+
 	public slots:
 		void zoomIn();
 		void zoomOut();
@@ -309,7 +312,7 @@ namespace casa {
 		void setCurveData(int id, const CurveData &data, double beamAngle, double beamArea,
 				SpectralCoordinate coord, const ErrorData &error=ErrorData(),
 		        const QString& lb="", ColorCategory colorCategory = CURVE_COLOR);
-		void refreshPixmap();
+
 
 		/**
 		 * Attempts to display a tool tip indicated a data point corresponding

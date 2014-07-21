@@ -72,6 +72,10 @@ public:
     //Return the size.
     virtual QSize sizeHint() const;
 
+    //Reset the height based on the positive or negative amount of new space that
+    //is available.
+    void resetHeight( int diff );
+
     //The plots being displayed have changed.
     void plotsChanged(const PlotMSPlotManager& manager, int index);
 
@@ -79,7 +83,7 @@ public:
     PlotMSPlot* getPlot();
 
     //Force (or not) the plots to update their displays.
-    void plot( bool forceReload );
+    bool plot( bool forceReload );
 
     vector<PMS::Axis> getSelectedLoadAxes() const;
     vector<PMS::Axis> getSelectedReleaseAxes() const;
@@ -93,8 +97,15 @@ public:
     //Change to a compact display
     void minimizeDisplay();
 
+    //Returns whether or not the display is compact (minimized) or expanded.
+    bool isMinimized() const;
+
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success );
+    void clearData();
 signals:
-	void plottableChanged();
 	void close( PlotMSDataCollapsible*);
 
 private slots:
@@ -102,7 +113,7 @@ private slots:
 	void showContextMenu( const QPoint& location );
 
 private:
-	bool isMinimized() const;
+
 	void maximizeDisplay();
 
     QAction minimizeAction;
@@ -110,6 +121,7 @@ private:
     QAction closeAction;
     const int SIZE_COLLAPSED;
     const int SIZE_EXPANDED;
+    const int SIZE_WIDTH;
     int minimumSize;
 
     QLineEdit* nameLabel;

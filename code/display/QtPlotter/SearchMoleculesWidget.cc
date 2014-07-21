@@ -43,6 +43,7 @@ using namespace std;
 namespace casa {
 
 	const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
+	const QString SearchMoleculesWidget::SEARCH_DEFAULT_UNITS = "GHz";
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = -1;
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = -1;
 
@@ -79,13 +80,16 @@ namespace casa {
 
 		//Range initialization
 		QList<QString> frequencyUnitList;
-		frequencyUnitList << "Hz" << "KHz" << "MHz" << "GHz" << "A" << "nm"
+		frequencyUnitList << "Hz" << "KHz" << "MHz" << "GHz" << "Angstrom" << "nm"
 		                  << "um" << "mm" << "cm" << "m";
 		for ( int i = 0; i < frequencyUnitList.size(); i++ ) {
 			ui.rangeUnitComboBox->addItem( frequencyUnitList[i]);
 		}
-		ui.rangeUnitComboBox->setCurrentIndex(frequencyUnitList.indexOf(SPLATALOGUE_UNITS));
-		this->unitStr = SPLATALOGUE_UNITS;
+		//ui.rangeUnitComboBox->setCurrentIndex(frequencyUnitList.indexOf(SPLATALOGUE_UNITS));
+		//this->unitStr = SPLATALOGUE_UNITS;
+		//According to CAS-6073 the default units should be GHz.
+		ui.rangeUnitComboBox->setCurrentIndex( frequencyUnitList.indexOf( SEARCH_DEFAULT_UNITS ) );
+		this->unitStr = SEARCH_DEFAULT_UNITS;
 		connect( ui.rangeUnitComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT( searchUnitsChanged(const QString&)));
 
 		//Astronomical Filters
@@ -102,6 +106,7 @@ namespace casa {
 		ui.rangeMaxLineEdit->setValidator( validator );
 		ui.dopplerLineEdit->setValidator( validator );
 		ui.dopplerLineEdit->setText( QString::number(0) );
+		connect( ui.dopplerLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(redshiftChanged( const QString&)));
 
 		radialVelocityTypeMap.insert("LSRK", MRadialVelocity::LSRK);
 		radialVelocityTypeMap.insert("LSRD", MRadialVelocity::LSRD);
@@ -111,7 +116,7 @@ namespace casa {
 		for ( int i = 0; i < keys.size(); i++ ) {
 			ui.referenceFrameCombo->addItem( keys[i] );
 		}
-		velocityUnitsList<<"m/s"<<"km/s";
+		velocityUnitsList<<"km/s"<<"m/s";
 		for ( int i = 0; i < velocityUnitsList.size(); i++ ) {
 			ui.dopplerUnitsComboBox->addItem( velocityUnitsList[i] );
 		}
@@ -153,18 +158,27 @@ namespace casa {
 
 
 	void SearchMoleculesWidget::setRange( double min, double max, QString units ) {
-		setRangeValue( min, units, ui.rangeMinLineEdit );
-		setRangeValue( max, units, ui.rangeMaxLineEdit );
+
+		double convertedMinValue = setRangeValue( min, units );
+		double convertedMaxValue = setRangeValue( max, units );
+		if ( convertedMinValue < convertedMaxValue ){
+			ui.rangeMinLineEdit->setText( QString::number(convertedMinValue, 'f', 6));
+			ui.rangeMaxLineEdit->setText( QString::number(convertedMaxValue, 'f', 6));
+		}
+		else {
+			ui.rangeMinLineEdit->setText( QString::number(convertedMaxValue, 'f', 6));
+			ui.rangeMaxLineEdit->setText( QString::number(convertedMinValue, 'f', 6));
+		}
 	}
 
-	void SearchMoleculesWidget::setRangeValue( double value, QString units,
-	        QLineEdit* lineEdit ) {
+	double SearchMoleculesWidget::setRangeValue( double value, QString units) {
+		double convertedValue = value;
 		if ( unitStr != units ) {
 			Converter* converter = Converter::getConverter( units, unitStr );
-			value = converter->convert( value, coord);
+			convertedValue = converter->convert( value, coord);
 			delete converter;
 		}
-		lineEdit->setText( QString::number( value, 'f', 6 ));
+		return convertedValue;
 	}
 
 	void SearchMoleculesWidget::setSpectralCoordinate(SpectralCoordinate coord ){
@@ -215,6 +229,14 @@ namespace casa {
 			delete converter;
 		}
 		unitStr = newUnits;
+	}
+
+	void SearchMoleculesWidget::redshiftChanged( const QString& redshiftStr ){
+		bool validRedshift = false;
+		redshiftStr.toDouble( &validRedshift );
+		if ( validRedshift ){
+			emit redshiftChanged();
+		}
 	}
 
 	void SearchMoleculesWidget::dopplerShiftChanged() {
@@ -420,11 +442,23 @@ namespace casa {
 			canvas->getCanvasDomain( &minValue, &maxValue, searchUnits );
 
 			//Only replace the empty ones, not the ones the user has specified.
+			double convertedMinVal = setRangeValue( minValue, searchUnits);
+			double convertedMaxVal = setRangeValue( maxValue, searchUnits);
+			double actualMin = convertedMinVal;
+			double actualMax = convertedMaxVal;
+			if ( actualMin > actualMax ){
+				actualMin = convertedMaxVal;
+				actualMax = convertedMinVal;
+			}
 			if (  minEmpty ) {
-				setRangeValue( minValue, searchUnits, ui.rangeMinLineEdit );
+				if ( !isnan( actualMin ) ){
+					ui.rangeMinLineEdit->setText( QString::number( actualMin, 'f', 6));
+				}
 			}
 			if ( maxEmpty ) {
-				setRangeValue( maxValue, searchUnits, ui.rangeMaxLineEdit );
+				if ( !isnan( actualMax ) ){
+					ui.rangeMaxLineEdit->setText( QString::number( actualMax, 'f', 6));
+				}
 			}
 		}
 	}

@@ -13,13 +13,109 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      threshold=0.001
      loopgain=0.1
 
+     restoringbeam=[]
+     #restoringbeam='30.0arcsec'
+
      # Interaction ON or OFF
      interactive=False
 
-
-     if(testnum==18): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
+     if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
           casalog.post("==================================");
-          casalog.post("Test 18 image-field, cubesrc --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.");
+          casalog.post("==================================");
+
+          msname = 'DataTest/point_twospws.ms'
+          clearcal(msname)  ## Set model column to unity
+          delmod(msname)  ## Get rid of OTF model
+          delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+
+          testList = {
+               ## readonly
+               0:{'readonly':True,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'},
+               ## readonly
+               1:{'readonly':True,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## save model column in last major cycle
+               2:{'readonly':False,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## save virtual model in last major cycleexit
+
+               3:{'readonly':False,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
+               ## Multi-term test : save model column in last major cycle
+               4:{'readonly':False,  'usescratch':True, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'}, 
+               ## Multi-term test : save virtual model in last major cycle
+               5:{'readonly':False,  'usescratch':False, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'} 
+               }
+
+          ###  Note : 2 or 3 has a bug. When trying to read the virtual model (in plotms), the plotted values are
+          ###           different when using a modelcolumn or a virtual model. Needs more checking.
+
+          if testid > 5:
+               print 'No such test.'
+               return
+
+          paramList = ImagerParameters(msname=msname,field='0',spw='0',\
+                                       usescratch=testList[testid]['usescratch'],readonly=testList[testid]['readonly'],\
+                                       mode='mfs',\
+                                       ntaylorterms=testList[testid]['ntaylorterms'],mtype=testList[testid]['mtype'],
+                                       imagename='mytest0', nchan=1,\
+                                       imsize=[110,110],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='I',\
+                                       phasecenter=0,
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       deconvolver=testList[testid]['deconvolver'],\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
+                                       interactive=interactive)
+
+
+     if(testnum==21):  ## 21 image-field, mfs --- Multiple Stokes planes -- Clark
+          casalog.post("==================================");
+          casalog.post("Test 21 image-field, mfs --- Multiple Stokes planes -- Clark.");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/point_stokes.ms',field='0',spw='0',\
+                                       usescratch=True,readonly=True,\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1,\
+                                       imsize=[110,110],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='IV',\
+                                       phasecenter=0,
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       deconvolver='clarkstokes',
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
+                                       interactive=interactive)
+
+
+     if(testnum==20):  ## 1 image-field, mfs, multiscale
+          casalog.post("==================================");
+          casalog.post("Test 20 MFS 1 term + multiscale");
+          casalog.post("==================================");
+          
+          paramList = ImagerParameters(msname='DataTest/eptwochan.ms',field='0',spw='0:0',\
+                                       usescratch=True,readonly=True,\
+                                       mode='mfs',\
+                                       imagename='mytest0', nchan=1,\
+                                       imsize=[200,200],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       ### center
+                                       #phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ### offset
+                                       #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
+                                       phasecenter=0,
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='multiscale',scales=[0,20,40],\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
+                                       interactive=interactive)
+
+
+
+     if(testnum==19): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
+          casalog.post("==================================");
+          casalog.post("Test 19 image-field, cubesrc --- Real Imaging with various cube parameter specifications");
           #casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
                                        spw='0',\
@@ -35,31 +131,55 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
-     if(testnum==17): ## mode=cubedata (For interface test purpose only, the mode is not full implemented yet)
+     if(testnum==18): ## mode=cube (with doppler correction)
           casalog.post("==================================");
-          casalog.post("Test 17 image-field, cubedata --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 18 image-field, cube --- With doppler corrections");
           #casalog.post("==================================");
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
-                                       spw='0',\
+          paramList = ImagerParameters(msname='DataTest/Cband.G37line.DopplerTest.ms', field='1',\
+                                       spw='0:105~135',\
                                        usescratch=True,readonly=True,\
-                                       imagename="CubedataTest", mode='cubedata',\
-                                       nchan=10,\
-                                       start=5,\
+                                       imagename="mytest0", mode='cube',\
+                                       nchan=30,\
+                                       start=105,\
                                        step=1,\
                                        veltype='radio',\
-                                       imsize=[100,100],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       imsize=[256,256],\
+                                       cellsize='0.01arcmin',\
+                                       phasecenter=1,
+                                       ftmachine='gridft', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
+                                       interactive=interactive)
+
+     if(testnum==17): ## mode=cubedata 
+          casalog.post("==================================");
+          casalog.post("Test 17 image-field, cubedata --- No runtime dopper corrections");
+          #casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/Cband.G37line.DopplerTest.ms', field='1',\
+                                       spw='0:105~135',\
+                                       usescratch=True,readonly=True,\
+                                       imagename="mytest0", mode='cubedata',\
+                                       nchan=30,\
+                                       start=105,\
+                                       step=1,\
+                                       veltype='radio',\
+                                       imsize=[256,256],\
+                                       cellsize='0.01arcmin',\
+                                       phasecenter=1,
+                                       ftmachine='gridft', weighting='natural',\
+                                       deconvolver='hogbom',\
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
@@ -67,21 +187,22 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 16 image-fields, mfs (one with nterms=1. one with nterms=2).");
           casalog.post("==================================");
           
-          write_file('out16.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nntaylorterms=2\nmtype=multiterm\nrestfreq=[1.5GHz]\nalgo=msmfs')
+          write_file('out16.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nntaylorterms=2\nmtype=multiterm\nreffreq=1.5GHz\ndeconvolver=mtmfs')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out16.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
-                                       interactive=interactive)
+                                        restoringbeam=restoringbeam,
+                                      interactive=interactive)
      
      if(testnum==15):  ## 2 image-fields, mfs, Overlapping models. Both multi-term
           casalog.post("==================================");
@@ -95,14 +216,15 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        outlierfile='out15.txt',\
                                        mode='mfs',\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
-                                       algo='msmfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       deconvolver='mtmfs',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -117,14 +239,15 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out14.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:58:39.580 +40.55.55.931",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -206,15 +329,16 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
 
-     if(testnum==12):  ## 1 image-field, mfs --- WB AWP ( multi term )
+     if(testnum==12):  ## 1 image-field, mfs --- WB AWP ( multi term mosaic )
           casalog.post("==================================");
           casalog.post("Test 12 image-field, mfs --- WB AWP( multi term )");
           casalog.post("==================================");
@@ -222,7 +346,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='*',scan='',
                                        spw='*',\
                                        usescratch=True,readonly=True,\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='1.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -234,10 +358,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cfcache = "perm.wb.nt2.mytest0.cfcache",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
-                                       algo='msmfs',\
+                                       deconvolver='mtmfs',\
                                        pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==11):  ## 1 image-field, mfs --- WB AWP ( single term )
@@ -261,10 +386,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cfcache = "perm.wb.mytest0.cfcache",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
-                                       algo='hogbom',\
+                                       deconvolver='hogbom',\
                                        pblimit=0.1,normtype='flatnoise',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
      if(testnum==10):  ## 1 image-field, mfs --- Narrow-band AWP
@@ -276,7 +402,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        spw='1',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='0.3GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
@@ -287,10 +413,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        cfcache = "perm.mytest0.cfcache.mos",#.offcenter",\
                                        dopointing = False, dopbcorr = True, conjbeams = True, 
                                        computepastep =360.0, rotatepastep =5.0,\
-                                       algo='hogbom',\
+                                       deconvolver='hogbom',\
                                        #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -303,17 +430,18 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='',spw='1',scan='',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.5GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=1,mtype='imagemosaic',restfreq=['1.5GHz'],\
                                        imsize=[512,512],\
                                        cellsize=['10.0arcsec','10.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        #phasecenter=1,\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        #pblimit=0.1,normtype='flatsky',
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
  
 
@@ -325,15 +453,16 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=2,mtype='multiterm',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='msmfs',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -345,17 +474,18 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=2,mtype='multiterm',
                                        reffreq='1.6GHz',\
                                        #restfreq=['1.5GHz'],\
                                        imsize=[200,200],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='msmfs',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='mtmfs',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -367,15 +497,16 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        ntaylorterms=1,mtype='default',restfreq=['1.5GHz'],\
                                        imsize=[200,200], facets=2,\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:00.2 +40.50.15.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -387,14 +518,15 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        field='0',spw=['0','0'],\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -403,20 +535,25 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
           casalog.post("==================================");
           
-          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nfreqstep=4.0GHz')
+          write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmode=mfs\nstart=1.0GHz\nstep=2.0GHz')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        outlierfile='out4.txt',\
                                        mode='cube',\
-                                       imagename='mytest0', nchan=2, start='1.0GHz', step='1.0GHz',\
+                                       imagename='mytest0', nchan=2,\
+                                       start='1.0GHz', step='1.0GHz',
+                                       #start='1.0GHz', step='2.0GHz',
+                                       #start=0, step=1,
+                                       frame='TOPO',\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -432,14 +569,15 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        usescratch=True,readonly=True,\
                                        outlierfile='out3.txt',\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1, start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'], 
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
      
      
@@ -455,10 +593,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        imsize=[100,100],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
                                        phasecenter="J2000 19:59:28.500 +40.44.01.50",\
-                                       ftmachine='GridFT', startmodel='', weighting='natural',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='natural',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
      
 
@@ -470,18 +609,19 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
-                                       imagename='mytest0', nchan=1,start='1.0GHz', step='4.0GHz',\
+                                       imagename='mytest0', nchan=1,\
                                        imsize=[110,110],\
-                                       cellsize=['8.0arcsec','8.0arcsec'],\
+                                       cellsize=['8.0arcsec','8.0arcsec'],stokes='I',\
                                        ### center
                                        #phasecenter="J2000 19:59:28.500 +40.44.01.50",\
                                        ### offset
                                        #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
                                        phasecenter=0,
-                                       ftmachine='GridFT', startmodel='', weighting='briggs',\
-                                       algo='hogbom',\
+                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
                                        interactive=interactive)
 
 
@@ -505,10 +645,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
         clusterdef=""
 
      ### Check input parameters, and parse outlier files.
-     if paramList.checkParameters() == False:
-        return [None, "", False, False,False]
+     #if paramList.checkParameters() == False:
+     #   return [None, "", False, False,False]
 
-     paramList.printParameters()
+     #paramList.printParameters()
 
      return [ paramList , clusterdef, parallelmajor, parallelminor, parallelcube ]
 
@@ -751,7 +891,7 @@ def checkDataPartitioningCode():
      ## Sync input lists to the same size.
      #paramList.checkParameters()
 
-     params = getparams( testnum=3 ,parallelmajor=True )
+     params = getparams( testnum=2 ,parallelmajor=True )
      paramList = params[0]
      clusterdeffile = params[1]
 
@@ -840,3 +980,11 @@ def testImageCoordinates( testnum=1, testid=0):
 #     #synu.makeimage( impars , 'DataTest/twopoints_twochan.ms')
 #     synu.makeimage( impars , 'DataTest/point_twospws.ms')
 #     synu.done()
+
+
+def delmodkeywords(msname=""):
+     tb.open( msname+'/SOURCE', nomodify=False )
+     keys = tb.getkeywords()
+     for key in keys:
+          tb.removekeyword( key )
+     tb.close()

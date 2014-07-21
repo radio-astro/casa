@@ -40,7 +40,7 @@ scaling={'GHz':1.0e-9,
 #   2. if possible, linearly interpolate in time.
 #   3. interpolate in frequency with specified mode if necessary
 #
-def fillTsys( filename, specif, tsysif=None, mode='linear',extrap=False ):
+def fillTsys( filename, specif, tsysif=None, mode='linear', extrap=False, skipaveragedspw=True ):
     """
     high level function to fill Tsys on spectral data
     
@@ -60,16 +60,22 @@ def fillTsys( filename, specif, tsysif=None, mode='linear',extrap=False ):
                      'slinear','quadratic','cubic'
                      any integer specifying an order of
                      spline interpolation
+    extrap -- whether enable extrapolation or not
+              default: False
+              options: True, False
+    skipaveragedspw -- whether fill Tsys for channel averaged spws or not
+              default: True
+              options: True, False
     """
     if tsysif is None or specif != tsysif:
-        filler = TsysFiller( filename=filename, specif=specif, tsysif=tsysif, extrap=extrap )
+        filler = TsysFiller( filename=filename, specif=specif, tsysif=tsysif, extrap=extrap, skip_channelaveraged=skipaveragedspw )
         polnos = filler.getPolarizations()
         for pol in polnos:
             filler.setPolarization( pol )
             filler.fillScanAveragedTsys( mode=mode )
         del filler
     else:
-        filler = SimpleTsysFiller( filename=filename, ifno=specif )
+        filler = SimpleTsysFiller( filename=filename, ifno=specif, skip_channelaveraged=skipaveragedspw )
         polnos = filler.getPolarizations()
         for pol in polnos:
             filler.setPolarization( pol )
@@ -231,6 +237,32 @@ class TsysFillerBase( object ):
                 ret.append( None )
         return ret
 
+    def _search( self, tcol, t, startpos=0 ):
+        """
+        Simple search
+        
+        Return minimum index that satisfies tcol[index] > t.
+        If such index couldn't be found, return -1.
+
+        tcol -- array
+        t -- target value
+        startpos -- optional start position (default 0)
+        """
+        n = len(tcol)
+        idx = min( n-1, max( 0, startpos ) )
+        if tcol[idx] > t:
+            idx = 0
+        while ( idx < n and tcol[idx] < t ):
+            #print '%s: tcol[%s] = %s, t = %s'%(idx,idx,tcol[idx],t)
+            idx += 1
+        if idx == n:
+            idx = -1
+            #print 'Index not found, return -1'
+        #else:
+            #print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
+
+        return idx
+
 
 #
 # class SimpleTsysFiller
@@ -244,7 +276,7 @@ class SimpleTsysFiller( TsysFillerBase ):
     """
     Simply Fill Tsys
     """
-    def __init__( self, filename, ifno ):
+    def __init__( self, filename, ifno, skip_channelaveraged=False ):
         """
         Constructor
 
@@ -254,6 +286,9 @@ class SimpleTsysFiller( TsysFillerBase ):
         super(SimpleTsysFiller,self).__init__( filename )
         self.ifno = ifno
         print 'IFNO to be processed: %s'%(self.ifno)
+        self.skip_channelaveraged = skip_channelaveraged
+        if skip_channelaveraged is True:
+            print 'SimpleTsysFiller: skip channel averaged spws (%s)'%(self.ifno + 1)
 
     def getPolarizations( self ):
         """
@@ -319,13 +354,12 @@ class SimpleTsysFiller( TsysFillerBase ):
                     tsys1 = atsys[idx]
                     tsys = interpolateInTime( t0, tsys0, t1, tsys1, t )
             stab.putcell( 'TSYS', irow, tsys )
-            if tptab.nrows() > 0:
+            if self.skip_channelaveraged is False and tptab.nrows() > 0:
                 tptab.putcell( 'TSYS', irow, numpy.median(tsys) )
         stab.close()
         ttab.close()
         tptab.close()
         
-
 #
 # class TsysFiller
 #
@@ -343,7 +377,7 @@ class TsysFiller( TsysFillerBase ):
     """
     Fill Tsys
     """
-    def __init__( self, filename, specif, tsysif=None, extrap=False ):
+    def __init__( self, filename, specif, tsysif=None, extrap=False, skip_channelaveraged=False ):
         """
         Constructor
 
@@ -357,6 +391,9 @@ class TsysFiller( TsysFillerBase ):
         self.specif = specif
         self.abcsp = self._constructAbcissa( self.specif )
         self.extend = extrap
+        self.skip_channelaveraged = skip_channelaveraged
+        if skip_channelaveraged is True:
+            print 'TsysFiller: skip channel averaged spws (%s)'%(self.specif + 1)
         if tsysif is None:
             self.tsysif = None
             self.abctsys = None
@@ -551,7 +588,7 @@ class TsysFiller( TsysFillerBase ):
             else:
                 newtsys = tsys
             stab.putcell( 'TSYS', irow, newtsys )
-            if tptab.nrows() > 0:
+            if self.skip_channelaveraged is False and tptab.nrows() > 0:
                 #tptab.putcell( 'TSYS', irow, newtsys.mean() )
                 tptab.putcell( 'TSYS', irow, numpy.median(newtsys) )
 
@@ -608,29 +645,4 @@ class TsysFiller( TsysFillerBase ):
             atsys[i][ext0:len(abctsys)-ext1] = b[i]
         return (abctsys,atsys)
                 
-    def _search( self, tcol, t, startpos=0 ):
-        """
-        Simple search
-        
-        Return minimum index that satisfies tcol[index] > t.
-        If such index couldn't be found, return -1.
-
-        tcol -- array
-        t -- target value
-        startpos -- optional start position (default 0)
-        """
-        n = len(tcol)
-        idx = min( n-1, max( 0, startpos ) )
-        if tcol[idx] > t:
-            idx = 0
-        while ( idx < n and tcol[idx] < t ):
-            #print '%s: tcol[%s] = %s, t = %s'%(idx,idx,tcol[idx],t)
-            idx += 1
-        if idx == n:
-            idx = -1
-            #print 'Index not found, return -1'
-        #else:
-            #print 'found index %s: time[%s] = %s, target = %s'%(idx,idx,tcol[idx],t)
-
-        return idx
 

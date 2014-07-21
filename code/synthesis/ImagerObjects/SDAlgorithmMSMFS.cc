@@ -55,7 +55,7 @@
 #include <casa/Logging/LogSink.h>
 
 #include <casa/System/Choice.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -63,15 +63,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-  SDAlgorithmMSMFS::SDAlgorithmMSMFS( uInt nTaylorTerms ):
+  SDAlgorithmMSMFS::SDAlgorithmMSMFS( uInt nTaylorTerms, Vector<Float> scalesizes ):
     SDAlgorithmBase(),
     //    itsImages(),
     itsMatPsfs(), itsMatResiduals(), itsMatModels(),
     itsNTerms(nTaylorTerms),
+    itsScaleSizes(scalesizes),
     itsMTCleaner(),
     itsMTCsetup(False)
  {
-   itsAlgorithmName=String("msmfs");
+   itsAlgorithmName=String("mtmfs");
+   if( itsScaleSizes.nelements()==0 ){ itsScaleSizes.resize(1); itsScaleSizes[0]=0.0; }
  }
 
   SDAlgorithmMSMFS::~SDAlgorithmMSMFS()
@@ -108,9 +110,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///  ----------- do once ----------
     if( itsMTCsetup == False)
       {
-	cout << "Setting up the MT Cleaner once" << endl;
-	Vector<Float> scalesizes(1); scalesizes[0]=0.0;
-	itsMTCleaner.setscales( scalesizes );
+	//cout << "Setting up the MT Cleaner once" << endl;
+	//Vector<Float> scalesizes(1); scalesizes[0]=0.0;
+	itsMTCleaner.setscales( itsScaleSizes );
 	itsMTCleaner.setntaylorterms( itsNTerms );
 	itsMTCleaner.initialise( itsImages->getShape()[0], itsImages->getShape()[1] );
 	
@@ -220,7 +222,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	tempMat.reference( tempArr );
 	itsMTCleaner.setresidual( tix, tempMat );
       }
-    
+
     itsMTCleaner.computeprincipalsolution();
 
     for(uInt tix=0; tix<itsNTerms; tix++)

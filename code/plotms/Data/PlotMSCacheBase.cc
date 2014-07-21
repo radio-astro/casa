@@ -37,9 +37,9 @@
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBufferUtil.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferUtil.h>
 #include <plotms/Data/PlotMSVBAverager.h>
 #include <plotms/PlotMS/PlotMS.h>
 #include <tables/Tables/Table.h>
@@ -653,6 +653,32 @@ String PlotMSCacheBase::getTimeBounds( int iterValue ){
 		formattedTime =Plotter::formattedDateString(Plotter::DEFAULT_RELATIVE_DATE_FORMAT,tValue, DATE_MJ_SEC );
 	}
 	return formattedTime;
+}
+
+bool PlotMSCacheBase::isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
+		Bool globalYRange, int dataIndex ) const {
+	bool initialized = true;
+	if ( this->iterAxis != iteraxis ){
+		initialized = false;
+	}
+	else {
+		if ( static_cast<int>(indexer_.size())<= dataIndex ){
+			initialized = false;
+		}
+		else {
+			if ( indexer_[dataIndex].empty()){
+				initialized = false;
+			}
+			else {
+				if ( indexer_[dataIndex][0] == NULL ||
+						indexer_[dataIndex][0]->isGlobalXRange() != globalXRange ||
+					indexer_[dataIndex][0]->isGlobalYRange() != globalYRange ){
+					initialized = false;
+				}
+			}
+		}
+	}
+	return initialized;
 }
 
 void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,

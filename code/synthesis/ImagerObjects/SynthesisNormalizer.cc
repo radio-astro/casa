@@ -73,7 +73,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisNormalizer::~SynthesisNormalizer() 
   {
     LogIO os( LogOrigin("SynthesisNormalizer","descructor",WHERE) );
-    os << "SynthesisNormalizer destroyed" << LogIO::POST;
+    os << LogIO::DEBUG1 << "SynthesisNormalizer destroyed" << LogIO::POST;
   }
   
   
@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{ itsNormType = "flatnoise";} // flatnoise, flatsky
 
-      cout << "Chosen normtype : " << itsNormType << endl;
+      //      cout << "Chosen normtype : " << itsNormType << endl;
 
       // For multi-term choices. Try to eliminate, after making imstores hold aux descriptive info.
       if( normpars.isDefined("mtype") )  // A single string
@@ -217,6 +217,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         { itsFacetImageStores[facet]->dividePSFByWeight( ); }
     }
 
+    //        cout << "UU Validating parent imstore " << endl;
+    //        itsImages->validate();
+
+      // Check PSF quality by fitting beams
+    {
+      itsImages->calcSensitivity();
+
+      itsImages->makeImageBeamSet();
+      itsImages->printBeamSet();
+    }
+    
   }
 
 
@@ -225,8 +236,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisNormalizer", "divideModelByWeight",WHERE) );
     if( itsImages.null() ) 
       {
-	os << LogIO::WARN << "No imagestore yet. Do something to fix the starting model case...." << LogIO::POST;
-	return;
+	//os << LogIO::WARN << "No imagestore yet. Trying to construct, so that the starting model can be divided by wt if needed...." << LogIO::POST;
+	
+	try
+	  {
+	    itsImages = makeImageStore( itsImageName );
+	  }
+	catch(AipsError &x)
+	  {
+	    throw(AipsError("Cannot construct ImageStore for "+itsImageName));
+	  }
+	//	return;
       }
     if( itsNFacets==1) {
       itsImages->divideModelByWeight( itsPBLimit, itsNormType );
@@ -275,6 +295,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool needToGatherImages=False;
 
+    String err("");
+
     // Check if full images exist, and open them if possible.
     Bool foundFullImage=False;
     try
@@ -285,7 +307,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     catch(AipsError &x)
       {
 	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-	cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
+	//cout << "Did not find full images : " << x.getMesg() << endl;  // This should be a debug message.
+	err = err += String(x.getMesg()) + "\n";
 	foundFullImage = False;
       }
 
@@ -304,6 +327,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	catch(AipsError &x)
 	  {
 	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
+	    err = err += String(x.getMesg()) + "\n";
 	    foundPartImages = False;
 	  }
       }
@@ -319,7 +343,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if( tempshape != itsPartImages[part]->getShape() )
 	      {
-		throw( AipsError("Shapes of partial images to be combined, do not match") );
+		throw( AipsError("Shapes of partial images to be combined, do not match" + err) );
 	      }
 	  }
       }
@@ -330,7 +354,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
 	  {
-	    os << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
+	    os << LogIO::DEBUG2 << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
 	    IPosition fullshape = itsImages->getShape();
 	    
 	    for ( uInt part=0; part < itsPartImages.nelements() ; part++ )
@@ -338,16 +362,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		IPosition partshape = itsPartImages[part]->getShape();
 		if( partshape != fullshape )
 		  {
-		    os << "NO" << LogIO::POST;
-		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather") );
+		    os << LogIO::DEBUG2<< "NO" << LogIO::POST;
+		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather" + err) );
 		  }
 	      }
-	    os << "Yes" << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Yes" << LogIO::POST;
 
 	  }
 	else // Full image does not exist. Need to make it, using the shape and coords of part[0]
 	  {
-	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Only partial images exist. Need to make full images" << LogIO::POST;
 
 	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
 
@@ -359,7 +383,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		imopen = itsPartImageNames[0]+".psf"+((itsMapperType=="multiterm")?".tt0":"");
 		Directory imdir2( imopen );
 		if( ! imdir2.exists() )
-		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]));
+		  throw(AipsError("Cannot find partial image psf or residual for  " + itsPartImageNames[0]+err));
 	      }
 
 	    PagedImage<Float> temppart( imopen );
@@ -380,34 +404,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	if ( foundFullImage == True ) 
 	  {
-	    os << "Full images exist : " << itsImageName << LogIO::POST;
+	    os << LogIO::DEBUG2 << "Full images exist : " << itsImageName << LogIO::POST;
 	  }
 	else // No full image on disk either. Error.
 	  {
-	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either.") );
+	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either."+err) );
 	  }
       }
-    
+
+    // Remove ? 
+    itsImages->psf();
+    itsImages->validate();
+
     // Set up facet Imstores..... if needed
     if( itsNFacets>1 )
       {
         
         // First, make sure that full images have been allocated before trying to make references.....
-        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
-	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
+	//        if( ! itsImages->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
+	//	    { throw(AipsError("Internal Error : Invalid ImageStore for " + itsImages->getName())); }
 
         //        Array<Float> ttt;
         //        (itsImages->sumwt())->get(ttt);
         //        cout << "SUMWT full : " << ttt <<  endl;
         
-        uInt nIm = itsNFacets * itsNFacets;
-        itsFacetImageStores.resize( nIm );
-        for( uInt facet=0; facet<nIm; ++facet )
+        itsFacetImageStores.resize( itsNFacets*itsNFacets );
+        for( uInt facet=0; facet<itsNFacets*itsNFacets; ++facet )
           {
-            itsFacetImageStores[facet] = itsImages->getFacetImageStore(facet, nIm);
+            itsFacetImageStores[facet] = itsImages->getSubImageStore(facet, itsNFacets);
 
-            Array<Float> qqq;
-            itsFacetImageStores[facet]->sumwt()->get(qqq);
+            //Array<Float> qqq;
+            //itsFacetImageStores[facet]->sumwt()->get(qqq);
             //            cout << "SUMWTs for " << facet << " : " << qqq << endl;
 
           }
@@ -420,9 +447,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<SIImageStore> SynthesisNormalizer::makeImageStore( String imagename )
   {
     if( itsMapperType == "multiterm" )
-      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms );   }
+      { return new SIImageStoreMultiTerm( imagename, itsNTaylorTerms, True );   }
     else
-      { return new SIImageStore( imagename );   }
+      { return new SIImageStore( imagename, True );   }
   }
 
 
@@ -433,7 +460,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( itsMapperType == "multiterm" )
       { return new SIImageStoreMultiTerm( imagename, csys, shp, itsNFacets, False, itsNTaylorTerms, useweightimage );   }
     else
-      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
+      { return new SIImageStore( imagename, csys, shp, False, useweightimage );   }
+    //      { return new SIImageStore( imagename, csys, shp, itsNFacets, False, useweightimage );   }
   }
 
 

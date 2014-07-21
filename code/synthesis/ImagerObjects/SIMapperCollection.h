@@ -75,7 +75,7 @@ class SIMapperCollection
   void grid(vi::VisBuffer2& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
   void finalizeGrid(vi::VisBuffer2& vb, const Bool dopsf=False);
   void initializeDegrid(vi::VisBuffer2& vb);
-  void degrid(vi::VisBuffer2& vb, const Bool useScratch=False);
+  void degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod=False);
   void saveVirtualModel(vi::VisBuffer2& vb);
   void finalizeDegrid(const vi::VisBuffer2& vb);
 
@@ -84,7 +84,7 @@ class SIMapperCollection
   void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED);
   void finalizeGrid(VisBuffer& vb, Bool dopsf=False);
   void initializeDegrid(VisBuffer& vb);
-  void degrid(VisBuffer& vb, Bool useScratch=False);
+  void degrid(VisBuffer& vb, Bool saveVirtualMod=False);
   void saveVirtualModel(VisBuffer& vb);
   void finalizeDegrid(VisBuffer& vb);
   ////////////////////////////////////////////////////

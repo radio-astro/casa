@@ -188,9 +188,9 @@ void UvwCoords::uvw_bl( const vector<Tag>& v_antennaId, unsigned int nrep, bool 
       it_j++;
       uvw_i = m_antUVW_.find(*it_i)->second;
       for(; it_j!=ite; ++it_j){
-	if (getenv ("ASDM_DEBUG")) {
-	  cout << "antenna_i = " << it_i->getTagValue() << ", antenna_j = " << it_j->getTagValue() << endl;  
-	}
+	//if (getenv ("ASDM_DEBUG")) {
+	// cout << "antenna_i = " << it_i->getTagValue() << ", antenna_j = " << it_j->getTagValue() << endl;  
+	//}
 	uvw_j = m_antUVW_.find(*it_j)->second;
 	for(unsigned int n=0; n<3; n++)
 	  uvw[n] = uvw_j[n]-uvw_i[n];

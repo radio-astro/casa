@@ -226,6 +226,11 @@ public:
   Lattice<Float>& getMask() const 
     { return (*(itsMask_ptr->clone())); }
   void setMask(Lattice<Float> & mask);
+
+  // get the Residual image
+  Lattice<Float>& getResidual() const 
+    { return (*(itsResidual_ptr->clone())); }
+
   // </group>
 
 

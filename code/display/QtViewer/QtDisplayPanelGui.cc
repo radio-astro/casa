@@ -1064,6 +1064,8 @@ void QtDisplayPanelGui::initFit2DTool() {
 
 		//Update the channel for the fit.
 		connect( this, SIGNAL(frameChanged(int)), fitTool, SLOT(frameChanged(int)));
+		int frameIndex = qdp_->frame();
+		fitTool->frameChanged( frameIndex );
 
 		//Connect drawing tools so that regions are updated for the fit.
 		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
@@ -3139,6 +3141,10 @@ void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, 
 		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
 		const QString& lineColor, const QString&, const QString&, int, int) {
 	if ( shape == "polyline") {
+		if ( qdp_ != NULL ){
+			int currentChannel = qdp_->zIndex();
+			sliceTool->updateChannel( currentChannel );
+		}
 		sliceTool->addPolyLine( id, viewer::region::RegionChangeCreate,
 				worldX, worldY, pixelX, pixelY, lineColor );
 		updateSliceCorners( id, worldX, worldY );

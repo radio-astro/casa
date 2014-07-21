@@ -30,16 +30,12 @@
 
 
 #include <casa/aips.h>
-#include <components/ComponentModels/ComponentType.h>
-#include <components/ComponentModels/GaussianBeam.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/MaskSpecifier.h>
 #include <measures/Measures/Stokes.h>
 #include <lattices/Lattices/TiledShape.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/Containers/SimOrdMap.h>
-
-#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,10 +44,11 @@ template <class T> class ImageInterface;
 template <class T> class Vector;
 template <class T> class Quantum;
 template <class T> class MaskedArray;
+template <class T> class PtrHolder;
 class LatticeBase;
 class CoordinateSystem;
 class Coordinate;
-class SkyComponent;
+class GaussianBeam;
 class ImageInfo;
 class String;
 class IPosition;
@@ -101,12 +98,17 @@ public:
 	// applied.
 	//  <group>
 	template <typename T> static void openImage(
-		std::auto_ptr<ImageInterface<T> >& image,
+		PtrHolder<ImageInterface<T> >& image,
 		const String& fileName
 	);
 
 	template <typename T> static void openImage(
 		ImageInterface<T>*& image,
+		const String& fileName
+	);
+
+	template <typename T>
+	static std::tr1::shared_ptr<ImageInterface<T> > openImage(
 		const String& fileName
 	);
 //  </group>
@@ -183,116 +185,8 @@ public:
 // are returned as given.
    static String shortAxisName (const String& axisName);
 
-// These functions convert between a vector of doubles holding SkyComponent values
-// (the output from SkyComponent::toPixel) and a SkyComponent.   The coordinate 
-// values are in the 'x' and 'y' frames.  It is possible that the x and y axes of 
-// the pixel array are lat/long (xIsLong=False)  rather than  long/lat.  
-// facToJy converts the brightness units from whatevers per whatever
-// to Jy per whatever (e.g. mJy/beam to Jy/beam).  It is unity if it
-// can't be done and you get a warning.  In the SkyComponent the flux
-// is integral.  In the parameters vector it is peak.
-//
-//   pars(0) = FLux     image units (e.g. Jy/beam).
-//   pars(1) = x cen    abs pix
-//   pars(2) = y cen    abs pix
-//   pars(3) = major    pix
-//   pars(4) = minor    pix
-//   pars(5) = pa radians (pos +x -> +y)
-//
-//  5 values for ComponentType::Gaussian, CT::Disk.  3 values for CT::Point.
-//
-// <group>
-   static SkyComponent encodeSkyComponent(LogIO& os, Double& facToJy,
-                                          const CoordinateSystem& cSys,
-                                          const Unit& brightnessUnit,
-                                          ComponentType::Shape type,
-                                          const Vector<Double>& parameters,
-                                          Stokes::StokesTypes stokes,
-                                          Bool xIsLong, const GaussianBeam& beam);
-
-    // for some reason, this method was in ImageAnalysis but also belongs here.
-    // Obviously hugely confusing to have to methods with the same name and
-    // which presumably are for the same thing in two different classes. I'm
-    // moving ImageAnalysis' method here and also moving that implamentation to
-    // here as well and also being consistent regarding callers (ie those that
-    // called the ImageAnalysis method will now call this method). I couldn't
-    // tell you which of the two implementations is the better one to use
-    // for new code, but this version does call the version that already existed
-    // in ImageUtilities, so this version seems to do a bit more.
-    // I also hate having a class with anything like Utilities in the name,
-    // but I needed to move this somewhere and can only tackle one issue
-    // at a time.
-    static casa::SkyComponent encodeSkyComponent(
-        casa::LogIO& os, casa::Double& fluxRatio,
-        const casa::ImageInterface<casa::Float>& im, 
-        casa::ComponentType::Shape modelType,
-        const casa::Vector<casa::Double>& parameters,
-        casa::Stokes::StokesTypes stokes,
-        casa::Bool xIsLong, casa::Bool deconvolveIt,
-        const GaussianBeam& beam
-    );
-
-    // Deconvolve SkyComponent from beam
-    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-    static SkyComponent deconvolveSkyComponent(
-        LogIO& os, const SkyComponent& skyIn,
-        const GaussianBeam& beam
-    );
-
-    /*
-    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-    // Put beam into +x -> +y frame
-    static GaussianBeam putBeamInXYFrame (
-        const GaussianBeam& beam,
-        const casa::DirectionCoordinate& dirCoord
-    );
-    */
-
-    // moved from ImageAnalysis. this needs to be moved to a more appropriate class at some point
-    static Vector<Double> decodeSkyComponent (
-        const SkyComponent& sky, const ImageInfo& ii,
-        const CoordinateSystem& cSys, const Unit& brightnessUnit,
-        Stokes::StokesTypes stokes, Bool xIsLong
-    );
-// </group>
-
-    // Convert 2d shape from world (world parameters=x, y, major axis,
-    // minor axis, position angle) to pixel (major, minor, pa).
-    // Can handle quantum units 'pix'.  If one width is
-    // in pixel units both must be in pixel units.  pixelAxes describes which
-    // 2 pixel axes of the coordinate system our 2D shape is in.
-    // If axes are not from the same coordinate type units must be pixels.
-    // If doRef is True, then x and y are taken from the reference
-    // value rather than the parameters vector.
-
-    // On input, pa is N->E (at ref pix) for celestial planes.
-    // Otherwise pa is in pixel coordinate system +x -> +y
-    // On output, pa (radians) is positive +x -> +y in pixel frame
-    static void worldWidthsToPixel(
-    	Vector<Double>& dParameters,
-    	const Vector<Quantum<Double> >& parameters,
-    	const CoordinateSystem& cSys,
-    	const IPosition& pixelAxes, Bool doRef=False
-    );
 
 
-// Convert 2d shape  from pixels (parameters=x,y, major axis, 
-// minor axis, position angle) to world (major, minor, pa)
-// at specified location. pixelAxes describes which
-// 2 pixel axes of the coordinate system our 2D shape is in.
-// If doRef is True, then x and y are taken from the reference
-// pixel rather than the paraneters vector.
-//
-// On input pa is positive for +x -> +y in pixel frame
-// On output pa is positive N->E
-// Returns True if major/minor exchanged themselves on conversion to world.
-    static Bool pixelWidthsToWorld(
-    	GaussianBeam& wParameters,
-    	const Vector<Double>& pParameters,
-    	const CoordinateSystem& cSys,
-    	const IPosition& pixelAxes,
-    	Bool doRef=False
-    );
 
    // write the specified image and add the specified pixels to it.
    // Currently no checks are done to ensure the pixel array size and
@@ -317,34 +211,7 @@ public:
 
 private:
 
-// Convert 2d sky shape (parameters=major axis, minor axis, position angle) 
-// from pixels to world at reference pixel. pixelAxes describes which
-// 2 pixel axes of the coordinate system our 2D shape is in.
-// On input pa is positive for +x -> +y in pixel frame
-// On output pa is positive N->E
-// Returns True if major/minor exchanged themselves on conversion to world.
-    static Bool _skyPixelWidthsToWorld(
-    	GaussianBeam& wParameters,
-    	const CoordinateSystem& cSys,
-    	const Vector<Double>& pParameters,
-    	const IPosition& pixelAxes, Bool doRef
-    );
 
-// Convert a length and position angle in world units (for a non-coupled 
-// coordinate) to pixels. The length is in some 2D plane in the 
-// CoordinateSystem specified  by pixelAxes.
-    static Double _worldWidthToPixel (
-    	Double positionAngle,
-    	const Quantum<Double>& length,
-    	const CoordinateSystem& cSys,
-    	const IPosition& pixelAxes
-    );
-
-    static Quantum<Double> _pixelWidthToWorld (
-    	Double positionAngle, Double length,
-    	const CoordinateSystem& cSys,
-    	const IPosition& pixelAxes
-    );
 };
 
 

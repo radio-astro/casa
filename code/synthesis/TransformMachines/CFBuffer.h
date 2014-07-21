@@ -36,7 +36,7 @@
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Utilities/Sort.h>
 #include <casa/Logging/LogOrigin.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
 

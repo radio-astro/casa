@@ -12,11 +12,16 @@ const std::map<uInt, String>* ImageCollapserData::funcNameMap() {
 	if (! _funcNameMap) {
 		std::map<uInt, String> ref;
 		//ref[(uInt)AVDEV] = "avdev";
+		ref[(uInt)FLUX] = "flux";
 		ref[(uInt)MAX] = "max";
 		ref[(uInt)MEAN] = "mean";
 		ref[(uInt)MEDIAN] = "median";
 		ref[(uInt)MIN] = "min";
+		ref[(uInt)NPTS] = "nputs";
 		ref[(uInt)RMS] = "rms";
+		ref[(uInt)SQRTSUM] = "sqrtsum";
+		ref[(uInt)SQRTSUM_NPIX_BEAM] = "sqrtsum_npix_beam";
+		ref[(uInt)SQRTSUM_NPIX] = "sqrtsum_npix";
 		ref[(uInt)STDDEV] = "stddev";
 		ref[(uInt)SUM] = "sum";
 		ref[(uInt)VARIANCE] = "variance";
@@ -30,11 +35,16 @@ const std::map<uInt, String>* ImageCollapserData::minMatchMap() {
 	if (! _minMatchMap) {
 		std::map<uInt, String> ref;
 		//ref[(uInt)AVDEV] = "a";
+		ref[(uInt)FLUX] = "f";
 		ref[(uInt)MAX] = "ma";
 		ref[(uInt)MEAN] = "mea";
 		ref[(uInt)MEDIAN] = "med";
 		ref[(uInt)MIN] = "mi";
+		ref[(uInt)NPTS] = "n";
 		ref[(uInt)RMS] = "r";
+		ref[(uInt)SQRTSUM] = "sqrtsum";
+		ref[(uInt)SQRTSUM_NPIX_BEAM] = "sqrtsum_npix_beam";
+		ref[(uInt)SQRTSUM_NPIX] = "sqrtsum_npix";
 		ref[(uInt)STDDEV] = "st";
 		ref[(uInt)SUM] = "su";
 		ref[(uInt)VARIANCE] = "v";
@@ -46,13 +56,14 @@ const std::map<uInt, String>* ImageCollapserData::minMatchMap() {
 }
 
 ImageCollapserData::AggregateType ImageCollapserData::aggregateType(
-	String& aggString
+	const String& aggString
 ) {
 	ThrowIf (
 		aggString.empty(),
 		"Aggregate function name is not specified and it must be."
 	);
-	aggString.downcase();
+	String agg = aggString;
+	agg.downcase();
 	const std::map<uInt, String> *funcNamePtr = funcNameMap();
 	std::map<uInt, String>::const_iterator iter;
 	const std::map<uInt, String> *minMatch = minMatchMap();
@@ -62,8 +73,8 @@ ImageCollapserData::AggregateType ImageCollapserData::aggregateType(
 		String minMatch = iter->second;
 		String funcName = (*funcNamePtr).at(key);
 		if (
-			aggString.startsWith(minMatch)
-			&& funcName.startsWith(aggString)
+			agg.startsWith(minMatch)
+			&& funcName.startsWith(agg)
 		) {
 			return (AggregateType)key;
 		}

@@ -74,6 +74,8 @@ public:
     virtual void finishProgress();
 
     int getId();
+    virtual QString getName() const = 0;
+    virtual bool isCacheThread() const;
 
 signals:
     // This signal MUST be emitted after start() has been called, and when the

@@ -132,7 +132,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="noisefwhm">
         <any type="variant" limittypes="int double record string"/>
         <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
-        <value type="int">0</value>
+        <value type="string"/>
     </param>
     <constraints>
         <when param="mask">
@@ -252,22 +252,6 @@ keys are arrays containing the the fitted zero level offset value and its error,
 for each channel. In cases where the fit did not converge, these values are set to NaN.
 The value associated with 'unit' is just the image brightness unit.
 
-If the input image has units of K, the flux density of components will be reported in units
-of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
-1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
-which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
-of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
-of the component dictionary (key 'beamster').  Then divide the numerical value of the
-logged flux density by the beam area in steradians. So, for example
-
-\begin{verbatim}
-# run on an image with K brightness units
-res = imfit(...)
-# get the I flux density in K*beam of component 0
-comp = res['results']['component0']
-flux_density_kperbeam = comp['flux']['value'][0]/comp['beam']['beamster']
-\end{verbatim}
-
 The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using
 the box parameter, multiple boxes can be given using the format
@@ -305,16 +289,32 @@ noise equations are used to compute the parameter uncertainties.
 SUPPORTED UNITS
 
 Currently only images with brightness units conformant with Jy/beam, Jy.km/s/beam, and K are fully
-supported for fitting. If your image has some other base brightness unit, imfit will assume
-that unit is equivalent to Jy/pixel and results will be calculated accordingly. For images
-with units of K, the flux density will be reported in the logger in some multiple of 
-K.beam if the image has a beam, but will be converted and written in the returned dictionary
-in units of K.rad.rad. Note also that converting the returned results subdictionary to a
-component list via cl.fromrecord() currently only works properly if the flux density units
-in the results dictionary are conformant with Jy. If you need to be able to
-run cl.fromrecord() on the resulting dictionary you can first modify the flux density units
-by hand to be (some prefix)Jy and then run cl.fromrecord on that dictionary, bearing in mind
-your unit conversion.
+supported for fitting. If your image has some other base brightness unit, that unit will be assumed
+to be equivalent to Jy/pixel and results will be calculated accordingly. In particular,
+the flux density (reported as Integrated Flux in the logger and associated with the "flux" key
+in the returned component subdictionary(ies)) for such a case represents the sum of pixel values.
+
+Note also that converting the returned results subdictionary to a component list via cl.fromrecord() currently
+only works properly if the flux density units in the results dictionary are conformant with Jy.
+If you need to be able to run cl.fromrecord() on the resulting dictionary you can first modify the
+flux density units by hand to be (some prefix)Jy and then run cl.fromrecord() on that dictionary,
+bearing in mind your unit conversion.
+
+If the input image has units of K, the flux density of components will be reported in units
+of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
+1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
+which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
+of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
+of the component subdictionary (key 'beamster'). Then divide the numerical value of the
+logged flux density by the beam area in steradians. So, for example
+
+\begin{verbatim}
+# run on an image with K brightness units
+res = imfit(...)
+# get the I flux density in K*beam of component 0
+comp = res['results']['component0']
+flux_density_kbeam = comp['flux']['value'][0]/comp['beam']['beamster']
+\end{verbatim}
 
 FITTING OVER MULTIPLE CHANNELS
 
@@ -448,7 +448,16 @@ Note well the following caveats:
   * If the image being analyzed is an interferometric image with poor uv sampling, the parameter
     uncertainties may be significantly underestimated.
 
-EXAMPLE: 
+The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
+differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
+possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
+and (position andle +/- position angle error). If the source cannot be deconvolved from the beam (if the best
+fit convolved source size cannot be deconvolved from the beam), upper limits on the deconvolved source size
+are sometimes reported. These limits simply come from the maximum major and minor axes of the deconvolved
+gaussians taken from trying all eight of the aforementioned combinations. In the case none of these combinations
+produces a deconvolved size, no upper limit is reported.
+
+EXAMPLE:
 
 Here is how one might fit two gaussians to multiple channels of a cube using the fit
 from the previous channel as the initial estimate for the next. It also illustrates

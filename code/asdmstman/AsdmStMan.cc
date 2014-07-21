@@ -39,7 +39,7 @@
 #include <casa/OS/DOos.h>
 #include <casa/Utilities/BinarySearch.h>
 #include <casa/Utilities/Assert.h>
-
+#include <casa/Logging/LogIO.h>
 
 namespace casa {
 
@@ -242,6 +242,30 @@ void AsdmStMan::init()
   itsStartRow   = -1;
   itsEndRow     = -1;
   itsIndexEntry = 0;
+
+  if(itsIndex.size()>0){
+    // test if the referenced ASDM seems to be present
+    try{
+      itsFD  = LargeFiledesIO::open (itsBDFNames[0].c_str(), False);
+      itsBDF = new LargeFiledesIO (itsFD, itsBDFNames[0]);
+      itsOpenBDF = 0;
+      closeBDF();
+    }
+    catch (AipsError x){
+      LogIO os(LogOrigin("AsdmStMan", "init()"));
+      os <<  LogIO::WARN 
+	 << "An error occured when accessing the ASDM referenced by this table:" << endl
+	 << x.what() << endl
+	 << "This means you will not be able to access the columns" << endl;
+      for(uInt i=0; i<itsColumns.size(); i++){
+	os << itsColumns[i]->columnName() << endl;
+      }
+      os << "You may have (re)moved the ASDM from its import location." << endl
+	 << "If you want to access the above columns, please restore the ASDM\nor correct the reference to it." 
+	 << LogIO::POST;
+    }
+  }
+
 }
 
 uInt AsdmStMan::searchIndex (Int64 rownr)

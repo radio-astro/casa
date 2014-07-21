@@ -1657,7 +1657,7 @@ class pimager():
               imagetilevol=100000,
               contclean=False, chanchunk=1, visinmem=False, maskimage='' , numthreads=1,  savemodel=False,
               painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
-              epjtablename='', interactive=False):
+              epjtablename='', interactive=False, **kwargs):
         """
         Drive pcube when interactive is on and depending on cyclefactor or not
         """
@@ -1944,6 +1944,11 @@ class pimager():
         self.c.pgc('a.dopbcorr='+str(dopbcorr));
         self.c.pgc('a.applyoffsets='+str(applyoffsets));
         self.c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+        ##lets push in the coordsys
+        tmpcsysrec=csys.torecord()
+        self.c.push(cubecsysrec=tmpcsysrec)
+        self.c.pgc('a.cubecoordsys=cubecsysrec')
+
 
         tb.clearlocks()
         #print 'LOCKS3', tb.listlocks()

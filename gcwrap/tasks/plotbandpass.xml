@@ -145,11 +145,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="subplot">
-      <description>11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored</description>
+      <description>11..81,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored</description>
       <any type="variant" limittypes="string int"/>
       <value type="string">22</value>
       <allowed kind="enum">
          <value>11</value>
+         <value>21</value>
+         <value>31</value>
+         <value>41</value>
+         <value>51</value>
+         <value>61</value>
+         <value>71</value>
+         <value>81</value>
          <value>22</value>
          <value>32</value>
          <value>42</value>
@@ -437,7 +444,7 @@ on the yaxis selection.
  showpoints: draw points for the data (default=F for amp, T for phase)
  solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=60)
  spw: must be single ID or list or range (e.g. 0~4, not the original ID)
- subplot: 11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored
+ subplot: 11..81,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored
  timeranges: show only these timeranges, the first timerange being 0
  xaxis: 'chan' or 'freq'
  yaxis: 'amp', 'tsys', 'phase', or 'both' amp+phase == 'ap'. Append 'db' for dB

@@ -31,6 +31,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
+#include <plotms/Plots/PlotMSPage.h>
 
 #include <casa/namespace.h>
 
@@ -158,11 +159,15 @@ public:
     // cause a redraw of the affected canvases.
     virtual void plotDataChanged();
     
+    virtual bool isIteration() const;
+
     // Exports canvases associated with this plot to the given format.  Exports
     // to multiple files if the plot has more than one canvas.
     virtual bool exportToFormat(const PlotExportFormat& format);
     void exportToFormatCancel();
     
+    virtual void cacheLoaded_(bool wasCanceled) = 0;
+
     // This method should be called when the given canvas (which was owned by
     // this plot) was disowned.
     virtual void canvasWasDisowned(PlotCanvasPtr canvas);
@@ -189,6 +194,9 @@ public:
       //Clear the title and axes from all this plots canvases.
       virtual void clearCanvases()=0;
 
+      //Whether a thread is currently updating the cache.
+      bool isCacheUpdating() const;
+      void setCacheUpdating( bool updating );
 protected:
     // ABSTRACT METHODS //
     
@@ -202,7 +210,7 @@ protected:
     // Returns true if the drawing should be released right away; if false is
     // returned, the child class is expect to release drawing when finished.
     virtual bool parametersHaveChanged_(const PlotMSWatchedParameters& params,
-            int updateFlag, bool releaseWhenDone) = 0;
+            int updateFlag, bool releaseWhenDone ) = 0;
     
     // Helper method for selectedRegions() and visibleSelectedRegions() that
     // returns the selected regions for plots in the given canvases.
@@ -229,6 +237,9 @@ protected:
     // Releases drawing on all plot canvases, which will also cause a redraw.
     virtual void releaseDrawing();
     
+    virtual int getPageIterationCount( const PlotMSPage& page )=0;
+
+    void waitOnCanvases();
 
     // MEMBERS //
     
@@ -244,7 +255,12 @@ protected:
     // Cache.
     PlotMSCacheBase* itsCache_;
     
+    //Used to determine if a thread is running to update the cache.
+    volatile bool cacheUpdating;
+
 private:
+    void waitOnCanvas( const PlotCanvasPtr& canvas );
+
     // Disable copy constructor and operator for now.
     // <group>
     PlotMSPlot(const PlotMSPlot& copy);

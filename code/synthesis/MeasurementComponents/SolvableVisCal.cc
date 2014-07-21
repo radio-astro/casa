@@ -28,7 +28,7 @@
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskArrMath.h>
@@ -1613,6 +1613,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
       for (vi.origin(); vi.more();vi++,iter++) {
 	time=vb.time()(0);
 	cout  << "                 " << "vb=" << iter << " ";
+	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "ar=" << vb.arrayId() << " ";
 	cout << "ob=" << vb.observationId()(0) << " ";
 	cout << "sc=" << vb.scan()(0) << " ";
@@ -3359,9 +3360,15 @@ void SolvableVisCal::normSolnArray(Array<Complex>& sol,
       factor/=abs(factor);
     }
 
-    // Determine amplitude normalization
-    amp(!solOK)=0.0f;
-    factor*=Complex(sum(amp)/Float(ntrue(solOK)));
+#define NEWWTSCALE True
+
+    // Determine amplitude normalization factor
+    if (NEWWTSCALE) 
+      factor*=calcPowerNorm(amp,solOK);
+    else {
+      amp(!solOK)=0.0f;
+      factor*=Complex(sum(amp)/Float(ntrue(solOK)));
+    }
     
     // Apply the normalization factor, if non-zero
     if (abs(factor) > 0.0)
@@ -3782,6 +3789,21 @@ void SolvableVisMueller::stateSVM(const Bool& doVC) {
     
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
+}
+
+Float SolvableVisMueller::calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) {
+
+  // SVM version assumes amp already in power units
+  Array<Float> a2;
+  a2.assign(amp);
+  a2(!ok)=0.0; // zero flagged samples
+
+  Float norm(1.0);
+  Float n=Float(ntrue(ok));
+  if (n>0.0)
+    norm=sum(a2)/n;
+
+  return norm;
 }
 
 
@@ -4702,6 +4724,21 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
 	 << " (" << diffJElem().data() << ")" << endl;
     cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" << endl;
   }
+}
+
+Float SolvableVisJones::calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) {
+
+  // SVJ version asumes amps are voltages, so square them
+  Array<Float> a2(square(amp));
+  a2(!ok)=0.0; // zero flagged samples
+
+  Float norm2(1.0);
+  Float n=ntrue(ok);
+  if (n>0.0)
+    norm2=(sum(a2)/n);
+
+  // Return sqrt, because Jones are voltages
+  return sqrt(norm2); 
 }
 
 void SolvableVisJones::globalPostSolveTinker() {
@@ -5695,6 +5732,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
     // Scale factor calculation, per trans fld, per spw
     Matrix<Double> fd( nSpw(), nFld, -1.0 );
     Matrix<Double> fderr( nSpw(), nFld, -1.0 );
+    Matrix<Double> fdrms(nSpw(),nFld,-1.0);
     Matrix<Int> numSol( nSpw(), nFld, -1 );
 //    fd.resize(nSpw(),nFld);
 //    fd.set(-1.0);
@@ -5707,8 +5745,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Matrix<Double> mgratio(nSpw(),nFld,-1.0);
     Matrix<Double> mgrms(nSpw(),nFld,-1.0);
     Matrix<Double> mgerr(nSpw(),nFld,-1.0);
-    Matrix<Double> fdrms(nSpw(),nFld,-1.0);
-//    Matrix<Double> fderr(nSpw(),nFld,-1.0);
 
     for (Int iTran=0; iTran<nTran; iTran++) {
       
@@ -5773,13 +5809,23 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	  scaleOK(ispw,tranidx)=True;
 	  //mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
 	  mgratio(ispw,tranidx)=median(mgTspw(mgokTspw));
-	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
-	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
-
+          if (nPA==1) { // flux scaling based on a single gain ratio... 
+	    mgrms(ispw,tranidx)=0.0;
+	    mgerr(ispw,tranidx)=0.0;
+          }
+          else {
+	    mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
+	    mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          }
 	  // ...and flux density estimate
 	  fd(ispw,tranidx)=mgratio(ispw,tranidx)*mgratio(ispw,tranidx);
 	  fdrms(ispw,tranidx)=2.0*mgrms(ispw,tranidx);
-	  fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          if (nPA==1) {
+	    fderr(ispw,tranidx)=0.0;
+          }
+          else {
+	    fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+          }
 	  numSol(ispw,tranidx) = nPA;
 	}
 
@@ -5858,7 +5904,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
 	logSink() << LogIO::POST;
 */
-
       } // ispw
       }		  
     } // iTran

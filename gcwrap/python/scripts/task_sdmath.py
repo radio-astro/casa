@@ -7,7 +7,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdmath(expr, varlist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, outfile, outform, overwrite):
+def sdmath(infiles, expr, varnames, antenna, fluxunit, telescopeparam, field, spw, scan, pol, outfile, outform, overwrite):
     with sdutil.sdtask_manager(sdmath_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -28,7 +28,12 @@ class sdmath_worker(sdutil.sdtask_template):
         if self.expr=='':
             raise Exception, 'expr is undefined'
 
+        # check spw
+        self.assert_no_channel_selection_in_spw('warn')
+        
         # check outfile
+        if (self.outfile.strip() == ''):
+            raise Exception("'outfile' must be specified.")
         sdutil.assert_outfile_canoverwrite_or_nonexistent(self.outfile,
                                                           self.outform,
                                                           self.overwrite)
@@ -39,15 +44,19 @@ class sdmath_worker(sdutil.sdtask_template):
             sd.rcParams['insitu'] = False
 
     def execute(self):
-        # insert varlist into expr
-        varlist = self.varlist
+        # insert varnames into expr
+        varnames = self.varnames
 
-        for key in varlist.keys():
+        for i in range(len(self.infiles)):
+            infile_key = 'IN' + str(i)
+            varnames[infile_key] = self.infiles[i]
+        
+        for key in varnames.keys():
             regex = re.compile( key )
-            if isinstance( varlist[key], str ):
-                self.expr = regex.sub( '\"%s\"' % varlist[key], self.expr )
+            if isinstance( varnames[key], str ):
+                self.expr = regex.sub( '\"%s\"' % varnames[key], self.expr )
             else:
-                self.expr = regex.sub( "varlist['%s']" % key, self.expr )
+                self.expr = regex.sub( "varnames['%s']" % key, self.expr )
 
         # default flux unit
         fluxunit_now = self.fluxunit
@@ -56,8 +65,7 @@ class sdmath_worker(sdutil.sdtask_template):
         self.__parse()
 
         # selector
-        #sel = self.get_selector()
-        sel = self.get_selector_by_list()
+        sel = None
 
         # actual operation
         scanlist = {}
@@ -87,6 +95,9 @@ class sdmath_worker(sdutil.sdtask_template):
                 # scantable
                 thisscan=sd.scantable(self.filenames[i],average=False,antenna=self.antenna)
 
+                # selector
+                if sel is None:
+                    sel = self.get_selector(thisscan)
                 # Apply the selection
                 thisscan.set_selection(sel)
                 if fluxunit_now == '':
@@ -97,7 +108,7 @@ class sdmath_worker(sdutil.sdtask_template):
                     s = thisscan.copy()
                 else:
                     s = thisscan
-                sdutil.set_fluxunit(s, self.fluxunit, self.telescopeparm, True)
+                sdutil.set_fluxunit(s, self.fluxunit, self.telescopeparam, True)
                 scanlist[skey] = s
 
             #regex=re.compile('[\',\"]')
@@ -106,12 +117,17 @@ class sdmath_worker(sdutil.sdtask_template):
             self.expr=regex.sub("scanlist['%s']" % skey ,self.expr)
         self.expr="tmpout="+self.expr
         exec(self.expr)
-        
+
         # set flux unit
         if tmpout.get_fluxunit() != fluxunit_now:
             tmpout.set_fluxunit(fluxunit_now)
 
         self.scan = tmpout
+
+        # clean up varnames
+        for i in range(len(self.infiles)):
+            infile_key = 'IN' + str(i)
+            del varnames[infile_key]
         
     def save(self):
         # avoid to call set_fluxunit
@@ -130,7 +146,7 @@ class sdmath_worker(sdutil.sdtask_template):
         self.filenames=[]
         #p=re.compile(r'[\',\"]\w+[\',\"]')
         #p=re.compile(r'[\',\"]\w+[\.,\-,\w+]*[\',\"]')
-        p=re.compile(r'(?!varlist\[)[\',\"]\w+[\.,\-,/,\w+]*[\',\"](?!\])')
+        p=re.compile(r'(?!varnames\[)[\',\"]\w+[\.,\-,/,\w+]*[\',\"](?!\])')
         fnames=p.findall(self.expr)
         p=re.compile('[\',\"]')
         for fname in fnames:

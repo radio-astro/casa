@@ -23,7 +23,6 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Image2DConvolver.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 //   
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 
@@ -34,7 +33,9 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Exceptions/Error.h>
+#include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/GaussianShape.h>
+#include <components/ComponentModels/SkyComponentFactory.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -64,47 +65,101 @@ template <class T>
 Image2DConvolver<T>::Image2DConvolver ()
 {}
 
+template <class T> Image2DConvolver<T>::Image2DConvolver(
+	const SPCIIT image, const Record *const &region,
+	const String& mask, const String& outname, const Bool overwrite
+) : ImageTask<T>(image, "", region, "", "", "", mask, outname, overwrite),
+	_type(VectorKernel::GAUSSIAN),  _scale(0), _major(), _minor(),
+	_pa(), _axes(image->coordinates().directionAxesNumbers()), _targetres(False) {
+	this->_construct(True);
+}
+
 template <class T>
 Image2DConvolver<T>::Image2DConvolver(const Image2DConvolver<T> &other)
 {
    operator=(other);
 }
 
-template <class T> 
-Image2DConvolver<T>::~Image2DConvolver ()
-{}
-
 // TODO use GaussianBeams rather than Vector<Quantity>s, this method
 // can probably be eliminated.
 template <class T>
 Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
-	LogIO& os, const Vector<Quantity>& targetBeamParms,
+	const Vector<Quantity>& targetBeamParms,
 	const GaussianBeam& inputBeam
 ) {
 	GaussianBeam convolvingBeam;
 	Vector<Quantity> kernelParms(3);
-	Angular2DGaussian targetBeam(
+	GaussianBeam targetBeam(
 		targetBeamParms[0], targetBeamParms[1],
 		targetBeamParms[2]
 	);
 	try {
-		if(inputBeam.deconvolve(convolvingBeam, targetBeam)) {
+		if(GaussianDeconvolver::deconvolve(convolvingBeam, targetBeam, inputBeam)) {
             // point source, or convolvingBeam nonsensical
             throw AipsError();
         }
     }
 	catch (const AipsError& x) {
-        os << LogOrigin("Image2DConvolver", __FUNCTION__)
-            << "Unable to reach target resolution of "
+		ostringstream os;
+		os << "Unable to reach target resolution of "
 			<< targetBeam << " Input image beam "
-			<< inputBeam << " is probably too large"
-			<< LogIO::EXCEPTION;
+			<< inputBeam << " is probably too large";
+		ThrowCc(os.str());
 	}
 	kernelParms[0] = convolvingBeam.getMajor();
 	kernelParms[1] = convolvingBeam.getMinor();
 	kernelParms[2] = convolvingBeam.getPA(True);
 	return kernelParms;
 }
+
+template <class T> void Image2DConvolver<T>::setAxes(
+	const std::pair<uInt, uInt>& axes
+) {
+	uInt ndim = this->_getImage()->ndim();
+	ThrowIf(axes.first == axes.second, "Axes must be different");
+	ThrowIf(
+		axes.first >= ndim || axes.second >= ndim,
+		"Axis value must be less than number of axes in image"
+	);
+	if (_axes.size() != 2) {
+		_axes.resize(2, False);
+	}
+	_axes[0] = axes.first;
+	_axes[1] = axes.second;
+}
+
+
+template <class T> void Image2DConvolver<T>::setKernel(
+	const String& type, const Quantity& major, const Quantity& minor,
+	const Quantity& pa
+) {
+	ThrowIf (major < minor, "Major axis is less than minor axis");
+	_type = VectorKernel::toKernelType(type);
+	_major = major;
+	_minor = minor;
+	_pa = pa;
+
+}
+
+template <class T> SPIIT Image2DConvolver<T>::convolve() {
+	Bool autoScale = _scale <= 0;
+	Double scale = autoScale ? 1.0 : _scale;
+	SPIIF subImage = SubImageFactory<Float>::createImage(
+		*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
+		this->_getDropDegen(), False, False, this->_getStretch()
+	);
+	Vector<Quantity> parameters(3);
+	parameters(0) = _major;
+	parameters(1) = _minor;
+	parameters(2) = _pa;
+	SPIIT outImage(new TempImage<Float> (subImage->shape(), subImage->coordinates()));
+	Image2DConvolver<Float>::convolve(
+		*this->_getLog(), outImage, *subImage, _type, _axes,
+		parameters, autoScale, scale, True, _targetres
+	);
+	return this->_prepareOutputImage(*outImage);
+}
+
 
 template <class T>
 Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &other)
@@ -115,7 +170,7 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
 }
 
 template <class T> void Image2DConvolver<T>::convolve(
-	LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
+	LogIO& os, SPIIT imageOut,
 	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
 	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
@@ -249,7 +304,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				}
 				else {
 					kernelParms = _getConvolvingBeamForTargetResolution(
-						os, parameters, inputBeam
+						parameters, inputBeam
 					);
 					kernelVolume = _makeKernel(
 						kernel, kernelType, kernelParms, pixelAxes, imageIn
@@ -335,7 +390,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 		GaussianBeam inputBeam = imageInfo.restoringBeam();
 		if (targetres) {
             kernelParms = _getConvolvingBeamForTargetResolution(
-				os, parameters, inputBeam
+				parameters, inputBeam
 			);
 			os << LogIO::NORMAL << "Convolving image that has a beam of "
 				<< inputBeam << " with a Gaussian of "
@@ -417,7 +472,7 @@ template <class T> T Image2DConvolver<T>::_makeKernel(
    wParameters(0) = Quantum<Double>(refVal(wAxis), units(wAxis));
    wAxis = cSys.pixelAxisToWorldAxis(pixelAxes(1));
    wParameters(1) = Quantum<Double>(refVal(wAxis), units(wAxis));
-   ImageUtilities::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
+   SkyComponentFactory::worldWidthsToPixel (dParameters, wParameters, cSys, pixelAxes, False);
 
 // Create n-Dim kernel array shape
 
@@ -473,7 +528,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			pixelParameters(3) = parameters(1).getValue();
 			pixelParameters(4) = parameters(2).getValue(Unit("rad"));
 			GaussianBeam worldParameters;
-			ImageUtilities::pixelWidthsToWorld(
+			SkyComponentFactory::pixelWidthsToWorld(
 				worldParameters, pixelParameters,
 				cSys, pixelAxes, False
 			);
@@ -506,7 +561,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			wParameters(3) = beamIn.getMinor();
 			wParameters(4) = beamIn.getPA(True);
 			Vector<Double> dParameters;
-			ImageUtilities::worldWidthsToPixel(
+			SkyComponentFactory::worldWidthsToPixel(
 				dParameters, wParameters, cSys, pixelAxes, False
 			);
 			// Create 2-D beam array shape
@@ -566,7 +621,7 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 			pixelParameters(2) = bSolution(3);
 			pixelParameters(3) = bSolution(4);
 			pixelParameters(4) = bSolution(5);
-			ImageUtilities::pixelWidthsToWorld(
+			SkyComponentFactory::pixelWidthsToWorld(
 				beamOut, pixelParameters, cSys, pixelAxes, False
 			);
 			if (brightnessUnitIn.getName().contains("K")) {
@@ -623,7 +678,6 @@ template <class T> void Image2DConvolver<T>::_checkKernelParameters(
 		);
 	}
 }
-
 
 template <class T> IPosition Image2DConvolver<T>::_shapeOfKernel(
 	const VectorKernel::KernelTypes kernelType,
@@ -738,7 +792,6 @@ template <class T> void Image2DConvolver<T>::_fillGaussian(
       }
    } 
 }
-
 
 } //# NAMESPACE CASA - END
 

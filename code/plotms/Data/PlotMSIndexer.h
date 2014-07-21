@@ -108,6 +108,8 @@ public:
 
   // Set global min/max flag
   void setGlobalMinMax(Bool globalX=False,Bool globalY=False);
+  bool isGlobalXRange() const;
+  bool isGlobalYRange() const;
 
   // Report per-chunk point counters
   Vector<uInt> nPoints() { return nPoints_; };

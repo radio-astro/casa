@@ -26,7 +26,7 @@
 
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskArrMath.h>

@@ -27,7 +27,7 @@
 //# $Id$
 #include <iostream>
 #include <casa/BasicSL/String.h>
-#include <synthesis/MSVis/SubMS.h>
+#include <msvis/MSVis/SubMS.h>
 
 using namespace casa;
 

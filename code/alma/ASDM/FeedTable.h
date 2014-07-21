@@ -87,6 +87,12 @@
 
 	
 
+	
+
+	
+
+	
+
 
 
 #include <ConversionException.h>
@@ -119,7 +125,7 @@ class FeedRow;
  * Contains characteristics of the feeds.
  * <BR>
  
- * Generated from model's revision "1.64", branch "HEAD"
+ * Generated from model's revision "-1", branch ""
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of Feed </CAPTION>
@@ -168,7 +174,7 @@ class FeedRow;
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
- * <TD> numReceptor </TD> 
+ * <TD> numReceptor (\f$N_{Rece}\f$)</TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
  * <TD> &nbsp;the number of receptors. </TD>
@@ -221,24 +227,45 @@ class FeedRow;
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> feedNum </TD> 
+ * <TD> feedNum</TD> 
  * <TD> int </TD>
  * <TD>  &nbsp; </TD>
  * <TD>&nbsp; the feed number to be used for multi-feed receivers. </TD>
  * </TR>
 	
  * <TR>
- * <TD> illumOffset </TD> 
+ * <TD> illumOffset</TD> 
  * <TD> vector<Length > </TD>
  * <TD>  2  </TD>
  * <TD>&nbsp; the illumination offset. </TD>
  * </TR>
 	
  * <TR>
- * <TD> position </TD> 
+ * <TD> position</TD> 
  * <TD> vector<Length > </TD>
  * <TD>  3  </TD>
  * <TD>&nbsp; the position of the feed. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> skyCoupling</TD> 
+ * <TD> float </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the sky coupling is the coupling efficiency to the sky of the WVR radiometer's. Note that in general one expects to see whether \b no sky coupling efficiency recorded or \b only \b one of the two forms  scalar (skyCoupling) or array (skyCouplingSpectrum, numChan). </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> numChan(\f$N_{Chan}\f$)</TD> 
+ * <TD> int </TD>
+ * <TD>  &nbsp; </TD>
+ * <TD>&nbsp; the size of skyCouplingSpectrum. This attribute must be present when the (array) attribute skyCouplingSpectrum is present since it defines its number of elements. The value of this attribute must be equal to the value of numChan in the row of the SpectralWindow table refered to by spectralWindowId. </TD>
+ * </TR>
+	
+ * <TR>
+ * <TD> skyCouplingSpectrum</TD> 
+ * <TD> vector<float > </TD>
+ * <TD>  numChan  </TD>
+ * <TD>&nbsp; the sky coupling is the coupling efficiency to the sky of the WVR radiometer's. This column differs from the skyCoupling column because it contains one value for each of the individual channels of that spectralWindow. See the documentation of numChan for the size and the presence of this attribute. Note that in general one expects to see whether \b no sky coupling efficiency recorded or \b only \b one of the two forms  scalar (skyCoupling) or array (skyCouplingSpectrum, numChan). </TD>
  * </TR>
 	
 
@@ -543,6 +570,9 @@ private:
 	std::string version ; 
 	
 	Entity entity;
+	
+
+	
 	
 
 

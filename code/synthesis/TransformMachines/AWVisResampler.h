@@ -32,7 +32,7 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/TransformMachines/VisibilityResampler.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 
@@ -285,7 +285,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const Vector<Int>&cfShape,
 			  const Vector<Int>& convOrigin,
 			  const Double& cfRefFreq,
-			  const Double& imRefFreq);
+			  const Double& imRefFreq,
+			  const Int& spwID=0, const Int& fieldId=0);
   };
 }; //# NAMESPACE CASA - END
 

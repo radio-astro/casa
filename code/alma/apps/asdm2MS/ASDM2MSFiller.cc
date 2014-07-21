@@ -62,7 +62,7 @@ void	timer( double *cpu_time ,		/* cpu timer */
 }
 
 #include "ASDM2MSFiller.h"
-#include "synthesis/MSVis/SubMS.h"
+#include "msvis/MSVis/SubMS.h"
 
 using namespace casa;
 
@@ -686,7 +686,9 @@ void ASDM2MSFiller::addData (bool                      complexData,
 			     int                       observationId_,
 			     vector<int>               &stateId_,
 			     vector<pair<int, int> >   &nChanNPol_,
-			     vector<double>            &uvw_){
+			     vector<double>            &uvw_,
+			     vector<double>            &weight_,
+			     vector<double>            &sigma_){
   
   unsigned int theSize = time_.size();
   Bool *flag_row__  = new Bool[theSize];
@@ -755,11 +757,11 @@ void ASDM2MSFiller::addData (bool                      complexData,
     int numChan = nChanNPol_[cRow0].first;
     int numCorr = nChanNPol_[cRow0].second;
 
-    Vector<float>   ones(IPosition(1, numCorr), 1.0);
+    Vector<float>   weight(IPosition(1, numCorr), weight_[cRow-itsMSMainRow]);
+    Vector<float>   sigma(IPosition(1, numCorr), sigma_[cRow-itsMSMainRow]); 
 
-    // Sigma and Weight set to arrays of 1.0
-    itsMSCol->sigma().put(cRow, ones);
-    itsMSCol->weight().put(cRow, ones);
+    itsMSCol->sigma().put(cRow, sigma);
+    itsMSCol->weight().put(cRow, weight);
 
     // The flag cell (an array) is put at false.
     itsMSCol->flag().put(cRow, Matrix<Bool>(IPosition(2, numCorr, numChan), false));

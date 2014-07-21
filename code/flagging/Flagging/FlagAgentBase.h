@@ -28,7 +28,7 @@
 #include <flagging/Flagging/FlagReport.h>
 #include <casa/Containers/OrdMapIO.h>
 #include <measures/Measures/Stokes.h>
-#include <synthesis/MSVis/AsynchronousTools.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

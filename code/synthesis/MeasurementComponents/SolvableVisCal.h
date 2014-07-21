@@ -43,9 +43,9 @@
 #include <synthesis/CalTables/CTPatchedInterp.h>
 #include <synthesis/CalTables/CalSetMetaInfo.h>
 #include <synthesis/CalTables/VisCalEnum.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/CalVisBuffer.h>
-#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/CalVisBuffer.h>
+#include <msvis/MSVis/VisBuffGroupAcc.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
@@ -424,6 +424,8 @@ protected:
 		     const Array<Bool>& solOK,
 		     const Bool doPhase=False);
 
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok)=0;
+
   // Logger
   LogIO& logSink() { return logsink_p; };
 
@@ -688,6 +690,9 @@ protected:
   // SVM-specific state
   virtual void stateSVM(const Bool& doVC);
 
+  // atomic power normalization calculation
+  //   Mueller version assumes amp in power units
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 
 private:
 
@@ -770,7 +775,7 @@ public:
 
   // SVJ-specific write to caltable
   virtual void keepNCT();
-			     
+
   // Report state:
   inline virtual void state() { stateSVJ(True); };
 
@@ -846,6 +851,11 @@ protected:
   virtual void initTrivDJ();
 
   virtual void stateSVJ(const Bool& doVC);
+
+  // atomic power normalization calculation
+  //   SVJ version assumes amp in voltage units
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
+			     
 private:
 
   // Default ctor is private

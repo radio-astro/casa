@@ -7,7 +7,8 @@
                 installed, a Qt version of at least 4.3.0 is required.  In
                 addition, the Qwt library is also required to enable plotting.
                 The version of Qwt must be at least 5.0.2.
-            </item><item name="Usage">
+            </item>
+            <item name="Usage">
                 Once CASA has been installed and built, the executable for
                 CasaBrowser can be found in the [CASA]/[architecture]/bin/
                 directory (for example: /casa/linux_gnu/bin).  Since this
@@ -24,6 +25,8 @@
                 are valid).</li></ul><h3> </h3><br />
                 CasaBrowser is also accessible from within casapy by using the
                 browsetable() command.
+            </item>
+            <item name="CASA Version"> 
             </item>
         </group>
         <group name="Information">

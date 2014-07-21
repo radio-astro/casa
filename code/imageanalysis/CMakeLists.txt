@@ -36,6 +36,8 @@ Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
 ImageAnalysis/AntennaResponses.cc
+ImageAnalysis/CasaImageBeamSet.cc
+ImageAnalysis/ComplexImageRegridder.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapserData.cc
@@ -57,6 +59,7 @@ ImageAnalysis/ImageRegridder.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
+ImageAnalysis/PixelValueManipulatorData.cc
 ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
@@ -72,6 +75,7 @@ IO/OutputDestinationChecker.cc
 IO/ProfileFitterEstimatesFileParser.cc
 
 Regions/CasacRegionManager.cc
+Utilities/SpectralImageUtil.cc
 )
 
 install (FILES
@@ -109,7 +113,15 @@ install (FILES
 	DESTINATION include/casacode/imageanalysis/IO
 	)
 install (FILES
+        Utilities/SpectralImageUtil.h
+	DESTINATION include/casacode/imageanalysis/Utilities
+         )
+install (FILES
 	ImageAnalysis/AntennaResponses.h
+	ImageAnalysis/BeamManipulator.h
+	ImageAnalysis/BeamManipulator.tcc
+	ImageAnalysis/CasaImageBeamSet.h
+	ImageAnalysis/ComplexImageRegridder.h
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image1DSmoother.h
 	ImageAnalysis/Image1DSmoother.tcc
@@ -122,7 +134,9 @@ install (FILES
 	ImageAnalysis/ImageCollapser.h
 	ImageAnalysis/ImageCollapser.tcc
 	ImageAnalysis/ImageCollapserData.h
-	ImageAnalysis/ImageConvolver.h
+	ImageAnalysis/ImageConcatenator.h
+    ImageAnalysis/ImageConcatenator.tcc
+    ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc
@@ -166,6 +180,8 @@ install (FILES
     ImageAnalysis/ImageRebinner.h
     ImageAnalysis/ImageRebinner.tcc
     ImageAnalysis/ImageRegridder.h
+    ImageAnalysis/ImageRegridderBase.h
+    ImageAnalysis/ImageRegridderBase.tcc
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h
@@ -179,6 +195,9 @@ install (FILES
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
+	ImageAnalysis/PixelValueManipulator.h
+	ImageAnalysis/PixelValueManipulator.tcc
+	ImageAnalysis/PixelValueManipulatorData.h
 	ImageAnalysis/ProfileFitResults.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
@@ -212,6 +231,7 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tCasaImageBeamSet.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )

@@ -21,8 +21,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
-    if (gridmode == 'advancedaprojection'):
-        raise Exception, 'This mode is not yet ready for use'
+    # if (gridmode == 'advancedaprojection'):
+    #     raise Exception, 'This mode is not yet ready for use'
 
         
     if gridmode == 'advancedaprojection' and usescratch==False:
@@ -719,7 +719,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     pbcov_image += '.pbcoverage'
                 maskimage = imset.make_mask_from_threshhold(pbcov_image, maskimg) 
             if not imset.skipclean: 
-                #print "imager.clean() starts"
+#                print "imager.clean() starts"
+#                if(os.path.exists(residualimage[0])):
+#                    imset.setReferenceFrameLSRK( residualimage[0] )
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
                             model=modelimages, residual=residualimage,
@@ -751,7 +753,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ## Set frame conversion layer for all masks at the end. This doesn't happen from C++.
             ## This is because setReferenceFrame is called within makemultifieldmask2 to
             ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
-            imset.setFrameConversionForMasks()
+            ###### CAS-6676 : for nterms>1, internal images are in LSRK, but for nterms=1
+            ######                  they're 'dataframe'=TOPO.  The mask needs to be in the correct
+            ######                  frame for re-use when restarting clean.
+            if nterms==1 :  
+                imset.setFrameConversionForMasks()
             if(resmooth):
                 for k in range(len(modelimages)):
                     imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], "common")

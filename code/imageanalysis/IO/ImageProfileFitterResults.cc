@@ -452,7 +452,7 @@ void ImageProfileFitterResults::_setResults() {
 		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 	);
     std::tr1::shared_ptr<TempImage<Float> > tmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
-    	collapser.collapse(True)
+    	collapser.collapse()
     );
     ThrowIf(! tmp, "Unable to perform dynamic cast");
 	std::tr1::shared_ptr<TempImage<Float> > myTemplate(tmp);
@@ -1027,7 +1027,7 @@ String ImageProfileFitterResults::_elementToString(
 
 String ImageProfileFitterResults::_pcfToString(
 	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-	const Vector<Double> world, const IPosition imPos,
+	const Vector<Double>& world, const IPosition& imPos,
 	const Bool showTypeString, const String& indent
 ) const {
 	Vector<Double> myWorld = world;
@@ -1124,6 +1124,11 @@ String ImageProfileFitterResults::_pcfToString(
 	summary << indent << "        Integral : "
 		<< _elementToString(integral, integralErr, integUnit, fixed[0] && fixed[2])
 		<< endl;
+	if (fwhm/increment <= 3) {
+		summary << indent << "WARNING: The FWHM is only " << (fwhm/increment)
+			<< " times the channel width. Be aware that instrumental channelization effects"
+			<< " may be important." << endl;
+	}
 	return summary.str();
 }
 

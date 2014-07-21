@@ -27,7 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/CalHistRecord.h>
-#include <synthesis/MSVis/MSCalEnums.h>
+#include <msvis/MSVis/MSCalEnums.h>
 #include <casa/Arrays.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

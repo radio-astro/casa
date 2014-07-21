@@ -35,7 +35,7 @@
 #include <guitools/Histogram/ChannelRangeWidget.qo.h>
 #include <guitools/Histogram/ZoomWidget.qo.h>
 #include <casa/Arrays/Vector.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <limits>
 
 #include <QDebug>
@@ -1039,7 +1039,12 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 
 	if ( histColor != fitCurveColor ){
 		if ( stepFunctionFilledAction.isChecked() ){
-			curve->setBaseline( 0 );
+			if( displayLogY ){
+				curve->setBaseline( 1 );
+			}
+			else {
+				curve->setBaseline( 0 );
+			}
 			QBrush brush;
 			brush.setColor( histColor );
 			brush.setStyle( Qt::SolidPattern );
@@ -1371,9 +1376,15 @@ void BinPlotWidget::keyPressEvent( QKeyEvent* event ){
 	if (modifiers & Qt::ShiftModifier ){
 		contextMenuMode = DISPLAY_CONTEXT;
 	}
+#if defined(__APPLE__)
+	else if (event->key() & Qt::Key_Meta ){
+		contextMenuMode = FIT_CONTEXT;
+	}
+#else
 	else if ( modifiers & Qt::ControlModifier ){
 		contextMenuMode = FIT_CONTEXT;
 	}
+#endif
 	else {
 		contextMenuMode = ZOOM_CONTEXT;
 	}

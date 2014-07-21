@@ -33,7 +33,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/MeasurementEquations/Iterate.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSet.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <casa/Arrays/Array.h>

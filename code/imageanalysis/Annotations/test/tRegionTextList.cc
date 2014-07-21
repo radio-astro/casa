@@ -25,10 +25,12 @@
 
 #include <casa/aips.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
 #include <casa/OS/EnvVar.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
+
+#include <images/Images/ImageUtilities.h>
 
 #include <casa/namespace.h>
 
@@ -51,6 +53,10 @@ int main () {
 		split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
 		String goodFile = parts[0]
 		    + "/data/regression/unittest/imageanalysis/Annotations/goodAsciiAnnotationsFile.txt";
+		String imageName = parts[0]
+		    + "/data/regression/unittest/imageanalysis/Annotations/test.im";
+		String circleFile = parts[0]
+		    + "/data/regression/unittest/imageanalysis/Annotations/circle.crtf";
 		delete [] parts;
 
 		RegionTextList list(
@@ -92,8 +98,42 @@ int main () {
 		);
 		Quantity k(4.1122334455667778, "km");
 		cout << std::setprecision(10) << k << endl;
+		{
+			ImageInterface<Float> *image;
+			ImageUtilities::openImage(image, imageName);
+			csys = image->coordinates();
+			RegionTextList list2(
+				circleFile, csys,
+				IPosition(csys.nPixelAxes(), 2000, 2000, 2000)
+			);
+			Vector<AsciiAnnotationFileLine>  lines2 = list2.getLines();
+			for ( uInt i=0; i < lines2.size( ); ++i ) {
+				const AnnotationBase* ann = lines2[i].getAnnotationBase();
+				if ( lines2[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) {
+					continue;
+				}
+				AnnotationBase::Type type = ann->getType();
+				switch (type ) {
+				case AnnotationBase::ELLIPSE: {
+					const AnnEllipse *ell = dynamic_cast<const AnnEllipse *>(ann);
+					cout << "major" << ell->getSemiMajorAxis().getValue("arcsec") << endl;
+					cout << "minor" << ell->getSemiMinorAxis().getValue("arcsec") << endl;
+					cout << "pa " << ell->getPositionAngle() << endl;
+					throw AipsError("got ellipse");
+					break;
+				}
+				case AnnotationBase::CIRCLE:
+					cout << "circle" << endl;;
+					break;
+				default:
+					throw AipsError("bad region");
+				}
 
-	} catch (AipsError x) {
+			}
+
+		}
+	}
+	catch (const AipsError& x) {
 		log << LogIO::SEVERE
 			<< "Caught exception: " << x.getMesg()
 			<< LogIO::POST;

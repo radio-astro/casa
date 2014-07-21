@@ -1255,6 +1255,24 @@ Bool CLPatchPanel::interpolate(Cube<Float>& resultR, Cube<Bool>& resFlag,
   return newcal;
 }
 
+Bool CLPatchPanel::getTresult(Cube<Float>& resultR, Cube<Bool>& resFlag,
+			      Int obs, Int fld, Int ent, Int spw) {
+
+  MSCalPatchKey mskey(obs,fld,ent,spw,-1);
+
+  if (msTres_.count(mskey)==0)
+    throw(AipsError("No calibration available for "+mskey.print()));
+
+  // Reference the requested Cube 
+  resultR.reference(msTres_[mskey].result_);
+  resFlag.reference(msTres_[mskey].resultFlag_);
+
+  return True;
+
+}
+
+
+
 
 void CLPatchPanel::listmappings() {
 

@@ -73,32 +73,46 @@ public:
      //Tell all of the supported plots to update their displays.
     void plot();
 
-    //Add aplot
+    //Add a plot
     void insertData( int index );
 
     //Return the currently supported plots.
     vector<PlotMSPlot*> getCurrentPlots();
 
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success);
+
 signals:
 	void changed( int index );
+
+protected:
+	void resizeEvent( QResizeEvent* event );
 
 private slots:
 	void singleDataChanged(PlotMSDataCollapsible* collapsible);
 	void addSinglePlot();
 	void observeModKeys();
 	void close( PlotMSDataCollapsible* collapsible );
-	bool plottableChanged();
 
 private:
 	void emptyLayout();
-	void fillLayout();
-	void plot( bool forceIt );
+	void fillLayout();	
+	void doPlotting();
+
 
     QList<PlotMSDataCollapsible*> dataList;
+    //Used to hold the plots whether the cache has been
+    //reloaded, but they have not yet been redrawn.
+    QMap<PlotMSDataCollapsible*, bool> completePlots;
     QWidget* scrollWidget;
     QSpacerItem* bottomSpacer;
     int rowLimit;
     int colLimit;
+
+    //Holds the index of the plot that is currently being updated.
+    int plotIndex;
 
     // Flag set if user uses shift+plot or otherwise requests reload&replot
     bool its_force_reload;

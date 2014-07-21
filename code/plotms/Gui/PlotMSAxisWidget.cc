@@ -149,7 +149,17 @@ QString PlotMSAxisWidget::getIdentifier() const {
 	return axisText;
 }
 
-
+bool PlotMSAxisWidget::matchesData(const PlotMSAxisWidget* other ) const {
+	bool matchingData = false;
+	if ( other != NULL ){
+		if ( other->axis() == this->axis() ){
+			if ( other->data() == this->data() ){
+				matchingData = true;
+			}
+		}
+	}
+	return matchingData;
+}
 
 PlotAxis PlotMSAxisWidget::attachAxis() const {
 	PlotAxis plotAxis = X_BOTTOM;

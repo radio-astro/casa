@@ -32,6 +32,7 @@
 #include <casa/iostream.h>
 #include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 
@@ -75,10 +76,10 @@
 #include <images/Images/ImageBeamSet.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <synthesis/MSVis/VisSet.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisImagingWeight.h>
-#include <synthesis/MSVis/SubMS.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/SubMS.h>
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
@@ -2152,7 +2153,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 	    if(freqFrameValid_p){
 	      CoordinateSystem cs=residIm.coordinates();
 	      String errorMsg;
-	      if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	      if (cs.setSpectralConversion (errorMsg, MFrequency::showType(freqFrame_p))) {
 		residIm.setCoordinateInfo(cs);
 		if(dorestore)
 		  restored.setCoordinateInfo(cs);
@@ -2295,7 +2296,7 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	if(freqFrameValid_p){
 	  CoordinateSystem cs=fluxScale.coordinates();
 	  String errorMsg;
-	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	  if (cs.setSpectralConversion (errorMsg,MFrequency::showType(freqFrame_p))) {
 	    fluxScale.setCoordinateInfo(cs);
             coverimage.setCoordinateInfo(cs);
 	  }
@@ -4252,7 +4253,7 @@ void Imager::savePSF(const Vector<String>& psf){
 	if(freqFrameValid_p){
 	  CoordinateSystem cs=psfimage.coordinates();
 	  String errorMsg;
-	  if (CoordinateUtil::setSpectralConversion (errorMsg, cs,MFrequency::showType(freqFrame_p))) {
+	  if (cs.setSpectralConversion (errorMsg, MFrequency::showType(freqFrame_p))) {
 	    psfimage.setCoordinateInfo(cs);
 	  }
         }

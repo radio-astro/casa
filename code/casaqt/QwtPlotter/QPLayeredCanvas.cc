@@ -510,8 +510,16 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
                     "thread for layer(s): " + layers + ".",
                     PlotLogger::MSG_DEBUG);
         }
-        
-        drawThread->start();
+        bool useThreading = true;
+        if ( this->m_parent != NULL ){
+        	useThreading = this->m_parent->isThreading();
+        }
+        if ( useThreading ){
+        	drawThread->start();
+        }
+        else {
+        	drawThread->run();
+        }
     } else {
         // Finish operation.
         PlotOperationPtr op;
@@ -528,8 +536,9 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
     m_parent->logMethod(CLASS_NAME, "drawItems", false);
 }
 
-Bool QPLayeredCanvas::isDrawing() const {
-    return m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
+Bool QPLayeredCanvas::isDrawing( ){
+	bool canvasDrawing = m_drawThread != NULL && (m_drawThread->isRunning() ||  !m_drawThread->isFinished());
+	return canvasDrawing;
 }
 
 void QPLayeredCanvas::printItems(QPainter* painter, const QRect& rect,
@@ -726,7 +735,9 @@ void QPLayeredCanvas::itemDrawingFinished() {
     // Finish logging.
     PlotLoggerPtr log;
     if(m_parent != NULL) log = m_parent->logger();
-    if(!log.null()) log->releaseMeasurement();
+    if(!log.null()) {
+    	log->releaseMeasurement();
+    }
 
     // Finish operation.
     PlotOperationPtr op;

@@ -54,6 +54,7 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 
 #include <synthesis/ImagerObjects/SIImageStore.h>
+#include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -366,6 +367,7 @@ protected:
 
   friend class VisModelData;
   friend class MultiTermFT;
+  friend class MultiTermFTNew;
   LogIO logIO_p;
 
   LogIO& logIO();

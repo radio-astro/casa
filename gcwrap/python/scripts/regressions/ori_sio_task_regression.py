@@ -80,20 +80,16 @@ if doplot:
 else:
    localplotlevel = 0
 
-# calibartion and averaging
+# calibartion
 # calibrate position-switched CH3OH scans (IF=15) 
 default(sdcal)
 infile = 'OrionS_rawACSmod'
 fluxunit = 'K' 
 calmode = 'ps'
-#scanlist = [24,25,26,27]
-scanlist = [25,26,27,28]
-iflist = [15]
-scanaverage = False
-timeaverage = True # average in time
-tweight = 'tintsys' #weighted by integ time and Tsys for time averaging
-polaverage = True  # average polarization
-pweight = 'tsys'   # weighted by Tsys for pol averaging
+#scanlist = [25,26,27,28]
+scanlist = '25,26,27,28'
+#iflist = [15]
+spw = '15'
 tau = 0.09         # do opacity correction 
 overwrite = True
 plotlevel = localplotlevel  
@@ -101,16 +97,23 @@ sdcal()
 # output
 localoutfile = infile+'_cal'
 
+#  averaging and smoothing
+default(sdaverage)
+infile = localoutfile
+# do time and polarization average
+timeaverage = True # average in time
+tweight = 'tintsys' #weighted by integ time and Tsys for time averaging
+scanaverage = False
+polaverage = True  # average polarization
+pweight = 'tsys'   # weighted by Tsys for pol averaging
 #smoothing
 # do boxcar smoothing with channel width=5
-default(sdsmooth)
-infile = localoutfile
 kernel = 'boxcar'
 kwidth = 10
 overwrite = True
 plotlevel = localplotlevel
-sdsmooth()
-localoutfile = infile+'_sm'
+sdaverage()
+localoutfile = infile+'_ave'
 
 #fit and remove baselines
 # do baseline fit with polynomial order of 2
@@ -118,7 +121,8 @@ localoutfile = infile+'_sm'
 default(sdbaseline)
 infile = localoutfile
 maskmode = 'list'
-masklist = [[500,3500],[5000,7500]]
+#masklist = [[500,3500],[5000,7500]]
+spw = '*:500~3500;5000~7500'
 blfunc = 'poly'
 order = 5
 overwrite = True
@@ -144,13 +148,15 @@ else:
 default(sdstat)
 # select line free regions to get rms
 infile = localoutfile
-masklist = [1000,3000]
+#masklist = [1000,3000]
+spw = '*:1000~3000'
 xstat = sdstat()
 curr_rms = xstat['rms']
 #rms= 0.037199538201093674 [CASA 2.3(#6654)+ASAP 2.2.0(#1448)]
 #
 # select the line region
-masklist = [3900,4300]
+#masklist = [3900,4300]
+spw = '*:3900~4300'
 xstat = sdstat()
 xstat
 curr_max = xstat['max']
@@ -163,7 +169,8 @@ default(sdfit)
 infile = localoutfile
 #sd.plotter.plot(spave)			# plot spectrum
 fitmode = 'list'
-maskline = [3900,4300]	# create region around line
+#maskline = [3900,4300]	# create region around line
+spw = '*:3900~4300'	# create region around line
 nfit = 1
 plotlevel = localplotlevel
 outfile = 'orions_sio_fit.txt'
@@ -180,6 +187,7 @@ overwrite = True
 sdsave()
 outfile = 'orions_sio_reduced.ms'
 outform = 'MS2'
+sdsave()
 
 endProc = time.clock()
 endTime = time.time()

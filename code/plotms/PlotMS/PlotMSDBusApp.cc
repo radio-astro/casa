@@ -413,6 +413,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
     else if (methodName == METHOD_SETPLOTPARAMS)  {
         bool resized = plotParameters(index);
+
         PlotMSPlotParameters& ppp = itsPlotParams_[index];
 
         PMS_PP_Axes* ppaxes = ppp.typedGroup<PMS_PP_Axes>();
@@ -814,8 +815,7 @@ Record PlotMSDBusApp::_locateInfo(const Record&) {
 bool PlotMSDBusApp::_savePlot(const Record& parameters) {
 	bool ok = true;
 	String methodName = "_savePlot";
-	//CountedPtr<PlotMSAction> action = ActionFactory::getAction( PlotMSAction::PLOT_EXPORT );
-	//PlotMSAction action(PlotMSAction::PLOT_EXPORT);
+
 	String filename;
 	if(parameters.isDefined(PARAM_EXPORT_FILENAME)) {
 		filename = parameters.asString(PARAM_EXPORT_FILENAME);
@@ -882,16 +882,15 @@ void PlotMSDBusApp::log(const String& m) {
 
 bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
     if(plotIndex < 0) plotIndex = 0;
-    if((unsigned int)plotIndex > itsPlotParams_.size())
+    if((unsigned int)plotIndex > itsPlotParams_.size()){
         plotIndex = itsPlotParams_.size();
-
+    }
     bool resized = false;
     if((unsigned int)plotIndex >= itsPlotParams_.size()) {
         resized = true;
         const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
                 PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
     }
-
     return resized;
 }
 
@@ -907,11 +906,12 @@ bool PlotMSDBusApp::update() {
         if(p == NULL) continue;
 
         if(*p != itsPlotParams_[i]) {
-            p->holdNotification(this);
-            *p = itsPlotParams_[i];
-            p->releaseNotification();
+        	p->holdNotification(this);
+        	*p = itsPlotParams_[i];
+        	p->releaseNotification();
         }
     }
+
     bool successfulUpdate = itsPlotms_.isOperationCompleted();
     if ( successfulUpdate ){
     	// check for added plots
@@ -925,6 +925,10 @@ bool PlotMSDBusApp::update() {
     			itsPlotms_.addOverPlot(&v[i]);
     		}
     	}
+    }
+    else {
+    	//Clear the failure flag so the next one can start.
+    	itsPlotms_.setOperationCompleted( true );
     }
 
     return successfulUpdate;

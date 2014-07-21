@@ -1,511 +1,229 @@
-#!/bin/bash
+#! /bin/bash
+startDir=$(pwd)
 #
-# Setup the run time environment for the CASA IPython interactive shell.
+#This is a shell script for running the casapy.py script
+#it's adapted from the mac python script and no doubt will
+#be freely adjusted for linux.
 #
-# NOTE: This code is ugly, because CASA is installed inconsistently in the file
-# system for different cases.  Much of this inconsistency is due to differences
-# in file system conventions between Darwin and Linux.  Some of this
-# inconsistency is due to attempts to minimize wasted disk space on Linux.
-# This can be improved, some day...
+#Set the location of the 3rd party software we will need
 #
-# NOTE: This script is NOT used to start CASA from a Mac app.  It is used for
-# All Linux environments, and developer environments on OS X.
-
-
-#
-# Collect runtime environment info we care about.
-if [ "x$CASA_INSTALLATION_TYPE" = "x" ]; then readonly CASA_INSTALLATION_TYPE="unknown"; fi
-readonly HOSTNAME=$(hostname -s)
-readonly OS_TYPE=$(uname -s)
-readonly OS_VERSION=$(uname -r | awk -F. '{print $1}')
-readonly SCRIPT_NAME=$(basename "$0")
-
-#
-# Find the FULL path to the directory containing the script:
-initial_script_directory=$(dirname "$0")
-if [ "${initial_script_directory:0:1}" = "/" ]; then
-   readonly SCRIPT_DIRECTORY="${initial_script_directory}"
-else
-   clean_partial_path="${initial_script_directory#*/}"
-   cwd=`pwd`
-   readonly SCRIPT_DIRECTORY="${cwd}/${clean_partial_path}"
+OSTYPE=$(uname -s)
+if [ $OSTYPE = "Darwin" ]; then
+    isapple="T"
+    installed_from_rpm="F"   
+    OSVERS=$(uname -r | awk -F. '{print $1}')
+    if [ -d /opt/casa/01 ]; then
+	casa3party=/opt/casa/01
+    else
+	if [ $OSVERS -eq "10" ]; then
+	    casa3party="/opt/casa/darwin10-64b"
+	fi
+	if [ $OSVERS -eq "11" ]; then
+            casa3party="/opt/casa/darwin11"
+	fi
+	if [ $OSVERS -eq "12" ]; then
+	    casa3party="/opt/casa/darwin12"
+	fi
+    fi
+    p_root=${casa3party}/Library/Frameworks/Python.framework/Versions/2.7
+else 
+    isapple="F"
+    casa3party="/usr/lib/casapy"
+    CPU=$(uname -p)
+    if [ "${CPU}" = "x86_64" ]; then
+	casa3party="@casa_packages@"
+    fi
+    p_root=${casa3party}
+    if [[ "$CASAPATH" =~ /usr/lib* ]]; then
+        installed_from_rpm="T"
+    else
+        installed_from_rpm="F"   
+    fi
 fi
-readonly STARTUP_DIRECTORY=$(pwd)
+
+# echo "DEBUG: isapple = $isapple"
+# echo "DEBUG: installed_from_rpm = $installed_from_rpm"
+
+a_site="socorro"
+
+_dorsync="F"
+if [ "$1" = "--rsync" ]; then
+    _dorsync="T"
+fi
+
+_dodebug="F"
+if [ "$1" = "--debug" ]; then
+    _dodebug="T"
+fi
+
+if [ $installed_from_rpm = "T" ]; then
+    prefix=`echo ${CASAPATH} | awk '{printf "%s", $1}'`
+else
+    prefix=`echo ${CASAPATH} | awk '{printf "%s/%s", $1,$2}'`
+fi
+# echo "DEBUG: prefix = $prefix"
+
+a_root=`echo ${CASAPATH} | awk '{print $1}'`
+a_host=$(hostname -s)
+a_arch=`echo ${CASAPATH} | awk '{print $2}'`
+a_site="${a_site}-${a_arch}"
+p_bind=${p_root}/bin
+p_libd=${p_root}/lib/python@python_version@
+
+if [ $isapple = 'T' ]; then
+    export PYTHONEXECUTABLE=${p_root}/Resources/Python.app/Contents/MacOS/Python
+    export TERMINFO="${casa3party}/lib/terminfo"
+    unset  LD_LIBRARY_PATH
+    export LC_CTYPE=en_US.UTF-8
+    export DYLD_FRAMEWORK_PATH="${casa3party}/Library/Frameworks"
+    p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
+else
+    export PYTHONEXECUTABLE=${p_root}/bin/python
+    export TERMINFO="/usr/share/terminfo"
+    p_path=${p_bind}:${p_libd}:${casa3party}/lib/python26.zip:${p_libd}/plat-linux2:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric
+fi
+
+if [ ! ${DEBUGGER} ]; then
+   DEBUGGER="gdb"
+fi
 
 
+if [ $installed_from_rpm = "T" ]; then
+    export   __CASAPY_PYTHONDIR=${prefix}/lib/python@python_version@
+else
+    export   __CASAPY_PYTHONDIR=${prefix}/python/@python_version@
+fi
+p_path=${__CASAPY_PYTHONDIR}:${__CASAPY_PYTHONDIR}/regressions/admin:${p_path}
+# echo "DEBUG: __CASAPY_PYTHONDIR = $__CASAPY_PYTHONDIR"
+# echo "DEBUG: p_path = $p_path"
+
+export PYTHONHOME=${p_root}
+export PYTHONPATH=${p_path}:${PYTHONPATH}
+export CASAPATH="$a_root $a_arch $a_site $a_host"
+# echo "DEBUG: CASAPATH = ${CASAPATH}"
+export DISPLAY=${DISPLAY=:0.0}
+
+if [ $installed_from_rpm = "T" ]; then
+    export PATH="${a_root}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+else
+    export PATH="${a_root}/${a_arch}/bin:${p_root}/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+fi
+# echo "DEBUG: PATH = ${PATH}"
+
+export PGPLOT_DIR="${casa3party}/lib"
+export LESS=${LESS="-X"}
 #
-# Skip forward to "Main" comment to see top level logic.
+###### Technically, DYLD_LIBRARY_PATH should not need to be set
+######  but somehow the inherited environment of the async processes
+######  needs it to find Qt and friends.
 
-
-#
-# Define functions
-#
-# Most of these functions are only called once, but I find giving chunks of
-# code descriptive names makes the code much easier to read and maintain.
-
-
-function display_debugging_message {
-    if [ "$DEBUG_CASA_SHELL_SCRIPT" = "T" ]; then
-        echo "DEBUG: $1"
-    fi
-}
-
-
-function display_startup_time_warning {
+if [ ${#PGPLOT_DIR} -gt 112 ]
+then
     echo
-    echo "========================================="
-    echo "The start-up time of CASA may vary"
-    echo "depending on whether the shared libraries"
-    echo "are cached or not."
-    echo "========================================="
     echo
-}
+    echo "======================================================================"
+    echo
+    echo "WARNING: The runtime for PGPLOT limits path lengths to 112 characters."
+    echo "WARNING: The current CASA application location"
+    echo "WARNING:   " ${prefix}
+    echo "WARNING:     results in a path that is " ${#PGPLOT_DIR} " characters."
+    echo "WARNING: You may experience problems with the CASA viewer and imager."
+    echo "WARNING: Please exit CASA, then move the CASA application"
+    echo "WARNING:  to /Applications and try again."
+    echo
+    echo "======================================================================"
+    echo
+    echo
+fi
 
-
-function ensure_dbus_is_running {
-#
-# We let the user's desktop manage dbus on Linux.
-# TODO: What about servers?
-# TODO: Capture standard out from launchctl, only display it if errors occur.
-    if [ "$OS_TYPE" = "Darwin" ]; then
-        # echo "TBD: ensure_dbus_is_running"
-        local _checkdbus=$(launchctl list | grep freedesktop | wc -l | tr -d ' ')
-        if [ "${_checkdbus}" -eq "1" ]; then
-            # If only one of the two required dbus services are running, stop it.
-            local _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
-            launchctl remove ${_dbusctl}
-        fi
-        launchctl load ${CASA_3RD_PARTY_DIRECTORY}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
-        launchctl load ${CASA_3RD_PARTY_DIRECTORY}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
-
-        if (( ${#casapy_wdir} > 0 )); then
-            mkdir -p "$casapy_wdir"
-            cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
-            echo "==="
-        else
-            cd $STARTUP_DIRECTORY
-        fi
-        #
-        # TODO: these do not appear to be used.  What are they for?
-        casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts        2>/dev/null)
-        casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 2>/dev/null)
-    fi
-}
-
-
-function ensure_directory_exists {
-    # $1 : path to directory
-    # $2 : name to use in messages
-    if [ -d "$1" ]; then
-        display_debugging_message "$2 found at: $1"
-    else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
-    fi
-}
-
-
-function ensure_executable_exists {
-    # $1 : path to executable
-    # $2 : name to use in messages
-    if [ -x "$1" ]; then
-        display_debugging_message "$2 found at: $1"
-    else
-        exit_with_error_message -1 "$2 not found!  Looked at: $1"
-    fi
-}
-
-
-function exit_with_error_message {
-    # $1 : the exit status to report
-    # $2 : message to display for the user
-    echo "ERROR: $2"
-    exit $1
-}
-
-
-#
-# Some shell environment variables may be set inappropriately.  Clean them out.
-function remove_unwanted_shell_variables {
-    if [ "$OS_TYPE" = "Darwin" ]; then
-        #
-        # LD_LIBRARY_PATH should not be set on Mac.
-        unset  LD_LIBRARY_PATH
-    fi
-}
-
-
-#
-# Rename any existing casapy.log in this directory per CASA convention.
-function rename_existing_casa_log_file {
-    if [[ -f casapy.log ]]; then
-        ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
-   fi
-}
-
-
-function set_A_ARCH {
-    # Ignore any previous values.
-    local result=`echo ${CASAPATH} | awk '{print $2}'`
-    if [ "x$result" = "x" ]; then
-        if [ "$OS_TYPE" = "Darwin" ]; then
-            result="darwin64"
-        else
-            CPU=$(uname -p)
-            if [ "${CPU}" = "x86_64" ]; then
-                result="linux_64b"
-            else
-                result="linux_gnu"
-            fi
-        fi
-    fi
-    readonly A_ARCH="$result"
-    display_debugging_message "A_ARCH = $A_ARCH"
-}
-
-
-function set_A_ROOT {
-    # Ignore any previous values.
-    local result="`echo ${CASAPATH} | awk '{print $1}'`"
-    if [ "x$result" = "x" ]; then
-        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${CASA_INSTALLATION_DIRECTORY%/*}"
-        else
-            result="${CASA_INSTALLATION_DIRECTORY}"
-        fi
-    fi
-    # On some platforms, A_ROOT ends with an ugly "<name>/..".  Strip if off.
-    if [ "${result##*/}" = ".." ]; then
-        readonly A_ROOT="${result%/*/*}"
-    else
-        readonly A_ROOT="$result"
-    fi
-    ensure_directory_exists "$A_ROOT" "A_ROOT"
-}
-
-
-function set_A_SITE {
-    # Ignore any previous values.
-    # TODO: Find a way to detect this per site.
-    readonly A_SITE="socorro"
-    display_debugging_message "A_SITE = $A_SITE"
-}
-
-
-function set_CASA_3RD_PARTY_DIRECTORY {
-    # Ignore any previous values.
-    local result=""
-    if [ "$OS_TYPE" = "Darwin" ]; then
-        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            if [ "$OS_VERSION" = "10" ]; then
-                result="/opt/casa/darwin${OS_VERSION}-64b"
-            else
-                result="/opt/casa/darwin${OS_VERSION}"
-            fi
-        else
-            # Probably running from an app.  Not sure though...
-            result="${CASA_INSTALLATION_DIRECTORY}"
-        fi
-    else
-        if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
-            result="$CASA_INSTALLATION_DIRECTORY"
-        else
-            if [ "`uname -p`" = "x86_64" ]; then
-                result="@casa_packages@"
-            else
-                result="/usr/lib/casapy"
-            fi
-        fi
-    fi
-    readonly CASA_3RD_PARTY_DIRECTORY="$result"
-    ensure_directory_exists "$CASA_3RD_PARTY_DIRECTORY" "CASA_3RD_PARTY_DIRECTORY"
-}
-
-
-function set_CASA_COMMAND_LINE {
-    # Ignore any previous values.
-    local result=""
-    if [ $DEBUG_CASA = "T" ]; then
-        display_debugging_message "DEBUGGER = $DEBUGGER"
-        result=" -a ${DEBUGGER} ${DEBUGGER} ${PYTHON_EXECUTABLE}"
-    else
-        result=" -a python ${PYTHON_EXECUTABLE} -W ignore::DeprecationWarning ${CASAPY_SCRIPT}"
-    fi
-    readonly CASA_COMMAND_LINE="$result"
-    display_debugging_message "CASA_COMMAND_LINE = $CASA_COMMAND_LINE"
-}
-
-
-function set_CASA_INSTALLATION_DIRECTORY {
-    # Ignore any previous values.
-    # TODO: Review this logic.
-    # Running from a Mac .app, CASAPATH will be empty.
-    if [ "x$CASAPATH" = "x" ]; then
-        if [ "$OS_TYPE" == "Darwin" ]; then
-            # Probably running from an app.  Not sure though...
-            result="${SCRIPT_DIRECTORY%/*/*}/Contents"
-        else
-            exit_with_error_message -1 "Unable to detect CASA_INSTALLATION_DIRECTORY.\nPlease report this to CASA developers immediately."
-        fi
-    else
-        local casa_root=$(echo $CASAPATH | awk '{printf "%s", $1}')
-        local casa_os=$(echo $CASAPATH | awk '{printf "%s", $2}')
-        if [ "$OS_TYPE" = "Darwin" ]; then
-            result="${casa_root%/*/*}/${casa_os}"
-        elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${casa_root}/${casa_os}"
-        else
-            result="$casa_root"
-        fi
-    fi
-    readonly CASA_INSTALLATION_DIRECTORY="$result"
-    ensure_directory_exists "$CASA_INSTALLATION_DIRECTORY" "CASA_INSTALLATION_DIRECTORY"
-}
-
-
-function set_CASAPATH {
-    # In most cases, CASAPATH will be set before this script starts, but it will
-    # only contain the first two fields.
-    export readonly CASAPATH="$A_ROOT $A_ARCH $A_SITE $HOSTNAME"
-    display_debugging_message "CASAPATH = $CASAPATH"
-}
-
-
-function set_CASAPY_SCRIPT {
-    # Ignore any previous values.
-    local result=""
-    if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-        result="${CASA_INSTALLATION_DIRECTORY}/python/@python_version@/casapy.py"
-    else
-        case $OS_TYPE in
-        "Darwin")
-            result="${CASA_INSTALLATION_DIRECTORY}/Resources/python/casapy.py"
-            ;;
-        "Linux")
-            result="${CASA_INSTALLATION_DIRECTORY}/lib/python@python_version@/casapy.py"
-            ;;
-        *)
-            exit_with_error_message -1 "Unknown OS: $OS_TYPE"
-            ;;
-        esac
-    fi
-    readonly CASAPY_SCRIPT="$result"
-    ensure_executable_exists "$CASAPY_SCRIPT" "CASAPY_SCRIPT"
-}
-
-
-function set_DEBUGGER {
-    # If it is already set, do not change it.
-    if [ "x$DEBUGGER" = "x" ]; then
-        export readonly DEBUGGER="gdb"
-    fi
-    display_debugging_message "DEBUGGER = $DEBUGGER"
-}
-
-
-function set_PGPLOT_DIR {
-    # If it is already set, do not change it.
-    # if [ "x$PGPLOT_DIR" = "x" ]; then
-        : # This function is a place holder in case we need to add logic to set PGPLOT_DIR later.
-          # This has not been required for the last two releases.
-        # echo "TBD: set_PGPLOT_DIR"
-        #    local result=""
-        #    export readonly PGPLOT_DIR="${CASA_3RD_PARTY_DIRECTORY}/lib"
-        #    ensure_directory_exists "$PGPLOT_DIR" "PGPLOT_DIR"
-        #    if [ "${#PGPLOT_DIR}" -gt "112" ]
-        #    then
-        #        echo
-        #        echo
-        #        echo "======================================================================"
-        #        echo
-        #        echo "WARNING: The runtime for PGPLOT limits path lengths to 112 characters."
-        #        echo "WARNING: The current CASA application location"
-        #        echo "WARNING:   " ${PREFIX}
-        #        echo "WARNING:     results in a path that is " ${#PGPLOT_DIR} " characters."
-        #        echo "WARNING: You may experience problems with the CASA viewer and imager."
-        #        echo "WARNING: Please exit CASA, then move the CASA application"
-        #        echo "WARNING:  to /Applications and try again."
-        #        echo
-        #        echo "======================================================================"
-        #        echo
-        #        echo
-        #    fi
-    # fi
-}
-
-function set_PYTHON_EXECUTABLE {
-    # Ignore any previous values.
-    local result=""
-    case $OS_TYPE in
-    "Darwin")
-        if [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${CASA_3RD_PARTY_DIRECTORY}/Library/Frameworks/Python.framework/Versions/@python_version@/Resources/Python.app/Contents/MacOS/Python"
-        else
-            # Probably running from an app.  Not sure though...
-            result="${CASA_INSTALLATION_DIRECTORY}/Frameworks/Python.framework/Versions/@python_version@/Resources/Python.app/Contents/MacOS/Python"
-        fi
-        ;;
-    "Linux")
-        if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
-            result="${CASA_3RD_PARTY_DIRECTORY}/lib/casapy/bin/python"
-        else
-            result="${CASA_3RD_PARTY_DIRECTORY}/bin/python"
-        fi
-        ;;
-    *)
-        exit_with_error_message -1 "Unknown OS: $OS_TYPE"
-        ;;
-    esac
-
-    readonly PYTHON_EXECUTABLE="$result"
-    ensure_executable_exists "$PYTHON_EXECUTABLE" "PYTHON_EXECUTABLE"
-}
-
-
-function source_CASA_shell_environments {
-    for ci in \
-    ${A_ROOT}/.casainit.sh \
-    ${A_ROOT}/aips++local.sh \
-    ${A_ROOT}/${A_ARCH}/aips++local.sh \
-    ${A_ROOT}/${A_ARCH}/${A_SITE}/aips++local.sh \
-    ${A_ROOT}/${A_ARCH}/${A_SITE}/${HOSTNAME}/aips++local.sh \
+# Source possible local CASA initialization files.
+for ci in \
+    ${a_root}/.casainit.sh \
+    ${a_root}/aips++local.sh \
+    ${a_root}/${a_arch}/aips++local.sh \
+    ${a_root}/${a_arch}/${a_site}/aips++local.sh \
+    ${a_root}/${a_arch}/${a_site}/${a_host}/aips++local.sh \
     ${HOME}/.aips++local.sh \
     ${HOME}/.casainit
-    do
-        display_debugging_message "Checking for shell environment file: $ci"
-        if  [ -r "$ci" ]; then
-            display_debugging_message "Sourcing: $ci"
-            . $ci
-        fi
-    done
-}
+do
+    if  [ -r $ci ]; then
+	$verbose && echo "sourcing $ci"
+	. $ci
+    fi
+done
 
 
-#
-# Update CASA data directory from the NRAO public CASA Data rsync repository.
-function update_CASA_data_directory {
-    #
-    # TODO: Check for write access before trying to run rsync.
-    local casapy_ddir=${A_ROOT}/data
-    ensure_directory_exists "$casapy_ddir" "CASA Data Directory"
+if [ "$_dorsync" = "T" ]; then
+    casapy_ddir=${a_root}/data
     if (( ${#casapy_ddir} > 0 )); then
-        mkdir -p "$casapy_ddir"
-        cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
-        echo "==================================="
-        echo "Updating data repository...."
-        rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
-        echo "... data repository update complete"
-        echo "==================================="
+	mkdir -p "$casapy_ddir"
+	cd "$casapy_ddir" && echo "=== cd: "$(pwd)" ==="
+	echo "==================================="
+	echo "Updating data repository...."
+	rsync -avz rsync.aoc.nrao.edu::casadata . 2>/dev/null
+	echo "... data repository update complete"
+	echo "==================================="
     fi
     cd -
-}
-
-
-#
-# Main
-#
-# Process the command line parameters we understand.
-# TODO: rewrite the following to not depend on command line option
-#       position or order.
-_debug_casa_shell_script="F"
-if [ "$1" = "--debug-shell-script" ]; then
-    _debug_casa_shell_script="T"
-    shift
 fi
-readonly DEBUG_CASA_SHELL_SCRIPT="$_debug_casa_shell_script"
-display_debugging_message "DEBUG_CASA_SHELL_SCRIPT = $DEBUG_CASA_SHELL_SCRIPT"
 
-_debug_casa="F"
-if [ "$1" = "--debug" ]; then
-    if [ "$CASA_INSTALLATION_TYPE" = "tar-installation" ]; then
-        echo
-        echo "This copy of CASA was installed from a tar distribution.  We do"
-        echo "not support debugging CASA installed from a tar distribution."
-        echo "This code is sufficiently optimized that debugging will be very"
-        echo "time consuming."
-        echo
-        echo "If you need to debug CASA code, you should build it from source."
-        echo
-        exit -1
-    else
-        _debug_casa="T"
+#
+# Here we check that both dbus launchctl processes are running, if not shutdown the orphan and proceed
+#
+if [ ${isapple} = "T" ]; then
+    _checkdbus=$(launchctl list | grep freedesktop | wc -l | tr -d ' ')
+    if [ "${_checkdbus}" -eq "1" ]; then
+        _dbusctl=$(launchctl list | grep freedesktop | awk '{print $3}')
+        launchctl remove ${_dbusctl}
     fi
-    shift
+    launchctl load ${casa3party}/Library/LaunchDaemons/org.freedesktop.dbus-system.plist
+    launchctl load ${casa3party}/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+    
+    if (( ${#casapy_wdir} > 0 )); then
+	mkdir -p "$casapy_wdir"
+	cd "$casapy_wdir" && echo "=== cd: "$(pwd)" ==="
+	echo "==="
+    else
+	cd $startDir
+    fi
+    casapy_opts=$(defaults read edu.nrao.casa.macosx.casapy casapy.opts        2>/dev/null)
+    casapy_wdir=$(defaults read edu.nrao.casa.macosx.casapy casapy.working.dir 2>/dev/null)
 fi
-readonly DEBUG_CASA="$_debug_casa"
-display_debugging_message "DEBUG_CASA = $DEBUG_CASA"
 
-_update_casa_data="F"
-if [ "$1" = "--rsync" ]; then
-    _update_casa_data="T"
-    shift
+echo
+echo "========================================="
+echo "The start-up time of CASA may vary"
+echo "depending on whether the shared libraries"
+echo "are cached or not."
+echo "========================================="
+echo
+
+
+# This bit of code, copies the old casapy.log file to one with a 
+# date string based on the last entry and then blows away the casapy.log
+# after creating a hard link
+
+if [[ -f casapy.log ]]; then
+    ln casapy.log casapy.$(tail -n 1 casapy.log | cut -c 1-19 | tr ' ' T).log && rm casapy.log
 fi
-readonly UPDATE_CASA_DATA="$_update_casa_data"
-display_debugging_message "UPDATE_CASA_DATA = $UPDATE_CASA_DATA"
 
-
-#
-# Display some of the runtime environment.
-display_debugging_message "CASA_INSTALLATION_TYPE = $CASA_INSTALLATION_TYPE"
-display_debugging_message "HOSTNAME = $HOSTNAME"
-display_debugging_message "OS_TYPE = $OS_TYPE"
-display_debugging_message "OS_VERSION = $OS_VERSION"
-display_debugging_message "SCRIPT_DIRECTORY = $SCRIPT_DIRECTORY"
-display_debugging_message "SCRIPT_NAME = $SCRIPT_NAME"
-display_debugging_message "STARTUP_DIRECTORY = $STARTUP_DIRECTORY"
-display_debugging_message "CASAPATH = $CASAPATH"
-display_debugging_message "LD_LIBRARY_PATH = $LD_LIBRARY_PATH"
-display_debugging_message "LD_PRELOAD = $LD_PRELOAD"
-
-
-remove_unwanted_shell_variables
-
-
-#
-# Set a bunch of environment variables used by CASA.
-set_CASA_INSTALLATION_DIRECTORY
-set_CASA_3RD_PARTY_DIRECTORY
-set_A_ARCH
-set_A_ROOT
-set_A_SITE
-set_CASAPATH
-set_PGPLOT_DIR
-
-
-#
-# Run remaining CASA setup.
-source_CASA_shell_environments
-if [ "$UPDATE_CASA_DATA" = "T" ]; then
-    update_CASA_data_directory
-fi
-rename_existing_casa_log_file
-
-
-#
-# Build the command line and run it.
-set_CASAPY_SCRIPT
-set_PYTHON_EXECUTABLE
-if [ "$DEBUG_CASA" = "T" ]; then
-    set_DEBUGGER
-    echo
-    echo "NOTICE: To start CASA in gdb, copy and paste the following line to the gdb prompt:"
-    echo "run ${CASAPY_SCRIPT} $*"
-    echo
-fi
-set_CASA_COMMAND_LINE
-
-ensure_dbus_is_running
-display_startup_time_warning
-
-display_debugging_message "Remaining command line options: $*"
-#
-# GDB will complain about excess command line options.
-if [ "$DEBUG_CASA" = "T" ]; then
-    exec ${CASA_COMMAND_LINE}
+if [ $installed_from_rpm = "T" ]; then
+    casapy_command="${prefix}/lib/python@python_version@/casapy.py"
 else
-    exec ${CASA_COMMAND_LINE} $*
+    casapy_command="${prefix}/python/@python_version@/casapy.py"
 fi
-# Preserve the exit status of exec!
-exit $?
+# echo "DEBUG: casapy_command = $casapy_command"
+
+#exec -a pythonw /opt/casa/darwin11/bin/pythonw -W ignore::DeprecationWarning -m cProfile -o stats.prof ${prefix}/python/@python_version@/casapy.py $*
+if [ ${_dodebug} = "T" ]; then
+    echo
+    echo "Debugger run command is: run -W ignore::DeprecationWarning ${casapy_command} $*"
+    echo
+    echo
+    exec -a ${DEBUGGER}  ${DEBUGGER} ${PYTHONEXECUTABLE}
+else
+    exec -a python ${PYTHONEXECUTABLE} -W ignore::DeprecationWarning ${casapy_command} $*
+fi
 
 #
 # O_o

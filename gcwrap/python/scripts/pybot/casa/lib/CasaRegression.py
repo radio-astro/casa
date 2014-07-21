@@ -28,7 +28,7 @@ class CasaRegression:
         self._path = { 'top': str(topdir), 'bin': str(bindir), \
                        'casa': str(casadir), 'testbase': str(testdir), \
                        'cache': str(cachedir), 'output': str(outputdir) }
-        self._state = { 'script': '', 'statedb': '', 'maildb': '', 'result': 'fail', 'stamp': str(0), 'time': str(0), 'master': 'Scott Rankin', 'master-email': 'srankin@nrao.edu' }
+        self._state = { 'script': '', 'statedb': '', 'maildb': '', 'result': 'fail', 'stamp': str(0), 'time': str(0), 'master': 'Darrell Schiebel', 'master-email': 'drs@nrao.edu' }
         if not os.path.isdir(self._path['top']):
             raise RuntimeError('top directory (' + self._path['top'] + ') must exist...')
         temppath = self._path['top'] + "/tmp"

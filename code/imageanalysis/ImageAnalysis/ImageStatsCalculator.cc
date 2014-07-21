@@ -87,7 +87,7 @@ Record ImageStatsCalculator::calculate() {
 		);
 		SPIIF tempIm;
 		try {
-			tempIm = collapsed.collapse(True);
+			tempIm = collapsed.collapse();
 		}
 		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Unable to collapse image "

@@ -837,14 +837,26 @@ if(mystep in thesteps):
     #refpeakcontsc =  0.00987098459154
 
     # reference values obtained with this script using CASA 4.1 prerelease 2, Butler 2012 (17 Apr 2013, DP)
-    refrmspcal    = 0.00101008242927
-    refpeakpcal   = 1.9241631031
-    refrmstitan   = 0.0050711822696
-    refpeaktitan  = 0.372662633657 
-    refrmscont    = 0.000336007156875
-    refpeakcont   = 0.00723568536341 
-    refrmscontsc  = 8.06680545793e-05
-    refpeakcontsc = 0.0101557951421 
+    #refrmspcal    = 0.00101008242927
+    #refpeakpcal   = 1.9241631031
+    #refrmstitan   = 0.0050711822696
+    #refpeaktitan  = 0.372662633657 
+    #refrmscont    = 0.000336007156875
+    #refpeakcont   = 0.00723568536341 
+    #refrmscontsc  = 8.06680545793e-05
+    #refpeakcontsc = 0.0101557951421 
+
+    # reference values obtained with this script using CASA 4.3 (23 Apr 2014, GM)
+    refrmspcal    = 0.00083721080
+    refpeakpcal   = 1.925847530
+    refrmstitan   = 0.00506945
+    refpeaktitan  = 0.37299222 
+    refrmscont    = 0.00033599
+    refpeakcont   = 0.00723174 
+    refrmscontsc  = 8.00418566e-05
+    refpeakcontsc = 0.01018095 
+
+
 
     devrmspcal = abs(rmspcal-refrmspcal)/refrmspcal*100.
     devpeakpcal = abs(peakpcal-refpeakpcal)/refpeakpcal*100.
@@ -912,12 +924,59 @@ if(mystep in thesteps):
         casalog.post('Results are different from expectations by more than 0.5 percent.', 'WARN')
     else:
         casalog.post( "\nAll peak and RMS values within 0.5 percent of the expectation.")
-        
-    pngfiles = ['cal-tsys_per_spw_1_uid___A002_X1d54a1_X174.png',
-                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X5.png',
+ 
+    pngfiles = ['cal-tsys_per_spw_1_uid___A002_X1d54a1_X5.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d54a1_X5.DV09.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d54a1_X174.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d54a1_X174.DV09.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d54a1_X2e3.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d54a1_X2e3.DV09.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X5.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X5.DV09.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X174.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X174.DV09.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X330.DV04.spw01.png',
+                'cal-tsys_per_spw_1_uid___A002_X1d5a20_X330.DV09.spw01.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X5.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X5.DV09.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X174.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X174.DV09.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X2e3.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d54a1_X2e3.DV09.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X5.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X5.DV09.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X174.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X174.DV09.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X330.DV04.spw03.png',
+                'cal-tsys_per_spw_3_uid___A002_X1d5a20_X330.DV09.spw03.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X5.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X5.DV09.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X174.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X174.DV09.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X2e3.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d54a1_X2e3.DV09.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X5.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X5.DV09.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X174.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X174.DV09.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X330.DV04.spw05.png',
+                'cal-tsys_per_spw_5_uid___A002_X1d5a20_X330.DV09.spw05.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X5.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X5.DV09.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X174.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X174.DV09.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X2e3.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d54a1_X2e3.DV09.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X5.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X5.DV09.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X174.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X174.DV09.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X330.DV04.spw07.png',
+                'cal-tsys_per_spw_7_uid___A002_X1d5a20_X330.DV09.spw07.png',
+                'bandpass.B1.spw00.t00.png',
+                'bandpass.B2.spw00.t00.png',
                 'cal-phase_vs_time_XX.G1.png',
                 'cal-phase_vs_time_YY.G1.png',
-                'bandpass.B1.png',
                 'cal-phase_vs_time_XX.G2.png',
                 'cal-phase_vs_time_YY.G2.png',
                 'cal-amp_vs_time_XX.G2.png',

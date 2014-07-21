@@ -104,8 +104,8 @@ def main(thislist, parallel=False, axis='both'):
             print 'ERROR: task '+t+' is not in TASKLIST. Run this script with -l for the full list.'
             os._exit(0)
             
-        if t == 'flagdata':
-            axis='scan'
+ #       if t == 'flagdata':
+#            axis='scan'
             
         mmstest(t, parallel, axis)
 

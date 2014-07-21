@@ -32,9 +32,9 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Utilities/Assert.h>
 #include <synthesis/CalTables/CalIntpMatch.h>
-#include <synthesis/MSVis/MSCalEnums.h>
+#include <msvis/MSVis/MSCalEnums.h>
 #include <synthesis/CalTables/CalMainBuffer.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 #include <casa/namespace.h>
 // <summary>

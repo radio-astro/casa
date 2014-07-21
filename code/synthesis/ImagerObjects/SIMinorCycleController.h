@@ -38,11 +38,10 @@
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 
-/* Future Decl */
-class casa::Record;
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   
+  class Record;
+
   class SIMinorCycleController : boost::noncopyable 
  {
   public:
@@ -54,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - exceeded number maxcycleniter
          - exceeded cycle threshold
     */
-    virtual bool majorCycleRequired(Float currentPeakResidual);
+    virtual Int majorCycleRequired(Float currentPeakResidual);
 
     /* This method sets the following controls for the Minor Cycle Controller:
        - niter
@@ -131,7 +130,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* This variable keeps track of the maximum number of iterations done
        during a major cycle */
     Int   itsMaxCycleIterDone;
-    
 
    Float itsPeakResidual;
    Float itsIntegratedFlux;

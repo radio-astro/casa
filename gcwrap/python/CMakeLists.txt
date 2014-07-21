@@ -117,6 +117,7 @@ scripts/task_importevla.py
 scripts/task_importfits.py
 scripts/task_importfitsidi.py
 scripts/task_importgmrt.py
+scripts/task_importmiriad.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
 scripts/task_impv.py
@@ -153,13 +154,13 @@ scripts/task_polcal.py
 scripts/task_predictcomp.py
 scripts/task_rmfit.py
 scripts/task_rmtables.py
+scripts/task_sdaverage.py
 scripts/task_sdbaseline.py
 scripts/task_sdcal.py
 scripts/task_sdcal2.py
 scripts/task_sdcoadd.py
 scripts/task_sdfit.py
 scripts/task_sdflag.py
-scripts/task_sdflag2.py
 scripts/task_sdflagmanager.py
 scripts/task_sdgrid.py
 scripts/task_sdimaging.py
@@ -170,22 +171,22 @@ scripts/task_sdplot.py
 scripts/task_sdreduce.py
 scripts/task_sdsave.py
 scripts/task_sdscale.py
-scripts/task_sdsmooth.py
 scripts/task_sdstat.py
 scripts/task_sdtpimaging.py
-scripts/task_tsdaverage.py
-scripts/task_tsdbaseline.py
-scripts/task_tsdcal.py
-scripts/task_tsdcal2.py
-scripts/task_tsdfit.py
-scripts/task_tsdflag.py
-scripts/task_tsdgrid.py
-scripts/task_tsdimaging.py
-scripts/task_tsdmath.py
-scripts/task_tsdplot.py
-scripts/task_tsdreduce.py
-scripts/task_tsdsave.py
-scripts/task_tsdstat.py
+scripts/task_sdbaselineold.py
+scripts/task_sdcalold.py
+scripts/task_sdcal2old.py
+scripts/task_sdfitold.py
+scripts/task_sdflagold.py
+scripts/task_sdflag2old.py
+scripts/task_sdgridold.py
+scripts/task_sdimagingold.py
+scripts/task_sdmathold.py
+scripts/task_sdplotold.py
+scripts/task_sdreduceold.py
+scripts/task_sdsaveold.py
+scripts/task_sdsmoothold.py
+scripts/task_sdstatold.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py
@@ -197,6 +198,7 @@ scripts/task_specfit.py
 scripts/task_specsmooth.py
 scripts/task_splattotable.py
 scripts/task_split.py
+scripts/task_split2.py
 scripts/task_spxfit.py
 scripts/task_statwt.py
 scripts/task_tclean.py
@@ -230,3 +232,4 @@ add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
 add_subdirectory( scripts/recipes )
 add_subdirectory( scripts/parallel )
+add_subdirectory( scripts/mpi4casa )

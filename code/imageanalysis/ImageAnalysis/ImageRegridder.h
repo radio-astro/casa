@@ -1,4 +1,3 @@
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,24 +22,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGEANALYSIS_IMAGEREGRIDDER_H
 #define IMAGEANALYSIS_IMAGEREGRIDDER_H
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <imageanalysis/ImageAnalysis/ImageRegridderBase.h>
 
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/namespace.h>
-
-#include <tr1/memory>
 
 namespace casa {
 
 template <class T> class SubImage;
 template <class T> class TempImage;
 
-class ImageRegridder : public ImageTask<Float> {
+class ImageRegridder : public ImageRegridderBase<Float> {
 	// <summary>
 	// Top level interface which regrids an image to a specified coordinate system
 	// </summary>
@@ -56,15 +52,11 @@ class ImageRegridder : public ImageTask<Float> {
 	// </etymology>
 
 	// <synopsis>
-	// High level interface for regridding an image.
+	// High level interface for regridding an image. Note that in the case of a complex-valued
+	// image, the image is first divided into its composite real and imaginary parts, and these
+	// parts are regridded independently. The resulting regridded images are combined to form
+	// the final regridded complex-valued image.
 	// </synopsis>
-
-	// <example>
-	// <srcblock>
-	// ImageCollapser collapser();
-	// collapser.collapse();
-	// </srcblock>
-	// </example>
 
 public:
 
@@ -78,15 +70,16 @@ public:
 		const Record *const regionRec,
 		const String& maskInp, const String& outname, Bool overwrite,
 		const CoordinateSystem& csysTo, const IPosition& axes,
-		const IPosition& shape, Bool dropdeg=False
+		const IPosition& shape
 	);
 
+	// FIXME Add support to allow image and templateIm to be of different data types
 	ImageRegridder(
 		const SPCIIF image, const String& outname,
 		const SPCIIF templateIm, const IPosition& axes=IPosition(),
 		const Record *const regionRec=0,
 		const String& maskInp="", Bool overwrite=False,
-		 Bool dropdeg=False, const IPosition& shape=IPosition()
+		const IPosition& shape=IPosition()
 	);
 	// </group>
 
@@ -96,58 +89,24 @@ public:
 	// perform the regrid.
 	SPIIF regrid() const;
 
-	// regrid the spectral axis in velocity space rather than frequency space?
-	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
-
 	inline String getClass() const { return _class; }
-
-	// Set interpolation method.
-	void setMethod(const String& method) { _method = Interpolate2D::stringToMethod(method); }
-
-	void setMethod(Interpolate2D::Method method) { _method = method; }
 
 	void setDebug(Int debug) { _debug = debug; }
 
-	void setDoRefChange(Bool d) { _doRefChange = d; }
-
-	void setReplicate(Bool r) { _replicate = r; }
-
-	// throws exception if 3*decimate > length of an axis that will be regridded
-	void setDecimate(Int d);
-
-	void setForceRegrid(Bool f) { _forceRegrid = f; }
-
-protected:
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
-		return CasacRegionManager::USE_ALL_STOKES;
-	}
-
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
-	}
-
 private:
-	const CoordinateSystem _csysTo;
-	IPosition _axes, _shape, _kludgedShape;
-	Bool _dropdeg, _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
-	Int _debug, _decimate;
+	Int _debug;
 	static const String _class;
-	Interpolate2D::Method _method;
-	vector<String> _outputStokes;
-	uInt _nReplicatedChans;
 
 	// disallow default constructor
 	ImageRegridder();
 
-	void _finishConstruction();
+	SPIIF _regrid() const;
 
-	std::tr1::shared_ptr<ImageInterface<Float> > _regrid() const;
-
-	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
+	SPIIF _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
-		std::tr1::shared_ptr<const ImageInterface<Float> > image0,
-		std::tr1::shared_ptr<const ImageInterface<Float> > image1
+		SPCIIF image0,
+		SPCIIF image1
 	);
 
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(
@@ -166,8 +125,6 @@ private:
 		const Vector<std::pair<Double, Double> >& corners0,
 		const Vector<std::pair<Double, Double> >& corners1
 	);
-
-	Bool _regriddingDirectionAxes() const;
 
 };
 }

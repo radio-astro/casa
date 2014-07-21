@@ -157,7 +157,7 @@ protected:
 
 	virtual String _getObserver() const = 0;
 
-	virtual String _getProjection() const = 0;
+	virtual String _getProjection() const;
 
 	virtual String _getRefFreqType() const = 0;
 

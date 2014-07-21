@@ -33,8 +33,8 @@
 #include <synthesis/CalTables/CalHistoryBuffer.h>
 #include <synthesis/CalTables/CalTable.h>
 #include <synthesis/CalTables/CalMainColumns.h>
-#include <synthesis/MSVis/MSCalEnums.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/MSCalEnums.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/CalTables/CalIterBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

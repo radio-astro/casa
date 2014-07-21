@@ -21,8 +21,8 @@
 //# $Id: $
 
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 
 #include <string>
 #include <iostream>

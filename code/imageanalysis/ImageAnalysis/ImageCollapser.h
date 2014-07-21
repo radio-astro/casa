@@ -36,7 +36,7 @@ template <class T> class ImageCollapser : public ImageTask<T> {
 
 	// <example>
 	// <srcblock>
-	// ImageCollapser collapser();
+	// ImageCollapser collapser(...);
 	// collapser.collapse();
 	// </srcblock>
 	// </example>
@@ -50,30 +50,25 @@ public:
 	// <group>
 
 	ImageCollapser(
-		String aggString, const SPCIIT image,
-		const String& region, const Record *const regionRec,
-		const String& box,
-		const String& chanInp, const String& stokes,
+		const String& aggString, SPCIIT image,
+		const Record *const regionRec,
 		const String& maskInp, const IPosition& axes,
-		const String& outname, const Bool overwrite
+		Bool invertAxesSelection,
+		const String& outname, Bool overwrite
 	);
 
 	ImageCollapser(
 		const SPCIIT image,
-		const IPosition& axes, const Bool invertAxesSelection,
+		const IPosition& axes, Bool invertAxesSelection,
 		const ImageCollapserData::AggregateType aggregateType,
-		const String& outname, const Bool overwrite
+		const String& outname, Bool overwrite
 	);
 	// </group>
 
-	// destructor
 	~ImageCollapser() {}
 
-	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
-	// collapsed image. The returned pointer is created via new(); it is the caller's
-	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-	// a NULL pointer is returned and pointer deletion is performed internally.
-	SPIIT collapse(const Bool wantReturn) const;
+	// perform the collapse and return the resulting image.
+	SPIIT collapse() const;
 
 	static const map<uInt, T (*)(const Array<T>&)>* funcMap();
 
@@ -87,6 +82,8 @@ protected:
 	inline std::vector<Coordinate::Type> _getNecessaryCoordinates() const {
 		return std::vector<Coordinate::Type>();
 	}
+
+	Bool _supportsMultipleRegions() const {return True;}
 
 private:
 	Bool _invertAxesSelection;
@@ -104,7 +101,7 @@ private:
 
 	// necessary to improve performance
 	void _doMedian(
-		const SubImage<T>& subImage,
+		SPCIIT image,
 		TempImage<T>& outImage
 	) const;
 
@@ -112,6 +109,8 @@ private:
 		TempImage<T>& outImage,
 		const Array<Bool>& outMask
 	) const;
+
+	static void _zeroNegatives(Array<T>& arr);
 
 	static const map<uInt, T (*)(const Array<T>&)>& _getFuncMap();
 };

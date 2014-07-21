@@ -174,7 +174,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-	                 COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;}; if ( -e \"$d/libgfortran.a\" and !$found ) { print \"$d/libgfortran.a \"; $found = 1; break;}break if $found;}break if $found;} break if $found; }"
+                     COMMAND perl -e "$found = 0; while(<>) {  s|\n||g; if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break; }} break if $found; } break if $found;}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
@@ -635,7 +635,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.239
+           VERSION 1.0.251
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -700,6 +700,7 @@ else()
        stdcasa
        synthesis
        asdmstman
+       msvis
        )
 endif()
 
@@ -708,7 +709,7 @@ endif()
 #
 
 casa_find( CASACODE
-           VERSION 1.0.145
+           VERSION 1.0.147
            PREFIX_HINTS ${CASACODE_ROOT_DIR}
            INCLUDES stdcasa/version.h
            INCLUDES_SUFFIXES casacode

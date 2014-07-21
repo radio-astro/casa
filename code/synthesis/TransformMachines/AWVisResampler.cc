@@ -338,7 +338,8 @@ namespace casa{
 					const Vector<Int>&cfShape,
 					const Vector<Int>& convOrigin,
 					const Double& /*cfRefFreq*/,
-                                        const Double& /*imRefFreq*/)
+                                        const Double& /*imRefFreq*/,
+					const Int& spwID, const Int& fieldId)
   {
     LogIO log_l(LogOrigin("AWVisResampler","cachePhaseGrad[R&D]"));
     //cout << "# " << cfRefFreq << " " << imRefFreq << endl;
@@ -349,8 +350,9 @@ namespace casa{
     	)
       {
 	log_l << "Computing phase gradiant for pointing offset " 
-	      << pointingOffset << cfShape 
-	      <<LogIO::POST;
+	      << pointingOffset << cfShape << " " << cached_phaseGrad_p.shape() 
+	      << "(SPW: " << spwID << " Field: " << fieldId << ")"
+	      << LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
 	Complex phx,phy;
@@ -611,7 +613,8 @@ namespace casa{
 					  convOrigin=cfShape/2;
 					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
 					  if (finitePointingOffsets && !psfOnly)
-					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
+					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
+							     ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
 					  
 					  cacheAxisIncrements(cfShape, cfInc_p);
 					  

@@ -381,6 +381,13 @@ diffstats = {'max':  0.03733807,
              'sigma': 0.00865906,
              'sum':  -213.66776456}
 
+# 20140613 
+diffstats = {'max':  0.031458,
+             'min': -0.065144,
+             'rms': 0.0086492,
+             'sigma': 0.0084582,
+             'sum':  -216.11}
+
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,

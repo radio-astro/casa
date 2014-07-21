@@ -1035,6 +1035,30 @@ class imregrid_test(unittest.TestCase):
         self.assertTrue(regridded)
         regridded.done()
         
+    def test_complex(self):
+        """Test regridding a complex image, CAS-1390"""
+        myia = self._myia
+        myia.open(datapath + "real1.im")
+        realpart = myia.getchunk()
+        csys = myia.coordsys()
+        csys.setincrement([-0.9, 0.9])
+        rrg = myia.regrid(csys=csys.torecord())
+        rrgpart = rrg.getchunk()
+        rrg.done()
+        myia.open(datapath + "imag1.im")
+        imagpart = myia.getchunk()
+        irg = myia.regrid(csys=csys.torecord())
+        irgpart = irg.getchunk()
+        irg.done()
+        myia.fromshape("", myia.shape(), type="c")
+        comp = myia.getchunk()
+        comp = realpart + imagpart*1j
+        myia.putchunk(comp)
+        crg = myia.regrid(csys=csys.torecord())
+        crgpart = crg.getchunk()
+        crg.done()
+        myia.done()
+        self.assertTrue((crgpart == rrgpart + irgpart*1j).all())        
         
 def suite():
     return [imregrid_test]

@@ -27,7 +27,7 @@
 //# $Id$
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Quanta/Quantum.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSRange.h>

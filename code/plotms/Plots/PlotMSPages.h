@@ -59,6 +59,8 @@ public:
     // Returns a COPY of the current page.
     PlotMSPage currentPage() const;
 
+    PlotMSPage getFirstPage() const;
+
     void setCurrentPageNum(uInt num);
 
     // Accessor
@@ -108,6 +110,9 @@ public:
 
     //Remove the plot from the canvas.
     void disown( PlotMSPlot* plot );
+    void disown( int row, int col, PlotMSPlot* plot );
+
+    bool canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const;
 
     PlotMSParameters getPageParameters();
     
@@ -123,6 +128,8 @@ private:
 	//Returns whether or not (rows,cols) would represent
 	//a change in the current page size.
     bool isGridChanged( int rows, int cols ) const;
+
+
 
     // Plot manager.
     PlotMSPlotManager* itsManager_;

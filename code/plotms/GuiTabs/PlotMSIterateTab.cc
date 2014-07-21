@@ -96,24 +96,6 @@ bool PlotMSIterateTab::isPlottable() const {
 
 
 void PlotMSIterateTab::locationChanged(){
-	int newRow = gridRowSpin->value();
-	int newCol = gridColSpin->value();
-	bool plottabilityChange = false;
-	if ( newRow == 0 && gridRow > 0 ){
-		plottabilityChange = true;
-	}
-	else if ( newRow > 0 && gridRow == 0 ){
-		plottabilityChange = true;
-	}
-	else if ( newCol == 0 && gridCol > 0 ){
-		plottabilityChange = true;
-	}
-	else if ( newCol > 0 && gridCol == 0 ){
-		plottabilityChange = true;
-	}
-	if ( plottabilityChange ){
-		emit plottableChanged();
-	}
 	emit changed();
 }
 
@@ -141,7 +123,7 @@ bool PlotMSIterateTab::setGridSize(unsigned int nRows,unsigned int nCols){
     //Reset the limits on the spins.
     gridRowSpin->setMaximum( nRows );
     gridColSpin->setMaximum( nCols );
-    //gridChanged( nRows, nCols );
+    emit plottableChanged();
     return validLocation;
 }
 

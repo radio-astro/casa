@@ -43,7 +43,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -137,8 +137,10 @@ public:
 
   String msname, spw, freqbeg, freqend;
   MFrequency::Types freqframe;
-  String field, antenna, timestr, scan, obs, state, uvdist,taql;
+  String field, antenna, timestr, scan, obs, state, uvdist,taql,intent;
   Bool usescratch,readonly,incrmodel;
+
+  String datacolumn;
 
 };
 
@@ -158,7 +160,7 @@ public:
 
   // Generate Coordinate System 
   //CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
-  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi) const;
+  CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
   Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, 
@@ -167,7 +169,7 @@ public:
 		 const Vector<Double>& dataChanFreqs, const Vector<Double>& dataFreqRes,
 		 const MFrequency::Types& dataFrame, const Quantity& qrestfreq, 
 		 const Double& freqmin, const Double& freqmax,
-		 const MDirection& phaseCenter ) const;
+		 const MDirection& phaseCenter );
   
   String findSpecMode(const String& mode) const;
   String MDopToVelString(Record &rec);
@@ -177,6 +179,7 @@ public:
   Vector<Int> imsize;
   Vector<Quantity> cellsize;
   Projection projection;
+  Bool useNCP;
   MDirection phaseCenter;
   Int phaseCenterFieldId;
 
@@ -194,6 +197,8 @@ public:
   String tststr;
   // for holding quantity or measure records
   Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
+  //freqframe coversion?
+  Bool freqFrameValid;
 
   Bool overwrite;
 
@@ -221,6 +226,9 @@ public:
   // Facets for gridding.
   Int facets;
 
+  // Spectral axis interpolation
+  String interpolation;
+
   // Moving phase center ? 
   Quantity distance;
   MDirection trackDir;
@@ -235,6 +243,30 @@ public:
   String mType;
 
 };
+
+
+  class SynthesisParamsDeconv: public SynthesisParams
+{
+public:
+
+  SynthesisParamsDeconv();
+  ~SynthesisParamsDeconv();
+
+  void fromRecord(Record &inrec);
+  void setDefaults();
+  String verify();
+  Record toRecord();
+
+  String imageName, algorithm, startModel;
+  Int deconvolverId; // maybe remove ? It's only to tag summary info.
+  Int nTaylorTerms; 
+  Vector<Float> scales;
+  String maskType;
+
+  GaussianBeam restoringbeam;
+  String usebeam;
+
+  };
 
 
 } //# NAMESPACE CASA - END

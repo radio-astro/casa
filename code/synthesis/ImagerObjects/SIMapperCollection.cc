@@ -49,7 +49,8 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 #include <images/Regions/WCBox.h>
 
 #include <sys/types.h>
@@ -218,7 +219,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  else{
 			  vb.correctedVisCube()-=vb.modelVisCube();
 		  }
-	  }
+	  } 
+	  else if (col==FTMachine::OBSERVED) {
+			  vb.visCube()-=vb.modelVisCube();
+	    }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 		  (itsMappers[k])->grid(vb, dopsf, col);
@@ -273,20 +277,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool useScratch)
+  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
 		  (itsMappers[k])->degrid(vb);
 
   	  }
-	  if(!useScratch){
+	  if(saveVirtualMod){
 		  if(vb.msId() != oldMsId_p){
 			  oldMsId_p=vb.msId();
+			  const vi::VisibilityIterator2 * viloc=vb.getVi();
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  for (uInt k=0; k < itsMappers.nelements(); ++k){
 				  Record rec;
+				  String modImage=viloc->ms().getPartNames()[0];
+				  if(!((viloc->ms()).source().isNull()))
+				    modImage=(viloc->ms()).source().tableName();
+				  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 				  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-				  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+				  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
 					 if((vb.getVi())->isWritable()){
 
 						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
@@ -301,8 +314,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
 	  if(vb.msId() != oldMsId_p){
 		  oldMsId_p=vb.msId();
+		  const vi::VisibilityIterator2 * viloc=vb.getVi();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 				  if((vb.getVi())->isWritable()){
@@ -315,13 +333,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb, Bool useScratch)
+  void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
     {
 	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	    				(itsMappers[k])->degrid(vb);
 
-  		  if(!useScratch){
-  			  saveVirtualModel(vb);
+  		  if(saveVirtualMod){
+		    saveVirtualModel(vb);
   		  }
 
     }
@@ -351,8 +369,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				fields.resize(nfields, True);
 		   */
 		  //Int msid = vb.msId();
+		  ROVisibilityIterator *viloc=vb.getVisibilityIterator();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
+			  String modImage=viloc->ms().getPartNames()[0];
+			  if(!((viloc->ms()).source().isNull()))
+			    modImage=(viloc->ms()).source().tableName();
+			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 
@@ -362,7 +385,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  VisibilityIterator * elvi=(dynamic_cast<VisibilityIterator* >(vb.getVisibilityIterator()));
 				  if(elvi)
 					  elvi->putModel(rec, iscomp, True);
-				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
+				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
 		  }
@@ -423,11 +446,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMapperCollection::checkOverlappingModels(String action)
   {
+    // If nothing that overlaps, don't check.
     if(nMappers()==1) return;
 
-    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
-
     Int nmodels = nMappers();
+
+    // If there is no model image (i.e. first major cycle with no starting model), don't check.
+    Bool hasmodel=True;
+    for (Int model=0;model<(nmodels-1); ++model) 
+      { hasmodel = hasmodel && ((itsMappers[model])->imageStore())->hasModel();  }
+    if( hasmodel==False ) { 
+      //cout << "No model images to check overlap for." << endl; 
+      return; 
+    }
+
+    // Internal check
+    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
 
     for (Int model=0;model<(nmodels-1); ++model) 
       {

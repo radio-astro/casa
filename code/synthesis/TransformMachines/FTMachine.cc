@@ -26,7 +26,7 @@
 //# $Id$
 #include <boost/math/special_functions/round.hpp>
 
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -43,11 +43,11 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageUtilities.h>
@@ -972,9 +972,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else{
 	Record imrec;
-	image->resize(TiledShape(griddedData.shape()));
-	image->put(griddedData);
-	if(image->toRecord(error, imrec))
+	TempImage<Complex> imCopy(griddedData.shape(), image->coordinates());
+	imCopy.put(griddedData) ;
+	ImageUtilities::copyMiscellaneous(imCopy, *image);
+	if(imCopy.toRecord(error, imrec))
 	  outRecord.defineRecord("image", imrec);
       }
     }
@@ -1402,7 +1403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     vb.lsrFrequency(spw, lsrFreq, condoo, !freqFrameValid_p);
     doConversion_p[spw]=condoo;
-    
+
     if(lsrFreq.nelements() ==0){
       return False;
     }
@@ -1771,6 +1772,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::stokesToCorrelation(ImageInterface<Float>& modelImage,
 				      ImageInterface<Complex>& compImage)
   {
+    /*
+    StokesCoordinate stcomp=compImage.coordinates().stokesCoordinate(compImage.coordinates().findCoordinate(Coordinate::STOKES));
+    StokesCoordinate stfloat = modelImage.coordinates().stokesCoordinate(modelImage.coordinates().findCoordinate(Coordinate::STOKES));
+
+    cout << "Stokes types : complex : " << stcomp.stokes() << "    float : " << stfloat.stokes() << endl;
+    cout << "Shapes : complex : " << compImage.shape() << "   float : " << modelImage.shape() << endl;
+    */
+
     //Pol axis need not be same
     AlwaysAssert(modelImage.shape()[0]==compImage.shape()[0], AipsError);
     AlwaysAssert(modelImage.shape()[1]==compImage.shape()[1], AipsError);
@@ -1943,13 +1952,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Vectorized finalizeToVis is not implemented because it does nothing and is never called.
   
   // Vectorized InitializeToSky
-  void FTMachine::initializeToSkyNew(const Bool /*dopsf*/, 
+  void FTMachine::initializeToSkyNew(const Bool dopsf, 
 				     const VisBuffer& vb, 
 				     CountedPtr<SIImageStore> imstore)
     
   {
     AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
+    
+    // Make the relevant float grid. 
+    // This is needed mainly for facetting (to set facet shapes), but is harmless for non-facetting.
+    if( dopsf ) { imstore->psf(); } else { imstore->residual(); } 
 
+    // Initialize the complex grid (i.e. tell FTMachine what array to use internally)
     Matrix<Float> sumWeight;
     initializeToSky(*(imstore->backwardGrid()) , sumWeight , vb);
 
@@ -1980,7 +1994,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
 		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
-	
+
 	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
 	
       }

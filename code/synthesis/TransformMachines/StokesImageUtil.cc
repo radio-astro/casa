@@ -49,7 +49,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
 
-#include <synthesis/MSVis/StokesVector.h>
+#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
@@ -530,6 +530,11 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, Vector<Float>& 
   Float bamp=0;
   Matrix<Float> lpsf;
   locatePeakPSF(psf, px, py, bamp, lpsf);
+
+  //check if peak is ZERO
+  if( bamp < 1e-07 ) {
+    throw(AipsError("Psf peak is zero"));
+  }
 
   //check if peak is outside inner quarter
   if(px < nx/4.0 || px > 3.0*nx/4.0 || py < ny/4.0 || py > 3.0*ny/4.0) {    

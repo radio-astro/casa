@@ -169,13 +169,18 @@ public:
     //it can be displayed.
     bool isPlottable() const;
 
-signals:
-	void plottableChanged();
+    //This was put in to support overplotting.  When two plots are sharing the
+    //same canvas, we don't want to trigger a redraw until all the plots sharing
+    //the same canvas are done updating their data in background threads.
+    void completePlotting( bool success );
+
+    //Remove old data from the plot.
+    void clearData();
 
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the
     // current plot.
-    void plot( bool forceReload );
+    bool plot( bool forceReload);
     
     
 protected:
@@ -234,6 +239,7 @@ private:
     PlotMSDataTab* findOrCreateDataTab();
     PlotMSIterateTab* findIterateTab() const;
     PlotMSDisplayTab* findDisplayTab();
+    PlotMSAxesTab* findAxesTab();
 
     // PlotMSPlotSubtab objects in tab widget.
     QList<PlotMSPlotSubtab*> itsSubtabs_;
@@ -274,6 +280,8 @@ private slots:
 
     //y-axis data has been removed.
     void removeAxisIdentifier( int index );
+
+    void plottableChanged();
 
 };
 

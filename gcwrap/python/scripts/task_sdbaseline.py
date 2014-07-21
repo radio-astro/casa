@@ -1,11 +1,13 @@
+import numpy
+import sdutil
+
 from taskinit import casalog
 
-import sdutil
 import asap as sd
 from asap.scantable import is_scantable
 
 @sdutil.sdtask_decorator
-def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdbaseline(infile, antenna, fluxunit, telescopeparam, field, spw, restfreq, frame, doppler, timerange, scan, pol, tau, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdbaseline_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -31,8 +33,7 @@ class sdbaseline_worker(sdutil.sdtask_template):
     def initialize_scan(self):
         sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
         
-        #sel = self.get_selector()
-        sel = self.get_selector_by_list()
+        sel = self.get_selector(sorg)
         sorg.set_selection(sel)
         del sel
 
@@ -60,12 +61,6 @@ class sdbaseline_worker(sdutil.sdtask_template):
         sn=list(scanns)
         casalog.post( "Number of scans to be processed: %d" % (len(sn)) )
         
-        # Warning for multi-IF data
-        if ( len(self.scan.getifnos()) > 1 and isinstance(self.masklist,list) and not self.maskmode == 'auto' ):
-            casalog.post( 'The scantable contains multiple IF data.', priority = 'WARN' )
-            casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority = 'WARN' )
-            casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.' % (self.scan.getif(0)), priority = 'WARN' )
-            
         sdutil.doopacity(self.scan, self.tau)
     
         engine.execute()
@@ -82,7 +77,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
     cspline_keys = ['npiece']
     sinusoid_keys = ['applyfft', 'fftmethod', 'fftthresh', 'addwn', 'rejwn']
     auto_keys = ['thresh', 'avg_limit', 'edge']
-    list_keys = ['masklist']
+    list_keys = []
     interact_keys = []
 
     def __init__(self, worker):
@@ -106,16 +101,20 @@ class sdbaseline_engine(sdutil.sdtask_engine):
         nrow = scan.nrow()
 
         # parse string masklist
-        if isinstance(self.masklist,list):
-                maskdict = {'': self.masklist}
-        else:
-                maskdict = scan.parse_maskexpr(self.masklist)
+        maskdict = scan.parse_spw_selection(self.spw)
+        valid_spw_list = []
+        for (k,v) in maskdict.items():
+            if len(v) > 0 and numpy.all(numpy.array(map(len, v)) > 0):
+                valid_spw_list.append(k)
+        
         basesel = scan.get_selection()
 
         # configure baseline function and its parameters
         self.__configure_baseline()
         
-        for sif, lmask in maskdict.iteritems():
+        for ifno in valid_spw_list:
+            lmask = maskdict[ifno]
+            sif = str(ifno)
             if len(sif) > 0:
                 sel = sd.selector(basesel)
                 sel.set_ifs([int(sif)])
@@ -153,6 +152,11 @@ class sdbaseline_engine(sdutil.sdtask_engine):
 
             # reset selection
             if len(sif) > 0: scan.set_selection(basesel)
+
+        ifs_org = basesel.get_ifs()
+        ifs_new = list(set(ifs_org) & set(valid_spw_list))
+        basesel.set_ifs(ifs_new)
+        scan.set_selection(basesel)
             
     def finalize(self):
         if ( abs(self.plotlevel) > 0 ):
@@ -183,7 +187,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
             self.params[k] = getattr(self,k)
 
         # common parameters
-        self.params['mask'] = self.masklist
+        self.params['mask'] = []
         self.params['plot'] = self.verify
         self.params['showprogress'] = self.showprogress
         self.params['minnrow'] = self.minnrow
@@ -215,7 +219,7 @@ class sdbaseline_engine(sdutil.sdtask_engine):
                 if mm == 'auto':
                     mtitles = ['Threshold', 'avg_limit', 'Edge']
                 elif mm == 'list':
-                    mtitles = ['Fit Range']
+                    mtitles = []
                 else: # interact
                     mtitles = []
                 ctitles = ['clipThresh', 'clipNIter']

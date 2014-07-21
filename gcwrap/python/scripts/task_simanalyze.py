@@ -4,7 +4,7 @@ import os
 import re
 import pylab as pl
 import pdb
-from sdimaging import sdimaging
+from sdimagingold import sdimagingold
 from imregrid import imregrid
 from immath import immath
 
@@ -459,13 +459,13 @@ def simanalyze(
                     msg("- Cell size (arcsec): [%s, %s]" % (temp_cell[0], temp_cell[1]),origin='simanalyze')
                     msg("- Imsize to cover final TP image area: [%d, %d] (type: %s)" % (temp_imsize[0], temp_imsize[1], type(temp_imsize[0])),origin='simanalyze')
                     msg("- convolution support: %d" % sfsupport,origin='simanalyze')
-                    msg("sdimaging(infiles=['"+tpmstoimage+"'], gridfunction='SF', convsupport = "+str(sfsupport)+
+                    msg("sdimagingold(infiles=['"+tpmstoimage+"'], gridfunction='SF', convsupport = "+str(sfsupport)+
                         ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
                         ",imsize="+str(temp_imsize)+", cell="+str(temp_cell)+
                         ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
                         "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
                     if not dryrun:
-                        sdimaging(infiles=[tpmstoimage], gridfunction='SF',
+                        sdimagingold(infiles=[tpmstoimage], gridfunction='SF',
                               convsupport = sfsupport,
                               outfile=temp_out, overwrite=overwrite,
                               imsize=temp_imsize, cell=temp_cell,
@@ -532,13 +532,13 @@ def simanalyze(
                     sdimsize = imsize
                     sdcell = [qa.tos(cell[0]), qa.tos(cell[1])]
                     ### TODO: need to set phasecenter properly based on imdirection
-                    msg("sdimaging(infiles=['"+tpmstoimage+"'], gridfunction='PB'"+
+                    msg("sdimagingold(infiles=['"+tpmstoimage+"'], gridfunction='PB'"+
                         ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
                         ",imsize="+str(sdimsize)+", cell="+str(sdcell)+
                         ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
                         "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
                     if not dryrun:
-                        sdimaging(infiles=[tpmstoimage],gridfunction='PB',
+                        sdimagingold(infiles=[tpmstoimage],gridfunction='PB',
                               outfile=tpimage, overwrite=overwrite,
                               imsize=sdimsize, cell=sdcell,
                               phasecenter=model_refdir, dochannelmap=True,

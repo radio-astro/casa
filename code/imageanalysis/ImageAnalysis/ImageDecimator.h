@@ -64,7 +64,7 @@ protected:
 
     inline Bool _supportsMultipleBeams() {return False;}
 
-    virtual inline Bool _supportsMultipleRegions() {return True;}
+    virtual inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
 	uInt _axis, _factor;

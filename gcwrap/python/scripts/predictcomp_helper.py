@@ -63,6 +63,7 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
     tmlabel = '%.1fd' % epoch['m0']['value']
     clabel = objname+'_spw0_'+freqlabel+'_'+tmlabel
     clname = clabel+'.cl'
+    if prefix: clname=prefix+clname
 
     if(os.path.exists(clname)):
         print "Removing previous cl file,", clname
@@ -81,7 +82,8 @@ def predictSolarObjectCompList(objname, epoch, freqs, prefix):
     #print "dirs=",dirs 
     mycl.addcomponent(flux=fluxes[0][0],fluxunit='Jy', polarization="Stokes", dir=dirs[0],
          shape='disk', majoraxis=str(sizes[0][0])+'arcsec', minoraxis=str(sizes[0][1])+'arcsec',
-         positionangle=str(sizes[0][2])+'arcsec', freq=['LSRK',str(freqs[0])+'Hz'],
+    #     positionangle=str(sizes[0][2])+'arcsec', freq=['LSRK',str(freqs[0])+'Hz'],
+         positionangle=str(sizes[0][2])+'arcsec', freq=['TOPO',str(freqs[0])+'Hz'],
          spectrumtype=sptype, index=index, label=clabel)
     # set tabular, use original input freqs
     if len(freqs)>1:

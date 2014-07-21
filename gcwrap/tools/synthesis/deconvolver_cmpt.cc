@@ -19,7 +19,7 @@
 #include <deconvolver_cmpt.h>
 #include <synthesis/MeasurementEquations/Deconvolver.h>
 #include <casa/Logging/LogIO.h>
-#include <components/ComponentModels/GaussianBeam.h>
+#include <scimath/Mathematics/GaussianBeam.h>
 //#include <casa/System/PGPlotterNull.h>
 //#include <graphics/Graphics/PGPlotterLocal.h>
 

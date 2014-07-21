@@ -50,7 +50,7 @@ namespace casa {
 	const QString QtCanvas::FONT_NAME = "Helvetica [Cronyx]";
 
 	QtCanvas::~QtCanvas() {
-		this->clearCurve();
+		this->clearCurve(true);
 		delete modeFactory;
 	}
 
@@ -138,7 +138,7 @@ namespace casa {
 				defaultZoomOut();
 			}
 		}
-		emit xRangeChanged(1.0,0.0);
+		//emit xRangeChanged(1.0,0.0);
 	}
 
 	void QtCanvas::defaultZoomOut() {
@@ -165,7 +165,7 @@ namespace casa {
 			xRangeIsShown=false;
 			++curZoom;
 			refreshPixmap();
-			emit xRangeChanged(1.0,0.0);
+			//emit xRangeChanged(1.0,0.0);
 		} else {
 			if (curveMap.size() != 0) {
 				defaultZoomIn();
@@ -237,14 +237,29 @@ namespace casa {
 
 
 	void QtCanvas::zoomNeutral() {
-		xRangeIsShown=false;
+		//xRangeIsShown=false;
+		if ( zoomStack.size() != 1 ){
+			zoomStack.resize(1);
+			zoomStack[0] = QtPlotSettings();
+			curZoom = 0;
 
-		zoomStack.resize(1);
-		zoomStack[0] = QtPlotSettings();
-		curZoom = 0;
+			setDataRange();
 
-		setDataRange();
-		emit xRangeChanged(1.0,0.0);
+			if (xRangeIsShown ){
+				QtPlotSettings currSettings = zoomStack[curZoom];
+				double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
+				double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
+				double newXStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
+				double newXEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
+
+				xRangeStart = qMax( newXStart,xRangeStart);
+				xRangeEnd = qMin( newXEnd, xRangeEnd );
+				update();
+				emit xRangeChanged(xRangeStart,xRangeEnd);
+
+
+			}
+		}
 	}
 
 	int QtCanvas::getLineCount() {
@@ -400,11 +415,11 @@ namespace casa {
 		curveCountSecondary = 0;
 	}
 
-	void QtCanvas::clearCurve() {
+	void QtCanvas::clearCurve( bool inDtor ) {
 		curveMap.clear();
 		profileFitMarkers.clear();
 
-		this->xRangeIsShown = false;
+		//this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
 		curveCountSecondary = 0;
@@ -416,8 +431,10 @@ namespace casa {
 		}
 		delete selectedAnnotation;
 		selectedAnnotation = NULL;
-		emit curvesChanged();
-		refreshPixmap();
+		if ( ! inDtor ) {
+			emit curvesChanged();
+			refreshPixmap();
+		}
 	}
 
 	void QtCanvas::clearEverything(){
@@ -861,7 +878,7 @@ namespace casa {
 				if (xRangeIsShown) {
 					xRangeIsShown=false;
 					updatexRangeBandRegion();
-					emit xRangeChanged(1.0,0.0);
+					//emit xRangeChanged(1.0,0.0);
 				}
 				currentMode = NULL;
 				break;

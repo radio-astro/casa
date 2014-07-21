@@ -61,7 +61,7 @@ void PVGenerator::setEndpoints(
 	const std::pair<Double, Double>& start,
 	const std::pair<Double, Double>& end
 ) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	Double startx = start.first;
 	Double starty = start.second;
 	Double endx = end.first;
@@ -174,7 +174,7 @@ Quantity PVGenerator::_increment() const {
 void PVGenerator::setEndpoints(
 	const MDirection& start, const MDirection& end
 ) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
 	Vector<Double> sPixel = dc.toPixel(start);
 	Vector<Double> ePixel = dc.toPixel(end);
@@ -195,7 +195,7 @@ void PVGenerator::setWidth(uInt width) {
 }
 
 void PVGenerator::setWidth(const Quantity& q) {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	const DirectionCoordinate dc = _getImage()->coordinates().directionCoordinate();
 	Quantity inc(fabs(dc.increment()[0]), dc.worldAxisUnits()[0]);
 	ThrowIf(
@@ -224,7 +224,7 @@ void PVGenerator::setWidth(const Quantity& q) {
 }
 
 SPIIF PVGenerator::generate() const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 
 	ThrowIf(
 		_start.get() == 0 || _end.get() == 0,
@@ -236,7 +236,7 @@ SPIIF PVGenerator::generate() const {
 			_getMask(), False, False, False, _getStretch()
 		 )
 	);
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	CoordinateSystem subCoords = subImage->coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
 	Int xAxis = dirAxes[0];
@@ -250,7 +250,7 @@ SPIIF PVGenerator::generate() const {
 		"in the direction coordinate"
 	);
 	_checkWidth(subShape[xAxis], subShape[yAxis]);
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	// get the PA of the end points
 	vector<Double> start = *_start;
 	vector<Double> end = *_end;
@@ -440,11 +440,11 @@ SPIIF PVGenerator::generate() const {
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
 	ImageCollapser<Float> collapser(
-		"mean", rotated, "", &lcbox,
-		"", "", "", "", axes, "", False
+		"mean", rotated, &lcbox,
+		"", axes, False, "", False
 	);
 
-	std::tr1::shared_ptr<ImageInterface<Float> > collapsed(collapser.collapse(True));
+	SPIIF collapsed = collapser.collapse();
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
@@ -527,7 +527,7 @@ String PVGenerator::getClass() const {
 }
 
 void PVGenerator::_checkWidth(const Int64 xShape, const Int64 yShape) const {
-	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __func__, WHERE);
 	if (_width == 1) {
 		return;
 	}

@@ -188,9 +188,9 @@ bool QPExporter::exportCanvases  ( vector<QPExportCanvas*>& canvases,
 
 
     // End logging.
-    for(unsigned int i = 0; i < loggers.size(); i++)
+    for(unsigned int i = 0; i < loggers.size(); i++){
         loggers[i]->releaseMeasurement();
-
+    }
     return ret;
 }
 

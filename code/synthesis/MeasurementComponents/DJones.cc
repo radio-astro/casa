@@ -27,8 +27,8 @@
 #include <synthesis/MeasurementComponents/DJones.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
@@ -1555,25 +1555,83 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
   // Solve for each channel
   Vector<Complex> Cph(nChan);
   Cph.set(Complex(1.0,0.0));
+  Float currAmb(1.0);
+  Bool report(False);
   for (Int ich=0;ich<nChan;++ich) {
 
     if (sum(wt.column(ich))>0.0) {
+      report=True;
       LinearFit<Double> phfitter;
       Polynomial<AutoDiff<Double> > line(1);
       phfitter.setFunction(line);
       Vector<Bool> m(mask.column(ich));
+
+   /*
+     // Fit nominally, detect if steep and resolve
+
+      // Solve y=mx+b for m
       Vector<Double> soln=phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m);
 
       // The X-Y phase is the arctan of the fitted slope
-      Float Xph=atan(soln(1));   // +C::pi;
-      Cph(ich)=Complex(cos(Xph),sin(Xph));
+      Double Xph=atan(soln(1));   
 
-      if (ich==nChan/2)
-	cout << endl 
-	     << "Spw = " << thisSpw
-	     << " (ich=" << ich << "/" << nChan << "): " << endl
-	     << " X-Y phase = " << Xph*180.0/C::pi << " deg." << endl;
-      
+      cout << currSpw() << ":" << ich << "  " << soln(1) << " " << Xph*180/C::pi;
+
+      // Handle steep solutions by solving x=(1/m)y -b/m for (1/m)
+      if (abs(soln(1))>1.0) {
+	// Resolve as x vs. y:
+	soln=phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m);
+	Double s1(soln(1));
+	if (s1>0.0)
+	  Xph=(C::pi/2.) - atan(s1); 
+	else
+	  Xph=(-C::pi/2.) - atan(s1); 
+	cout << "-->" << soln(1) << " " << Xph*180/C::pi;
+      }
+   */
+
+
+      // Fit steep and shallow, and always prefer shallow
+      Vector<Double> solnA=phfitter.fit(x.column(ich),y.column(ich),sig.column(ich),&m);
+      Double XphA=atan(solnA(1));   
+      //      cout << currSpw() << ":" << ich << "  " << solnA(1) << " " << XphA*180/C::pi;
+      Vector<Double> solnB=phfitter.fit(y.column(ich),x.column(ich),sig.column(ich),&m);
+      Double XphB=atan(solnB(1));   
+
+      Double Xph(0.0);
+      if (abs(solnA(1))<abs(solnB(1))) {
+	Xph=XphA;
+	//	cout << " <-- " << solnB(1) << " " << XphB*180/C::pi;
+      }
+      else {
+	Double s1(solnB(1));
+	if (s1>0.0)
+	  Xph=(C::pi/2.) - XphB;
+	else
+	  Xph=(-C::pi/2.) - XphB;
+	//	cout << " --> " << solnB(1) << " " << Xph*180/C::pi;
+      }
+
+      Cph(ich)=currAmb*Complex(DComplex(cos(Xph),sin(Xph)));
+
+      // Watch for and remove ambiguity changes which can
+      //  occur near Xph~= +/-90 deg (the atan above can jump)
+      //  (NB: this does _not_ resolve the amb; it merely makes
+      //   it consistent within the spw)
+      if (ich>0) {
+	// If Xph changes by more than pi/2, probably a ambig jump...
+	Float dang=abs(arg(Cph(ich)/Cph(ich-1)));
+	if (dang > (C::pi/2.)) {
+	  Cph(ich)*=-1.0;   // fix this one
+	  currAmb*=-1.0;    // reverse currAmb, so curr amb is carried forward
+	  //	  cout << "  Found XY phase ambiguity jump at chan=" << ich << " in spw=" << currSpw();
+	}
+      }
+
+      //      cout << " (" << currAmb << ")";
+      //      cout << endl;
+
+
       // Set all antennas with this X-Y phase (as a complex number)
       solveCPar()(Slice(0,1,1),Slice(ich,1,1),Slice())=Cph(ich);
       solveParOK()(Slice(),Slice(ich,1,1),Slice())=True;
@@ -1584,7 +1642,12 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
     }
   }
 
-  //  cout << "solveCPar() = " << solveCPar() << endl;
+  if (report)
+    cout << endl 
+	 << "Spw = " << thisSpw
+	 << " (ich=" << nChan/2 << "/" << nChan << "): " << endl
+	 << " X-Y phase = " << arg(Cph[nChan/2])*180.0/C::pi << " deg." << endl;
+      
 
   // Now fit for the source polarization
   {

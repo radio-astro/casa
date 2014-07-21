@@ -23,7 +23,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
         </param>
         <param type="string" name="mode">
-            <description>If "coords", use start and end values. If "length", use center, width, and pa values.</description>
+            <description>If "coords", use start and end values. If "length", use center, length, and pa values.</description>
             <value>coords</value>
             <example>mode="coords"</example>
         </param>
@@ -45,12 +45,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="string"/>
         </param>
         <param type="any" name="length" subparam="true">
-            <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
+            <description>The length of the segment in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
             <any type="variant" limittypes="string int double stringArray record"/>
             <value type="string"/>
         </param>
         <param type="any" name="pa" subparam="true">
-            <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
+            <description>The position angle of the segment in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
             <any type="variant" limittypes="string record"/>
             <value type="string"/>
         </param>

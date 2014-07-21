@@ -420,7 +420,7 @@ public:
     void addAxisListener( AxisListener* listener );
     void clearAxisListeners();
 
-    virtual bool isDrawing() const;
+    virtual bool isDrawing();
 protected:
     // Sets the parent QPPlotter to the given.  This MUST be done when a canvas
     // is added to the plotter so that it can use the plotter's logger if
@@ -463,6 +463,9 @@ protected:
     
     // For catching Qt resize events.
     void resizeEvent(QResizeEvent* event);
+
+    bool isThreading() const;
+
 
 private:
     // Parent QPPlotter.

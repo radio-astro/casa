@@ -34,15 +34,20 @@ Int main(Int argc, char *argv[]) {
 	if (myim == 0) {
 		mylog << "Unable to open image " << imagename << LogIO::EXCEPTION;
 	}
-	Record *regionPtr = 0;
 	SPCIIF image(myim);
+	CasacRegionManager rm(image->coordinates());
+	String diagnostics;
+	uInt nSelectedChannels;
+	Record myreg = rm.fromBCS(
+		diagnostics, nSelectedChannels, stokes, 0, "", chans,
+		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", False
+	);
     ImageCollapser<Float> imCollapser(
-		function, image, region, regionPtr, box,
-		chans, stokes, mask, axes, outname,
-        overwrite
+		function, image, &myreg,
+		mask, axes, False, outname, overwrite
     );
 
-	imCollapser.collapse(False);
+	imCollapser.collapse();
 
     return 0;
 }

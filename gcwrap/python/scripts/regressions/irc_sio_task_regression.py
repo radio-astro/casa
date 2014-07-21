@@ -85,12 +85,14 @@ default(sdreduce)
 infile = 'IRC+10216_rawACSmod'
 fluxunit = 'K'
 calmode = 'nod'
-scanlist = [240,241,242,243,244,245,246,247]
-iflist = [30]
+#scanlist = [241,242,243,244,245,246,247, 248]
+scan = '241~244,245~248'
+#iflist = [30]
+spw = '30'
 average = True
-scanaverage = False
 timeaverage = True # average in time
 tweight = 'tintsys' # weighted by integ. time and Tsys for time averaging 
+scanaverage = False
 polaverage = True  # average polarization
 pweight = 'tsys'   # weighted by Tsys for polarization averaging
 tau = 0.09         # do opacity correction
@@ -126,13 +128,15 @@ else:
 default(sdstat)
 # select line free regions to get rms
 infile = localoutfile
-masklist = [800, 1500]
+#masklist = [800, 1500]
+spw = '*:800~1500'
 xstat = sdstat()
 curr_rms = xstat['rms']
 #rms=
 #
 # select the line region
-masklist = [1850,2300]
+#masklist = [1850,2300]
+spw = '*:1850~2300'
 xstat = sdstat()
 xstat
 curr_max = xstat['max']

@@ -32,7 +32,7 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -171,7 +171,8 @@ public:
   FTMachine* cloneFTM();
 
 protected:
-
+  // have to call the initmaps of subftm
+  virtual void initMaps(const VisBuffer& vb);
   // Instantiate a new sub FTM
   CountedPtr<FTMachine> getNewFTM(const CountedPtr<FTMachine>& ftm);
 
@@ -194,7 +195,7 @@ protected:
   Matrix<Float> imweights_p;
   String machineName_p;
 
-  Bool donePSF_p;
+  //  Bool donePSF_p;
 
   Block< CountedPtr<FTMachine> > subftms_p;
 

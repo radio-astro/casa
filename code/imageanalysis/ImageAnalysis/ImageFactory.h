@@ -30,6 +30,7 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
+#include <casa/Arrays/Array.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/namespace.h>
@@ -40,6 +41,7 @@ namespace casa {
 class CoordinateSystem;
 class IPosition;
 class Record;
+template <class T> class TempImage;
 template <class T> class Vector;
 
 class ImageFactory {
@@ -60,6 +62,11 @@ class ImageFactory {
 	// </synopsis>
 
 public:
+
+	enum ComplexToFloatFunction {
+		REAL,
+		IMAG
+	};
 
     ~ImageFactory() {};
 
@@ -93,7 +100,28 @@ public:
         const std::vector<std::pair<LogOrigin, String> > *const &msgs=0
     );
 
+    template <class T> static SPIIT imageFromArray(
+    	const String& outfile, const Array<T>& pixels,
+    	const Record& csys, Bool linear=False,
+    	Bool overwrite=False, Bool verbose=True,
+    	const vector<std::pair<LogOrigin, String> > *const &msgs=0
+    );
+
+    // Create a float-valued image from a complex-valued image. All metadata is copied
+    // and pixel values are initialized according to <src>func</src>.
+    static std::tr1::shared_ptr<TempImage<Float> > floatFromComplex(
+    	SPCIIC complexImage, ComplexToFloatFunction func
+    );
+
+    // Create a complex-valued image from a float-valued image (real part)
+    // and float-valued array (imaginary part). All metadata is copied from the
+    // real image and pixel values are initialized to real + i*complex
+    static std::tr1::shared_ptr<TempImage<Complex> > complexFromFloat(
+    	SPCIIF realPart, const Array<Float>& imagPart
+    );
+
 private:
+
 	ImageFactory() {};
 
 	template <class T> static SPIIT _fromShape(
@@ -114,6 +142,7 @@ private:
     );
 };
 }
+
 #ifndef AIPS_NO_TEMPLATE_SRC
 #include <imageanalysis/ImageAnalysis/ImageFactory.tcc>
 #endif

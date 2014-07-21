@@ -32,6 +32,8 @@
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Cube.h>
 #include <synthesis/TransformMachines/ComponentFTMachine.h>
+#include <msvis/MSVis/VisModelDataI.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
   class VisBuffer;
@@ -137,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // </todo>
 
-class VisModelData {
+  class VisModelData : public VisModelDataI {
  public:
   //empty constructor
   VisModelData();
@@ -157,24 +159,42 @@ class VisModelData {
   //add componentlists or ftmachines 
   void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb);
 
+  VisModelDataI * clone ();
+
   //put the model data for this VisBuffer in the modelVisCube
   Bool getModelVis(VisBuffer& vb);
 
   //this is a helper function that writes the model record to the ms 
+  void putModelI(const MeasurementSet& thems, const RecordInterface& rec,
+		 const Vector<Int>& validfields, const Vector<Int>& spws,
+		 const Vector<Int>& starts, const Vector<Int>& nchan,
+		 const Vector<Int>& incr, Bool iscomponentlist=True, Bool incremental=False)
+  {
+    putModel (thems, rec, validfields, spws, starts, nchan, incr, iscomponentlist, incremental);
+  }
   static void putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfields, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist=True, Bool incremental=False);
 
   //helper function to clear the keywordSet of the ms of the model  for the fields 
   //in that ms
+  void clearModelI(const MeasurementSet& thems) { clearModel (thems); }
   static void clearModel(const MeasurementSet& thems);
   // ...with field selection and optionally spw
   static void clearModel(const MeasurementSet& thems, const String field, const String spws=String(""));
 
   //Functions to see if model is defined in the MS either in the SOURCE table or else in the MAIN
+  Bool isModelDefinedI(const Int fieldId, const MeasurementSet& thems, String& key, Int& sourceRow)
+  {
+    return isModelDefined (fieldId, thems, key, sourceRow);
+  }
   static Bool isModelDefined(const Int fieldId, const MeasurementSet& thems, String& key, Int& sourceRow);
   static Bool isModelDefined(const String& elkey, const MeasurementSet& thems);
 
   //Get a given model that is defined by key
   //Forcing user to use a TableRecord rather than Generic RecordInterface ...just so as to avoid a copy.
+  Bool getModelRecordI(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs)
+  {
+    return getModelRecord (theKey, theRec, theMs);
+  }
   static Bool getModelRecord(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs);
 
   // List the fields
@@ -209,7 +229,7 @@ class VisModelData {
   CountedPtr<ComponentFTMachine> cft_p;
   Cube<Int> ftindex_p;
   Cube<Int> clindex_p;
-
+  static Bool initialize;
 };
 
 }//end namespace

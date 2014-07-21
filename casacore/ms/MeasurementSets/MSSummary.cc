@@ -33,7 +33,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Record.h>
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Unit.h>
 #include <measures/Measures/MDirection.h>
@@ -101,7 +101,7 @@ MSSummary::~MSSummary ()
 //
 Int MSSummary::nrow () const
 {
-	return _msmd->nRows();
+	return _msmd.ptr()->nRows();
 }
 
 
@@ -128,7 +128,7 @@ Bool MSSummary::setMS (const MeasurementSet& ms)
 		return False;
 	} else {
 		pMS = pTemp;
-		_msmd.reset(new MSMetaData(&ms, _cacheSizeMB));
+		_msmd.set(new MSMetaData(&ms, _cacheSizeMB));
 		return True;
 	}
 }
@@ -236,18 +236,18 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		return;
 	}
 
-	// Make objects
-	ROMSColumns msc(*pMS);
-	Double startTime, stopTime;
-	minMax(startTime, stopTime, msc.time().getColumn());
+	//ROMSColumns msc(*pMS);
+	std::set<Double> times = _msmd->getTimesForScans(std::set<Int>());
+	Double startTime = *times.begin();
+	Double stopTime = *(--times.end());
+	//minMax(startTime, stopTime, msc.time().getColumn());
 	Double exposTime = stopTime - startTime;
-	//    Double exposTime = sum(msc.exposure().getColumn());
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
 	ROMSMainColumns msmc(*pMS);
 	String timeref=msmc.time().keywordSet().subRecord("MEASINFO").asString("Ref");
 
 	// Output info
-	os << "Data records: " << nrow() << "       Total integration time = "
+	os << "Data records: " << nrow() << "       Total elapsed time = "
 			<< exposTime << " seconds" << endl
 			<< "   Observed from   " << MVTime(startTime/C::day).string(MVTime::DMY,7)  //startMVT.string()
 			<< "   to   " << MVTime(stopTime/C::day).string(MVTime::DMY,7)  // stopMVT.string()
@@ -465,7 +465,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 					// this MJD
 					day=floor(MVTime(btime/C::day).day());
 
-					spw = _msmd->getSpwsForScan(lastscan);
+					spw = _msmd.ptr()->getSpwsForScan(lastscan);
 					String name=fieldnames(lastfldids(0));
 
 					if (verbose) {
@@ -1838,6 +1838,8 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().width(widthFreq);	os << "   Ch0(MHz)";
 		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
+		os.output().width(widthFreq);	os << "CtrFreq(MHz) ";
+
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
 		Bool hasBBCNo = _msmd->hasBBCNo();
 		if (hasBBCNo) {
@@ -1848,8 +1850,9 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os << endl;
 
 		vector<uInt> nChans = _msmd->nChans();
-		vector<Quantum<Vector<Double> > > chanFreqs = _msmd->getChanFreqs();
-		vector<Quantum<Vector<Double> > > chanWidths = _msmd->getChanWidths();
+		vector<QVD> chanFreqs = _msmd->getChanFreqs();
+		vector<QVD> chanWidths = _msmd->getChanWidths();
+		vector<Quantity> centerFreqs = _msmd->getCenterFreqs();
 		vector<Double> bandwidths = _msmd->getBandWidths();
 		vector<uInt> bbcNo = hasBBCNo ? _msmd->getBBCNos() : vector<uInt>();
 
@@ -1887,6 +1890,10 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthFrqNum);
 			os.output().precision(1);
 			os<< bandwidths[spw]/1000;
+			os.output().width(widthFrqNum);
+			os.output().precision(4);
+
+			os << centerFreqs[spw].getValue("MHz") << " ";
 			if (hasBBCNo) {
 				os.output().width(widthBBCNo);
 				os<< bbcNo[spw];

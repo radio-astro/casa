@@ -7,8 +7,10 @@ from tasks import *
 from taskinit import mstool, tbtool, msmdtool, aftool
 from __main__ import default
 import testhelper as th
+import partitionhelper as ph
 from recipes.listshapes import listshapes
 from parallel.parallel_task_helper import ParallelTaskHelper
+from parallel.parallel_data_helper import ParallelDataHelper
 from unittest.case import expectedFailure
 
 
@@ -170,7 +172,25 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)  
+        default(mstransform)                     
+                   
+    def createMMS(self, msfile, axis='auto',scans='',spws=''):
+        '''Create MMSs for tests with input MMS'''
+        prefix = msfile.rstrip('.ms')
+        if not os.path.exists(msfile):
+            os.system('cp -RL '+datapath + msfile +' '+ msfile)
+        
+        # Create an MMS for the tests
+        self.testmms = prefix + ".test.mms"
+        default(mstransform)
+        
+        if os.path.exists(self.testmms):
+            os.system("rm -rf " + self.testmms)
+            
+        print "................. Creating test MMS .................."
+        mstransform(vis=msfile, outputvis=self.testmms, datacolumn='data',
+                    createmms=True,separationaxis=axis, scan=scans, spw=spws)
+        
 
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -297,48 +317,6 @@ class test_Combspw1(test_base):
         ret = th.verifyMS('combcvel12.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
 
-    def test_combspw1_3(self):
-        '''mstransform: Do not combine spws and create MMS with axis scan.'''
-        self.setUp_jupiter()
-        self.outputms = 'combspw13.mms'
-        mstransform(vis=self.vis, outputvis=self.outputms, combinespws=False, spw='0,1',field = '12',
-             datacolumn='DATA', createmms=True, separationaxis='scan')
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Should create 6 subMSs
-        mslocal = mstool()
-        mslocal.open(thems=self.outputms)
-        sublist = mslocal.getreferencedtables()
-        mslocal.close()
-        self.assertEqual(sublist.__len__(), 6, 'Should have created 6 subMSs')
-
-        ret = th.verifyMS(self.outputms, 2, 1, 0)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_combspw1_4(self):
-        '''mstransform: Combine some channels of two spws using MMS input'''
-        # same test as test_combspw1_2
-        mmsfile = "inpmms14.mms"
-        # First create an MMS
-        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True)
-
-        # Now do the same as in test_combspw1_2. Datacolumn moved to DATA
-        self.outputms = "combspw14.ms"
-        mstransform(vis=mmsfile, outputvis=self.outputms, combinespws=True, spw='0:60~63,1:60~63',
-                    datacolumn='data')
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # The spws contain gaps, therefore the number of channels is bigger
-        ret = th.verifyMS(self.outputms, 1, 68, 0)
-        self.assertTrue(ret[0],ret[1])
-
-        # Compare with cvel results
-        default(cvel)
-        cvel(vis=self.vis, outputvis='combcvel14.ms', spw='0:60~63,1:60~63')
-        ret = th.verifyMS('combcvel14.ms', 1, 68, 0)
-        self.assertTrue(ret[0],ret[1])
-
     def test_combspw1_5(self):
         '''mstransform: Combine four spws into one'''
 
@@ -347,9 +325,9 @@ class test_Combspw1(test_base):
         self.assertTrue(os.path.exists(self.outputms))
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
         # DDI subtable should have 4 rows with the proper indices
         mytb = tbtool()
@@ -421,40 +399,12 @@ class test_Regridms1(test_base):
         listobs(self.outputms)
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
-
-    def test_regrid1_3(self):
-        '''mstransform: Default regridms with spw selection using input MMS'''
-        # same as test_regrid1_1
-        mmsfile = 'testmms13.mms'
-        # Create input MMS
-        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True, parallel=False,
-                    separationaxis='scan')
-
-        self.outputms = "reg13.ms"
-        mstransform(vis=mmsfile, outputvis=self.outputms, regridms=True, spw='1,3,5,7',
-                    datacolumn='DATA')
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # The regriding should be the same as the input
-        for i in range(4):
-            ret = th.verifyMS(self.outputms, 4, 64, i)
-            self.assertTrue(ret[0],ret[1])
-
-        listobs(self.outputms)
-
-        # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
 
 
 class test_Regridms3(test_base):
@@ -511,9 +461,9 @@ class test_Regridms3(test_base):
         self.assertTrue(th.compTables('cvel31-sorted.ms/STATE','reg31-sorted.ms/STATE', [],0.000001,"absolute"))
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
 # Uncomment after seg fault is fixed
     @unittest.skip('Skip until seg fault in InterpolateArray1D.tcc is fixed.')
@@ -581,9 +531,9 @@ class test_Hanning(test_base):
         self.assertTrue(ret[0],ret[1])
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_hanning3(self):
         '''mstransform: Hanning theoretical and calculated values should be the same'''
@@ -677,9 +627,9 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 1, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_freqavg2(self):
         '''mstranform: Select a few channels to average from one spw'''
@@ -719,11 +669,11 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_freqavg5(self):
         '''mstranform: Different number of spws and chanbin. Expected error'''
@@ -733,123 +683,20 @@ class test_FreqAvg(test_base):
 
         self.assertFalse(ret)
 
-    def test_freqavg6(self):
-        '''mstranform: Average all channels of one spw, save as an MMS'''
-        # same as test_freqavg3
-        self.outputms = "favg6.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='23', chanaverage=True, chanbin=128,
-                    createmms=True)
-
-        self.assertTrue(os.path.exists(self.outputms))
-        ret = th.verifyMS(self.outputms, 1, 1, 0)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_freqavg7(self):
-        '''mstranform: Average using different bins for several spws, output MMS'''
-        # same as test_freqavg4
-        self.outputms = "favg7.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='10,12,20', chanaverage=True,
-                    chanbin=[128,4,10], createmms=True, separationaxis='scan')
-
+    def test_freqavg11(self):
+        '''mstransform: Automatically convert numpy type to Python type'''
+        self.outputms = "freqavg_numpytype.ms"
+        bin1 = numpy.int32(128)
+        mstransform(vis=self.vis, outputvis=self.outputms, spw='10', chanaverage=True,
+                    chanbin=bin1)
+        
         self.assertTrue(os.path.exists(self.outputms))
 
         # Output should be:
         # spw=0 1 channel
-        # spw=1 32 channels
-        # spw=3 13 channels
-        ret = th.verifyMS(self.outputms, 3, 1, 0, ignoreflags=True)
+        ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 32, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 12, 2, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-        # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-
-    def test_freqavg8(self):
-        '''mstranform: Average using different bins for several spws, output MMS'''
-        # same as test_freqavg4
-        self.outputms = "favg8.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='10,12,20', chanaverage=True,
-                    chanbin=[128,4,10], createmms=True, separationaxis='spw',numsubms=2)
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Output should be:
-        # spw=0 1 channel
-        # spw=1 32 channels
-        # spw=3 13 channels
-        ret = th.verifyMS(self.outputms, 3, 1, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 32, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 12, 2, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_freqavg9(self):
-        '''mstranform: Average using different bins and a channel selection, output MMS'''
-        self.outputms = "favg9.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='2,12,10:1~10', chanaverage=True,
-                    chanbin=[32,128,5], createmms=True, separationaxis='spw')
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Output should be:
-        # spw=0 4 channels
-        # spw=1 1 channel
-        # spw=2 2 channels
-        ret = th.verifyMS(self.outputms, 3, 4, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 1, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 2, 2, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-        # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-
-    def test_freqavg10(self):
-        '''mstranform: Average using different bins, channel selection, both axes, output MMS'''
-        self.outputms = "favg10.ms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='2,12,10:1~10', chanaverage=True,
-                    chanbin=[32,128,5], createmms=True, separationaxis='both')
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Should create 6 subMSs
-        mslocal = mstool()
-        mslocal.open(thems=self.outputms)
-        sublist = mslocal.getreferencedtables()
-        mslocal.close()
-        self.assertEqual(sublist.__len__(), 6, 'Should have created 6 subMSs')
-
-        # Output should be:
-        # spw=0 4 channels
-        # spw=1 1 channel
-        # spw=2 2 channels
-        ret = th.verifyMS(self.outputms, 3, 4, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 1, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 3, 2, 2, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-        # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-
+        
 
 class test_Shape(test_base):
     '''Test the tileshape parameter'''
@@ -900,25 +747,6 @@ class test_Shape(test_base):
 
         self.assertTrue((inptsh==outtsh).all(), 'Tile shapes are different')
 
-    def test_shape3(self):
-        '''mstransform: DATA and FLAG tileshapes should be the same'''
-        self.outputms = "shape3.ms"
-        inptsh = [4,10,1024]
-        mstransform(vis=self.vis, outputvis=self.outputms, createmms=False, tileshape=inptsh)
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Get the tile shape for the DATA output
-        tblocal = tbtool()
-        tblocal.open(self.outputms)
-        outdm = tblocal.getdminfo()
-        tblocal.close()
-        outtsh = th.getTileShape(outdm)
-        # And for the FLAG column
-        flagtsh = th.getTileShape(outdm, 'FLAG')
-
-        self.assertTrue((outtsh==flagtsh).all(), 'Tile shapes are different')
-
 
 class test_Columns(test_base):
     '''Test different datacolumns'''
@@ -939,6 +767,7 @@ class test_Columns(test_base):
           mkeys = mcol.keys()
           self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
           
+#    @unittest.skip('Skip until seg fault in msvis is fixed.')          
     def test_col2(self):
           """mstransform: make real a virtual MODEL column """
           self.setUp_ngc5921()
@@ -1005,12 +834,12 @@ class test_SeparateSPWs(test_base):
         self.assertTrue(ret[0],ret[1])
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_sep2(self):
         '''mstransform: separate three spws into 2, using default regrid parameters'''
@@ -1084,12 +913,12 @@ class test_SeparateSPWs(test_base):
         check_eq(spwCol[3], 3)
 
         # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
         
     def test_slicing_problem(self):
         '''mstransform: Separate SPWs after re-gridding one single SPW'''
@@ -1104,166 +933,6 @@ class test_SeparateSPWs(test_base):
         check_eq(numChan[0], 10)
         check_eq(numChan[1], 10)
         check_eq(numChan[2], 10)        
-
-
-class test_MMS(test_base):
-    '''Several tests that create an MMS'''
-    def setUp(self):
-        self.setUp_4ants()
-
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
-
-    def test_mms1(self):
-        '''mstransform: create MMS with spw separation and channel selections'''
-        self.outputms = "testmms1.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0~4,5:1~10',createmms=True,
-                    separationaxis='spw')
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 6 subMS, with spw=0~5
-        # spw=5 should have only 10 channels
-        ret = th.verifyMS(self.outputms, 6, 10, 5,ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_mms2(self):
-        '''mstransform: create MMS with spw/scan separation and channel selections'''
-        self.outputms = "testmms2.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='both')
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 4 subMS, with spw=0~1
-        # spw=0 has 11 channels, spw=1 has 4 channels
-        ret = th.verifyMS(self.outputms, 2, 11, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 2, 4, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-        # Verify that some sub-tables are properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
-
-    def test_mms3(self):
-        '''mstransform: create MMS with scan separation and channel selections'''
-        self.outputms = "testmms3.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='scan')
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 2 subMS, with spw=0~1
-        # spw=0 has 11 channels, spw=1 has 4 channels
-        ret = th.verifyMS(self.outputms, 2, 11, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 2, 4, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_mms4(self):
-        '''mstransform: verify spw sub-table consolidation'''
-        self.outputms = "testmms4.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='3,5:10~20,7,9,11,13,15',createmms=True,
-                    separationaxis='spw')
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # spw=5 should be spw=1 after consolidation, with 10 channels
-        ret = th.verifyMS(self.outputms, 7, 10, 1, ignoreflags=True)
-        
-    def test_CAS6206(self):
-        '''mstransform: verify that all columns are re-indexed in SPW sub-table'''
-        self.outputmms='test.mms'
-        self.outputms='assoc.ms'
-        self.setUp_CAS_5013()
-        mstransform(vis=self.vis, outputvis=self.outputmms,createmms=True, datacolumn='corrected')
-        
-        # if SPW sub-table is not correct, the next step will fail
-        self.assertTrue(mstransform(vis=self.outputmms, outputvis=self.outputms, hanning=True, datacolumn='data'))
-        
-
-
-class test_Parallel(test_base):
-    '''Run some of the same tests in parallel'''
-    def setUp(self):
-        self.setUp_4ants()
-
-    def tearDown(self):
-        os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
-
-    def test_parallel1(self):
-        '''mstransform: create MMS with spw separation and channel selections in parallel'''
-        self.outputms = "parallel1.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0~4,5:1~10',createmms=True,
-                    separationaxis='spw', parallel=False)
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 6 subMS, with spw=0~5
-        # spw=5 should have only 10 channels
-        ret = th.verifyMS(self.outputms, 6, 10, 5,ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_parallel2(self):
-        '''mstransform: create MMS with spw/scan separation and channel selections in parallel'''
-        self.outputms = "parallel2.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='both', parallel=False)
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 4 subMS, with spw=0~1
-        # spw=0 has 11 channels, spw=1 has 4 channels
-        ret = th.verifyMS(self.outputms, 2, 11, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 2, 4, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_parallel3(self):
-        '''mstransform: create MMS with scan separation and channel selections in parallel'''
-        self.outputms = "parallel3.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='scan', parallel=False)
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # It should create 2 subMS, with spw=0~1
-        # spw=0 has 11 channels, spw=1 has 4 channels
-        ret = th.verifyMS(self.outputms, 2, 11, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-        ret = th.verifyMS(self.outputms, 2, 4, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])
-
-    def test_parallel4(self):
-        '''mstransform: verify spw sub-table consolidation in parallel'''
-        self.outputms = "parallel4.mms"
-        mstransform(vis=self.vis, outputvis=self.outputms, spw='3,5:10~20,7,9,11,13,15',createmms=True,
-                    separationaxis='spw', parallel=False)
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # spw=5 should be spw=1 after consolidation, with 10 channels
-        ret = th.verifyMS(self.outputms, 7, 10, 1, ignoreflags=True)
-
-    def test_parallel5(self):
-        '''mstransform: Do not combine spws and create MMS with axis scan in parallel.'''
-        self.setUp_jupiter()
-        self.outputms = 'parallel5.mms'
-        mstransform(vis=self.vis, outputvis=self.outputms, combinespws=False, spw='0,1',field = '12',
-             datacolumn='DATA', createmms=True, separationaxis='scan', parallel=False)
-
-        self.assertTrue(os.path.exists(self.outputms))
-
-        # Should create 6 subMSs
-        mslocal = mstool()
-        mslocal.open(thems=self.outputms)
-        sublist = mslocal.getreferencedtables()
-        mslocal.close()
-        self.assertEqual(sublist.__len__(), 6, 'Should have created 6 subMSs')
-
-        ret = th.verifyMS(self.outputms, 2, 1, 0)
-        self.assertTrue(ret[0],ret[1])
 
 
 class test_state(test_base):
@@ -1469,7 +1138,7 @@ class test_float_column(test_base):
         mstransform(vis=self.vis,outputvis=self.outputms,datacolumn='FLOAT_DATA',
                     regridms=True,outframe='LSRK',spw='0')
 
-	print "Check column and keywords"
+        print "Check column and keywords"
         mytb = tbtool()
         mytb.open(self.outputms+'/SPECTRAL_WINDOW')
         refnum = mytb.getcell('MEAS_FREQ_REF',0)
@@ -1487,18 +1156,22 @@ class test_float_column(test_base):
         
         
 class test_timeaverage(test_base_compare):
-
+    
     def setUp(self):
         super(test_timeaverage,self).setUp()
         self.setUp_4ants()
         self.outvis = 'test_timeaverage-mst.ms'
         self.refvis = 'test_timeaverage-split.ms'
         self.outvis_sorted = 'test_timeaverage-mst-sorted.ms'
-        self.refvis_sorted = 'test_timeaverage-split-sorted.ms'
+        self.refvis_sorted = 'test_timeaverage-split-sorted.ms'   
+        self.timerange = '14:45:08.00~14:45:10.00' 
+        self.spw = '0'
+        self.antenna = '0&&1'
+        self.timerange = '' 
+        self.spw = ''
+        self.antenna = ''        
         os.system('rm -rf test_timeaverage*')
-#        flagdata(vis=self.vis,mode='unflag', flagbackup=False)
-        self.unflag_ms()
-
+        
     def tearDown(self):
         super(test_timeaverage,self).tearDown()
 
@@ -1510,96 +1183,82 @@ class test_timeaverage(test_base_compare):
         aflocal.init()
         aflocal.run(writeflags=True)
         aflocal.done()
+        
+    def flag_ms(self):
+        aflocal.open(self.vis)
+        aflocal.selectdata()
+        agentUnflag={'apply':True,'mode':'rflag','extendflags':False}
+        aflocal.parseagentparameters(agentUnflag)
+        aflocal.init()
+        aflocal.run(writeflags=True)
+        aflocal.done()        
 
-    def test_timeaverage_data(self):
-
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='30s')
-        split(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timebin='30s')
-
+    def test_timeaverage_data_unflagged(self):   
+        
+        self.unflag_ms()
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='30s',
+                    timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timebin='30s',
+                    timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+        
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5
 
-        self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 15.0/100
-
-        self.mode['EXPOSURE'] = "percentage"
-        self.tolerance['EXPOSURE'] = 3.58E-5/100
-
-        self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 2.77E-4
-
-        self.mode['DATA'] = "percentage"
-        self.tolerance['DATA'] = 2.27E-5/100
-
-        self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 3.15E-3/100
-
-        self.mode['SIGMA'] = "percentage"
-        self.tolerance['SIGMA'] = 35
-
-        self.post_process()
-
-    def test_timeaverage_model(self):
-
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='MODEL',timeaverage=True,timebin='30s')
-        split(vis=self.vis,outputvis=self.refvis,datacolumn='MODEL',timebin='30s')
-
+        self.post_process()   
+        
+    def test_timeaverage_model_unflagged(self):  
+        
+        self.unflag_ms()
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='MODEL',timeaverage=True,timebin='30s',
+                   timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='MODEL',timebin='30s',
+              timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+              
+        
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5
 
-        self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 4.08E-3/100
-
-        self.mode['EXPOSURE'] = "percentage"
-        self.tolerance['EXPOSURE'] = 3.58E-5/100
-
-        self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 2.77E-4
-
-        self.mode['DATA'] = "percentage"
-        self.tolerance['DATA'] = 1.20E-5/100
-
-        self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 3.15E-3/100
-
-        self.mode['SIGMA'] = "percentage"
-        self.tolerance['SIGMA'] = 35
-
-        self.post_process()
-
-    def test_timeaverage_corrected(self):
-
-        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='CORRECTED',timeaverage=True,timebin='30s')
-        split(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED',timebin='30s')
-
+        self.post_process()          
+        
+    def test_timeaverage_corrected_unflagged(self):
+        
+        self.unflag_ms()
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='CORRECTED',timeaverage=True,timebin='30s',
+                    timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+        split(vis=self.vis,outputvis=self.refvis,datacolumn='CORRECTED',timebin='30s',
+              timerange=self.timerange,spw=self.spw,antenna=self.antenna)
+        
         self.generate_tolerance_map()
-
-        self.mode['UVW'] = "percentage"
-        self.tolerance['UVW'] = 4.08E-3/100
-
-        self.mode['EXPOSURE'] = "percentage"
-        self.tolerance['EXPOSURE'] = 3.58E-5/100
-
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5
+        
+        self.mode['EXPOSURE'] = "absolute"
+        self.tolerance['EXPOSURE'] = 1E-4    
+        
         self.mode['TIME_CENTROID'] = "absolute"
-        self.tolerance['TIME_CENTROID'] = 2.77E-4
+        self.tolerance['TIME_CENTROID'] = 1E-5
+      
 
-        self.mode['DATA'] = "percentage"
-        self.tolerance['DATA'] = 2.34E-5/100
-
-        self.mode['WEIGHT'] = "percentage"
-        self.tolerance['WEIGHT'] = 3.15E-3/100
-
-        self.mode['SIGMA'] = "percentage"
-        self.tolerance['SIGMA'] = 35
-
-        self.post_process()
-
-    def test_timeaverage_baseline_dependent(self):
-
+        self.post_process()   
+        
+    def test_timeaverage_baseline_dependent_unflagged(self):
+        
+        self.unflag_ms()
+        
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='10s',maxuvwdistance=1E5)
         mstransform(vis=self.vis,outputvis=self.refvis,datacolumn='DATA',timeaverage=True,timebin='10s')
+        
+        self.generate_tolerance_map()  
 
-        self.generate_tolerance_map()
-
-        self.post_process()
+        self.post_process()       
 
 class test_timeaverage_limits(test_base):
 
@@ -1768,6 +1427,7 @@ class test_multiple_transformations(test_base_compare):
 
         self.post_process()
 
+        th.compTables(self.vis+'/FEED', self.outvis+'/FEED', ['FOCUS_LENGTH'])
 
 class test_regridms_single_spw(test_base_compare):
     '''Tests for regridms w/o combining SPWS'''
@@ -1824,7 +1484,7 @@ class test_regridms_multiple_spws(test_base_compare):
         self.generate_tolerance_map()
         
         self.mode['WEIGHT'] = "absolute"
-        self.tolerance['WEIGHT'] = 1
+        self.tolerance['WEIGHT'] = 1E-5
 
         self.post_process()          
         
@@ -1888,11 +1548,11 @@ class test_spw_poln(test_base):
         self.assertEqual(inp_nrow, out_nrow)
 
         # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r3'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
         self.assertEqual(pol_col['r1'][0], 1,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
@@ -1932,15 +1592,14 @@ class test_spw_poln(test_base):
         self.assertEqual(inp_nrow, out_nrow)
 
         # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
         self.assertEqual(pol_col['r1'][0], 0,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
         self.assertEqual(pol_col['r2'][0], 1,'Error re-indexing POLARIZATION_ID of DATA_DESCRIPTION table')
-
 
     def test_spwid_poln_LL(self):
         '''mstransform: split one spw ID, polarization LL from RR,LL'''
@@ -2012,10 +1671,10 @@ class test_spw_poln(test_base):
         self.assertEqual(inp_nrow, out_nrow)
 
         # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        spw_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(spw_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
+        self.assertEqual(spw_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
+        self.assertEqual(spw_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
 
         pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
         self.assertEqual(pol_col['r1'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
@@ -2078,147 +1737,10 @@ class test_spw_poln(test_base):
         listobs(self.outputms, listfile='list.obs')
         self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
 
-    def test_mms_spw_selection(self):
-        '''mstransform: Create MMS and select two spws with different polarization shapes'''
-        self.outputms = '3cspw12.mms'
-        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='1,2',
-                    createmms=True, separationaxis='spw')
+        # Check the FEED table
+        out_feed_spw = th.getVarCol(self.outputms+'/FEED', 'SPECTRAL_WINDOW_ID')
+        self.assertEqual(len(out_feed_spw.keys()), 26)
 
-        # Verify the input versus the output
-        myms = mstool()
-        myms.open(self.vis)
-        myms.msselect({'spw':'1,2'})
-        inp_nrow = myms.nrow()
-        myms.close()
-
-        myms.open(self.outputms)
-        out_nrow = myms.nrow()
-        myms.close()
-        self.assertEqual(inp_nrow, out_nrow)
-
-        # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 2, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-
-        pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
-        self.assertEqual(pol_col['r1'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-        self.assertEqual(pol_col['r2'][0], 3,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-
-        # Verify that POLARIZATION table is not re-sized.
-        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
-        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
-
-    def test_mms_spw_selection2(self):
-        '''mstransform: Create MMS and select two spws with different polarization shapes'''
-        self.outputms = '3cspw01.mms'
-        # spw=0 contains two DD in DATA_DESCRIPTION table
-        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0,1',
-                    createmms=True, separationaxis='spw')
-
-        # Verify the input versus the output
-        myms = mstool()
-        myms.open(self.vis)
-        myms.msselect({'spw':'0,1'})
-        inp_nrow = myms.nrow()
-        myms.close()
-
-        myms.open(self.outputms)
-        out_nrow = myms.nrow()
-        myms.close()
-        self.assertEqual(inp_nrow, out_nrow)
-
-        # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-
-        pol_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'POLARIZATION_ID')
-        self.assertEqual(pol_col['r1'][0], 0,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-        self.assertEqual(pol_col['r2'][0], 1,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-        self.assertEqual(pol_col['r3'][0], 2,'Error in POLARIZATION_ID of DATA_DESCRIPTION table')
-
-        # Verify that POLARIZATION table is not re-sized.
-        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
-        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
-
-    def test_mms_spw_selection3(self):
-        '''mstransform: Create MMS and select three spws with numsubms=2'''
-        self.outputms = '3cspw012.mms'
-        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0,1,2',
-                    createmms=True, separationaxis='spw', numsubms=2)
-
-        # Verify the input versus the output
-        msmdt = msmdtool()
-        msmdt.open(self.outputms)
-        out_dds = msmdt.datadescids()
-        out_nrow = msmdt.nrows()
-        msmdt.done()
-
-        self.assertTrue(out_nrow,5200)
-        ref = [0,1,2,3]
-        for i in out_dds:
-            self.assertEqual(out_dds[i], ref[i])
-
-        # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r4'][0], 2,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-
-    def test_mms_scan_spw_partition(self):
-        '''mstransform: Create MMS and part by scan/spw'''
-        self.outputms = '3cscanspw02.mms'
-        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', spw='0,2',
-                    createmms=True)
-
-        # Verify the input versus the output
-        msmdt = msmdtool()
-        msmdt.open(self.outputms)
-        out_dds = msmdt.datadescids()
-        msmdt.done()
-
-        ref = [0,1,2]
-        for i in out_dds:
-            self.assertEqual(out_dds[i], ref[i])
-
-        # Verify that DATA_DESCRIPTION table is properly re-indexed.
-        dd_col = th.getVarCol(self.outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')
-        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')
-        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r2'][0], 0,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-        self.assertEqual(dd_col['r3'][0], 1,'Error re-indexing SPECTRAL_WINDOW_ID of DATA_DESCRIPTION table')
-
-    def test_mms_XXYY_selection(self):
-        '''mstransform: correlation='RR,LL' should select and re-index properly'''
-        self.outputms = '3cRRLL.mms'
-        # spw 0 should not be processed. The selection should happen before the MMS work
-        mstransform(vis=self.vis, outputvis=self.outputms, datacolumn='data', correlation='RR,LL',
-                    createmms=True)
-        
-        msmdt = msmdtool()
-        msmdt.open(self.outputms)
-        out_dds = msmdt.datadescids()
-        msmdt.done()
-        
-        ref = [0,1]
-        for i in out_dds:
-            self.assertEqual(out_dds[i], ref[i])
-        
-        pol_col = th.getVarCol(self.outputms+'/POLARIZATION','NUM_CORR')
-        self.assertEqual(pol_col['r1'][0], 0,'Error in NUM_CORR of POLARIZATION table')
-        self.assertEqual(pol_col['r2'][0], 0,'Error in NUM_CORR of POLARIZATION table')
-        self.assertEqual(pol_col['r3'][0], 2,'Error in NUM_CORR of POLARIZATION table')
-        self.assertEqual(pol_col['r4'][0], 2,'Error in NUM_CORR of POLARIZATION table')
-
-        # Verify that POLARIZATION table is not re-sized.
-        corr_col = th.getVarCol(self.outputms+'/POLARIZATION', 'NUM_CORR')
-        self.assertEqual(corr_col.keys().__len__(), 4, 'Wrong number of rows in POLARIZATION table')
 
 class testFlags(test_base):
     '''Test the keepflags parameter'''
@@ -2259,7 +1781,7 @@ class testFlags(test_base):
         
         print 'Expected Error!'
         
-
+        
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2286,8 +1808,6 @@ def suite():
             test_Shape,
             test_Columns,
             test_SeparateSPWs,
-            test_MMS,
-            test_Parallel,
             test_state,
             test_WeightSpectrum,
             test_channelAverageByDefault,

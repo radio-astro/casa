@@ -45,7 +45,11 @@ synthesisdeconvolver::~synthesisdeconvolver()
   try 
     {
       casa::Record rec = *toRecord( decpars );
-      itsDeconvolver->setupDeconvolution( rec );
+
+      SynthesisParamsDeconv decpars;
+      decpars.fromRecord( rec );
+      itsDeconvolver->setupDeconvolution( decpars );
+      //      itsDeconvolver->setupDeconvolution( rec );
     } 
   catch  (AipsError x) 
     {

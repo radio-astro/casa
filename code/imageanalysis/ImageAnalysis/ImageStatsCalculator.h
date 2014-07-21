@@ -127,7 +127,7 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
-    inline Bool _supportsMultipleRegions() {return True;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
     std::auto_ptr<ImageStatistics<Float> > _statistics;

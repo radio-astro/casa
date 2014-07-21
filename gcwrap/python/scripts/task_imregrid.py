@@ -90,15 +90,19 @@ def imregrid(
 
         # The actual regridding.
         _myia.open(imagename)
-        _tmp = _myia.regrid(
-            outfile=output, shape=shape, csys=csys.torecord(),
-            axes=axes, asvelocity=asvelocity,
-            method=interpolation, decimate=decimate,
-            replicate=replicate, overwrite=overwrite
-        )
-        _myia.done()
-        _tmp.done()
-        return True
+        # put this in its own try/catch so, if exception, the message is not
+        # logged twice
+        try:
+            _tmp = _myia.regrid(
+                outfile=output, shape=shape, csys=csys.torecord(),
+                axes=axes, asvelocity=asvelocity,
+                method=interpolation, decimate=decimate,
+                replicate=replicate, overwrite=overwrite
+            )
+            return True
+        except Exception, instance:
+            # The error message has already been logged by ia.regrid()
+            return False
         
     except Exception, instance:
         casalog.post("Error: " + str(instance), "SEVERE")

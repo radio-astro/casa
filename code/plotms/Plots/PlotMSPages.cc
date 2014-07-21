@@ -60,6 +60,10 @@ PlotMSPage PlotMSPages::currentPage() const {
     return itsPages_[itsCurrentPageNum_];
 }
 
+PlotMSPage PlotMSPages::getFirstPage() const {
+	return itsPages_[0];
+}
+
 unsigned int PlotMSPages::totalPages() const {
 	return itsPages_.size();
 }
@@ -144,6 +148,12 @@ void PlotMSPages::disown( PlotMSPlot* plot ){
 	}
 }
 
+void PlotMSPages::disown( int row, int col, PlotMSPlot* plot ){
+	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
+		itsPages_[i].disown( row, col, plot );
+	}
+}
+
 void PlotMSPages::clearCanvas( int row, int col ){
 	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
 		itsPages_[i].clearCanvas( row, col );
@@ -160,6 +170,10 @@ void PlotMSPages::resize(size_t pages) {
     // Shrink if needed
     if(pages < currentSize) {
     	itsPages_.resize(pages, PlotMSPage(*this));
+    	//Reset the current page number if it is too big.
+    	if ( itsCurrentPageNum_>= itsPages_.size() ){
+    		itsCurrentPageNum_ = 0;
+    	}
     }
     // If we are adding new pages, initialize them
     for(size_t i = currentSize; i < pages; ++i) {
@@ -185,6 +199,19 @@ bool PlotMSPages::gridChanged( int rows, int cols ){
 
 bool PlotMSPages::isSpot( int rowIndex, int colIndex, PlotMSPlot* plot ) const {
 	return itsPages_[itsCurrentPageNum_].isSpot( rowIndex, colIndex, plot );
+}
+
+bool PlotMSPages::canvasIsOwnedBy( int row, int col, PlotMSPlot* plot ) const {
+	bool canvasOwned = false;
+	//int pageCount = itsPages_.size();
+	//for ( int i = 0; i < pageCount; i++ ){
+		QList<PlotMSPlot*> plotOwners = itsPages_[/*i*/itsCurrentPageNum_].owner(row,col);
+		if ( plotOwners.contains( plot )){
+			canvasOwned = true;
+			//break;
+		}
+	//}
+	return canvasOwned;
 }
 
 pair<int,int> PlotMSPages::findEmptySpot() const {

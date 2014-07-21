@@ -337,7 +337,7 @@ void PlotMSPlotter::showError(
 		// We are likely running from an automated python script, or otherwise
 		// don't want to create any blocking popups.
 		// Call upon showMessage to do the right thing.
-		showMessage( String( (isWarning)? "WARNING: " : "ERROR: ")  +  message , title);
+		showMessage( String( (isWarning)? "WARNING: " : "ERROR: ")  +  message , title, isWarning);
 
 	 } else {
 	
@@ -352,13 +352,24 @@ void PlotMSPlotter::showError(
 
 
 
-void PlotMSPlotter::showMessage(const String& message, const String& title) {
+void PlotMSPlotter::showMessage(const String& message, const String& title, bool warning) {
 	if (itsParent_->its_want_avoid_popups)  {
+
 
 		// Update status bar 
 		// (Ignore the title)
+
+		QPalette pal = statusbar->palette();
+		if ( warning ){
+			pal.setColor(statusbar->foregroundRole(), Qt::red );
+		}
+		else {
+			pal.setColor( statusbar->foregroundRole(), Qt::black );
+		}
+		statusbar->setPalette( pal );
 		statusbar->showMessage( QString::fromStdString( message ));
 		
+
 		// Also write msg to logger
 		// (not entirely sure how this is supposed to be done)
 		getParent()->getLogger()->postMessage(PMS::LOG_ORIGIN, String("showError()"), 
@@ -443,7 +454,7 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
 void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // GUI initialize.
     setupUi(this);
-    
+
     // Try to initialize plotter, and throw error on failure.
     itsFactory_ = plotterImplementation(imp);
     if(itsFactory_.null()) {
@@ -693,9 +704,23 @@ bool PlotMSPlotter::exportPlot( const PlotExportFormat& format, const bool async
 }
 
 void PlotMSPlotter::currentThreadFinished() {
-    // Run post-thread method as needed.
-	if ( itsCurrentThread_!= NULL && ! itsCurrentThread_->wasCanceled() ){
-		itsCurrentThread_->postThreadMethod();
+	if ( itsCurrentThread_!= NULL ){
+		bool cancelled = itsCurrentThread_->wasCanceled();
+		//Post an error if the thread was cancelled and there is an
+		//error message.
+		if (cancelled ){
+			String error = itsCurrentThread_->getError();
+			if ( error.length() > 0 ){
+				String errorOperation = itsCurrentThread_->getErrorTitle();
+				bool errorWarning = itsCurrentThread_->isErrorWarning();
+				showError( error, errorOperation, errorWarning );
+			}
+		}
+
+		//Notify that the data has been loaded.
+		if ( itsCurrentThread_->isCacheThread() ){
+			itsPlotTab_->completePlotting( !cancelled );
+		}
 	}
 
     // Clean up current thread.

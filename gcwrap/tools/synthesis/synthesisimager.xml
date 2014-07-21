@@ -450,6 +450,11 @@ Define the image coordinate systems and shapes.
      <value>false</value>
      </param>
 
+     <param type="stringArray" name="uvtaper">
+     <description>Parameters of uv-taper Gaussian</description>
+     <value></value>
+     </param>
+
 
 </input>
 <returns type="bool"/>

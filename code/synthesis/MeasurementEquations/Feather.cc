@@ -44,7 +44,6 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
-#include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -63,6 +62,8 @@
 #include <casadbus/plotserver/PlotServerProxy.h>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
+
+#include <components/ComponentModels/GaussianDeconvolver.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -163,7 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try {
       //cerr << "highBeam " << hBeam_p.getMajor() << " " << hBeam_p.getMinor() << " " << hBeam_p.getPA() << endl; 
       retval=
-      hBeam_p.deconvolve(toBeUsed, newHighBeam);
+      GaussianDeconvolver::deconvolve(toBeUsed, newHighBeam, hBeam_p);
       //cerr << "beam to be used " << toBeUsed.getMajor() << " " << toBeUsed.getMinor() << "  " << toBeUsed.getPA() << endl;
     }
     catch (const AipsError& x) {
@@ -243,7 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     GaussianBeam newBeam(halfpb, halfpb, Quantity(0.0, "deg"));
     GaussianBeam toBeUsed;
     try {
-      lBeam_p.deconvolve(toBeUsed, newBeam);
+        GaussianDeconvolver::deconvolve(toBeUsed, newBeam, lBeam_p);
     }
     catch (const AipsError& x) {
       throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
@@ -757,7 +758,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       GaussianBeam toBeUsed;
       //cerr << "beam " << beam.toVector() << endl;
       //cerr << "newBeam " << newBeam.toVector() << endl;
-      beam.deconvolve(toBeUsed, newBeam);
+      GaussianDeconvolver::deconvolve(toBeUsed, newBeam, beam);
       extraconv.resize(3);
       // use the Major difference
       extraconv(0) = toBeUsed.getMajor();

@@ -25,7 +25,7 @@
 using namespace PointingMethodMod;
 
 template<>
- struct enum_set_traits<PointingMethodMod::PointingMethod> : public enum_set_traiter<PointingMethodMod::PointingMethod,5,PointingMethodMod::CIRCLE> {};
+ struct enum_set_traits<PointingMethodMod::PointingMethod> : public enum_set_traiter<PointingMethodMod::PointingMethod,6,PointingMethodMod::HOLOGRAPHY> {};
 
 template<>
 class enum_map_traits<PointingMethodMod::PointingMethod,void> : public enum_map_traiter<PointingMethodMod::PointingMethod,void> {
@@ -47,6 +47,8 @@ public:
      (PointingMethodMod::CROSS,ep((int)PointingMethodMod::CROSS,"CROSS","un-documented")));
     m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
      (PointingMethodMod::CIRCLE,ep((int)PointingMethodMod::CIRCLE,"CIRCLE","un-documented")));
+    m_.insert(pair<PointingMethodMod::PointingMethod,EnumPar<void> >
+     (PointingMethodMod::HOLOGRAPHY,ep((int)PointingMethodMod::HOLOGRAPHY,"HOLOGRAPHY","un-documented")));
     return true;
   }
   static map<PointingMethodMod::PointingMethod,EnumPar<void> > m_;

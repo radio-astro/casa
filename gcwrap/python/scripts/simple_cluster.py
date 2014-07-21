@@ -1262,6 +1262,17 @@ class simple_cluster:
 
 		return return_list
 
+    def get_output_return_list(self):
+        """
+        Gather return outputvis variables from the different engines back to the main CASA controller instance
+        """
+
+        output_return_list = {}
+        jobQueue = self._JobQueueManager.getOutputJobs()
+        for job in jobQueue:
+            output_return_list[job.getCommandArguments()['outputvis']]=job.getReturnValues()
+
+        return output_return_list
 
     ###########################################################################
     ###   execution status management

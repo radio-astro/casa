@@ -34,9 +34,9 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
 #include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
@@ -86,7 +86,7 @@ class SynthesisImager
 			  const Bool readonly=False, 
 			  const Bool incrementModel=False);
 
-  virtual Bool defineImage(const SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
+  virtual Bool defineImage(SynthesisParamsImage& impars, const SynthesisParamsGrid& gridpars);
 
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
@@ -141,7 +141,11 @@ class SynthesisImager
 	      const Double robust=0.0,
 	      const Quantity& fieldofview=Quantity(0.0, "arcsec"),
 	      const Int npixels=0, 
-	      const Bool multiField=False);
+	      const Bool multiField=False,
+	      const String& filtertype=String("Gaussian"),
+	      const Quantity& filterbmaj=Quantity(0.0,"deg"),
+	      const Quantity& filterbmin=Quantity(0.0,"deg"),
+	      const Quantity& filterbpa=Quantity(0.0,"deg")  );
 
   //the following get rid of the mappers in this object
   void resetMappers();
@@ -149,7 +153,7 @@ class SynthesisImager
   CountedPtr<SIImageStore> imageStore(const Int id=0);
 
   //Record getMajorCycleControls();
-  void   executeMajorCycle(Record& controls, const Bool useViVB2=False);
+  void executeMajorCycle(Record& controls, const Bool useViVB2=False);
 
   // make the psf images  i.e grid weight rather than data
   void makePSF(const Bool useViVB2=False);
@@ -189,6 +193,8 @@ protected:
 		       const Bool conjBeams  = True,
 		       const Float computePAStep   = 360.0,
 		       const Float rotatePAStep    = 5.0,
+		       const String interpolation = String("linear"),
+		       const Bool freqFrameValid = True,
 		       const Int cache=1000000000,
 		       const Int tile=16);
 
@@ -242,7 +248,7 @@ protected:
 			  const Int tile);
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
-  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
+  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -298,7 +304,11 @@ protected:
   Int facetsStore_p;
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
-  Bool useScratch_p;
+  Bool useScratch_p,readOnly_p;
+  //
+  //  Bool freqFrameValid_p;
+
+  FTMachine::Type datacol_p;
 
 };
 

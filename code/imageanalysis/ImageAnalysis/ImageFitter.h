@@ -174,9 +174,12 @@ public:
 	Record getOutputRecord() const {return _output; }
 
 protected:
-    virtual inline Bool _supportsMultipleRegions() {return True;}
+    virtual inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
+
+    typedef GaussianBeam Angular2DGaussian;
+
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
 	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
@@ -275,7 +278,7 @@ private:
 	) const;
 
 	void _encodeSkyComponentError(
-		SkyComponent& sky, Double facToJy, const ImageInterface<Float>& subIm,
+		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;

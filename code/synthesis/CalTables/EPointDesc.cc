@@ -28,7 +28,7 @@
 
 #include <synthesis/CalTables/EPointDesc.h>
 #include <synthesis/CalTables/SolvableVJDesc.h>
-#include <synthesis/MSVis/MSCalEnums.h>
+#include <msvis/MSVis/MSCalEnums.h>
 #include <tables/Tables/ArrColDesc.h>
 
 namespace casa{

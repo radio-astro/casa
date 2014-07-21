@@ -31,6 +31,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/region/Region.qo.h>
+#include <display/Display/Options.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/FITSImgParser.h>
@@ -42,6 +43,7 @@
 #include <casa/fstream.h>
 #include <casa/Exceptions/Error.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <tr1/functional>
 
 #include <images/Images/PagedImage.h>		/*** needed for global imagePixelType( ) ***/
 #include <images/Images/ImageFITSConverter.h>
@@ -60,22 +62,51 @@
 
 #include <tr1/memory>
 
+using std::tr1::function;
+using std::tr1::get;
+using std::map;
+using std::set;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+	struct dismiss_button_t : public QPushButton {
+		dismiss_button_t( QTableWidgetItem *i, QString u, QString t, QString s, QWidget *parent=0 ) : QPushButton(parent), item(i), url(u),
+                                                                                                      file_type(t), service(s) { }
+		~dismiss_button_t( ) { }
+		QTableWidgetItem *item;
+		QString url;
+		QString path;
+		QString file_type;
+		QString display_type;
+		QString service;
+	};
 
 // forward declare...
 	namespace viewer {
 		std::string canonical_path( const std::string & );
+
+        namespace dvo {
+            void param::mousePressEvent ( QMouseEvent * event ) {
+                 list->setCurrentItem(item);
+                 edit->setFocus( );
+            }
+
+        }
 	}
 
 	QtDataManager::QtDataManager(QtDisplayPanelGui* panel, const char *name, QWidget *parent ) :
 		QWidget(parent), parent_(parent), panel_(panel),
 		ms_selection(new Ui::QtDataMgrMsSelect), rc(viewer::getrc()),
-        slice_available(true), regrid_available(true) {
+        slice_available(true), regrid_available(true), dvo("edu.nrao.casa.dVO", "/casa/dVO", QDBusConnection::sessionBus( ), 0),
+		vo_current_action(0), vo_action_timeout(new QTimer( )), vo_actions_are_enabled(true) {
 
 		setWindowTitle(name);
 
 		setupUi(this);
+
+        setupVO( );
+
+		connect( vo_action_timeout, SIGNAL(timeout( )), SLOT(vo_action_timed_out( )) );
 
 		slice_gen = new viewer::SlicerGen( );
 		slice_gen->initialize(slice_frame);
@@ -277,7 +308,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		connect(save_ds9_region,    SIGNAL(toggled(bool)),                 SLOT(region_ds9_csys_disable(bool)));
 	}
 
-	QtDataManager::~QtDataManager() { }
+	QtDataManager::~QtDataManager() {
+		delete vo_action_timeout;
+	}
 
 
 	void QtDataManager::showTab( std::string tab ) {
@@ -661,9 +694,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDataManager::updateDisplayDatas(QtDisplayData*, Bool ) {
-		for ( tab_info_map_t::iterator it=tab_info.begin( ); it != tab_info.end( ); ++it ) {
-			it->second.notify(this,"update data");
-		}
+		tab_info_map_t::iterator it=tab_info.find(tabs->currentIndex( ));
+		if ( it != tab_info.end( ) ) it->second.notify(this,"update data");
 	}
 
 	void QtDataManager::buildDirTree( std::string /*newpath*/ ) {
@@ -800,6 +832,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	private:
 		float min;
 	};
+
+    void QtDataManager::showEvent( QShowEvent *event ) {
+        QWidget::showEvent(event);
+        updateVOstatus( );
+    }
+    void QtDataManager::enterEvent( QEvent  *event ) {
+        QWidget::enterEvent(event);
+        updateVOstatus( );
+    }
 
 	void QtDataManager::showDisplayButtons(int ddtp,const QString &name) {
 		hideDisplayButtons();
@@ -1297,7 +1338,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				(*it).first->show( );
 				(*it).first->setTitle("velocity range");
 				buf.str("");
-				buf << image_properties.velocities( ).front( ) << ", " << 
+				buf << image_properties.velocities( ).front( ) << ", " <<
                      image_properties.velocities( ).back( ) << " km/s" ;
 				(*it).second->setText(QString::fromStdString(buf.str( )));
 				(*it).second->setCursorPosition(0);
@@ -1307,23 +1348,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDataManager::changeTabContext( int index ) {
-		if ( tabs->tabText(index) == "load" ) {
-			save_options->show( );
-		} else {
-			save_options->hide( );
-		}
-
 		buildDirTree();
+		updateDisplayDatas(0,false);
 	}
 
 	void QtDataManager::init_tab_info( ) {
 		if ( tab_info.size( ) != 0 ) return;
 		for ( int i=0; i < tabs->count( ); ++i ) {
 			if ( tabs->tabText(i) == "load" ) {
-				tab_info.insert(tab_info_map_t::value_type(i,tab_state( load_directory, load_tree_widget_, std::set<int>( ),
+				tab_info.insert(tab_info_map_t::value_type(i,tab_state( load_directory, load_tree_widget_, set<int>( ),
 				                load_info_box, &load_ifields, &QtDataManager::load_tab_notify )));
 			} else if ( tabs->tabText(i) == "save image" ) {
-				std::set<int> filter;
+				set<int> filter;
 				filter.insert(CASAREGION);
 				filter.insert(DS9REGION);
 				filter.insert(MEASUREMENT_SET);
@@ -1334,7 +1370,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				                image_data_list_, img_output_name,
 				                &QtDataManager::image_tab_error )));
 			} else if ( tabs->tabText(i) == "save region" ) {
-				std::set<int> filter;
+				set<int> filter;
 				filter.insert(IMAGE);
 				filter.insert(MEASUREMENT_SET);
 				filter.insert(SKY_CATALOG);
@@ -1983,5 +2019,538 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 update_regrid_options( );
         }
     }
+
+	struct vo_service_config {
+		// name of service => pre-flight configuration
+		function<void(QtDataManager &mgr)> pre_flight;
+		function<const char **( )> flex_params;
+		vo_service_config( function<void(QtDataManager &mgr)> pref, function<const char **( )> flex ) : pre_flight(pref), flex_params(flex) { }
+
+	};
+
+	void lambda_dsoc_test_pre_( QtDataManager &dm ) {
+		dm.ra_size_val->setRange( 0, 360 );
+        dm.vo_ra_size->setText("360.0");
+        dm.vo_dec_size->setText("360.0");
+        dm.vo_dec->setText("0.0");
+        dm.vo_ra->setText("180.0");
+
+	}
+	const char **lambda_dsoc_test_flex_( ) {
+		static const char *result[] = { "Band", "BAND", "1.0E-8/5",
+										"Time", "TIME", "1990-07-04/2014",
+										"Mode", "MODE", "archival",
+										"Collection", "COLLECTION", "alma,jvla,vla", 0 };
+		return result;
+	}
+
+    void QtDataManager::setupVO( ) {
+
+		// initialize the default service name...
+		vo_selected_service = vo_service->currentText( );
+
+		const char *vo_service_service_map[] = { "NRAO/DSOC Test Service", "http://vaosa-vm1.aoc.nrao.edu/ivoa-dal/siapv2-vao",
+												 "Chandra X-ray Observatory Data Archive", "http://cda.harvard.edu/cxcsiap/queryImages?",
+												 "Chandra Source Catalog", "http://cda.harvard.edu/cscsiap/queryImages?",
+												 0, 0 };
+
+        const char *vo_labels_to_params_defaults[] = { "Band", "BAND", "1.0E-8/5",
+                                                       "Time", "TIME", "1990-07-04/2014",
+                                                       "Mode", "MODE", "archival",
+                                                       "Collection", "COLLECTION", "alma,jvla,vla",
+													   0, 0, 0 };
+
+		for ( const char **name=vo_service_service_map, **url=vo_service_service_map+1; *name; name+=2, url+=2 ) {
+			vo_service_name_to_url[*name] = *url;
+		}
+
+        // save the default background for QLineEdit...
+        QPalette pal = vo_ra->palette( );
+        vo_default_bg = pal.color( vo_ra->backgroundRole() );
+
+        // set up QLineEdit validators...
+		//  >>>>>>=========================> move definitions back to here from end of class once we have lambda functions...............
+        /*QDoubleValidator * */ra_val = new QDoubleValidator(this);
+        /*QDoubleValidator * */dec_val = ra_val;
+        /*QDoubleValidator * */ra_size_val = new QDoubleValidator(this);;
+        /*QDoubleValidator * */dec_size_val = ra_size_val;
+
+        vo_ra->setValidator(ra_val);
+        vo_dec->setValidator(dec_val);
+        vo_ra_size->setValidator(ra_size_val);
+        vo_dec_size->setValidator(dec_size_val);
+
+		lambda_dsoc_test_pre_(*this);
+
+        for ( const char **valp=vo_labels_to_params_defaults; *valp; valp += 3 ) {
+            voparameters.push_back(vo_param_t(false, valp[0], valp[1], valp[2], NULL));
+            // user actions fills vo_flex_params_entry
+            vo_flex_params->addItem(valp[0]);
+        }
+
+		connect( vo_clear, SIGNAL(pressed( )), SLOT(vo_clear_table( )) );
+        connect( vo_query, SIGNAL(pressed( )), SLOT(vo_launch_query( )) );
+		connect( vo_raster, SIGNAL(pressed( )), SLOT(vo_fetch_data( )) );
+		connect( vo_contour, SIGNAL(pressed( )), SLOT(vo_fetch_data( )) );
+
+        connect( voaddb, SIGNAL(pressed( )), this, SLOT(addVOParam( )) );
+        connect( voremoveb, SIGNAL(pressed( )), this, SLOT(removeVOParam( )) );
+
+        connect( vo_ra, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
+        connect( vo_ra_size, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
+        connect( vo_dec, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
+        connect( vo_dec_size, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
+
+		connect( vo_service, SIGNAL(currentIndexChanged(QString)), this, SLOT(vo_service_select(QString)) );
+
+        connect( &dvo, SIGNAL(query_begin(int,QString,QtStringMap)), this, SLOT(vo_query_begin(int,QString,QtStringMap)) );
+        connect( &dvo, SIGNAL(query_data(int,QString,QtStringMap)), this, SLOT(vo_query_row(int,QString,QtStringMap)) );
+        connect( &dvo, SIGNAL(query_description(int,QString,QtStringMap)), this, SLOT(vo_query_description(int,QString,QtStringMap)) );
+        connect( &dvo, SIGNAL(query_end(int,QString,QtStringMap)), this, SLOT(vo_query_complete(int,QString,QtStringMap)) );
+		connect( &dvo, SIGNAL(query_error(int,QString,QString)), this, SLOT(vo_error(int,QString,QString)) );
+		connect( &dvo, SIGNAL(fetch_complete(int,QString)), this, SLOT(vo_fetch_complete(int,QString)) );
+		connect( &dvo, SIGNAL(fetch_progress(int,QString,double,double,double,double)),
+				 this, SLOT(vo_fetch_progress(int,QString,double,double,double,double)) );
+		connect( &dvo, SIGNAL(fetch_error(int,QString,QString)), this, SLOT(vo_error(int,QString,QString)) );
+
+        vo_flex_params->setCurrentRow(0);
+        vo_table->setSelectionBehavior(QAbstractItemView::SelectRows);
+		connect( vo_table, SIGNAL(itemSelectionChanged( )), SLOT(vo_selection_changed( )) );
+
+		vo_init_columns( );
+
+    }
+
+     bool QtDataManager::updateVOstatus( ) {
+		static bool dvo_service_down = false;
+        if ( dvo.isValid( ) ) {
+			vo_enable_actions( );
+			if ( dvo_service_down ) vo_clear_status( );
+			dvo_service_down = false;
+			return true;
+        } else {
+			vo_disable_actions( );
+			error( "DBus Virtual Observatory Service is NOT available..." );
+			dvo_service_down = true;
+			return false;
+        }
+    }
+
+    void QtDataManager::vo_clear_param( ) {
+        QWidget *sender = static_cast<QWidget*>(sender);
+        if ( sender && dvo_missing_parameters.find(sender) != dvo_missing_parameters.end( ) ) {
+            QPalette pal = sender->palette( );
+            pal.setColor( sender->backgroundRole(), vo_default_bg );
+            sender->setPalette(pal);
+        }
+    }
+
+    void QtDataManager::vo_query_begin( int count, const QString &service, const QtStringMap &values ) {
+		vo_action_with_timeout_reset( );
+        if ( values["QUERY_STATUS"] == "OK" ) {
+			QString url_base = values["URL base"];
+			QString url_full = values["URL full"];
+		} else {
+			qDebug() << "failed query to " << values["URL base"];
+		}
+    }
+
+    static QStringList add_to_qstringlist( const QStringList &l, const QString &v ) {
+        QStringList result(l);
+        result << v;
+        return result;
+    }
+
+    static std::string to_string( const std::pair<QString,int>& data) {
+        std::ostringstream str;
+        str << data.first.toStdString( ) << ", " << data.second;
+        return str.str();
+    }
+
+    void QtDataManager::vo_query_description( int count, const QString &service, const QtStringMap &values ) {
+		qDebug( ) << "------------------------------------------- description -------------------------------------------";
+		qDebug( ) << service;
+		qDebug( ) << "---------------------------------------------------------------------------------------------------";
+		qDebug( ) << values;
+		vo_action_with_timeout_reset( );
+        int initial_columns = vo_labels.size( );
+        vector<QString>::size_type cur_row = vo_urls.size( );
+        bool found_url = false;
+        for ( QtStringMap::const_iterator it=values.begin( ); it != values.end( ); ++it ) {
+            if ( it.key( ) == "access_url" || it.key( ) == "accref" )
+                 found_url = true;
+            else if ( vo_label2col.find(it.key( )) == vo_label2col.end( ) ) {
+                 vo_labels.push_back(it.key( ));
+                 // column #0 has the delete row button...
+                 // so column numbering for info starts at column #1...
+                 vo_label2col[it.key( )] = vo_labels.size( );
+				 QStringList desc = it.value( ).split(":@:");
+				 vo_labels_tip.push_back(desc.last( ));
+            }
+        }
+        if ( found_url && vo_labels.size( ) != initial_columns ) {
+			int size = std::min(vo_labels.size( ),vo_labels_tip.size( ));
+            vo_table->setColumnCount(size+1);
+			for ( int i = 0; i < size; ++i ) {
+				QTableWidgetItem *item = new QTableWidgetItem( vo_labels[i] );
+				item->setToolTip(vo_labels_tip[i]);
+				vo_table->setHorizontalHeaderItem(i+1,item);
+			}
+        }
+    }
+
+    void QtDataManager::vo_query_complete( int id, const QString &service, const QtStringMap &values ) {
+		// std::copy( dvo_working_set.begin(), dvo_working_set.end(), std::ostream_iterator<int>( std::cout, "\n" ));
+		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
+		if ( iter != dvo_working_set.end( ) ) dvo_working_set.erase(iter);
+		vo_action_with_timeout_complete( );
+    }
+
+    void QtDataManager::vo_error( int id, const QString &service, const QString &err ) {
+		error( err );
+		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
+		if ( iter != dvo_working_set.end( ) ) dvo_working_set.erase(iter);
+		vo_action_with_timeout_complete( );
+    }
+
+    void QtDataManager::vo_query_row( int id, const QString &service, const QtStringMap &values ) {
+		vo_action_with_timeout_reset( );
+		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
+		if ( dvo_working_set.find(id) == dvo_working_set.end( ) ) return;
+		if ( iter->count < 3 ) {
+			qDebug( ) << "-------------------------------------------      row    -------------------------------------------";
+			qDebug( ) << service;
+			qDebug( ) << "---------------------------------------------------------------------------------------------------";
+			qDebug( ) << values;
+		}
+		const int truncate_length = 500;
+		if ( iter->count >= truncate_length ) {
+			warning( QString("Truncating query results after %1 entries...").arg(truncate_length) );
+			dvo.cancel(id);
+			dvo_working_set.erase(iter);
+			vo_action_with_timeout_complete( );
+			return;
+		}
+		iter->increment( );
+
+        int row = vo_table->rowCount();
+        vo_table->insertRow(row);
+        QString url;
+		QString type;
+		bool skip_row = false;
+		QTableWidgetItem *reference_item = 0;
+        for ( QtStringMap::const_iterator it=values.begin( ); it != values.end( ); ++it ) {
+            if ( it.key( ) == "access_url" || it.key( ) == "accref" ) {
+                 url = it.value( );
+            } else {
+				if ( it.key( ) == "access_format" || it.key( ) == "imgfmt" ) {
+					type = it.value( );
+					if ( type != "image/fits" ) {
+						// drop any non-fits rows...
+						skip_row = true;
+						break;
+					}
+				}
+                std::map<QString,int>::iterator col = vo_label2col.find(it.key( ));
+                if ( col != vo_label2col.end( ) ) {
+                     QTableWidgetItem *cell = new QTableWidgetItem(it.value( ));
+					 if ( reference_item == 0 ) reference_item = cell;
+					 cell->setFlags( cell->flags() ^ Qt::ItemIsEditable );
+                     vo_table->setItem(row,col->second,cell);
+                }
+            }
+        }
+
+		if ( reference_item && ! url.isEmpty( ) && ! skip_row ) {
+			vo_table->setCellWidget(row,0,new_vo_dismiss_button(reference_item,url,type));
+		} else vo_table->removeRow( row );
+
+    }
+
+	void QtDataManager::vo_fetch_complete( int id, QString path ) {
+		set<dvo_working_item>::iterator iter = dvo_working_set.find(id);
+		if ( iter == dvo_working_set.end( ) ) return;
+		dvo_working_set.erase(iter);
+		if ( vo_current_action ) {
+			dismiss_button_t *disb = static_cast<dismiss_button_t*>(vo_current_action);
+			if ( disb && disb->path.isEmpty( ) == false ) {
+				panel_->createDD( disb->path.toStdString( ), "image",
+								  disb->display_type.toStdString( ), True, -1,
+								  false, false, false/*, ddo, image_properties*/ );
+			}
+			vo_clear_status_delayed(3);
+		} else vo_clear_status( );
+		vo_action_with_timeout_complete( );
+	}
+
+	void QtDataManager::vo_fetch_progress( int id, QString path, double total_size, double total_done, double ultotal, double uldone ) {
+		// if ( dvo_working_set.find(id) == dvo_working_set.end( ) ) return;
+		status( QString("%1% (of %2MB) complete").arg(total_done/total_size * 100.0,0,'f',0).arg(total_size/(1024.0*1024.0),0,'f',1) );
+		vo_action_with_timeout_reset( );
+	}
+
+    void QtDataManager::vo_flag_missing_param( QLineEdit *widget ) {
+         QPalette pal = widget->palette();
+         pal.setColor(widget->backgroundRole(), Qt::yellow);
+         widget->setPalette(pal);
+         dvo_missing_parameters.insert(widget);
+    }
+
+    bool QtDataManager::collect_vo_parameters( double &ra, double &dec, double &ra_size, double &dec_size, QVariantMap &params ) {
+        bool OK = true;
+
+        // ra
+        QString ra_str = vo_ra->text( );
+        if ( ra_str.size( ) <= 0 ) {
+            OK = false;
+            vo_flag_missing_param(vo_ra);
+        } else ra = ra_str.toDouble( );
+
+        // dec
+        QString dec_str = vo_dec->text( );
+        if ( dec_str.size( ) <= 0 ) {
+            OK = false;
+            vo_flag_missing_param(vo_dec);
+        } else dec = dec_str.toDouble( );
+
+        // ra size
+        QString ra_size_str = vo_ra_size->text( );
+        if ( ra_size_str.size( ) <= 0 ) {
+            OK = false;
+            vo_flag_missing_param(vo_ra_size);
+        } else ra_size = ra_size_str.toDouble( );
+
+        // dec size
+        QString dec_size_str = vo_dec_size->text( );
+        if ( dec_size_str.size( ) <= 0 ) {
+            OK = false;
+            vo_flag_missing_param(vo_dec_size);
+        } else dec_size = dec_size_str.toDouble( );
+
+        // flexible parameters...
+        for ( int i=0; i < voparameters.size( ); ++i ) {
+            if ( get<0>(voparameters[i]) ) {
+                viewer::dvo::param *param = get<4>(voparameters[i]);
+                if ( param && param->edit->text( ).size( ) <= 0 ) {
+                    OK = false;
+                    vo_flag_missing_param(param->edit);
+                } else params.insert(get<2>(voparameters[i]),param->edit->text( ));
+            }
+        }
+        return OK;
+    }
+
+    void QtDataManager::vo_launch_query( ) {
+        if ( ! updateVOstatus( ) ) return;
+        double ra, dec, ra_size, dec_size;
+        QVariantMap flex_params;
+        collect_vo_parameters( ra, dec, ra_size, dec_size, flex_params );
+		QStringList vos;
+		vos.push_back(vo_service_name_to_url[vo_selected_service]);
+		int id = dvo.query(ra,dec,ra_size,dec_size, "image/fits", flex_params,vos);
+        dvo_working_set.insert(id);
+		vo_action_with_timeout( id, 5, "VO query" );
+    }
+
+	void QtDataManager::vo_selection_changed( ) {
+		vo_selected_rows.clear( );
+		QList<QTableWidgetSelectionRange> range = vo_table->selectedRanges( );
+		for ( QList<QTableWidgetSelectionRange>::iterator it = range.begin( ); it != range.end( ); ++it ) {
+			for ( int r=it->topRow( ); r <= it->bottomRow( ); ++r )vo_selected_rows.push_back(r);
+		}
+		if ( vo_selected_rows.size( ) > 0 ) {
+			vo_contour->setEnabled( true );
+			vo_raster->setEnabled( true );
+		} else {
+			vo_contour->setEnabled( false );
+			vo_raster->setEnabled( false );
+		}
+	}
+
+	void QtDataManager::vo_fetch_data( ) {
+		if ( vo_table->currentRow( ) < 0 )
+			error( "No row is currently selected..." );
+		else {
+			QWidget *widget = vo_table->cellWidget(vo_table->currentRow( ),0);
+			if ( widget ) {
+				dismiss_button_t *disb = static_cast<dismiss_button_t*>(widget);
+				if ( disb && disb->url.size( ) > 0 ) {
+					QPushButton *button = dynamic_cast<QPushButton*>(sender());
+					if ( button ) {
+						QString qname(disb->file_type);
+						qname.replace('/','_');
+						qname.push_front("dvo_");
+						disb->path = QString::fromStdString(viewer::options.temporaryPath( qname.toStdString( ) ));
+						disb->display_type = button->text( );
+						vo_current_action = disb;
+						qDebug() << "fetch url: " << disb->url;
+						qDebug() << "fetch out: " << disb->path;
+						int id = dvo.fetch(disb->url,disb->path,false);
+						dvo_working_set.insert( id );
+						vo_action_with_timeout( id, 5, "VO fetch" );
+						// disable buttons, set timer (for timeout... reset with each progress event), etc.
+					}
+				}
+			}
+		}
+	}
+
+	void QtDataManager::vo_dismiss_row( ) {
+		QPushButton *sender = static_cast<QPushButton*>(QObject::sender( ));
+		if ( sender ) {
+			dismiss_button_t *disb = static_cast<dismiss_button_t*>(sender);
+			if ( disb ) {
+				int row = vo_table->row(disb->item);
+				if ( row >= 0 ) {
+					vo_table->removeRow( row );
+					if ( row == 0 ) vo_table->selectRow( 1 );
+					else vo_table->selectRow(row);
+				}
+			}
+		}
+	}
+
+    void QtDataManager::addVOParam( ) {
+        // how many "available to activate" flex params...
+        int count = vo_flex_params->count( );
+        if ( count == 0 ) return;
+        // fetch the current "available" flex param...
+        int cur = vo_flex_params->currentRow( );
+        QListWidgetItem *item = vo_flex_params->item(cur);
+        if ( ! item ) return;
+        QString current = item->text( );
+        // find state for current param...
+        for ( int i=0; i < voparameters.size( ); ++i ) {
+            if ( current == get<1>(voparameters[i]) ) {
+                int entries = vo_flex_params_entry->count( );
+                // remove current param from the "available to activate" list...
+                vo_flex_params->removeItemWidget(item);
+                delete item;
+                // create new flex param entry widget...
+                QListWidgetItem *newitem = new QListWidgetItem( );
+                vo_flex_params_entry->addItem(newitem);
+                viewer::dvo::param *param = new viewer::dvo::param( vo_flex_params_entry, newitem );
+                connect( param->edit, SIGNAL(textChanged(QString)), this, SLOT(vo_clear_param( )) );
+                get<4>(voparameters[i]) = param;
+                // if the size hint is not set, then the group boxes pile up...
+                newitem->setSizeHint(get<4>(voparameters[i])->minimumSizeHint());
+                vo_flex_params_entry->setItemWidget(newitem,get<4>(voparameters[i]));
+                // mark the parameter as active...
+                get<0>(voparameters[i]) = true;
+                // set the focus to the line edit widget...
+                get<4>(voparameters[i])->setFocus( );
+                // set the title and default value...
+                get<4>(voparameters[i])->setTitle(get<1>(voparameters[i]));
+                get<4>(voparameters[i])->edit->setText(get<3>(voparameters[i]));
+                // set the new active parameter entry as the active item...
+                vo_flex_params_entry->setCurrentItem(newitem);
+                int choices = vo_flex_params->count( );
+                // enable the "remove" button if this is the first "enabled" flex param...
+                if ( entries == 0 ) voremoveb->setEnabled(true);
+                // disable the "add" button if this is the last parameter available for activation...
+                if ( choices == 0 ) voaddb->setEnabled(false);
+                break;
+            }
+        }
+
+    }
+
+    void QtDataManager::removeVOParam( ) {
+        // how many active flex params...
+        int count = vo_flex_params_entry->count( );
+        if ( count == 0 ) return;
+        // fetch current flex param...
+        int cur = vo_flex_params_entry->currentRow( );
+        QListWidgetItem *item = vo_flex_params_entry->item(cur);
+        if ( ! item ) return;
+        viewer::dvo::param *param = static_cast<viewer::dvo::param*>(vo_flex_params_entry->itemWidget(item));
+        QString current = param->title( );
+        // find state for current param...
+        for ( int i=0; i < voparameters.size( ); ++i ) {
+            if ( current == get<1>(voparameters[i]) ) {
+                int choices = vo_flex_params->count( );
+                // remove current flex param...
+                vo_flex_params_entry->removeItemWidget(item);
+                delete item;
+                // add choice back in the "available to activate" list...
+                vo_flex_params->addItem(get<1>(voparameters[i]));
+                // clear param widget pointer...
+                get<4>(voparameters[i]) = 0;
+                // mark parameter as not active...
+                get<0>(voparameters[i]) = false;
+                // update current row among the remaining "active" entries...
+                int entries = vo_flex_params_entry->count( );
+                if ( entries > cur ) vo_flex_params_entry->setCurrentRow( cur );
+                else if ( entries > 0 ) vo_flex_params_entry->setCurrentRow( cur-1 );
+                else voremoveb->setEnabled(false);
+                // enable the "activate" button if the "available to activate"
+                // list was initially empty...
+                if ( choices == 0 ) voaddb->setEnabled(true);
+                // update the current row in the "available to activate" list...
+                vo_flex_params->setCurrentRow(choices);
+                break;
+            }
+        }
+    }
+
+    QPushButton *QtDataManager::new_vo_dismiss_button( QTableWidgetItem *i, QString url, QString type ) {
+        QSizePolicy sizepolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+		QPushButton *dismiss = new dismiss_button_t(i,url,type,vo_selected_service,vo_table);
+		connect( dismiss, SIGNAL(pressed( )), SLOT(vo_dismiss_row( )) );
+        dismiss->setObjectName(QString::fromUtf8("dismiss"));
+        sizepolicy.setHeightForWidth(dismiss->sizePolicy().hasHeightForWidth());
+        dismiss->setSizePolicy(sizepolicy);
+        dismiss->setMaximumSize(QSize(25, 25));
+        dismiss->setFlat(true);
+        dismiss->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
+        dismiss->setToolTip(QApplication::translate("QtDataManager", "delete this row", 0, QApplication::UnicodeUTF8));
+        return dismiss;
+    }
+
+	void QtDataManager::vo_clear_status( ) { status( "" ); }
+	void QtDataManager::vo_clear_status_delayed( int seconds ) {
+		QTimer::singleShot( seconds * 1000, this, SLOT(vo_clear_status( )) );
+	}
+
+	void QtDataManager::vo_action_with_timeout( int id, int seconds, QString msg ) {
+		QApplication::setOverrideCursor(Qt::WaitCursor);
+		vo_action_timeout_id = id;
+		vo_action_timeout_msg = msg;
+		vo_disable_actions( );
+		vo_action_timeout->setInterval( seconds*1000 );
+		vo_action_timeout->start( );
+	}
+
+	void QtDataManager::vo_disable_actions( ) {
+		vo_contour->setEnabled(false);
+		vo_raster->setEnabled(false);
+		vo_query->setEnabled(false);
+		vo_clear->setEnabled(false);
+		vo_actions_are_enabled = false;
+	}
+	void QtDataManager::vo_enable_actions( ) {
+		vo_action_timeout->stop( );
+		vo_action_timeout->setInterval( 0 );
+		if ( vo_selected_rows.size( ) > 0 ) {
+			vo_contour->setEnabled(true);
+			vo_raster->setEnabled(true);
+		}
+		vo_query->setEnabled(true);
+		vo_clear->setEnabled(true);
+		vo_actions_are_enabled = true;
+	}
+
+	void QtDataManager::vo_action_timed_out( ) {
+		vo_action_with_timeout_complete( );
+		error( vo_action_timeout_msg + " timed out..." );
+		updateVOstatus( );
+	}
+
+	void QtDataManager::vo_action_with_timeout_complete( ) {
+		QApplication::restoreOverrideCursor();
+		vo_enable_actions( );
+		vo_action_timeout_id = 0;
+		vo_action_timeout_msg = "";
+	}
 
 } //# NAMESPACE CASA - END

@@ -398,7 +398,7 @@ String QPAxis::axisLabel(PlotAxis axis) const {
 	return axisLabel;
 }
 
-bool QPAxis::isDrawing() const {
+bool QPAxis::isDrawing(  ) {
 	return false;
 }
 

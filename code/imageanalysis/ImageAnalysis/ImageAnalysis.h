@@ -28,8 +28,6 @@
 
 // PLEASE DO *NOT* ADD ADDITIONAL METHODS TO THIS CLASS
 
-//# put includes here
-
 #include <casa/Quanta/Quantum.h>
 
 #include <imageanalysis/ImageTypedefs.h>
@@ -85,17 +83,6 @@ class ImageAnalysis
     	const Bool overwrite = False
     );
 
-    SPIIF imageconcat(const String& outfile,
-                                        const Vector<String>& infiles, 
-                                        const Int axis, 
-                                        const Bool relax = False, 
-                                        const Bool tempclose = True, 
-                                        const Bool overwrite = False);
-
-    Bool imagefromarray(const String& outfile, Array<Float>& pixels, 
-                        const Record& csys, const Bool linear = False, 
-                        const Bool overwrite = False, const Bool log = True);
-
     Bool imagefromascii(const String& outfile, const String& infile, 
                         const Vector<Int>& shape, const String& sep, 
                         const Record& csys, const Bool linear = False, 
@@ -142,15 +129,6 @@ class ImageAnalysis
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
 
-    SPIIF convolve2d(
-    		const String& outfile, const Vector<Int>& axes,
-            const String& type, const Quantity& major,
-            const Quantity& minor, const Quantity& pa,
-            Double scale, Record& region, const String& mask,
-            const Bool overwrite = False, const Bool stretch=False,
-            const Bool targetres = False
-    );
-
     CoordinateSystem coordsys(const Vector<int>& axes);
 
     Record* coordmeasures(Quantity& intensity, Record& direction, 
@@ -196,30 +174,6 @@ class ImageAnalysis
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
-
-    // Recover some pixels from the image from a simple strided box
-    Bool getchunk(
-    	Array<Float>& pixel, Array<Bool>& pixmask,
-    	const Vector<Int>& blc, const Vector<Int>& trc,
-    	const Vector<Int>& inc, const Vector<Int>& axes,
-    	const Bool list = False, const Bool dropdeg = False,
-    	const bool getmask = False
-    );
-
-    Bool getchunk(
-    	Array<Complex>& pixel, Array<Bool>& pixmask,
-    	const Vector<Int>& blc, const Vector<Int>& trc,
-    	const Vector<Int>& inc, const Vector<Int>& axes,
-    	const Bool list = False, const Bool dropdeg = False,
-    	const bool getmask = False
-    );
-
-    Bool getregion(
-    	Array<Float>& pixels, Array<Bool>& pixmask, Record& region,
-        const Vector<Int>& axes, const String& mask,
-        const Bool list=False, const Bool dropdeg=False,
-        const Bool getmask=False, const Bool extendMask=False
-    );
 
     Record* getslice(const Vector<Double>& x, const Vector<Double>& y, 
                      const Vector<Int>& axes, const Vector<Int>& coord, 
@@ -284,18 +238,6 @@ class ImageAnalysis
     void pixelValue (Bool& offImage, Quantum<Double>& value, Bool& mask,
                      Vector<Int>& pos) const;
 
-    Bool putchunk(
-    	const Array<Float>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list = False,
-    	const Bool locking = True, const Bool replicate = False
-    );
-
-    Bool putchunk(
-    	const Array<Complex>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list = False,
-    	const Bool locking = True, const Bool replicate = False
-    );
-
     Bool putregion(const Array<Float>& pixels, const Array<Bool>& pixelmask, 
                    Record& region, const Bool list = False, 
                    const Bool usemask = True, 
@@ -335,13 +277,6 @@ class ImageAnalysis
 
     inline static String className() {const static String x = "ImageAnalysis"; return x; }
 
-    Bool setrestoringbeam(
-    	const Quantity& major, const Quantity& minor,
-        const Quantity& pa, const Record& beam,
-        const Bool remove = False, const Bool log = True,
-        Int channel=-1, Int polarization=-1
-    );
-
     bool twopointcorrelation(
     	const String& outfile, Record& region,
         const String& mask, const Vector<Int>& axes,
@@ -374,9 +309,6 @@ class ImageAnalysis
         const Double maskvalue=-999, const Bool overwrite=False,
         const Bool extendMask=False
     );
-
-
-    Vector<Double> topixel(Record& value);
 
     Record toworld(const Vector<double>& value, const String& format = "n") const;
 
@@ -459,7 +391,7 @@ class ImageAnalysis
       * 	       regions (when the vectors x and y both have size 2).  Other types of region
       * 	       can be distinguished from the size of the x,y vectors.
       */
-    Bool getFreqProfile(const Vector<Double>& x,
+    /*Bool getFreqProfile(const Vector<Double>& x,
 			const Vector<Double>& y,
 			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 			const String& xytype="world",
@@ -473,7 +405,7 @@ class ImageAnalysis
 			const Int& whichQuality=0,
 			const String& restValue="",
 			Int beamChannel = -1,
-			const String& shape="rectangle");
+			const String& shape="rectangle");*/
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -504,7 +436,7 @@ class ImageAnalysis
     Bool isFloat() const { return _imageFloat; }
 
  private:
-
+    //Note:  getFreqProfile has been replaced by imageanalysis/PixelValueManipulator
     //Used for single point extraction.
     //Functions to get you back a spectral profile at direction position x, y.
      //x, y are to be in the world coord value or pixel value...user specifies
@@ -521,7 +453,7 @@ class ImageAnalysis
      // freq and "km/s" for vel, "mm" for wavelength and "um" for "air wavelength"
      //PLEASE note that the returned value of zyaxisval are the units of the image
      //specframe can be a valid frame from MFrequency...i.e LSRK, LSRD etc...
-     Bool getFreqProfile(const Vector<Double>& xy,
+     /*Bool getFreqProfile(const Vector<Double>& xy,
     		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
     		 const String& xytype="world",
     		 const String& specaxis="freq",
@@ -531,7 +463,7 @@ class ImageAnalysis
     		 const String& xunits="",
     		 const String& specframe="",
     		 const Int& whichQuality=0,
-    		 const String& restValue="");
+    		 const String& restValue="");*/
     
     SPIIF _imageFloat;
     SPIIC _imageComplex;
@@ -541,11 +473,10 @@ class ImageAnalysis
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::auto_ptr<ImageHistograms<Float> > _histograms;
+    std::tr1::shared_ptr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    casa::ImageRegion* pOldHistRegionRegion_p;
-    casa::ImageRegion* pOldHistMaskRegion_p;
+    std::tr1::shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
@@ -557,14 +488,12 @@ class ImageAnalysis
     // Convert types
     //casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
-    // Delete private ImageStatistics and ImageHistograms objects
-    bool deleteHist();
+    // Delete private ImageHistograms objects
+    void deleteHist();
    
-    static Bool _haveRegionsChanged (
+    Bool _haveRegionsChanged (
     	ImageRegion* pNewRegionRegion,
-    	ImageRegion* pNewMaskRegion,
-    	ImageRegion* pOldRegionRegion,
-    	ImageRegion* pOldMaskRegion
+    	ImageRegion* pNewMaskRegion
     );
     
 // Make a new image with given CS
@@ -585,9 +514,6 @@ class ImageAnalysis
     void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
                          const casa::Record& Regions,
                          casa::LogIO& logger);
-    // Set the cache
-    void set_cache(const casa::IPosition& chunk_shape) const;
-    
 
     // Some helper functions that needs to be in casa namespace coordsys
 
@@ -598,14 +524,17 @@ class ImageAnalysis
     Record worldVectorToMeasures(const Vector<Double>& world, 
                                  Int c, Bool abs) const;
 
+
+    //Note:  getSpectralAxisVal has been replaced by imageanalysis/PixelValueManipulator
+
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already.  If a
     //valid tabular axis is specified (>=0) it takes precedence over the
     //spectral axis.
-    Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
+    /*Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal,
                             const CoordinateSystem& cSys, const String& xunits, 
                             const String& freqFrame="", const String& restValue="",
-                            int tabularAxisIndex = -1);
+                            int tabularAxisIndex = -1);*/
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
@@ -619,22 +548,6 @@ class ImageAnalysis
     );
 
     void _onlyFloat(const String& method) const;
-
-    template<class T> Bool _getchunk(
-       	Array<T>& pixel, Array<Bool>& pixmask,
-       	const ImageInterface<T>& image,
-       	const Vector<Int>& blc, const Vector<Int>& trc,
-       	const Vector<Int>& inc, const Vector<Int>& axes,
-       	const Bool list, const Bool dropdeg,
-       	const bool getmask
-    );
-
-    template<class T> Bool _putchunk(
-        ImageInterface<T>& image,
-    	const Array<T>& pixels, const Vector<Int>& blc,
-    	const Vector<Int>& inc, const Bool list,
-    	const Bool locking, const Bool replicate
-    );
 
     template<class T> static void _destruct(ImageInterface<T>& image);
 

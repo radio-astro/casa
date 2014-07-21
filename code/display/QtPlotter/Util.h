@@ -27,6 +27,9 @@
 
 #include <QString>
 #include <casa/Arrays/Vector.h>
+#include <display/Display/DisplayCoordinateSystem.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulatorData.h>
+#include <imageanalysis/ImageAnalysis/ImageCollapserData.h>
 #include <tr1/memory>
 
 class QWidget;
@@ -71,6 +74,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//is no tabular index in the image in frequency units.
 		static int getTabularFrequencyAxisIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img);
 
+		static Record getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
+					const Vector<Double>& x, const Vector<Double>& y);
+
+		static std::pair<Vector<Float>,Vector<Float> > getProfile(std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+				const Vector<Double>& x, const Vector<Double>& y, String shape,
+				int tabularAxis, ImageCollapserData::AggregateType, String& unit,
+				const String& coordinateType,
+				const Quantity *const restFreq=0, const String& frame="");
 
 	private:
 		Util();

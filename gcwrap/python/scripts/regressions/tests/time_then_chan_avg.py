@@ -13,7 +13,7 @@ def description():
 # Typically channel averaging does not change the # of rows.
 expected = {
     # Input MS
-    'labelled_by_time+ichan.ms': {  # Has weight spectrum (some rows altered)
+    'labelled_by_time+ichan_simple.ms': {  # Has weight spectrum (some rows altered)
        # Time averaging width in s.
        'tav': 20,
        # Channel averaging width in channels.
@@ -29,55 +29,38 @@ expected = {
                 'tav': {('FLAG', 0): [False for i in xrange(8)],
                         ('WEIGHT', 0): (589824.0, 0.1),
                         ('EXPOSURE', 0): 18.874367952346802,
-                        ('DATA', 1): (numpy.array([[0.0+0.j, 4.5+1.j,
-                                                    4.5+2.j, 4.5+3.j,
-                                                    4.5+4.j, 4.5+5.j,
-                                                    0.0+0.j, 0.0+0.j]]), 0.005),
-                        ('WEIGHT_SPECTRUM', 1): (numpy.array([[0., 43690.668, 87381.336,
-                                                     131072.03125, 174762.671875,
-                                                               218453.359375, 0., 0.]]), 0.05),
+                        ('DATA', 1): (numpy.array([[ 4.50010633+0.j,  4.50010633+1.j,
+                                                     4.50010633+2.j,  4.50010633+3.j,
+                                                     4.50010633+4.j,  4.50010633+5.j,
+                                                     4.50010633+6.j,  4.50010633+7.j]]), 0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
-                        ('FLAG', 1): [True, False, False, False,
-                                      False, False, True, True],
+                        ('FLAG', 1): [False for i in xrange(8)],
                         ('WEIGHT', 1): (655360.0, 0.1),
                         ('SIGMA', 1): 0.0012352647,
                         ('WEIGHT', 2): (45.0, 0.05),
-                        ('WEIGHT_SPECTRUM', 2): (numpy.array([[5.625, 5.625, 5.625, 5.625,
-                                                               5.625, 5.625, 5.625, 5.625]]),
-                                                 0.001),
-                        ('FLAG', 3): [True for i in xrange(8)],
-                        ('WEIGHT_SPECTRUM', 4): (numpy.array([[16384.0, 8192.0,
-                                                                8192.0, 8192.0,
-                                                                8192.0, 8192.0,
-                                                                8192.0, 8192.0]]), 0.1),
+                        ('FLAG', 3): [False for i in xrange(8)],
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         },
                 'cav': {('FLAG', 0): [False for i in xrange(4)],
-                        ('WEIGHT', 0): (589824.0, 0.1),
+                        ('WEIGHT', 0): (1179648.0,0.1),
                         ('EXPOSURE', 0): 18.874367952346802,
                         ('FEED1', 0): 0,
                         ('FEED2', 9): 0,
-                        ('DATA', 1): (numpy.array([[4.5+1.j, 4.5+2.6j,
-                                                    4.5+4.5555556j, 0.0+0.j]]),
-                                      0.005),
-                        ('WEIGHT_SPECTRUM', 1): (numpy.array([[43690.668, 218453.375,
-                                                               393216.03125,       0.]]),
-                                                 0.05),
+                        ('DATA', 1): (numpy.array([[ 4.50010633+0.5j,  4.50010633+2.5j,
+                                                     4.50010633+4.5j, 4.50010633+6.5j]]),0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
                         ('ARRAY_ID', 1): 0,
-                        ('FLAG', 1): [False, False, False, True],
-                        ('WEIGHT', 1): (655360.0, 0.1),
+                        ('FLAG', 1): [False for i in xrange(4)],
+                        ('WEIGHT', 1): (1310720.0, 0.1),
                         ('SIGMA', 1): 0.0008734640,
-                        ('WEIGHT', 2): (45.0, 0.05),
-                        ('WEIGHT_SPECTRUM', 2): (numpy.array([[11.25, 11.25, 11.25, 11.25]]),
-                                                 0.01),
-                        ('FLAG', 3): [True for i in xrange(4)],
-                        ('WEIGHT_SPECTRUM', 4): (numpy.array([[24576.0, 16384.0,
-                                                               16384.0, 16384.0]]), 0.1),
+                        ('WEIGHT', 2): (90.0, 0.05),
+                        ('FLAG', 3): [False for i in xrange(4)],
                         ('ANTENNA2', 5): 7  # Baseline 0-6 is dropped
                         }}},
+
+       'dep':{   # these tests are deprecated....
         '0': {
             'nrows_aft_tavg': 269,
             'nrows_aft_cavg': 269,
@@ -345,6 +328,7 @@ expected = {
                 }
             }
         }
+        }
     }
 
 def isquantized(val):
@@ -388,6 +372,7 @@ def run(fetch=False):
         spwsels = expected[input_ms].keys()
         spwsels.remove('tav')
         spwsels.remove('cav')
+        spwsels.remove('dep')
         spwsels.sort()                      # Prob. not needed.
         for spwsel in spwsels:
             tavms = re.sub(r'.ms$', '', input_ms) + '_%s_timebin%s.ms' % (spwsel, tbin)

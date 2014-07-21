@@ -24,8 +24,12 @@
 //#
 #include <display/QtPlotter/Util.h>
 #include <images/Images/ImageInterface.h>
+#include <images/Regions/RegionManager.h>
+#include <images/Regions/WCEllipsoid.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <display/Display/DisplayCoordinateSystem.h>
+#include <display/QtPlotter/QtProfile.qo.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulator.h>
 #include <assert.h>
 #include <cmath>
 #include <iostream>
@@ -262,4 +266,153 @@ namespace casa {
 		return coreName;
 	}
 
+	Record Util::getRegionRecord( String shape, const DisplayCoordinateSystem& cSys,
+			const Vector<Double>& x, const Vector<Double>& y){
+		const String radUnits( "rad");
+		const String absStr( "abs");
+		Record regionRecord;
+		Int directionIndex = cSys.findCoordinate(Coordinate::DIRECTION);
+		if ( directionIndex >= 0 ){
+			Vector<Int> dirPixelAxis = cSys.pixelAxes(directionIndex);
+			RegionManager regMan;
+			if ( shape == QtProfile::SHAPE_RECTANGLE ){
+				Vector<Quantity> blc(2);
+				Vector<Quantity> trc(2);
+				blc(0) = Quantity(x[0], radUnits);
+				blc(1) = Quantity(y[0], radUnits);
+				trc(0) = Quantity(x[1], radUnits);
+				trc(1) = Quantity(y[1], radUnits);
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+
+				Record* imagregRecord = regMan.wbox(blc, trc, pixax, cSys, absStr, radUnits);
+				regionRecord = *imagregRecord;
+				delete imagregRecord;
+			}
+			else if ( shape == QtProfile::SHAPE_ELLIPSE ){
+				Vector<Quantity> center(2);
+				Vector<Quantity> radius(2);
+				center[0] = Quantity( (x[0]+x[1])/2, radUnits );
+				center[1] = Quantity( (y[0]+y[1])/2, radUnits );
+
+				MDirection::Types type = MDirection::N_Types;
+				uInt dirIndex = static_cast<uInt>(directionIndex);
+				type = cSys.directionCoordinate(dirIndex).directionType(true);
+
+				Vector<Double> qCenter(2);
+				qCenter[0] = center[0].getValue();
+				qCenter[1] = center[1].getValue();
+				MDirection mdcenter( Quantum<Vector<Double> >(qCenter,radUnits), type );
+				Vector<Double> blc_rad_x(2);
+				blc_rad_x[0] = x[0];
+				blc_rad_x[1] = center[1].getValue();
+				MDirection mdblc_x( Quantum<Vector<Double> >(blc_rad_x,radUnits),type );
+
+				Vector<Double> blc_rad_y(2);
+				blc_rad_y[0] = center[0].getValue();
+				blc_rad_y[1] = y[0];
+				MDirection mdblc_y( Quantum<Vector<Double> >(blc_rad_y,radUnits),type );
+
+				double xdistance = mdcenter.getValue( ).separation(mdblc_x.getValue( ));
+				double ydistance = mdcenter.getValue( ).separation(mdblc_y.getValue( ));
+				radius[0] = Quantity(xdistance, radUnits );
+				radius[1] = Quantity(ydistance, radUnits );
+
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+				WCEllipsoid* ellipsoid = new WCEllipsoid( center, radius, IPosition(dirPixelAxis), cSys);
+				regionRecord = ellipsoid->toRecord("");
+				delete ellipsoid;
+			}
+			else if ( shape == QtProfile::SHAPE_POLY ){
+				int n = x.size();
+				Vector<Quantity> xvertex(n);
+				Vector<Quantity> yvertex(n);
+				for (Int k = 0; k < n; ++k) {
+					xvertex[k] = Quantity(x[k], radUnits);
+					yvertex[k] = Quantity(y[k], radUnits);
+				}
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+				ImageRegion* imagreg = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
+				regionRecord = imagreg->toRecord(String(""));
+				delete imagreg;
+			}
+			else if ( shape == QtProfile::SHAPE_POINT ){
+				//Try a rectangle with blc=trc;
+				Vector<Quantity> blc(2);
+				Vector<Quantity> trc(2);
+				blc(0) = Quantity(x[0], radUnits);
+				blc(1) = Quantity(y[0], radUnits);
+				trc(0) = Quantity(x[0], radUnits);
+				trc(1) = Quantity(y[0], radUnits);
+				Vector<Int> pixax(2);
+				pixax(0) = dirPixelAxis[0];
+				pixax(1) = dirPixelAxis[1];
+
+				Record* imagregRecord = regMan.wbox(blc, trc, pixax, cSys, absStr, radUnits);
+				regionRecord=*imagregRecord;
+				delete imagregRecord;
+			}
+			else {
+				qDebug() <<"Util::getRegionRecord unrecognized shape: "<<shape.c_str();
+			}
+		}
+
+		return regionRecord;
+	}
+
+	std::pair<Vector<Float>,Vector<Float> > Util::getProfile(std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+					const Vector<Double>& x, const Vector<Double>& y, String shape,
+					int tabularAxis, ImageCollapserData::AggregateType function, String& unit,
+					const String& coordinateType, const Quantity *const restFreq, const String& frame){
+		DisplayCoordinateSystem cSys = imagePtr->coordinates();
+		uInt spectralAxis = 0;
+		if ( cSys.hasSpectralAxis()){
+			spectralAxis = cSys.spectralAxisNumber();
+		}
+		else if ( tabularAxis >= 0 ){
+			spectralAxis = (uInt)(tabularAxis);
+		}
+		Record regionRecord = getRegionRecord( shape, cSys, x, y);
+		QString pixelSpectralType(coordinateType.c_str());
+		if ( pixelSpectralType == QtProfile::FREQUENCY){
+			pixelSpectralType = "default";
+		}
+		PixelValueManipulatorData::SpectralType specType
+			= PixelValueManipulatorData::spectralType( pixelSpectralType.toStdString().c_str() );
+		Vector<Float> jyValues;
+		Vector<Float> xValues;
+		try {
+			PixelValueManipulator<Float> pvm(imagePtr, &regionRecord, "");
+			Record result = pvm.getProfile( spectralAxis, function, unit, specType,
+				restFreq, frame );
+			const String VALUE_KEY( "values");
+			if ( result.isDefined( VALUE_KEY )){
+				result.get( VALUE_KEY, jyValues );
+			}
+			const String COORD_KEY( "coords" );
+			if ( result.isDefined( COORD_KEY ) ){
+				Vector<Double> coords;
+				result.get( COORD_KEY, coords );
+				int coordCount = coords.size();
+				xValues.resize( coordCount );
+				for ( int i = 0; i < coordCount; i++ ){
+					xValues[i] = static_cast<Float>( coords[i]);
+				}
+			}
+			const String UNIT_KEY( "xUnit" );
+			if ( result.isDefined( UNIT_KEY ) ){
+				unit = result.asString( UNIT_KEY );
+			}
+		}
+		catch( AipsError& error ){
+			qDebug() << "Could not generate profile: "<<error.getMesg().c_str();
+		}
+		std::pair<Vector<Float>,Vector<Float> > resultVectors( xValues, jyValues );
+		return resultVectors;
+	}
 }

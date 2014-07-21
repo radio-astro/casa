@@ -42,8 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>
 SubImage<T>::SubImage()
-: itsImagePtr  (0),
-  itsSubLatPtr (0)
+: itsImagePtr  (),
+  itsSubLatPtr ()
 {}
 
 template<class T>
@@ -180,7 +180,7 @@ SubImage<T>& SubImage<T>::operator= (const SubImage<T>& other)
 {
   if (this != &other) {
     ImageInterface<T>::operator= (other);
-    itsImagePtr.reset(other.itsImagePtr->cloneII());
+    itsImagePtr.set(other.itsImagePtr->cloneII());
     itsSubLatPtr.reset(new SubLattice<T> (*other.itsSubLatPtr));
   }
   return *this;

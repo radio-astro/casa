@@ -315,10 +315,10 @@ void testBeams() {
 	trc[3] = 5.7;
 	LCBox box(blc, trc, shape);
     Record myboxRec = box.toRecord("");
-    std::auto_ptr<LogIO> log(new LogIO());
-    std::auto_ptr<ImageRegion> outRegionMgr(
+    PtrHolder<LogIO> log(new LogIO());
+    PtrHolder<ImageRegion> outRegionMgr(
         ImageRegion::fromRecord(
-            log.get(), x.coordinates(),
+            log.ptr(), x.coordinates(),
             x.shape(), myboxRec
         )
     );

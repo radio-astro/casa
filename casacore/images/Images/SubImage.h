@@ -32,9 +32,7 @@
 //# Includes
 #include <images/Images/ImageInterface.h>
 #include <casa/Arrays/AxesSpecifier.h>
-
-#include <memory>
-
+#include <casa/Utilities/PtrHolder.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -260,8 +258,10 @@ private:
    void convertIPosition(Vector<Float>& x, const IPosition& pos) const;
 
   //# itsImagePtr points to the parent image.
-  std::auto_ptr<ImageInterface<T> > itsImagePtr;
-  std::auto_ptr<SubLattice<T> >    itsSubLatPtr;
+  PtrHolder<ImageInterface<T> > itsImagePtr;
+  // tried to make this PtrHolder and SPtrHolder, but segfaults happened
+  // in gcwrap tests in call to pixelMask() (itsSubLatPtr->pixelMask())
+  std::tr1::shared_ptr<SubLattice<T> >    itsSubLatPtr;
 
 
   /*

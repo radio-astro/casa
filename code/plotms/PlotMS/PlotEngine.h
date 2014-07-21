@@ -69,6 +69,7 @@ public:
 	virtual void clearPlots() = 0;
 
 	virtual bool isOperationCompleted() const = 0;
+	virtual void setOperationCompleted( bool complete) = 0;
 	virtual bool save(const PlotExportFormat& format) = 0;
 	virtual PlotMSFlagging getFlagging() const = 0;
 	virtual void setFlagging(PlotMSFlagging flag) = 0;

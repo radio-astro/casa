@@ -397,6 +397,7 @@ else()
     )
 endif()
 
+
 #
 # Create casainit.(c)sh
 # The environment defined here is not needed at build time, but at runtime.
@@ -471,6 +472,40 @@ file( WRITE ${casaroot}/casainit.csh
 set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
+set( PREFIX ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
+set( INCLUDE ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "casa include file install directory" FORCE )
+set( LDDPATH "" CACHE STRING "path for (DY)LD_LIBRARY_PATH" FORCE )
+set( LDDPRELOAD "" CACHE STRING "libraries to be pre-loaded at runtime" FORCE )
+set( LIBVERSION ${casa_soversion} CACHE STRING "shared library version number" FORCE )
+
+
+###
+### these are duplicated from casadef.cmake...
+###
+execute_process( COMMAND
+  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE CASAREVISION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+execute_process( COMMAND
+  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+  OUTPUT_VARIABLE CASASRCURL
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+###
+###
+
+configure_file( ${CMAKE_SOURCE_DIR}/install/casa-config.in ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config @ONLY )
+file( COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config
+	  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+	  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+	                   GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE )
+
 
 # Preprocessor definitions
 add_definitions( 
@@ -743,7 +778,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.237
+           VERSION 1.0.251
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -1015,25 +1050,26 @@ else()
 endif()
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
-casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
-casa_add_module( imageanalysis CASACORE Boost)
+casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
+casa_add_module( components stdcasa CASACORE)
+casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis)
-casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
+casa_add_module( msvis CASACORE Boost asdmstman )
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis)
+casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4 msvis)
 casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
-casa_add_module( components stdcasa CASACORE)
 casa_add_module( guitools CASACORE QT4 QWT synthesis)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines components)
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)
-casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
+casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
 #casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost)
-casa_add_module( mstransform CASACORE synthesis)
+casa_add_module( mstransform CASACORE msvis imageanalysis asdmstman)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()

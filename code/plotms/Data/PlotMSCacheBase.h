@@ -156,6 +156,8 @@ public:
   void release(const vector<PMS::Axis>& axes);
   
   // Set up indexing for the plot
+  bool isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
+  		Bool globalYRange, int dataIndex ) const;
   void setUpIndexer(PMS::Axis iteraxis=PMS::SCAN,
 		    Bool globalXRange=False, Bool globalYRange=False, int dataIndex = 0);
 

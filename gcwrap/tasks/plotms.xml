@@ -822,9 +822,9 @@ Export plot as image Parameters
          <value>True</value>
      </param>
      
-     <param type="bool" name="clearplots">
+     <param type="bool" name="clearplots" subparam="true">
      	<description>Remove any existing plots so new ones can replace them.</description>
-     	<value>False</value>
+     	<value>True</value>
      </param>
 
 <!--
@@ -1196,6 +1196,15 @@ Constraints
             <default param="overwrite"><value type="bool">False</value></default>
         </notequals>
     </when>
+    
+    <when param="showgui">
+    	<equals type="bool" value="True">
+    		<default param="clearplots"><value type="bool">False</value></default>
+    	</equals>
+        <equals type="bool" value="False">
+            <default param="clearplots"><value type="bool">True</value></default>
+        </equals>
+    </when>    
 
     <when param="showmajorgrid">
       <equals type="bool" value="False" />

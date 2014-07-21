@@ -28,8 +28,8 @@
 #ifndef IMAGES_IMAGE2DCONVOLVER_H
 #define IMAGES_IMAGE2DCONVOLVER_H
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-//# Includes
 #include <casa/aips.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
@@ -93,9 +93,16 @@ class GaussianBeam;
 //   <li> 
 // </todo>
 
-template <class T> class Image2DConvolver
-{
+template <class T> class Image2DConvolver : public ImageTask<T> {
 public:
+
+	Image2DConvolver(
+		const SPCIIT image, const Record *const &regionPtr,
+	    const String& mask, const String& outname, const Bool overwrite
+	);
+
+	// Destructor
+	~Image2DConvolver() {}
 
 	// Convolve.   If the output image needs a mask and doesn't have one,
 	// it will be given one if possible.  The miscInfo, imageInfo,
@@ -112,7 +119,39 @@ public:
 		const Bool targetres=False
 	);
 
+	SPIIT convolve();
+
+	void setKernel(
+		const String& type, const Quantity& major, const Quantity& minor,
+		const Quantity& pa
+	);
+
+	void setScale(Double d) { _scale = d; }
+
+	void setAxes(const std::pair<uInt, uInt>& axes);
+
+	void setTargetRes(Bool b) { _targetres = b; }
+
+	String getClass() const { const static String c = "Image2DConvolver"; return c; }
+
+protected:
+
+   	virtual CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_ALL_STOKES;
+   	}
+
+    virtual vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<Coordinate::Type>();
+    }
+
+    virtual inline Bool _supportsMultipleRegions() const {return True;}
+
 private:
+    VectorKernel::KernelTypes _type;
+    Double _scale;
+    Quantity _major, _minor, _pa;
+    IPosition _axes;
+    Bool _targetres;
 
 	// This class contains all static methods. Do not allow it to
 	// be instantiated.
@@ -122,8 +161,7 @@ private:
 	// Copy constructor.  Uses reference semantics.
 	Image2DConvolver(const Image2DConvolver<T> &other);
 
-	// Destructor
-	~Image2DConvolver();
+
 
 	// Assignment operator. Uses reference semantics.
 	Image2DConvolver &operator=(const Image2DConvolver<T> &other);
@@ -176,12 +214,10 @@ private:
 	static uInt _sizeOfGaussian(const Double width, const Double nSigma);
 
 	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
-		LogIO& os, const Vector<Quantity>& targetBeamParms,
+		const Vector<Quantity>& targetBeamParms,
 		const GaussianBeam& inputBeam
 	);
 };
-
-
 
 } //# NAMESPACE CASA - END
 

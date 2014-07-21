@@ -32,8 +32,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/BasicSL/Constants.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <measures/Measures/MDirection.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

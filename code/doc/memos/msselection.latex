@@ -42,7 +42,7 @@
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: Nov. 24, 2013)}}
+\date{June 15, 2007\\{\small (Updated: April 25, 2014)}}
 \maketitle
 \normalsize
 \begin{center}
@@ -66,7 +66,7 @@
   exceptions generated from each individual expression parser are
   further specializations of the {\tt MSSeletionError} class.
   Application layer code therefore can have a finer level control on
-  error handling.  The module now also support externally plugable
+  error handling.  The module now also support externally plug-able
   error handlers of type \MSSelectionErrorHandler. This allows
   application layer code to have control on the resolution mechanism
   of the exceptional states that may be reached during the parsing
@@ -634,7 +634,6 @@ any of the above mentioned uv-distance specifications.  E.g.
 
 Frequency selection expression consists of two specifications
 separated by colon (':') in the form:
-
 \begin{verbatim}
       SPWSPEC[:CHANSPEC]
 \end{verbatim}
@@ -651,49 +650,72 @@ with the syntax for CHANSPEC list.
 
 \subsection{Spectral Window Specification Syntax}
 
-Spectral windows (SPW) specification can be a single ID or a list of
-spectral window integer IDs, a spectral window name (as a literal
-\hyperref{string}{string (see Section }{)}{Sec:STRINGS} (for exact
-match)/regular expression/pattern) or a reference frequency value
-(value with a unit).  A single frequency specification is used for
-exact match with the REF\_FREQUENCY column of the SPECTRAL\_WINDOW
-sub-table.  A \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
-frequencies are used to select all SPWs which are within the given
-range.  The allowed units are Hz, KHz, MHz, GHz or THz.
+Spectral windows (SPW) specification can be of the following types:
+\begin{enumerate}
+\item an integer ID 
+\item a name (as a literal 
+\hyperref{string}{string (see Section}{)}{Sec:STRINGS} for exact match
+or a regular expression/pattern)
+\item a frequency value (value with a unit).  
+\end{enumerate}
 
-SPWs can also be selected via a boolean expression for integer IDs.
+\subsubsection{Selection by ID}
 
+SPWSPEC can be single integer, a list or a range of integers.  It can also be
+a list of boolean expressions involving IDs.  E.g.
 \begin{itemize}
-\item "$>$ID" will select all SPWs with ID greater than the specified
+\item spwspec="$>$ID" will select all SPWs with ID greater than the specified
   value.
-\item "$<$ID" will select all SPWs with ID lesser than the specified
+\item spwspec="$<$ID" will select all SPWs with ID lesser than the specified
   value.
-\item "$>$FREQ" will select all SPWs, the reference frequencies of
-  which are greater than the given frequency converted to Hz.
-\item "$<$FREQ" will select all SPWs, the reference frequencies of
-  which are greater than the given frequency converted to Hz.
-\end{itemize}
-E.g.
-\begin{itemize}
-\item spw={\tt 1,2,3} selects spectral window IDs 1,2 and 3
-\item spw={\tt 1;2;3} same as above.  This style can be used along
+\item spwspec={\tt 1,2,3} selects spectral window IDs 1,2 and 3
+\item spwspec={\tt 1;2;3} same as above.  This style can be used along
   with CHANSPEC
-\item spw={\tt 1$\sim$3} same as above
-\item spw={\tt 327MHz} selects spectral window with a reference
+\item spwspec={\tt 1$\sim$3} same as above
+\end{itemize}
+
+\subsubsection{Selection by name}
+
+SPWSPEC can be a name or a list of names which will be matched against
+the NAME column of the SPECTRAL\_WINDOW.  The name can be
+a string for literal matching, or a regular expression or a pattern.
+All SPWs that match the given name will be selected.  E.g.
+\begin{itemize}
+\item spwspec="LBAND" will select {\it a} SPW named ``{\tt LBAND}''.
+\item spwspec="SUBBAND*" will select all SPWs with the name starting with ``{\tt SUBBAND}''.
+\item spwspec="SUBBAND*0" will select all SPWs with name starting with ``{\tt
+    SUBBAND}'' and ending with ``{\tt 0}''.
+\end{itemize}
+
+\subsubsection{Selection by frequency}
+SPWSPEC can also be constructed using the reference frequency of the
+SPWs.  The reference frequency is defined as the average of the
+frequency corresponding to the first and the last channel for each
+SPW.  A single frequency specification is used for exact match with
+the reference frequency.  A \hyperref{range}{range (see Section
+}{)}{Sec:RANGE} of frequencies are used to select all SPWs with the
+reference frequencies within the given range.  The allowed units are
+Hz, KHz, MHz, GHz or THz.  E.g.
+\begin{itemize}
+\item spwspec="$>$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
+\item spwspec="$<$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
+\item spwspec={\tt 327MHz} selects spectral window with a reference
   frequency equal to 327.0 MHz
-\item spw={\tt 327$\sim$610MHz} selects all spectral windows with
+\item spwspec={\tt 327$\sim$610MHz} selects all spectral windows with
   reference frequencies in the range [327.0, 610.0] MHz.
-\item spw={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
+\item spwspec={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
   frequency 1421.0, 1422.0 and 1423.0 MHz.
-\item spw={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
+\item spwspec={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
   can be used along with CHANSPEC.
-\item spw={\tt $>$327MHz} selects all spectral windows with reference
+\item spwspec={\tt $>$327MHz} selects all spectral windows with reference
   frequency greater than 327.0 MHz
-\item spw={\tt $<$327MHz} selects all spectral windows with reference
+\item spwspec={\tt $<$327MHz} selects all spectral windows with reference
   frequency less than 327.0 MHz
 \end{itemize}
 
-\subsection{Channel Selection Syntax}
+\subsection{Channel Specification Syntax}
 
 Channel specification\footnote{\it The \MSS\ module is currently
   used to only parse the channel selection expression to produce the
@@ -701,7 +723,7 @@ Channel specification\footnote{\it The \MSS\ module is currently
   applied to the data.  The list of tuples per SPW is passed to the
   application program layer and the interpretation of the tuples for
   actual selection depends on the application programmer.} (referred
-to as CHANSPEC in the following description) is a START,STOP,STEP
+to as CHANSPEC in the following description) is a START, STOP, STEP
 tuple corresponding to the first frequency channel, the last frequency
 channel and the step size to increment from the first to the last
 channel.  The START and STOP part of the tuple can be
@@ -721,24 +743,24 @@ Similarly for a range of physical quantities.
 If a START,STOP part of the tuple specification is followed by
 "\char94 STEP", the STEP is used as the third value of the tuple.
 STEP specification is a single integer or physical quantity.
-E.g. 0$\sim$10\char94 2 is converted to a START,STOP,STEP tuple
+E.g. 0$\sim$10\char94 2 is converted to a START, STOP, STEP tuple
 [0,10,2].
 
 A channel selection expression is a semi-colon separated list of
 channel specifications.  E.g.
 
 \begin{itemize}
-\item chan={\tt 1;2;3} selects channels 1,2 and 3.
-\item chan={\tt 1$\sim$3} selects channels 1,2 and 3.
-\item chan={\tt 0$\sim$10\char94 2} selects channels in the range
+\item chanspec={\tt 1;2;3} selects channels 1,2 and 3.
+\item chanspec={\tt 1$\sim$3} selects channels 1,2 and 3.
+\item chanspec={\tt 0$\sim$10\char94 2} selects channels in the range
   [0,10] with a step size of 2
-\item chan={\tt 1421MHz} selects a frequency channel corresponding to
+\item chanspec={\tt 1421MHz} selects a frequency channel corresponding to
   the frequency 1421.0 MHz
-\item chan={\tt 1421$\sim$1500MHz} selects all channels in the range
+\item chanspec={\tt 1421$\sim$1500MHz} selects all channels in the range
   [1412.0, 1500.0] MHz
-\item chan={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels
+\item chanspec={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels
   in the range [1421.0, 1500.0] MHz in steps of 10 KHz.
-\item chan={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ;
+\item chanspec={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ;
   20 ; 30; 40} selects all channels in the range [1421.0, 1500.0] MHz
   in steps of 10KHz, all channels with indexes in the range [0,10] in
   steps of 2 channels and channels 10, 20 and 30.
@@ -787,6 +809,40 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 \end{itemize}          
 
 \end{itemize}          
+
+Figure~\ref{FIG:SPW} shows an example frequency setup which makes
+clear the need to separate the full frequency selection expression
+into SPWSPEC and CHANSPEC parts.  SPW0 covers the frequency range
+1.0--2.0~GHz with SPW1 overlapping in the range 1.6--1.7~GHz, with a
+reference frequency of 1.5~GHz and 1.65~GHz respectively.  Even for
+the overlapping range of frequencies, the selection syntax must allow
+selection of channels from only SPW0 or only SPW1 or channels from
+both.  With independent specifications for SPW and channel selection,
+selection expressions can be constructed to select channels from SPW0
+\underline{\bf or} SPW1 or from SPW0 \underline{\bf and} SPW1. E.g.
+\begin{itemize}
+\item spw= ``{\tt * : 1.6$\sim$1.7GHz}'' will select all channels from
+  SPW0 \underline{\it and} SPW1 that are in the range
+\item spw= ``{\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz}'' is the same as
+  above (selecting SPWs via reference frequency specification)
+\item spw=``{\tt 1.5MHz : 1.6$\sim$1.7GHz}'' will select all channels
+  from \underline{only} SPW0 that are in the range
+\item spw=``{\tt 0 : 1.6$\sim$1.7GHz}'' will select all channels
+  from \underline{only} SPW0 that are in the range
+\item spw=``{\tt 1.65MHz : 1.6$\sim$1.7GHz}'' same as above, with SPW0
+  selected via integer ID
+\item spw=``{\tt 1 : 1.6$\sim$1.7GHz}'' same as above, with SPW1
+  selected via integer ID
+
+\end{itemize}
+\begin{figure}
+\centerline{
+  \includegraphics[width=10cm]{FreqSettingExample.png}\qquad
+}
+\caption{Frequency setup with two overlapping SPWs.}
+\label{FIG:SPW}
+
+\end{figure}
       
 \subsubsection{Notes}
 
@@ -820,7 +876,7 @@ frequency and polarization description of the data\footnote{The
   combined main-table descriptor for spectral windows and polarization
   is the Data Description ID (DDID).  DDID represents a two-level
   indirection based on the the Spectral Window and Polarization
-  sub-tables (which are the real astro-physically relevant parameters
+  sub-tables (which are the real astrophysically relevant parameters
   of the database).}.  E.g., it is valid to have data at 1420MHz, with
 some fraction of the data recorded with only parallel hand
 polarizations (e.g. "RR" and "LL") and some fraction of the data
@@ -911,7 +967,7 @@ Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
 Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
 Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
 selection expressions and the corresponding list of selected scan
-numbers from Table~\ref{Tab:SCANINTENTEXPR}.
+numbers from Table~\ref{Tab:SCANINTENT}.
 
 \begin{table}[ht!]
 \caption{Example scan-intent table}
@@ -929,7 +985,6 @@ numbers from Table~\ref{Tab:SCANINTENTEXPR}.
 \end{center}
 \label{Tab:SCANINTENT}
 \end{table}
-
 \begin{table}[h!]
 \caption{Examples of scan-intent selection expressions for intents
 shown in Table~\ref{Tab:SCANINTENT}}
@@ -943,37 +998,28 @@ shown in Table~\ref{Tab:SCANINTENT}}
 \hline
 {\small \tt CALI*}   & 0,1,2 & \\
 \hline
-{\small \tt *PHASE}   & 0,2   & Matches \\
-               &       & {\small \tt CALIBRATE\_PHASE} but \\
-               &       & not {\small \tt PHASE\_UNSPECIFIED} \\
+{\small \tt *PHASE}   & 0,2   & Matches {\small \tt CALIBRATE\_PHASE} but \\
+                      &       & not {\small \tt PHASE\_UNSPECIFIED} \\
 \hline
 {\small \tt *UNSPEC*} & 3     & \\
 \hline
-{\small \tt *AMPLI, *PHASE} & 1,2 & {\small \tt *AMPLI} matches \\
-                     &     & {\small \tt CALIBRATE\_AMPLI}; \\
-                     &     & {\small \tt *PHASE} matches \\
-                     &     & {\small \tt CALIBRATE\_PHASE} \\
+{\small \tt *AMPLI, *PHASE} & 1,2 & {\small \tt *AMPLI} matches {\small \tt CALIBRATE\_AMPLI}; \\
+                            &     & {\small \tt *PHASE} matches {\small \tt CALIBRATE\_PHASE} \\
 \hline
-{\small \tt *AMP*} & 1,2,3 & {\small \tt *AMP*} matches \\
-            &       & {\small \tt CALIBRATE\_AMPLI} and \\
-            &       & {\small \tt AMPLI\_UNSPECIFIED} \\
+{\small \tt *AMP*} & 1,2,3 & {\small \tt *AMP*} matches {\small \tt CALIBRATE\_AMPLI} and \\
+                   &       & {\small \tt AMPLI\_UNSPECIFIED} \\
 \hline
-{\small \tt *BAND \& *PHASE} & 0,2 & {\small \tt *BAND} and {\small \tt *PHASE} are \\
-                      &     & simultaneous present \\
-                      &     & for scans 0 and 2 only \\
+{\small \tt *BAND \& *PHASE} & 0,2 & {\small \tt *BAND} and {\small \tt *PHASE} are  simultaneous present \\
+                             &     & for scans 0 and 2 only \\
 \hline
-{\small \tt AMP* \& *PHASE*} & 3 & {\small \tt *PHASE*} matches scans \\
-                      &   & 0,2,3. {\small \tt AMP*} matches \\
-                      &   & only scan 3. \\
+{\small \tt AMP* \& *PHASE*} & 3 & {\small \tt *PHASE*} matches scans 0,2,3. {\small \tt AMP*} matches \\
+                             &   & only scan 3. \\
 \hline
-{\small \tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches \\
-                                &   & {\small \tt *BAND} {\it and} \\
-                                &   & {\small \tt *PHASE*} {\it and} {\small \tt *AMP*} is \\
-                                &   & scan 2 \\
+{\small \tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches {\small \tt *BAND} {\it and} \\
+                                       &   & {\small \tt *PHASE*} {\it and} {\small \tt *AMP*} is scan 2 \\
 \hline
-{\small \tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\small \tt *BAND \& *PHASE} \\
-                               &       & selects scans 0,2. \\
-                               &       & {\small \tt AMPLI*} selects scan 3 \\
+{\small \tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\small \tt *BAND \& *PHASE} selects scans 0,2. \\
+                                      &       & {\small \tt AMPLI*} selects scan 3 \\
 \hline
 \end{tabular}
 \end{center}
@@ -995,7 +1041,7 @@ boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
   (getSubArrayList() for sub-arrays) method will return the list
   generated from INT,INT,... or INT$\sim$INT or "$<$INT"
   specification.  For "$>$INT" specification, the returned list will
-  be number from INT part of "$>$INT" upto the maxScans (maxArrays for
+  be number from INT part of "$>$INT" up to the maxScans (maxArrays for
   sub-arrays) set via MSSelection::setMaxScan()
   (MSSelection::setMaxArray() for sub-arrays).  The default value of
   maxScans/maxArrays is {\tt std::standard\_limits$<$int$>$::max()}
@@ -1025,6 +1071,8 @@ specifications.  E.g.
 
 \newpage
 \appendix{}
+\section{Appendix: Using the {\tt MSSelection} module for other MS-like Tables}
+\newpage
 \section{Appendix: General Error Handling}
 
 The \MSS\ sub-system reports errors via the C++ exception
@@ -1085,7 +1133,7 @@ object of type \MSSelectionErrorHandler\footnote{This is also the
 object that is used internally to handle errors in the \MSS\
 module.  The default error handler that comes pre-installed simply
 throws an exception of the appropriate kind when an error is
-encountered, recreating the normal behaviour of the C++ excpetion
+encountered, recreating the normal behaviour of the C++ exception
 handling mechanism.
 
 To collect errors (and the error messages generated in the process) as

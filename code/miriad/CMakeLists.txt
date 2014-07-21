@@ -48,7 +48,7 @@ install (FILES
 	)
 
 # importmiriad is supposed to be a more general filler for miriad data
-# casa_add_executable( miriad importmiriad apps/importmiriad/importmiriad.cc )
+casa_add_executable( miriad importmiriad apps/importmiriad/importmiriad.cc )
 
 # carmafiller is somewhat limited, and deals only with CARMA (like) data
 casa_add_executable( miriad carmafiller apps/carmafiller/carmafiller.cc )

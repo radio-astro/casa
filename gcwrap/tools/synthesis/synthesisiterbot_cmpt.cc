@@ -32,7 +32,7 @@ namespace casac {
     itsIterBot(NULL)
 {
   itsIterBot = new SynthesisIterBot() ;
-  itsIterBot->openDBus( );
+  ////  itsIterBot->openDBus( );
 }
 
 synthesisiterbot::~synthesisiterbot()
@@ -95,9 +95,9 @@ casac::record* synthesisiterbot::getiterationsummary()
 
 
 
-  bool synthesisiterbot::cleanComplete()
+  int synthesisiterbot::cleanComplete()
 {
-  Bool rstat(False);
+  Int rstat=0;
 
   try 
     {

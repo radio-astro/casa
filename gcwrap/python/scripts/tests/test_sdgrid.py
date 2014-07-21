@@ -11,6 +11,15 @@ import numpy
 import re
 import string
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
+#to rethrow exception
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
 from sdgrid import sdgrid
 import asap as sd
 
@@ -30,6 +39,38 @@ class sdgrid_unittest_base(object):
     tolerance=0.01
     outfile='sdgrid.asap.grid'
 
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+
+    def _getdim( self, sp ):
+        dim = 0
+        import copy
+        a = copy.deepcopy(sp)
+        while isinstance(a, list):
+            dim = dim + 1
+            a = a[0]
+        return dim
+    
+    def _checkshape( self, sp, ref ):
+        # check array dimension
+        self.assertEqual( self._getdim(sp), self._getdim(ref),
+                          msg='array dimension differ' )
+        # check number of spectra
+        self.assertEqual( len(sp), len(ref),
+                          msg='number of spectra differ' )
+        # check number of channel
+        self.assertEqual( len(sp[0]), len(ref[0]),
+                          msg='number of channel differ' )
+    def _diff(self, sp, ref):
+        diff=abs((sp-ref)/ref)
+        idx=numpy.argwhere(numpy.isnan(diff))
+        #print idx
+        if len(idx) > 0:
+            diff[idx]=sp[idx]
+        return diff
+        
     def getdata(self):
         tb.open(self.outfile)
         self.data = tb.getcol('SPECTRA')
@@ -86,8 +127,9 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
     Test on bad parameter setting
     """
     # Input and output names
-    prefix=sdgrid_unittest_base.taskname+'Test0'
-    badid=99
+    #prefix=sdgrid_unittest_base.taskname+'Test0'
+    prefix='sdgridTest0'
+    badid='99'
     rawfile='testimage1chan.1point.asap'
 
     def setUp(self):
@@ -110,24 +152,25 @@ class sdgrid_failure_case(sdgrid_unittest_base,unittest.TestCase):
         self.assertFalse(res)
 
     def test001(self):
-        """Test001: Invalid IFNO"""
+        """Test001: Invalid SPW"""
         try:
-            res=sdgrid(infiles=self.rawfile,ifno=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            res=sdgrid(infiles=self.rawfile,spw=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('No corresponding rows for given selection: IFNO %s'%(self.badid))
+            #pos=str(e).find('No corresponding rows for given selection: SPW %s'%(self.badid))
+            pos=str(e).find('No valid spw')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
     def test002(self):
         """Test002: Invalid POLNO"""
         try:
-            res=sdgrid(infiles=self.rawfile,pollist=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
+            res=sdgrid(infiles=self.rawfile,pol=self.badid,npix=16,cell='20arcsec',outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('Empty pollist')
+            pos=str(e).find('Empty pol')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))
 
@@ -357,8 +400,33 @@ class sdgrid_clipping(sdgrid_unittest_base,unittest.TestCase):
 class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
     """
     Test for flag
+    test300. test channel flag
+    test301. test row flag
+    test302. test row flag (all rows of a pol flagged)
+    test303. test combination of channel and row flags 
+
+    Input data has 2 pol x 4channels x 2 rows.
+    [How to generate input data]
+    nchan = 4
+    orgscan = 'testimage1chan.1point.asap'
+    outscan = ('testgrid%dchan.1point.asap' % nchan)
+    sdcoadd(infiles = [orgscan, orgscan], outfile = outscan)
+    tb.open(outscan, nomodify=False)
+    subtb = tb.query('POLNO==0') # nrow=2
+    sp0 = numpy.array([[10.]*nchan, [1.]*nchan])
+    subtb.putcol('SPECTRA', sp0.transpose())
+    subtb.putcol('FLAGTRA', sp0.transpose()*0)
+    subtb.close()
+    subtb = tb.query('POLNO==1') # nrow=2
+    sp1 = numpy.array([[15.]*nchan, [7.]*nchan])
+    subtb.putcol('SPECTRA', sp1.transpose())
+    subtb.putcol('FLAGTRA', sp1.transpose()*0)
+    subtb.close()
+    tb.close()
     """
-    rawfile='testimage1chan.1point.asap'
+    rawfile='testgrid4chan.1point.asap'
+    outfile='sdgrid_flagging.asap'
+    nchan = 4
     
     def setUp(self):
         if os.path.exists(self.rawfile):
@@ -375,59 +443,128 @@ class sdgrid_flagging(sdgrid_unittest_base,unittest.TestCase):
 
     def test300(self):
         """Test 300: Test channel flagging"""
-        # channel flag pol0 data
+        # channel flag pol0 data chan=0~1 @row0 and chan=1~2@row1 
         tb.open(self.rawfile,nomodify=False)
-        fl=tb.getcell('FLAGTRA',0)
-        fl[:]=1
-        tb.putcell('FLAGTRA',0,fl)
+        subtb = tb.query("POLNO==0")
+        for irow in range(subtb.nrows()):
+            fl=subtb.getcell('FLAGTRA',irow)
+            fl[irow:irow+2]=1
+            subtb.putcell('FLAGTRA',irow,fl)
+        subtb.close()
         tb.close()
-
         # exec task
-        npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
-        self.assertEqual(res,None,
-                         msg='Any error occurred during gridding')
-
-        # test result
-        self._testresult(npix)
+        # POL0 should be [1., flagged, 10., 5.5]
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([1., numpy.nan, 10., 5.5]),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
 
     def test301(self):
-        """Test 301: Test row flagging"""
-        # row flag pol0 data
+        """Test 301: Test row flagging (one of two rows)"""
+        # row flag the first row of pol1 data
         tb.open(self.rawfile,nomodify=False)
-        fl=tb.getcell('FLAGROW',0)
+        subtb = tb.query("POLNO==1")
+        fl=subtb.getcell('FLAGROW',0)
         fl=1
-        tb.putcell('FLAGROW',0,fl)
+        subtb.putcell('FLAGROW',0,fl)
+        subtb.close()
+        tb.close()
+        # exec task
+        # POL0 should be [5.5]*nchan
+        # POL1 should be [7.]*nchan
+        refdata = [self._create_masked_array([5.5]*self.nchan),
+                   self._create_masked_array([7.]*self.nchan)]
+        self.run_test(refdata)
+
+    def test302(self):
+        """Test 302: Test row flagging all rows"""
+        # row flag all rows of pol0 data
+        tb.open(self.rawfile,nomodify=False)
+        subtb = tb.query("POLNO==0")
+        fl=subtb.getcol('FLAGROW')
+        fl[:]=1
+        subtb.putcol('FLAGROW',fl)
+        subtb.close()
         tb.close()
 
         # exec task
-        npix=17
-        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
+        # POL0 should be flagged
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([numpy.nan]*self.nchan, True),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
+
+    def test303(self):
+        """Test 303: Test combination of row and channel flagging"""
+        # flag chans=1~2 in the second row of pol0 data and
+        # row flag the first row
+        tb.open(self.rawfile,nomodify=False)
+        subtb = tb.query("POLNO==0")
+        fl=subtb.getcell('FLAGTRA',0)
+        fl[1:3] = 1
+        fl=subtb.putcell('FLAGTRA',0,fl)
+        fl=subtb.getcell('FLAGROW',1)
+        fl=1
+        subtb.putcell('FLAGROW',1,fl)
+        subtb.close()
+        tb.close()
+
+        # exec task
+        # POL0 should be [10., flagged, flagged, 10.]
+        # POL1 should be [11.]*nchan
+        refdata = [self._create_masked_array([10., numpy.nan, numpy.nan, 10.]),
+                   self._create_masked_array([11.]*self.nchan)]
+        self.run_test(refdata)
+
+    ####################
+    # Helper functions
+    ####################
+    def _create_masked_array(self, data, mask=None):
+        if mask is None: mask=numpy.isnan(numpy.array(data))
+        return numpy.ma.masked_array(data, mask)
+
+    def run_test(self, refdata):
+        npix=1
+        res=sdgrid(infiles=self.rawfile,gridfunction='BOX',weight='UNIFORM',
+                   npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
         self.assertEqual(res,None,
                          msg='Any error occurred during gridding')
-
+        self._test_results(self.outfile, refdata)
+    
+    def _test_results(self, filename, refdata):
+        # assert output file is generated
+        self._checkfile(filename)
         # test result
-        self._testresult(npix)
+        tb.open(filename)
+        try:
+            nrow = tb.nrows()
+            spec = tb.getcol('SPECTRA').transpose()
+            cflag = tb.getcol('FLAGTRA').transpose()
+            rflag = tb.getcol('FLAGROW')
+        except: raise
+        finally: tb.close()
+        # check row number
+        self.assertEqual(nrow,len(refdata),
+                         msg='output row number differs: %d (expected: %d)' % (nrow, len(refdata)))
+        # spectra and flagtra
+        for irow in range(nrow):
+            ref = refdata[irow]
+            sp = spec[irow]
+            # FLAGROW should be set if all channels are flagged.
+            if ((cflag[irow]!=0).all()):
+                self.assertTrue(rflag[irow]!=0, "All channels are flagged but FLAGROW is not set")
+            flg = (rflag[irow]!=0) or (cflag[irow]!=0)
+            # check num chan
+            self.assertEqual(len(sp),len(ref),
+                             msg='nchan in row=%d differs: %d (expected: %d)' % (irow, len(sp), len(ref)))
+            # check flag and spectra
+            spma = self._create_masked_array(sp, flg)
+            if ref.mask.all():
+                self.assertTrue(spma.mask.all(), msg='spectram in row=%d should been all flagged' % irow)
+            else:
+                self.assertTrue((spma==ref).all(),
+                                msg='spectrum or flag in row=%d differs: %s (expected: %s)' % (irow, str(spma), str(ref)))
 
-    def _testresult(self,npix):
-        self.getdata()
-        
-        # center is only nonzero pixel
-        npol=2
-        width=1
-        nonzeropix_ref=self.generateNonzeroPix(npol,npix,width)
-        # pol0 is flagged so that data must be zero
-        #nonzeropix_ref2=(numpy.array([nonzeropix_ref[0][1]]),
-        #                 numpy.array([nonzeropix_ref[1][1]]))
-        nonzeropix_ref2=numpy.array([nonzeropix_ref[1]])
-        nonzeropix=self.data.nonzero()[1]
-        #print nonzeropix
-        self.nonzero(nonzeropix_ref2,nonzeropix)
-
-        # pol1 must be 1.0
-        pol1=self.data[0,nonzeropix[0]]
-        self.check(1.0,pol1)
-        
 
 ###
 # Test various weighting
@@ -788,7 +925,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
             shutil.rmtree(self.outfile)
 
     def test700(self):
-        """Test 700: Test to change center for gridding (DEC)"""
+        """Test 700: Test to change center for gridding"""
         tb.open(self.rawfile)
         dir=tb.getcell('DIRECTION',0)
         tb.close()
@@ -817,7 +954,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix_ref
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
-        
+
     def test701(self):
         """Test 701: Test to change center for gridding (RA)"""
         tb.open(self.rawfile)
@@ -848,64 +985,444 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix_ref
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
+    
+class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
+                        sdgrid_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
+    
+    Data used for this test are sd_analytic_type1-3.asap (raw data)
+    and sdgrid_selection.asap.ref (reference data).
+    The reference data are generated using the following expr parameter:
+    expr='V1*V1+1.0' where V1='sd_analytic_type1-3.asap'.
 
-class sdgrid_flagging2(sdgrid_unittest_base,unittest.TestCase):
     """
-    This is test suite for handling flag information in sdgrid.
-    """
-    rawfile='testimage1chan.map.asap'
-    modified_file=rawfile+'.mod'
+    # Input and output names
+    rawfile='sd_analytic_type1-3.asap'
+    reffile='sdgrid_test_selection.asap.ref'
+    prefix=sdgrid_unittest_base.taskname+'TestSel'
+    postfix='.grid.asap'
+    field_prefix = 'M100__'
+
+    @property
+    def task(self):
+        return sdgrid
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
     def setUp(self):
-        if os.path.exists(self.rawfile):
-            shutil.rmtree(self.rawfile)
-        shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
 
-        table = gentools(['tb'])[0]
-        table.open(self.rawfile, nomodify=False)
-        spectra = table.getcol('SPECTRA')
-        flagtra = table.getcol('FLAGTRA')
-        spectra_new = numpy.concatenate([spectra, spectra])
-        flagtra_new = numpy.concatenate([flagtra, flagtra])
-        table.putcol('SPECTRA', spectra_new)
-        table.putcol('FLAGTRA', flagtra_new)
-        table.close()
-        
         default(sdgrid)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.outfile)):
-            shutil.rmtree(self.outfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test_channelflag(self):
-        """test_channelflag: test specific channels are flagged"""
-        # flag all channels
-        scan = sd.scantable(self.rawfile, average=False)
-        mask = scan.create_mask([0,0])
-        scan.flag(mask)
-        scan.save(self.modified_file, overwrite=True)
+    def _compare( self, name, ref ):
+        self._checkfile( name )
+        # reference data
+        tb.open(ref)
+        nrow0=tb.nrows()
+        rsp=[]
+        for irow in xrange(nrow0):
+            rsp.append(tb.getcell('SPECTRA',irow))
+        tb.close()
+        # check shape
+        tb.open(name)
+        nrow=tb.nrows()
+        self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
+        sp=[]
+        for irow in xrange(nrow):
+            sp.append(tb.getcell('SPECTRA',irow))
+            self.assertEqual(len(sp[irow]),len(rsp[irow]),
+                             msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
+        tb.close()
+        # check data
+        valuetype=type(sp[0][0])
+        #print ''
+        for irow in xrange(nrow):
+            #print 'irow=%s'%(irow)
+            #print '  rsp=%s'%(rsp[irow])
+            #print '   sp=%s'%(sp[irow])
+            ret=numpy.allclose(rsp[irow],sp[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
 
-        # run sdgrid
-        npix=17
-        res=sdgrid(infiles=self.modified_file,gridfunction='BOX',npix=npix,cell='20arcsec',outfile=self.outfile,plot=False)
-        self.assertEqual(res,None,
-                         msg='Any error occurred during gridding')
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan=''
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='15')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '15'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '<16'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>15')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scangt15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '>15'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_scan_id_range(self):
+        """ test scan selection (scan='15~16')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_scan15.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        scan = '15~16'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan = '15,17'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='<16, 17')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        scan = '<16, 17'
+        self.res=sdgrid(scan=scan,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol=''
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '1'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '<1'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [0]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '>0'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        tbsel = {'POLNO': [1]}
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._comparecal_with_selection(outname, tbsel)
+    
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '0~1'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '0,1'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='<1,1')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        pol = '<1,1'
+        self.res=sdgrid(pol=pol,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, self.reffile)
+    
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwnullstring.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw=''
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='22')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw22.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='22'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<25')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwlt25.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<25'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>21')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwgt21.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='>21'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_range(self):
+        """ test spw selection (spw='21~24')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwlt25.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<25'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,22,23,25')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw21222325.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='21,22,23,25'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='<22,>24')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw21222325.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='<22,>24'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spwnullstring.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='*'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300~310GHz')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw300to310ghz.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='300~310GHz'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-50~50km/s')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw-50to50kms.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='-50~50km/s'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='150~550km/s,>23')"""
+        infiles=[self.rawfile]
+        outname=self.prefix+self.postfix
+        reffile0='sdgrid_test_selection_spw150to500kmsgt23.asap.ref'
+        if (not os.path.exists(reffile0)):
+            shutil.copytree(self.datapath+reffile0, reffile0)
+        spw='150~550km/s,>23'
+        self.res=sdgrid(spw=spw,infiles=infiles,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, reffile0)
+        if (os.path.exists(reffile0)):
+            shutil.rmtree(reffile0)
+    
+    ####################
+    # Helper functions
+    ####################
+    def _comparecal_with_selection( self, name, tbsel={} ):
+        self._checkfile(name)
+        sp=self._getspectra_selected(name, tbsel)
+        spref=self._getspectra_selected(self.reffile, tbsel)
+
+        self._checkshape( sp, spref )
         
-        # check result
-        table = gentools(['tb'])[0]
-        table.open(self.outfile)
-        flagtra = table.getcol('FLAGTRA')
-        table.close()
-        self.assertTrue(all(flagtra[0] != 0),
-                        msg='Channel 0 should be flagged for all spectra')
-        self.assertTrue(all(flagtra[1] == 0),
-                        msg='Channel 1 should not be flagged')
+        for irow in xrange(len(sp)):
+            diff=self._diff(numpy.array(sp[irow]),numpy.array(spref[irow]))
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def _getspectra_selected( self, name, tbsel={} ):
+        """
+        Returns an array of spectra in rows selected in table.
         
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        sp = []
+        if len(tbsel) == 0:
+            for i in range(tb.nrows()):
+                sp.append(tb.getcell('SPECTRA', i).tolist())
+        else:
+            command = ''
+            for key, val in tbsel.items():
+                if len(command) > 0:
+                    command += ' AND '
+                command += ('%s in %s' % (key, str(val)))
+            newtb = tb.query(command)
+            for i in range(newtb.nrows()):
+                sp.append(newtb.getcell('SPECTRA', i).tolist())
+            newtb.close()
+
+        tb.close()
+        return sp
 
 def suite():
     return [sdgrid_failure_case, sdgrid_single_integ,
             sdgrid_clipping, sdgrid_flagging,
             sdgrid_weighting, sdgrid_map,
             sdgrid_dec_correction, sdgrid_grid_center,
-            sdgrid_flagging2]
+            sdgrid_selection]

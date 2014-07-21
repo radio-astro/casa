@@ -25,7 +25,7 @@
 using namespace AntennaMotionPatternMod;
 
 template<>
- struct enum_set_traits<AntennaMotionPatternMod::AntennaMotionPattern> : public enum_set_traiter<AntennaMotionPatternMod::AntennaMotionPattern,9,AntennaMotionPatternMod::UNSPECIFIED> {};
+ struct enum_set_traits<AntennaMotionPatternMod::AntennaMotionPattern> : public enum_set_traiter<AntennaMotionPatternMod::AntennaMotionPattern,11,AntennaMotionPatternMod::LISSAJOUS> {};
 
 template<>
 class enum_map_traits<AntennaMotionPatternMod::AntennaMotionPattern,void> : public enum_map_traiter<AntennaMotionPatternMod::AntennaMotionPattern,void> {
@@ -55,6 +55,10 @@ public:
      (AntennaMotionPatternMod::TEST,ep((int)AntennaMotionPatternMod::TEST,"TEST","un-documented")));
     m_.insert(pair<AntennaMotionPatternMod::AntennaMotionPattern,EnumPar<void> >
      (AntennaMotionPatternMod::UNSPECIFIED,ep((int)AntennaMotionPatternMod::UNSPECIFIED,"UNSPECIFIED","un-documented")));
+    m_.insert(pair<AntennaMotionPatternMod::AntennaMotionPattern,EnumPar<void> >
+     (AntennaMotionPatternMod::STAR,ep((int)AntennaMotionPatternMod::STAR,"STAR","un-documented")));
+    m_.insert(pair<AntennaMotionPatternMod::AntennaMotionPattern,EnumPar<void> >
+     (AntennaMotionPatternMod::LISSAJOUS,ep((int)AntennaMotionPatternMod::LISSAJOUS,"LISSAJOUS","un-documented")));
     return true;
   }
   static map<AntennaMotionPatternMod::AntennaMotionPattern,EnumPar<void> > m_;

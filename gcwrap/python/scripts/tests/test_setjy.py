@@ -63,10 +63,10 @@ class SetjyUnitTestBase(unittest.TestCase):
             if maxnback > nstrows:
                 maxnback = nstrows - 1
             stoprow = startrow - maxnback
-            print hint
             for linenum in xrange(startrow, stoprow - 1, -1):
                 curline = st.getcell('MESSAGE', linenum)
-                if hint in curline:
+                #if hint in curline:
+                if curline.find(hint)!=-1:
                     retline = curline
                     break
             st.close()
@@ -160,6 +160,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['med4'] = tblocal.getcell('MODEL_DATA', 4)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint='Uranus')
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Uranus')
                 self.result = record
         except AssertionError, e:
@@ -221,6 +222,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+            #    record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
@@ -369,6 +371,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
@@ -620,72 +623,129 @@ class test_ModImage(SetjyUnitTestBase):
         # The MS is in Q band, so deliberately choose the U band model so that the structure
         # is not too far off, but whether or not its flux density is scaled makes a difference.
 
-        for use_standard in [False, True]:
-            self.result[use_standard] = self.run_setjy(use_standard)
+        print "Running multiple setjy with different parameters..."
+        for use_oldstandard in [False, True]:
+        # for debugging ...
+        #for use_oldstandard in [True]:
+            selStandard = ("Perley-Taylor 99" if use_oldstandard else "Perley-Butler 2010")
+            print "!!!!! Run with standard=\"%s\" !!!!!" % selStandard
+            self.result[use_oldstandard] = self.run_setjy(use_oldstandard)
 
+        
+        print "!!!! Run with standard=\"manual\", fluxdensity !!!!!"
         self.result['fluxdens'] = self.run_setjy(False, 1234.0)
+        print "!!!! Run with standard=\"manual\", fluxdensity and spix !!!!!"
         self.result['spix'] = self.run_setjy(False,1234.0 * (43.42064/35.0)**0.7,-0.7,"35.0GHz")
 
-        """Flux density in HISTORY (standard)?"""
-        # Don't bother checking it without scaling - it won't be there and isn't interesting.
-        self.check_history(self.result[True]['history'],["Scaling spw 1's model image to I ="])
-        """Flux density in HISTORY (fluxdensity)?"""
-        self.check_history(self.result['fluxdens']['history'],["Scaling spw 1's model image to I ="])
-        """Flux density in HISTORY (fluxdensity)?"""
-        self.check_history(self.result['fluxdens']['history'],["Scaling spw 1's model image to I ="])
+        # check on HISTORY sub-table entries - does not check for values
+        """Flux density in HISTORY (old standard)?"""
+        #no scaling
+        #self.check_history(self.result[True]['history'],["Scaling spw 1's model image to I ="])
+        self.check_history(self.result[True]['history'],["fld ind 12) spw 1  [I="])
+        """Flux density in HISTORY (new default standard)?"""
+        self.check_history(self.result[False]['history'],["Scaling spw(s) [0, 1]'s model image to I ="])
+        #"""Flux density in HISTORY (fluxdensity)?""" <= no flux density is written in HISTORY, just input flux dens.
+        #self.check_history(self.result['fluxdens']['history'],["Scaling spw 1's model image to I ="])
         """Flux density in HISTORY (spix)?"""
-        self.check_history(self.result['spix']['history'],["Scaling spw 1's model image to I ="])
-        """ Returned flux density (using standard) """
+        #self.check_history(self.result['spix']['history'],["Scaling spw 1's model image to I ="])
+        self.check_history(self.result['spix']['history'],["Flux density as a function of frequency"])
+
+        # computed flux check
+        # -different standards
+        """ Returned flux density (using old standard) """
         # fieldid = 12
         self.assertTrue(self.result[True]['setjyran'].has_key('12'))
         self.check_eq(self.result[True]['setjyran']['12']['1']['fluxd'][0],0.91134687,0.0001)
-        """ Returned flux density (no  standard) """
+        """ Returned flux density (default standard=Perley-Butler 2010) """
         self.assertTrue(self.result[False]['setjyran'].has_key('12'))
-        self.check_eq(self.result[False]['setjyran']['12']['1']['fluxd'][0],0.0,0.0001)
+        #self.check_eq(self.result[False]['setjyran']['12']['1']['fluxd'][0],0.0,0.0001)
+        # Updated value for the updated run_setjy 2014-05-01 TT
+        self.check_eq(self.result[False]['setjyran']['12']['1']['fluxd'][0],1.0510757,0.0001)
+        #
+        # -manual mode (fluxdensity specification)
         """ Returned flux density (with input fluxdensity) """
         self.assertTrue(self.result['fluxdens']['setjyran'].has_key('12'))
         self.check_eq(self.result['fluxdens']['setjyran']['12']['1']['fluxd'][0],1234.0,0.0001)
         """ Returned flux density (with input fluxdensity and spix) """
         self.assertTrue(self.result['spix']['setjyran'].has_key('12'))
-        self.check_eq(self.result['spix']['setjyran']['12']['1']['fluxd'][0],1233.91240671,0.0001)
+        #self.check_eq(self.result['spix']['setjyran']['12']['1']['fluxd'][0],1233.91240671,0.0001)
+        # Updated value for the updated run_setjy 2014-05-01 TT
+        self.check_eq(self.result['spix']['setjyran']['12']['1']['fluxd'][0],1234.0328507,0.0001)
+        #
+        # -for standard='Perley-Butler 2010, with model image
         """modimage != '' and fluxdensity == 0 -> no scaling?"""
-        self.check_eq(self.result[False]['short'], 2.712631, 0.05)
-        self.check_eq(self.result[False]['long'],  2.4080808, 0.05)
-        """modimage != '' and default fluxdensity -> scaling?"""
+        #self.check_eq(self.result[False]['short'], 2.712631, 0.05)
+        # Updated value for the updated run_setjy 2014-05-01 TT
+        self.check_eq(self.result[False]['short'], 1.0508747, 0.05)
+        #self.check_eq(self.result[False]['long'],  2.4080808, 0.05)
+        # Updated value for the updated run_setjy 2014-05-01 TT
+        self.check_eq(self.result[False]['long'],  0.9328917, 0.05)
+        #
+        # -for standard='Perley-Taylor 99' (no model specification is allowed)
+        """Perley-Taylor 99 standard?"""
         self.check_eq(self.result[True]['short'], 0.911185, 0.025)
-        self.check_eq(self.result[True]['long'],  0.808885, 0.025)
-        """modimage != '' and fluxdensity > 0"""
-        self.check_eq(self.result['fluxdens']['short'], 1233.7, 0.05)
-        self.check_eq(self.result['fluxdens']['long'],  1095.2, 0.05)
-        """modimage != '', fluxdensity > 0, and spix = -0.7"""
-        self.check_eq(self.result['spix']['short'], 1233.7, 0.5)
-        self.check_eq(self.result['spix']['long'],  1095.2, 0.5)
+        #self.check_eq(self.result[True]['long'],  0.808885, 0.025)
+        # Updated value for the updated run_setjy 2014-05-01 TT
+        self.check_eq(self.result[True]['long'],  0.9114067, 0.025)
+        #"""modimage != '' and fluxdensity > 0""" this is no longer supported in the task
+        """fluxdensity > 0"""  # should be = input fluxdensity for model vis
+        self.check_eq(self.result['fluxdens']['short'], 1234.0, 0.05)
+        self.check_eq(self.result['fluxdens']['long'],  1234.0, 0.05)
+        #"""modimage != '', fluxdensity > 0, and spix = -0.7""" with modimage no longer supproted
+        """fluxdensity > 0, and spix = -0.7"""
+        #self.check_eq(self.result['spix']['short'], 1233.7, 0.5)
+        #self.check_eq(self.result['spix']['long'],  1095.2, 0.5)
+        self.check_eq(self.result['spix']['short'], 1234.0, 0.5)
+        self.check_eq(self.result['spix']['long'],  1234.0, 0.5)
 
         return True
 
-    def run_setjy(self, use_standard, fluxdens=0, spix=0, reffreq="1GHz"):
+    def run_setjy(self, use_oldstandard, fluxdens=0, spix=0, reffreq="1GHz"):
         record = {'setjyran': False}
         try:
-            if use_standard:
+            if use_oldstandard:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
-                                           modimage=self.modelim,
+                                           #modimage=self.modelim,
                                            scalebychan=False,
                                            standard='Perley-Taylor 99',
                                            usescratch=True,
                                            async=False)
+
+                record['history'] = self.get_last_history_line(self.inpms,
+                                                           origin='imager::setjy()',
+                                                           #hint='model image to I')
+                                                           hint='fld ind 12) spw 1  [I=')
             else:
-                record['setjyran'] = setjy(vis=self.inpms, field=self.field,
-                                           #modimage=self.modelim,
-                                           model=self.modelim,
-                                           scalebychan=False,
-                                           standard='manual',
-                                           fluxdensity=fluxdens,
-                                           spix=spix, reffreq=reffreq,
-                                           usescratch=True,
-                                           async=False)
-            record['history'] = self.get_last_history_line(self.inpms,
+                if fluxdens==0:
+                    # use default standard with model
+                    record['setjyran'] = setjy(vis=self.inpms, field=self.field,
+                                               model=self.modelim,
+                                               scalebychan=False,
+                                               standard='Perley-Butler 2010',
+                                               spix=spix, reffreq=reffreq,
+                                               usescratch=True,
+                                               async=False)
+
+                    record['history'] = self.get_last_history_line(self.inpms,
                                                            origin='imager::setjy()',
                                                            hint='model image to I')
+                else:
+                    record['setjyran'] = setjy(vis=self.inpms, field=self.field,
+                                               #model=self.modelim,
+                                               #scalebychan=False,
+                                               scalebychan=True,
+                                               standard='manual',
+                                               fluxdensity=fluxdens,
+                                               spix=spix, reffreq=reffreq,
+                                               usescratch=True,
+                                               async=False)
+
+                    if spix!=0.0:
+                        record['history'] = self.get_last_history_line(self.inpms,
+                                                           origin='imager::setjy()',
+                                                           hint='Flux density as a function of frequency')
+
+
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
                                             complex_value='amp',

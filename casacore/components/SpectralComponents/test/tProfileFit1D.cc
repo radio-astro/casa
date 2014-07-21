@@ -76,10 +76,15 @@ int main() {
 			Vector<Bool> m;
 			Double amp, cen, sig, p0, p1;
 			makeData(x, y, m, amp, cen, sig, p0, p1);
+
 			const uInt n = x.nelements();
 
 			// Make fitter, set data and fit
 			ProfileFit1D<Double> fitter;
+			cout << "x " << x << endl;
+			                        cout << "y " << y << endl;
+			                        cout << "m " << m << endl;
+
 			fitter.setData (x,y,m);
 			fitter.setGaussianElements (1);
 			const SpectralElement *firstEl = fitter.getList(False)[0];

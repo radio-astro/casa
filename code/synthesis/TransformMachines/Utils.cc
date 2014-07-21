@@ -25,7 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <measures/Measures/MEpoch.h>

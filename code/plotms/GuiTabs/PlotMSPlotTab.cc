@@ -216,7 +216,20 @@ String PlotMSPlotTab::getAveragingSummary() const {
 
 // Public Slots //
 
-void PlotMSPlotTab::plot( bool forceReload ) {
+bool PlotMSPlotTab::plot( bool forceReload ) {
+	Bool plotCompleted = true;
+
+	//Post an error rather than plotting if the user has specified duplicate
+	//y-axes.
+	PlotMSAxesTab* axesTab = findAxesTab();
+	if ( axesTab != NULL ){
+		bool axesValid = axesTab->isAxesValid();
+		if ( !axesValid ){
+			String message( "Please remove duplicate y-axes.");
+			this->itsPlotter_->showError( message, "Duplicate y-axes", true);
+			return plotCompleted;
+		}
+	}
 
     if(itsCurrentParameters_ != NULL) {
         PlotMSPlotParameters params = currentlySetParameters();
@@ -247,7 +260,6 @@ void PlotMSPlotTab::plot( bool forceReload ) {
 		// Must remove constness of the reference returned by d->selection()
 		PlotMSSelection &sel = (PlotMSSelection &)d->selection();
 		sel.setForceNew(forceReloadCounter_);
-
         if (paramsChanged || cancelledCache ) {
             if (paramsChanged) {
                 // check for "clear selections on axes change" setting
@@ -267,16 +279,40 @@ void PlotMSPlotTab::plot( bool forceReload ) {
                 itsCurrentParameters_->holdNotification(this);
                 *itsCurrentParameters_ = params;
                 itsCurrentParameters_->releaseNotification();
-            } else if (cancelledCache) {
+                plotCompleted = !itsCurrentPlot_->isCacheUpdating();
+                if ( plotCompleted ){
+                	completePlotting( true );
+                }
+                return plotCompleted;
+            }
+            else if (cancelledCache) {
                 // Tell the plot to redraw itself because of the cache.
                 itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
                         PMS_PP::UPDATE_REDRAW & PMS_PP::UPDATE_CACHE);
+                plotCompleted = itsCurrentPlot_->isCacheUpdating();
             }
             plotsChanged(itsPlotManager_);
         }
     }
+    return plotCompleted;
 }
 
+void PlotMSPlotTab::completePlotting( bool success ){
+	if ( itsCurrentPlot_ != NULL ){
+		if ( !success ){
+			itsCurrentPlot_->dataMissing();
+		}
+		else {
+			itsCurrentPlot_->cacheLoaded_( false );
+		}
+	}
+}
+
+void PlotMSPlotTab::clearData(){
+	if ( itsCurrentPlot_ != NULL ){
+		itsCurrentPlot_->detachFromCanvases();
+	}
+}
 
 // Protected //
 
@@ -471,6 +507,17 @@ PlotMSDisplayTab* PlotMSPlotTab::insertDisplaySubtab (int index){
      return tab;
 }
 
+PlotMSAxesTab* PlotMSPlotTab::findAxesTab(){
+	PlotMSAxesTab* tab = NULL;
+	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
+		tab = dynamic_cast < PlotMSAxesTab * >(t);
+		if (tab != NULL){
+			break;
+		}
+	}
+	return tab;
+}
+
 PlotMSDisplayTab* PlotMSPlotTab::findDisplayTab(){
 	PlotMSDisplayTab* tab = NULL;
 	foreach (PlotMSPlotSubtab * t, itsSubtabs_) {
@@ -507,13 +554,19 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          Int cols = 1;
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
-         connect( tab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
+
+         connect( tab, SIGNAL(plottableChanged()), this, SLOT(plottableChanged()));
      }
      insertSubtab (index, tab);
      return tab;
 }
 
-
+void PlotMSPlotTab::plottableChanged(){
+	if ( this->itsCurrentParameters_ != NULL ){
+		itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
+		                        PMS_PP::UPDATE_REDRAW );
+	}
+}
 
 PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab (){
      return insertTransformationsSubtab (itsSubtabs_.size ());
@@ -559,10 +612,7 @@ void PlotMSPlotTab::setupForPlot() {
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-   
-    PMS_PP_Display* displayParams = itsCurrentParameters_->typedGroup<PMS_PP_Display>();
-    PlotSymbolPtr displaySymbol = displayParams->unflaggedSymbol();
-
+  
     insertData(0);
     insertAxes(1);
     insertIterate(2);

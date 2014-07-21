@@ -2510,6 +2510,7 @@ Bool MSTransformDataHandler::copyFeed()
 
 		for (uInt k = 0; k < totalSelFeeds; ++k)
 		{
+
 			antCol.put(k, antNewIndex_p[antCol(k)]);
 			if (spwCol(k) > -1) spwCol.put(k, spwRelabel_p[spwCol(k)]);
 		}
@@ -3059,6 +3060,17 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 
 	uInt rowIndex = spwTable_0.nrow();
 
+	// Map subMS with spw_id to merge the FEED table later
+	Vector<uInt> mapSubmsSpwid;
+
+	// subMS_0000 starts with spw 0
+	uInt spwStart = 0;
+	mapSubmsSpwid.resize(filenames.size());
+	mapSubmsSpwid[0] = spwStart;
+
+	// for next subMS
+	spwStart = spwStart + rowIndex;
+
 	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
 	{
 		String filename_i = filenames(subms_index);
@@ -3066,7 +3078,14 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 		MSSpectralWindow spwTable_i = ms_i.spectralWindow();
 		MSSpWindowColumns spwCols_i(spwTable_i);
 
-		spwTable_0.addRow(spwTable_i.nrow());
+		uInt nrow = spwTable_i.nrow();
+		spwTable_0.addRow(nrow);
+
+		// Map of this subMS to spw ID
+		mapSubmsSpwid[subms_index] = spwStart;
+
+		// for next subMS
+		spwStart = spwStart + nrow;
 
 		for (uInt subms_row_index=0;subms_row_index<spwTable_i.nrow();subms_row_index++)
 		{
@@ -3102,6 +3121,7 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 	ms_0.flush(True);
 
 	mergeDDISubTables(filenames);
+	mergeFeedSubTables(filenames, mapSubmsSpwid);
 
 	return True;
 }
@@ -3127,7 +3147,6 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 		ddiTable_0.addRow(dditable_i.nrow());
 
-
 		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
 		{
 			// get the last spw id entered in the 0th DD table
@@ -3135,6 +3154,7 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
 			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
+			// SPW_ID cannot be the re-indexed value here
 			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
 			rowIndex += 1;
 		}
@@ -3144,6 +3164,85 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 	return True;
 }
+
+
+// -----------------------------------------------------------------------
+// Method to merge FEED sub-tables from SubMSs to create the MMS-level FEED sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+	MSFeed feedTable_0 = ms_0.feed();
+	MSFeedColumns feedCols_0(feedTable_0);
+
+	uInt rowIndex = feedTable_0.nrow();
+
+	if (filenames.size() != mapSubmsSpwid.size()){
+		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+		os 	<< LogIO::WARN << "There was an error merging the FEED tables of the subMSs"
+			<< LogIO::POST;
+		return false;
+	}
+
+	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+	{
+		String filename_i = filenames(subms_index);
+		MeasurementSet ms_i(filename_i);
+		MSFeed feedtable_i = ms_i.feed();
+		MSFeedColumns feedcols_i(feedtable_i);
+
+		feedTable_0.addRow(feedtable_i.nrow());
+
+		// The starting SPW ID of this subMS is
+		uInt spwid = mapSubmsSpwid[subms_index];
+
+		uInt spw_i_previous = 0;
+
+		for (uInt subms_row_index=0;subms_row_index<feedtable_i.nrow();subms_row_index++)
+		{
+
+			uInt spw_i = feedcols_i.spectralWindowId().get(subms_row_index);
+			if (spw_i != spw_i_previous){
+				// increment spwid
+				spwid += 1;
+			}
+
+			// FEED table columns"
+			// POSITION BEAM_OFFSET POLARIZATION_TYPE POL_RESPONSE RECEPTOR_ANGLE ANTENNA_ID
+			// BEAM_ID FEED_ID INTERVAL NUM_RECEPTORS SPECTRAL_WINDOW_ID TIME FOCUS_LENGTH
+
+			feedCols_0.position().put(rowIndex,feedcols_i.position()(subms_row_index));
+			feedCols_0.beamOffset().put(rowIndex,feedcols_i.beamOffset()(subms_row_index));
+			feedCols_0.polarizationType().put(rowIndex,feedcols_i.polarizationType()(subms_row_index));
+			feedCols_0.polResponse().put(rowIndex,feedcols_i.polResponse()(subms_row_index));
+			feedCols_0.receptorAngle().put(rowIndex,feedcols_i.receptorAngle()(subms_row_index));
+			feedCols_0.antennaId().put(rowIndex,feedcols_i.antennaId()(subms_row_index));
+			feedCols_0.beamId().put(rowIndex,feedcols_i.beamId()(subms_row_index));
+			feedCols_0.feedId().put(rowIndex,feedcols_i.feedId()(subms_row_index));
+			feedCols_0.interval().put(rowIndex,feedcols_i.interval()(subms_row_index));
+			feedCols_0.numReceptors().put(rowIndex,feedcols_i.numReceptors()(subms_row_index));
+			feedCols_0.time().put(rowIndex,feedcols_i.time()(subms_row_index));
+
+			// optional column (?)
+			if (feedcols_i.focusLength().isNull()==false and feedcols_i.focusLength().hasContent()==true){
+				feedCols_0.focusLength().put(rowIndex,feedcols_i.focusLength()(subms_row_index));
+			}
+
+			// SPW_ID cannot be the re-indexed value here
+			feedCols_0.spectralWindowId().put(rowIndex,spwid);
+
+			spw_i_previous = feedcols_i.spectralWindowId().get(subms_row_index);
+
+			rowIndex += 1;
+		}
+	}
+
+	ms_0.flush(True);
+
+	return True;
+}
+
 
 // -----------------------------------------------------------------------
 // Work-around to copy the keywords of the FLOAT_DATA column to the output MS

@@ -41,7 +41,7 @@
 
 #include <casa/System/PGPlotter.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
 #include <synthesis/CalTables/GJonesMBuf.h>
 #include <synthesis/CalTables/GJonesTable.h>
 #include <synthesis/CalTables/CalIter.h>

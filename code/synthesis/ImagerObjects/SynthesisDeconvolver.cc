@@ -64,113 +64,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       //				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
 				       //                                       itsPartImageNames(Vector<String>(0)),
+				       itsBeam(0.0),
 				       itsDeconvolverId(0),
-				       itsBeam(0.0)
+				       itsScales(Vector<Float>())
   {
     
   }
   
   SynthesisDeconvolver::~SynthesisDeconvolver() 
   {
-    LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
-    os << "SynthesisDeconvolver destroyed" << LogIO::POST;
+        LogIO os( LogOrigin("SynthesisDeconvolver","descructor",WHERE) );
+	os << LogIO::DEBUG1 << "SynthesisDeconvolver destroyed" << LogIO::POST;
   }
-  
-  
-  void SynthesisDeconvolver::setupDeconvolution(Record decpars)
+
+  void SynthesisDeconvolver::setupDeconvolution(const SynthesisParamsDeconv& decpars)
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setupDeconvolution",WHERE) );
 
-    String algorithm("test");
-
-    uInt nTaylorTerms=1; // Try to remove....
-    try
-      {
-
-      if( decpars.isDefined("imagename") )  // A single string
-	{ itsImageName = decpars.asString( RecordFieldId("imagename")); }
-      else
-	{throw( AipsError("imagename not specified")); }
-
-      /*
-      if( decpars.isDefined("partimagenames") )  // A vector of strings
-	{ decpars.get( RecordFieldId("partimagenames") , itsPartImageNames ); }
-      else
-	{ itsPartImageNames.resize(0); }
-      */
-
-      if( decpars.isDefined("id") )
-	{ decpars.get( RecordFieldId("id") , itsDeconvolverId ); }
-
-      if( decpars.isDefined("algo") )
-	{ decpars.get( RecordFieldId("algo") , algorithm ); algorithm.downcase(); }
-
-      
-      if( decpars.isDefined("startmodel") )  // A single string
-	{ itsStartingModelName = decpars.asString( RecordFieldId("startmodel")); }
-
-      if( decpars.isDefined("ntaylorterms") )
-	{ nTaylorTerms = decpars.asInt( RecordFieldId("ntaylorterms") );}
-      //	{ Int nt; decpars.get( RecordFieldId("ntaylorterms") , nt ); nTaylorTerms=nt;}
-
-
-      // Scale sizes...
-
-
-      }
-    catch(AipsError &x)
-      {
-	os << "Error in reading parameters " << LogIO::POST;
-	throw( AipsError("Error in reading deconvolution parameters: "+x.getMesg()) );
-      }
+    itsImageName = decpars.imageName;
+    itsStartingModelName = decpars.startModel;
+    itsDeconvolverId = decpars.deconvolverId;
     
-    os << "Set Deconvolution Options for image [" << itsDeconvolverId << "] :" << itsImageName ;
+    os << "Set Deconvolution Options for [" << itsImageName << "] : " << decpars.algorithm ;
     if( itsStartingModelName.length() > 0 ) os << " , starting from model : " << itsStartingModelName;
-    //    if( itsPartImageNames.nelements()>0 ) os << " constructed from : " << itsPartImageNames;
     os << LogIO::POST;
 
     try
       {
-	/*
-	if(algorithm==String("test")) 
-	  {
-	    itsDeconvolver = new SDAlgorithmTest(); 
-	  }
-	
-	  else */ if(algorithm==String("hogbom"))
+	if(decpars.algorithm==String("hogbom"))
 	  {
 	    itsDeconvolver = new SDAlgorithmHogbomClean(); 
 	  }
-	  else if(algorithm==String("msmfs"))
+	else if(decpars.algorithm==String("mtmfs"))
 	  {
-	    itsDeconvolver = new SDAlgorithmMSMFS( nTaylorTerms ); 
-	    } 
+	    itsDeconvolver = new SDAlgorithmMSMFS( decpars.nTaylorTerms, decpars.scales ); 
+	  } 
+	else if(decpars.algorithm==String("clark"))
+	  {
+	    itsDeconvolver = new SDAlgorithmClarkClean("clark"); 
+	  } 
+	else if(decpars.algorithm==String("clarkstokes"))
+	  {
+	    itsDeconvolver = new SDAlgorithmClarkClean("clarkstokes"); 
+	  } 
+	else if(decpars.algorithm==String("multiscale"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMSClean( decpars.scales ); 
+	  } 
+	else if(decpars.algorithm==String("mem"))
+	  {
+	    itsDeconvolver = new SDAlgorithmMEM( "entropy" ); 
+	  } 
 	else
 	  {
-	    throw( AipsError("Un-known algorithm : "+algorithm) );
+	    throw( AipsError("Un-known algorithm : "+decpars.algorithm) );
 	  }
+
+	// Set restoring beam options
+	itsDeconvolver->setRestoringBeam( decpars.restoringbeam, decpars.usebeam );
+
       }
     catch(AipsError &x)
       {
 	throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
       }
-
-    try
-      {
-	/// itsCurrentMaskHandler = XXX ( check the mask input for accepted formats )
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in constructing a MaskHandler : "+x.getMesg()) );
-      }
-
-    // Set flag to add model image
+    
     itsAddedModel=False;
-      
-  }//end of setupDeconvolution
+  }
   
-
-  Record SynthesisDeconvolver::initMinorCycle( )
+   Record SynthesisDeconvolver::initMinorCycle( )
   { 
     LogIO os( LogOrigin("SynthesisDeconvolver","initMinorCycle",WHERE) );
     Record returnRecord;
@@ -200,7 +162,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsLoopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
 
-      os << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
+      os << LogIO::DEBUG2 << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
 
     } catch(AipsError &x) {
       throw( AipsError("Error initializing the Minor Cycle for "  + itsImageName + " : "+x.getMesg()) );
@@ -267,10 +229,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   CountedPtr<SIImageStore> SynthesisDeconvolver::makeImageStore( String imagename )
   {
-    if( itsDeconvolver->getAlgorithmName() == "msmfs" )
-      {  return new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms() ); }
+    CountedPtr<SIImageStore> imstore;
+    if( itsDeconvolver->getAlgorithmName() == "mtmfs" )
+      {  imstore =  new SIImageStoreMultiTerm( imagename, itsDeconvolver->getNTaylorTerms(), True ); }
     else
-      {  return new SIImageStore( imagename ); }
+      {  imstore = new SIImageStore( imagename, True ); }
+
+    return imstore;
+
   }
 
 

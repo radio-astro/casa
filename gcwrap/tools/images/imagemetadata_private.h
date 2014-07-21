@@ -11,7 +11,5 @@ static const casa::String _class;
 
 void _exceptIfDetached() const;
 
-template <class T> void _openImage(const casa::String& infile);
-
 
 

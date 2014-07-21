@@ -27,7 +27,7 @@
 //# $Id$
 
 #include <synthesis/Utilities/ThreadCoordinator.h>
-#include <synthesis/MSVis/AsynchronousTools.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 #include <cassert>
 #include <boost/thread/barrier.hpp>
 

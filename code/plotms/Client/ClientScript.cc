@@ -142,7 +142,7 @@ void ClientScript::showGUI( bool /*show*/ ) {
 	//itsPlotter_->showGUI(true);
 }
 
-void ClientScript::showMessage(const String& message, const String& title) {
+void ClientScript::showMessage(const String& message, const String& title, bool /*warning*/) {
 	PlotLoggerPtr infoLog = itsPlotter_->logger();
 	infoLog->postMessage(SCRIPT_CLIENT, title, message,PlotLogger::MSG_INFO);
 }

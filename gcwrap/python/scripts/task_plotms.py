@@ -215,10 +215,12 @@ def plotms(vis=None, plotindex=None,
         if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
         if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
 
-         
-        vis = os.path.abspath(vis.strip())
+        vis = vis.strip()
+        if len(vis) > 0:
+            vis = os.path.abspath(vis) 
         if not plotindex:
             plotindex = 0
+      
     
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
@@ -226,7 +228,7 @@ def plotms(vis=None, plotindex=None,
         pm.setShowGui( showgui )
         
         #Clear any existing plots.
-        if clearplots:
+        if clearplots and not showgui:
             pm.clearPlots()
        
         gridChange = False    
@@ -261,15 +263,35 @@ def plotms(vis=None, plotindex=None,
                 yDataCount = len(ydatacolumn)
             yLocationCount = 0
             if yaxislocation!=['']:
-                yLocationCount = len(yaxislocation)    
-            for i in range(0,yAxisCount):
-                yDataColumn=''
-                if i < yDataCount:
-                    yDataColumn = ydatacolumn[i]
-                yAxisLocation = 'left'
-                if i < yLocationCount:
-                    yAxisLocation = yaxislocation[i]
-                pm.setPlotAxes(xaxis, yaxis[i], xdatacolumn, yDataColumn, yAxisLocation, False, plotindex, i)
+                yLocationCount = len(yaxislocation)
+                
+            '''Make sure all the y-axis values are unique.'''
+            uniqueY = True
+            for i in range(0, yAxisCount ):
+                yDataColumnI = ''
+                if  i < yDataCount :
+                    yDataColumnI = ydatacolumn[i]
+                for j in range(0, i):
+                    if yaxis[j] == yaxis[i] :
+                        yDataColumnJ = ''
+                        if j < yDataCount:
+                            yDataColumnJ = ydatacolumn[j]
+                        if yDataColumnI == yDataColumnJ :
+                            uniqueY = False
+                            break
+                if not uniqueY :
+                    break
+            if ( uniqueY ):
+                for i in range(0,yAxisCount):
+                    yDataColumn=''
+                    if i < yDataCount:
+                        yDataColumn = ydatacolumn[i]
+                    yAxisLocation = 'left'
+                    if i < yLocationCount:
+                        yAxisLocation = yaxislocation[i] 
+                    pm.setPlotAxes(xaxis, yaxis[i], xdatacolumn, yDataColumn, yAxisLocation, False, plotindex, i)
+            else :
+                raise Exception, 'Please remove duplicate y-axes.'
         
         # Set selection
         if (selectdata and os.path.exists(vis)):
@@ -340,6 +362,31 @@ def plotms(vis=None, plotindex=None,
             pm.setColorAxis(coloraxis,False,plotindex)
 
         # Set custom symbol
+        # Make the custom symbol into a list if it is not already.
+        if type(customsymbol) is bool and customsymbol:
+            customSymbolValue = customsymbol
+            customsymbol=[customSymbolValue]
+            
+        if type(symbolshape) is str:
+            symbolValue = symbolshape
+            symbolshape=[symbolValue]
+            
+        if type(symbolsize) is int:
+            symbolValue = symbolsize
+            symbolsize=[symbolValue]    
+        
+        if type(symbolcolor) is str:
+            symbolValue = symbolcolor
+            symbolcolor=[symbolValue]  
+            
+        if type(symbolfill) is str:
+            symbolValue = symbolfill
+            symbolfill=[symbolValue]
+            
+        if type(symboloutline) is bool:
+            symbolValue = symboloutline
+            symboloutline=[symbolValue]                   
+        
         if type(customsymbol) is list:
             customSymbolCount = len(customsymbol)
             for i in range(0,customSymbolCount):
@@ -387,9 +434,34 @@ def plotms(vis=None, plotindex=None,
                     symbolOutline = False
                 pm.setSymbol(symbolShape, symbolSize, symbolColor,
                      symbolFill, symbolOutline, False,plotindex,i)
-       
+      
+           
             
         # Set custom flagged symbol
+        if type(customflaggedsymbol) is bool:
+            customSymbolValue = customflaggedsymbol
+            customflaggedsymbol=[customSymbolValue]
+            
+        if type(flaggedsymbolshape) is str:
+            symbolValue = flaggedsymbolshape
+            flaggedsymbolshape=[symbolValue]
+            
+        if type(flaggedsymbolsize) is int:
+            symbolValue = flaggedsymbolsize
+            flaggedsymbolsize=[symbolValue]    
+        
+        if type(flaggedsymbolcolor) is str:
+            symbolValue = flaggedsymbolcolor
+            flaggedsymbolcolor=[symbolValue]  
+            
+        if type(flaggedsymbolfill) is str:
+            symbolValue = flaggedsymbolfill
+            flaggedsymbolfill=[symbolValue]
+            
+        if type(flaggedsymboloutline) is bool:
+            symbolValue = flaggedsymboloutline
+            flaggedsymboloutline=[symbolValue]  
+        
         if type(customflaggedsymbol) is list:
             customSymbolCount = len(customflaggedsymbol)
             for i in range(0,customSymbolCount):

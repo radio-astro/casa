@@ -11,13 +11,16 @@ import numpy
 import re
 import string
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
 # to rethrow exception 
 import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
-from sdcal_cli import sdcal_cli as sdcal
-from sdstat_cli import sdstat_cli as sdstat
-#from sdcal import sdcal
+from sdcal import sdcal
 import asap as sd
 
 #
@@ -96,86 +99,6 @@ class sdcal_caltest_base(sdcal_unittest_base):
         del sp, spref
 
 ###
-# Base class for averaging test
-###
-class sdcal_avetest_base(sdcal_unittest_base):
-    """
-    Base class for averaging test
-    """
-    postfix='ave.asap'
-
-    def _split( self, s ):
-        pos0=s.find('[')+1
-        pos1=s.find(']')
-        substr=s[pos0:pos1]
-        return substr.split(',')
-
-    def _getrefdata( self, name ):
-        isthere=os.path.exists(name)
-        self.assertEqual(isthere,True,
-                         msg='file %s does not exist'%(name))
-        f=open(name)
-        lines=f.readlines()
-        f.close
-        # scanno
-        scans=[]
-        if re.match('^SCANNO:',lines[0]) is not None:
-            ss=self._split(lines[0])
-            for s in ss:
-                scans.append(string.atoi(s))
-
-        # polno
-        pols=[]
-        if re.match('^POLNO:',lines[1]) is not None:
-            ss=self._split(lines[1])
-            for s in ss:
-                pols.append(string.atoi(s))
-
-        # spectral data
-        sp=[]
-        for line in lines[2:]:
-            tmp=[]
-            ss=self._split(line)
-            for s in ss:
-                tmp.append(string.atof(s))
-            sp.append(tmp)
-
-        # python list -> numpy array
-        scans=numpy.unique(scans)
-        pols=numpy.unique(pols)
-        sp=numpy.array(sp)
-
-        return (scans, pols, sp)
-    
-
-    def _compare( self, name1, name2 ):
-        self._checkfile(name1)
-        sp=self._getspectra( name1 )
-        (scan0,pol0,sp0)=self._getrefdata( name2 )
-
-        self._checkshape( sp, sp0 )
-
-        s=sd.scantable(name1,False)
-        scan=numpy.array(s.getscannos())
-        pol=numpy.array(s.getpolnos())
-        #print scan0, scan
-        #print pol0, pol
-        retval=len(pol)==len(pol0) and all(pol==pol0)
-        self.assertEqual( retval, True,
-                          msg='POLNO is wrong' )
-        retval=len(scan)==len(scan0) and all(scan==scan0)
-        self.assertEqual( retval, True,
-                          msg='SCANNO is wrong' )
-        del s
-        
-        for irow in xrange(sp.shape[0]):
-            diff=self._diff(sp[irow],sp0[irow])
-            retval=numpy.all(diff<0.01)
-            self.assertEqual( retval, True,
-                              msg='averaged result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
-        del sp, sp0
-
-###
 # Base class for edgemarker testing
 ###
 class sdcal_edgemarker_base(sdcal_unittest_base):
@@ -242,51 +165,17 @@ class sdcal_test0(sdcal_unittest_base,unittest.TestCase):
     def test000(self):
         """Test 000: Default parameters"""
         # argument verification error
-        try:
-            self.res=sdcal()
-            #self.assertFalse(self.res)
-            self.fail("The task must throw exception.")
-        except Exception, e:
-            pos=str(e).find("Parameter verification failed")
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        self.res=sdcal()
+        self.assertFalse(self.res)
         
     def test001(self):
-        """Test 001: Time averaging without weight"""
-        try:
-            self.res=sdcal(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            pos=str(e).find('Please specify weight type of time averaging')
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
+        """Test 001: Invalid calibration mode"""
+        # argument verification error
+        self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
+        self.assertFalse(self.res)
 
     def test002(self):
-        """Test 002: Polarization averaging without weight"""
-        try:
-            self.res=sdcal(infile=self.rawfile,polaverage=True,outfile=self.outfile)
-            self.assertTrue(False,
-                            msg='The task must throw exception')
-        except Exception, e:
-            pos=str(e).find('Please specify weight type of polarization averaging')
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
-
-    def test003(self):
-        """Test 003: Invalid calibration mode"""
-        # argument verification error
-        try:
-            self.res=sdcal(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
-            #self.assertFalse(self.res)
-            self.fail("The task must throw exception.")
-        except Exception, e:
-            pos=str(e).find("Parameter verification failed")
-            self.assertNotEqual(pos,-1,
-                                msg='Unexpected exception was thrown: %s'%(str(e)))
-
-    def test004(self):
-        """Test 004: Specify existing output file name with overwrite=False"""
+        """Test 002: Specify existing output file name with overwrite=False"""
         outfile='calpsGBT.cal.asap'
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
@@ -555,369 +444,6 @@ class sdcal_test5(sdcal_caltest_base,unittest.TestCase):
 
 
 ###
-# Test polarization averaging with/without scan average
-###
-class sdcal_test6(sdcal_avetest_base,unittest.TestCase):
-    """
-    Test polarization averaging with/without scan average
-
-    Data is calpsGBT.cal.asap.
-
-    ###NOTE###
-    Polarization average averages data in both time and polarization.
-    """
-    # Input and output names
-    rawfile='calpsGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test6'
-    reffiles=['polaverage.ref0',
-              'polaverage.ref1',
-              'polaverage.ref2',
-              'polaverage.ref3']
-    
-    def setUp(self):
-        self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        for reffile in self.reffiles:
-            if (not os.path.exists(reffile)):
-                shutil.copyfile(self.datapath+reffile, reffile)
-
-        default(sdcal)
-
-    def tearDown(self):
-        if (os.path.exists(self.rawfile)):
-            shutil.rmtree(self.rawfile)
-        for reffile in self.reffiles:
-            if (os.path.exists(reffile)):
-                os.remove(reffile)
-        os.system( 'rm -rf '+self.prefix+'*' )
-
-    def test600(self):
-        """Test 600: test polarization average with pweight='var' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during polarization averaging')
-        self._compare(outname,self.reffiles[0])
-        
-    def test601(self):
-        """Test 601: test polarization average with pweight='var' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during polarization averaging')
-        self._compare(outname,self.reffiles[1])
-
-    def test602(self):
-        """Test 602: test polarization average with pweight='tsys' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during polarization averaging')
-        self._compare(outname,self.reffiles[2])
-        
-    def test603(self):
-        """Test 603: test polarization average with pweight='tsys' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during polarization averaging')
-        self._compare(outname,self.reffiles[3])
-
-
-###
-# Test time averaging with/without scan average
-###
-class sdcal_test7(sdcal_avetest_base,unittest.TestCase):
-    """
-    Test time averaging with/without scan average
-
-    Data is calpsGBT.cal.asap.
-    """
-    # Input and output names
-    rawfile='calpsGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test7'
-    reffiles=['timeaverage.ref0',
-              'timeaverage.ref1',
-              'timeaverage.ref2',
-              'timeaverage.ref3',
-              'timeaverage.ref4',
-              'timeaverage.ref5',
-              'timeaverage.ref6',
-              'timeaverage.ref7',
-              'timeaverage.ref8',
-              'timeaverage.ref9']
-
-    def setUp(self):
-        self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        for reffile in self.reffiles:
-            if (not os.path.exists(reffile)):
-                shutil.copyfile(self.datapath+reffile, reffile)
-
-        default(sdcal)
-
-    def tearDown(self):
-        if (os.path.exists(self.rawfile)):
-            shutil.rmtree(self.rawfile)
-        for reffile in self.reffiles:
-            if (os.path.exists(reffile)):
-                os.remove(reffile)
-        os.system( 'rm -rf '+self.prefix+'*' )
-
-    def test700(self):
-        """Test 700: test time average with tweight='var' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[0])
-        
-    def test701(self):
-        """Test 701: test time average with tweight='var' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[1])
-        
-    def test702(self):
-        """Test 702: test time average with tweight='tsys' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[2])
-        
-    def test703(self):
-        """Test 703: test time average with tweight='tsys' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[3])
-        
-    def test704(self):
-        """Test 704: test time average with tweight='tint' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[4])
-        
-    def test705(self):
-        """Test 705: test time average with tweight='tint' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[5])
-        
-    def test706(self):
-        """Test 706: test time average with tweight='tintsys' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[6])
-        
-    def test707(self):
-        """Test 707: test time average with tweight='tintsys' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[7])
-        
-    def test708(self):
-        """Test 708: test time average with tweight='median' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[8])
-        
-    def test709(self):
-        """Test 709: test time average with tweight='median' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        self._compare(outname,self.reffiles[9])
-        
-
-###
-# Test mixed operation (cal+average,time+pol average,...)
-###
-class sdcal_test8(sdcal_avetest_base,unittest.TestCase):
-    """
-    Test other things including mixed opearation
-
-       - calibration + time average
-       - calibration + polarization average
-       - time average + polarzation average
-       - channelrange parameter
-       
-    """
-    # Input and output names
-    rawfile='calpsGBT.asap'
-    calfile='calpsGBT.cal.asap'
-    prefix=sdcal_unittest_base.taskname+'Test8'
-    reffiles=['polaverage.ref2',
-              'timeaverage.ref6',
-              'timepolaverage.ref']
-
-    def setUp(self):
-        self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.calfile)):
-            shutil.copytree(self.datapath+self.calfile, self.calfile)
-        for reffile in self.reffiles:
-            if (not os.path.exists(reffile)):
-                shutil.copyfile(self.datapath+reffile, reffile)
-
-        default(sdcal)
-
-    def tearDown(self):
-        if (os.path.exists(self.rawfile)):
-            shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.calfile)):
-            shutil.rmtree(self.calfile)
-        for reffile in self.reffiles:
-            if (os.path.exists(reffile)):
-                os.remove(reffile)
-        os.system( 'rm -rf '+self.prefix+'*' )
-
-    def test800(self):
-        """Test 800: test calibration + polarization average with pweight='tsys' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode='ps',scanaverage=True,polaverage=True,pweight='tsys',tau=0.09,outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during calibration and averaging')
-        self._compare(outname,self.reffiles[0])
-        
-    def test801(self):
-        """Test 801: test calibration + time average with tweight='tintsys' (scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode='ps',scanaverage=True,timeaverage=True,tweight='tintsys',tau=0.09,outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during calibration and averaging')
-        self._compare(outname,self.reffiles[1])
-        
-    def test802(self):
-        """Test 802: test polarization average with pweight='tsys' + time average with tweight='tintsys' (no scan average)"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.calfile,scanaverage=False,timeaverage=True,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during averaging')
-        self._compare(outname,self.reffiles[2])
-        
-    def test803(self):
-        """Test 803: test channelrange selection"""
-        chrange=[1000,8000]
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.calfile,channelrange=chrange,outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during channel range selection')
-
-        s0=sd.scantable(self.calfile,False)
-        s1=sd.scantable(outname,False)
-
-        # check spectral value
-        sp0=numpy.array(s0._getspectrum(0))
-        sp1=numpy.array(s1._getspectrum(0))
-        self.res=all(sp0[chrange[0]:chrange[1]+1]==sp1)
-        self.assertEqual(self.res,True,
-                         msg='spectral data do not match')
-
-        # check frequency
-        s0.set_unit('GHz')
-        s1.set_unit('GHz')
-        abc0=numpy.array(s0._getabcissa(0))
-        abc1=numpy.array(s1._getabcissa(0))
-        self.res=numpy.allclose(abc0[chrange[0]:chrange[1]+1],abc1)
-        self.assertEqual(self.res,True,
-                         msg='frequencies do not match')
-
-        del s0,s1
-
-###
-# Test averageall parameter
-###
-class sdcal_test9(sdcal_avetest_base,unittest.TestCase):
-    """
-    Test averageall parameter that forces to average spectra with
-    different spectral resolution.
-
-    Here, test to average the following two spectra that have same
-    frequency in band center.
-
-       - nchan = 8192, resolution = 6104.23 Hz
-       - nchan = 8192, resolution = 12208.5 Hz
-       
-    """
-    # Input and output names
-    rawfile='averageall.asap'
-    prefix=sdcal_unittest_base.taskname+'Test9'
-    reffiles=['averageall.ref']
-
-    def setUp(self):
-        self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        for reffile in self.reffiles:
-            if (not os.path.exists(reffile)):
-                shutil.copyfile(self.datapath+reffile, reffile)
-
-        default(sdcal)
-
-    def tearDown(self):
-        if (os.path.exists(self.rawfile)):
-            shutil.rmtree(self.rawfile)
-        for reffile in self.reffiles:
-            if (os.path.exists(reffile)):
-                os.remove(reffile)
-        os.system( 'rm -rf '+self.prefix+'*' )
-
-    def test900(self):
-        """Test 900: test averageall parameter"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
-        self.assertEqual(self.res,None,
-                         msg='Any error occurred during averaging')
-        self._compare(outname,self.reffiles[0])
-        self._checkFrequencies(outname)
-
-    def _checkFrequencies(self,outfile):
-        tb.open(self.rawfile.rstrip('/')+'/FREQUENCIES')
-        rpin=tb.getcol('REFPIX')
-        rvin=tb.getcol('REFVAL')
-        icin=tb.getcol('INCREMENT')
-        tb.close
-        tb.open(outfile.rstrip('/')+'/FREQUENCIES')
-        rpout=tb.getcol('REFPIX')
-        rvout=tb.getcol('REFVAL')
-        icout=tb.getcol('INCREMENT')
-        tb.close
-        ic=[icin[2:4].max(),icin[0:2].max()]
-        ledge=[rvin[2]-ic[0]*(rpin[2]+0.5),
-               rvin[0]-ic[1]*(rpin[0]+0.5)]
-        redge=[rvin[2]+ic[0]*(8191-rpin[2]+0.5),
-               rvin[0]+ic[1]*(8191-rpin[0]+0.5)]
-        eps = 1.0e-15
-        for i in xrange(2):
-            self.assertEqual(ic[i],icout[i],
-                             msg='INCREMENT for FREQ_ID=%s differ'%(i))
-            fmin=rvout[i]-icout[i]*(rpout[i]+0.5)
-            self.assertTrue(abs((fmin-ledge[i])/ledge[i]) < eps,
-                             msg='Left frequency edge for FREQ_ID=%s does not match'%(i))
-            fmax=rvout[i]+icout[i]*(8191-rpout[i]+0.5)
-            self.assertTrue(abs((fmax-redge[i])/redge[i]) < eps,
-                             msg='Right frequency edge for FREQ_ID=%s does not match'%(i))
-
-###
 # Test edgemarker
 ###
 class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
@@ -955,7 +481,7 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otf',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        self.res = sdcal(infile=self.rawfile,calmode='otf',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[0] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
@@ -965,7 +491,7 @@ class sdcal_test_edgemarker_generic(sdcal_edgemarker_base,unittest.TestCase):
         Test customized edge marking
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otf',fraction='3%',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        self.res = sdcal(infile=self.rawfile,calmode='otf',fraction='3%',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[1] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
@@ -1006,7 +532,7 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otfraster',markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        self.res = sdcal(infile=self.rawfile,calmode='otfraster',markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[0] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
@@ -1016,174 +542,502 @@ class sdcal_test_edgemarker_raster(sdcal_edgemarker_base,unittest.TestCase):
         Test default setting for edgemarker
         """
         outname = self.prefix+'.asap'
-        self.res = sdcal(infile=self.rawfile,calmode='otfraster',noff=1,markonly=True,scanaverage=False,timeaverage=False,polaverage=False,outfile=outname,outform='ASAP')
+        self.res = sdcal(infile=self.rawfile,calmode='otfraster',noff=1,markonly=True,outfile=outname,outform='ASAP')
         refdir = self._readref( self.reffiles[1] )
         self._checkfile( outname ) 
         self._checkmarker( outname, refdir )
 
-
-###
-# Averaging of flagged data
-###
-class sdcal_test_flag(sdcal_avetest_base,unittest.TestCase):
+class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
+                               sdcal_caltest_base,unittest.TestCase):
     """
-    Test Averaging of flagged data.
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol
 
-    Data varies with tests
+    Data is taken from sd_analytic_type1-3.asap and TSYS column is filled
+    by the following script:
+    poly = ( (1.0, ), (0.2, 0.02), (2.44, -0.048, 0.0004),
+           (-3.096, 0.1536, -0.00192, 8.0e-6) )
+    shutil.copytree(os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/singledish/sd_analytic_type1-3.asap','sd_analytic_type1-3.filltsys.asap')
+    tb.open('sd_analytic_type1-3.filltsys.asap', nomodify=False)
+    subt = tb.query('SRCTYPE==0')
+    for irow in range(subt.nrows()):
+        nchan = len(subt.getcell('SPECTRA', irow))
+        x = numpy.array(range(nchan))
+        tsys = numpy.zeros(nchan)
+        coeffs = poly[irow]
+        for idim in range(len(coeffs)):
+            tsys += coeffs[idim]*x**idim
+        subt.putcell('TSYS',irow, tsys)
+    subt.flush()
+    tb.flush()
+    subt.close()
+    tb.close()
     """
     # Input and output names
-    prefix=sdcal_unittest_base.taskname+'Test7'
-    filelist = []
+    rawfile='sd_analytic_type1-3.filltsys.asap'
+    prefix=sdcal_unittest_base.taskname+'TestSel'
+    calmode='ps'
+    line = ({'value': 5,  'channel': (20,20)},
+            {'value': 10, 'channel': (40,40)},
+            {'value': 20, 'channel': (60,60)},
+            {'value': 30, 'channel': (80,80)},)
+    baseline = ( (1.0, ), (0.2, 0.02), (2.44, -0.048, 0.0004),
+                (-3.096, 0.1536, -0.00192, 8.0e-6) )
+    
+    @property
+    def task(self):
+        return sdcal
+    
+    @property
+    def spw_channel_selection(self):
+        return False
 
     def setUp(self):
         self.res=None
-        self.filelist = []
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
         default(sdcal)
-
+        self.outname=self.prefix+self.postfix
+        
     def tearDown(self):
-        for name in self.filelist:
-            self._remove(name)
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+    
+    ####################
+    # Additional tests
+    ####################
+    #N/A
 
-    def _remove(self, name):
-        # remove file/directory if exists
-        if os.path.isdir(name):
-            shutil.rmtree(name)
-        elif os.path.exists(name):
-            os.remove(name)
-
-    def _mark_to_delete(self, name):
-        self.filelist.append(name)
-
-    def _copy(self, source, dest):
-        # copy source directory to dest
-        self.assertTrue(os.path.exists(source),
-                        msg="Could not find a source file '%s'" % source)
-        if os.path.exists(dest):
-            shutil.rmtree(dest)
-        shutil.copytree(source, dest)
-
-    def _copyInputs(self, inputs):
-        if type(inputs)==str:
-            inputs = [inputs]
-
-        for inname in inputs:
-            inname = inname.rstrip('/')
-            outname = os.path.basename(inname)
-            self._copy(inname, outname)
-            self._mark_to_delete(outname)
-
-
-    def _comp_stat(self, data, refstat):
-        if type(data)==str:
-            data = sdstat(infile=data)
-        elif type(data)!=dict:
-            self.fail(msg="Internal Error: invalid data given to calculate statistics.")
-        for key, refvals in refstat.items():
-            refvals = self._to_list(refvals)
-            testvals = self._to_list(data[key])
-            for idx in range(len(refvals)):
-                rdiff = (testvals[idx] - refvals[idx])/refvals[idx]
-                self.assertAlmostEqual(rdiff, 0., 4, msg="Verification of '%s' (idx=%d) failed: %f (expected: %f)" % (key, idx, testvals[idx], refvals[idx]))
-
-    def _to_list(self, indata):
-        try: len(indata)
-        except TypeError: return [indata]
-        return list(indata)
-
-
-    def testFlag01(self):
-        """TestFlag01: test time average of row flagged data set"""
-        outname=self.prefix+self.postfix
-        self._mark_to_delete(outname)
-        # Prepare input
-        inname = 'flatspec_rowflag.asap'
-        self.rawfile = self.datapath+inname
-        self._copyInputs(self.rawfile)
-        self._remove(outname)
-
-        # run task
-        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=True,
-                       tweight='tint',outfile=outname,outform='ASAP')
-        # verification
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        scan = ''
+        ref_idx = []
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,scan=scan,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        refstat = {'max': 1.5, 'min': 1.5, 'sum': 12288.0}
-        self._comp_stat(outname, refstat)
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testFlag02(self):
-        """TestFlag02: test time average of channel flagged data set"""
-        outname=self.prefix+self.postfix
-        self._mark_to_delete(outname)
-        # Prepare input
-        inname = 'flatspec_chanflag0.asap'
-        self.rawfile = self.datapath+inname
-        self._copyInputs(self.rawfile)
-        self._remove(outname)
-
-        # run task
-        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=True,
-                       tweight='tint',outfile=outname,outform='ASAP')
-        # verification
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='16')"""
+        scan = '16'
+        ref_idx = [1, 2]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
-        refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstat(outname, masklist=[3000, 5000])
-        self._comp_stat(outstat, refinner)
-        outstat = sdstat(outname, masklist=[[0, 2999], [5001, 8192]])        
-        self._comp_stat(outstat, refedge)
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testFlag03(self):
-        """TestFlag03: test polarization average of row flagged data set"""
-        outname=self.prefix+self.postfix
-        self._mark_to_delete(outname)
-        # Prepare input
-        inname = 'flatspec_2pol_rowflag.asap'
-        self.rawfile = self.datapath+inname
-        self._copyInputs(self.rawfile)
-        self._remove(outname)
-
-        # run task
-        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=False,
-                       polaverage=True,pweight='tsys',
-                       outfile=outname,outform='ASAP')
-        # verification
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        scan = '<16'
+        ref_idx = [0]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        refstat = {'max': 1.5, 'min': 1.5, 'sum': 12288.0}
-        self._comp_stat(outname, refstat)
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
 
-    def testFlag04(self):
-        """TestFlag04: test polarization average of channel flagged data set"""
-        outname=self.prefix+self.postfix
-        self._mark_to_delete(outname)
-        # Prepare input
-        inname = 'flatspec_2pol_chanflag0.asap'
-        self.rawfile = self.datapath+inname
-        self._copyInputs(self.rawfile)
-        self._remove(outname)
-
-        # run task
-        self.res=sdcal(infile=inname,scanaverage=False,timeaverage=False,
-                       polaverage=True,pweight='tsys',
-                       outfile=outname,outform='ASAP')
-        # verification
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>16')"""
+        scan = '>16'
+        ref_idx = [3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
         self.assertEqual(self.res,None,
-                         msg='Any error occurred during time averaging')
-        refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
-        refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstat(outname, masklist=[3000, 5000])
-        self._comp_stat(outstat, refinner)
-        outstat = sdstat(outname, masklist=[[0, 2999], [5001, 8192]])        
-        self._comp_stat(outstat, refedge)
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_scan_id_range(self):
+        """ test scan selection (scan='16~17')"""
+        scan = '16~17'
+        ref_idx = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        scan = '15,17'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='15,>16')"""
+        scan = '15,>16'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,scan=scan,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        pol = ''
+        ref_idx = []
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,pol=pol,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+        pol = '1'
+        ref_idx = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        pol = '<1'
+        ref_idx = [0,2]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        pol = '>0'
+        ref_idx = [1,3]
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        pol = '0~1'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        pol = '0,1'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='0,>0')"""
+        pol = '0,>0'
+        ref_idx = []
+        self.res=self.run_task(infile=self.rawfile,pol=pol,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='')"""
+        field = ''
+        ref_idx = []
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,field=field,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_exact(self):
+        """ test field selection (field='6')"""
+        field = '6'
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_lt(self):
+        """ test field selection (field='<6')"""
+        field = '<6'
+        ref_idx = [0]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_gt(self):
+        """ test field selection (field='>7')"""
+        field = '>7'
+        ref_idx = [3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_range(self):
+        """ test field selection (field='6~8')"""
+        field = '6~8'
+        ref_idx = [1,2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_list(self):
+        """ test field selection (field='5,8')"""
+        field = '5,8'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_id_exprlist(self):
+        """ test field selection (field='5,>7')"""
+        field = '5,>7'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_value_exact(self):
+        """ test field selection (field='M30')"""
+        field = 'M30'
+        ref_idx = [2]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_value_pattern(self):
+        """ test field selection (field='M*')"""
+        field = 'M*'
+        ref_idx = [0,1,2]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_value_list(self):
+        """ test field selection (field='3C273,M30')"""
+        field = '3C273,M30'
+        ref_idx = [2,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_field_mix_exprlist(self):
+        """ test field selection (field='<6,3*')"""
+        field = '<6,3*'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,field=field,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        spw = ''
+        ref_idx = []
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='23')"""
+        spw = '23'
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<23')"""
+        spw = '<23'
+        ref_idx = [2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>23')"""
+        spw = '>23'
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_range(self):
+        """ test spw selection (spw='23~25')"""
+        spw = '23~25'
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,25')"""
+        spw = '21,25'
+        ref_idx = [1,2]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='23,>24')"""
+        spw = '23,>24'
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        spw='*'
+        ref_idx = []
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,spw=spw,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300.49~300.50GHz')"""
+        spw = '300.49~300.50GHz' # IFNO=25 should be selected
+        ref_idx = [1]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-470~470km/s')"""
+        spw = '-470~470km/s'  # IFNO=23 should be selected
+        ref_idx = [0,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='25,-30~30km/s')"""
+        spw = '25,-30~30km/s' # IFNO=23,25 should be selected
+        ref_idx = [0,1,3]
+        self.res=self.run_task(infile=self.rawfile,spw=spw,calmode=self.calmode,outfile=self.outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._compare_with_analytic(self.outname, self.line, self.baseline, ref_idx)
+
+    ####################
+    # Helper functions
+    ####################
+    def _compare_with_analytic(self, name, ref_line, ref_bl, ref_idx=[], precision = 1.e-6):
+        self._checkfile( name )
+        sout = sd.scantable(name,average=False)
+        nrow = sout.nrow()
+        if len(ref_idx) == 0:
+            ref_idx = range(nrow)
+
+        self.assertEqual(nrow,len(ref_idx),"The rows in output table differs from the expected value.")
+        for irow in range(nrow):
+            y = sout._getspectrum(irow)
+            nchan = len(y)
+            x = numpy.array( range(nchan) )
+            # analytic solution
+            coeff = ref_bl[ ref_idx[irow] ]
+            yana = self._create_ploynomial_array(coeff, x)
+            curr_line = ref_line[ ref_idx[irow] ]
+            chanlist = curr_line['channel']
+            valuelist = curr_line['value']
+            yana += self._create_tophat_array(nchan, chanlist, valuelist)
+
+            # compare
+            rdiff = self._get_array_relative_diff(y,yana)
+            rdiff_max = max(abs(rdiff))
+            self.assertTrue(rdiff_max < precision, "Maximum relative difference %f > %f" % (rdiff_max, precision))
+    
+    def _create_tophat_array(self, nchan, chanlist, valuelist):
+        array_types = (tuple, list, numpy.ndarray)
+        # check for inputs
+        if nchan < 1:
+            self.fail("Internal error. Number of channels should be > 0")
+        if type(chanlist) not in array_types:
+            self.fail("Internal error. Channel range list for reference data is not an array type")
+        if type(chanlist[0]) not in array_types:
+            chanlist = [ chanlist ]
+        if type(valuelist) not in array_types:
+            valuelist = [ valuelist ]
+        nval = len(valuelist)
+        nrange = len(chanlist)
+        # generate reference data
+        ref_data = numpy.zeros(nchan)
+        for irange in range(nrange):
+            curr_range = chanlist[irange]
+            if type(curr_range) not in array_types or len(curr_range) < 2:
+                self.fail("Internal error. Channel range list  for reference data should be a list of 2 elements arrays.")
+            schan = curr_range[0]
+            echan = curr_range[1]
+            ref_data[schan:echan+1] = valuelist[irange % nval]
+        return ref_data
+
+    def _create_ploynomial_array(self, coeff, x):
+        """ Create an array from a list of polynomial coefficients and x-array"""
+        xarr = numpy.array(x)
+        yarr = numpy.zeros(len(xarr))
+        for idim in range(len(coeff)):
+            ai = coeff[idim]
+            yarr += ai*xarr**idim
+        return yarr
+
+    def _get_array_relative_diff(self, data, ref, precision=1.e-6):
+        """
+        Return an array of relative difference of elements in two arrays
+        """
+        precision = abs(precision)
+        data_arr = numpy.array(data)
+        ref_arr = numpy.array(ref)
+        ref_denomi = numpy.array(ref)
+        # a threshold to assume the value to be zero.
+        almostzero = min(precision, max(abs(ref_arr))*precision)
+        # set rdiff=0 for elements both data and reference are close to zero
+        idx_ref = numpy.where(abs(ref_arr) < almostzero)
+        idx_data = numpy.where(abs(data_arr) < almostzero)
+        if len(idx_ref[0])>0 and len(idx_data[0])>0:
+            idx = numpy.intersect1d(idx_data[0], idx_ref[0], assume_unique=True)
+            ref_arr[idx] = almostzero
+            data_arr[idx] = almostzero
+        # prevent zero division
+        ref_denomi[idx_ref] = almostzero
+        return (data_arr-ref_arr)/ref_denomi
 
 
 def suite():
     return [sdcal_test0, sdcal_test1,
             sdcal_test2, sdcal_test3,
             sdcal_test4, sdcal_test5,
-            sdcal_test6, sdcal_test7,
-            sdcal_test8, sdcal_test9,
             sdcal_test_edgemarker_generic,
             sdcal_test_edgemarker_raster,
-            sdcal_test_flag]
+            sdcal_test_selection]

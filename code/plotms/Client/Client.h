@@ -92,7 +92,7 @@ public:
 	//Display a message.  For a GUI client, this may mean popping up a dialog;
 	//for a script client, this may mean writing the message to a log file or
 	//a web log.
-	virtual void showMessage(const String& message, const String& title) = 0;
+	virtual void showMessage(const String& message, const String& title, bool warning = false) = 0;
 
 
 	virtual void setCanvasCachedAxesStackImageSize(int width, int height );

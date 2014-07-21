@@ -109,6 +109,9 @@ void PlotMSDrawThread::updatePlotterCanvases() {
     itsOperationsMutex_.unlock();
 }
 
+QString PlotMSDrawThread::getName() const {
+	return "Draw Thread";
+}
 
 void PlotMSDrawThread::startOperation() {
     itsOperationsMutex_.lock();

@@ -66,7 +66,7 @@ public:
     // Implements PlotOperationWatcher::operationChanged().
     void operationChanged(const PlotOperation& operation);
 
-
+    virtual QString getName() const;
 
 protected:
     // Slot for when the QThread finishes.

@@ -6,12 +6,26 @@ import functools
 import re
 import abc
 import datetime
+import contextlib
 
 from casac import casac
 from taskinit import casalog, gentools, qatool
 import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable, is_ms, scantable
+
+@contextlib.contextmanager
+def toolmanager(vis, tooltype, *args, **kwargs):
+    tool = gentools([tooltype])[0]
+    tool.open(vis, *args, **kwargs)
+    yield tool
+    tool.close()
+
+def tbmanager(vis, *args, **kwargs):
+    return toolmanager(vis, 'tb', *args, **kwargs)
+
+def cbmanager(vis, *args, **kwargs):
+    return toolmanager(vis, 'cb', *args, **kwargs)
 
 def sdtask_decorator(func):
     """
@@ -301,6 +315,38 @@ class sdtask_template(sdtask_interface):
 
         return selector
 
+    def set_selection(self, scantb=None):
+        """
+        Set selection that select scan(s), IF(s), polarization(s),
+        beam(s), field(s), and timerange set to this class.
+        This method parses attributes of string selection parameter,
+        scan(no), spw, pol(no), and beam(no), and applies the selection
+        to a scantable.
+
+        Parameter
+            scantb : A scantable instance to apply selection.
+                     The scantable defined as self.scan is used if scantb
+                     is not defined (default).
+        """
+        if not scantb:
+            if hasattr(self,'scan') and isinstance(self.scan, scantable):
+                scantb = self.scan
+            else:
+                raise Exception, "Internal Error. No valid scantable."
+        in_ifno = scantb.getifnos()
+        # apply selection
+        scantb.set_selection(self.get_selector(scantb))
+        # filter restfreq for future use.
+        if self.restfreq not in ("", []) and \
+               type(self.restfreq) in (list, tuple) and \
+               len(self.restfreq) == len(in_ifno):
+            # Per IF rest frequency. Need to filter selected restfreqs for future use.
+            sel_ifno = scantb.getifnos()
+            rf = []
+            for if_idx in sel_ifno:
+                rf.append(self.restfreq[in_ifno.index(if_idx)])
+            self.selected_restfreq = rf
+    
     def assert_no_channel_selection_in_spw(self, mode='warn'):
         """
         Assert 'spw' does not have channel selection
@@ -342,13 +388,15 @@ class sdtask_template(sdtask_interface):
                     if len(self.scan.get_restfreqs().values()[0]) == 0 and not rfset:
                         raise Exception('Restfreq must be given')
                     if rfset:
-                        fval = normalise_restfreq(self.restfreq)
+                        rf = self.restfreq if not hasattr(self, 'selected_restfreq') else self.selected_restfreq
+                        fval = normalise_restfreq(rf)
                         casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                         self.scan.set_restfreqs(freqs=fval)
         elif hasattr(self, 'spw') and self.spw != '' and \
                 hasattr(self,'restfreq'):
            if self.restfreq not in ['',[]]:
-               fval = normalise_restfreq(self.restfreq)
+               rf = self.restfreq if not hasattr(self, 'selected_restfreq') else self.selected_restfreq
+               fval = normalise_restfreq(rf)
                casalog.post( 'Set rest frequency to %s Hz' % str(fval) )
                self.scan.set_restfreqs(freqs=fval)
 

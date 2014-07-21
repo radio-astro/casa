@@ -24,7 +24,7 @@
 #define MSTransformBufferImpl_H_
 
 // Where VisBufferImpl2 interface is defined
-#include <synthesis/MSVis/VisBufferImpl2.h>
+#include <msvis/MSVis/VisBufferImpl2.h>
 
 // Class containing the actual transformation logic
 #include <mstransform/MSTransform/MSTransformManager.h>

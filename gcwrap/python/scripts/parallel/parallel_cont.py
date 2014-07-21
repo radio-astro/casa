@@ -48,6 +48,8 @@ class imagecont():
         self.observation=observation
         self.pbcorr=pbcorr
         self.minpb=minpb
+        ###a default common cube coordsys
+        self.cubecoordsys=casac.coordsys().torecord()
 
         self.painc=painc;
         self.pblimit=pblimit;
@@ -332,9 +334,16 @@ class imagecont():
         retval['maxresidual']=0.0
         retval['iterations']=0
         retval['converged']=False
-        ia.open(imroot+'.model')
-        csys=ia.coordsys()
-        ia.done()
+        #pdb.set_trace()
+        ####This causes a lock problem..randomly gets exception while waiting
+        #ia.open(imroot+'.model')
+        #csys=ia.coordsys()
+        #ia.done()
+        ####
+        csys=casac.coordsys()
+        ###hopefully this has been set by caller
+        csys.fromrecord(self.cubecoordsys)
+
         im=casac.imager()  
         fstart=csys.toworld([0,0,0,startchan],'n')['numeric'][3]
         fstep=csys.toworld([0,0,0,startchan+1],'n')['numeric'][3]-fstart
@@ -377,19 +386,27 @@ class imagecont():
                 retval=im.clean(algorithm=alg, gain=self.gain, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage=imname+'.psf') 
                 if(not os.path.exists(imname+'.image')):
                 ##all channels flagged for example...make 0 images for concat later
+                    im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz', outframe='LSRK')
                     im.make(imname+'.image')
                     im.make(imname+'.model')
                     im.make(imname+'.residual')
                     im.make(imname+'.psf')
+                    if(self.ft=='mosaic'):
+                        im.make(imname+'.flux' )
+                        im.make(imname+'.flux.pbcoverage')
             im.done()
             del im
         except Exception as instance:
             if(not os.path.exists(imname+'.image')):
                 ##all channels flagged for example...make 0 images for concat later
+                im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz', outframe='LSRK')
                 im.make(imname+'.image')
                 im.make(imname+'.model')
                 im.make(imname+'.residual')
                 im.make(imname+'.psf')
+                if(self.ft=='mosaic'):
+                    im.make(imname+'.flux' )
+                    im.make(imname+'.flux.pbcoverage')
             im.done()
             del im
             if(string.count(str(instance), 'PSFZero') <1):
@@ -612,7 +629,8 @@ class imagecont():
                     return False
 
             ############
-                rg0=ia.setboxregion(blc=blc,trc=trc)
+                #rg0=ia.setboxregion(blc=blc,trc=trc)
+                rg0 = rg.box(blc=blc, trc=trc)
             ###########
             
             ########

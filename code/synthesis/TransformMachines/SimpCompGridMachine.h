@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_SIMPCOMPGRIDMACHINE_H
 #define SYNTHESIS_SIMPCOMPGRIDMACHINE_H
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/ComponentFTMachine.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>

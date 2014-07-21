@@ -179,7 +179,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
     calfield="J1037*" # which field is the phase calibrator
     sciencefield="ngc3256" # which field is the target
 
-    avspw=["0:10~118","1:10~118"] # which channels to average for the gain calibration
+    avspw=["0:17~118","1:17~118"] # which channels to average for the gain calibration
     delay=[0,-8] # there is an 8ns delay problem in the second BB
 
         
@@ -234,7 +234,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
         # Use the bright phase calibrator for the bandpass
         bandpass(
             vis=msn,
-            spw=str(i),
+            spw=avspw[i],  #str(i),
             field=calfield,
             caltable=caltablename+"_spw"+str(i)+".B",
             bandtype="B",
@@ -426,8 +426,11 @@ def analyseASDM(basename, caltablename0, genwvr=True):
         print ">> Peak in calibrator image: "+str(peak[i])
         print ">> Dynamic range in calibrator image: "+str(peak[i]/rms[i])
 
-    reference_rms = [0.0016516, 0.0009388]
-    reference_peak = [1.00014091, 1.00002384]
+    #reference_rms = [0.0016516, 0.0009388]
+    #reference_peak = [1.00014091, 1.00002384]
+    # the follow test values introduced w/ data weight updates
+    reference_rms = [0.0019042, 0.0008856]
+    reference_peak = [0.999954, 1.0001681]
 
     for i in range(2):
         print ">> image rms ", i, " is ", rms[i], " expected value is ", reference_rms[i] 

@@ -46,6 +46,7 @@
 #include <display/QtPlotter/conversion/ConverterIntensity.h>
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/PixelValueManipulatorData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageFITSConverter.h>
@@ -90,6 +91,7 @@ namespace casa {
 	const QString QtProfile::OPTICAL = "optical";
 	const QString QtProfile::AIR = "air";
 	const QString QtProfile::FRAME_REST = "REST";
+	const QString QtProfile::FRAME_NONE = "Undefined";
 	const QString QtProfile::PERSIST_FREQUENCY_BOTTOM = ".freqcoord.type";
 	const QString QtProfile::PERSIST_FREQUENCY_TOP = ".freqcoordTop.type";
 	bool QtProfile::topAxisDefaultSet = false;
@@ -117,7 +119,7 @@ namespace casa {
 		:QMainWindow(parent),
 //pc(0),
 //te(0),
-		 analysis(0), image(img), over(0),WORLD_COORDINATES("world"),
+		 image(img), over(0),WORLD_COORDINATES("world"),
 		 coordinate( WORLD_COORDINATES ), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
 		 cSysRval(""), fileName(name), position(""), yUnit(""),
 		 yUnitPrefix(""), xpos(""), ypos(""), cube(0),
@@ -259,7 +261,6 @@ namespace casa {
 		positioningWidget->setLogger( itsLog );
 		if ( img ){
 			try {
-				analysis  = new ImageAnalysis(img);
 				momentSettingsWidget->reset();
 				specFitSettingsWidget->reset();
 				setUnitsText( xaxisUnit );
@@ -271,9 +272,6 @@ namespace casa {
 				String message = "Error when starting the profiler:\n" + x.getMesg();
 				*itsLog << LogIO::WARN << message << LogIO::POST;
 			}
-		}
-		else {
-			analysis = NULL;
 		}
 		setUnitsText( xaxisUnit );
 	}
@@ -328,31 +326,37 @@ namespace casa {
 		pixelCanvas -> setToolTipXUnit( xaxisUnit.c_str());
 	}
 
-	void QtProfile::updateSpectralReferenceFrame( ){
+	bool QtProfile::customizeSpectralReferenceFrame( const QString& specialType ){
 		//Cannot convert from rest frame to other spectral frames without
 		//reloading the image.
-		bool restFrame = false;
-		if ( FRAME_REST.toStdString() == spcRefFrame.c_str()){
-			restFrame = true;
+		bool typeMatch = false;
+		if ( specialType.toStdString() == spcRefFrame.c_str()){
+			typeMatch = true;
 		}
-		int restIndex = spcRef->findText( FRAME_REST );
 
+		int typeIndex = spcRef->findText( specialType );
 		//Add rest frame if it is not already there.
-		if ( restFrame ){
-			if ( restIndex == -1 ){
-				spcRef->addItem( FRAME_REST );
+		if ( typeMatch ){
+			if ( typeIndex == -1 ){
+				spcRef->addItem( specialType );
 			}
 		}
 		//Remove rest frame as an option to convert to.
 		else {
-			if ( restIndex >= 0 ){
-				spcRef->removeItem( restIndex );
+			if ( typeIndex >= 0 ){
+				spcRef->removeItem( typeIndex );
 			}
 		}
+		return typeMatch;
+	}
+
+	void QtProfile::updateSpectralReferenceFrame( ){
+		bool restFrame = customizeSpectralReferenceFrame( FRAME_REST );
+		bool noFrame = customizeSpectralReferenceFrame( FRAME_NONE );
 		//Update the combo with the current rest frame.
 		int restFrameIndex = spcRef->findText( spcRefFrame.c_str() );
 		spcRef->setCurrentIndex( restFrameIndex );
-		spcRef->setEnabled( !restFrame );
+		spcRef->setEnabled( !restFrame && !noFrame );
 		lineOverlaysHolder->setInitialReferenceFrame( spcRef->currentText() );
 	}
 
@@ -485,15 +489,13 @@ namespace casa {
 		pixelCanvas->graph()->save(fn);
 		return ;
 	}
+
 	void QtProfile::saveExp() {
-		//qDebug() << "fileName:" << fileName;
 		QFile file(fileName.append(position).append(".png"));
 		if (!file.open(QFile::WriteOnly))
 			return ;
-		//qDebug() << "open ok";
 
 		pixelCanvas->graph()->save(fileName, "PNG");
-		//qDebug() << "save ok";
 		return ;
 	}
 
@@ -547,7 +549,7 @@ namespace casa {
 		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
 	}
 
-	bool QtProfile::isImageSupported(std::tr1::shared_ptr<const ImageInterface<float> > imagePtr ){
+	bool QtProfile::isImageSupported(std::tr1::shared_ptr<ImageInterface<float> > imagePtr ){
 		bool imageSupported = true;
 		const DisplayCoordinateSystem& displayCoords = imagePtr->coordinates();
 		bool spectralAxis = displayCoords.hasSpectralAxis();
@@ -690,8 +692,9 @@ namespace casa {
 		position = QString("");
 		profileStatus->showMessage(position);
 		pixelCanvas->clearCurve();
-
-		ctypeUnit = String(text.toStdString());
+		if ( text.length() > 0 ){
+			ctypeUnit = String(text.toStdString());
+		}
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 
 		setUnitsText( xaxisUnit );
@@ -736,10 +739,6 @@ namespace casa {
 	void QtProfile::resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name) {
 		image = img;
 		try {
-			if (analysis)
-				delete analysis;
-			analysis = new ImageAnalysis(img);
-			
 			specFitSettingsWidget->reset( );
 			momentSettingsWidget->reset();
 			Bool validSpectrum;
@@ -765,7 +764,7 @@ namespace casa {
 		if (over) {
 			delete over;
 			over = 0;
-			over = new QList<OverplotAnalysis>();
+			over = new QList<OverplotInterface>();
 		}
 
 		// adjust the error box
@@ -932,7 +931,7 @@ namespace casa {
 	                           const Vector<Double> wx, const Vector<Double> wy,
 	                           const ProfileType ptype) {
 		if (!isVisible()) return;
-		if (!analysis) return;
+		if (!image) return;
 		*itsLog << LogOrigin("QtProfile", "wcChanged");
 
 		//Since we are going to reset the data, we need to store the
@@ -1121,6 +1120,29 @@ namespace casa {
 		cube = cb;
 	}
 
+	bool QtProfile::parseRestFrequency( const String& restStr, Quantity& result ) const {
+		Bool validNumber = false;
+		if ( restStr.length() > 0 ){
+			QString restFreqValStr( restStr.c_str());
+			QString restFreqUnitStr( "");
+			QRegExp characterExpression("[a-df-zA-Z]" );
+			int unitIndex = restFreqValStr.indexOf( characterExpression );
+			if ( unitIndex > 0 ) {
+				restFreqUnitStr = restFreqValStr.mid( unitIndex, restFreqValStr.length() - unitIndex + 1);
+				restFreqValStr= restFreqValStr.mid( 0, unitIndex);
+			}
+
+			double restFrequency = restFreqValStr.toDouble(&validNumber);
+			if ( validNumber ){
+				result.setValue( restFrequency );
+			}
+			if ( restFreqUnitStr.length() > 0 ){
+				result.setUnit( restFreqUnitStr.toStdString().c_str() );
+			}
+		}
+		return validNumber;
+	}
+
 	void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys) {
 		// NOTE: A change of any of these values requires a re-plot of the
 		//       extracted spectrum. A change in "spcTypeUnit" and "spcSys"
@@ -1146,7 +1168,6 @@ namespace casa {
 		if (qSpcTypeUnit != bottomAxisCType->currentText()) {
 			// if necessary, change the unit and the spectral quantity
 			updateAxisUnitCombo( qSpcTypeUnit, bottomAxisCType );
-
 		}
 
 		if (spcRval != cSysRval) {
@@ -1154,14 +1175,9 @@ namespace casa {
 			cSysRval = spcRval;
 
 			//Store the new rest frequency.
-			QString restFreqStr( cSysRval.c_str());
-			QRegExp characterExpression("[a-df-zA-Z]" );
-			int unitIndex = restFreqStr.indexOf( characterExpression );
-			if ( unitIndex > 0 ) {
-				restFreqStr= restFreqStr.mid( 0, unitIndex);
-			}
-			Bool validNumber = false;
-			double restFrequency = restFreqStr.toDouble(&validNumber);
+			Quantity restQuantity;
+			Bool validNumber = parseRestFrequency( cSysRval, restQuantity );
+			double restFrequency = restQuantity.getValue();
 			if ( validNumber && restFrequency >= 0 ){
 
 				//Update the search capability with the new rest frequency so that
@@ -1173,7 +1189,7 @@ namespace casa {
 				}
 			}
 			else {
-				qDebug() << "QtProfiler::rest frequency parse error: "<<restFreqStr;
+				qDebug() << "QtProfiler::rest frequency parse error: "<<cSysRval.c_str();
 			}
 
 			// an immediate replot has to be triggered such that the
@@ -1207,12 +1223,12 @@ namespace casa {
 		return axisAscending;
 	}
 
-	int QtProfile::getChannelCount( ImageAnalysis* analysis ){
+	/*int QtProfile::getChannelCount( ImageAnalysis* analysis ){
 		std::tr1::shared_ptr<const ImageInterface<float> > img(analysis->getImage());
 		return getChannelCount( img );
-	}
+	}*/
 
-	int QtProfile::getChannelCount( std::tr1::shared_ptr<const ImageInterface<float> >& img){
+	int QtProfile::getChannelCount( std::tr1::shared_ptr<ImageInterface<float> >& img){
 		DisplayCoordinateSystem cSys = img->coordinates();
 		Int spectralIndex = cSys.spectralAxisNumber();
 		IPosition imgShape = img->shape();
@@ -1232,23 +1248,23 @@ namespace casa {
 		return channelCount;
 	}
 
-	ImageAnalysis* QtProfile::findImageWithMaximumChannels(){
-		ImageAnalysis* maxChannelAnalysis = analysis;
-		int maxChannelCount = getChannelCount( analysis );
+	std::tr1::shared_ptr<ImageInterface<float> > QtProfile::findImageWithMaximumChannels(){
+		int maxChannelCount = getChannelCount( image );
+		std::tr1::shared_ptr<ImageInterface<float> > maxChannelImage = image;
 		if ( over ){
-			QListIterator<OverplotAnalysis> i(*over);
+			QListIterator<OverplotInterface> i(*over);
 			while (i.hasNext() && stateMProf) {
-				OverplotAnalysis overplot = i.next();
+				OverplotInterface overplot = i.next();
 				QString ky = overplot.first;
-				ImageAnalysis* ana = overplot.second;
-				int channelCount = getChannelCount( ana );
+				//ImageAnalysis* ana = overplot.second;
+				int channelCount = getChannelCount( overplot.second );
 				if ( channelCount > maxChannelCount ){
-					maxChannelAnalysis = ana;
+					maxChannelImage = overplot.second;
 					maxChannelCount = channelCount;
 				}
 			}
 		}
-		return maxChannelAnalysis;
+		return maxChannelImage;
 	}
 
 	void QtProfile::changeTopAxis() {
@@ -1270,14 +1286,19 @@ namespace casa {
 			//Get the minimum and maximum x-value for the top axis
 			//Of all the images we are overplotting, use the one with the maximum
 			//number of channels.
-			ImageAnalysis* maxChannelAnalysis = findImageWithMaximumChannels();
-			int tabularIndex = getFreqProfileTabularIndex( maxChannelAnalysis );
+			std::tr1::shared_ptr<ImageInterface<Float> > maxChannelImage = findImageWithMaximumChannels();
+			//int tabularIndex = getFreqProfileTabularIndex( maxChannelImage );
 			//We don't have to worry about smoothing here because we are only using
 			//the x-values.
-			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
+			/*bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
 						                             WORLD_COORDINATES, coordinateType, 0,
 						                             tabularIndex, 0, cTypeUnit, spcRefFrame,
-						                             (Int)QtProfile::MEAN, 0, cSysRval, -1, lastShape);
+						                             (Int)QtProfile::MEAN, 0, cSysRval, -1,
+						                             lastShape);*/
+
+			bool ok = generateProfile(xValues,yValues, maxChannelImage, lastWX, lastWY,
+					lastShape, QtProfile::MEAN,cTypeUnit, coordinateType, cSysRval, spcRefFrame);
+
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
 				bool topAxisAscendingX = isAxisAscending(xValues);
@@ -1291,6 +1312,89 @@ namespace casa {
 				pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 			}
 		}
+	}
+
+	bool QtProfile::generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
+			std::tr1::shared_ptr<casa::ImageInterface<Float> > img,
+			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
+			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
+			String restFreq, const String& frame){
+
+		const DisplayCoordinateSystem& cSys = img->coordinates();
+		Bool stokesCoordinate = cSys.hasPolarizationCoordinate();
+
+		int stokesCount = 0;
+		Int stokesPixelAxis = -1;
+		Bool ok = false;
+		IPosition imShape = img->shape();
+		if ( stokesCoordinate ){
+			stokesPixelAxis = cSys.polarizationAxisNumber();
+			// Now create box region to select only on the Stokes axis
+			stokesCount = imShape( stokesPixelAxis );
+		}
+		//The profiler is meant to get a profile along the spectral axis only, so need to
+		//make a subimage with a single stokes for all functions. Otherwise, the function
+		//will be applied across all stokes, which is probably not what most users want.
+		if ( stokesCount > 1 ){
+			IPosition blc(img->ndim(), 0);
+			IPosition trc = imShape - 1;
+			blc[stokesPixelAxis] = 0;
+			trc[stokesPixelAxis] = 0;
+			LCBox leregion(blc, trc, imShape);
+			Record	stokesRegion = Record(leregion.toRecord(""));
+			String empty("");
+			SubImage<Float> result = SubImageFactory<Float>::createSubImage(*img, stokesRegion, empty, NULL, False);
+			std::tr1::shared_ptr<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
+			ok = _generateProfile(resultXValues, resultYValues, subImage, regionX, regionY,
+									shape, combineType, unit, coordinateType,
+									restFreq, frame);
+			//If we are using an image with multiple Stokes planes, then
+			//we need to post a warning that we are doing the flux calculation with the
+			//first one.
+			if ( itsPlotType == QtProfile::PFLUX && stokesCount > 1 ){
+				ostringstream oss;
+				oss << "Calculation was performed using the first Stokes plane.";
+				postStatus( oss.str() );
+			}
+
+		}
+		else {
+			ok = _generateProfile(resultXValues, resultYValues, img, regionX, regionY,
+					shape, combineType, unit, coordinateType, restFreq, frame);
+		}
+		return ok;
+	}
+
+
+	bool QtProfile::_generateProfile( Vector<Float>& resultXValues, Vector<Float>& resultYValues,
+			std::tr1::shared_ptr<const casa::ImageInterface<Float> > imagePtr,
+			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
+			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
+			String restFreq, const String& frame){
+
+		Quantity restQuantity;
+		Quantity* restQuantityPtr = NULL;
+		bool validNumber = parseRestFrequency( restFreq, restQuantity );
+		if ( validNumber ){
+			restQuantityPtr = &restQuantity;
+		}
+
+		int tabularIndex = getFreqProfileTabularIndex( imagePtr );
+		ImageCollapserData::AggregateType function = static_cast<ImageCollapserData::AggregateType>(combineType);
+		pair<Vector<Float>,Vector<Float> >  plotData = Util::getProfile( imagePtr, regionX, regionY,
+			shape, tabularIndex, function, unit,
+			coordinateType, restQuantityPtr, frame );
+		bool success = false;
+		int resultXCount = plotData.first.size();
+		int resultYCount = plotData.second.size();
+		if ( resultXCount == resultYCount && resultXCount > 0 ){
+			resultXValues.resize( resultXCount);
+			resultXValues = plotData.first;
+			resultYValues.resize( resultYCount );
+			resultYValues = plotData.second;
+			success = true;
+		}
+		return success;
 	}
 
 	void QtProfile::plotMainCurve() {
@@ -1363,7 +1467,7 @@ namespace casa {
 	void QtProfile::setCollapseRange(double xmin, double xmax) {
 		momentSettingsWidget->setRange( xmin, xmax );
 		specFitSettingsWidget->setRange( xmin, xmax );
-		//lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
+		lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
 	}
 
 	void QtProfile::overplot(QList<OverplotInterface> hash) {
@@ -1374,14 +1478,10 @@ namespace casa {
 		}
 
 		if ( stateMProf ){
-			over = new QList<OverplotAnalysis>();
+			over = new QList<OverplotInterface>();
 			QListIterator<OverplotInterface> i(hash);
 			while (i.hasNext()) {
-				OverplotInterface overplot = i.next();
-				QString ky = overplot.first;
-				ImageAnalysis* ana = new ImageAnalysis(overplot.second);
-				OverplotAnalysis overlay( ky, ana );
-				(*over).append( overlay );
+				(*over).append( i.next() );
 			}
 		}
 		newOverplots = true;
@@ -1389,8 +1489,6 @@ namespace casa {
 
 	void QtProfile::clearPlots(){
 		pixelCanvas->clearCurve();
-		delete analysis;
-		analysis = NULL;
 		delete over;
 		over = NULL;
 
@@ -1402,7 +1500,7 @@ namespace casa {
 	                           const QList<int> &pixel_x, const QList<int> &pixel_y,
 	                           const QString &/*linecolor*/, const QString & /*text*/, const QString &/*font*/, int /*fontsize*/, int /*fontstyle*/ ) {
 		if (!isVisible()) return;
-		if (!analysis) return;
+		if (!image) return;
 		if (shape == "polyline") {
 			return;
 		}
@@ -1544,7 +1642,7 @@ namespace casa {
 	                              const QList<int> &pixel_x, const QList<int> &pixel_y ) {
 
 		if (!isVisible()) return;
-		if (!analysis) return;
+		if (!image) return;
 		if ( type == viewer::region::RegionChangeDelete ) {
 			SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 			if ( it != spectra_info_map.end() ) {
@@ -2353,17 +2451,18 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	bool QtProfile::getFrequencyProfileWrapper( ImageAnalysis* analysis, const Vector<double> &wxv, const Vector<double> &wyv,
+	/*bool QtProfile::getFrequencyProfileWrapper( std::tr1::shared_ptr<ImageInterface<Float> >& img,
+			const Vector<double> &wxv, const Vector<double> &wyv,
 	        Vector<Float> &z_xval, Vector<Float> &z_yval,
 	        const String& xytype, const String& specaxis,
 	        const Int& whichStokes, const Int& whichTabular,
-	        const Int& whichLinear, const String& xunits,
-	        const String& specFrame, const Int &combineType,
+	        const Int& whichLinear, String& xunits,
+	        const String& specFrame, QtProfile::ExtrType combineType,
 	        const Int& whichQuality, const String& restValue, const String& shape ) {
 
 		Bool ok = false;
 
-		Int beamChannel = 0;
+		//Int beamChannel = 0;
 
 		// might want to introduce more fancy selection of the
 		//beamChannel here but using channel 0 is a good choice already
@@ -2372,9 +2471,12 @@ namespace casa {
 		                               combineType, whichQuality, restValue,
 		                               beamChannel, shape);
 
+
 		//Note:  we don't have to worry about applying smoothing here because the callers
 		//of this method currently do it.
 
+		//Note that the warning below is no longer needed because the new PixelValueManipulator
+		//can correctly handle images with multiple beams per channel.
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2383,45 +2485,62 @@ namespace casa {
 			postStatus( oss.str() );
 		}
 		return ok;
-	}
-
+	}*/
 
 
 	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-	                                        const String& coordinateType, const String& xaxisUnit,
+	                                        const String& coordinateType, String& xaxisUnit,
 	                                        Vector<Float> &z_xval, Vector<Float> &z_yval,
 	                                        const String& shape) {
 
-		Int whichTabular = getFreqProfileTabularIndex( analysis );
+		//Int whichTabular = getFreqProfileTabularIndex( analysis );
 		Bool ok = false;
 		String restValue = cSysRval;
+
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0,
 					xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEAN, 0, restValue, -1, shape );
+					(Int)QtProfile::MEAN, 0, restValue, -1, shape );*/
+			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
+					shape, QtProfile::MEAN, xaxisUnit, coordinateType,
+					restValue, spcRefFrame);
+
 			break;
 		case QtProfile::PMEDIAN:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEDIAN, 0, restValue, -1, shape );
+					(Int)QtProfile::MEDIAN, 0, restValue, -1, shape );*/
+			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
+								shape, QtProfile::MEDIAN, xaxisUnit, coordinateType,
+								restValue, spcRefFrame);
 			break;
 		case QtProfile::PSUM:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::SUM, 0, restValue, -1, shape );
+					(Int)QtProfile::SUM, 0, restValue, -1, shape );*/
+			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
+								shape, QtProfile::SUM, xaxisUnit, coordinateType,
+								restValue, spcRefFrame);
 			break;
 		case QtProfile::PFLUX:
-			ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::FLUX, 0, restValue, shape);
+			/*ok=getFrequencyProfileWrapper( image, wxv, wyv, z_xval, z_yval,
+					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0,
+					xaxisUnit, spcRefFrame,
+					QtProfile::FLUX, 0, restValue, shape);*/
+			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
+					shape, QtProfile::FLUX, xaxisUnit, coordinateType,
+					restValue, spcRefFrame);
 			break;
 
 		default:
-			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
 					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEAN, 0, restValue, -1, shape );
+					(Int)QtProfile::MEAN, 0, restValue, -1, shape );*/
+			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
+								shape, QtProfile::MEAN, xaxisUnit, coordinateType,
+								restValue, spcRefFrame);
 			break;
 		}
 
@@ -2438,9 +2557,9 @@ namespace casa {
 		return ok;
 	}
 
-	int QtProfile::getFreqProfileTabularIndex(ImageAnalysis* analysis ) {
+	int QtProfile::getFreqProfileTabularIndex(std::tr1::shared_ptr<const ImageInterface<Float> > img ) {
 		Int whichTabular = -1;
-		std::tr1::shared_ptr<const ImageInterface<Float> > img = analysis->getImage();
+
 		const DisplayCoordinateSystem& cSys = img->coordinates();
 		if ( !cSys.hasSpectralAxis() ){
 			whichTabular = Util::getTabularFrequencyAxisIndex( img );
@@ -2454,7 +2573,7 @@ namespace casa {
 		DisplayCoordinateSystem cSys = image->coordinates();
 		String shape = getRegionShape();
 
-		int tabularIndex = getFreqProfileTabularIndex(analysis);
+		//int tabularIndex = getFreqProfileTabularIndex(image);
 		switch (itsErrorType) {
 		case QtProfile::PNOERROR:
 			if (z_eval.size()> 0)
@@ -2479,9 +2598,13 @@ namespace casa {
 					//  		 z_eval.resize(0);
 					//		 break;
 				default:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+					/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                             (Int)QtProfile::RMSE, 0, cSysRval, -1, shape);
+					                             (Int)QtProfile::RMSE, 0, cSysRval, -1, shape);*/
+					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
+										shape, QtProfile::RMSE, xaxisUnit, coordinateType,
+										cSysRval, spcRefFrame);
+
 					break;
 				}
 			}
@@ -2494,9 +2617,12 @@ namespace casa {
 			} else {
 				switch ( itsPlotType ) {
 				case QtProfile::PMEAN:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+					/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                             (Int)QtProfile::NSQRTSUM, 1, cSysRval, -1, shape);
+					                             (Int)QtProfile::NSQRTSUM, 1, cSysRval, -1, shape);*/
+					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
+							shape, QtProfile::NSQRTSUM, xaxisUnit, coordinateType,
+							cSysRval, spcRefFrame);
 					break;
 				case QtProfile::PMEDIAN:
 					*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
@@ -2504,14 +2630,21 @@ namespace casa {
 						z_eval.resize(0);
 					break;
 				case QtProfile::PSUM:
-					ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+					/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
 					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                             (Int)QtProfile::SQRTSUM, 1, cSysRval, -1, shape);
+					                             (Int)QtProfile::SQRTSUM, 1, cSysRval, -1, shape);*/
+					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
+							shape, QtProfile::SQRTSUM, xaxisUnit, coordinateType,
+							cSysRval, spcRefFrame);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( analysis, wxv, wyv, z_xval, z_eval,
-					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                               (Int)QtProfile::EFLUX, 1, cSysRval, shape);
+					/*ok=getFrequencyProfileWrapper( image, wxv, wyv, z_xval, z_eval,
+					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0,
+					                               xaxisUnit, spcRefFrame,
+					                               QtProfile::EFLUX, 1, cSysRval, shape);*/
+					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
+												shape, QtProfile::EFLUX, xaxisUnit, coordinateType,
+												cSysRval, spcRefFrame);
 					break;
 				default:
 					if (z_eval.size()> 0)
@@ -2658,12 +2791,12 @@ namespace casa {
 		bool ok = true;
 
 		if ( over != NULL ) {
-			QListIterator<OverplotAnalysis> i(*over);
+			QListIterator<OverplotInterface> i(*over);
 			while (i.hasNext() && stateMProf) {
-				OverplotAnalysis overplot = i.next();
+				OverplotInterface overplot = i.next();
 				QString ky = overplot.first;
-				ImageAnalysis* ana = overplot.second;
-				int tabularIndex = getFreqProfileTabularIndex( ana );
+				std::tr1::shared_ptr<ImageInterface<Float> >  ana = overplot.second;
+				//int tabularIndex = getFreqProfileTabularIndex( ana );
 
 				Vector<Float> xval(100);
 				Vector<Float> yval(100);
@@ -2671,30 +2804,51 @@ namespace casa {
 
 				switch (itsPlotType) {
 				case QtProfile::PMEAN:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					/*ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::MEAN, 0, "", -1, shape);
+					                        (Int)QtProfile::MEAN, 0, "", -1, shape);*/
+					ok = generateProfile(xval, yval, ana, wxv, wyv,
+							shape, QtProfile::MEAN, xaxisUnit,
+							coordinateType, "", spcRefFrame);
+
 					break;
 				case QtProfile::PMEDIAN:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					/*ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::MEDIAN, 0, "", -1, shape);
+					                        (Int)QtProfile::MEDIAN, 0, "", -1, shape);*/
+					ok = generateProfile(xval, yval, ana, wxv, wyv,
+										shape, QtProfile::MEDIAN, xaxisUnit,
+										coordinateType, "", spcRefFrame);
 					break;
 				case QtProfile::PSUM:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					/*ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                        (Int)QtProfile::PSUM, 0, "", -1, shape);
+					                        (Int)QtProfile::PSUM, 0, "", -1, shape);*/
+					ok = generateProfile(xval, yval, ana, wxv, wyv,
+							shape, QtProfile::SUM, xaxisUnit,
+							coordinateType, "", spcRefFrame);
 					break;
 				case QtProfile::PFLUX:
-					ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
+					/*ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
 					                               WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                               (Int)QtProfile::PFLUX, 0, "", shape);
+					                               (Int)QtProfile::FLUX, 0, "", shape);*/
+
+
+					ok = generateProfile(xval, yval, ana, wxv, wyv,
+															shape, QtProfile::FLUX, xaxisUnit,
+															coordinateType, "", spcRefFrame);
+
 					break;
 
 				default:
-					ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					/*ok=ana->getFreqProfile( wxv, wyv, xval, yval,
 					                        WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
 					                        (Int)QtProfile::MEAN, 0, "", -1, shape);
+					*/
+					ok = generateProfile(xval, yval, ana, wxv, wyv,
+										shape, QtProfile::MEAN, xaxisUnit,
+										coordinateType, "", spcRefFrame);
+
 					break;
 				}
 
@@ -2764,11 +2918,11 @@ namespace casa {
 		}
 	}
 
-	void QtProfile::addOverplotToCanvas( ImageAnalysis* ana, const Vector<Float>& xVals, const
+	void QtProfile::addOverplotToCanvas( std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const Vector<Float>& xVals, const
 			Vector<Float>& yVals, const QString& ky ){
 		Double beamAngle = 0;
 		Double beamArea = 0;
-		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = ana->getImage();
+		//std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = ana->getImage();
 		getBeamInfo( imagePtr, beamAngle, beamArea );
 		Bool validSpectrum;
 		SpectralCoordinate coord = getSpectralAxis( imagePtr, validSpectrum );
@@ -2777,7 +2931,7 @@ namespace casa {
 		}
 	}
 
-	double QtProfile::getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits ){
+	double QtProfile::getUnitsPerChannel( std::tr1::shared_ptr<ImageInterface<Float> > img , bool* ok, const QString& matchUnits ){
 		//We just care about the min and the max so we use a vector
 		//of size 2.
 		Vector<Float> xval(2);
@@ -2796,12 +2950,15 @@ namespace casa {
 			String cTypeUnit;
 
 			getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
-			int tabularIndex = getFreqProfileTabularIndex( analysis );
+			//int tabularIndex = getFreqProfileTabularIndex( img );
 			//We don't have to worry about smoothing here because we are only
 			//using the x-values.
-			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
+			/**ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
 					WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, cTypeUnit, spcRefFrame,
-							(Int)QtProfile::MEAN, 0, "", -1, getRegionShape());
+							(Int)QtProfile::MEAN, 0, "", -1, getRegionShape());*/
+			*ok = generateProfile(xval,yval, img, lastWX, lastWY,
+								getRegionShape(), QtProfile::MEAN,
+								cTypeUnit, coordinateType, "", spcRefFrame);
 			if ( *ok ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
 			}
@@ -2841,7 +2998,7 @@ namespace casa {
 
 		//Get the units per channel for the main image
 		bool unitsAvailable = false;
-		double unitsPerChannel = getUnitsPerChannel( analysis, &unitsAvailable, matchUnits );
+		double unitsPerChannel = getUnitsPerChannel( image, &unitsAvailable, matchUnits );
 		if ( !unitsAvailable ){
 			unitsMatch = false;
 		}
@@ -2850,11 +3007,11 @@ namespace casa {
 			//Compare that with the frequency per channel of the overplots
 			if ( over != NULL){
 				const float ERROR_TOL = 0.00001f;
-				QListIterator<OverplotAnalysis> i(*over);
+				QListIterator<OverplotInterface> i(*over);
 				while (i.hasNext() && stateMProf) {
-					OverplotAnalysis overplot = i.next();
-					QString ky = overplot.first;
-					ImageAnalysis* ana = overplot.second;
+					OverplotInterface overplot = i.next();
+					//QString ky = overplot.first;
+					std::tr1::shared_ptr<ImageInterface<Float> > ana = overplot.second;
 					double overUnitsPerChannel = getUnitsPerChannel( ana, &unitsAvailable, matchUnits );
 					if ( !unitsAvailable ){
 						unitsMatch = false;
@@ -3077,13 +3234,12 @@ namespace casa {
 	std::tr1::shared_ptr<const ImageInterface<Float> > QtProfile::getImage( const QString& imageName ) const {
 		//First look for a specific image with the name
 		if ( imageName.length() > 0 && over ) {
-			QListIterator<OverplotAnalysis> i( *over );
+			QListIterator<OverplotInterface> i( *over );
 			while (i.hasNext()) {
-				OverplotAnalysis overplot = i.next();
+				OverplotInterface overplot = i.next();
 				QString ky = overplot.first;
 				if ( ky == imageName ) {
-					ImageAnalysis* analysis = overplot.second;
-					std::tr1::shared_ptr<const ImageInterface<Float> > imageInterface(analysis->getImage());
+					std::tr1::shared_ptr<const ImageInterface<Float> > imageInterface = overplot.second;
 					return imageInterface;
 				}
 			}

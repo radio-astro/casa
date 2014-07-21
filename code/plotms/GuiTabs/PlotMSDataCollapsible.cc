@@ -39,7 +39,7 @@ PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
       minimizeAction( "Minimize", this ),
       maximizeAction( "Maximize", this ),
       closeAction( "Close", this ),
-      SIZE_COLLAPSED( 50 ), SIZE_EXPANDED( 525 ){
+      SIZE_COLLAPSED( 50 ), SIZE_EXPANDED( 525 ), SIZE_WIDTH( 200 ){
 	ui.setupUi(this);
 	nameLabel = new QLineEdit( this );
 	nameLabel->setEnabled( false );
@@ -54,7 +54,6 @@ PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
 	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
 	ui.widgetLayout->setContentsMargins(2,2,2,2);
 	plotTab = new PlotMSPlotTab( plotter );
-	connect( plotTab, SIGNAL(plottableChanged()), this, SIGNAL(plottableChanged()));
 
 	maximizeDisplay();
 
@@ -75,13 +74,13 @@ PlotMSDataTab* PlotMSDataCollapsible::getSingleData(){
 
 
 QSize PlotMSDataCollapsible::minimumSizeHint() const {
-	QSize hint ( 200, minimumSize );
+	QSize hint ( SIZE_WIDTH, minimumSize );
 	return hint;
 }
 
 
 QSize PlotMSDataCollapsible::sizeHint() const {
-	QSize hint ( 200, minimumSize );
+	QSize hint ( SIZE_WIDTH, minimumSize );
 	return hint;
 }
 
@@ -132,6 +131,27 @@ void PlotMSDataCollapsible::maximizeDisplay() {
 	minimumSize = SIZE_EXPANDED;
 }
 
+void PlotMSDataCollapsible::resetHeight( int diff ){
+	bool heightChange = false;
+	if ( diff > 0 ){
+		minimumSize = minimumSize + diff;
+		heightChange = true;
+	}
+	else if ( diff < 0 ){
+		int freeSpace = minimumSize - SIZE_EXPANDED;
+		int decreaseAmount = qMin( freeSpace+1, -1 * diff );
+		if ( decreaseAmount > 0 ){
+			minimumSize = minimumSize - decreaseAmount;
+			heightChange = true;
+		}
+	}
+	if ( heightChange ){
+		updateGeometry();
+	}
+}
+
+
+
 void PlotMSDataCollapsible::parametersHaveChanged(const PlotMSWatchedParameters& params,
                   int updateFlag){
 	if ( plotTab != NULL ){
@@ -181,11 +201,26 @@ PlotMSPlot* PlotMSDataCollapsible::getPlot(){
 }
 
 
-void PlotMSDataCollapsible::plot( bool forceReload){
+bool PlotMSDataCollapsible::plot( bool forceReload){
+	Bool plottingCompleted = true;
 	if ( plotTab != NULL ){
-		plotTab->plot( forceReload );
+		plottingCompleted = plotTab->plot( forceReload );
+	}
+	return plottingCompleted;
+}
+
+void PlotMSDataCollapsible::completePlotting( bool success ){
+	if ( plotTab != NULL ){
+		plotTab->completePlotting( success);
 	}
 }
+
+void PlotMSDataCollapsible::clearData(){
+	if ( plotTab != NULL ){
+		plotTab->clearData();
+	}
+}
+
 
 
 void PlotMSDataCollapsible::setGridSize( int rowCount, int colCount ){

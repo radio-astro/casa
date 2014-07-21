@@ -27,31 +27,33 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFactory.h>
 
+#include <images/Images/ImageUtilities.h>
+
 namespace casa {
 
-	SPIIF ImageFactory::floatImageFromShape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, Bool linear,
-    	Bool overwrite, Bool verbose,
-        const vector<std::pair<LogOrigin, String> > *const &msgs
-    ) {
-		return _fromShape<Float>(
+SPIIF ImageFactory::floatImageFromShape(
+		const String& outfile, const Vector<Int>& shape,
+		const Record& csys, Bool linear,
+		Bool overwrite, Bool verbose,
+		const vector<std::pair<LogOrigin, String> > *const &msgs
+) {
+	return _fromShape<Float>(
 			outfile, shape, csys, linear,
-            overwrite, verbose, msgs
-		);
-	}
+			overwrite, verbose, msgs
+	);
+}
 
-	SPIIC ImageFactory::complexImageFromShape(
-    	const String& outfile, const Vector<Int>& shape,
-    	const Record& csys, Bool linear,
-    	Bool overwrite, Bool verbose,
-        const vector<std::pair<LogOrigin, String> > *const &msgs
-    ) {
-		return _fromShape<Complex>(
+SPIIC ImageFactory::complexImageFromShape(
+		const String& outfile, const Vector<Int>& shape,
+		const Record& csys, Bool linear,
+		Bool overwrite, Bool verbose,
+		const vector<std::pair<LogOrigin, String> > *const &msgs
+) {
+	return _fromShape<Complex>(
 			outfile, shape, csys, linear,
-            overwrite, verbose, msgs
-		);
-	}
+			overwrite, verbose, msgs
+	);
+}
 
 void ImageFactory::_centerRefPix(
 	CoordinateSystem& csys, const IPosition& shape
@@ -90,6 +92,61 @@ CoordinateSystem* ImageFactory::_makeCoordinateSystem(
         errMsg
     ); 
     return pCS.release();
+}
+
+std::tr1::shared_ptr<TempImage<Complex> > ImageFactory::complexFromFloat(
+	SPCIIF realPart, const Array<Float>& imagPart
+) {
+	std::tr1::shared_ptr<TempImage<Complex> > newImage(
+		new TempImage<Complex>(
+			TiledShape(realPart->shape()),
+			realPart->coordinates()
+		)
+	);
+	{
+		Array<Bool> mymask = realPart->getMask();
+		if (realPart->hasPixelMask()) {
+			mymask = mymask && realPart->pixelMask().get();
+		}
+		if (! allTrue(mymask)) {
+			newImage->attachMask(ArrayLattice<Bool>(mymask));
+		}
+	}
+	ImageUtilities::copyMiscellaneous(*newImage, *realPart);
+	newImage->put(makeComplex(realPart->get(), imagPart));
+	return newImage;
+}
+
+std::tr1::shared_ptr<TempImage<Float> > ImageFactory::floatFromComplex(
+	SPCIIC complexImage, ComplexToFloatFunction function
+) {
+	std::tr1::shared_ptr<TempImage<Float> > newImage(
+		new TempImage<Float>(
+			TiledShape(complexImage->shape()),
+			complexImage->coordinates()
+		)
+	);
+	{
+		Array<Bool> mymask = complexImage->getMask();
+		if (complexImage->hasPixelMask()) {
+			mymask = mymask && complexImage->pixelMask().get();
+		}
+		if (! allTrue(mymask)) {
+			newImage->attachMask(ArrayLattice<Bool>(mymask));
+		}
+	}
+	ImageUtilities::copyMiscellaneous(*newImage, *complexImage);
+	switch (function) {
+	case REAL:
+		newImage->put(real(complexImage->get()));
+		break;
+	case IMAG:
+		newImage->put(imag(complexImage->get()));
+		break;
+	default:
+		ThrowCc("Logic Error: Unhandled function");
+	}
+	return newImage;
 }
 
 }

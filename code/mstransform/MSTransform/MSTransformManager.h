@@ -39,12 +39,12 @@
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 
 // VisibityIterator / VisibilityBuffer framework
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 
 // TVI framework
-#include <synthesis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/AveragingVi2Factory.h>
 
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
@@ -379,6 +379,7 @@ protected:
 											Vector<Double> &intermediateChanFreq,
 											Vector<Double> &intermediateChanWidth);
 	void calculateWeightAndSigmaFactors();
+	void calculateNewWeightAndSigmaFactors();
 
 	// From selected MS
 	void checkFillFlagCategory();
@@ -564,10 +565,10 @@ protected:
 													Matrix<T> &outputMatrix,
 													Bool convolveFlags=False,
 													vi::VisBuffer2 *vb=NULL);
-	template <class T> void mapScaleAndAverageMatrix(	const Matrix<T> &inputMatrix,
-														Matrix<T> &outputMatrix,
-														map<uInt,T> scaleMap,
-														Vector<Int> spws);
+	template <class T> void mapAndScaleMatrix(	const Matrix<T> &inputMatrix,
+												Matrix<T> &outputMatrix,
+												map<uInt,T> scaleMap,
+												Vector<Int> spws);
 	template <class T> void writeMatrix(	const Matrix<T> &inputMatrix,
 											ArrayColumn<T> &outputCol,
 											RefRows &rowRef,
@@ -1136,6 +1137,8 @@ protected:
 	map<uInt,uInt> numOfCombInterChanMap_p;
 	map<uInt,Float> weightFactorMap_p;
 	map<uInt,Float> sigmaFactorMap_p;
+    map<uInt,Float> newWeightFactorMap_p;
+	map<uInt,Float> newSigmaFactorMap_p;
 
 	// Reference Frame Transformation members
 	MFrequency::Types inputReferenceFrame_p;

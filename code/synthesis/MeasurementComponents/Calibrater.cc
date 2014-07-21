@@ -47,10 +47,10 @@
 #include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
-#include <synthesis/MSVis/VisSetUtil.h>
-#include <synthesis/MSVis/VisBuffAccumulator.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisBuffAccumulator.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -60,7 +60,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <vector>
 using std::vector;
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 
 using namespace casa::utilj;
 
@@ -1066,38 +1066,42 @@ Calibrater::correct(String mode)
             for (vi.origin(); vi.more(); vi++) {
 
                 uInt spw = vb->spectralWindow();
+
+		// Re-initialize weights from sigma column
+		vb->resetWeightMat();
+
+		// If we can calibrate this vb, do it...
                 if (ve_p->spwOK(spw)){
-
-		    // Re-initialize weights from sigma column
-		    vb->resetWeightMat();
-
-		    // throws exception if nothing to apply
-                    ve_p->correct(*vb,trialmode);
+		  
+		  // throws exception if nothing to apply
+		  ve_p->correct(*vb,trialmode);
 		    
-		    // Only if not a trial run, trigger write to disk
-		    if (upmode!="TRIAL") {
-		      
-		      if (upmode.contains("CAL")) {
-			vi.setVis (vb->visCube(), whichOutCol);
-			vi.setWeightMat(vb->weightMat()); 
-		      }
-		      
-		      if (upmode.contains("FLAG"))
-			vi.setFlag (vb->flag());
-		      
-		    }
                 }
+		// ...else don't, prepare warning, and possibly set flags
                 else{
-                    uncalspw[spw] = true;
-                    if (! vi.isAsynchronous()){
 
-                        // Asynchronous I/O doesn't have a way to skip
-                        // VisBuffers, so only break out when not using
-                        // async i/o.
-
-                        break; // Only proceed if spw can be calibrated
-                    }
+		  // set uncalspw for warning message
+		  uncalspw[spw] = true;
+		  // set the flags, if we are being strict
+		  if (upmode.contains("STRICT"))
+		    // set the flags
+		    // (don't touch the data/weights, which are initialized)
+		    vb->flag().set(True);
                 }
+
+		// Only if not a trial run, trigger write to disk
+		if (!upmode.contains("TRIAL")) {
+		      
+		  if (upmode.contains("CAL")) {
+		    vi.setVis (vb->visCube(), whichOutCol);
+		    vi.setWeightMat(vb->weightMat()); 
+		  }
+		  
+		  if (upmode.contains("FLAG"))
+		    vi.setFlag (vb->flag());
+		  
+		}
+		
             }
         }
 
@@ -1105,7 +1109,8 @@ Calibrater::correct(String mode)
 
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct", 
+				     upmode.contains("STRICT"));
 
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
@@ -1313,8 +1318,6 @@ Bool Calibrater::initWeights() {
   logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
   Bool retval = true;
 
-  cout << "THIS IS USING VI2/VB2!!" << endl;
-
   try {
 
     if (!ok())
@@ -1352,7 +1355,6 @@ Bool Calibrater::initWeights() {
        Int spw = vb->spectralWindows()(0);
 
        Int nrow=vb->nRows();
-       Int nchan=vb->nChannels();
        Int ncor=vb->nCorrelations();
 
        // Detect ACs
@@ -1416,7 +1418,8 @@ Bool Calibrater::initWeights() {
 
 
 Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
-				     const String& origin)
+				     const String& origin,
+				     Bool strictflag)
 {
   Bool hadprob = false;
   uInt totNspw = uncalspw.nelements();
@@ -1436,9 +1439,13 @@ Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
       }
     }
     logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
-	      << "    in one or more of the specified tables.\n"
-	      << "    Please check your results carefully!"
-	      << LogIO::POST;
+	      << "    in one or more of the specified tables.\n";
+    if (strictflag)
+      logSink() << "    These spws have been flagged!";
+    else
+      logSink() << "    Please check your results carefully!";
+
+    logSink() << LogIO::POST;
   }
   return !hadprob;
 }

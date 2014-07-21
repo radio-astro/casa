@@ -82,7 +82,7 @@ public:
 	//Display a message.  For a GUI client, this may mean popping up a dialog;
 	//for a script client, this may mean writing the message to a log file or
 	//a web log.
-	virtual void showMessage(const String& message, const String& title);
+	virtual void showMessage(const String& message, const String& title, bool warning = false);
 
 
 	//Add a plot to those displayed.

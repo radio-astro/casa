@@ -53,10 +53,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Default constructor
 
   SIImageStoreMultiTerm();
-  SIImageStoreMultiTerm(String imagename, uInt ntaylorterms=1);
+  SIImageStoreMultiTerm(String imagename, uInt ntaylorterms=1, const Bool ignorefacets=False);
   SIImageStoreMultiTerm(String imagename, CoordinateSystem &imcoordsys, 
 			IPosition imshape, const int nfacets, 
 			const Bool overwrite=False, uInt ntaylorterms=1,Bool useweightimage=False);
+
+  /*
   SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
 			Block<CountedPtr<ImageInterface<Float> > >residims,
 			Block<CountedPtr<ImageInterface<Float> > >psfims, 
@@ -66,7 +68,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			CountedPtr<ImageInterface<Float> > newmask,
 			CountedPtr<ImageInterface<Float> > newalpha,
 			CountedPtr<ImageInterface<Float> > newbeta);
+  */
+
+ SIImageStoreMultiTerm(Block<CountedPtr<ImageInterface<Float> > >modelims, 
+			Block<CountedPtr<ImageInterface<Float> > >residims,
+			Block<CountedPtr<ImageInterface<Float> > >psfims, 
+			Block<CountedPtr<ImageInterface<Float> > >weightims, 
+			Block<CountedPtr<ImageInterface<Float> > >restoredims,
+			Block<CountedPtr<ImageInterface<Float> > >sumwtims, 
+			CountedPtr<ImageInterface<Float> > newmask,
+			CountedPtr<ImageInterface<Float> > newalpha,
+			CountedPtr<ImageInterface<Float> > newbeta,
+		       CoordinateSystem& csys, 
+		       IPosition imshape, 
+		       String imagename, 
+		       const Int facet=0, const Int nfacets=1,
+		       const Int chan=0, const Int nchanchunks=1,
+		       const Int pol=0, const Int npolchunks=1);
   
+  virtual void init();
+
   virtual ~SIImageStoreMultiTerm();
 
   virtual String getType(){return "multiterm";}
@@ -99,9 +120,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
 
+  /*
   Bool checkValidity(const Bool ipsf, const Bool iresidual, const Bool iweight, 
 		     const Bool imodel, const Bool irestored, const Bool imask=False, 
 		     const Bool isumwt=True, const Bool ialpha=False, const Bool ibeta=False);
+  */
 
   Bool releaseLocks();
 
@@ -109,14 +132,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   uInt getNTaylorTerms(Bool dopsf=False);  // {return dopsf ? (2*itsNTerms-1) : itsNTerms;};
 
+  void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
   GaussianBeam restorePlane();
   void pbcorPlane();
 
+  /*
   CountedPtr<SIImageStore> getFacetImageStore(const Int facet, const Int nfacets);
-  CountedPtr<SIImageStore> getSubImageStore(const Int chan, const Bool onechan, 
+  CountedPtr<SIImageStore> getSubImageStoreOld(const Int chan, const Bool onechan, 
 					    const Int pol, const Bool onepol);
+  */
+
+  CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
+					    const Int chan=0, const Int nchanchunks=1, 
+					    const Int pol=0, const Int npolchunks=1);
+  
 
   virtual Bool hasSensitivity(){return itsWeights.nelements()>0 && !itsWeights[0].null();}
+  virtual Bool hasModel() {return itsModels.nelements()>0 && !itsModels[0].null();}
+  virtual Bool hasPsf(){return itsPsfs.nelements()>0 && !itsPsfs[0].null();}
+  virtual Bool hasResidual() {return itsResiduals.nelements()>0 && !itsResiduals[0].null();}
+  virtual Bool hasSumWt() {return itsSumWts.nelements()>0 && !itsSumWts[0].null();}
+
+  //  virtual Bool getUseWeightImage();
+  //  {return ( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) ? False : getUseWeightImage( *(itsParentSumWts[0]) ); };
+
+  void calcSensitivity();
 
 protected:
 
@@ -129,6 +169,8 @@ private:
   Block<CountedPtr<ImageInterface<Float> > > itsPsfs, itsModels, itsResiduals, itsWeights, itsImages, itsSumWts;
   Block<CountedPtr<ImageInterface<Complex> > > itsForwardGrids, itsBackwardGrids;
   CountedPtr<ImageInterface<Float> > itsAlpha, itsBeta;
+
+  Block<CountedPtr<ImageInterface<Float> > > itsParentPsfs, itsParentModels, itsParentResiduals, itsParentWeights, itsParentImages, itsParentSumWts;
 
 };
 

@@ -26,7 +26,7 @@
 #ifndef BACKGROUNDTHREAD_H_
 #define BACKGROUNDTHREAD_H_
 
-#include <synthesis/MSVis/AsynchronousTools.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 
 namespace casa {
 

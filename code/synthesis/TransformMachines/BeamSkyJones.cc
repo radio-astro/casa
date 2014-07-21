@@ -45,7 +45,7 @@
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/PBMath.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>

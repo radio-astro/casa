@@ -62,6 +62,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgress.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <images/Images/ImageStatistics.h>
@@ -235,7 +236,7 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		momentAxis_p == _image->coordinates().spectralAxisNumber()
 		&& _image->imageInfo().hasMultipleBeams()
 	) {
-		GaussianBeam maxBeam = _image->imageInfo().getBeamSet().getCommonBeam();
+		GaussianBeam maxBeam = CasaImageBeamSet(_image->imageInfo().getBeamSet()).getCommonBeam();
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
@@ -257,8 +258,6 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 	}
 	worldMomentAxis_p = _image->coordinates().pixelAxisToWorldAxis(momentAxis_p);
 }
-
-
 
 template <class T>
 Bool ImageMoments<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,

@@ -4,7 +4,7 @@ import time
 import unittest
 import testhelper as th
 import partitionhelper as ph
-from tasks import *
+from tasks import partition, flagdata, flagmanager, split, setjy, listpartition
 from taskinit import msmdtool, mstool, aftool, tbtool
 from __main__ import default
 from parallel.parallel_task_helper import ParallelTaskHelper
@@ -171,7 +171,7 @@ class partition_test1(test_base):
     def test_scan_selection(self):
         '''Partition: create an MMS using scan selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11',
-                  flagbackup=False, parallel=False)
+                  flagbackup=False, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -200,7 +200,7 @@ class partition_test1(test_base):
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
         #       IDs, therefore I need to selection by obs id in partition
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2',
-                  flagbackup=False, parallel=False)
+                  flagbackup=False, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -231,7 +231,7 @@ class partition_test1(test_base):
     def test_spw_selection(self):
         '''Partition: create an MMS separated by spws with spw=2,4 selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4',
-                  flagbackup=False, parallel=False)
+                  flagbackup=False, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -277,7 +277,7 @@ class partition_test1(test_base):
         
         # Now create an MMS from it. The SOURCE_MODEL column should be there too
         partition(vis=inpms,outputvis=self.mmsfile, observation='1',spw='1',
-                  scan='1,2,3', parallel=False, flagbackup=False)  
+                  scan='1,2,3', disableparallel=True, flagbackup=False)  
 
         print 'Check the SOURCE_MODEL columns....'
         mytb = tbtool()
@@ -380,10 +380,14 @@ class partition_test2(test_base):
 
         # Compare the DATA column
         self.assertTrue(th.compVarColTables('ms_sorted.ms', 'mms_sorted.ms','DATA'))
-
+        
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'scan,spw', 'Partition did not write AxisType correctly in MMS')
+        
     def test_default_sequential(self):
         '''Partition: create an MMS with default values in sequential'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -405,6 +409,11 @@ class partition_test2(test_base):
             ms_spw = ph.getSpwIds(self.msfile, s)
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
+            
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'scan,spw', 'Partition did not write AxisType correctly in MMS')
+
 
         # Sort the output MSs so that they can be compared
 #         myms = mstool()
@@ -428,10 +437,10 @@ class partition_test2(test_base):
     # create the MMS. It does not fail in partition, but in the ms.getscansummary()
     # methods. Check this soon
     def test_sepaxis(self):
-        '''Partition: separationaxis=both'''        
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='both',
-                  flagbackup=False, parallel=False)
-#        partition(vis=self.msfile, outputvis=self.mmsfile,separationaxis='both')
+        '''Partition: separationaxis=auto'''        
+        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='auto',
+                  flagbackup=False, disableparallel=True)
+#        partition(vis=self.msfile, outputvis=self.mmsfile,separationaxis='auto')
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
 
@@ -459,11 +468,14 @@ class partition_test2(test_base):
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'scan,spw', 'Partition did not write AxisType correctly in MMS')
         
     def test_all_columns(self):
         '''Partition: datacolumn=all'''
         partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all',
-                  flagbackup=False, parallel=False)
+                  flagbackup=False, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -492,6 +504,7 @@ class partition_test2(test_base):
                   spw='1~4,10,11', flagbackup=False)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        self.assertTrue(os.path.exists(self.msfile),'Make sure the input MS is not deleted inside the task')
         
         # Take the dictionary and compare with original MS
         thisdict = listpartition(vis=self.mmsfile, createdict=True)
@@ -515,13 +528,16 @@ class partition_test2(test_base):
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
             self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+            
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'scan', 'Partition did not write AxisType correctly in MMS')
  
-        
     def test_numsubms(self):
         '''Partition: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
-                  numsubms=6, flagbackup=False, parallel=False)
+                  numsubms=6, flagbackup=False, disableparallel=True)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -549,13 +565,17 @@ class partition_test2(test_base):
                 setlist.add(a)
 
         self.assertEqual(list(setlist), spwlist)
+
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'spw', 'Partition did not write AxisType correctly in MMS')
         
     def test_flagversions(self):
         '''Partition: check that the .flagversions is created'''
                 
         # Run partition and create the .flagversions
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  parallel=False)
+                  disableparallel=True)
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
  
          # Check that the number of backups in MMS is correct
@@ -586,7 +606,7 @@ class partition_test2(test_base):
         
         # Run partition and create the .flagversions
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  parallel=False)
+                  disableparallel=True)
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
         
         # Flag spw=9 and then spw=7 in the MMS
@@ -605,7 +625,7 @@ class partition_test2(test_base):
     def test_channels1(self):
         '''partition: create MMS with spw separation and channel selections'''
         partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~4,5:1~10',createmms=True,
-                    separationaxis='spw', parallel=False, flagbackup=False)
+                    separationaxis='spw', disableparallel=True, flagbackup=False)
                             
         self.assertTrue(os.path.exists(self.mmsfile))
         
@@ -617,7 +637,7 @@ class partition_test2(test_base):
     def test_channels2(self):
         '''partition: create MMS with spw/scan separation and channel selections'''
         partition(vis=self.msfile, outputvis=self.mmsfile, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='both', parallel=False, flagbackup=False)
+                    separationaxis='auto', disableparallel=True, flagbackup=False)
                             
         self.assertTrue(os.path.exists(self.mmsfile))
         
@@ -639,6 +659,10 @@ class partition_test2(test_base):
         ret = th.verifyMS(self.mmsfile, 7, 10, 1, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])
 
+        # The separation axis should be written to the output MMS
+        sepaxis = ph.axisType(self.mmsfile)
+        self.assertEqual(sepaxis, 'spw', 'Partition did not write AxisType correctly in MMS')
+
 class partition_float(test_base):
     def setUp(self):
         self.setUp_floatcol()
@@ -650,7 +674,7 @@ class partition_float(test_base):
     def test_split_float(self):
         '''partition: split an MS with FLOAT_DATA'''
         partition(vis=self.msfile, outputvis=self.mmsfile,spw='1,3,5',
-                  createmms=False,datacolumn='FLOAT_DATA', parallel=False,flagbackup=False)
+                  createmms=False,datacolumn='FLOAT_DATA', disableparallel=True,flagbackup=False)
         
         ret = th.verifyMS(self.mmsfile, 3, 512, 0, [], ignoreflags=True)
         self.assertTrue(ret[0],ret[1])
@@ -662,7 +686,7 @@ class partition_float(test_base):
     def test_mms_float(self):
         '''partition: '''
         partition(vis=self.msfile, outputvis=self.mmsfile,spw='1,3,5',
-                  datacolumn='FLOAT_DATA', parallel=False,flagbackup=False)
+                  datacolumn='FLOAT_DATA', disableparallel=True,flagbackup=False)
         
         ret = th.verifyMS(self.mmsfile, 3, 512, 0, [], ignoreflags=True)
         self.assertTrue(ret[0],ret[1])

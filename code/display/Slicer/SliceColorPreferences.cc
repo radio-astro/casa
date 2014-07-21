@@ -23,6 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "SliceColorPreferences.qo.h"
+#include <display/QtPlotter/ColorSummaryDelegate.h>
 #include <QColorDialog>
 #include <QMessageBox>
 #include <QDebug>
@@ -47,6 +48,7 @@ namespace casa {
 		                    "#A52A2A" << "#808080" << "#FF6347" << "#FFFF00";
 		ui.accumulatedColorList->setSelectionBehavior(QAbstractItemView::SelectRows);
 		ui.accumulatedColorList->setSelectionMode( QAbstractItemView::SingleSelection );
+		ui.accumulatedColorList->setItemDelegate( new ColorSummaryDelegate( this ));
 
 		polylineUnit = true;
 		colorUnits << POLYGONAL_CHAIN << LINE_SEGMENT;
@@ -73,6 +75,7 @@ namespace casa {
 		ui.colorUnitComboBox->setEnabled( !viewerColors );
 		ui.addButton->setEnabled( !viewerColors );
 		ui.deleteButton->setEnabled( !viewerColors );
+		ui.accumulatedColorList->setEnabled( !viewerColors );
 	}
 
 	bool SliceColorPreferences::isViewerColors() const {

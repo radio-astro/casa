@@ -27,7 +27,7 @@
 #include <display/Slicer/SliceStatistics.h>
 #include <display/Slicer/SegmentTracer.h>
 #include <QtCore/qmath.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>

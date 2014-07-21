@@ -864,7 +864,7 @@ class specfit_test(unittest.TestCase):
                         for multifit in [True, False]:
                             res = code(
                                 imagename=imagename, box="", region="", chans="",
-                                stokes="", axis=2, mask=imagename + "<1000", ngauss=2, poly=-1,
+                                stokes="", axis=2, mask="'" + imagename + "'<1000", ngauss=2, poly=-1,
                                 multifit=multifit, logresults=False, sigma=sig,
                                 outsigma=outsigma
                             )

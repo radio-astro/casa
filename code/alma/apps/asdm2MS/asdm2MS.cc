@@ -2351,7 +2351,11 @@ void v2oss(std::vector<T> v,
   oss << cChar;
 }
 
-void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   selected_eb_scan_m, const casa::MeasurementSet*  tab_p) {
+void fillMainLazily(const string& dsName,
+		    ASDM*  ds_p,
+		    map<int, set<int> >&   selected_eb_scan_m,
+		    const casa::MeasurementSet*  tab_p,
+		    std::map<unsigned int, double>& effectiveBwPerDD_m) {
   ostringstream oss;
 
   LOGENTER("fillMainLazily");
@@ -2392,6 +2396,7 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
   
   // Initialize an UVW coordinates engine.
   UvwCoords uvwCoords(ds_p);
+
 
   //
   // Some informations
@@ -2564,6 +2569,9 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<double> >        timeCentroid_vv(dataDescriptionIds.size());	// Column TIME_CENTROID
 	vector<vector<pair<int, int> > >    nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
 	vector<vector<double> >        uvw_vv(dataDescriptionIds.size());       // Column UVW
+	vector<vector<double> >        weight_vv(dataDescriptionIds.size());    // Column WEIGHT
+	vector<vector<double> >        sigma_vv(dataDescriptionIds.size());     // Column SIGMA
+
 	//
 	// Everything is contained in *one* SDMDataSubset.
 	//
@@ -2580,6 +2588,14 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	  //
 	  pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
 							numberOfPolarizations_v[iDD]);
+
+	  //
+	  // Compute weight and sigma which depend on the data description id and on the interval
+	  //
+	  double	weight = 1.0 * effectiveBwPerDD_m[dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()]] * interval;
+	  weight	       = (weight == 0.0) ? 1.0 : weight;
+	  double	sigma  = 1./sqrt(weight);
+
 	  for (unsigned int itime = 0; itime < sdosr.numTime(); itime++) {
 	    for (unsigned int iA = 0; iA < antennaIds.size(); iA++) {
 	      antenna1_vv[iDD].push_back(antennaIds[iA].getTagValue());
@@ -2595,6 +2611,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	      timeCentroid_vv[iDD].push_back(time_vv[iDD].back());
 	      nChanNPol_vv[iDD].push_back(nChanNPol);
 	      uvw_vv[iDD].push_back(0.0);uvw_vv[iDD].push_back(0.0);uvw_vv[iDD].push_back(0.0);
+	      weight_vv[iDD].push_back(weight);
+	      sigma_vv[iDD].push_back(sigma);
 	    }
 	    bdf2AsdmStManIndex.appendWVRIndex(iDD,
 					      bdfNames[iRow],
@@ -2632,7 +2650,9 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					     observationId,
 					     stateId_vv[iDD],
 					     nChanNPol_vv[iDD],
-					     uvw_vv[iDD]);
+					     uvw_vv[iDD],
+					     weight_vv[iDD],
+					     sigma_vv[iDD]);
 	}
       }
 
@@ -2643,6 +2663,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	//
 	// We use vectors of vectors in order to be able to build separate vectors for different data description
 	// and then output these vectors in the appropriate order.
+	//
+	// The cross correlation chapter.
 	//
 	vector<vector<int> >     cross_antenna1_vv(dataDescriptionIds.size());      // Column ANTENNA1 per Data Description
 	vector<vector<int> >     cross_antenna2_vv(dataDescriptionIds.size());      // Column ANTENNA2 per Data Description
@@ -2656,8 +2678,11 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<int> >     cross_stateId_vv(dataDescriptionIds.size());       // Column STATE_ID per Data Description
 	vector<vector<double> >  cross_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
 	vector<vector<pair<int, int> > >    cross_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
-	vector<vector<double> >  cross_uvw_vv(dataDescriptionIds.size());          // Column UVW
+	vector<vector<double> >  cross_uvw_vv(dataDescriptionIds.size());           // Column UVW
+	vector<vector<double> >  cross_weight_vv(dataDescriptionIds.size());        // Column WEIGHT
+	vector<vector<double> >  cross_sigma_vv(dataDescriptionIds.size());         // Column SIGMA
 
+	// The auto correlation chapter.
 	vector<vector<int> >     auto_antenna1_vv(dataDescriptionIds.size());      // Column ANTENNA1 per Data Description
 	vector<vector<int> >     auto_antenna2_vv(dataDescriptionIds.size());      // Column ANTENNA2 per Data Description
 	vector<vector<int> >     auto_dataDescId_vv(dataDescriptionIds.size());    // Column DATA_DESC_ID per Data Description
@@ -2671,6 +2696,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	vector<vector<double> >  auto_timeCentroid_vv(dataDescriptionIds.size());  // Column TIME_CENTROID per Data Description
 	vector<vector<pair<int, int> > >    auto_nChanNPol_vv(dataDescriptionIds.size());  // numChan , numPol information 
 	vector<vector<double> >  auto_uvw_vv(dataDescriptionIds.size());           // Column UVW
+	vector<vector<double> >  auto_weight_vv(dataDescriptionIds.size());           // Column WEIGHT
+	vector<vector<double> >  auto_sigma_vv(dataDescriptionIds.size());            // Column SIGMA
 	
 	//
 	// Traverse all the integrations.
@@ -2719,6 +2746,12 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	      //
 	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
 							    numberOfPolarizations_v[iDD]);
+	      //
+	      // Compute weight and sigma which depend on interval and iDD.
+	      //
+	      double weight = 2.0*interval*effectiveBwPerDD_m[dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()]];
+	      weight = (weight == 0.0) ? 1.0 : weight;
+	      double sigma = 1.0 / sqrt (weight);
 
 	      for (unsigned int iA2 = 1; iA2 < antennaIds.size(); iA2++)
 		for (unsigned int iA1 = 0; iA1 < iA2; iA1++) {
@@ -2738,6 +2771,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		  cross_uvw_vv[iDD].push_back(vv_uvw[uvwIndex](1));
 		  cross_uvw_vv[iDD].push_back(vv_uvw[uvwIndex](2));
 		  uvwIndex += dataDescriptionIds.size();
+		  cross_weight_vv[iDD].push_back(weight);
+		  cross_sigma_vv[iDD].push_back(sigma);
 		}
 	      
 	      bdf2AsdmStManIndex.appendCrossIndex(iDD,
@@ -2767,6 +2802,13 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
 							    numberOfPolarizations_v[iDD]);
 
+	      //
+	      // Compute weight and sigma which depend on interval and iDD.
+	      //
+	      double weight = 1.0*interval*effectiveBwPerDD_m[dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()]];
+	      weight = (weight == 0.0) ? 1.0 : weight;
+	      double sigma = 1.0 / sqrt (weight);
+
 	      unsigned int ddIndex = dataDescriptionIdx2Idx[dataDescriptionIds[iDD].getTagValue()];
 	      for (unsigned int iA = 0; iA < antennaIds.size(); iA++) {
 		auto_antenna1_vv[iDD].push_back(antennaIds[iA].getTagValue());
@@ -2782,6 +2824,8 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 		auto_timeCentroid_vv[iDD].push_back(time);
 		auto_nChanNPol_vv[iDD].push_back(nChanNPol);
 		auto_uvw_vv[iDD].push_back(0.0);auto_uvw_vv[iDD].push_back(0.0);auto_uvw_vv[iDD].push_back(0.0);
+		auto_weight_vv[iDD].push_back(weight);
+		auto_sigma_vv[iDD].push_back(sigma);		
 	      }
 
 	      bdf2AsdmStManIndex.appendAutoIndex(iDD,
@@ -2823,7 +2867,9 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					       observationId,
 					       auto_stateId_vv[iDD],
 					       auto_nChanNPol_vv[iDD],
-					       auto_uvw_vv[iDD]);
+					       auto_uvw_vv[iDD],
+					       auto_weight_vv[iDD],
+					       auto_sigma_vv[iDD]);
 	  if ( correlationMode == CROSS_AND_AUTO || correlationMode == CROSS_ONLY ) 
 	    msFillers[AP_UNCORRECTED]->addData(true,             // Yes ! these are complex data.
 					       cross_time_vv[iDD],
@@ -2842,7 +2888,9 @@ void fillMainLazily(const string& dsName, ASDM*  ds_p, map<int, set<int> >&   se
 					       observationId,
 					       cross_stateId_vv[iDD],
 					       cross_nChanNPol_vv[iDD],
-					       cross_uvw_vv[iDD]);      
+					       cross_uvw_vv[iDD],
+					       cross_weight_vv[iDD],
+					       cross_sigma_vv[iDD]);      
 	}
       }
       else 
@@ -2991,7 +3039,7 @@ void fillMain(int		rowNum,
     }
   }
 	    
-  // Do we have to fill an MS with corrected data + radiometric data ( again considered as uncorrected data) ?
+  // Have we asked to write an MS with corrected data + radiometric data ?
   if (msFillers.find(AP_CORRECTED) != msFillers.end() ) {
 
     // Are we with radiometric data ? Then we assume that the data are labelled AP_UNCORRECTED.
@@ -3019,60 +3067,67 @@ void fillMain(int		rowNum,
       }
     }
     
-    else {
-      // we are in front of non radiometric data , but data supposedly with AP_CORRECTED data.
-      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
-	if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
-	  /*
-	  ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
-	  ** corrected data.
-	  */
-	  correctedTime.push_back(vmsData_p->v_time.at(iData));
-	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	  correctedFilteredDD.push_back(filteredDD.at(iData));
-	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	  correctedUvw.push_back(vv_uvw.at(iData)(0));
-	  correctedUvw.push_back(vv_uvw.at(iData)(1));
-	  correctedUvw.push_back(vv_uvw.at(iData)(2));
-	  correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
-	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
-	}
-	else {
-	  /*
-	  ** And now finally the correlation corrected data.
-	  */
-	  correctedTime.push_back(vmsData_p->v_time.at(iData));
-	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	  correctedFilteredDD.push_back(filteredDD.at(iData));
-	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	  correctedUvw.push_back(vv_uvw.at(iData)(0));
-	  correctedUvw.push_back(vv_uvw.at(iData)(1));
-	  correctedUvw.push_back(vv_uvw.at(iData)(2));
-	  iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
-	  float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-				      vmsData_p->vv_dataShape.at(iData).at(1),
-				      iter->second);
-	  correctedData.push_back(theData);
-	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+    else {  // We assume that we are in front of CORRELATOR data, but do we have uncorrected data on that specific subscan ?
+      Tag configDescriptionId = r_p -> getConfigDescriptionId();
+      ConfigDescriptionTable & cfgDescT = r_p -> getTable() . getContainer() . getConfigDescription();
+      ConfigDescriptionRow * cfgDescR_p = cfgDescT.getRowByKey(configDescriptionId);
+      const vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >& apc_v = cfgDescR_p->getAtmPhaseCorrection();
+      bool subscanHasCorrectedData = std::find(apc_v.begin(), apc_v.end(), AtmPhaseCorrectionMod::AP_CORRECTED)!=apc_v.end();
+      if (subscanHasCorrectedData) {
+	// Then we know that we have  AP_CORRECTED data.
+	for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
+	  if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
+	    /*
+	    ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
+	    ** corrected data.
+	    */
+	    correctedTime.push_back(vmsData_p->v_time.at(iData));
+	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	    correctedFilteredDD.push_back(filteredDD.at(iData));
+	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	    correctedUvw.push_back(vv_uvw.at(iData)(0));
+	    correctedUvw.push_back(vv_uvw.at(iData)(1));
+	    correctedUvw.push_back(vv_uvw.at(iData)(2));
+	    correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
+	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
+	  }
+	  else {
+	    /*
+	    ** And now finally the correlation corrected data.
+	    */
+	    correctedTime.push_back(vmsData_p->v_time.at(iData));
+	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	    correctedFilteredDD.push_back(filteredDD.at(iData));
+	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	    correctedUvw.push_back(vv_uvw.at(iData)(0));
+	    correctedUvw.push_back(vv_uvw.at(iData)(1));
+	    correctedUvw.push_back(vv_uvw.at(iData)(2));
+	    iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
+	    float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					vmsData_p->vv_dataShape.at(iData).at(1),
+					iter->second);
+	    correctedData.push_back(theData);
+	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+	  }
 	}
       }
     }
   }
 	  
   if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
-    if (! mute) {
+    if (! mute) { // Here we make the assumption that we have always uncorrected data. This realistic even if not totally rigorous.
       msFillers[AP_UNCORRECTED]->addData(complexData,
 					 (vector<double>&) vmsData_p->v_time, // this is already time midpoint
 					 (vector<int>&) vmsData_p->v_antennaId1,
@@ -5871,7 +5926,7 @@ int main(int argc, char *argv[]) {
   // And then finally process the state and the main table.
   //
   if (lazy) {
-    fillMainLazily(dsName, ds, selected_eb_scan_m, msFillers.begin()->second->ms());
+    fillMainLazily(dsName, ds, selected_eb_scan_m, msFillers.begin()->second->ms(),effectiveBwPerDD_m);
   }
   else {
     const MainTable& mainT = ds->getMain();
@@ -5947,41 +6002,21 @@ int main(int argc, char *argv[]) {
 	    continue;
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
-
-          if (doparallel) {
-            // //vector< casa::Vector<casa::Double> > vv_uvw;
-            // casa::Matrix<casa::Double> mat_uvw; // put in matrix
-            // int ispw = 0;
-            // int nspw = SwIds.size();
-            // calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
-            // Bool deleteit;
-            // casa::Double* puvw = mat_uvw.getStorage(deleteit); 
-            
-            // @pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
-            // //@pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller)
-            // {
-            // @pragma omp for ordered
-	    //   for (ispw = 0; ispw < nspw; ispw++) { 
-	    // 	//fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
-	    // 	fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
-	    //   }
-            // }
-          }//end of doparallel
-          else {
-	    fillMain(i,
-		     v[i],
-		     sdmBinData,
-		     vmsDataPtr,
-		     uvwCoords,
-		     effectiveBwPerDD_m,
-		     complexData,
-		     mute);
-          }
+	   
+	  fillMain(i,
+		   v[i],
+		   sdmBinData,
+		   vmsDataPtr,
+		   uvwCoords,
+		   effectiveBwPerDD_m,
+		   complexData,
+		   mute);
+          
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
 	  info(infostream.str());
 	}
-	else {
+	else { // Assume we are in front of a Correlator.
 	  // Open its associate BDF.
 
 	  sdmBinData.openMainRow(v[i]);
@@ -5995,7 +6030,7 @@ int main(int argc, char *argv[]) {
 	  
 	  // For each slice of the BDF with a size approx equal to the required size
 	  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
-	    numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
+	    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF. 
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);

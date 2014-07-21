@@ -43,11 +43,17 @@ void ExportThread::setPlots( vector<PlotMSPlot*> plots ){
 bool ExportThread::doWork(){
 	bool result = true;
 	int count = exportPlots.size();
-	//for ( int i = 0; i < count; i++ ){
 	if ( count > 0 ){
-		result = exportPlots[0]->exportToFormat( format );
+		PlotMSPlot* exportPlot = exportPlots[0];
+		//If we can find an iteration plot, we want to export it instead since it
+		//may extend to more than one page.
+		for ( int i = 0; i < count; i++ ){
+			if ( exportPlots[i]->isIteration() ){
+				exportPlot = exportPlots[i];
+			}
+		}
+		result = exportPlot->exportToFormat( format );
 	}
-	//}
 	return result;
 }
 

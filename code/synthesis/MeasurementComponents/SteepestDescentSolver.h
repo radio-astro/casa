@@ -35,7 +35,7 @@
 #include <synthesis/MeasurementEquations/VisEquation.h>
 #include <synthesis/MeasurementEquations/Iterate.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/OS/Timer.h>
 

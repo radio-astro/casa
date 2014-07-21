@@ -77,6 +77,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </notequals>
             </when>
+            <when param="outfile">
+                <notequals type="string" value="">
+                    <default param="overwrite">
+                        <value>False</value>
+                    </default>
+                </notequals>
+            </when>
         </constraints>
     </input>
     <returns type="image"/>

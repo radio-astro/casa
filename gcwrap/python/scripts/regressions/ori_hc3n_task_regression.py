@@ -85,14 +85,10 @@ default(sdcal)
 infile = 'OrionS_rawACSmod'
 fluxunit = 'K' 
 calmode = 'ps'
-#scanlist = [20,21,22,23]
-scanlist = [21,22,23,24]
-iflist = [0]
-scanaverage = False
-timeaverage = True # average in time
-tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
-polaverage = True  # average polarization
-pweight = 'tsys'   # weighted by Tsys for pol. averaging 
+#scanlist = [21,22,23,24]
+scan = '21~24'
+#iflist = [0]
+spw = '0'
 tau = 0.09         # do opacity correction 
 overwrite = True
 plotlevel = localplotlevel  
@@ -100,16 +96,26 @@ sdcal()
 # output
 localoutfile = infile+'_cal'
 
+
+#  averaging and smoothing
+default(sdaverage)
+infile = localoutfile
+#averaging
+# do time and polarization average
+timeaverage = True # average in time
+tweight = 'tintsys' # weighted by integ time and Tsys for time averaging
+scanaverage = False
+polaverage = True  # average polarization
+pweight = 'tsys'   # weighted by Tsys for pol. averaging 
 #smoothing
 # do boxcar smoothing with channel width=5
-default(sdsmooth)
-infile = localoutfile
 kernel = 'boxcar'
 kwidth = 5
+
 overwrite = True
 plotlevel = localplotlevel
-sdsmooth()
-localoutfile = infile+'_sm'
+sdaverage()
+localoutfile = infile+'_ave'
 
 #fit and remove baselines
 # do baseline fit with polynomial order of 2
@@ -145,14 +151,16 @@ else:
 default(sdstat)
 # select line free regions to get rms
 infile = localoutfile
-masklist = [5000,7000]
+#masklist = [5000,7000]
+spw = '*:5000~7000'
 xstat = sdstat()
 curr_rms = xstat['rms']
 #rms= 0.04910755529999733
 #rms= 0.049121532589197159 [CASA 2.3(#6654)+ASAP 2.2.0(#1448)]
 #
 # select the line region
-masklist = [3900,4200]
+#masklist = [3900,4200]
+spw = '*:3900~4200'
 xstat = sdstat()
 xstat
 #{'eqw': 70.905397021125211,
@@ -181,7 +189,8 @@ default(sdfit)
 infile = localoutfile
 #sd.plotter.plot(spave)			# plot spectrum
 fitmode = 'list'
-maskline = [3928,4255]	# create region around line			# gregion,[4000,4200]
+#maskline = [3928,4255]	# create region around line			# gregion,[4000,4200]
+spw = '*:3928~4255'	# create region around line			# gregion,[4000,4200]
 nfit = 1
 plotlevel = localplotlevel
 outfile = 'orions_hc3n_fit.txt'
@@ -209,6 +218,7 @@ overwrite = True
 sdsave()
 outfile = 'orions_hc3n_reduced.ms'
 outform = 'MS2'
+sdsave()
 
 endProc = time.clock()
 endTime = time.time()

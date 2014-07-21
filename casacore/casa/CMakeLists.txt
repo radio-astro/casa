@@ -419,8 +419,6 @@ IO/MMapfdIO.h
 IO/MMapIO.h
 IO/RawIO.h
 IO/RegularFileIO.h
-IO/STLIO.h
-IO/STLIO.tcc
 IO/StreamIO.h
 IO/TapeIO.h
 IO/TypeIO.h
@@ -505,6 +503,8 @@ Quanta/QMath.h
 Quanta/QMath.tcc
 Quanta/Quantum.h
 Quanta/Quantum.tcc
+Quanta/QVector.h
+Quanta/QVector.tcc
 Quanta/QuantumHolder.h
 Quanta/QuantumType.h
 Quanta/RotMatrix.h

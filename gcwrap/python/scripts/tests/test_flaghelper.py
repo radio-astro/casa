@@ -6,6 +6,7 @@ import pprint
 import exceptions
 import flaghelper as fh
 from taskinit import qa
+from OrderedDictionary import OrderedDict
 
 #
 # Test of flaghelper.py
@@ -257,6 +258,134 @@ class test_flaghelper(test_base):
         self.assertEqual(adict[3]['command']['timerange'], '2013/11/15/10:25:30.516~2013/11/15/10:25:32.454')
         self.assertEqual(adict[2]['command']['antenna'], 'DV04 &&*')
             
+    def test_parseNoEval1(self):
+        '''flaghelper: CAS-6553 parse and evaluate a string with double whitespaces'''
         
+        # Dividers for string 
+        first = ' '
+        second = '='
+        reference = OrderedDict([('mode', 'extend'), ('antenna', 'ea24'), ('flagnearfreq', True)])
+        
+        # cmd with whitespace between pairs
+        cmd = "mode='extend' antenna='ea24'  flagnearfreq=True" 
+        myparser = fh.Parser(first,second)
+        
+        res = myparser.parseNoEval(cmd)
+        
+        # evaluate parameters to fix single quote left dangling
+        resdict = fh.evaluateParameters(res)
+        
+        self.assertDictEqual(reference, resdict, 'Failed to parserNoEval() with whitespaces between pairs')
+
+    def test_parseNoEval2(self):
+        '''flaghelper: CAS-6553 parse and evaluate a string with whitespaces'''
+        
+        # Dividers for string 
+        first = ' '
+        second = '='
+        reference = OrderedDict([('mode', "extend"), ('antenna', 'ea24'), ('flagnearfreq', True)])
+        
+        # cmd with whitespace between pairs and at the end
+        cmd = "mode='extend' antenna='ea24 '  flagnearfreq=True" 
+        myparser = fh.Parser(first,second)
+        
+        # test parseNoEval()
+        res = myparser.parseNoEval(cmd)
+        
+        # evaluate parameters to fix single quote
+        resdict = fh.evaluateParameters(res)
+        self.assertDictEqual(reference, resdict, 'Failed to parserNoEval() with whitespaces in value')
+
+    def test_parseNoEval3(self):
+        '''flaghelper: CAS-6553 parse and evaluate a string with whitespaces'''
+        
+        # Dividers for string 
+        first = ' '
+        second = '='
+        reference = OrderedDict([('mode', "tfcrop"), ('antenna', 'ea24')])
+        
+        # cmd with whitespace in the begin and end
+        cmd = " mode='tfcrop' antenna='ea24' "
+        myparser = fh.Parser(first,second)
+        
+        res = myparser.parseNoEval(cmd)
+        
+        # evaluate parameters to fix single quote left dangling
+        resdict = fh.evaluateParameters(res)
+        self.assertDictEqual(reference, resdict, 'Failed to parserNoEval() with whitespaces at begin and end')
+
+    def test_evaluateParameters1(self):
+        '''flaghelper: parse and evaluate a string with a many extra whitespaces'''
+        
+        # Dividers for string 
+        first = ' '
+        second = '='
+        reference = OrderedDict([('mode', "manual"), ('antenna', 'ea24'), ('spw', '0'), ('reason', 'MY WHITESPACES')])
+        print reference
+        
+        # cmd with single quote inside a string
+        cmd = " mode='manual'   antenna='ea24'      spw='0'   reason='MY WHITESPACES'"
+        myparser = fh.Parser(first,second)
+        
+        res = myparser.parseNoEval(cmd)
+        
+        # evaluate parameters to fix single quote 
+        resdict = fh.evaluateParameters(res)
+        print resdict
+        self.assertDictEqual(reference, resdict, 'Failed to evaluateParameters with many whitespaces')
+
+
+    @unittest.skip('CAS-6553 breaks this use-case.')
+    def test_evaluateParameters2(self):
+        '''flaghelper: parse and evaluate a string with a single quote inside'''
+        
+        # Dividers for string 
+        first = ' '
+        second = '='
+        reference = OrderedDict([('mode', "manual"), ('field', "It A'int a Field")])
+        
+        # cmd with single quote inside a string
+        cmd = "mode='manual' field='It A'int a Field'"
+        myparser = fh.Parser(first,second)
+        
+        res = myparser.parseNoEval(cmd)
+        
+        # evaluate parameters to fix single quote 
+        resdict = fh.evaluateParameters(res)
+        self.assertDictEqual(reference, resdict, 'Failed to evaluateParameters with single quote in value')
+       
+#     def test_parse2List(self):
+#         '''flaghelper: test the Parser class'''
+#         
+#         # Dividers for string 
+#         first = ' '
+#         second = '='
+#         cmdlist = [" mode='tfcrop' antenna='ea24' ", " mode='extend' antenna='ea24'  flagnearfreq=True " ]
+#         reference = ["mode='tfcrop' antenna='ea24'", "mode='extend' antenna='ea24' flagnearfreq=True"]
+#         
+#         # cmd with whitespace between pairs and at the end
+#         myparser = fh.Parser(first,second)
+#         
+#         ii = 0
+#         for cmd in cmdlist:
+#             res = myparser.parse2List(cmd)
+#             print res
+# #            self.assertListEqual(reference[ii], res, 'Failed to parser2List() with whitespaces everywhere')
+# #            ii = ii+1
+        
+
+
 def suite():
     return [test_flaghelper]
+
+
+
+
+
+
+
+
+
+
+
+

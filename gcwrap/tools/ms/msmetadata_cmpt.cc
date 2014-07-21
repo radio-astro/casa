@@ -33,7 +33,7 @@
 #include <tools/ms/msmetadata_forward.h>
 
 #include <casa/Containers/Record.h>
-#include <casa/IO/STLIO.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
@@ -123,8 +123,8 @@ vector<int> msmetadata::almaspws(
 	return vector<int>();
 }
 
-vector<casa::String> msmetadata::_vectorStdStringToVectorString(
-	const vector<std::string>& inset
+vector<String> msmetadata::_vectorStdStringToVectorString(
+	const vector<string>& inset
 ) {
 	vector<String> outset;
 	foreach_(string el, inset) {
@@ -666,6 +666,34 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 	return 0;
 }
 
+variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
+	_FUNC(
+		if (asnames) {
+			std::map<Int COMMA std::set<String> > res = _msmd->getFieldNamesForSourceMap();
+			if (res.find(sourceID) == res.end()) {
+				return new variant(vector<string>());
+			}
+			else {
+				return new variant(
+					_setStringToVectorString(res[sourceID])
+				);
+			}
+		}
+		else {
+			std::map<Int COMMA std::set<Int> > res = _msmd->getFieldsForSourceMap();
+			if (res.find(sourceID) == res.end()) {
+				return new variant(vector<int>());
+			}
+			else {
+				return new variant(
+					_setIntToVectorInt(res[sourceID])
+				);
+			}
+		}
+	)
+	return 0;
+}
+
 variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 	_FUNC(
 		_checkSpwId(spw, True);
@@ -771,6 +799,48 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 		return _vectorStringToStdVectorString(
 			_msmd->getFieldNamesForFieldIDs(fieldIDs)
 		);
+	)
+	return vector<string>();
+}
+
+
+vector<string> msmetadata::namesforspws(const variant& spwids) {
+	_FUNC(
+		variant::TYPE myType = spwids.type();
+		vector<uInt> spwIDs;
+		if (myType == variant::INT) {
+			Int id = spwids.toInt();
+			ThrowIf(id < 0, "Field ID must be nonnegative.");
+			spwIDs.push_back(id);
+		}
+		else if (myType == variant::INTVEC) {
+			vector<Int> kk = spwids.toIntVec();
+			ThrowIf(
+				min(Vector<Int>(kk)) < 0,
+				"All field IDs must be nonnegative."
+			);
+			spwIDs = _vectorIntToVectorUInt(kk);
+		}
+		else if (
+			(myType == variant::STRING && spwids.toString().empty())
+			|| myType == variant::BOOLVEC
+		) {
+			return _vectorStringToStdVectorString(
+				_msmd->getSpwNames()
+			);
+		}
+		else if (spwids.size() != 0) {
+			ThrowCc(
+				"Unsupported type for spwids. It must be a "
+				"nonnegative integer or nonnegative integer array"
+			);
+		}
+		vector<String> allNames = _msmd->getSpwNames();
+		vector<String> names;
+		foreach_(uInt i, spwIDs) {
+			names.push_back(allNames[i]);
+		}
+		return _vectorStringToStdVectorString(names);
 	)
 	return vector<string>();
 }

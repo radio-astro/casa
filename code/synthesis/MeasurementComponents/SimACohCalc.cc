@@ -27,7 +27,7 @@
 //# $Id$
 
 #include <synthesis/MeasurementComponents/SimACohCalc.h>
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <casa/Logging/LogIO.h>

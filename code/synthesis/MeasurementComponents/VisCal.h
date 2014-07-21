@@ -37,9 +37,9 @@
 #include <synthesis/MeasurementComponents/Jones.h>
 #include <synthesis/CalTables/VisCalEnum.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
-#include <synthesis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSet.h>
 
-#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <msvis/MSVis/VisBuffGroupAcc.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -449,6 +449,10 @@ protected:
  
   // Synchronize weight scale factors
   virtual void syncWtScale();
+  virtual void syncWtScale2();  // new version
+
+  // Perform weight scale calculation (specializable)
+  virtual void calcWtScale();
 
   // Update the wt vector for a baseline
   virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
@@ -580,6 +584,10 @@ protected:
 
   // Synchronize weight scale factors
   virtual void syncWtScale();
+  virtual void syncWtScale2();
+
+  // Perform weight scale calculation (specializable)
+  virtual void calcWtScale();
 
   // Update the wt vector for a baseline
   virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);

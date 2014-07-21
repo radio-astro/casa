@@ -1508,7 +1508,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-    cerr << "initializeToSky for grid" << endl;
+    //cerr << "initializeToSky for grid" << endl;
     if(useDoubleGrid_p) 
       visResampler_p->initializeToSky(griddedData2, sumWeight);
     else

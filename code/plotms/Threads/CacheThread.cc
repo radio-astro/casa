@@ -27,7 +27,7 @@
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/Threads/ThreadCommunication.h>
 #include <plotms/Plots/PlotMSPlot.h>
-#include <synthesis/MSVis/UtilJ.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <QDebug>
 
 namespace casa {
@@ -147,11 +147,7 @@ void CacheThread::handleError(String message ){
 	if ( message.length() > 0 ){
 		error += ": " + message;
 	}
-	//Cleanup the plot so the data is not left in an
-	//inconsistent state.
-	if ( itsPlot != NULL ){
-		itsPlot->dataMissing();
-	}
+
 	//Notify that an error has ocurred.
 	if ( threadController != NULL ){
 		threadController->setError( error );

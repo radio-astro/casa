@@ -259,6 +259,7 @@ class imcollapse_test(unittest.TestCase):
                 self.assertTrue(type(mytool) == type(ia))
                 self.checkImage(mytool, expected)
                 self.checkImage(outname, expected)
+                mytool.done()
             else:
                outname = outname + "imcollapse"
                # check that can overwrite previous output. Then check output image
@@ -375,6 +376,45 @@ class imcollapse_test(unittest.TestCase):
                             self.assertTrue(npts == 26)
                         else:
                             self.assertTrue(npts == 24)
+                            
+    def test_median(self):
+        """Test median when collapsing along multiple axes"""
+        myia = iatool()
+        imagename = "median.im"
+        myia.fromshape(imagename, [3, 3, 3])
+        bb = myia.getchunk()
+        count = 0
+        for i in range(3):
+            for j in range(3):
+                for k in range(3):
+                    bb[i, j, k] = count
+                    count += 1
+        myia.putchunk(bb)
+        collapsed = myia.collapse(axes=[0, 1], function="median")
+        bb = collapsed.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 12)
+        self.assertTrue(bb[0, 0, 1] == 13)
+        self.assertTrue(bb[0, 0, 2] == 14)
+        collapsed.done()
+        
+        collapsed = myia.collapse(
+            axes=[0, 1], function="median",
+            mask=imagename + "<14 || " + imagename + ">16" 
+        )
+        bb = collapsed.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 10.5)
+        self.assertTrue(bb[0, 0, 1] == 11.5)
+        self.assertTrue(bb[0, 0, 2] == 14)
+        collapsed.done()
+        
+        myia.fromshape("", [20, 20, 5])
+        reg = rg.fromtext(
+            "circle [[10pix, 10pix], 5pix]", csys=myia.coordsys().torecord(),
+            shape=myia.shape()
+        )
+        collapsed = myia.collapse(axes=[0, 1], function="median", region=reg)
+        myia.done()
+        collapsed.done()
 
     def test_CAS_3418(self):
         """imcollapse: Test separate code for median due to performance issues"""
@@ -523,6 +563,89 @@ class imcollapse_test(unittest.TestCase):
         myia.done()
         col.done()
         
+    def test_flux(self):
+        """Test flux function"""
+        myia = iatool()
+        imagename = "flux_test.im"
+        myia.fromshape(imagename, [10, 10, 10])
+        bb = myia.getchunk()
+        bb[:] = 1
+        bb[0,0,0] = 0
+        myia.putchunk(bb)
+        self.assertRaises(Exception, myia.collapse, axes=[0,1], function="flux")
+        myia.setrestoringbeam(major="3arcmin", minor="3arcmin", pa="0deg")
+        myia.setbrightnessunit("Jy/beam")
+        col = myia.collapse(axes=[0,1], function="flux", mask=imagename + "> 0")
+        self.assertTrue((col.shape() == [1, 1, 10]).all())
+        bb = col.getchunk()
+        for i in range(10):
+            if i == 0:
+                self.assertTrue(abs(bb[0,0,i] - 9.707966) < 1e-5)
+            else:
+                self.assertTrue(abs(bb[0,0,i] - 9.806027) < 1e-5)
+        col.done()
+        myia.done()
+        
+    def test_sqrtsum(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 2)
+        self.assertTrue(abs(bb[0, 0, 1] - 2*sqrt(2)) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 2*sqrt(2)) < 1e-6)
+        
+    def test_sqrtsum_npix(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0.5)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.5*sqrt(2)) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.5*sqrt(2)) < 1e-6)
+        
+    def test_sqrtsum_npix_beam(self):
+        """Test sqrtsum function"""
+        myia = iatool()
+        myia.fromshape("",[2,2,2])
+        myia.setrestoringbeam(major="3arcmin", minor="3arcmin", pa="0deg")
+        bb = myia.getchunk()
+        bb[:, :, 0] = 1
+        bb[:, :, 1] = 2
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix_beam")
+        bb = zz.getchunk()
+        self.assertTrue(abs(bb[0, 0, 0] - 0.19612053) < 1e-6)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.27735632) < 1e-6)
+        bb = myia.getchunk()
+        bb[:, :, 0] = -1
+        myia.putchunk(bb)
+        zz = myia.collapse(axes=[0,1], function="sqrtsum_npix_beam")
+        bb = zz.getchunk()
+        self.assertTrue(bb[0, 0, 0] == 0)
+        self.assertTrue(abs(bb[0, 0, 1] - 0.27735632) < 1e-6)
         
 def suite():
     return [imcollapse_test]

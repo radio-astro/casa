@@ -27,7 +27,7 @@
 #include <synthesis/MeasurementComponents/FJones.h>
 //#include <synthesis/MeasurementComponents/CalCorruptor.h>
 
-#include <synthesis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer.h>
 #include <synthesis/CalTables/CTIter.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicMath/Math.h>

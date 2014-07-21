@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
+#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <measures/Measures/MeasTable.h>
 #include <iostream>

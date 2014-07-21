@@ -376,14 +376,29 @@ protected:
 // See for example, class ImageStatistics.  When you provide
 // the beam, then the Flux statistic, if requested, can be
 // computed.  Returns False if beam not available, else True.
-// The implementation here returns False. Callers are responsible
-   // for deleting the <src>beamArea</src> pointer which is created
+// The implementation here returns False.
 
    virtual Bool _getBeamArea (Array<Double>& beamArea) const;
+
+   // FIXME The indirect dependence of this class on ImageInterface related
+   // issues (eg flux density) breaks encapsulation. All the ImageInterface related code should be
+   // encapsulated in ImageStatistics. Unfortunately, that requires significantly
+   // more time than I have atm. A return value of False means that the object in
+   // question cannot compute flux density values. The default implementation returns False.
+   virtual Bool _canDoFlux() const { return False; }
+   virtual Quantum<AccumType> _flux(
+		    AccumType sum, Double beamAreaInPixels
+	) const {
+	   ThrowCc("Logic Error: This object cannot compute flux density");
+	   // kill compiler warnings
+	   sum = 0; beamAreaInPixels = 0;
+   }
 
    virtual void listMinMax (ostringstream& osMin,
                             ostringstream& osMax,
                             Int oWidth, DataType type);
+
+   //
 
 // List the statistics to the logger.   The implementation here
 // is adequate for all lattices.  See ImageStatistics for an
@@ -397,8 +412,8 @@ protected:
 // Have a look at the implementation to see what you really
 // have to do.
    virtual Bool listStats (Bool hasBeam, const IPosition& dPos,
-                           const Matrix<AccumType>& ord);
-   virtual Bool listLayerStats (Double hasBeam, 
+                          const Matrix<AccumType>& ord);
+   virtual Bool listLayerStats (
              const Matrix<AccumType>& ord,
              ostringstream& rslt, Int zLayer); 
 
@@ -506,7 +521,7 @@ private:
    Int niceColour         (Bool& initColours) const; 
 
 // Plot the statistics
-   Bool plotStats         (Bool hasBeam, const IPosition& dPos, 
+   Bool plotStats         (const IPosition& dPos,
                            const Matrix<AccumType>& ord,
                            PGPlotter& plotter);
 

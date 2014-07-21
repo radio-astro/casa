@@ -127,8 +127,8 @@
 			<description>Specified flux density [I,Q,U,V]; (-1 will lookup values)</description>
 			<value type="int">-1</value>
 		</param>
-                <!--<param type="any" name="spix" subparam="true">-->
-                <param type="double" name="spix" subparam="true">
+                <param type="any" name="spix" subparam="true">
+                <!--<param type="double" name="spix" subparam="true">-->
                         <any type="variant" limittypes="double doubleArray"/>
 			<description>Spectral index of fluxdensity</description>
 			<value type="double">0.0</value>
@@ -137,11 +137,7 @@
 			<description>Reference frequency for spix</description>
 			<value>1GHz</value>
 		</param>
-                <param type="record" name="fluxdict" subparam="true">
-                       <description>output dictionary from fluxscale</description>
-                       <value type="record"></value>
-                </param>
-                <!-- for polarization fraction handling
+                <!-- for polarization fraction handling -->
 		<param type="doubleArray" name="polindex" subparam="true">
 			<description>Parameters of expansion of sqrt(Q^2+U^2) for linear polarization fraction</description>
 			<value></value>
@@ -154,7 +150,11 @@
 			<description>Rotation measure (in rad/m^2)</description>
 			<value>0.0</value>
 		</param>
-                -->
+
+                <param type="record" name="fluxdict" subparam="true">
+                       <description>output dictionary from fluxscale</description>
+                       <value type="record"></value>
+                </param>
 
                 <param type="bool" name="useephemdir" subparam="true">
 			<description>use directions in the ephemeris table</description>
@@ -235,14 +235,12 @@
                       <default param="fluxdensity"><value type="vector">
                            <value>1</value><value>0</value><value>0</value><value>0</value>
                            </value></default>
-                      <!--<default param="spix"><value type="doubleArray"></value></default>-->
-                      <default param="spix"><value type="double">0.0</value></default>
+                      <default param="spix"><value type="doubleArray"></value></default>
+                      <!--<default param="spix"><value type="double">0.0</value></default>-->
                       <default param="reffreq"><value type="string">1GHz</value></default> 
-                      <!-- comment out until polarization fraction is implemented...
                       <default param="polindex"><value type="doubleArray"></value></default>
                       <default param="polangle"><value type="doubleArray"></value></default>
                       <default param="rm"><value type="double">0.0</value></default>
-                      -->
                   </equals>
                   <equals type="string" value="fluxscale">
                     <default param="fluxdict"><value type="record"></value></default>

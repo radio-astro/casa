@@ -3359,7 +3359,7 @@ one field, and will currently only process Stokes I.
      <value>false</value>
      </param>
 
-     <param type="double" name="spix">
+     <param type="doubleArray" name="spix">
        <description>Spectral index for fluxdensity.
          S = fluxdensity * (freq/reffreq)**spix</description>
        <value>0.0</value>
@@ -3370,6 +3370,22 @@ one field, and will currently only process Stokes I.
        <any type="variant"/>
        <value>1GHz</value>
      </param>
+
+     <param type="doubleArray" name="polindex">
+       <description>Coefficients for Taylor expansion of Polarization index</description>
+       <value>0.0</value>
+     </param>
+
+     <param type="doubleArray" name="polangle">
+       <description>Coefficients for Taylor expansion of Polarization angle in radians</description>
+       <value>0.0</value>
+     </param>
+
+     <param type="double" name="rotmeas">
+       <description>rotation measure (rad/lambda**2)</description>
+       <value>0.0</value>
+     </param>
+
 
      <param type="string" name="time">
      <description>Time range to operate on</description>

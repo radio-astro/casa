@@ -52,7 +52,6 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionClose"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuView">
@@ -142,11 +141,6 @@
    </property>
    <property name="text">
     <string>&amp;Quit</string>
-   </property>
-  </action>
-  <action name="actionClose">
-   <property name="text">
-    <string>&amp;Close...</string>
    </property>
   </action>
   <action name="actionClearRegions">

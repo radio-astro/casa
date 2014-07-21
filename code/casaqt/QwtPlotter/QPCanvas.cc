@@ -1547,7 +1547,7 @@ void QPCanvas::keyReleaseEvent(QKeyEvent* event) {
     else       event->ignore();
 }
 
-bool QPCanvas::isDrawing() const {
+bool QPCanvas::isDrawing() {
 	bool drawing = m_canvas.isDrawing();
 	return drawing;
 }
@@ -1576,6 +1576,14 @@ PlotCoordinate QPCanvas::globalPosToPixelCoord(int x, int y) {
     QRect rect = m_canvas.canvas()->contentsRect();
     QPoint p = m_canvas.canvas()->mapToGlobal(rect.topLeft());
     return PlotCoordinate(x - p.x(), y - p.y(), PlotCoordinate::PIXEL);
+}
+
+bool QPCanvas::isThreading() const {
+    bool useThreading = true;
+    if ( m_parent != NULL ){
+    	useThreading = m_parent->isGuiShown();
+    }
+    return useThreading;
 }
 
 

@@ -39,7 +39,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
-#include <synthesis/MSVis/VisibilityProcessing.h>
+#include <msvis/MSVis/VisibilityProcessing.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -327,7 +327,8 @@ class Calibrater
 
   // Given a (supplied) list of uncalibrated spws, determines and returns if there were
   // any, and if so sends them as a warning message to the logger.
-  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin);
+  Bool summarize_uncalspws(const Vector<Bool>& uncalspw, const String& origin,
+			   Bool strictflag=False);
 
   // Create a VisSet for raw phase transfer if needed
   void getRawPhaseVisSet(Vector<Int>& spwid); 

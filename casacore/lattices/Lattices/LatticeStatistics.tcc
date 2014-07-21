@@ -53,6 +53,8 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Utilities/LinearSearch.h>
+#include <casa/Utilities/PtrHolder.h>
+
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/ValType.h>
 
@@ -595,22 +597,22 @@ Bool LatticeStatistics<T>::getStats(
 	//stats(VARIANCE) = LattStatsSpecialize::getVariance(stats(SUM),                                               stats(SUMSQ), n);
 	stats(SIGMA) = LattStatsSpecialize::getSigma(stats(VARIANCE));
 	stats(RMS) =  LattStatsSpecialize::getRms(stats(SUMSQ), n);
-	Array<Double> beamArea;
-	if (_getBeamArea(beamArea)) {
-		IPosition beamPos = pos;
-		if (posInLattice) {
-			this->_latticePosToStoragePos(beamPos, pos);
+	stats(FLUX) = 0;
+	if (_canDoFlux()) {
+		Array<Double> beamArea;
+		if (_getBeamArea(beamArea)) {
+			IPosition beamPos = pos;
+			if (posInLattice) {
+				this->_latticePosToStoragePos(beamPos, pos);
+			}
+			stats(FLUX) = _flux(stats(SUM), beamArea(beamPos)).getValue();
 		}
-		stats(FLUX) = stats(SUM) / beamArea(beamPos);
-	}
-	else {
-		stats(FLUX) = 0;
+		else {
+			stats(FLUX) = _flux(stats(SUM), 0).getValue();
+		}
 	}
 	return True;
 }
-
-
-
 
 template <class T>
 Bool LatticeStatistics<T>::getMinMaxPos(IPosition& minPos, IPosition& maxPos)
@@ -693,7 +695,6 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
    slice.resize(nPts.shape());
    slice = 0.0;
    VectorIterator<AccumType> sliceIt(slice);
-
 // Do it
 
    Array<AccumType> sum;
@@ -713,24 +714,32 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
        }
    }
    else if (type==FLUX) {
+	   if (! _canDoFlux()) {
+		   slice.resize(IPosition(0,0));
+		   return False;
+	   }
        Array<Double> beamArea;
-       if (! _getBeamArea(beamArea)) {
-          slice.resize(IPosition(0,0));
-          return False;
-       }
+       Bool gotBeamArea = _getBeamArea(beamArea);
        retrieveStorageStatistic (sum, SUM, dropDeg);
        ReadOnlyVectorIterator<AccumType> sumIt(sum);
-       ReadOnlyVectorIterator<Double> beamAreaIter(beamArea);
+       PtrHolder<ReadOnlyVectorIterator<Double> > beamAreaIter(
+    		   gotBeamArea ? new ReadOnlyVectorIterator<Double>(beamArea) : 0
+       );
        while (!nPtsIt.pastEnd()) {
           for (uInt i=0; i<n1; i++) {
              if (LattStatsSpecialize::hasSomePoints(nPtsIt.vector()(i))) {
-                sliceIt.vector()(i) = sumIt.vector()(i) / beamAreaIter.vector()(i);
+                //sliceIt.vector()(i) = sumIt.vector()(i) / beamAreaIter.vector()(i);
+            	sliceIt.vector()(i) = _flux(
+            		sumIt.vector()(i), gotBeamArea ? beamAreaIter->vector()(i) : 0
+            	).getValue();
              }
           }
           nPtsIt.next();
           sumIt.next();
           sliceIt.next();
-          beamAreaIter.next();
+          if (gotBeamArea) {
+        	  beamAreaIter->next();
+          }
        }
     }
    else if (type==SIGMA) {
@@ -1034,7 +1043,7 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
    }
    os_p.output() << setw(oDWidth) << "Npts";
    os_p.output() << setw(oDWidth) << "Sum";
-   if (hasBeam) os_p.output() << setw(oDWidth) << "FluxDensity";
+   if (_canDoFlux()) os_p.output() << setw(oDWidth) << "FluxDensity";
    os_p.output() << setw(oDWidth) << "Mean";  
    if (doRobust_p) os_p.output() << setw(oDWidth) << "Median"; 
    os_p.output() << setw(oDWidth) << "Rms";
@@ -1063,7 +1072,7 @@ Bool LatticeStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
          setStream(os9, oPrec); 
 
          os0 << stats.column(SUM)(j);
-         if (hasBeam) os1 << stats.column(FLUX)(j);
+         if (_canDoFlux()) os1 << stats.column(FLUX)(j);
          os2 << stats.column(MEAN)(j);
          if (doRobust_p) os8 << stats.column(MEDIAN)(j);
          os3 << stats.column(RMS)(j);
@@ -1151,7 +1160,7 @@ Bool LatticeStatistics<T>::getLayerStats(
       os.setf(ios::left, ios::adjustfield);
       os << setw(10) << "Npts";
       os << setw(oDWidth) << "Sum";
-      if (area > 0) 
+      if (_canDoFlux())
          os << setw(oDWidth) << "Flux (Jy)";
       os << setw(oDWidth) << "Mean";  
       if (doRobust_p) 
@@ -1171,10 +1180,10 @@ Bool LatticeStatistics<T>::getLayerStats(
       setStream(os, oPrec);
       os << setw(oDWidth)
          << sum;
-      if (area > 0) { 
+      if (_canDoFlux()) {
             setStream(os, oPrec);
             os << setw(oDWidth)
-               << sum / area;
+               << _flux(sum, area);
        }
        setStream(os, oPrec);
        os << setw(oDWidth)
@@ -1277,7 +1286,9 @@ Bool LatticeStatistics<T>::getLayerStats(
          if (LattStatsSpecialize::hasSomePoints(nPts)) {
             ord(i,MEAN) = 
                LattStatsSpecialize::getMean(matrix(i,SUM), nPts);
-            if (area > 0) ord(i,FLUX) = matrix(i,SUM) / area;
+            if (_canDoFlux()) {
+            	ord(i,FLUX) = _flux(matrix(i,SUM), area).getValue();
+            }
             /*
             ord(i,VARIANCE) = LattStatsSpecialize::getVariance(
                               matrix(i,SUM), matrix(i,SUMSQ), nPts);
@@ -1293,7 +1304,7 @@ Bool LatticeStatistics<T>::getLayerStats(
          for (uInt j=0; j<n1; j++) ord(j,i) = matrix(j,i);
       }
 
-      listLayerStats(area, ord, os, layer);
+      listLayerStats(ord, os, layer);
       break;
    }
    stats += os.str();
@@ -1371,8 +1382,8 @@ Bool LatticeStatistics<T>::getLayerStats(
 	stats.push_back(stat_element("Sum",buffer));
 
 
-	if ( area > 0 ) {
-	    sprintf( buffer, "%e", sum / area );
+	if ( _canDoFlux()) {
+	    sprintf( buffer, "%e", _flux(sum, area ).getValue());
 	    stats.push_back(stat_element("FluxDensity",buffer));
 	}
 
@@ -1445,10 +1456,10 @@ Bool LatticeStatistics<T>::getLayerStats(
 	    const AccumType& nPts = matrix(i,NPTS);
 	    if (LattStatsSpecialize::hasSomePoints(nPts)) {
 		ord(i,MEAN) = LattStatsSpecialize::getMean(matrix(i,SUM), nPts);
-		if (area > 0) ord(i,FLUX) = matrix(i,SUM) / area;
-	    /*
-		ord(i,VARIANCE) = LattStatsSpecialize::getVariance( matrix(i,SUM), matrix(i,SUMSQ), nPts);
-	    */
+		if (_canDoFlux()) {
+			ord(i,FLUX) = _flux(matrix(i,SUM), area).getValue();
+		}
+		//ord(i,VARIANCE) = LattStatsSpecialize::getVariance( matrix(i,SUM), matrix(i,SUMSQ), nPts);
 		ord(i,SIGMA) = LattStatsSpecialize::getSigma(matrix(i,VARIANCE));
 		ord(i,RMS) =  LattStatsSpecialize::getRms(matrix(i,SUMSQ), nPts);
 	    }
@@ -1489,7 +1500,7 @@ Bool LatticeStatistics<T>::getLayerStats(
 		    sprintf( buffer, "%e", ord.column(SUM)(j) );
 		    stats.push_back(stat_element("Sum",buffer));
 
-		    if (area > 0) {
+		    if (_canDoFlux()) {
 			sprintf( buffer, "%e", ord.column(FLUX)(j) );
 			stats.push_back(stat_element("FluxDensity",buffer));
 		    }
@@ -1521,8 +1532,9 @@ Bool LatticeStatistics<T>::getLayerStats(
     return True;
 }
 
+
 template <class T>
-Bool LatticeStatistics<T>::listLayerStats (Double beamArea, 
+Bool LatticeStatistics<T>::listLayerStats (
     const Matrix<AccumType>& stats, ostringstream& os, Int zLayer) 
 {
 
@@ -1568,8 +1580,10 @@ Bool LatticeStatistics<T>::listLayerStats (Double beamArea,
 
    os << setw(10) << "Npts";
    os << setw(oDWidth) << "Sum";
-   if (beamArea > 0) 
+   if (_canDoFlux()) {
+	   //FIXME Unit not correct in all cases
       os << setw(oDWidth) << "Flux (Jy)";
+   }
    os << setw(oDWidth) << "Mean";  
    if (doRobust_p) 
       os << setw(oDWidth) << "Median"; 
@@ -1599,7 +1613,7 @@ Bool LatticeStatistics<T>::listLayerStats (Double beamArea,
          setStream(os, oPrec);
          os << setw(oDWidth)
             << stats.column(SUM)(j);
-         if (beamArea > 0) { 
+         if (_canDoFlux()) {
             setStream(os, oPrec);
             os << setw(oDWidth)
                << stats.column(FLUX)(j);
@@ -1832,7 +1846,7 @@ Bool LatticeStatistics<T>::display()
 // Plot statistics
 
       if (plotter_p.isAttached()) {
-        if (!plotStats (hasBeam, pixelIterator.position(), ord, plotter_p)) return False;
+        if (!plotStats (pixelIterator.position(), ord, plotter_p)) return False;
       }
 
 
@@ -2047,7 +2061,7 @@ Int LatticeStatistics<T>::niceColour (Bool& initColours) const
 
 
 template <class T>
-Bool LatticeStatistics<T>::plotStats (Bool hasBeam, 
+Bool LatticeStatistics<T>::plotStats (
                                       const IPosition& dPos,
                                       const Matrix<AccumType>& stats,
                                       PGPlotter& plotter) 
@@ -2089,7 +2103,9 @@ Bool LatticeStatistics<T>::plotStats (Bool hasBeam,
    linearSearch(doMax, statsToPlot_p, Int(MAX), n);
    linearSearch(doNPts, statsToPlot_p, Int(NPTS), n);
    linearSearch(doFlux, statsToPlot_p, Int(FLUX), n);
-   if (!hasBeam) doFlux = False;
+   if (! _canDoFlux() ) {
+	   doFlux = False;
+   }
 //
    Bool none;
    Bool first = True;
@@ -2954,8 +2970,8 @@ void LatticeStatistics<T>::displayStats (
 ) {
 // Get beam
 
-   Array<Double> beamArea;
-   Bool hasBeam = _getBeamArea(beamArea);
+   //Array<Double> beamArea;
+   //Bool hasBeam = _getBeamArea(beamArea);
 
 // Have to convert LogIO object to ostream before can apply
 // the manipulators.  Also formatting Complex numbers with
@@ -2991,12 +3007,11 @@ void LatticeStatistics<T>::displayStats (
       os8 << median;
       os9 << medAbsDevMed;
       os10 << quartile; 
-//
       os_p << "Number points = ";
       os_p.output() << setw(oWidth) << String(os00) << "       Sum      = ";
       os_p.output() << setw(oWidth) << String(os1) << endl;
       os_p.post();
-//
+      /*
       if (hasBeam) {
     	  // beamArea guaranteed to only have one value in this method.
          os_p << "Flux density  = ";
@@ -3004,7 +3019,7 @@ void LatticeStatistics<T>::displayStats (
          os_p.output() << setw(oWidth) << String(os0) << " Jy" << endl;
          os_p.post();
       }
-//
+      */
       os_p << "Mean          = ";
       os_p.output() << setw(oWidth) << String(os2);
       if (doRobust_p) {

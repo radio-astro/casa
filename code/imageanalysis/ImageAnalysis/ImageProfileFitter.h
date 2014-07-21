@@ -201,7 +201,7 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
-    inline Bool _supportsMultipleRegions() {return True;}
+    inline Bool _supportsMultipleRegions() const {return True;}
 
 private:
 	String _residual, _model, _xUnit,
@@ -273,7 +273,7 @@ private:
 
     void _setFitterElements(
     	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-    	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+    	const PtrHolder<const PolynomialSpectralElement>& polyEl,
     	const vector<IPosition>& goodPos,
     	const IPosition& fitterShape, const IPosition& curPos,
     	uInt nOrigComps

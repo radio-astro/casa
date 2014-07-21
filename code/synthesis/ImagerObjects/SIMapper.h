@@ -34,8 +34,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/VisBufferImpl2.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 //#include <synthesis/ImagerObjects/SIMapperBase.h>
 
@@ -79,7 +79,7 @@ template<class T> class ImageInterface;
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);
-  Bool getFTMRecord(Record& rec);
+  Bool getFTMRecord(Record& rec, const String diskimage="");
 
   virtual String getImageName(){return itsImages->getName();};
   virtual CountedPtr<SIImageStore> imageStore(){return itsImages;};

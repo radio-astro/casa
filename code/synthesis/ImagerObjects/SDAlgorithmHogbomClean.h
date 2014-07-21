@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
     virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
     virtual void finalizeDeconvolver();
-    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+    ///    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
     //    virtual void restorePlane();
 
     /*

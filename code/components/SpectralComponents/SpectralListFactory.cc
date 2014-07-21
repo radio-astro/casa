@@ -86,20 +86,19 @@ SpectralList SpectralListFactory::create(
 	if (myfunc.size() == 0) {
 		myfunc.resize(myampest.size(), "G");
 	}
-	if (
+	ThrowIf(
 		mycenterest.size() != mynpcf
 		|| myfwhmest.size() != mynpcf
-		|| myfunc.size() != mynpcf
-	) {
-		log << "pampest, pcenterest, pfwhmest, and pfunc arrays "
-			<< "must all be the same length" << LogIO::EXCEPTION;
-	}
-	if (gfixSpecified && myfix.size() != mynpcf) {
-		log << "If the gfix array is specified the number of "
-			<< "elements it has must be the same as the number of elements "
-			<< "in the ampest array even if some elements are empty strings"
-			<< LogIO::EXCEPTION;
-	}
+		|| myfunc.size() != mynpcf,
+		"pampest, pcenterest, pfwhmest, and pfunc arrays "
+		"must all be the same length"
+	);
+	ThrowIf(
+		gfixSpecified && myfix.size() != mynpcf,
+		"If the gfix array is specified the number of "
+		"elements it has must be the same as the number of elements "
+		"in the ampest array even if some elements are empty strings"
+	);
 	if (mygmncomps.size() > 0) {
 		_addGaussianMultiplets(
 			spectralList, log, mygmncomps, mygmampcon,
@@ -148,7 +147,7 @@ SpectralList SpectralListFactory::create(
 	}
 	if (myltpest.size() > 0) {
 		_addLogTransformedPolynomial(
-			spectralList, log, myltpest, myltpfix
+			spectralList, myltpest, myltpfix
 		);
 	}
 	return spectralList;
@@ -283,22 +282,26 @@ void SpectralListFactory::_addPowerLogPolynomial(
 
 void SpectralListFactory::_addLogTransformedPolynomial(
 	SpectralList& spectralList,
-	LogIO& log,	vector<double>& myltpest,
+	vector<double>& myltpest,
 	vector<bool>& myltpfix
 ) {
 	uInt nest = myltpest.size();
-	if (nest < 2) {
-		log << "Number of elements in the log transformed polynomial estimates list must be at least 2"
-			<< LogIO::EXCEPTION;
-	}
+	ThrowIf(
+		nest < 2,
+		"Number of elements in the log transformed polynomial "
+		"estimates list must be at least 2"
+	);
 	uInt nfix = myltpfix.size();
 	if (nfix == 0) {
 		myltpfix = vector<bool>(nest, False);
 	}
-	else if (nfix != myltpest.size()) {
-		log << "Number of elements in the logarithmic transformed polynomial fixed parameter list must "
-			<< "either be 0 or equal to the number of elements in the estimates list"
-			<< LogIO::EXCEPTION;
+	else {
+		ThrowIf(
+			nfix != myltpest.size(),
+			"Number of elements in the logarithmic transformed polynomial "
+			"fixed parameter list must either be 0 or equal to the number "
+			"of elements in the estimates list"
+		);
 	}
 	LogTransformedPolynomialSpectralElement ltp(myltpest);
 	ltp.fix(myltpfix);

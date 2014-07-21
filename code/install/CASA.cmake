@@ -77,6 +77,25 @@ macro( casa_add_dbus_adaptor _header _interface)
       )
 endmacro()
 
+macro( casa_qt4_add_dbus_proxy qohfiles ccfiles _header _interface)
+    get_filename_component(_out_path ${_header} PATH)
+    get_filename_component(_out_name ${_header} NAME_WE)
+    get_filename_component(_infile ../casadbus/xml/${_interface} ABSOLUTE)
+    get_filename_component(_out_header ${CMAKE_CURRENT_BINARY_DIR}/${_header} ABSOLUTE)
+    get_filename_component(_out_source ${CMAKE_CURRENT_BINARY_DIR}/${_out_path}/${_out_name}.cc ABSOLUTE)
+
+    # The output directory needs to exist, 
+    # or dbus-xml2cpp will silently fail
+    add_custom_command( 
+      OUTPUT ${_out_header} ${_out_source}
+      COMMAND mkdir -p ${_out_path}
+      COMMAND qdbusxml2cpp -v -c ${_out_name} -i "casaqt/QtUtilities/QtDBusMeta.h" -p ${_out_header}:${_out_source} ${_infile}
+      DEPENDS ${_infile}
+    )
+    SET(${qohfiles} ${${qohfiles}} ${_out_header})
+    SET(${ccfiles} ${${ccfiles}} ${_out_source})
+endmacro()
+
 
 # Generate .ui.h files from .ui
 # The same as CMAKE's built-in macro, but using a different naming convention

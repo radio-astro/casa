@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -9,6 +10,15 @@ import time
 import filecmp
 from matplotlib import pylab as pl
 
+try:
+    import selection_syntax
+except:
+    import tests.selection_syntax as selection_syntax
+
+#to rethrow exception
+import inspect
+g = sys._getframe(len(inspect.stack())-1).f_globals
+g['__rethrow_casa_exceptions'] = True
 from sdplot import sdplot
 import asap as sd
 from asap.scantable import is_scantable
@@ -19,8 +29,10 @@ class sdplot_unittest_base:
     """
     taskname = 'sdplot'
     # Data path of input/output
+    #datapath = os.environ.get('CASAPATH').split()[0] + \
+    #           '/data/regression/unittest/' + taskname + '/'
     datapath = os.environ.get('CASAPATH').split()[0] + \
-               '/data/regression/unittest/' + taskname + '/'
+               '/data/regression/unittest/sdplot/'
     # directories to save figure
     prevdir = datapath+'prev_sdplot'
     currdir = os.path.abspath('curr_sdplot')
@@ -44,9 +56,20 @@ class sdplot_unittest_base:
         sd.rcParams['plotter.gui'] = usegui
         sd.plotter.__init__()
 
+    def _check_file( self, filename, fail=True ):
+        """
+        Check if filename exists.
+        The test fails if fail=True. Otherwise the method returns
+        a bool which indicates if exists or not.
+        """
+        exists = os.path.exists(filename)
+        if fail:
+            self.assertTrue(exists,"'%s' does not exists." % filename)
+        return exists
+
     # compare two figures
     def _checkOutFile( self, filename, compare=False ):
-        self.assertTrue(os.path.exists(filename),"'%s' does not exists." % filename)
+        self._check_file(filename)
         self.assertTrue(os.path.isfile(filename),\
                         "Not a regular file. (A directory?): %s" % filename)
         self.assertTrue(os.path.getsize(filename) > self.minsize,\
@@ -54,7 +77,7 @@ class sdplot_unittest_base:
                         (int(self.minsize/1000), filename))
         prevfig = self.prevdir+'/'+filename
         currfig = self.currdir+'/'+filename
-        if compare and os.path.exists(prevfig):
+        if compare and self._check_file(prevfig, False):
             # The unit test framework doesn't allow saving previous results
             # This test is not run.
             msg = "Compareing with previous plot:\n"
@@ -64,7 +87,7 @@ class sdplot_unittest_base:
         shutil.move(filename,currfig)
 
         # Save the figure for future comparison if possible.
-        if os.path.exists(self.prevdir) and self.saveref:
+        if self._check_file(self.prevdir, False) and self.saveref:
             try:
                 casalog.post("copying %s to %s" % (currfig,prevfig),'INFO')
                 shutil.copyfile(currfig, prevfig)
@@ -180,8 +203,9 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    outfile = sdplot_unittest_base.taskname + '_testErr.png'
-    badid = 99
+    #outfile = sdplot_unittest_base.taskname + '_testErr.png'
+    outfile = 'sdplot_testErr.png'
+    badid = '99'
     badstr = "bad"
 
     def setUp( self ):
@@ -222,13 +246,14 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
         """test_badSelection: Invalid data selection (no data selected) """
         # the AipsError raised in cpp is caught and rethrown in
         # the middle of task script
-        iflist = [self.badid]
+        spw = self.badid
         try:
-            result = sdplot(infile=self.infile,iflist=iflist)
+            result = sdplot(infile=self.infile,spw=spw)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, err:
-            pos=str(err).find("Selection contains no data. Not applying it.")
+            #pos=str(err).find("Selection contains no data. Not applying it.")
+            pos=str(err).find("No valid spw.")
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(err)))
 
@@ -300,7 +325,8 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    figroot = sdplot_unittest_base.taskname + '_test'
+    #figroot = sdplot_unittest_base.taskname + '_test'
+    figroot = 'sdplot_test'
     figsuff = '.png'
     fig=None
     baseinfo = {'npanel': 2, 'nstack': 2,
@@ -399,10 +425,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         fluxunit = 'K'
         stack = 'p'
         panel = 'i'
-        iflist = [0,2]
+        spw = '0,2'
         header = False
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
-                        stack=stack,panel=panel,iflist=iflist,
+                        stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -421,10 +447,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         fluxunit = 'K'
         stack = 'p'
         panel = 'i'
-        iflist = [0,2]
+        spw = '0,2'
         header = False
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
-                        stack=stack,panel=panel,iflist=iflist,
+                        stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'xlabel': 'LSRK Frequency (%s)' % specunit}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -445,10 +471,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         fluxunit = 'K'
         stack = 'p'
         panel = 'i'
-        iflist = [0,2]
+        spw = '0,2'
         header = False
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
-                        stack=stack,panel=panel,iflist=iflist,
+                        stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'xlabel': 'LSRK RADIO velocity (%s)' % (specunit)}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -469,10 +495,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         fluxunit = 'Jy'
         stack = 'p'
         panel = 'i'
-        iflist = [0,2]
+        spw = '0,2'
         header = False
         result = sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
-                        stack=stack,panel=panel,iflist=iflist,
+                        stack=stack,panel=panel,spw=spw,
                         header=header,outfile=outfile)
         locinfo = {'ylabel': 'Flux density (Jy)'}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -593,10 +619,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "13"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3500,5000]
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1,'nstack': 2,
                    'title0': 'IF0', 'label0': 'XX',
@@ -615,10 +641,10 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "14"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         flrange = [0.,6.]
         header = False
-        result = sdplot(infile=infile,iflist=iflist,flrange=flrange,
+        result = sdplot(infile=infile,spw=spw,flrange=flrange,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'ylim': flrange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -635,11 +661,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "15"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3500,5000]
         flrange = [0.,6.]
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         header=header,flrange=flrange,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange, 'ylim': flrange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -656,11 +682,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "16"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3900,4300]
         histogram = True
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         header=header,histogram=histogram,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -677,11 +703,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "17"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3900,4300]
         colormap = "pink orange"
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         header=header,colormap=colormap,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -698,11 +724,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "18"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3900,4300]
         linewidth = 3
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         header=header,linewidth=linewidth,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -719,12 +745,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "19"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0]
+        spw = '0'
         sprange = [3900,4300]
         linewidth = 2
         linestyles = "dotted dashdot"
         header = False
-        result = sdplot(infile=infile,iflist=iflist,sprange=sprange,
+        result = sdplot(infile=infile,spw=spw,sprange=sprange,
                         linewidth=linewidth,linestyles=linestyles,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'xlim': sprange}
@@ -742,9 +768,9 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "20"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0,2]
+        spw = '0,2'
         headsize = 11
-        result = sdplot(infile=infile,iflist=iflist,headsize=headsize,
+        result = sdplot(infile=infile,spw=spw,headsize=headsize,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -759,8 +785,8 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "21"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0,2]
-        result = sdplot(infile=infile,iflist=iflist,
+        spw = '0,2'
+        result = sdplot(infile=infile,spw=spw,
                         outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -775,11 +801,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "22"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0,2]
+        spw = '0,2'
         plotstyle = True
         margin = [0.15,0.3,0.85,0.7,0.25,0.25]
         header = False
-        result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
                         margin=margin,header=header,outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -794,11 +820,11 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "23"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0,2]
+        spw = '0,2'
         plotstyle = True
         legendloc = 3
         header = False
-        result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
                         legendloc=legendloc,header=header,outfile=outfile)
         # Tests
         self.assertEqual(result,None)
@@ -896,12 +922,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "28"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [0,2]
+        spw = '0,2'
         panel = 'r'
         plotstyle = True
         subplot = 24
         header = False
-        result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+        result = sdplot(infile=infile,spw=spw,plotstyle=plotstyle,
                         subplot=subplot,header=header,outfile=outfile)
         locinfo = {'rows': 2, 'cols': 4}
         refinfo = self._mergeDict(self.baseinfo,locinfo)
@@ -913,17 +939,17 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
 
     def testplot29( self ):
         """
-        Test 29: plot with user defined restfreq (a list of num and qauntity)
+        Test 29: plot with user defined restfreq (a list of num and quantity)
         """
         tid = "29"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [1,2]
+        spw = '1,2'
         specunit = 'km/s'
         restfreq = ['45.3GHz', 44.075e9]
         panel = 'i'
         header = False
-        result = sdplot(infile=infile,iflist=iflist,panel = panel,
+        result = sdplot(infile=infile,spw=spw,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
         locinfo = {'xlim': (-170.62517234590837, 160.27007370505743),
@@ -943,12 +969,12 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         tid = "30"
         outfile = self.figroot+tid+self.figsuff
         infile = self.infile
-        iflist = [2]
+        spw = '2'
         specunit = 'km/s'
         restfreq = [{'name': 'ch3oh', 'value': 44.075e9}]
         panel = 'i'
         header = False
-        result = sdplot(infile=infile,iflist=iflist,panel = panel,
+        result = sdplot(infile=infile,spw=spw,panel = panel,
                         specunit=specunit,restfreq=restfreq,
                         header=header,outfile=outfile)
         locinfo = {'npanel': 1, 'xlabel': 'LSRK RADIO velocity (km/s)',
@@ -984,7 +1010,8 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
     """
     # Input and output names
     infile = 'OrionS_rawACSmod_cal2123.asap'
-    figroot = sdplot_unittest_base.taskname + '_store'
+    #figroot = sdplot_unittest_base.taskname + '_store'
+    figroot = 'sdplot_store'
     figsuff = '.png'
     fig=None
 
@@ -1001,7 +1028,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
     doppler = out_uc['doppler']
     stack = 'p'
     panel = 'i'
-    iflist = [0,2]
+    spw = '0,2'
     header = False
 
     def setUp( self ):
@@ -1112,7 +1139,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
-                        iflist=self.iflist,header=self.header,outfile=outfile)
+                        spw=self.spw,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -1136,7 +1163,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
-                        iflist=self.iflist,header=self.header,outfile=outfile)
+                        spw=self.spw,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -1160,7 +1187,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
-                        iflist=self.iflist,header=self.header,outfile=outfile)
+                        spw=self.spw,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -1184,7 +1211,7 @@ class sdplot_storageTest( sdplot_unittest_base, unittest.TestCase ):
         result = sdplot(infile=self.infile,specunit=self.specunit,\
                         fluxunit=self.fluxunit,frame=self.frame,\
                         doppler=self.doppler,stack=self.stack,panel=self.panel,\
-                        iflist=self.iflist,header=self.header,outfile=outfile)
+                        spw=self.spw,header=self.header,outfile=outfile)
         # Test plot
         self.assertEqual(result,None)
         self._checkOutFile(outfile,self.compare)
@@ -1215,14 +1242,15 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
     # Input and output names
     infile = 'FLS3a_calfs.6x6.asap'
     #infile = 'FLS3a_calfs.asap'
-    figroot = sdplot_unittest_base.taskname + '_grid'
+    #figroot = sdplot_unittest_base.taskname + '_grid'
+    figroot = 'sdplot_grid'
     figsuff = '.png'
     fig=None
 
     # common parameter values
     type = 'grid'
     header = False
-    pollist = [0]
+    pol = '0'
     subplot = 66
     #cell = ["0.033934774957430407rad","0.0080917391193671574rad"]
     cell = ["0.0087400000000000064rad", "0.0094409136746534481rad"]
@@ -1267,7 +1295,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         """testgrid01: default gridding (1x1)"""
         tid="01"
         outfile = self.figroot+tid+self.figsuff
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, header=self.header,
                         outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1286,7 +1314,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         cell = self.cell
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type,
                         cell=cell, subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1304,7 +1332,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         center = self.center
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1322,7 +1350,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         outfile = self.figroot+tid+self.figsuff
         center = self.center
         cell = self.cell
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         cell=cell,
                         header=self.header, outfile=outfile)
@@ -1340,7 +1368,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="05"
         outfile = self.figroot+tid+self.figsuff
         center = self.center
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1357,7 +1385,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="06"
         outfile = self.figroot+tid+self.figsuff
         cell = self.cell
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, cell=cell,
                         header=self.header, outfile=outfile)
         locinfo = {'npanel': 1, 'rows': 1, 'cols': 1,
@@ -1374,7 +1402,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         tid="07"
         outfile = self.figroot+tid+self.figsuff
         subplot = self.subplot
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         header=self.header, outfile=outfile)
         locinfo = {}#'title0': 'J2000 17:17:58 +59.30.02.0'}
@@ -1393,7 +1421,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         cell = self.cell
         subplot = self.subplot
 
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, center=center,
                         cell=cell, subplot=subplot,
                         header=self.header, outfile=outfile)
@@ -1412,7 +1440,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         sprange = [200,800]
 
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         sprange=sprange,
                         header=self.header, outfile=outfile)
@@ -1432,7 +1460,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         flrange = [-2.,10.]
 
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         flrange=flrange,
                         header=self.header, outfile=outfile)
@@ -1453,7 +1481,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         sprange = [200,800]
         flrange = [-2.,10.]
 
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         sprange=sprange, flrange=flrange,
                         header=self.header, outfile=outfile)
@@ -1473,7 +1501,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         colormap = "orange pink"
         
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         colormap=colormap,
                         header=self.header, outfile=outfile)
@@ -1492,7 +1520,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         linestyles = "dashdot"
         
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         linestyles=linestyles,
                         header=self.header, outfile=outfile)
@@ -1511,7 +1539,7 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         subplot = self.subplot
         linewidth=3
         
-        result = sdplot(infile=self.infile, pollist=self.pollist,
+        result = sdplot(infile=self.infile, pol=self.pol,
                         plottype=self.type, subplot=subplot,
                         linewidth=linewidth,
                         header=self.header, outfile=outfile)
@@ -1523,39 +1551,528 @@ class sdplot_gridTest( sdplot_unittest_base, unittest.TestCase ):
         self._compareDictVal(currinfo, refinfo)
         self._checkOutFile(outfile,self.compare)
 
-#####
-# Tests on string data selection
-#####
-class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
-    """
-    Test CASA type data selection in string.
-    
-    The list of tests:
-      testsel01 --- scanlist
-      testsel01 --- iflist
-      testsel01 --- pollist
-      testsel01 --- beamlist
 
-    Note: input data is generated from a single dish regression data,
-    'OrionS_rawACSmod', as follows:
-      default(sdcal)
-      sdcal(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
-            calmode='ps',tau=0.09,outfile='tmp.asap')
-      sdcal(infile='tmp.asap',scanaverage=True,outfile=self.infile)
+class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax. Selection parameters to test are:
+    field, spw (no channel selection), scan, pol, beam
+    
+    The dataset used for this test is sd_analytic_type1-3.asap.
     """
     # Input and output names
-    infile = 'OrionS_rawACSmod_calSave.asap'
-    figroot = sdplot_unittest_base.taskname + '_sel'
-    figsuff = '.png'
-    fig=None
-    baseinfo = {'npanel': 2, 'nstack': 2,
-               'xlabel': 'Channel',
-               'ylabel': 'Brightness Temperature (K)'}
+    infile='sd_analytic_type1-3.asap'
+    prefix=sdplot_unittest_base.taskname+'TestSel'
+    postfix='.plot.png'
+    outfile=prefix+postfix
 
-    # common parameter values
-    header = False
+    def _get_selection_plot_info( self, is_field=None ):
+        if is_field is None: is_field = False
+        
+        retdic = {}
+        titles = []
+        npanel = len(sd.plotter._plotter.subplots)
+        for i in xrange(npanel):
+            ttmp = sd.plotter._plotter.subplots[i]['axes'].get_title().upper().strip()
+            if is_field:
+                title = ttmp.split('(')[1].split(')')[0].strip()
+            else:
+                if len(ttmp.split(' ')) > 1: # scan/beam
+                    title = ttmp.split(' ')[1]
+                elif ttmp[0:2].upper() == 'IF': # spw
+                    title = ttmp.strip()[2:]
+                #elif ttmp[0:4].upper() == 'BEAM': # beam
+                #    title = ttmp.strip()[4:]
+                else: # pol
+                    title = ttmp
+            if title not in titles:
+                titles.append(title)
+        titles.sort()
+        retdic['title'] = titles
 
+        return retdic
     
+    def _set_selection_plot_info( self, fields, which_param=None ):
+        retdic = {}
+        flist = []
+        for field in fields:
+            if which_param == 'pol':
+                if field == 0:
+                    val = 'XX'
+                else:
+                    val = 'YY'
+                flist.append(val)
+            elif which_param == 'field':
+                try:
+                    fid = int(field)
+                    if fid == 5:
+                        sfield = 'M100'
+                    elif fid == 6:
+                        sfield = 'M100'
+                    elif fid == 7:
+                        sfield = 'M30'
+                    elif fid == 8:
+                        sfield = '3C273'
+                    else:
+                        raise Exception("bad field ID (" + str(fid) + ")")
+                except:
+                    sfield = field.upper().strip()
+                finally:
+                    if sfield not in flist:
+                        flist.append(sfield)
+            else:
+                flist.append(str(field))
+                
+        flist.sort()
+        retdic['title'] = flist
+        return retdic
+
+    @property
+    def task(self):
+        return sdplot
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
+    def setUp(self):
+        # switch on/off GUI
+        self._switchPlotterGUI(self.usegui)
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdplot)
+
+    def tearDown(self):
+        # restore GUI setting
+        self._switchPlotterGUI(self.oldgui)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        scan=''
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15,16,17])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='15')"""
+        scan='15'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15])
+        self._compareDictVal(outinfo, refinfo)
+        
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<17')"""
+        scan = '<17'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15,16])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>15')"""
+        scan = '>15'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([16,17])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_scan_id_range(self):
+        """ test scan selection (scan='15~16')"""
+        scan = '15~16'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15,16])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        scan = '15,17'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15,17])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='<16, 17')"""
+        scan = '<16, 17'
+        self.res=sdplot(scan=scan,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([15,17])
+        self._compareDictVal(outinfo, refinfo)
+    
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        pol=''
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([0,1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+        pol = '1'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        outname=self.prefix+self.postfix
+        pol = '<1'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([0], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        pol = '>0'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        pol = '0~1'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([0,1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        pol = '0,1'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([0,1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='<1,1')"""
+        pol='<1,1'
+        self.res=sdplot(pol=pol,panel='p',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([0,1], 'pol')
+        self._compareDictVal(outinfo, refinfo)
+
+    ####################
+    # field
+    ####################
+    def test_field_value_default(self):
+        """test field selection (field='')"""
+        field=''
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([5,6,7,8], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_id_exact(self):
+        """ test field selection (field='6')"""
+        field = '6'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([6], 'field')
+        self._compareDictVal(outinfo, refinfo)
+
+    def test_field_id_lt(self):
+        """ test field selection (field='<6')"""
+        field = '<6'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([5], 'field')
+        self._compareDictVal(outinfo, refinfo)
+
+    def test_field_id_gt(self):
+        """ test field selection (field='>7')"""
+        field = '>7'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([8], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_id_range(self):
+        """ test field selection (field='5~7')"""
+        field = '5~7'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([5,6,7], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_id_list(self):
+        """ test field selection (field='5,7')"""
+        field = '5,7'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([5,7], 'field')
+        self._compareDictVal(outinfo, refinfo)
+
+    def test_field_id_exprlist(self):
+        """ test field selection (field='<7,8')"""
+        field = '<7,8'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([6,8], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_value_exact(self):
+        """ test field selection (field='M100')"""
+        field = 'M100'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info(['M100'], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_value_pattern(self):
+        """ test field selection (field='M*')"""
+        field = 'M*'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info(['M100','M30'], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_value_list(self):
+        """ test field selection (field='M30,3C273')"""
+        field = 'M30,3C273'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info(['M30','3C273'], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_field_mix_exprlist(self):
+        """ test field selection (field='<7,3C273')"""
+        field = '<7,3C273'
+        self.res=sdplot(field=field,panel='s',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info(True)
+        refinfo = self._set_selection_plot_info([6,'3C273'], 'field')
+        self._compareDictVal(outinfo, refinfo)
+    
+    ####################
+    # spw 
+    ####################
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        spw=''
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([20,21,22,23,24,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='21')"""
+        spw = '21'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([21])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<25')"""
+        spw = '<25'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([20,21,22,23,24])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>21')"""
+        spw = '>21'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([22,23,24,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_range(self):
+        """ test spw selection (spw='21~24')"""
+        spw = '21~24'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([21,22,23,24])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,22,23,25')"""
+        spw = '21,22,23,25'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([21,22,23,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='<22,>24')"""
+        spw = '<22,>24'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([20,21,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        spw='*'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([20,21,22,23,24,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='299.5~310GHz')"""
+        spw = '299.5~310GHz'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([22,23,24,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-50~50km/s')"""
+        spw = '-50~50km/s'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([22,23])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='150~550km/s,>23')"""
+        spw = '150~550km/s,>23'
+        self.res=sdplot(spw=spw,infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([20,21,24,25])
+        self._compareDictVal(outinfo, refinfo)
+    
+    ####################
+    # beam
+    ####################
+    def test_beam_id_default(self):
+        """test beam selection (beam='')"""
+        beam=''
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([11,12,13])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_exact(self):
+        """ test beam selection (beam='12')"""
+        beam='12'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([12])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_lt(self):
+        """test beam selection (beam='<13')"""
+        beam='<13'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([11,12])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_gt(self):
+        """test beam selection (beam='>11')"""
+        beam='>11'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([12,13])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_range(self):
+        """test beam selection (beam='12~13')"""
+        beam='12~13'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([12,13])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_list(self):
+        """test beam selection (beam='11,13')"""
+        beam='11,13'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([11,13])
+        self._compareDictVal(outinfo, refinfo)
+    
+    def test_beam_id_exprlist(self):
+        """test beam selection (beam='<12,>12')"""
+        beam='<12,>12'
+        self.res=sdplot(beam=beam,panel='b',infile=self.infile,outfile=self.outfile)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        outinfo = self._get_selection_plot_info()
+        refinfo = self._set_selection_plot_info([11,13])
+        self._compareDictVal(outinfo, refinfo)
+
+
+class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
+    """
+    Test flag handling in sdplot
+    
+    The dataset used for this test is testgrid4chan.1point.asap
+    | ROW | SCAN | POL | SPECTRA (all IF=2, 4chans)
+    |  0  |   0  |  0  | [10,10,10,10]
+    |  1  |   0  |  1  | [15,15,15,15]
+    |  2  |   1  |  0  | [1, 1, 1, 1]
+    |  3  |   1  |  1  | [7, 7, 7, 7]
+    """
+    # Input and output names
+    infile = 'testgrid4chan.1point.asap'
+    panel = 'r'
+    stack = 'p'
+    spec= [[10,10,10,10], [15,15,15,15], [1, 1, 1, 1], [7, 7, 7, 7]]
+    masked_spec = None
+    to_deg = 180./numpy.pi  #Az-El and pointing plots are in deg.
+
     def setUp( self ):
         # switch on/off GUI
         self._switchPlotterGUI(self.usegui)
@@ -1563,16 +2080,10 @@ class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
         shutil.copytree(self.datapath+self.infile, self.infile)
-        # Generate directory to save figures
-        if not os.path.exists(self.currdir):
-            os.makedirs(self.currdir)
-        # Create a directory to store the figures for future comparison
-        if (not os.path.exists(self.prevdir)) and self.saveref:
-            try: os.makedirs(self.prevdir)
-            except OSError:
-                msg = "Unable to create directory, "+self.prevdir+".\n"
-                msg += "Plot figures will remain in "+self.currdir
-                casalog.post(msg,'WARN')
+        # create base reference data
+        self.masked_spec = []
+        for sp in self.spec:
+            self.masked_spec.append(numpy.ma.masked_array(sp, False))
         
         default(sdplot)
 
@@ -1582,79 +2093,215 @@ class sdplot_selectTest( sdplot_unittest_base, unittest.TestCase ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
 
-    # helper functions of tests
+    def test_spectraRflag(self):
+        """test row flag in plottype='spectra'"""
+        self._flag_table(row=[0,3])
+        self.run_test(self.masked_spec, 'spectra')
+        
+    def test_spectraCflag(self):
+        """test channel flag in plottype='spectra'"""
+        self._flag_table(row=[1,2], chan=[[1,2]])
+        self.run_test(self.masked_spec, 'spectra')
+        
+    def test_gridRflag(self):
+        """test row flag in plottype='grid'"""
+        self._flag_table(row=[0])
+        refdata = [ self.masked_spec[2] ]
+        self.run_test(refdata, 'grid', subplot=11)
+        
+    def test_gridCflag(self):
+        """test channel flag in plottype='grid'"""
+        self._flag_table(row=[0], chan=[[1,2]])
+        self._flag_table(row=[2], chan=[[2,3]])
+        refdata = [ numpy.ma.masked_array([5.5,1,0,10], [0,0,1,0]) ]
+        self.run_test(refdata, 'grid', subplot=11)
+        
+    def test_azelRflag(self):
+        """test row flag in plottype='azel'"""
+        self._flag_table(row=[0])
+        tb.open(self.infile)
+        try:
+            az = tb.getcol('AZIMUTH')
+            el = tb.getcol('ELEVATION')
+        except: raise
+        finally: tb.close()
+        mask = [ sp.mask.all() for sp in self.masked_spec ]
+        refdata = [ numpy.ma.masked_array(el*self.to_deg, mask),
+                    numpy.ma.masked_array(az*self.to_deg, mask) ]
+        self.run_test(refdata, 'azel')
+        
+    def test_azelCflag(self):
+        """test channel flag in plottype='azel'"""
+        self._flag_table(row=[0], chan=[[0,3]]) # flag all channels
+        self._flag_table(row=[2], chan=[[2,3]])
+        tb.open(self.infile)
+        try:
+            az = tb.getcol('AZIMUTH')
+            el = tb.getcol('ELEVATION')
+        except: raise
+        finally: tb.close()
+        mask = [ 1, 0, 0, 0 ]
+        refdata = [ numpy.ma.masked_array(el*self.to_deg, mask),
+                    numpy.ma.masked_array(az*self.to_deg, mask) ]
+        self.run_test(refdata, 'azel')
+        
+    def test_pointingRflag(self):
+        """test row flag in plottype='pointing'"""
+        self._flag_table(row=[0]) # flag all chans
+        tb.open(self.infile)
+        try: dec = tb.getcol('DIRECTION')[1]
+        except: raise
+        finally: tb.close()
+        dec *= self.to_deg
+        # stack='r' is not supported (pol=0 is in rows = 0, 2)
+        refdata = [ numpy.ma.masked_array([dec[i] for i in [0,2]], [1, 0]) ]
+        self.run_test(refdata, 'pointing', pol='0')
+        
+    def test_pointingCflag(self):
+        """test channel flag in plottype='pointing'"""
+        self._flag_table(row=[0], chan=[[1,2]])
+        self._flag_table(row=[2], chan=[[0,3]])
+        tb.open(self.infile)
+        try: dec = tb.getcol('DIRECTION')[1]
+        except: raise
+        finally: tb.close()
+        dec *= self.to_deg
+        # stack='r' is not supported (pol=0 is in rows = 0, 2)
+        refdata = [ numpy.ma.masked_array([dec[i] for i in [0,2]], [0, 1]) ]
+        self.run_test(refdata, 'pointing', pol='0')
 
-    # Actual tests
-    def testsel01( self ):
-        """testsel01: scanlist='23~25'"""
-        tid="01"
-        outfile = self.figroot+tid+self.figsuff
-        scanlist="23~25"
-        panel = 's'
-        result = sdplot(infile=self.infile, scanlist=scanlist,
-                        panel=panel, header=self.header,
-                        outfile=outfile)
-        locinfo = {'npanel': 2, 'title0': 'Scan 23 (OrionS)'}
-        refinfo = self._mergeDict(self.baseinfo,locinfo)
-        # Tests
-        self.assertEqual(result,None)
-        currinfo = self._get_plot_info()
-        self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile,self.compare)
+    def test_totalpowerRflag(self):
+        """test row flag in plottype='totalpower'"""
+        self._flag_table(row=[1])
+        data = [ sp.mean() for sp in self.masked_spec ]
+        mask = [ 0, 1, 0, 0 ]
+        refdata = [ numpy.ma.masked_array(data, mask) ]
+        self.run_test(refdata, 'totalpower')
+        
+    def test_totalpowerCflag(self):
+        """test channel flag in plottype='totalpower'"""
+        self._flag_table(row=[0], chan=[[1,2]])
+        self._flag_table(row=[2], chan=[[0,3]])
+        tb.open(self.infile, nomodify=False)
+        # make sure mean is calculated only from valid channels
+        try:
+            tb.putcell('SPECTRA', 0, [10, 0, 0, 10])
+        except: raise
+        finally: tb.close()
+        data = [ sp.mean() for sp in self.masked_spec ]
+        mask = [ 0, 0, 1, 0 ]
+        refdata = [ numpy.ma.masked_array(data, mask) ]
+        self.run_test(refdata, 'totalpower')
 
-    def testsel02( self ):
-        """testsel02: iflist='1, 3~12,>= 14'"""
-        tid="02"
-        outfile = self.figroot+tid+self.figsuff
-        iflist='1, 3~12,>= 14'
-        panel = 'i'
-        result = sdplot(infile=self.infile, iflist=iflist,
-                        panel=panel, header=self.header,
-                        outfile=outfile)
-        locinfo = {'npanel': 5, 'title0': 'IF1'}
-        refinfo = self._mergeDict(self.baseinfo,locinfo)
-        # Tests
-        self.assertEqual(result,None)
-        currinfo = self._get_plot_info()
-        self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile,self.compare)
+    ####################
+    # Helper functions
+    ####################
+    def _flag_table(self, row=[], chan=[]):
+        """
+        flag self.infile and update reference data corresponding to flag.
+        row: a list of row ids to flag
+        chan : a list of [start, end] channels to flag
+        when chan=[], FLAGROW is set. Otherwise, channel flag is set
+        for the row list.
+        """
+        if len(row) == 0: return
+        flagrow = (len(chan)==0)
+        self._check_file(self.infile)
+        tb.open(self.infile, nomodify=False)
+        try:
+            self.assertEqual(tb.nrows(), len(self.masked_spec),
+                             "number of table rows differs from reference data")
+            if flagrow:
+                fl = tb.getcol('FLAGROW')
+                for idx in row:
+                    fl[idx] = 1
+                    self.masked_spec[idx] = numpy.ma.masked_array(self.masked_spec[idx].data, fl[idx])
+                tb.putcol('FLAGROW', fl)
+            else:
+                if type(chan[0]) in [int, float]:
+                    chan = [chan]
+                fl = tb.getcol('FLAGTRA').transpose()
+                for irow in row:
+                    for (schan, echan) in chan:
+                        fl[irow][schan:echan+1] = 1
+                    self.masked_spec[irow] = numpy.ma.masked_array(self.masked_spec[irow].data, fl[irow])
+                tb.putcol('FLAGTRA', fl.transpose())
+        except:
+            raise
+        finally:
+            tb.flush()
+            tb.close()
 
-    def testsel03( self ):
-        """testsel03: pollist='>0'"""
-        tid="03"
-        outfile = self.figroot+tid+self.figsuff
-        pollist='>0'
-        panel = 'p'
-        result = sdplot(infile=self.infile, pollist=pollist,
-                        panel=panel, header=self.header,
-                        outfile=outfile)
-        locinfo = {'npanel': 1, 'nstack': 1, 'title0': 'LL'}
-        refinfo = self._mergeDict(self.baseinfo,locinfo)
-        # Tests
-        self.assertEqual(result,None)
-        currinfo = self._get_plot_info()
-        self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile,self.compare)
+    def run_test(self, refdata, plottype, **kwargs):
+        verbose = False
+        # construct task parameters
+        self.assertFalse(kwargs.has_key('plottype'), "Internal error. plot type should be defined as argument")
+        params = kwargs
+        params['plottype'] = plottype
+        predefs = ['infile', 'panel', 'stack']
+        for par in predefs:
+            if not params.has_key(par) and hasattr(self, par):
+                params[par] = getattr(self, par)
+        # save flag for comparison
+        tbname = params['infile']
+        self._check_file(tbname)
+        tb.open(tbname)
+        flagtra_pre = tb.getcol('FLAGTRA')
+        flagrow_pre = tb.getcol('FLAGROW')
+        tb.close()
+        # invoke task
+        sdplot(**params)
+        # check number of pannels and lines, and data plotted
+        fig = pl.gcf()
+        panels =  fig.axes
+        npanel = len(panels)
+        if verbose: print("number of pannels: %d (expected: %d)." % (npanel, len(refdata)))
+        self.assertEqual(npanel, len(refdata),
+                         "Number of panels differs: %d (expected: %d)." % \
+                         (npanel, len(refdata)))
+        for i in range(npanel):
+            lines = panels[i].get_lines()
+            nline = len(lines)
+            spref = refdata[i]
+            nref = 0 if spref.mask.all() else 1
+            if verbose: print("number of lines in panel %d = %d (expected: %d)" % (i, nline, nref))
+            self.assertEqual(nline, nref, "number of lines in panel %d differs: %d (expected: %d)" % (i, nline, nref))
+            for il in range(nline):
+                spec = lines[il].get_ydata()
+                if verbose: print("spectra=%s (expected: %s)" % (str(spec), str(spref)))
+                self.assertTrue(self._compare_mased_array(spec, spref),
+                                "spectral data differs (panel=%d line=%d)" % (i, il))
+        # make sure FLAGTRA and FLAGROW are not changed
+        tb.open(tbname)
+        flagtra_post = tb.getcol('FLAGTRA')
+        flagrow_post = tb.getcol('FLAGROW')
+        tb.close()
+        self.assertTrue((flagrow_post==flagrow_pre).all(),
+                        "FLAGROW has been changed by task operation")
+        self.assertTrue((flagtra_post==flagtra_pre).all(),
+                        "FLAGTRA has been changed by task operation")
 
-    def testsel04( self ):
-        """testsel04: beamlist='<1'"""
-        tid="04"
-        outfile = self.figroot+tid+self.figsuff
-        beamlist='<1'
-        panel = 'b'
-        result = sdplot(infile=self.infile, beamlist=beamlist,
-                        panel=panel, header=self.header,
-                        outfile=outfile)
-        locinfo = {'npanel': 1, 'title0': 'Beam 0'}
-        refinfo = self._mergeDict(self.baseinfo,locinfo)
-        # Tests
-        self.assertEqual(result,None)
-        currinfo = self._get_plot_info()
-        self._compareDictVal(currinfo, refinfo)
-        self._checkOutFile(outfile,self.compare)
+
+    def _compare_mased_array( self, testval, refval, reltol=1.0e-5 ):
+        """
+        Check if a masked array of test values is within permissive relative
+        difference from refval.
+        Returns a boolean.
+        testval & refval : two masked arrays to compare
+        reltol           : allowed relative difference to consider the two
+                           values to be equal. (default 1.e-5)
+        """
+        maskok = (testval.mask == refval.mask).all()
+        if not maskok: return False
+        for i in range(len(refval)):
+            if refval.mask[i]: continue
+            if not self._isInAllowedRange(refval[i], testval[i], reltol):
+                return False
+        return True
 
 
 
 def suite():
-    return [sdplot_basicTest, sdplot_storageTest,sdplot_gridTest,
-            sdplot_selectTest, sdplot_errorTest]
+    return [sdplot_basicTest, sdplot_storageTest,
+            sdplot_gridTest, sdplot_errorTest,
+            sdplot_selectionTest, sdplot_flagTest]

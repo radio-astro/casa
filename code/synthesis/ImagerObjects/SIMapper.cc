@@ -48,8 +48,8 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/VisBuffer2Adapter.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBuffer2Adapter.h>
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
@@ -207,15 +207,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapper::finalizeDegrid()
   {
     LogIO os( LogOrigin("SIMapper","finalizeDegrid",WHERE) );
+    ft_p->finalizeToVis();
   }
 
-  Bool SIMapper::getFTMRecord(Record& rec)
+  Bool SIMapper::getFTMRecord(Record& rec, const String diskimage)
   {
     LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
     if(ft_p.null())
     	return False;
     String err;
-    return ft_p->toRecord(err, rec, True);
+    return ft_p->toRecord(err, rec, True, diskimage);
     // rec = itsFTM->toRecord();
 
   }

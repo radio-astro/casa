@@ -67,6 +67,7 @@ public:
 		   CountedPtr<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
+  void setRestoringBeam( GaussianBeam restbeam, String usebeam );
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
@@ -85,13 +86,13 @@ protected:
   virtual void finalizeDeconvolver()=0;
 
   // Base Class implements the option of single-plane images for the minor cycle.
-  virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
+  virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
   //  virtual void restorePlane();
 
   // Non virtual. Implemented only in the base class.
-  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
-  Bool findMaxAbsMask(const Matrix<Float>& lattice,const Matrix<Float>& mask,
+  Int checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
+  Bool findMaxAbs(const Array<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
+  Bool findMaxAbsMask(const Array<Float>& lattice,const Array<Float>& mask,
 		      Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
@@ -108,6 +109,9 @@ protected:
 
   SDMaskHandler itsMaskHandler;
   //  Array<Float> itsMatMask;
+
+  GaussianBeam itsRestoringBeam;
+  String itsUseBeam;
 
 };
 

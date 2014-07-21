@@ -381,7 +381,6 @@ print "\t----\t Intro Ex 1 \t----"
 ia.maketestimage('zz',overwrite=true)# Make test image; writes disk file called 'zz'
 print ia.summary()                   # Summarize (to logger)
 print ia.statistics()                # Evaluate statistics over entire image
-#box = ia.setboxregion([10,10],[50,50])  # Make a pixel box region
 box = rg.box([10,10], [50,50])       # Make a pixel box region with regionmanager
 im2 = ia.subimage('zz2', box, overwrite=true)  # Make a subimage  called 'zz2'
 print im2.statistics()                    # Evaluate statistics
@@ -424,7 +423,7 @@ ia.open(datapath2)              # Access casa image
 #ims = ia.newimagefromimage(infile=datapath1, region=rg.quarter())
 # rg.quarter() not implemented yet so has grabbed entire image
 ims = ia.newimagefromimage(infile=datapath1)
-innerquarter=ims.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter=rg.box([0.25,0.25],[0.75,0.75],frac=true)
 subim = ims.subimage(region=innerquarter)
 print ia.name()
 print ims.name()
@@ -1076,12 +1075,12 @@ myim.done()
     <shortdescription>Collapse an image along a specified axis, computing a specified aggregate function of pixels along that axis.</shortdescription>
     <input>
         <param type="string"  name="function">
-            <description>Aggregate function to apply. This can be set to any of the following: max, mean, median, min, rms, stdev, sum, variance. User specification is required. Default value is unset.</description>
+            <description>Aggregate function to apply. This can be set one of flux, max, mean, median, min, rms, stdev, sum, variance. Must be specified.</description>
             <value></value>
         </param>
         <param type="any"  name="axes">
             <any type="variant"/>
-            <description>Zero-based (0, 1, 2) axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
+            <description>Zero-based axis number (specified as a list or integer) along which to collapse the specified image. Default value is 0. </description>
             <value>0</value>
         </param>
         <param type="string"  name="outfile">
@@ -1126,11 +1125,20 @@ specified axis. Both float valued and complex valued images are supported. It co
 function for pixel values along the specified axes,
 and places those values in the single remaining plane of those axes in the output image. The method returns
 an image analysis tool containing the newly-created collapsed image. Valid choices of aggregate functions are:
-'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
+'flux' (see below for constraitns), 'max', 'mean', 'median', 'min', 'rms', 'stdev', 'sum' and 'variance'. Minimal unique matching is supported
 for the function parameter (e.g. function = 'r' will compute the rms of the pixel values, 'med' will compute
 the median, etc.).
 
-Axes may be specified as a single integer or an array of integers indicating the zero-based (i.e. 0, 1, 2)
+If one specifies function='flux', the following constraints must be true:
+
+1. The image must have a direction coordinate,
+2. The image must have at least one beam,
+3. The specified axes must be exactly the direction coordinate axes,
+4. Only one of the non-directional axes may be non-degenerate,
+5. The iamge brightness unit must be conformant with x*yJy/beam, where x is an optional unit (such as km/s for moments images)
+   and y is an optional SI prefix.
+
+Axes may be specified as a single integer or an array of integers indicating the zero-based
 axes along which to collapse the image. Axes may also be specified as a single or array of strings which
 minimally and uniquely match (ignoring case) world axis names in the image (e.g. 'dec' for
 collapsing along the declination axis or ['ri', 'd'] for collapsing along both the right ascension and
@@ -1301,6 +1309,12 @@ wild cards accepted.  Default is empty string.</description>
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
+     
+     <param type="bool" name="reorder">
+        <description>Automatically reorder the images if necessary.</description>
+        <value>false</value>
+     </param>
+     
 </input>
 <returns type="image"/>
 
@@ -1331,14 +1345,24 @@ this \tool\ useless.  When you destroy this tool (with the <link
 anchor="images:image.done.function">done</link> function) the
 reference connections are broken.
 
-The input and output images must be of the same dimension.  Therefore,
+The input and output images must be of the same dimensionality.  Therefore,
 if you wish to concatenate 2-D images into a 3-D image, the 2-D images
 must have a third axis (of length unity) so that the output image
 coordinates are known along the concatenation axis. 
 
-The input images are concatenated in the order in which they are listed. 
-Therefore, the Coordinate System of the output image is given by that of the
-first input image.  The input images are checked to see that they are
+The input images are concatenated in the order in which they are listed unless
+the reorder parameter is set to True. If True, the images are reordered if necessary
+so that the world coordinate values along the selected axis monotonically increase 
+or decrease. The direction of the increment is determined by the first listed image.
+If reorder=True, the world coordinate ranges of the images along the selected axis
+are not permitted to overlap, and the signs of the increments for this axis in all
+images must be the same. If reorder=False, the coordinate system of the first listed
+image is used as the coordinate system for the output image. If reorder=True, the
+coordinate system of the first image in the list of the reordered images is used
+as the coordinate system of the output image. Setting reorder=True can be especially
+useful if the infiles are specified using a wildcard character(s).
+
+If relax=False, the input images are checked to see that they are
 contiguous along the concatenation axis and an error is generated if
 they are not.  In addition, the coordinate descriptors (e.g.  reference
 pixel, reference value etc) for the non-concatenation axes must be the
@@ -1476,7 +1500,7 @@ bigim.done()
 <description>
 
 This function converts a numerical (integer or float) numpy array of any size and
-dimensionality into a \casa\ image. 
+dimensionality into a \casa\ image. It will create both float and complex valued images.
 
 The image analysis tool on which this method is called will reference the created image;
 if this tool referenced another image before this call, that image will no longer be referenced
@@ -1487,8 +1511,8 @@ which this method was called will reference a temporary image (either in memory 
 depending on its size) that will be deleted when the tool
 is closed.
 
-At present, no matter what type the {\stfaf pixels} array is, a
-float-valued image will be written.
+Float valued images are produced from real-valued arrays. Complex-valued images are produced from
+complex-valued arrays.
 
 The coordinate system, provided as a <link
 anchor="images:coordsys">coordsys</link> \tool converted to a record
@@ -1806,8 +1830,9 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -1865,10 +1890,7 @@ See also the <link anchor="images:image.subimage.function">subimage</link> funct
 """
 #
 print "\t----\t fromimage Ex 1 \t----"
-# Unfortunately, rg.quarter() wasn't implemented when this example was written.
-#ia.fromimage(outfile='image.small', infile='image.large', region=rg.quarter())
-ia.open(infile='test.data')  # needs to be open for ia.setboxregion()
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter = rg.box([0.25,0.25],[0.75,0.75],frac=true)
 ia.close()
 ia.fromimage(outfile='image.small', infile='test.data', region=innerquarter, overwrite=true)
 ia.close()
@@ -2146,8 +2168,9 @@ In this example, all the images are virtual (temporary images).
      <value type="vector"><value>0.0</value> <value>1.0</value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -2260,8 +2283,9 @@ from a normal distribution added.
      <value>-1.0</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>Region of interest.  The default is the whole image.</description>
+     <param type="variant"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
      <value></value>
      </param>
 
@@ -2367,9 +2391,10 @@ im3.done()
    
 <input>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any" name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
 </input>
 <returns type="record">Record or fail</returns>
@@ -2843,8 +2868,9 @@ ia.close()              # The Image tool is detached from the image again, using
      <value>continuumsub.im</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region over which output is desired.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region over which output is desired. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -2915,7 +2941,7 @@ ia.fromarray(outfile='test.data',
              pixels=ia.makearray(0, [64, 64, 4, 128]), overwrite=true)
 #im1csub=ia.continuumsub(region=rg.quarter(),
 #                        channels=range(3,9)+range(54,61),fitorder=0);
-innerquarter=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+innerquarter= rg.box([0.25,0.25],[0.75,0.75],frac=true)
 im1csub=ia.continuumsub(region=innerquarter,
                         channels=range(3,9)+range(54,61),fitorder=0);
 im1csub.done()      # done the on-the-fly image tool
@@ -3065,8 +3091,9 @@ ia.close()
      <value>-1</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>Region of interest.  The default is the whole image.</description>
+     <param type="any"  name="region">
+     <any limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. The default is the whole image.</description>
      <value></value>
      </param>
 
@@ -3453,8 +3480,9 @@ at a particular location at a particular time.
    
 <input>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is unset.</description>
+     <param type="variant"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is unset.</description>
      <value></value>
      </param>
   
@@ -3939,9 +3967,10 @@ ia.close()
      <value>-1</value>
      </param>
 
-     <param type="record"  name="region">
-     <description>The region of interest.  The default setting is the whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. The default setting is the whole image.</description>
+     <value/>
      </param>
 
      <param type="any"  name="mask">
@@ -4039,9 +4068,10 @@ ia.removefile('p.im')
      <value>0.1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest to fit.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -4129,7 +4159,7 @@ We use the Componentlist GUI to look at the strongest component.
         </param>
         <param type="any"  name="region">
             <any type="variant" limittypes="string record"/>
-            <description>Region name, Default: no region ("").</description>
+            <description>Region of interest. See help par.region for details. Default is entire image.</description>
             <value type="string"/>
         </param>
         <param type="string"  name="chans">
@@ -4279,7 +4309,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value/>
         </param>
         <param type="doubleArray" name="spxest">
-            <description>Initial estimates for the spectral index function coefficients.</description>
+            <description>REQUIRED. Initial estimates as array of numerical values for the spectral index function coefficients. eg [1.5, -0.8] if fitting a plp function thought to be close to 1.5*(x/div)**(-0.8) or [0.4055, -0.8] if fitting an lpt function thought to be close to ln(1.5) - 0.8*ln(x/div).</description>
             <value/>
         </param>
         <param type="boolArray" name="spxfix">
@@ -4338,7 +4368,9 @@ We use the Componentlist GUI to look at the strongest component.
 
     <description>
 This application simultaneously fits any number of gaussian singlets, any number of lorentzian singlets, and any number of gaussian multiplets,
-and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
+and/or a polynomial to one dimensional profiles using the non-linear, least squares Levenberg-Marquardt algorithm. A description of the
+fitting algorithm may be found in AIPS++ Note 224 (http://www.astron.nl/casacore/trunk/casacore/doc/notes/224.html) and in Numerical Recipes
+by W.H. Press et al., Cambridge University Press. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
 center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
 more gaussian lines in which at least one (and possibly two or three) parameter of each line is dependent on the parameter of another,
 single (reference) profile in the multiplet. For example, one can specify a doublet in which the amplitude of the first line is 0.6 times the
@@ -4347,27 +4379,31 @@ line is identical (in pixels) to that of the zeroth line. There is no limit to t
 (except of course that the number of parameters to be fit should be significantly less than the number of data points), but there can be only
 a single reference profile in a multiplet to which to tie constraints of parameters of the other profiles in the set.
 
-Additionally, a power logarithmic polynomial or a logarithmic tranformed polynomial can be fit. In this case, each of these functions
+Additionally, a power logarithmic polynomial (plp) or a logarithmic tranformed polynomial (ltp) can be fit. In this case, each of these functions
 cannot be fit simultaneously with any other supported function. These functions are most often used for fitting the spectral index and
 higher order terms of a spectrum. A power logarithmic polynomial has the form
 
-y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
+y = c0*x/div**(c1 + c2*ln(x/div) + c3*ln(x/div)**2 + ... + cn*ln(x/div)**(n - 1))
 
 and a logarithmic transformed polynomial is simply the result of this equation after taking the natural log of both sides so that it has the form
 
-ln(y) = c0 + c1*ln(x) + c2*ln(x/D)**2 +  ... + cn*ln(x/D)**n
+ln(y) = c0 + c1*ln(x/div) + c2*ln(x/div)**2 +  ... + cn*ln(x/div)**n
 
 The coefficients of the two forms correspond with each other except that c0 in the second equation is equal to
 ln(c0) of the first. In the case of fitting a spectral index, the spectral index, traditionally represented as alpha, is
 equal to c1.
 
-In both cases, D is a normalization constant used so that abscissa values are closer to unity when they are sent to the fitter. This generally
+In both cases, div is a numerical value used to scale abscissa values so they are closer to unity when they are sent to the fitter. This generally
 improves the probability that the fit will converge. This parameter may be specified via the div parameter. A value of 0
-(the default) indicates that the application should determine a reasonable value for D, which is determined via
+(the default) indicates that the application should determine a reasonable value for div, which is determined via
 
-D = 10**int(log10(sqrt(min(x)*max(x))))
+div = 10**int(log10(sqrt(min(x)*max(x))))
 
 where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
+
+So, for example, if S(nu) is proportional to nu**alpha and you expect alpha to be near -0.8 and the value of S(nu) is 1.5 at
+1e9 Hz and your image(s) have spectral units of Hz, you would specify spxest=[1.5, -0.8] and div=1e9 when fitting a plp function,
+or spxest=[0.405, -0.8] and div=1e9 if fitting an ltp function.
 
 More details of fitting all of these functions are described in following sections.
 
@@ -4776,7 +4812,7 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
         <param type="any" name="noisefwhm">
             <any type="variant" limittypes="int double record string"/>
             <description>Noise correlation beam FWHM. If numeric value, interpreted as pixel widths. If quantity (dictionary, string), it must have angular units.</description>
-            <value type="int">0</value>
+            <value type="string"/>
         </param>
     </input>
     <returns type="record">Results dictionary</returns>
@@ -4830,22 +4866,6 @@ keys are arrays containing the the fitted zero level offset value and its error,
 for each channel. In cases where the fit did not converge, these values are set to NaN.
 The value associated with 'unit' is just the image brightness unit.
 
-If the input image has units of K, the flux density of components will be reported in units
-of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
-1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
-which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
-of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
-of the component dictionary (key 'beamster').  Then divide the numerical value of the
-logged flux density by the beam area in steradians. So, for example
-
-\begin{verbatim}
-# run on an image with K brightness units
-res = ia.fitcomponents(...)
-# get the I flux density in K*beam of component 0
-comp = res['results']['component0']
-flux_density_kperbeam = comp['flux']['value'][0]/comp['beam']['beamster']
-\end{verbatim}
-
 The region can either be specified by a box(es) or a region.
 Ranges of pixel values can be included or excluded from the fit. If specified using
 the box parameter, multiple boxes can be given using the format
@@ -4883,16 +4903,32 @@ noise equations are used to compute the parameter uncertainties.
 SUPPORTED UNITS
 
 Currently only images with brightness units conformant with Jy/beam, Jy.km/s/beam, and K are fully
-supported for fitting. If your image has some other base brightness unit, imfit will assume
-that unit is equivalent to Jy/pixel and results will be calculated accordingly. For images
-with units of K, the flux density will be reported in the logger in some multiple of 
-K.beam if the image has a beam, but will be converted and written in the returned dictionary
-in units of K.rad.rad. Note also that converting the returned results subdictionary to a
-component list via cl.fromrecord() currently only works properly if the flux density units
-in the results dictionary are conformant with Jy. If you need to be able to
-run cl.fromrecord() on the resulting dictionary you can first modify the flux density units
-by hand to be (some prefix)Jy and then run cl.fromrecord on that dictionary, bearing in mind
-your unit conversion.
+supported for fitting. If your image has some other base brightness unit, that unit will be assumed
+to be equivalent to Jy/pixel and results will be calculated accordingly. In particular,
+the flux density (reported as Integrated Flux in the logger and associated with the "flux" key
+in the returned component subdictionary(ies)) for such a case represents the sum of pixel values.
+
+Note also that converting the returned results subdictionary to a component list via cl.fromrecord() currently
+only works properly if the flux density units in the results dictionary are conformant with Jy.
+If you need to be able to run cl.fromrecord() on the resulting dictionary you can first modify the
+flux density units by hand to be (some prefix)Jy and then run cl.fromrecord() on that dictionary,
+bearing in mind your unit conversion.
+
+If the input image has units of K, the flux density of components will be reported in units
+of [prefix]K*rad*rad, where prefix is an SI prefix used so that the numerical value is between
+1 and 1000. To convert to units of K*beam, determine the area of the appropriate beam,
+which is given by pi/(4*ln(2))*bmaj*bmin, where bmaj and bmin are the major and minor axes
+of the beam, and convert to steradians (=rad*rad). This value is included in the beam portion
+of the component subdictionary (key 'beamster'). Then divide the numerical value of the
+logged flux density by the beam area in steradians. So, for example
+
+\begin{verbatim}
+# run on an image with K brightness units
+res = imfit(...)
+# get the I flux density in K*beam of component 0
+comp = res['results']['component0']
+flux_density_kbeam = comp['flux']['value'][0]/comp['beam']['beamster']
+\end{verbatim}
 
 FITTING OVER MULTIPLE CHANNELS
 
@@ -5025,6 +5061,15 @@ Note well the following caveats:
     for).
   * If the image being analyzed is an interferometric image with poor uv sampling, the parameter
     uncertainties may be significantly underestimated.
+    
+The deconvolved size and position angle errors are computed by taking the maximum of the absolute values of the
+differences of the best fit deconvolved value of the given parameter and the deconvolved size of the eight
+possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
+and (position andle +/- position angle error). If the source cannot be deconvolved from the beam (if the best
+fit convolved source size cannot be deconvolved from the beam), upper limits on the deconvolved source size
+are sometimes reported. These limits simply come from the maximum major and minor axes of the deconvolved
+gaussians taken from trying all eight of the aforementioned combinations. In the case none of these combinations
+produces a deconvolved size, no upper limit is reported.
 
 EXAMPLE: 
 
@@ -5200,8 +5245,9 @@ ia.close()
 
 <input>
 
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
 
@@ -5281,7 +5327,7 @@ to recover the pixel from a simple regular region.
 print "\t----\t getregion Ex 1 \t----"
 ia.fromshape('cube', [64,64,64], overwrite=true)
 #r1=rg.box(blc=[10,10,10],trc=[30,40]) # Create region
-r1=ia.setboxregion([10,10,10],[30,40,40]) # Create region
+r1=rg.box([10,10,10],[30,40,40]) # Create region
 pixels=ia.getregion(r1)
 ia.close()
 #
@@ -5303,6 +5349,113 @@ pixelmask = ia.getregion(getmask=T)
 In this example we recover first the pixels and then the pixel mask.
 </example>
 </method>
+
+<method type="function" name="getprofile">
+    <shortdescription>Get values and mask for a one dimensional profile along a specified image axis by applying an aggregate function.</shortdescription>
+    <input>
+        <param type="int"  name="axis">
+            <description>Axis along which to determine profile. Must be specified</description>
+            <value>-1</value>
+        </param>
+        <param type="string" name="function">
+            <description>Aggregate function to apply for collapse along axes orthogonal to specified axis.</description>
+            <value>mean</value>
+        </param>
+        
+        <param type="any"  name="region">
+            <any type="variant" limittypes="record string"/>
+            <description>The region of interest. See help par.region for details. Default is whole image.</description>
+            <value></value>
+        </param>
+        <param type="string"  name="mask">
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value type="string"/>
+        </param>
+        <param type="string" name="unit">
+            <description>Unit of the returned abscissa values. Must either be 'pixel' or be conformant with image axis unit unless axis is the spectral axis. Default is the unit associated with axis in the image coordinate system.</description>
+            <value></value>
+        </param>
+        <param type="bool"  name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>false</value>
+        </param>
+        <param type="string"  name="spectype">
+            <description>Velocity or wavelength type if profile taken along spectral axis. Supported (minimum match, case insensitive) values are "relativistic velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength", "default".</description>
+            <value>default</value>
+        </param>
+        <param type="any"  name="restfreq">
+            <any type="variant"/>
+            <description>Rest frequency to use when calculating coordinate values. Used only if axis is spectral axis and unit is not the unit associated with the axis in the coordinate system. Empty string means use the rest frequency associated with the image coordinate system</description>
+            <value type="string"/>
+        </param>
+        <param type="string"  name="frame">
+            <description>Reference frame to use when calculating coordinate values. Used only if axis is spectral axis and unit is not the unit associated with the axis in the coordinate system. Empty string means use the reference frame associated with the image coordinate system</description>
+            <value/>
+        </param>
+</input>
+<returns type="record"/>
+<description>
+This application returns information on a one-dimensional profile taken along a specified image axis.
+The region of interest is collapsed (a'la ia.collapse() along all axes orthogonal to the one specified, and)
+the specified aggregate function is applied to these pixels to generate the returned values. 
+
+The aggregate function must be one of the functions supported by ia.collapse; ie, 'flux', 'max',  'mean',
+'median', 'min', 'rms', 'stdev', 'sum', and 'variance'. See the help for ia.collapse() for details regarding
+these functions. Minimum match and case insenstivity is supported.
+
+One may specify the unit of the returned coordinate values.  Unless axis is the spectral axis, unit must be
+conformant with the corresponding axis unit in the image coordinate system or it must be 'pixel' which signifies,
+pixel, rather than world, coordinate values should be calculated. If axis is the spectral axis, unit may be a
+velocity unit (assuming the coordinate system has a rest frequency or restfreq is specified) or a length unit.
+In these cases, the returned coordinate values will be converted to velocity or wavelength, respectively.
+
+The parameter spectype may be used to specify the velocity or wavelength type for the returned coordinate values
+if profile is taken along spectral axis. Supported (minimum match, case insensitive) values) are "relativistic
+velocity", "beta", "radio velocity", "optical velocity", "wavelength", "air wavelength", "default". The "default"
+value is equivalent to "relativistic" if unit is a velocity unit or "wavelength" if unit is a length unit.
+
+The restfreq parameter allows one to set the rest frequency for the coordinates to be returned if axis is the
+spectral axis and unit is a velocity unit. If blank, the rest frequency associated with the image coordinate
+system is used.
+
+The frame allows one to specify which kinematic reference frame that the returned coordinate values should be
+calculated in. It is only used if axis is the spectral axis and unit is unspecified or is specified and a
+frequency unit. If blank, the reference frame associated with the image coordinate system is used.
+
+The returned dictionary
+contains the keys:
+
+values:  one-dimensional array along the specified axis containing values resulting from applying the specified
+         aggregate function to corresponding pixels at the same location along that axis.
+mask:    one-dimensional array of booleans of the resulting mask after applying the aggregate function, formed in the
+         same way as that formed by ia.collapse.
+coords   One-dimensional array of corresponding coordinate values along the specified axis in the specified unit
+         (or the unit associated with the axis in the image coordinate system if unspecified).
+xUnit    The unit used for calculating the values the coords array.
+
+
+<example>
+</example>
+
+</description>
+
+<example>
+ia.open('myimage')
+# get the max pixel values along axis 2
+res = ia.getprofile(axis=2, function='max')
+
+# axis 2 is the spectral axis. Get the minimum pixel values along this axis
+# and specify that the returned coordinate values should be optical velocities
+# in km/s
+
+res2 = ia.getprofile(axis=2, function='min', unit='km/s', spectype='optical')
+
+ia.done()
+
+</example>
+
+</method>
+
 
  
    <method type="function" name="getslice">
@@ -5394,7 +5547,7 @@ ia.close()
   
      <param type="any"  name="region">
      	<any type="variant" limittypes="record, string"/>
-    	<description>Dictionary or string specifying the region of interest.  Default is whole image.</description>
+    	<description>Region of interest. See help par.region for details. Default is whole image.</description>
      	<value/>
      </param>
   
@@ -5588,9 +5741,10 @@ and acquires just a read lock.
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -5827,8 +5981,9 @@ ia.history(list=T, browse=F)       # List history to logger
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest of the input image.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest of the input image. See help par.region for details.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -5939,10 +6094,8 @@ print "\t----\t ispersistent Ex 1 \t----"
 ia.fromshape(outfile='tmp', shape=[10,20], overwrite=true)
 print ia.ispersistent()
 #True
-r = ia.setboxregion()                #rg.box() isn't implemented yet
 ia.close()
-#ia.fromimage(infile='tmp', region=rg.box())
-ia.fromimage(infile='tmp', region=r)
+ia.fromimage(infile='tmp')
 print ia.ispersistent()
 #True
 im3 = ia.subimage()
@@ -6022,8 +6175,9 @@ and acquire a readonly lock.
      <description>Imaginary image file name</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -6293,8 +6447,9 @@ ia.close()
      <description>Record representation of a ComponentList model</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest.  Default is whole image.</description>
+     <param type="any" name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -6371,9 +6526,10 @@ In this example we subtract the model returned by the fitcomponents function.
    
 <input>
   
-     <param type="record"  name="region">
-     <description>The 2-D region of interest to fit.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The 2-D region of interest to fit. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="point">
@@ -6449,8 +6605,9 @@ ia.close()
      <value>-10</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region specification. See help par.region. Default is to not use a region.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region specification. See help par.region for details. Default is entire image.</description>
      <value></value>
      </param>
   
@@ -7005,7 +7162,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
             <value></value>
         </param>
@@ -7074,7 +7231,7 @@ The {\stff open} function first closes the old \imagefile.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
             <value></value>
         </param>
@@ -7359,9 +7516,10 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="any" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="list">
@@ -7594,8 +7752,8 @@ ia.close()
      </param>
   
      <param type="any"  name="region">
-        <any type="variant"/>
-        <description>The region of interest.  Default is the whole image.</description>
+        <any type="variant" limittypes="record string"/>
+        <description>The region of interest. See help par.region for details. Default is the whole image.</description>
         <value/>
      </param>
   
@@ -7702,6 +7860,10 @@ get no warnings).
 If you regrid a plane holding a Direction Coordinate and the units are
 Jy/pixel then the output is scaled to conserve flux (roughly; just one
 scale factor at the reference pixel is computed). 
+
+Regridding of complex-valued images is supported. The real and imaginary parts are
+regridded independently and the resulting regridded pixel values are combined to
+form the regridded, complex-valued image.
 
 A variety of interpolation schemes are provided (you need only specify
 the first three characters to {\stfaf method}).  The cubic interpolation
@@ -7986,8 +8148,9 @@ ia.done()
      <value>0deg</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -8175,8 +8338,8 @@ print ia.name(strippath=T)
      </param>
   
      <param type="any"  name="region">
-     	<any type="variant"/>
-     	<description>The region of interest. see help par.region.  Default is whole image.</description>
+     	<any type="variant" limittypes="record string"/>
+     	<description>The region of interest. See help par.region for details. Default is whole image.</description>
     	<value/>
      </param>
   
@@ -8308,7 +8471,7 @@ ia.maketestimage('zz1',overwrite=true)
 ia.calcmask('zz1&lt;0')
 im2 = ia.subimage(outfile='zz2',overwrite=true)
 # r = rg.quarter()
-r=ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
+r=rg.box([0.25,0.25],[0.75,0.75],frac=true)
 ia.replacemaskedpixels(0.0, region=r, mask=im2.name(strippath=T)+'\&gt;0')
 # same as ia.replacemaskedpixels(0.0, region=r, mask='zz2\&gt;0')
 im2.done()
@@ -8448,8 +8611,9 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="region" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -8586,9 +8750,10 @@ ia.close()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="bool"  name="list">
@@ -8642,7 +8807,6 @@ mask is created for you and made the default mask.
 print "\t----\t set Ex 1 \t----"
 ia.maketestimage('yy',overwrite=true)
 ia.fromshape('xx', [10,20], overwrite=true)
-#r1 = ia.setboxregion([2,2],[6,8])
 r1 = rg.box([2,2],[6,8])         # Make a box region
 ia.set(pixels=1.0)               # Set all pixels to 1
 ia.set(pixels='2.0', region=r1)  # Set all pixels to 2 in the region
@@ -8913,6 +9077,10 @@ ia.close()
             <description>Zero-based polarization number for which to set a per plane beam. If the image has a traditional beam, set to less than zero. Default -1.</description>
             <value>-1</value>
         </param>
+        <param type="string" name="imagename">
+            <description>Copy the beam(s) from the specified image to this image. If multiple beams, the current image must be able to hold a beam set of the shape in the specified image.</description>
+            <value/>
+        </param>
             
     </input>
 
@@ -8978,6 +9146,10 @@ channel to a negative value. Similarly, in the case where an image has multiple 
 the beams associated with all polarizations for a given spectral channel can be modified to the same
 beam by setting channel equal to the desired spectral channel number and by setting
 polarization to a negative value.
+
+A beam or set of beams can be copied from another image using the imagename parameter to specify
+that image's name. If both the current image and specified image have multiple beams, the current
+image shape must be consistent with the specified image beam set shape.
 
 The traditional beam or a set of multiple beams can be deleted from an image by setting {\stfaf delete=T}. If set
 to true, all other parameters are then ignored; all existing beams
@@ -9059,8 +9231,9 @@ ib.done()
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>Region of interest.  Default is whole image.</description>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>Region of interest. See help par.region for details. Default is whole image.</description>
      <value></value>
      </param>
   
@@ -9385,9 +9558,10 @@ the the record containing the statistics arrays.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -9743,9 +9917,10 @@ listed in square brackets.
      <value>-1</value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -9888,8 +10063,9 @@ ia.close()
      Default is input name + '.ascii'.</description>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details.
      Default is whole image.</description>
      <value></value>
      </param>
@@ -10364,9 +10540,10 @@ the example we list the names of the fields in this record.
      <value></value>
      </param>
   
-     <param type="record"  name="region">
-     <description>The region of interest.  Default is the whole image.</description>
-     <value></value>
+     <param type="any"  name="region">
+     <any type="variant" limittypes="record string"/>
+     <description>The region of interest. See help par.region for details. Default is the whole image.</description>
+     <value/>
      </param>
   
      <param type="any"  name="mask">
@@ -10567,7 +10744,7 @@ used to create a 2D temporary image.
             <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
+            <any type="variant" limittypes="record string"/>
             <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
             <value></value>
         </param>
@@ -10649,12 +10826,12 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="any" name="length">
-            <description>The length of the segmaent in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
+            <description>The length of the segment in the direction plane. If specified, center and pa must also be specified and neither of start nor end may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
         <param type="any" name="pa">
-            <description>The position angle of the segmaent in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
+            <description>The position angle of the segment in the direction plane, measured from north through east. If specified, center and length must also be specified and neither of start nor end may be specified.</description>
             <any type="variant"/>
             <value/>
         </param>
@@ -10672,9 +10849,9 @@ used to create a 2D temporary image.
             <value>false</value>
         </param>
         <param type="any"  name="region">
-            <any type="variant"/>
-            <description>Region selection. Default is entire image. No selection is permitted in the direction plane.</description>
-            <value></value>
+            <any type="variant" limittypes="record string"/>
+            <description>Region selection. See help par.region for details. Default is entire image. No selection is permitted in the direction plane.</description>
+            <value/>
         </param>
         <param type="string"  name="chans">
             <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
@@ -10800,6 +10977,7 @@ cube = ia.makearray(0,[4,4,4])
 </example>
 </method>
 
+<!--  
 
    <method type="function" name="setboxregion">
    <shortdescription>DEPRECATED. Use rg.box() instead. Set a pixel box region of interest in the image</shortdescription>
@@ -10840,7 +11018,7 @@ Make region box of inner quarter of the image.
 
 """
 #
-print "\t----\t setboxregion Ex 1 \t----"
+print " setboxregion Ex 1 "
 ia.maketestimage()
 box = ia.setboxregion([0.25,0.25],[0.75,0.75],frac=true)
 ia.close()
@@ -10850,7 +11028,7 @@ ia.close()
 </example>
 
 </method>
-
+-->
 
 <method type="function" name="isconform">
     <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
