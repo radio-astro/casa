@@ -369,7 +369,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="double">0.1</value>
     </param>
 
-    <param type="double" name="threshold" subparam="true">
+    <param type="any" name="threshold" subparam="true">
       <description>Stopping threshold (number, in units of Jy)</description>
       <value type="double">0.0</value>
     </param>
