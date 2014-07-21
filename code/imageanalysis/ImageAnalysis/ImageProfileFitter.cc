@@ -352,7 +352,6 @@ void ImageProfileFitter::setSigma(const Array<Float>& sigma) {
 	setSigma(temp.get());
 }
 
-
 void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
 	if (anyTrue(sigma->get() < Array<Float>(sigma->shape(), 0.0))) {
 		*_getLog() << "All sigma values must be non-negative" << LogIO::EXCEPTION;
@@ -457,7 +456,6 @@ void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	_abscissaDivisor = q.getValue(fitAxisUnit);
 	_abscissaDivisorForDisplay = String::toString(q);
 }
-
 
 void ImageProfileFitter::_getOutputStruct(
     vector<OutputDestinationChecker::OutputStruct>& outputs
@@ -666,17 +664,11 @@ void ImageProfileFitter::_fitProfiles(
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 	String abscissaUnits = _isSpectralIndex ? "native" : "pix";
-	if (
+	ThrowIf(
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
-		)
-	) {
-		*_getLog() << errMsg << LogIO::EXCEPTION;
-	}
-	IPosition inTileShape = _subImage->niceCursorShape();
-	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
-	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-
+		), errMsg
+	);
 	uInt nProfiles = 0;
 	uInt nFit = 0;
 	IPosition fitterShape = inShape;
@@ -698,7 +690,23 @@ void ImageProfileFitter::_fitProfiles(
 	Bool checkMinPts = _subImage->isMasked();
 	Array<Bool> fitMask;
 	if (checkMinPts) {
-		fitMask = partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis)) >= _minGoodPoints;
+		fitMask = (
+			partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis))
+			>= _minGoodPoints
+		);
+		IPosition oldShape = fitMask.shape();
+		IPosition newShape(fitMask.ndim() + 1);
+		uInt oldIndex = 0;
+		for (uInt i=0; i<newShape.size(); i++) {
+			if (i == (uInt)_fitAxis) {
+				newShape[i] = 1;
+			}
+			else {
+				newShape[i] = oldShape[oldIndex];
+				oldIndex++;
+			}
+		}
+		fitMask.assign(fitMask.reform(newShape));
 	}
 	SpectralList newEstimates = _nonPolyEstimates;
 
@@ -713,6 +721,7 @@ void ImageProfileFitter::_fitProfiles(
 	Double *divisorPtr = 0;
 
 	Vector<Double> abscissaValues(0);
+	Bool fitSuccess;
 	if (isSpectral) {
 		abscissaValues = fitter.makeAbscissa(
 			abcissaType, True, 0
@@ -730,9 +739,9 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	Bool abscissaSet = abscissaValues.size() > 0;
 
-	std::auto_ptr<PolynomialSpectralElement> polyEl(0);
+	PtrHolder<const PolynomialSpectralElement> polyEl;
 	if (_polyOrder >= 0) {
-		polyEl.reset(new PolynomialSpectralElement(_polyOrder));
+		polyEl.set(new PolynomialSpectralElement(_polyOrder));
 		if (newEstimates.nelements() > 0) {
 			newEstimates.add(*polyEl);
 		}
@@ -748,6 +757,9 @@ void ImageProfileFitter::_fitProfiles(
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __func__);
 	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
+	IPosition inTileShape = _subImage->niceCursorShape();
+	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
+	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
 			pProgressMeter->update(Double(nProfiles));
@@ -761,44 +773,39 @@ void ImageProfileFitter::_fitProfiles(
 			fitter.setAbscissa(abscissaValues);
 			abscissaSet = False;
 		}
-
-		if (
+		ThrowIf (
 			! fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
-			)
-		) {
-			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
-		}
+			), "Unable to set data"
+		);
 		_setFitterElements(
 			fitter, newEstimates, polyEl, goodPos,
 			fitterShape, curPos, nOrigComps
 		);
-
-		nFit++;
-		Bool ok = False;
 		try {
-			ok = fitter.fit();
-			if (ok) {
+			fitSuccess = fitter.fit();
+			if (fitSuccess) {
 				_flagFitterIfNecessary(fitter);
-				ok = fitter.isValid();
+				fitSuccess = fitter.isValid();
 				if (
-					ok && _nonPolyEstimates.nelements() > 0
+					fitSuccess && _nonPolyEstimates.nelements() > 0
 				) {
 					goodPos.push_back(curPos);
 				}
 			}
 		}
 		catch (const AipsError& x) {
-			ok = False;
+			fitSuccess = False;
 		}
 		_fitters(curPos).reset(new ProfileFitResults(fitter));
 		// Evaluate and fill
 		if (pFit || pResid) {
 			_updateModelAndResidual(
-				pFit, pResid, ok, fitter, sliceShape, curPos,
+				pFit, pResid, fitSuccess, fitter, sliceShape, curPos,
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
+		nFit++;
 	}
 }
 
@@ -846,19 +853,17 @@ void ImageProfileFitter::_updateModelAndResidual(
 
 void ImageProfileFitter::_setFitterElements(
 	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+	const PtrHolder<const PolynomialSpectralElement>& polyEl,
 	const std::vector<IPosition>& goodPos,
 	const IPosition& fitterShape, const IPosition& curPos,
 	uInt nOrigComps
-
-
 ) const {
 	if (_nonPolyEstimates.nelements() == 0) {
 		if (! fitter.setGaussianElements (_nGaussSinglets)) {
 			*_getLog() << "Unable to set gaussian elements"
 				<< LogIO::EXCEPTION;
 		}
-		if (polyEl.get() != 0) {
+		if (polyEl.ptr()) {
 			fitter.addElement(*polyEl);
 		}
 	}

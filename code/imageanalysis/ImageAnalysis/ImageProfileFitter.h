@@ -273,7 +273,7 @@ private:
 
     void _setFitterElements(
     	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-    	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+    	const PtrHolder<const PolynomialSpectralElement>& polyEl,
     	const vector<IPosition>& goodPos,
     	const IPosition& fitterShape, const IPosition& curPos,
     	uInt nOrigComps
