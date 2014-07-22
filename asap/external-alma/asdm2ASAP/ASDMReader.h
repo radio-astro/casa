@@ -10,10 +10,12 @@
 #include <ASDMAll.h>
 #include <SDMBinData.h>
 
-class casa::MDirection;
-class casa::MeasFrame;
-class casa::MPosition;
-class casa::MEpoch;
+namespace casa {
+  class MDirection;
+  class MeasFrame;
+  class MPosition;
+  class MEpoch;
+}
 
 class ASDMReader
 {
