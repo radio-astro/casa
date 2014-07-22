@@ -408,7 +408,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     return True;
   }
-  
+
+  /*
+  Bool SDAlgorithmBase::findMinMaxMask(const Array<Float>& lattice,
+				       const Array<Float>& mask,
+				       Float& minVal, Float& maxVal)
+  //				       IPosition& minPos, IPosition& maxPos)
+  {
+    //posMaxAbs = IPosition(lattice.shape().nelements(), 0);
+    //maxAbs=0.0;
+    IPosition posmin(lattice.shape().nelements(), 0);
+    IPosition posmax(lattice.shape().nelements(), 0);
+    minMaxMasked(minVal, maxVal, posmin, posmax, lattice,mask);
+
+    return True;
+  }
+  */
   /*
 
   GaussianBeam SDAlgorithmBase::getPSFGaussian()

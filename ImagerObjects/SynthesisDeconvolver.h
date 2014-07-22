@@ -93,6 +93,14 @@ protected:
 
   CountedPtr<SIImageStore> makeImageStore( String imagename );
 
+  void findMinMax(const Array<Float>& lattice,
+					const Array<Float>& mask,
+					Float& minVal, Float& maxVal,
+					Float& minValMask, Float& maxValMask);
+
+  void printImageStats();
+
+
   // Gather all part images to the 'full' one
   //void gatherImages();
   //void scatterModel();
