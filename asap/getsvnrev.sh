@@ -4,9 +4,9 @@
 # we executed make.
 
 # if we don't see the .svn directory, just return
-if test ! -d .svn; then
-   exit 0;
-fi
+#if test ! -d .svn; then
+#   exit 0;
+#fi
 
 
 OUT=python/svninfo.txt
