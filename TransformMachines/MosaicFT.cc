@@ -30,6 +30,7 @@
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
+#include <measures/Measures/UVWMachine.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -302,6 +303,9 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
+  //make sure we rotate the first field too
+  lastFieldId_p=-1;
+  phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
   prepGridForDegrid();
    
@@ -393,6 +397,9 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
+  //make sure we rotate the first field too
+  lastFieldId_p=-1;
+  phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
   if((image->shape().product())>cachesize) {
     isTiled=True;
@@ -951,7 +958,7 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   
   doUVWRotation_p=True;
-  rotateUVW(uvw, dphase, vb);
+  girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
 
   // Get the pointing positions. This can easily consume a lot 
@@ -1470,7 +1477,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   
   doUVWRotation_p=True;
-  rotateUVW(uvw, dphase, vb);
+  girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
   
   
@@ -2113,6 +2120,114 @@ void MosaicFT::addBeamCoverage(ImageInterface<Complex>& pbImage){
 
 
 }
+
+
+void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+			    const VisBuffer& vb)
+{
+    
+    
+    
+    //the uvw rotation is done for common tangent reprojection or if the 
+    //image center is different from the phasecenter
+    // UVrotation is False only if field never changes
+  
+   if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
+      doUVWRotation_p=True;
+    if(doUVWRotation_p ||  fixMovingSource_p){
+      
+      mFrame_p.epoch() != 0 ? 
+	mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
+	mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), vb.msColumns().timeMeas()(0).getRef()));
+      MDirection::Types outType;
+      MDirection::getType(outType, mImage_p.getRefString());
+      MDirection phasecenter=MDirection::Convert(vb.phaseCenter(), MDirection::Ref(outType, mFrame_p))();
+      
+
+      if(fixMovingSource_p){
+       
+      //First convert to HA-DEC or AZEL for parallax correction
+	MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+	MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+	MDirection::Ref outref(mImage_p.getRef().getType(), mFrame_p);
+	MDirection sourcenow=MDirection::Convert(tmphadec, outref)();
+	//cerr << "Rotating to fixed moving source " << MVDirection(phasecenter.getAngle()-firstMovingDir_p.getAngle()+sourcenow.getAngle()) << endl;
+	phasecenter.set(MVDirection(phasecenter.getAngle()+firstMovingDir_p.getAngle()-sourcenow.getAngle()));
+	
+    }
+
+
+      // Set up the UVWMachine only if the field id has changed. If
+      // the tangent plane is specified then we need a UVWMachine that
+      // will reproject to that plane iso the image plane
+      if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p) || fixMovingSource_p) {
+	
+	String observatory=vb.msColumns().observation().telescopeName()(0);
+	if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
+	if(observatory.contains("ATCA") || observatory.contains("WSRT")){
+		//Tangent specified is being wrongly used...it should be for a
+	    	//Use the safest way  for now.
+	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
+					True, False);
+	    phaseShifter_p=new UVWMachine(mImage_p, phasecenter, mFrame_p,
+					True, False);
+	}
+	else{
+	  uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(),  mFrame_p,
+				      False, False);
+	  phaseShifter_p=new UVWMachine(mImage_p, phasecenter,  mFrame_p,
+				      False, False);
+	}
+      }
+
+	lastFieldId_p=vb.fieldId();
+	lastMSId_p=vb.msId();
+
+      
+      AlwaysAssert(uvwMachine_p, AipsError);
+      
+      // Always force a recalculation 
+      uvwMachine_p->reCalculate();
+      phaseShifter_p->reCalculate();
+      
+      // Now do the conversions
+      uInt nrows=dphase.nelements();
+      Vector<Double> thisRow(3);
+      thisRow=0.0;
+      uInt irow;
+      CoordinateSystem csys=image->coordinates();
+      DirectionCoordinate dc=csys.directionCoordinate(0);
+      Vector<Double> thePix(2);
+      dc.toPixel(thePix, phasecenter);
+      //cerr << "field id " << vb.fieldId() << "  the Pix " << thePix << endl;
+      Vector<Float> scale(2);
+      //scale(0)=(nx*dc.increment()(0))/C::c;
+      //scale(1)=(ny*dc.increment()(1))/C::c;
+      scale(0)=dc.increment()(0);
+      scale(1)=dc.increment()(1);
+      for (irow=0; irow<nrows;++irow) {
+	thisRow.reference(uvw.column(irow));
+	//cerr << " uvw " << thisRow ;
+	// This is for frame change
+	uvwMachine_p->convertUVW(dphase(irow), thisRow);
+	// This is for correlator change
+	MVPosition rotphase=phaseShifter_p->rotationPhase() ;
+	rotphase(2)=0.0;
+	//cerr << " rotPhase " <<  rotphase << " oldphase "<<  rotphase*(uvw.column(irow))  << " newphase " << (rotphase)*thisRow ;
+	//	cerr << " phase " << dphase(irow) << " new uvw " << uvw.column(irow);
+	//dphase(irow)+= (thePix(0)-nx/2.0)*thisRow(0)*scale(0)+(thePix(1)-ny/2.0)*thisRow(1)*scale(1);
+	//Double pixphase=(thePix(0)-nx/2.0)*uvw.column(irow)(0)*scale(0)+(thePix(1)-ny/2.0)*uvw.column(irow)(1)*scale(1);
+	//Double pixphase2=(thePix(0)-nx/2.0)*thisRow(0)*scale(0)+(thePix(1)-ny/2.0)*thisRow(1)*scale(1);
+	//cerr << " pixphase " <<  pixphase <<  " pixphase2 " << pixphase2<< endl;
+	//dphase(irow)=pixphase;
+	dphase(irow)+= (rotphase)*thisRow;
+      }
+	
+      
+    }
+}
+
+
 
 String MosaicFT::name() const {
   return machineName_p;
