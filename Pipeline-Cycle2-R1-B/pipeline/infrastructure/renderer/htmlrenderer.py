@@ -1878,7 +1878,8 @@ class WvrgcalflagPhaseOffsetPlotRenderer(object):
                 'plots'      : self.plots,
                 'antennas'   : self.antenna_names,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'plot_title' : 'WVR Phase Offset Plots for %s' % self.ms}
 
     @property
     def dirname(self):
@@ -1945,7 +1946,8 @@ class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'plot_title' : 'Phase offset vs average baseline for %s' % self.ms}
 
     @property
     def dirname(self):
@@ -4221,7 +4223,8 @@ class TsyscalPlotRenderer(object):
                 'result'     : self.result,
                 'plots'      : self.plots,
                 'dirname'    : self.dirname,
-                'json'       : self.json}
+                'json'       : self.json,
+                'plot_title' : 'T<sub>sys</sub> plots for %s' % self.ms}
 
     @property
     def dirname(self):
