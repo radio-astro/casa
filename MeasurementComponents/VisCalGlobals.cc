@@ -186,7 +186,7 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("EVLAGAIN"))
     throw(AipsError("Please regenerate EVLA Sw Pow table using gencal."));
 
-  else if (uptype.contains("ZTEC") || uptype.contains("FJONES") )  // zenith tec model
+  else if (uptype.contains("TEC") || uptype.contains("FJONES") )  // zenith tec model
     return new FJones(vs);
 
   else {
