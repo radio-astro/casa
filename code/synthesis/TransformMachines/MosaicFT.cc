@@ -2194,25 +2194,21 @@ void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
       uInt nrows=dphase.nelements();
       Vector<Double> thisRow(3);
       thisRow=0.0;
-      uInt irow;
-      CoordinateSystem csys=image->coordinates();
-      DirectionCoordinate dc=csys.directionCoordinate(0);
-      Vector<Double> thePix(2);
-      dc.toPixel(thePix, phasecenter);
+      //CoordinateSystem csys=image->coordinates();
+      //DirectionCoordinate dc=csys.directionCoordinate(0);
+      //Vector<Double> thePix(2);
+      //dc.toPixel(thePix, phasecenter);
       //cerr << "field id " << vb.fieldId() << "  the Pix " << thePix << endl;
-      Vector<Float> scale(2);
-      //scale(0)=(nx*dc.increment()(0))/C::c;
-      //scale(1)=(ny*dc.increment()(1))/C::c;
-      scale(0)=dc.increment()(0);
-      scale(1)=dc.increment()(1);
-      for (irow=0; irow<nrows;++irow) {
+      //Vector<Float> scale(2);
+      //scale(0)=dc.increment()(0);
+      //scale(1)=dc.increment()(1);
+      for (uInt irow=0; irow<nrows;++irow) {
 	thisRow.reference(uvw.column(irow));
 	//cerr << " uvw " << thisRow ;
 	// This is for frame change
 	uvwMachine_p->convertUVW(dphase(irow), thisRow);
-	// This is for correlator change
+	// This is for correlator phase center change
 	MVPosition rotphase=phaseShifter_p->rotationPhase() ;
-	rotphase(2)=0.0;
 	//cerr << " rotPhase " <<  rotphase << " oldphase "<<  rotphase*(uvw.column(irow))  << " newphase " << (rotphase)*thisRow ;
 	//	cerr << " phase " << dphase(irow) << " new uvw " << uvw.column(irow);
 	//dphase(irow)+= (thePix(0)-nx/2.0)*thisRow(0)*scale(0)+(thePix(1)-ny/2.0)*thisRow(1)*scale(1);
@@ -2220,7 +2216,7 @@ void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 	//Double pixphase2=(thePix(0)-nx/2.0)*thisRow(0)*scale(0)+(thePix(1)-ny/2.0)*thisRow(1)*scale(1);
 	//cerr << " pixphase " <<  pixphase <<  " pixphase2 " << pixphase2<< endl;
 	//dphase(irow)=pixphase;
-	dphase(irow)+= (rotphase)*thisRow;
+	dphase(irow)+= rotphase(0)*thisRow(0)+rotphase(1)*thisRow(1);
       }
 	
       
