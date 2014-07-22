@@ -509,8 +509,8 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
   sourceRow=-1;
   String modelkey=String("definedmodel_field_")+String::toString(fieldId);
   thekey="";
-  if(Table::isReadable(thems.sourceTableName()) &&thems.source().nrow() > 0 ){
-    if(thems.source().keywordSet().isDefined(modelkey)){
+  if(Table::isReadable(thems.sourceTableName()) && thems.source().nrow() > 0 && (thems.source().keywordSet().isDefined(modelkey))){
+      {
       thekey=thems.source().keywordSet().asString(modelkey);
       if(thems.source().keywordSet().isDefined(thekey))
 	sourceRow=thems.source().keywordSet().asInt(thekey);
@@ -540,8 +540,8 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
 
   Bool VisModelData::getModelRecord(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs){
     //Let's try the Source table
-    if(Table::isReadable(theMs.sourceTableName()) &&theMs.source().nrow() > 0 ){
-      if(theMs.source().keywordSet().isDefined(theKey)){
+    if(Table::isReadable(theMs.sourceTableName()) &&theMs.source().nrow() > 0 && (theMs.source().keywordSet().isDefined(theKey))){
+	{
 	//Get the row for the model 
         Int row=theMs.source().keywordSet().asInt(theKey);
 	//ROMSSourceColumns srcCol(theMs.source());
@@ -600,26 +600,27 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       theMS.rwKeywordSet().removeField(elkey);
     Int row=-1;
     //Prefer the Source table first    
-    if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
+    ROMSFieldColumns fCol(theMS.field());
+    if(Table::isReadable(theMS.sourceTableName()) && (theMS.source().nrow() > 0) &&  (!fCol.sourceId().isNull()) && (fCol.sourceId().get(fieldIds[0]) != -1) ){
       //
-      ROMSFieldColumns fCol(theMS.field());
       row=0;
       MSSource& mss=theMS.source();
-      if(!fCol.sourceId().isNull()){
-	Int sid=fCol.sourceId().get(fieldIds[0]);
-	Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
-	if(rows.nelements() > 0) 
-	  row=rows[0];
-	else{
-	  LogIO logio;
-	  logio << "Invalid Source_id "+String::toString(sid)+" found in FIELD table\n" 
-		<<"Model is being written at Source ID 0 position which will be erased\n" 
-                << "Fix the FIELD table before proceeding " 
-		<<  LogIO::WARN << LogIO::POST;
-    
-	}
-	  
+     
+      Int sid=fCol.sourceId().get(fieldIds[0]);
+      Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
+      if(rows.nelements() > 0) 
+	row=rows[0];
+      else{
+	LogIO logio;
+	logio << "Invalid Source_id "+String::toString(sid)+" found in FIELD table\n" 
+	      <<"Model is being written at Source ID 0 position which will be erased\n" 
+	      << "Fix the FIELD table before proceeding " 
+	      <<  LogIO::WARN << LogIO::POST;
+	
       }
+	  
+	
+      
       putRecordByKey(theMS, elkey, theRec, row);
       for (uInt k=0; k < fieldIds.nelements();  ++k){
 	mss.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);
