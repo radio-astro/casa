@@ -57,7 +57,8 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 
-#include <msvis/MSVis/SubMS.h>
+//#include <msvis/MSVis/SubMS.h>
+#include <mstransform/MSTransform/MSTransformRegridder.h>
 #include <msvis/MSVis/MSUtil.h>
 
 #include <sys/types.h>
@@ -1463,8 +1464,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-        SubMS thems(msobj);
-        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+        //SubMS thems(msobj);
+        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+        if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
@@ -1716,9 +1718,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          <<" dataFrame="<<dataFrame <<" veltype="<<veltype
          << LogIO::POST;
 
-      Bool rst=SubMS::calcChanFreqs(os,
+      //Bool rst=SubMS::calcChanFreqs(os,
+      Double dummy; // dummy variable  - weightScale is not used here
+      Bool rst=MSTransformRegridder::calcChanFreqs(os,
                            chanFreq, 
                            chanFreqStep,
+                           dummy,
                            dataChanFreq,
                            dataChanWidth,
                            phaseCenter,
