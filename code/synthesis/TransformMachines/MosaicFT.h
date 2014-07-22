@@ -125,6 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MosaicFT;
   class SimplePBConvFunc;
   class MPosition;
+  class UVWMachine;
 
 
 class MosaicFT : public FTMachine {
@@ -233,6 +234,9 @@ protected:
   void findConvFunction(const ImageInterface<Complex>& image,
 			const VisBuffer& vb);
 
+  void girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+  		const VisBuffer& vb);
+
   void addBeamCoverage(ImageInterface<Complex>& image);
   void prepGridForDegrid();
 
@@ -325,6 +329,7 @@ protected:
   CountedPtr<TempImage<Float> >skyCoverage_p;
   TempImage<Complex>* convWeightImage_p;
   CountedPtr<SimplePBConvFunc> pbConvFunc_p;
+  CountedPtr<UVWMachine> phaseShifter_p;
  //Later this 
   String machineName_p;
   Bool doneWeightImage_p;
