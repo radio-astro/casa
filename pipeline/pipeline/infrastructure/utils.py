@@ -173,12 +173,22 @@ def total_time_on_source(scans):
         # measurement set is missing scans with science intent
         return datetime.timedelta(0)
 
-def format_datetime(dt):
+def format_datetime(dt, dp=0):
     '''
     Return a formatted string representation for the given datetime
     '''
-    # Ignore microseconds
-    return dt.strftime('%Y-%m-%d %H:%M:%S')
+    if dp > 6:
+        raise ValueError('Cannot exceed 6 decimal places as datetime stores '
+                         'to microsecond precision')
+
+    s = dt.strftime('%Y-%m-%d %H:%M:%S')    
+    if dp <= 0:
+        # Ignore microseconds
+        return s
+
+    microsecs = dt.microsecond / 1e6
+    f = '{0:.%sf}' % dp
+    return s + f.format(microsecs)[1:]
 
 def format_timedelta(td, dp=0):
     '''

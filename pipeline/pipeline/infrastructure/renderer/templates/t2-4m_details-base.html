@@ -268,11 +268,11 @@ Help disabled until the task descriptions from John's presentation are added
 			<div class="accordion-inner">
 				<dl class="dl-horizontal">
 					<dt>Start time</dt>
-					<dd>${result.timestamps.start}</dd>
+					<dd>${utils.format_datetime(result.timestamps.start, dp=3)}</dd>
 					<dt>End</dt>
-					<dd>${result.timestamps.end}</dd>
+					<dd>${utils.format_datetime(result.timestamps.end, dp=3)}</dd>
 					<dt>Duration</dt>
-					<dd>${str(result.timestamps.end - result.timestamps.start)}</dd>
+					<dd>${utils.format_timedelta(result.timestamps.end - result.timestamps.start, dp=3)}</dd>
 					<dt>Context size</dt>
 					<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
 				</dl>
