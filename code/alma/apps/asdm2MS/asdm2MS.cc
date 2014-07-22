@@ -2538,7 +2538,7 @@ void fillMainLazily(const string& dsName,
       //
       unsigned int	stepSDBl     = 0;
       unsigned int	stepCrossBl  = 0;
-      unsigned int	stepBl	     = 0;
+      //unsigned int	stepBl	     = 0;
       for (unsigned int i = 0; i < numberOfSpectralWindows; i++) {
 	//stepBl			    += numberOfChannels_v[i]*numberOfPolarizations_v[i];
 	stepSDBl		    += numberOfChannels_v[i]*numberOfSDPolarizations_v[i];
@@ -2547,7 +2547,7 @@ void fillMainLazily(const string& dsName,
 
       if (debug) {
 	oss.str("");
-	oss << "stepBl : " << stepBl;
+	oss << "stepSDBl : " << stepSDBl << "\n" << "stepCrossBl : " << stepCrossBl; 
 	LOG(oss.str());
       }
 
@@ -2830,7 +2830,7 @@ void fillMainLazily(const string& dsName,
 	      // Prepare a pair<int, int> to transport the shape of some cells
 	      //
 	      pair<int,int> nChanNPol = make_pair<int, int>(numberOfChannels_v[iDD],
-							    numberOfSDPolarizations_v[iDD]);
+							    numberOfSDPolarizations_v[iDD] == 3 ? 4 : numberOfSDPolarizations_v[iDD] );
 
 	      //
 	      // Compute weight and sigma which depend on interval and iDD.
@@ -2864,7 +2864,7 @@ void fillMainLazily(const string& dsName,
 						 numberOfSpectralWindows,
 						 numberOfChannels_v[iDD],
 						 numberOfSDPolarizations_v[iDD],
-						 stepBl, //numberOfSpectralWindows * numberOfChannels * numberOfSDPolarizations,
+						 stepSDBl, //numberOfSpectralWindows * numberOfChannels * numberOfSDPolarizations,
 						 iDD,
 						 autoScaleFactors,
 						 sdmDataSubset.autoDataPosition(),
@@ -4107,7 +4107,8 @@ int main(int argc, char *argv[]) {
     infostream << "Input ASDM dataset : " << dsName << endl;
     info(infostream.str());
     
-    ds->setFromFile(dsName, ASDMParseOptions().loadTablesOnDemand(true).checkRowUniqueness(checkRowUniqueness));
+    ASDMParseOptions parse = ASDMParseOptions().loadTablesOnDemand(true).checkRowUniqueness(checkRowUniqueness);
+    ds->setFromFile(dsName, parse);
   }
   catch (ConversionException e) {
     errstream.str("");
@@ -6127,6 +6128,11 @@ int main(int argc, char *argv[]) {
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << "produced a total of " << numberOfMSMainRows << " MS Main rows." << endl;
 	}
+      }
+      catch ( ConversionException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
       }
       catch ( IllegalAccessException& e) {
 	infostream.str("");
