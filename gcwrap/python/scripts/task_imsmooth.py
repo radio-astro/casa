@@ -72,30 +72,28 @@ import numpy
 from taskinit import *
 
 def imsmooth(
-    imagename, kernel, major, minor, pa, targetres, region,
+    imagename, kernel, major, minor, pa, targetres, kimage, scale, region,
     box, chans, stokes, mask, outfile, stretch, overwrite, beam
 ):
     casalog.origin( 'imsmooth' )
-    if (type(beam) == str):
+    ikernel = kernel.startswith('i')
+    ckernel = kernel.startswith('c')
+    bkernel = kernel.startswith('b')
+    gkernel = kernel.startswith('g')
+    if (
+        not (
+            gkernel or  bkernel or ckernel or ikernel
+        )
+    ):
+        casalog.post('Unsupported kernel, ' + kernel, 'SEVERE' )
+        return False
+
+    if (not ikernel and type(beam) == str):
         if len(beam) != 0:
             err = "beam cannot be a non-empty string"
             casalog.post(err, "SEVERE")
             raise Exception(err)
-        beam = {}
-    retValue = False
-    # boxcar, tophat and user-defined kernel's are not supported
-    # yet.
-
-    if (
-        not (
-            kernel.startswith( 'g' ) or  kernel.startswith( 'b' )
-            or kernel.startswith('c')
-        )
-    ):
-        casalog.post( 'Our deepest apologies gaussian kernels is the only'
-                      +' type supported at this time.', 'SEVERE' )
-        return retValue
-    
+        beam = {}    
 
     # First check to see if the output file exists.  If it
     # does then we abort.  CASA doesn't allow files to be
@@ -109,24 +107,28 @@ def imsmooth(
     retia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
-    reg = rg.frombcs(
+    myrg = rgtool()
+    reg = myrg.frombcs(
         mycsys.torecord(), _myia.shape(), box, chans,
         stokes, "a", region
     )
+    myrg.done()
+    mycsys.done()
     _myia.done()
     # If the values given are integers we assume they are given in
     # arcsecs and alter appropriately
-    if isinstance(major, (int, long, float)):
-        major=str(major)+'arcsec'
-    if isinstance(minor, (int, long, float)):
-        minor=str(minor)+'arcsec'
-    if isinstance(pa, (int, long, float)):
-        pa=str(pa)+'deg'
+    if not ikernel:
+        if isinstance(major, (int, long, float)):
+            major=str(major)+'arcsec'
+        if isinstance(minor, (int, long, float)):
+            minor=str(minor)+'arcsec'
+        if isinstance(pa, (int, long, float)):
+            pa=str(pa)+'deg'
         
     try:       
-        if ( kernel.startswith("g") or kernel.startswith("c")):
+        if ( gkernel or ckernel):
             _myia.open(imagename)
-            if kernel.startswith("c"):
+            if ckernel:
                 beam = _myia.commonbeam()
                 # add a small epsilon to avoid convolving with a null beam to reach
                 # a target resolution that already exists
@@ -154,7 +156,7 @@ def imsmooth(
             )
             return True
 
-        elif (kernel.startswith( "b" ) ):
+        elif (bkernel ):
             if not major or not minor:
                 raise Exception, "Both major and minor must be specified."
             # BOXCAR KERNEL
@@ -185,13 +187,20 @@ def imsmooth(
                 overwrite=overwrite
             )
             return True
+        elif ikernel:
+            _myia.open(imagename)
+            retia = _myia.convolve(
+                outfile=outfile, kernel=kimage, scale=scale, region=reg,
+                mask=mask, overwrite=overwrite, stretch=stretch 
+            )
+            return True
         else:
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
             return False
         
     except Exception, instance:
         casalog.post("Exception: " + str(instance), 'SEVERE')
-        raise
+        return False
     finally:
         _myia.done()
         retia.done()

@@ -28,7 +28,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="kernel">
-        <description>Type of kernel to use. Acceptable values are "b", "box", or "boxcar" for a boxcar kernel, "g", "gauss", or "gaussian" for a gaussian kernel, "c", "common", or "commonbeam" to use the common beam of an image with multiple beams as the gaussian to which to convolve all the planes.</description>
+        <description>Type of kernel to use. Acceptable values are "b", "box", or "boxcar" for a boxcar kernel, "g", "gauss", or "gaussian" for a gaussian kernel, "c", "common", or "commonbeam" to use the common beam of an image with multiple beams as the gaussian to which to convolve all the planes, "i" or "image" to use an image as the kernel.</description>
         <value>gauss</value>
         <allowed kind="enum">
             <value>g</value>
@@ -40,6 +40,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>commonbeam</value>
             <value>common</value>
             <value>c</value>
+            <value>image</value>
+            <value>i</value>
         </allowed>
     </param>
 
@@ -68,7 +70,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         -->
         <value type="bool">False</value>
     </param>
-
+    <param type="string" name="kimage" subparam="yes">
+        <description>Kernel image name. Only used if kernel="i" or "image".</description>
+        <value/>
+    </param>
+    <param type="double" name="scale" subparam="yes">
+        <description>Scale factor. -1.0 means auto-scale. Only used if kernel="i" or "image".</description>
+        <value>-1.0</value>
+    </param>
     <param type="any" name="region">
         <description>Region selection. See help par.region. Empty string means use box/chans/stokes if supplied, or else entire image.</description>
 	<any type='variant' limittype='string stringArray'/>
@@ -162,6 +171,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="major"><value type="string"/></default>
                 <default param="minor"><value type="string"/></default>
             </equals>
+            <equals value="image">
+                <default param="kimage"><value type="string"/></default>
+                <default param="scale"><value type="double">-1.0</value></default>
+            </equals>
+            <equals value="i">
+                <default param="kimage"><value type="string"/></default>
+                <default param="scale"><value type="double">-1.0</value></default>
+            </equals>
 	    </when>
         <when param="mask">
             <notequals type="string" value="">
@@ -184,14 +201,14 @@ outfile      Output smoothed image file name. Must be specified.
 kernel       Type of kernel to use when smoothing ("g", "gauss", or "gaussian" for a gaussian
              kernel or "b", "box", or "boxcar" for a boxcar kernel), or if the
              image has multiple channels and kernel="commonbeam" (or "c", or "common"), convolve
-             all channels to the smallest beam that encloses all beams in the input image.
+             all channels to the smallest beam that encloses all beams in the input image, "i" or "image"
+             to use an image as the kernel.
              For boxcar smoothing, the major axis is parallel to the y-axis of the image
              and the minor axis is parallel to the x-axis. For a Gaussian, the
              orientation is specified by a position angle. A value of 0 degrees means
              the major axis is parallel to the y-axis and an increasing value of the
              position angle results in a counter-clockwise rotation of the ellipse.
-                default: 'gauss'; example: kernel='gauss'
-                options: 'gauss', 'boxcar', or 'commonbeam'. 
+                default: 'gauss'
 major        Major axis of kernel which must be specified for boxcar smoothing. For
              Gaussian smoothing, the kernel parameters can alternatively be specified
              in the beam parameter. Standard quantity representations are supported.
@@ -211,6 +228,8 @@ targetres    Boolean used only for kernel='gauss'. If True, kernel parameters (m
              or beam) are the resolution of the output image. If false, a gaussian
              with these parameters is convolved with the input image to produce
              the output image.
+kimage       The image to be used as the convolution kernel. Only used if kernel="image" or "i".
+scale        Scale  factor to use if kernel="i" or "image".  -1.0 means auto-scale, which is the default.
 mask         Mask to use. See help par.mask. Default is none.
 region       Region selection in the input image. See help par.region for details.
              You may specify none or one of region or a box/chans/stokes combination, but not both.
@@ -278,6 +297,31 @@ The major, minor, and pa parameters can be specified in one of three ways
               be in arcsec and units of pa are assumed to be degrees. 
 
 Note: Using pixel units allows you to convolve axes with different units.
+
+IMAGE KERNEL
+If kernel="i" or "image", the image specified by kimage is used to convolve the input image.
+The coordinate system of the convolution image is ignored; only the pixel values are considered.
+
+Fourier-based convolution is performed.
+
+The provided kernel can have fewer
+dimensions than the image being convolved.  In this case, it will be
+padded with degenerate axes.  An error will result if the kernel has
+more dimensions than the image.
+
+The scaling of the output image is determined by the argument {\stfaf scale}.
+If this is left unset, then the kernel is normalized to unit sum.
+If {\stfaf scale} is not left unset, then the convolution kernel
+will be scaled (multiplied) by this value.
+
+Masked pixels will be assigned the value 0.0 before convolution.
+
+The output mask is the combination (logical OR) of the default input
+\pixelmask\ (if any) and the OTF mask.  Any other input \pixelmasks\
+will not be copied.  The function
+<link anchor="images:image.maskhandler.function">maskhandler</link>
+should be used if there is a need to copy other masks too.
+
 
 EXAMPLES
 

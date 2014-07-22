@@ -1372,7 +1372,39 @@ class imsmooth_test(unittest.TestCase):
             self.assertTrue(abs(qa.getvalue(beam['positionangle'])) < 1e-5)
         myia.done()
         
-
+    def test_image_kernel(self):
+        """Test image as kernel, CAS-5844"""
+        imagename = self.datapath + "point.im"
+        kimage = self.datapath + "bessel.im"
+        outfile = "point_c_bessel.im"
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, kernel="i",
+                kimage=kimage, outfile=outfile
+            )
+        )
+        myia = self.ia
+        myia.open(kimage)
+        bessel = myia.getchunk()
+        myia.open(outfile)
+        conv = myia.getchunk()
+        myia.done()
+        ratio = conv/bessel
+        print "max",abs(ratio - ratio[50,50]).max()
+        self.assertTrue((abs(ratio - ratio[50,50]) < 2e-4).all())
+        self.assertTrue(
+            imsmooth(
+                imagename=imagename, kernel="i",
+                kimage=kimage, outfile=outfile,
+                overwrite=True, scale=1
+            )
+        )
+        myia.open(outfile)
+        conv = myia.getchunk()
+        myia.done()
+        diff = conv - bessel
+        self.assertTrue(abs(diff).max() < 2e-7)
+        
         
 def suite():
     return [imsmooth_test]    
