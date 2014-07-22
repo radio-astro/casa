@@ -469,12 +469,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    catch (AipsError &x){
 	      cerr << "Writable table exists, but cannot open. Overwriting." << endl;
 	      imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
+	      imPtr->set(0.0);
 	    }
 	  }
 	else
 	  {
 	    cerr << "Table " << imagenamefull << " is not writeable. Creating temp image." << endl;
 	    imPtr=new TempImage<Float> (useShape, itsCoordSys);
+	    imPtr->set(0.0);
 	  }
       }
 

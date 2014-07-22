@@ -167,7 +167,7 @@ class PySynthesisImager:
               initrec =  self.SDtools[immod].initminorcycle() 
               self.IBtool.mergeinitrecord( initrec );
               print "Peak res of field ",immod, " : " ,initrec['peakresidual']
-              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
+#              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
          stopflag = self.IBtool.cleanComplete()
@@ -553,7 +553,7 @@ class PyParallelDeconvolver(PySynthesisImager):
              retrec = self.PH.pullval("initrec", immod )
              self.IBtool.mergeinitrecord( retrec[immod] )
              print "Peak res of field ",immod, " on node ", immod , ": " ,retrec[immod]['peakresidual']
-             casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
+#             casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
         # Check with the iteration controller about convergence.
         stopflag = self.IBtool.cleanComplete()

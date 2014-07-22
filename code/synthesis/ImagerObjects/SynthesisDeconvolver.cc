@@ -157,10 +157,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ///divideResidualByWeight();
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
-      //SISubIterBot itsLoopController(subIterBotRecord);
       itsLoopController.setPeakResidual( getPeakResidual() );
       itsLoopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
+
+      printImageStats();
 
       os << LogIO::DEBUG2 << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
 
@@ -326,6 +327,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
+  //  Bool SynthesisDeconvolver::findMinMaxMask(const Array<Float>& lattice,
+  void SynthesisDeconvolver::findMinMax(const Array<Float>& lattice,
+					const Array<Float>& mask,
+					Float& minVal, Float& maxVal,
+					Float& minValMask, Float& maxValMask)
+  {
+    IPosition posmin(lattice.shape().nelements(), 0);
+    IPosition posmax(lattice.shape().nelements(), 0);
+
+    if( sum(mask) <1e-06 ) {minValMask=0.0; maxValMask=0.0;}
+    else { minMaxMasked(minValMask, maxValMask, posmin, posmax, lattice,mask); }
+
+    minMax( minVal, maxVal, posmin, posmax, lattice );
+  }
+
+  void SynthesisDeconvolver::printImageStats()
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","getPeakResidual",WHERE) );
+    Float minresmask, maxresmask, minres, maxres;
+    findMinMax( itsImages->residual()->get(), itsImages->mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    os << "[" << itsImageName << "]:" ;
+    os << " Peak residual (max,min) " ;
+    if( minresmask!=0.0 || maxresmask!=0.0 )
+      { os << "within mask : (" << maxresmask << "," << minresmask << ")"; }
+    os << "over full image : (" << maxres << "," << minres << ")" << LogIO::POST;
+
+  }
 
 
 } //# NAMESPACE CASA - END
