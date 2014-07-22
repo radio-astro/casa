@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.50 2014/07/16 21:20:34 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.51 2014/07/22 14:20:34 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.50 2014/07/16 21:20:34 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.51 2014/07/22 14:20:34 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1771,8 +1771,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (scansToPlotPerSpw[myspw] == []):
                 indexDelete = np.where(spwsToPlot==myspw)[0]
                 if (len(indexDelete) > 0):
-                    indexDelete = [0]
-                    spwsToPlot = np.delete(spwsToPlot, indexDelete)
+                    spwsToPlot = np.delete(spwsToPlot, indexDelete[0])
         print "spwsToPlot = ", spwsToPlot
     casalogPost(debug,"scans to plot: %s" % (str(scansToPlot)))
     casalogPost(debug,"UT times to plot: %s" % (timerangeListTimesString))
