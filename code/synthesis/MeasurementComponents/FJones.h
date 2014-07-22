@@ -55,8 +55,8 @@ public:
   virtual String typeName()     { return "FJones"; };
   virtual String longTypeName() { return "FJones (Ionosphere)"; };
 
-  // Type of Jones matrix according to nPar()
-  Jones::JonesType jonesType() { return Jones::Diagonal; };
+  // Report current Jones type (circ=diag, lin=general)
+  Jones::JonesType jonesType() { return pjonestype_; };
 
   // Par is freq-INdep, but matrix is freq-dep
   virtual Bool freqDepPar() { return False; };
@@ -65,8 +65,16 @@ public:
   // We have Float parameters
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
+  // Local setapply to enforce calwt=F and spwmap=[0] for FJones
+  virtual void setApply(const Record& apply);
+  using SolvableVisJones::setApply;
+
   // Report apply-related info
   String applyinfo();
+
+  // Local specializations for TEC generation
+  virtual void setSpecify(const Record& specify);
+  virtual void specify(const Record& specify);
 
 protected:
 
@@ -79,6 +87,9 @@ protected:
   // Access to z.a. data
   Vector<Double>& za() { return za_; };
 
+  // Locally set which feed basis (Jones type)
+  void syncJones(const Bool& doInv);
+
   // Calculate parameters (in this case, the z.a.)
   virtual void calcPar();
 
@@ -86,6 +97,9 @@ protected:
   virtual void calcAllJones();
 
 private:
+
+  // TEC specify/retrieval mode
+  String tectype_;
 
   // Field calculation components
   MeasFrame mframe_;
@@ -102,6 +116,9 @@ private:
 
   // Units
   Double radper_;
+
+  // Lin (general) or Circ (diag)
+  Jones::JonesType pjonestype_;
 
 };
 

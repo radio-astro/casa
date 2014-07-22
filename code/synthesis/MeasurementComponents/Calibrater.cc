@@ -2233,8 +2233,8 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TOPAC",*vs_p);
     else if (utype.contains("GC") || utype.contains("EFF"))
       cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
-    else if (utype.contains("ZTEC"))
-      cal_ = createSolvableVisCal("ZTEC",*vs_p);
+    else if (utype.contains("TEC"))
+      cal_ = createSolvableVisCal("TEC",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 
