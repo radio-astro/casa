@@ -3462,7 +3462,7 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 
    if (pc->type() == Coordinate::DIRECTION) {
       DirectionCoordinate* dc = dynamic_cast<DirectionCoordinate*>(pc);
-      string = dc->projection().name();
+      string = dc->isNCP() ? "NCP" : dc->projection().name();
    } else {
       string = " ";
    }
