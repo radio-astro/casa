@@ -914,7 +914,7 @@ namespace casa{
 
     LatticeFFT::cfft2d(c1_lat,False);
     LatticeFFT::cfft2d(c2tmp_lat,False);
-    cerr << "########## " << c1.shape() << " " << c2tmp.shape() << endl;
+    //cerr << "########## " << c1.shape() << " " << c2tmp.shape() << endl;
     c1 = sqrt(c1);
     c2tmp=sqrt(c2tmp);
     c1 *= conj(c2tmp);

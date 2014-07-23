@@ -29,6 +29,7 @@
 #include <synthesis/TransformMachines/CFCache.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <lattices/Lattices/LatticeExpr.h>
+#include <casa/System/ProgressMeter.h>
 #include <casa/Exceptions/Error.h>
 #include <fstream>
 #include <algorithm>
@@ -175,7 +176,9 @@ namespace casa{
   //
   //-----------------------------------------------------------------------
   //
-  void CFCache::initCache2()
+  // By default (i.e., when called without any agruments), load all
+  // the CFs found in the CF disk cache.
+  void CFCache::initCache2(Float selectedPA, Float dPA)
   {
     LogOrigin logOrigin("CFCache", "initCache2");
     LogIO log_l(logOrigin);
@@ -196,8 +199,8 @@ namespace casa{
 					     " exists but is unreadable/unwriteable")));
       }
 
-    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True);
-    fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False);
+    fillCFSFromDisk(dirObj,"CFS*", memCache2_p, True, selectedPA, dPA);
+      fillCFSFromDisk(dirObj,"WTCFS*", memCacheWt2_p, False, selectedPA, dPA);
     memCache2_p[0].primeTheCFB();
     memCacheWt2_p[0].primeTheCFB();
 
@@ -216,10 +219,11 @@ namespace casa{
   //-----------------------------------------------------------------------
   //
   void CFCache::fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore,
-				Bool showInfo)
+				Bool showInfo, Float selectPAVal, Float dPA)
   {
     LogOrigin logOrigin("CFCache", "fillCFSFromDisk");
     LogIO log_l(logOrigin);
+    Bool selectPA = (fabs(selectPAVal) <= 360.0);
     try
       {
 	if (memStore.nelements() == 0) memStore.resize(1,True);
@@ -227,6 +231,7 @@ namespace casa{
 	CFCacheTableType cfCacheTable_l;
 	Regex regex(Regex::fromPattern(pattern));
 	Vector<String> fileNames(dirObj.find(regex));
+
 	if (fileNames.nelements() > 0)
 	  {
 	    String CFCDir=dirObj.path().absoluteName();
@@ -238,16 +243,21 @@ namespace casa{
 	    //
 	    // Gather the list of PA values
 	    //
-	    for (uInt i=0; i < fileNames.nelements(); i++)
-	      {
-		PagedImage<Complex> thisCF(CFCDir+'/'+fileNames[i]);
-		TableRecord miscinfo = thisCF.miscInfo();
-		//	    miscinfo.print(cerr);
-		Double  paVal;
-                //UNUSED: Double  wVal; Int mVal;
-		miscinfo.get("ParallacticAngle",paVal);
-		paList_p.push_back(paVal);
-	      }
+	    {
+	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
+			       "Reading CFCache aux. info.", "","","",True);
+	      for (uInt i=0; i < fileNames.nelements(); i++)
+		{
+		  PagedImage<Complex> thisCF(CFCDir+'/'+fileNames[i]);
+		  TableRecord miscinfo = thisCF.miscInfo();
+		  //	    miscinfo.print(cerr);
+		  Double  paVal;
+		  //UNUSED: Double  wVal; Int mVal;
+		  miscinfo.get("ParallacticAngle",paVal);
+		  paList_p.push_back(paVal);
+		  pm.update(Double(i));
+		}
+	    }
 	    //
 	    // Make the PA-value list unique
 	    //
@@ -262,25 +272,51 @@ namespace casa{
 	    //
 	    Array<Complex> pixBuf;
 
-	    for (uInt i=0; i < fileNames.nelements(); i++)
-	      {
-		Double paVal, wVal, fVal, sampling; Int mVal, xSupport, ySupport;
-		CoordinateSystem coordSys;
+	    // Int cfCount=0;
+	    // for (uInt i=0; i<fileNames.nelements(); i++)
+	    //   {
+	    // 	Double paVal, wVal, fVal, sampling; Int mVal, xSupport, ySupport;
+	    // 	CoordinateSystem coordSys;
 
-		getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
-			    xSupport, ySupport, fVal, wVal, mVal);
+	    // 	getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+	    // 		    xSupport, ySupport, fVal, wVal, mVal,False);
+	    // 	Bool pickThisCF=True;
+	    // 	if (selectPA) pickThisCF = (fabs(paVal - selectPAVal) <= dPA);
+	    // 	cerr << fileNames[i] << " " << paVal << " " << selectPAVal << " " << dPA << " " << pickThisCF << endl;
+	    // 	if (pickThisCF) cfCount++;
+	    //   }
+	    // cerr << "Will load " << cfCount << "CFs." << endl;
 
-		Int ipos; SynthesisUtils::stdNearestValue(paList_p, (Float)paVal,ipos);
-		uInt paPos=ipos;
+	    {
+	      ProgressMeter pm(1.0, Double(fileNames.nelements()),
+			       "Loading CFs", "","","",True);
+	      for (uInt i=0; i < fileNames.nelements(); i++)
+		{
+		  Double paVal, wVal, fVal, sampling; Int mVal, xSupport, ySupport;
+		  CoordinateSystem coordSys;
+
+		  getCFParams(fileNames[i], pixBuf, coordSys,  sampling, paVal, 
+			      xSupport, ySupport, fVal, wVal, mVal,False);
+		
+		  Bool pickThisCF=True;
+		  if (selectPA) pickThisCF = (fabs(paVal - selectPAVal) <= dPA);
+		  if (pickThisCF)
+		    {
+		      Int ipos; SynthesisUtils::stdNearestValue(paList_p, (Float)paVal,ipos);
+		      uInt paPos=ipos;
 		  
-		if (paPos < paList_p.size())
-		  {
-		    cfCacheTable_l[paPos].freqList.push_back(fVal);
-		    cfCacheTable_l[paPos].wList.push_back(wVal);
-		    cfCacheTable_l[paPos].muellerList.push_back(mVal);
-		    cfCacheTable_l[paPos].cfNameList.push_back(fileNames[i]);
-		  }
-	      }
+		      if (paPos < paList_p.size())
+			{
+			  cfCacheTable_l[paPos].freqList.push_back(fVal);
+			  cfCacheTable_l[paPos].wList.push_back(wVal);
+			  cfCacheTable_l[paPos].muellerList.push_back(mVal);
+			  cfCacheTable_l[paPos].cfNameList.push_back(fileNames[i]);
+			  cerr << paPos << " " << fileNames[i] << endl;
+			}
+		    }
+		  pm.update(Double(fileNames.nelements()));
+		}
+	    }
 	    for (uInt ipa=0; ipa < cfCacheTable_l.size(); ipa++)
 	      {
 		//
@@ -318,6 +354,7 @@ namespace casa{
 		  }
 		cfb->resize(0.0,0.0,wList,fList,
 			    muellerElements,muellerElements,muellerElements,muellerElements);
+		cfb->setPA(paList_p[ipa]);
 
 		//
 		// Now go over the list of fileNames corresponding to
@@ -370,7 +407,7 @@ namespace casa{
 		    // 	      << cfCacheTable_l[ipa].cfNameList.size()  << LogIO::POST;
 		    // 	log_l << "F: " << fList << endl << "M: " << mList << endl << "W: " << wList << endl << LogIO::POST;
 		    //   }
-		    // log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "]" ;
+		    log_l << cfCacheTable_l[ipa].cfNameList[nf] << "[" << fndx << "," << wndx << "," << mndx << "] "  << paList_p[ipa] << LogIO::POST;
 		  }
 		// cfb->show("cfb: ");
 
@@ -403,14 +440,15 @@ namespace casa{
 			    Double& sampling,
 			    Double& paVal,
 			    Int& xSupport, Int& ySupport,
-			    Double& fVal, Double& wVal, Int& mVal)
+			    Double& fVal, Double& wVal, Int& mVal,
+			    Bool loadPixels)
   {
     try
       {
 	PagedImage<Complex> thisCF(Dir+'/'+fileName);
 	TableRecord miscinfo = thisCF.miscInfo();
 
-	pixelBuffer.assign(thisCF.get());
+	if (loadPixels) pixelBuffer.assign(thisCF.get());
 	miscinfo.get("ParallacticAngle", paVal);
 	miscinfo.get("MuellerElement", mVal);
 	miscinfo.get("WValue", wVal);

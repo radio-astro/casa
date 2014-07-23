@@ -59,7 +59,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const CountedPtr<WTerm> wTerm,
 	       const Bool wbAWP=False):
       ConvolutionFunction(),aTerm_p(ATerm),psTerm_p(psTerm), wTerm_p(wTerm), pixFieldGrad_p(), 
-      wbAWP_p(wbAWP)
+      wbAWP_p(wbAWP), baseCFB_p()
     {pixFieldGrad_p.resize(2);pixFieldGrad_p=0.0;}
 
     ~AWConvFunc() {};
@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
 				  CFStore2& cfwts);
-  void fillConvFuncBuffer(CFBuffer& cfb, CFBuffer& cfWtb,
+    virtual void fillConvFuncBuffer(CFBuffer& cfb, CFBuffer& cfWtb,
 			  const Int& nx, const Int& ny,
 			  const Vector<Double>& freqValues,
 			  const Vector<Double>& wValues,
@@ -136,6 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> thePix_p, pixFieldGrad_p;
     Double imRefFreq_p;
     Bool wbAWP_p;
+    CountedPtr<CFBuffer> baseCFB_p;
   };
   //
   //-------------------------------------------------------------------------------------------

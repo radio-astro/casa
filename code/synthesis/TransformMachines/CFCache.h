@@ -166,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Method to initialize the internal memory cache.
     //
     void initCache();
-    void initCache2();
+    void initCache2(Float selectedPA=400.0, Float dPA=-1.0);
     void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
     inline Bool OTODone() {return OTODone_p;}
     //
@@ -255,7 +255,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     Double& sampling,
 		     Double& paVal,
 		     Int& xSupport, Int& ySupport,
-		     Double& fVal, Double& wVal, Int& mVal);
+		     Double& fVal, Double& wVal, Int& mVal,
+		     Bool loadPixels=True);
     //
     // Methods to write the auxillary information from the memory
     // cache to the disk cache.  Without this call, the disk cache
@@ -304,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Float convSampling);
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
-    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False);
+    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False, Float selectPAVal=400.0, Float dPA=-1.0);
 
     Bool avgPBReady_p;
     String avgPBReadyQualifier_p;

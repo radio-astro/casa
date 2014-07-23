@@ -100,7 +100,7 @@ namespace casa{
       }
     else
       phasor=Complex(1.0);
-    cerr << "### " << pos[0] << " " << offset[0] << " " << off[0] << endl;
+    //cerr << "### " << pos[0] << " " << offset[0] << " " << off[0] << endl;
   }
   //
   //-----------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ namespace casa{
 	Int ant1Type = cf.mapAntIDToAntType(vbs.antenna1()(irow)),
 	  ant2Type = cf.mapAntIDToAntType(vbs.antenna2()(irow));
 	//
-	// Get the CFBuffer for the give PA and baseline catagorized
+	// Get the CFBuffer for the given PA and baseline catagorized
 	// by the two antenna types.  For homgeneous arrays, all
 	// baselines will map to a single antenna-type pair.
 	//
@@ -139,6 +139,7 @@ namespace casa{
 	try
 	  {
 	   cfb_l = cfs.getCFBuffer(pa, dPA, ant1Type, ant2Type);
+	   //cfb_l->show("From VRB: ");
 	  }
 	catch (CFNotCached& x)
 	  {

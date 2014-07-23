@@ -181,7 +181,19 @@ namespace casa{
     cfCells_p(ndx(0),ndx(1),ndx(2))->coordSys_p  = cs;
     return ndx;
   }
-			   
+  //
+  //---------------------------------------------------------------
+  //
+  void CFBuffer::setPA(Float& pa)
+  {
+    RigidVector<Int,3> ndx(-1);
+    Int nF=cfCells_p.shape()(0), nW=cfCells_p.shape()(1), nM=cfCells_p.shape()(2);
+    for (Int i=0; i<nF; i++)
+      for(Int j=0; j<nW; j++)
+	for(Int k=0; k<nM; k++)
+	  cfCells_p(i,j,k)->pa_p=Quantity(pa,"deg");
+  }
+
   void CFBuffer::setParams(Int& /*nx*/, Int& /*ny*/, CoordinateSystem& /*cs*/, Float& /*sampling*/, 
 			   Int& /*xSupport*/, Int& /*ySupport*/, const Double& /*freqValue*/, 
 			   const Double& /*wValue*/, const Int& /*muellerElement*/)
