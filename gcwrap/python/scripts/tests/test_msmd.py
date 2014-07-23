@@ -76,6 +76,9 @@ import numpy
 
 fixture = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/MSMetaData/MSMetaData.ms'
 
+def near(a, b, epsilon):
+    return abs((a-b)/max(a,b)) <= epsilon
+
 class msmd_test(unittest.TestCase):
     
     def setUp(self):
@@ -1042,5 +1045,21 @@ class msmd_test(unittest.TestCase):
             else:
                 self.assertTrue(len(res2) == 1 and res2[0] == names[i])
 
+    def test_pointingdirection(self):
+        """Test pointingdirection(), CAS-5878"""
+        md = self.md
+        ret = md.pointingdirection(500)
+        self.assertTrue(ret['antenna1']['id'] == 7)
+        self.assertTrue(ret['antenna2']['id'] == 11)
+        eps = 1e-10
+        self.assertTrue(near(ret['time'], 4842824902.632, eps))
+        p1 = ret['antenna1']['pointingdirection']
+        p2 = ret['antenna2']['pointingdirection']
+        self.assertTrue(near(p1['m0']['value'], -1.231522504164003, eps))
+        self.assertTrue(near(p1['m1']['value'], 0.8713643131745025, eps))
+        self.assertTrue(near(p2['m0']['value'], -1.2315042783587336, eps))
+        self.assertTrue(near(p2['m1']['value'], 0.8713175514123461, eps))
+        
+        
 def suite():
     return [msmd_test]

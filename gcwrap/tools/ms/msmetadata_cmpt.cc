@@ -38,6 +38,7 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
+#include <measures/Measures/MDirection.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaData.h>
 
@@ -507,6 +508,7 @@ bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
 		_ms.reset(0);
+		_log.reset(0);
 		return true;
 	)
 	return false;
@@ -939,10 +941,33 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
+record* msmetadata::pointingdirection(int rowid) {
+	//_FUNC(
+		Int ant1 COMMA ant2;
+		Double time;
+		std::pair<casa::MDirection COMMA casa::MDirection> pDirs = _msmd->getPointingDirection(
+			ant1, ant2, time, rowid
+		);
+		MeasureHolder m1(pDirs.first);
+		MeasureHolder m2(pDirs.second);
+		Record ret;
+		ret.define("time", time);
+		Record ant1Rec COMMA ant2Rec COMMA m1rec COMMA m2rec;
+		ant1Rec.define("id", ant1);
+		m1.toRecord(m1rec);
+		ant1Rec.defineRecord("pointingdirection", m1rec);
+		ret.defineRecord("antenna1", ant1Rec);
+		ant2Rec.define("id", ant2);
+		m2.toRecord(m2rec);
+		ant2Rec.defineRecord("pointingdirection", m2rec);
+		ret.defineRecord("antenna2", ant2Rec);
+		return fromRecord(ret);
+	//);
+}
+
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
     _msmd.reset(new MSMetaData(ms, cachesize));
 }
-
 
 bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
