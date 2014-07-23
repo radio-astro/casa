@@ -618,21 +618,19 @@ String ImageMetaDataBase::_getProjection() const {
 	if (! csys.hasDirectionCoordinate()) {
 		return "";
 	}
-	Projection proj = csys.directionCoordinate().projection();
+	const DirectionCoordinate dc = csys.directionCoordinate();
+	Projection proj = dc.projection();
 	if (proj.type() == Projection::SIN) {
 		Vector<Double> pars =  proj.parameters();
-		if (pars.size() == 2 && (anyNE(pars, 0.0))) {
+		if (dc.isNCP()) {
+			ostringstream os;
+			os << "SIN (" << pars << "): NCP";
+			return os.str();
+		}
+		else if(pars.size() == 2 && (anyNE(pars, 0.0))) {
 			// modified SIN
 			ostringstream os;
 			os << "SIN (" << pars << ")";
-			if (pars[0] == 0) {
-				Vector<Double> refval = csys.directionCoordinate().referenceValue();
-				Vector<String> units = csys.directionCoordinate().worldAxisUnits();
-				Double dec = Quantity(refval[1], units[1]).getValue("rad");
-				if (dec != 0 && near(pars[1], 1/std::tan(dec))) {
-					os << ": NCP";
-				}
-			}
 			return os.str();
 		}
 	}
