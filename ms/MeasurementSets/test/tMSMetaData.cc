@@ -35,6 +35,7 @@
 #include <casa/OS/EnvVar.h>
 #include <casa/Quanta/QLogical.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
+#include <measures/Measures/MDirection.h>
 
 #include <casa/Containers/ContainerIO.h>
 #include <iomanip>
@@ -1345,6 +1346,33 @@ void testIt(MSMetaData& md) {
 					res2[i].size() == 1 && *(res2[i].begin()) == names[i], AipsError
 				);
 			}
+		}
+		{
+			cout << "*** Test getPointingDirection" << endl;
+			Int ant1, ant2;
+			Double time;
+			std::pair<MDirection, MDirection> pDirs = md.getPointingDirection(
+				ant1, ant2, time, 500
+			);
+			AlwaysAssert(ant1 == 7, AipsError);
+			AlwaysAssert(ant2 == 11, AipsError);
+			AlwaysAssert(time == 4842824902.632, AipsError);
+			AlwaysAssert(
+				near(pDirs.first.getAngle().getValue()[0], -1.231522504, 2e-10),
+				AipsError
+			);
+			AlwaysAssert(
+				near(pDirs.first.getAngle().getValue()[1], 0.8713643132, 1e-9),
+				AipsError
+			);
+			AlwaysAssert(
+				near(pDirs.second.getAngle().getValue()[0], -1.231504278, 4e-10),
+				AipsError
+			);
+			AlwaysAssert(
+				near(pDirs.second.getAngle().getValue()[1], 0.8713175514, 1e-9),
+				AipsError
+			);
 		}
 		{
 			cout << "*** cache size " << md.getCache() << endl;

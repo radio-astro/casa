@@ -344,6 +344,12 @@ public:
 	// get unique field IDs that exist in the main table.
 	std::set<Int> getUniqueFiedIDs();
 
+	// get the pointing directions associated with antenna1 and antenna2 for
+	// the specified row of the main MS table
+	std::pair<MDirection, MDirection> getPointingDirection(
+		Int& ant1, Int& ant2, Double& time, uInt row
+	) const;
+
 private:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
