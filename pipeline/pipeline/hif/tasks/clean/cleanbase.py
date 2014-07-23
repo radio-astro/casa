@@ -400,7 +400,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    else:
 	        result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
 	except Exception, e:
-            LOG.error('Clean error: %s' % (str(e)))
+            LOG.error('%s/%s/spw%s clean error: %s' % (field, intent, spw, str(e)))
 	finally:
 	    pass
 
