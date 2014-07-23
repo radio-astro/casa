@@ -396,7 +396,7 @@ def reducerecord(record):
 
             ##baseline--------------------------
             libsakurapy.logical_and(nchan, mask, mask_bl, mask_temp)
-            data = libsakurapy.subtract_baseline(nchan, data, mask_temp, 
+            data = libsakurapy.subtract_baseline(nchan, data, mask, 
                                                  ctxbl['context'], 
                                                  ctxbl['clip_threshold'], 
                                                  ctxbl['num_fitting_max'], 
