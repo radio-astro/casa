@@ -325,6 +325,10 @@ public:
     // Checks that the Matrix is consistent (invariants check out).
     virtual Bool ok() const;
 
+    // Create an identity matrix of side length n. (Could not do this as a constructor
+    // because of ambiguities with other constructors).
+    static Matrix<T> identity(uInt n);
+
 protected:
     // Remove the degenerate axes from other and store result in this matrix.
     // An exception is thrown if removing degenerate axes does not result

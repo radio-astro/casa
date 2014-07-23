@@ -1649,17 +1649,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-    Vector<String> FITSCoordinateUtil::cTypeFromDirection(Bool& isNCP, const Projection& proj,
-							  const Vector<String>& axisNames,
-							  Double, Bool printError) 
-    //
-    // RefLat in radians
-    //
-    {  
+    Vector<String> FITSCoordinateUtil::cTypeFromDirection(
+    	Bool& isNCP, const Projection& proj,
+    	const Vector<String>& axisNames,
+    	Double refLat, Bool printError
+    ) {
+    	//
+    	// RefLat in radians
+    	//
+    	{
+    		DirectionCoordinate dc(
+    			MDirection::J2000, proj,
+    			0, refLat, 1e-5, -1e-5,
+    			Matrix<Double>::identity(2), 0, 0
+    		);
+    		isNCP = dc.isNCP();
+    	}
+    	return cTypeFromDirection(proj, axisNames, printError);
+    }
+
+    Vector<String> FITSCoordinateUtil::cTypeFromDirection (
+    	const Projection& proj, const Vector<String>& axisNames, Bool printError
+    ) {
 	LogIO os(LogOrigin("FITSCoordinateUtil", "cTypeFromDirection", WHERE));
 	Vector<String> ctype(2);
 
-	isNCP = False;
 	for (uInt i=0; i<2; i++) {
 	    String name = axisNames(i);
 	    while (name.length() < 4) {

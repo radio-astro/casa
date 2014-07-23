@@ -760,6 +760,19 @@ Vector<String> DirectionCoordinate::axisNames(MDirection::Types type,
     return names;
 }
 
+Bool DirectionCoordinate::isNCP() const {
+	if (projection_p.type() == Projection::SIN) {
+		Vector<Double> pars =  projection_p.parameters();
+		if (pars.size() == 2 && (anyNE(pars, 0.0)) && pars[0] == 0) {
+			Quantity dec(referenceValue()[1], worldAxisUnits()[1]);
+			return (
+				dec.getValue() != 0
+				&& casa::near(pars[1], 1/tan(dec.getValue("rad")))
+			);
+		}
+	}
+	return False;
+}
 
 void DirectionCoordinate::checkFormat(Coordinate::formatType& format,
                                       Bool absolute) const
@@ -2134,10 +2147,10 @@ void DirectionCoordinate::makeWCS(::wcsprm& wcs,  const Matrix<Double>& xform,
         
 // Construct FITS ctype vector   
      
-    Bool isNCP = False;
     Vector<String> axisNames = DirectionCoordinate::axisNames(directionType, True);
-    Vector<String> ctype = FITSCoordinateUtil::cTypeFromDirection (isNCP, proj, axisNames,
-                                                                   refLat*C::degree, False);
+    Vector<String> ctype = FITSCoordinateUtil::cTypeFromDirection (
+    	proj, axisNames, False
+    );
     strncpy (wcs.ctype[0], ctype[0].chars(), 9);
     strncpy (wcs.ctype[1], ctype[1].chars(), 9);
 //

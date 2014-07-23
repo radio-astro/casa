@@ -71,7 +71,6 @@ template<class T> Matrix<T>::Matrix(uInt l1, uInt l2, const T &initialValue)
     DebugAssert(ok(), ArrayError);
 }
 
-
 template<class T> Matrix<T>::Matrix(const Matrix<T> &other)
 : Array<T>(other)
 {
@@ -370,6 +369,13 @@ template<class T> void Matrix<T>::makeIndexingConstants()
     yinc_p = this->inc_p(1)*this->originalLength_p(0);
 }
 
+template<class T> Matrix<T> Matrix<T>::identity(uInt n) {
+	Matrix<T> m(n, n, T(0));
+	for (uInt i=0; i<n; i++) {
+		m(i, i) = T(1);
+	}
+	return m;
+}
 
 template<class T>
 void Matrix<T>::doNonDegenerate (const Array<T> &other,

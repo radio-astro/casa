@@ -1068,6 +1068,24 @@ int main()
         	}
 
         }
+        {
+        	cout << "*** Test Matrix::identity()" << endl;
+        	for (uInt i=0; i<20; i++) {
+        		Matrix<Double> x = Matrix<Double>::identity(i);
+        		AlwaysAssertExit(x.ncolumn() == i);
+        		AlwaysAssertExit(x.nrow() == i);
+        		for (uInt j=0; j<i; j++) {
+        			for (uInt k=0; k<i; k++) {
+        				if (j == k) {
+        					AlwaysAssertExit(x(j, k) == 1);
+        				}
+        				else {
+        					AlwaysAssertExit(x(j, k) == 0);
+        				}
+        			}
+        		}
+        	}
+        }
     }
     catch (const AipsError& x) {
 	cout << "\nCaught an exception: " << x.getMesg() << endl;

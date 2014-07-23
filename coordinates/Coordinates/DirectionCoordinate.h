@@ -608,6 +608,9 @@ public:
     // are the pixels square?
     Bool hasSquarePixels() const;
 
+    // Is the projection equivalent to NCP?
+    Bool isNCP() const;
+
 private:
     // Direction type
     MDirection::Types type_p, conversionType_p;
