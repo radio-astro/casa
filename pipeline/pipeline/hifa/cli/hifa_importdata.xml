@@ -135,7 +135,7 @@ overwrite -- Overwrite existing MSs on output.
    default: False
 
 bdfflags -- Apply BDF flags on line
-   default: True
+   default: False
 
 --- pipeline task execution modes
 
