@@ -179,16 +179,27 @@ class MakeCleanListHeuristics(object):
                 aipsfieldofview = '%4.1farcsec' % (2.0 * beam)
                 rtn = casatools.imager.advise(takeadvice=False,
                   amplitudeloss=0.5, fieldofview=aipsfieldofview)
-                cellv = rtn[2]['value']
-                cellu = rtn[2]['unit']
-                cellv /= oversample
-                cellvs.append(cellv)
-                LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
-                  oversample, field_intent[0], field_intent[1], spwspec, cellv))
+                if not rtn[0]:
+                    # advise can fail if all selected data are flagged
+                    # - not documented but assuming bool in first field of returned
+                    # record indicates success or failure
+                    LOG.warning('imager.advise failed for field/intent %s/%s spw %s - no valid data?' 
+                      % (field_intent[0], field_intent[1], spwids))
+                    valid_data[field_intent] = False
+                else:
+                    cellv = rtn[2]['value']
+                    cellu = rtn[2]['unit']
+                    cellv /= oversample
+                    cellvs.append(cellv)
+                    LOG.debug('Cell (oversample %s) for %s/%s spw %s: %s' % (
+                      oversample, field_intent[0], field_intent[1], spwspec, cellv))
 
             if cellvs:
+                # cell that's good for all field/intents
                 cell = '%.3f%s' % (min(cellvs), cellu)
                 LOG.debug('RESULT cell for spw %s: %s' % (spwspec, cell))
+            else:
+                cell = 'invalid'
 
         finally:
             casatools.imager.done()
