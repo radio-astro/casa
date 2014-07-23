@@ -30,6 +30,7 @@
 #include <casa/OS/File.h>
 #include <measures/Measures/MeasTable.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSPointingColumns.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableParse.h>
@@ -2893,6 +2894,25 @@ std::map<std::pair<uInt, uInt>, Int> MSMetaData::getSpwIDPolIDToDataDescIDMap() 
 	return spwPolIDToDataDescIDMap;
 }
 
+std::pair<MDirection, MDirection> MSMetaData::getPointingDirection(
+	Int& antenna1, Int& antenna2, Double& time, uInt row
+) const {
+	ThrowIf(
+		row >= this->nRows(),
+		"Row number exceeds number of rows in the MS"
+	);
+	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
+	_getAntennas(ant1, ant2);
+	antenna1 = (*ant1)[row];
+	antenna2 = (*ant2)[row];
+	time = (*_getTimes())[row];
+	ROMSPointingColumns pCols(_ms->pointing());
+	return std::make_pair<MDirection, MDirection>(
+		pCols.directionMeas(pCols.pointingIndex(antenna1, time)),
+		pCols.directionMeas(pCols.pointingIndex(antenna2, time))
+	);
+}
+
 std::map<Int, uInt> MSMetaData::_getDataDescIDToSpwMap() const {
 	if (! _dataDescIDToSpwMap.empty()) {
 		return _dataDescIDToSpwMap;
@@ -3014,15 +3034,14 @@ void MSMetaData::_checkScan(const Int scan, const std::set<Int> uniqueScans) {
 }
 
 Bool MSMetaData::_hasFieldID(const Int fieldID) {
-	if (fieldID >= (Int)nFields()) {
-		throw AipsError(
-			_ORIGIN + "Requested field ID "
-			+ String::toString(fieldID)
-			+ " is greater than or equal to the number of records ("
-			+ String::toString(nFields())
-		    + ") in this MS's FIELD table"
-		);
-	}
+	ThrowIf (
+		fieldID >= (Int)nFields(),
+		"Requested field ID "
+		+ String::toString(fieldID)
+		+ " is greater than or equal to the number of records ("
+		+ String::toString(nFields())
+		+ ") in this MS's FIELD table"
+	);
 	std::set<Int> uniqueFields = getUniqueFiedIDs();
 	return uniqueFields.find(fieldID) != uniqueFields.end();
 }
@@ -3037,15 +3056,14 @@ std::set<Int> MSMetaData::getUniqueFiedIDs() {
 
 Bool MSMetaData::_hasStateID(const Int stateID) {
 	// This method is responsible for setting _uniqueStateIDs
-	if (stateID >= (Int)nStates()) {
-		throw AipsError(
-			_ORIGIN + "Requested state ID "
-			+ String::toString(stateID)
-			+ " is greater than or equal to the number of records ("
-			+ String::toString(nStates())
-			+ ") in this MS's STATE table"
-		);
-	}
+	ThrowIf(
+		stateID >= (Int)nStates(),
+		"Requested state ID "
+		+ String::toString(stateID)
+		+ " is greater than or equal to the number of records ("
+		+ String::toString(nStates())
+		+ ") in this MS's STATE table"
+	);
 	if (_uniqueStateIDs.empty()) {
 		std::tr1::shared_ptr<Vector<Int> > allStateIDs = _getStateIDs();
 		_uniqueStateIDs.insert(allStateIDs->begin(), allStateIDs->end());
