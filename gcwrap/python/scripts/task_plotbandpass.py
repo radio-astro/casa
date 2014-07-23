@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.51 2014/07/22 14:20:34 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.52 2014/07/23 02:57:53 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.51 2014/07/22 14:20:34 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.52 2014/07/23 02:57:53 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -482,6 +482,12 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
         # support multi-fields with overlay='time'
         uTPFPS = []
         uTPFPStimerange = []
+        # Find all timerange integers for all fields, not just the ones that were plotted
+        allTimeranges = []
+        for f in range(len(uniqueTimesPerFieldPerSpw[ispwInCalTable])):
+            for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
+                if (t in timerangeListTimes):
+                    allTimeranges.append(list(timerangeListTimes).index(t))
         for f in fieldIndicesToPlot:
             for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
                 matched, mymatch = sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
@@ -489,6 +495,7 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                 if (matched):
                     uTPFPS.append(t)
                     uTPFPStimerange.append(mymatch)
+        allTimeranges = list(np.sort(np.unique(allTimeranges)))
         idx = np.argsort(uTPFPS)
         uTPFPStimerange = np.array(uTPFPStimerange)[idx]
         uTPFPS = np.sort(uTPFPS)
@@ -500,7 +507,7 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
             legendString = utstring(uTPFPS[a],timeFormat)
             if (debug): print "----> Defined legendString: %s" % (legendString)
             if (a==0):
-                pb.text(xstartTitle-0.02, ystartOverlayLegend, 'UT',color='k',fontsize=mysize,
+                pb.text(xstartTitle-0.03, ystartOverlayLegend, 'UT',color='k',fontsize=mysize,
                         transform=pb.gcf().transFigure)
             if (a < maxTimesAcross):
                 x0 = xstartTitle + (a*timeHorizontalSpacing)
@@ -529,9 +536,8 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
 #                        transform=pb.gcf().transFigure)
                 if (debug):
                     print "len(uTPFPStimerange)=%d, a=%d, len(myUniqueColor)=%d" % (len(uTPFPStimerange),a,len(myUniqueColor))
-                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[uTPFPStimerange[a]]],
-                        fontsize=mysize,
-                        transform=pb.gcf().transFigure)
+                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[allTimeranges.index(uTPFPStimerange[a])]],
+                        fontsize=mysize, transform=pb.gcf().transFigure)
                 if (debug):
                     print "done text"
             else:
