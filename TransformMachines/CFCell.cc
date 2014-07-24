@@ -67,7 +67,8 @@ namespace casa{
        << "wValues: "            << wValue_p    << endl
        << "FreqValues: "         << freqValue_p << endl
        << "MuellerElements: "    << muellerElement_p << endl
-       << "Data shape: "         << storage_p->shape() << " " << cfShape_p 
+       << "Data shape: "         << storage_p->shape() << " " << cfShape_p << endl
+       << "Parallactic Angle(d): "  << pa_p.getValue("deg")
        << endl;
     IPosition dummy;
     Vector<String> csList;

@@ -166,7 +166,8 @@ namespace casa{
     //
     virtual void setPolMap(const Vector<Int>& polMap) {polMap_p_base.resize(0);polMap_p_base=polMap;}
     //    virtual void rotate(const VisBuffer& vb, CFStore2& cfs)=0;
-    virtual void rotate(const VisBuffer& vb, CFCell& cfs, const Double& rotAngleIncrement=5.0)=0;
+    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
+    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFS, CFCell& cfc, const Double& rotAngleIncrement=5.0)=0;
     virtual Int mapAntIDToAntType(const Int& /*ant*/) {return 0;};
   protected:
     LogIO& logIO() {return logIO_p;}

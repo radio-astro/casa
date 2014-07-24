@@ -33,6 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -71,19 +72,20 @@ public:
   // Called at the start of de-gridding : subftm->initializeToVis()
   // Note : Pre-de-gridding model-image divisions by PBs will go here.
   void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb);
-
+  void initializeToVis(ImageInterface<Complex>& /*image*/, const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
   // Called at the end of de-gridding : subftm->finalizeToVis()
   void finalizeToVis();
 
   // Called at the start of gridding : subftm->initializeToSky()
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,  const VisBuffer& vb);
+  void initializeToSky(ImageInterface<Complex>& /*image*/,  Matrix<Float>& /*weight*/,  const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
 
   // Called at the end of gridding : subftm->finalizeToSky()
   void finalizeToSky();
 
   // Do the degridding via subftm->get() and modify model-visibilities by Taylor-weights
   void get(VisBuffer& vb, Int row=-1);
-
+  void get(vi::VisBuffer2& /*vb*/, Int row=-1){throw(AipsError("not implemented"));};
   // Modify imaging weights with Taylor-weights and do gridding via subftm->put()
   void put(VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
@@ -92,6 +94,9 @@ public:
   void put(const VisBuffer& /*vb*/, Int /*row=-1*/, Bool /*dopsf=False*/,
 	   FTMachine::Type /*type=FTMachine::OBSERVED*/)
   {throw(AipsError("MultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
+  void put(const vi::VisBuffer2& /*vb*/, Int /*row=-1*/, Bool /*dopsf=False*/,
+  	   FTMachine::Type /*type=FTMachine::OBSERVED*/)
+    {throw(AipsError("MultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
 
   // Calculate residual visibilities if possible.
   // The purpose is to allow rGridFT to make this multi-threaded

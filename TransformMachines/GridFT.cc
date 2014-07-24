@@ -42,6 +42,7 @@
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -296,7 +297,7 @@ GridFT::~GridFT() {
 // we grid-correct, and FFT the image
 
 void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
-			     const VisBuffer& vb)
+			     const vi::VisBuffer2& vb)
 {
   image=&iimage;
   toVis_p=True;
@@ -400,7 +401,7 @@ void GridFT::finalizeToVis()
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
 // grid. 
 void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
-			     Matrix<Float>& weight, const VisBuffer& vb)
+			     Matrix<Float>& weight, const vi::VisBuffer2& vb)
 {
   // image always points to the image
   image=&iimage;
@@ -656,7 +657,7 @@ extern "C" {
 		 const Int*,
 		 const Complex*);
 }
-void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf, 
+void GridFT::put(const vi::VisBuffer2& vb, Int row, Bool dopsf,
 		 FTMachine::Type type)
 {
 
@@ -664,18 +665,18 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //  peek->setVBPtr(&vb);
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
+  if(vb.isNewMs())
     matchAllSpwChans(vb);
   
   //Here we redo the match or use previous match
   
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
+  if(doConversion_p[vb.spectralWindows()[0]]){
+    matchChannel(vb);
   }
   else{
     chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
+    chanMap=multiChanMap_p[vb.spectralWindows()[0]];
   }
 
   //No point in reading data if its not matching in frequency
@@ -713,7 +714,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row==-1) {
-    nRow=vb.nRow();
+    nRow=vb.nRows();
     startRow=0;
     endRow=nRow-1;
   } else {
@@ -738,9 +739,10 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int nvispol=s[0];
   Int nvischan=s[1];
   Int nvisrow=s[2];
-  Matrix<Double> uvw(3, vb.uvw().nelements());
+  Matrix<Double> uvw(vb.uvw().shape());
+
   uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
+  Vector<Double> dphase(vb.nRows());
   Cube<Int> loc(2, nvischan, nRow);
   Cube<Int> off(2, nvischan, nRow);
   Matrix<Complex> phasor(nvischan, nRow);
@@ -748,8 +750,8 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   dphase=0.0;
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
+    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i,idim);
+    uvw(2,i)=vb.uvw()(i,2);
   }
   timemass_p +=tim.real();
   tim.mark(); 
@@ -797,7 +799,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   if(dopsf) idopsf=1;
 
 
-  Vector<Int> rowFlags(vb.nRow());
+  Vector<Int> rowFlags(vb.nRows());
   rowFlags=0;
   rowFlags(vb.flagRow())=True;
   if(!usezero_p) {
@@ -963,14 +965,14 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 }
 
 
-void GridFT::get(VisBuffer& vb, Int row)
+void GridFT::get(vi::VisBuffer2& vb, Int row)
 {
 
   gridOk(gridder->cSupport()(0));
   // If row is -1 then we pass through all rows
   Int startRow, endRow, nRow;
   if (row < 0) {
-    nRow=vb.nRow();
+    nRow=vb.nRows();
     startRow=0;
     endRow=nRow-1;
     //unnecessary zeroing
@@ -984,14 +986,14 @@ void GridFT::get(VisBuffer& vb, Int row)
   }
 
   // Get the uvws in a form that Fortran can use
-  Matrix<Double> uvw(3, vb.uvw().nelements());
+  Matrix<Double> uvw(vb.uvw().shape());
   uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
+  Vector<Double> dphase(vb.nRows());
   dphase=0.0;
   //NEGATING to correct for an image inversion problem
   for (Int i=startRow;i<=endRow;i++) {
-    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
-    uvw(2,i)=vb.uvw()(i)(2);
+    for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i,idim);
+    uvw(2,i)=vb.uvw()(i,2);
   }
   rotateUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
@@ -999,19 +1001,19 @@ void GridFT::get(VisBuffer& vb, Int row)
   
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
+  if(vb.isNewMs())
     matchAllSpwChans(vb);
 
 
   //Here we redo the match or use previous match
   
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
+  if(doConversion_p[vb.spectralWindows()[0]]){
+    matchChannel(vb);
   }
   else{
     chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindow()];
+    chanMap=multiChanMap_p[vb.spectralWindows()[0]];
   }
 
   //cerr << "chanMap " << chanMap << endl;
@@ -1086,7 +1088,7 @@ void GridFT::get(VisBuffer& vb, Int row)
   Int rend=endRow+1;
 
 
-  Vector<Int> rowFlags(vb.nRow());
+  Vector<Int> rowFlags(vb.nRows());
   rowFlags=0;
   rowFlags(vb.flagRow())=True;
   //cerr << "rowFlags " << rowFlags << endl;

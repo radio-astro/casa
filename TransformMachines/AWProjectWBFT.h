@@ -146,7 +146,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 				 const VisBuffer& vb);
-
     void setObservatoryLocation(const MPosition& mLocation) {mLocation_p=mLocation;};
 
     virtual Bool verifyShapes(IPosition shape0, IPosition shape1)

@@ -48,6 +48,7 @@
 #include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -310,7 +311,28 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   prepGridForDegrid();
    
 }
+void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
+			       const vi::VisBuffer2& vb)
+{
+  image=&iimage;
+  toVis_p=True;
+  ok();
 
+  //  if(convSize==0) {
+    init();
+
+    //  }
+
+  // Initialize the maps for polarization and channel. These maps
+  // translate visibility indices into image indices
+  initMaps(vb);
+  //make sure we rotate the first field too
+  lastFieldId_p=-1;
+  phaseShifter_p=new UVWMachine(*uvwMachine_p);
+  //findConvFunction(*image, vb);
+  prepGridForDegrid();
+
+}
 
 void MosaicFT::prepGridForDegrid(){
 
@@ -482,7 +504,106 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   // AlwaysAssert(lattice, AipsError);
   
 }
+void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
+			       Matrix<Float>& weight,
+			       const vi::VisBuffer2& vb)
+{
+  // image always points to the image
+  image=&iimage;
 
+  //  if(convSize==0) {
+    init();
+
+    //  }
+
+  // Initialize the maps for polarization and channel. These maps
+  // translate visibility indices into image indices
+  initMaps(vb);
+  //make sure we rotate the first field too
+  lastFieldId_p=-1;
+  phaseShifter_p=new UVWMachine(*uvwMachine_p);
+  //findConvFunction(*image, vb);
+  if((image->shape().product())>cachesize) {
+    isTiled=True;
+  }
+  else {
+    isTiled=False;
+  }
+  //For now isTiled has to be false
+  isTiled=False;
+  nx    = image->shape()(0);
+  ny    = image->shape()(1);
+  npol  = image->shape()(2);
+  nchan = image->shape()(3);
+
+  sumWeight=0.0;
+  weight.resize(sumWeight.shape());
+  weight=0.0;
+
+  image->clearCache();
+  // Initialize for in memory or to disk gridding. lattice will
+  // point to the appropriate Lattice, either the ArrayLattice for
+  // in memory gridding or to the image for to disk gridding.
+  if(isTiled) {
+    imageCache->flush();
+    image->set(Complex(0.0));
+    lattice=CountedPtr<Lattice<Complex> >(image, False);
+    if( !doneWeightImage_p && (convWeightImage_p==0)){
+
+      convWeightImage_p=new  TempImage<Complex> (iimage.shape(),
+						 iimage.coordinates());
+
+
+
+
+      convWeightImage_p->set(Complex(0.0));
+      weightLattice=convWeightImage_p;
+
+    }
+  }
+  else {
+    IPosition gridShape(4, nx, ny, npol, nchan);
+    griddedData.resize(gridShape);
+    griddedData=Complex(0.0);
+    if(useDoubleGrid_p){
+      griddedData.resize();
+      griddedData2.resize(gridShape);
+      griddedData2=DComplex(0.0);
+    }
+    //if(arrayLattice) delete arrayLattice; arrayLattice=0;
+    //arrayLattice = new ArrayLattice<Complex>(griddedData);
+    //lattice=arrayLattice;
+
+    if( !doneWeightImage_p && (convWeightImage_p==0)){
+
+
+
+      convWeightImage_p=new  TempImage<Complex> (iimage.shape(),
+						 iimage.coordinates());
+      griddedWeight.resize(gridShape);
+      /*IPosition stride(4, 1);
+      IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
+		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
+      IPosition trc(blc+image->shape()-stride);
+
+      griddedWeight(blc, trc).set(Complex(0.0));
+      */
+      if(useDoubleGrid_p){
+	griddedWeight2.resize(gridShape);
+	griddedData2=DComplex(0.0);
+      }
+      else{
+	griddedWeight=Complex(0.0);
+      }
+      //if(weightLattice) delete weightLattice; weightLattice=0;
+      weightLattice = new ArrayLattice<Complex>(griddedWeight);
+
+    }
+
+  }
+  // AlwaysAssert(lattice, AipsError);
+
+}
 void MosaicFT::reset(){
 
   doneWeightImage_p=False;
@@ -869,6 +990,13 @@ extern "C" {
 	     
 
 }
+
+void MosaicFT::put(const vi::VisBuffer2& vb, Int row, Bool dopsf,
+		   FTMachine::Type type){
+	{throw(AipsError("not implemented"));}
+
+}
+
 void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 		   FTMachine::Type type)
 {
@@ -1441,7 +1569,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 */
-
+void MosaicFT::get(vi::VisBuffer2& vb, Int row){
+	{throw(AipsError("not implemented"));}
+}
 void MosaicFT::get(VisBuffer& vb, Int row)
 {
   

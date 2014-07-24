@@ -654,7 +654,7 @@ protected:
 
   String msname_p;
   CountedPtr<MeasurementSet> mssel_p;
-  VisSet *vs_p;
+  //VisSet *vs_p;
   ROVisibilityIterator* rvi_p;
   VisibilityIterator* wvi_p;
   FTMachine *ft_p;

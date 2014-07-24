@@ -80,12 +80,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // {
     //   String name("wtimg.im");
-    //   storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
+    //   storeArrayAsImage(name,image->coordinates(),wtImage.get());
     // }
     LatticeFFT::cfft2d(wtImage,False);
     // {
     //   String name("ftwtimg.im");
-    //   storeArrayAsImage(name,griddedWeights.coordinates(),wtImage.get());
+    //   storeArrayAsImage(name,image->coordinates(),wtImage.get());
     // }
     wtImageFTDone_p=True;
 

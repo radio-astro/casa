@@ -53,9 +53,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AzElAperture : public ATerm
   {
   public:
-    AzElAperture(): ATerm(){};
+    AzElAperture(): ATerm(), cachedCFC_p(), cachedCFCPA_p(400.0){};
     ~AzElAperture() {};
-    virtual void rotate(const VisBuffer& vb, CFCell& cfs, const Double& rotAngleIncrement=5.0);
+    virtual void rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncrement=5.0);
+    virtual void rotate2(const VisBuffer& vb, CFCell& baseCFC, CFCell& cfc, const Double& rotAngleIncrement=5.0);
+  private:
+    Array<TT> cachedCFC_p;
+    Float cachedCFCPA_p;
   };
 };
 #endif

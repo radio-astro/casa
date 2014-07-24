@@ -26,7 +26,7 @@
 //# $Id$
 #include <boost/math/special_functions/round.hpp>
 
-#include <msvis/MSVis/VisibilityIterator.h>
+
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -43,11 +43,14 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/StokesVector.h>
+#include <msvis/MSVis/MSUtil.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageUtilities.h>
@@ -201,7 +204,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool FTMachine::changed(const VisBuffer&) {
     return False;
   }
-  
+  Bool FTMachine::changed(const vi::VisBuffer2&) {
+      return False;
+    }
   //----------------------------------------------------------------------
   FTMachine::FTMachine(const FTMachine& other)
   {
@@ -228,6 +233,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (polMap(i) > -1) {cfStokes_p(N) = vb.corrType()(i);N++;}
     }
   }
+  //----------------------------------------------------------------------
+   void FTMachine::initPolInfo(const vi::VisBuffer2& vb)
+   {
+     //
+     // Need to figure out where to compute the following arrays/ints
+     // in the re-factored code.
+     // ----------------------------------------------------------------
+     {
+       polInUse_p = 0;
+       uInt N=0;
+       for(uInt i=0;i<polMap.nelements();i++) if (polMap(i) > -1) polInUse_p++;
+       cfStokes_p.resize(polInUse_p);
+       for(uInt i=0;i<polMap.nelements();i++)
+ 	if (polMap(i) > -1) {cfStokes_p(N) = vb.correlationTypes()(i);N++;}
+     }
+   }
   //----------------------------------------------------------------------
   void FTMachine::initMaps(const VisBuffer& vb) {
     
@@ -440,7 +461,219 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     initPolInfo(vb);
     pop_p->initCFMaps(visPolMap, polMap);
   }
-  
+  //----------------------------------------------------------------------
+    void FTMachine::initMaps(const vi::VisBuffer2& vb) {
+
+      logIO() << LogOrigin("FTMachine", "initMaps") << LogIO::NORMAL;
+
+      AlwaysAssert(image, AipsError);
+
+      // Set the frame for the UVWMachine
+      mFrame_p=MeasFrame(MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()), mLocation_p);
+
+      // First get the CoordinateSystem for the image and then find
+      // the DirectionCoordinate
+      CoordinateSystem coords=image->coordinates();
+      Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
+      AlwaysAssert(directionIndex>=0, AipsError);
+      DirectionCoordinate
+        directionCoord=coords.directionCoordinate(directionIndex);
+
+      // get the first position of moving source
+      if(fixMovingSource_p){
+
+        //First convert to HA-DEC or AZEL for parallax correction
+        MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+        MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+        MDirection::Ref outref(directionCoord.directionType(), mFrame_p);
+        firstMovingDir_p=MDirection::Convert(tmphadec, outref)();
+
+      }
+
+
+      // Now we need MDirection of the image phase center. This is
+      // what we define it to be. So we define it to be the
+      // center pixel. So we have to do the conversion here.
+      // This is independent of padding since we just want to know
+      // what the world coordinates are for the phase center
+      // pixel
+      {
+        Vector<Double> pixelPhaseCenter(2);
+        pixelPhaseCenter(0) = Double( image->shape()(0) / 2 );
+        pixelPhaseCenter(1) = Double( image->shape()(1) / 2 );
+        directionCoord.toWorld(mImage_p, pixelPhaseCenter);
+      }
+
+      // Decide if uvwrotation is not necessary, if phasecenter and
+      // image center are with in one pixel distance; Save some
+      //  computation time especially for spectral cubes.
+      {
+        Vector<Double> equal= (mImage_p.getAngle()-
+  			     vb.phaseCenter().getAngle()).getValue();
+        if((abs(equal(0)) < abs(directionCoord.increment()(0)))
+  	 && (abs(equal(1)) < abs(directionCoord.increment()(1)))){
+  	doUVWRotation_p=False;
+        }
+        else{
+  	doUVWRotation_p=True;
+        }
+      }
+      // Get the object distance in meters
+      Record info(image->miscInfo());
+      if(info.isDefined("distance")) {
+        info.get("distance", distance_p);
+        if(abs(distance_p)>0.0) {
+  	logIO() << "Distance to object is set to " << distance_p/1000.0
+  		<< "km: applying focus correction" << LogIO::POST;
+        }
+      }
+
+      // Set up the UVWMachine.
+      if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
+
+
+      String observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+      if(observatory.contains("ATCA") || observatory.contains("DRAO")
+         || observatory.contains("WSRT")){
+        uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
+  				  True, False);
+      }
+      else{
+        uvwMachine_p=new UVWMachine(mImage_p, vb.phaseCenter(), mFrame_p,
+  				  False, tangentSpecified_p);
+      }
+      AlwaysAssert(uvwMachine_p, AipsError);
+
+      lastFieldId_p=vb.fieldId()(0);
+      lastMSId_p=vb.msId();
+
+      // Set up maps
+      Int spectralIndex=coords.findCoordinate(Coordinate::SPECTRAL);
+      AlwaysAssert(spectralIndex>-1, AipsError);
+      spectralCoord_p=coords.spectralCoordinate(spectralIndex);
+
+      //Store the image/grid channels freq values
+      {
+        Int chanNumbre=image->shape()(3);
+        Vector<Double> pixindex(chanNumbre);
+        imageFreq_p.resize(chanNumbre);
+        Vector<Double> tempStorFreq(chanNumbre);
+        indgen(pixindex);
+        //    pixindex=pixindex+1.0;
+        for (Int ll=0; ll< chanNumbre; ++ll){
+  	if( !spectralCoord_p.toWorld(tempStorFreq(ll), pixindex(ll))){
+  	  logIO() << "Cannot get imageFreq " << LogIO::EXCEPTION;
+
+  	}
+        }
+        convertArray(imageFreq_p,tempStorFreq);
+      }
+      //Destroy any conversion layer Freq coord if freqframe is not valid
+      if(!freqFrameValid_p){
+        MFrequency::Types imageFreqType=spectralCoord_p.frequencySystem();
+        spectralCoord_p.setFrequencySystem(imageFreqType);
+        spectralCoord_p.setReferenceConversion(imageFreqType,
+  					     MEpoch(Quantity(vb.time()(0), "s")),
+  					     mLocation_p,
+  					     mImage_p);
+      }
+
+      // Channel map: do this properly by looking up the frequencies
+      // If a visibility channel does not map onto an image
+      // pixel then we set the corresponding chanMap to -1.
+      // This means that put and get must always check for this
+      // value (see e.g. GridFT)
+
+      nvischan  = vb.getFrequencies(0).nelements();
+      interpVisFreq_p.resize();
+      interpVisFreq_p=vb.getFrequencies(0);
+      if(selectedSpw_p.nelements() < 1){
+        Vector<Int> myspw(1);
+        myspw[0]=vb.spectralWindows()(0);
+        setSpw(myspw, freqFrameValid_p);
+      }
+
+      matchAllSpwChans(vb);
+
+      chanMap.resize();
+
+      chanMap=multiChanMap_p[vb.spectralWindows()(0)];
+      if(chanMap.nelements() == 0)
+        chanMap=Vector<Int>(vb.getFrequencies(0).nelements(), -1);
+
+      {
+        //logIO() << LogIO::DEBUGGING << "Channel Map: " << chanMap << LogIO::POST;
+      }
+      // Should never get here
+      if(max(chanMap)>=nchan||min(chanMap)<-1) {
+        logIO() << "Illegal Channel Map: " << chanMap << LogIO::EXCEPTION;
+      }
+
+      // Polarization map
+      Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
+      AlwaysAssert(stokesIndex>-1, AipsError);
+      StokesCoordinate stokesCoord=coords.stokesCoordinate(stokesIndex);
+
+      Vector<Int> visPolMap(vb.getCorrelationTypes());
+      nvispol=visPolMap.nelements();
+      AlwaysAssert(nvispol>0, AipsError);
+      polMap.resize(nvispol);
+      polMap=-1;
+      isIOnly=False;
+      Int pol=0;
+      Bool found=False;
+      // First we try matching Stokes in the visibilities to
+      // Stokes in the image that we are gridding into.
+      for (pol=0;pol<nvispol;pol++) {
+        Int p=0;
+        if(stokesCoord.toPixel(p, Stokes::type(visPolMap(pol)))) {
+  	AlwaysAssert(p<npol, AipsError);
+  	polMap(pol)=p;
+  	found=True;
+        }
+      }
+      // If this fails then perhaps we were looking to grid I
+      // directly. If so then we need to check that the parallel
+      // hands are present in the visibilities.
+      if(!found) {
+        Int p=0;
+        if(stokesCoord.toPixel(p, Stokes::I)) {
+  	polMap=-1;
+  	if(vb.polarizationFrame()==VisibilityIterator::Linear) {
+  	  p=0;
+  	  for (pol=0;pol<nvispol;pol++) {
+  	    if(Stokes::type(visPolMap(pol))==Stokes::XX)
+  	      {polMap(pol)=0;p++;found=True;};
+  	    if(Stokes::type(visPolMap(pol))==Stokes::YY)
+  	      {polMap(pol)=0;p++;found=True;};
+  	  }
+  	}
+  	else {
+  	  p=0;
+  	  for (pol=0;pol<nvispol;pol++) {
+  	    if(Stokes::type(visPolMap(pol))==Stokes::LL)
+  	      {polMap(pol)=0;p++;found=True;};
+  	    if(Stokes::type(visPolMap(pol))==Stokes::RR)
+  	      {polMap(pol)=0;p++;found=True;};
+  	  }
+  	}
+  	if(!found) {
+  	  logIO() <<  "Cannot find polarization map: visibility polarizations = "
+  		  << visPolMap << LogIO::EXCEPTION;
+  	}
+  	else {
+  	  isIOnly=True;
+  	  //logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
+  	}
+        };
+      }
+      //logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
+      //	    << LogIO::POST;
+
+      initPolInfo(vb);
+      pop_p->initCFMaps(visPolMap, polMap);
+    }
+
   FTMachine::~FTMachine() 
   {
     if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
@@ -658,6 +891,217 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
   
+  Bool FTMachine::interpolateFrequencyTogrid(const vi::VisBuffer2& vb,
+  					     const Matrix<Float>& wt,
+  					     Cube<Complex>& data,
+  					     Cube<Int>& flags,
+  					     Matrix<Float>& weight,
+  					     FTMachine::Type type){
+      Cube<Complex> origdata;
+      Cube<Bool> modflagCube;
+      Vector<Double> visFreq(vb.getFrequencies(0).nelements());
+      if(doConversion_p[vb.spectralWindows()[0]]){
+        visFreq.resize(lsrFreq_p.shape());
+        convertArray(visFreq, lsrFreq_p);
+      }
+      else{
+        convertArray(visFreq, vb.getFrequencies(0));
+        lsrFreq_p.resize();
+        lsrFreq_p=vb.getFrequencies(0);
+      }
+      if(type==FTMachine::MODEL){
+        origdata.reference(vb.visCubeModel());
+      }
+      else if(type==FTMachine::CORRECTED){
+        origdata.reference(vb.visCubeCorrected());
+      }
+      else if(type==FTMachine::OBSERVED){
+        origdata.reference(vb.visCube());
+      }
+      else if(type==FTMachine::PSF){
+        // make sure its a size 0 data ...psf
+        //so avoid reading any data from disk
+        origdata.resize();
+
+      }
+      else{
+        throw(AipsError("Don't know which column is being regridded"));
+      }
+      if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour) || (vb.nChannels()==1)){
+        data.reference(origdata);
+        // do something here for apply flag based on spw chan sels
+        // e.g.
+        // setSpecFlag(vb, chansels_p) -> newflag cube
+        setSpectralFlag(vb,modflagCube);
+        //flags.resize(vb.flagCube().shape());
+        flags.resize(modflagCube.shape());
+        flags=0;
+        //flags(vb.flagCube())=True;
+        flags(modflagCube)=True;
+        weight.reference(wt);
+        interpVisFreq_p.resize();
+        interpVisFreq_p=lsrFreq_p;
+
+        return False;
+      }
+
+      Cube<Bool>flag;
+
+      //okay at this stage we have at least 2 channels
+      Double width=fabs(imageFreq_p[1]-imageFreq_p[0])/fabs(visFreq[1]-visFreq[0]);
+      //if width is smaller than number of points needed for interpolation ...do it directly
+      //
+      // If image chan width is more than twice the data chan width, make a new list of
+      // data frequencies on which to interpolate. This new list is sync'd with the starting image chan
+      // and have the same width as the data chans.
+      if(((width >2.0) && (freqInterpMethod_p==InterpolateArray1D<Double, Complex>::linear)) ||
+         ((width >4.0) && (freqInterpMethod_p !=InterpolateArray1D<Double, Complex>::linear))){
+        Double minVF=min(visFreq);
+        Double maxVF=max(visFreq);
+        Double minIF=min(imageFreq_p);
+        Double maxIF=max(imageFreq_p);
+        if( ((minIF-fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) > maxVF) ||
+  	  ((maxIF+fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) < minVF)){
+  	//This function should not have been called with image
+  	//being out of bound of data...but still
+  	interpVisFreq_p.resize(imageFreq_p.nelements());
+  	interpVisFreq_p=imageFreq_p;
+  	chanMap.resize(interpVisFreq_p.nelements());
+  	chanMap.set(-1);
+        }
+        else{ // Make a new list of frequencies.
+  	Bool found;
+  	uInt where=0;
+  	Double interpwidth=visFreq[1]-visFreq[0];
+  	if(minIF < minVF){ // Need to find the first image-channel with data in it
+  	  where=binarySearchBrackets(found, imageFreq_p, minVF, imageFreq_p.nelements());
+  	  if(where != imageFreq_p.nelements()){
+  	    minIF=imageFreq_p[where];
+  	  }
+  	}
+
+  	if(maxIF > maxVF){
+  	   where=binarySearchBrackets(found, imageFreq_p, maxVF, imageFreq_p.nelements());
+  	   if(where!= imageFreq_p.nelements()){
+  	    maxIF=imageFreq_p[where];
+  	   }
+
+  	}
+
+          // This new list of frequencies starts at the first image channel minus half image channel.
+  	// It ends at the last image channel plus half image channel.
+  	Int ninterpchan=(Int)ceil((maxIF-minIF+fabs(imageFreq_p[1]-imageFreq_p[0]))/fabs(interpwidth));
+  	chanMap.resize(ninterpchan);
+  	chanMap.set(-1);
+  	interpVisFreq_p.resize(ninterpchan);
+  	interpVisFreq_p[0]=(interpwidth > 0) ? minIF : maxIF;
+  	interpVisFreq_p[0] -= fabs(imageFreq_p[1]-imageFreq_p[0])/2.0;
+  	for (Int k=1; k < ninterpchan; ++k){
+  	  interpVisFreq_p[k] = interpVisFreq_p[k-1]+ interpwidth;
+  	}
+
+  	for (Int k=0; k < ninterpchan; ++k){
+  	  ///chanmap with width
+  	  Double nearestchanval = interpVisFreq_p[k]- (imageFreq_p[1]-imageFreq_p[0])/2.0;
+  	  where=binarySearchBrackets(found, imageFreq_p, nearestchanval, imageFreq_p.nelements());
+  	  if(where != imageFreq_p.nelements())
+  	    chanMap[k]=where;
+  	}
+
+        }// By now, we have a new list of frequencies, synchronized with image channels, but with data chan widths.
+      }// end of ' if (we have to make new frequencies) '
+      else{
+        // Interpolate directly onto output image frequencies.
+        interpVisFreq_p.resize(imageFreq_p.nelements());
+        convertArray(interpVisFreq_p, imageFreq_p);
+        chanMap.resize(interpVisFreq_p.nelements());
+        indgen(chanMap);
+      }
+
+      // Read flags from the vb.
+      setSpectralFlag(vb,modflagCube);
+
+      if(type != FTMachine::PSF){ // Interpolating the data
+   	//Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
+  	//2 swap of axes needed
+  	Cube<Complex> flipdata;
+  	Cube<Bool> flipflag;
+
+          // Interpolate the data.
+          //      Input flags are from the previous step ( setSpectralFlag ).
+          //      Output flags contain info about channels that could not be interpolated
+          //                                   (for example, linear interp with only one data point)
+  	swapyz(flipflag,modflagCube);
+  	swapyz(flipdata,origdata);
+  	InterpolateArray1D<Double,Complex>::
+  	  interpolate(data,flag,interpVisFreq_p,visFreq,flipdata,flipflag,freqInterpMethod_p);
+  	flipdata.resize();
+  	swapyz(flipdata,data);
+  	data.resize();
+  	data.reference(flipdata);
+  	flipflag.resize();
+  	swapyz(flipflag,flag);
+  	flag.resize();
+  	flag.reference(flipflag);
+          // Note : 'flag' will get augmented with the flags coming out of weight interpolation
+       }
+      else
+        { // get the flag array to the correct shape.
+  	// This will get filled at the end of weight-interpolation.
+           flag.resize(vb.nCorrelations(), interpVisFreq_p.nelements(), vb.nRows());
+           flag.set(False);
+      }
+        // Now, interpolate the weights also.
+        //   (1) Read in the flags from the vb ( setSpectralFlags -> modflagCube )
+        //   (2) Collapse the flags along the polarization dimension to match shape of weight.
+         Matrix<Bool> chanflag(wt.shape());
+         AlwaysAssert( chanflag.shape()[0]==modflagCube.shape()[1], AipsError);
+         AlwaysAssert( chanflag.shape()[1]==modflagCube.shape()[2], AipsError);
+         chanflag=False;
+         for(uInt pol=0;pol<modflagCube.shape()[0];pol++)
+  	 chanflag = chanflag | modflagCube.yzPlane(pol);
+
+         // (3) Interpolate the weights.
+         //      Input flags are the collapsed vb flags : 'chanflag'
+         //      Output flags are in tempoutputflag
+         //            - contains info about channels that couldn't be interpolated.
+         Matrix<Float> flipweight;
+         flipweight=transpose(wt);
+         Matrix<Bool> flipchanflag;
+         flipchanflag=transpose(chanflag);
+         Matrix<Bool> tempoutputflag;
+         InterpolateArray1D<Double,Float>::
+  	 interpolate(weight,tempoutputflag, interpVisFreq_p, visFreq,flipweight,flipchanflag,freqInterpMethod_p);
+         flipweight.resize();
+         flipweight=transpose(weight);
+         weight.resize();
+         weight.reference(flipweight);
+         flipchanflag.resize();
+         flipchanflag=transpose(tempoutputflag);
+         tempoutputflag.resize();
+         tempoutputflag.reference(flipchanflag);
+
+         // (4) Now, fill these flags back into the flag cube
+         //                 so that they get USED while gridding the PSF (and data)
+         //      Taking the OR of the flags that came out of data-interpolation
+         //                         and weight-interpolation, in case they're different.
+         //      Expanding flags across polarization.  This will destroy any
+         //                          pol-dependent flags for imaging, but msvis::VisImagingWeight
+         //                          uses the OR of flags across polarization anyway
+         //                          so we don't lose anything.
+
+         AlwaysAssert( tempoutputflag.shape()[0]==flag.shape()[1], AipsError);
+         AlwaysAssert( tempoutputflag.shape()[1]==flag.shape()[2], AipsError);
+         for(uInt pol=0;pol<flag.shape()[0];pol++)
+  	 flag.yzPlane(pol) = tempoutputflag | flag.yzPlane(pol);
+
+         // Fill the output array of image-channel flags.
+         flags.resize(flag.shape());
+         flags=0;
+         flags(flag)=True;
+
+      return True;
+    }
   void FTMachine::getInterpolateArrays(const VisBuffer& vb,
 				       Cube<Complex>& data, Cube<Int>& flags){
     
@@ -702,7 +1146,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     chanMap.resize(imageFreq_p.nelements());
     indgen(chanMap);
   }
-  
+  void FTMachine::getInterpolateArrays(const vi::VisBuffer2& vb,
+  				       Cube<Complex>& data, Cube<Int>& flags){
+
+
+      if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)||  (vb.nChannels()==1)){
+        Cube<Bool> modflagCube;
+        setSpectralFlag(vb,modflagCube);
+        data.reference(vb.visCubeModel());
+        //flags.resize(vb.flagCube().shape());
+        flags.resize(modflagCube.shape());
+        flags=0;
+        //flags(vb.flagCube())=True;
+        flags(modflagCube)=True;
+        interpVisFreq_p.resize();
+        interpVisFreq_p=vb.getFrequencies(0);
+        return;
+      }
+
+      data.resize(vb.nCorrelations(), imageFreq_p.nelements(), vb.nRows());
+      flags.resize(vb.nCorrelations(), imageFreq_p.nelements(), vb.nRows());
+      data.set(Complex(0.0,0.0));
+      flags.set(0);
+      //no need to degrid channels that does map over this vb
+      Int maxchan=max(chanMap);
+      for (uInt k =0 ; k < chanMap.nelements() ; ++k){
+        if(chanMap(k)==-1)
+  	chanMap(k)=maxchan;
+      }
+      Int minchan=min(chanMap);
+      if(minchan==maxchan)
+        minchan=-1;
+
+
+      for(Int k = 0; k < minchan; ++k)
+        flags.xzPlane(k).set(1);
+
+      for(uInt k = maxchan + 1; k < imageFreq_p.nelements(); ++k)
+        flags.xzPlane(k).set(1);
+
+      interpVisFreq_p.resize(imageFreq_p.nelements());
+      convertArray(interpVisFreq_p, imageFreq_p);
+      chanMap.resize(imageFreq_p.nelements());
+      indgen(chanMap);
+    }
   Bool FTMachine::interpolateFrequencyFromgrid(VisBuffer& vb, 
 					       Cube<Complex>& data, 
 					       FTMachine::Type type){
@@ -743,10 +1230,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     InterpolateArray1D<Double,Complex>::
       interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
     swapyz(vb.modelVisCube(),flipdata);
+
     
     
     return True;
   }
+  Bool FTMachine::interpolateFrequencyFromgrid(vi::VisBuffer2& vb,
+  					       Cube<Complex>& data,
+  					       FTMachine::Type type){
+
+      Cube<Complex> *origdata;
+      Vector<Double> visFreq(vb.getFrequencies(0).nelements());
+
+      if(doConversion_p[vb.spectralWindows()[0]]){
+        convertArray(visFreq, lsrFreq_p);
+      }
+      else{
+        convertArray(visFreq, vb.getFrequencies(0));
+      }
+
+      if(type==FTMachine::MODEL){
+        origdata=const_cast <Cube<Complex>* > (&(vb.visCubeModel()));
+      }
+      else if(type==FTMachine::CORRECTED){
+        origdata=const_cast<Cube<Complex>* >(&(vb.visCubeCorrected()));
+      }
+      else{
+        origdata=const_cast<Cube<Complex>* >(&(vb.visCube()));
+      }
+      if((imageFreq_p.nelements()==1) || (freqInterpMethod_p== InterpolateArray1D<Double, Complex>::nearestNeighbour)){
+        origdata->reference(data);
+        return False;
+      }
+
+      //Need to get  new interpolate functions that interpolate explicitly on the 2nd axis
+      //2 swap of axes needed
+      Cube<Complex> flipgrid;
+      flipgrid.resize();
+      swapyz(flipgrid,data);
+
+      Cube<Complex> flipdata((origdata->shape())(0),(origdata->shape())(2),
+  			   (origdata->shape())(1)) ;
+      flipdata.set(Complex(0.0));
+      InterpolateArray1D<Double,Complex>::
+        interpolate(flipdata,visFreq, imageFreq_p, flipgrid,freqInterpMethod_p);
+      flipgrid.resize();
+      swapyz(flipgrid,flipdata);
+      vb.setVisCubeModel(flipgrid);
+
+      return True;
+    }
+
   void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 			    const VisBuffer& vb)
   {
@@ -823,7 +1357,82 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }//end pragma
     }
   }
+  void FTMachine::rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+  			    const vi::VisBuffer2& vb)
+    {
 
+
+
+      //the uvw rotation is done for common tangent reprojection or if the
+      //image center is different from the phasecenter
+      // UVrotation is False only if field never changes
+      if((vb.fieldId()(0)!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
+        doUVWRotation_p=True;
+      if(doUVWRotation_p || tangentSpecified_p || fixMovingSource_p){
+        ok();
+
+        mFrame_p.epoch() != 0 ?
+  	mFrame_p.resetEpoch(MEpoch(Quantity(vb.time()(0), "s"))):
+  	mFrame_p.set(mLocation_p, MEpoch(Quantity(vb.time()(0), "s"), ROMSColumns(vb.getVi()->ms()).timeMeas()(0).getRef()));
+
+        MDirection phasecenter=mImage_p;
+        if(fixMovingSource_p){
+
+        //First convert to HA-DEC or AZEL for parallax correction
+  	MDirection::Ref outref1(MDirection::AZEL, mFrame_p);
+  	MDirection tmphadec=MDirection::Convert(movingDir_p, outref1)();
+  	MDirection::Ref outref(mImage_p.getRef().getType(), mFrame_p);
+  	MDirection sourcenow=MDirection::Convert(tmphadec, outref)();
+  	//cerr << "Rotating to fixed moving source " << MVDirection(phasecenter.getAngle()-firstMovingDir_p.getAngle()+sourcenow.getAngle()) << endl;
+  	phasecenter.set(MVDirection(phasecenter.getAngle()+firstMovingDir_p.getAngle()-sourcenow.getAngle()));
+
+      }
+
+
+        // Set up the UVWMachine only if the field id has changed. If
+        // the tangent plane is specified then we need a UVWMachine that
+        // will reproject to that plane iso the image plane
+        if((vb.fieldId()(0)!=lastFieldId_p) || (vb.msId()!=lastMSId_p) || fixMovingSource_p) {
+
+  	String observatory=ROMSColumns(vb.getVi()->ms()).observation().telescopeName()(0);
+  	if(uvwMachine_p) delete uvwMachine_p; uvwMachine_p=0;
+  	if(observatory.contains("ATCA") || observatory.contains("WSRT")){
+  		//Tangent specified is being wrongly used...it should be for a
+  	    	//Use the safest way  for now.
+  	    uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
+  					True, False);
+  	}
+  	else{
+  		uvwMachine_p=new UVWMachine(phasecenter, vb.phaseCenter(), mFrame_p,
+  					False,tangentSpecified_p);
+  	    }
+       }
+
+  	lastFieldId_p=vb.fieldId()(0);
+  	lastMSId_p=vb.msId();
+
+
+        AlwaysAssert(uvwMachine_p, AipsError);
+
+        // Always force a recalculation
+        uvwMachine_p->reCalculate();
+
+        // Now do the conversions
+        uInt nrows=dphase.nelements();
+        Vector<Double> thisRow(3);
+        thisRow=0.0;
+        uInt irow;
+        //#pragma omp parallel default(shared) private(irow,thisRow)
+        {
+  	//#pragma omp for
+  	  for (irow=0; irow<nrows;++irow) {
+  	    thisRow.reference(uvw.column(irow));
+  	    convUVW(dphase(irow), thisRow);
+  	  }
+
+        }//end pragma
+      }
+    }
   void FTMachine::convUVW(Double& dphase, Vector<Double>& thisrow){
     //for (uInt i=0;i<3;i++) thisRow(i)=uvw(i,row);
     uvwMachine_p->convertUVW(dphase, thisrow);
@@ -946,7 +1555,83 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
   }
-  
+  //
+    // Refocus the array on a point at finite distance
+    //
+    void FTMachine::refocus(Matrix<Double>& uvw, const Vector<Int>& ant1,
+  			  const Vector<Int>& ant2,
+  			  Vector<Double>& dphase, const vi::VisBuffer2& vb)
+    {
+
+      ok();
+
+      if(abs(distance_p)>0.0) {
+
+        nAntenna_p=max(vb.antenna2())+1;
+
+        // Positions of antennas
+        Matrix<Double> antPos(3,nAntenna_p);
+        antPos=0.0;
+        Vector<Int> nAntPos(nAntenna_p);
+        nAntPos=0;
+
+        uInt aref = min(ant1);
+
+        // Now find the antenna locations: for this we just reference to a common
+        // point. We ignore the time variation within this buffer.
+        uInt nrows=dphase.nelements();
+        for (uInt row=0;row<nrows;row++) {
+  	uInt a1=ant1(row);
+  	uInt a2=ant2(row);
+  	for(uInt dim=0;dim<3;dim++) {
+  	  antPos(dim, a1)+=uvw(dim, row);
+  	  antPos(dim, a2)-=uvw(dim, row);
+  	}
+  	nAntPos(a1)+=1;
+  	nAntPos(a2)+=1;
+        }
+
+        // Now remove the reference location
+        Vector<Double> center(3);
+        for(uInt dim=0;dim<3;dim++) {
+  	center(dim) = antPos(dim,aref)/nAntPos(aref);
+        }
+
+        // Now normalize
+        for (uInt ant=0; ant<nAntenna_p; ant++) {
+  	if(nAntPos(ant)>0) {
+  	  for(uInt dim=0;dim<3;dim++) {
+  	    antPos(dim,ant)/=nAntPos(ant);
+  	    antPos(dim,ant)-=center(dim);
+  	  }
+  	}
+        }
+
+        // Now calculate the offset needed to focus the array,
+        // including the w term. This must have the correct asymptotic
+        // form so that at infinity no net change occurs
+        for (uInt row=0;row<nrows;row++) {
+  	uInt a1=ant1(row);
+  	uInt a2=ant2(row);
+
+  	Double d1=distance_p*distance_p-2*distance_p*antPos(2,a1);
+  	Double d2=distance_p*distance_p-2*distance_p*antPos(2,a2);
+  	for(uInt dim=0;dim<3;dim++) {
+  	  d1+=antPos(dim,a1)*antPos(dim,a1);
+  	  d2+=antPos(dim,a2)*antPos(dim,a2);
+  	}
+  	d1=sqrt(d1);
+  	d2=sqrt(d2);
+  	for(uInt dim=0;dim<2;dim++) {
+  	  dphase(row)-=(antPos(dim,a1)*antPos(dim,a1)-antPos(dim,a2)*antPos(dim,a2))/(2*distance_p);
+  	}
+  	uvw(0,row)=distance_p*(antPos(0,a1)/d1-antPos(0,a2)/d2);
+  	uvw(1,row)=distance_p*(antPos(1,a1)/d1-antPos(1,a2)/d2);
+  	uvw(2,row)=distance_p*(antPos(2,a1)/d1-antPos(2,a2)/d2)+dphase(row);
+        }
+      }
+    }
+
   void FTMachine::ok() {
     AlwaysAssert(image, AipsError);
     AlwaysAssert(uvwMachine_p, AipsError);
@@ -1386,7 +2071,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
     
   }
-  
+  Bool FTMachine::matchAllSpwChans(const vi::VisBuffer2& vb){
+	  Vector<Int>  elspw;
+	  Vector<Int>  elstart;
+	  Vector<Int>  elnchan;
+	  Double elfstart, elfend, elfinc;
+	  spectralCoord_p.toWorld(elfstart, 0.0);
+	  spectralCoord_p.toWorld(elfend, Double(nchan));
+	  if(elfend < elfstart){
+		  Double tmpfreq=elfstart;
+		  elfstart=elfend;
+		  elfend=tmpfreq;
+	  }
+	  elfinc=(spectralCoord_p.increment()(0));
+
+
+	  MSUtil::getSpwInFreqRangeAllFields(elspw, elstart,
+			  elnchan,vb.getVi()->ms(), elfstart,elfend,elfinc, MFrequency::LSRK);
+	  selectedSpw_p.resize();
+	  selectedSpw_p=elspw[vb.msId()];
+	  nVisChan_p.resize();
+	  nVisChan_p=elnchan[vb.msId()];
+
+
+      doConversion_p.resize(max(selectedSpw_p)+1);
+      doConversion_p.set(True);
+
+      multiChanMap_p.resize(max(selectedSpw_p)+1, True);
+      matchChannel(vb);
+      /*Bool anymatchChan=False;
+      Bool anyTopo=False;
+      for (uInt k=0; k < selectedSpw_p.nelements(); ++k){
+        Bool matchthis=matchChannel(selectedSpw_p[k], vb);
+        anymatchChan= (anymatchChan || matchthis);
+        anyTopo=anyTopo || ((MFrequency::castType(ROMSColumns(vb.getVi()->ms()).spectralWindow().measFreqRef()(selectedSpw_p[k]))==MFrequency::TOPO) && freqFrameValid_p);
+      }
+
+      // if TOPO and valid frame things may match later but not now  thus we'll go
+      // through the data
+      // hoping the user made the right choice
+      if (!anymatchChan && !anyTopo){
+        logIO() << "No overlap in frequency between image channels and selected data found for this FTMachine \n"
+  	      << " Check your data selection and image parameters if you end up with a blank image"
+  	      << LogIO::WARN << LogIO::POST;
+
+      }
+         */
+      return True;
+
+    }
   Bool FTMachine::matchChannel(const Int& spw, 
 			       const VisBuffer& vb){
     
@@ -1462,7 +2195,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 
-  
+  Bool FTMachine::matchChannel(const vi::VisBuffer2& vb){
+
+	  Int spw=vb.spectralWindows()[0];
+      if(nVisChan_p[spw] < 0)
+        logIO() << " Spectral window " << spw
+  	      << " does not seem to have been selected" << LogIO::EXCEPTION;
+      nvischan  = nVisChan_p[spw];
+      chanMap.resize(nvischan);
+      chanMap.set(-1);
+      Vector<Double> lsrFreq(0);
+      Bool condoo=False;
+
+      //cerr << "doConve " << spw << "   " << doConversion_p[spw] << " freqframeval " << freqFrameValid_p << endl;
+
+     if(freqFrameValid_p)
+    	 lsrFreq=vb.getFrequencies(0,MFrequency::LSRK);
+     else
+    	 lsrFreq=vb.getFrequencies(0);
+      doConversion_p[spw]=freqFrameValid_p;
+
+      if(lsrFreq.nelements() ==0){
+        return False;
+      }
+      lsrFreq_p.resize(lsrFreq.nelements());
+      lsrFreq_p=lsrFreq;
+      Vector<Double> c(1);
+      c=0.0;
+      Vector<Double> f(1);
+      Int nFound=0;
+
+
+      //cout.precision(10);
+      for (Int chan=0;chan<nvischan;chan++) {
+        f(0)=lsrFreq[chan];
+        if(spectralCoord_p.toPixel(c, f)) {
+  	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center
+  	//cerr << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+  	/////////////
+  	//c(0)=pixel;
+  	//spectralCoord_p.toWorld(f, c);
+  	//cerr << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+  	////////////////
+  	if(pixel>-1&&pixel<nchan) {
+  	  chanMap(chan)=pixel;
+  	  nFound++;
+  	  if(nvischan>1&&(chan==0||chan==nvischan-1)) {
+  	    /*logIO() << LogIO::DEBUGGING
+  		    << "Selected visibility channel : " << chan+1
+  		    << " has frequency "
+  		    <<  MFrequency(Quantity(f(0), "Hz")).get("GHz").getValue()
+  		    << " GHz and maps to image pixel " << pixel+1 << LogIO::POST;
+  	    */
+  	  }
+  	}
+        }
+      }
+
+      multiChanMap_p[spw].resize();
+      multiChanMap_p[spw]=chanMap;
+
+
+      if(nFound==0) {
+        /*
+  	logIO()  << "Visibility channels in spw " << spw+1
+  	<<      " of ms " << vb.msId() << " is not being used "
+  	<< LogIO::WARN << LogIO::POST;
+        */
+        return False;
+      }
+
+
+
+
+      return True;
+
+    }
+
+
 
 
   void FTMachine::gridOk(Int convSupport){
@@ -1627,6 +2437,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
   }
+  void FTMachine::setSpectralFlag(const vi::VisBuffer2& vb, Cube<Bool>& modflagcube){
+
+      modflagcube.resize(vb.flagCube().shape());
+      modflagcube=vb.flagCube();
+      uInt nchan = vb.nChannels();
+      uInt msid = vb.msId();
+      uInt selspw = vb.spectralWindows()[0];
+      Bool spwFlagIsSet=( (spwChanSelFlag_p.nelements() > 0) && (spwChanSelFlag_p.shape()(1) > selspw) &&
+  			(spwChanSelFlag_p.shape()(0) > msid) &&
+  			(spwChanSelFlag_p.shape()(2) >=nchan));
+      //cerr << "spwFlagIsSet " << spwFlagIsSet << endl;
+      for (uInt i=0;i<nchan;i++) {
+        //Flag those channels that  did not get selected...
+        //respect the flags from vb  if selected  or
+        //if spwChanSelFlag is wrong shape
+        if ((spwFlagIsSet) && (spwChanSelFlag_p(msid,selspw,i)!=1)) {
+  	modflagcube.xzPlane(i).set(True);
+        }
+      }
+    }
 
   //-----------------------------------------------------------------------------------------------------------------
   //------------  Vectorized versions of initializeToVis, initializeToSky, finalizeToSky  

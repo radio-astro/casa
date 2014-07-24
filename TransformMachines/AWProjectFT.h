@@ -139,6 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   //  class EPJones;
   class SolvableVisJones;
+  namespace vi{class VisBuffer2;}
   class AWProjectFT : public FTMachine {
   public:
     AWProjectFT();
@@ -201,6 +202,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
+    virtual void initializeToVis(ImageInterface<Complex>& /*image*/,
+    			 const vi::VisBuffer2& /*vb*/){};
     // This version returns the gridded vis...should be used in conjunction 
     // with the version of 'get' that needs the gridded visdata 
     virtual void initializeToVis(ImageInterface<Complex>& image,
@@ -214,7 +217,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initialize transform to Sky plane: initializes the image
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 			 const VisBuffer& vb);
-    
+    virtual void initializeToSky(ImageInterface<Complex>& /*image*/,  Matrix<Float>& /*weight*/,
+    			 const vi::VisBuffer2& /*vb*/){};
     // Finalize transform to Sky plane: flushes the image
     // cache and shows statistics if it is being used. DOES NOT
     // DO THE FINAL TRANSFORM!
@@ -225,7 +229,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get actual coherence from grid by degridding
     void get(VisBuffer& vb, Int row=-1);
-    
+    void get(vi::VisBuffer2& /*vb*/, Int row=-1){};
     // Get the coherence from grid return it in the degrid 
     // is used especially when scratch columns are not 
     // present in ms.
@@ -268,7 +272,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	     FTMachine::Type type=FTMachine::OBSERVED);
-    
+    void put(const vi::VisBuffer2& /*vb*/, Int row=-1, Bool dopsf=False,
+    	     FTMachine::Type type=FTMachine::OBSERVED){};
     // Make the entire image using a ROVisIter
     virtual void makeImage(FTMachine::Type,
 			   ROVisibilityIterator&,

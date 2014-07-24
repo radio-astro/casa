@@ -833,7 +833,7 @@ namespace casa{
 	//   (coords.increment()(0)*screen.shape()(0));
 
 	Float psScale = (2*coords.increment()(0))/(nx*image.coordinates().increment()(0)),
-	  innerQuaterFraction=1.0;
+	  innerQuaterFraction=4.0;
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
@@ -943,7 +943,8 @@ namespace casa{
     else 
       threshold   = real(abs(func(IPosition(4,convFuncOrigin,convFuncOrigin,0,0))));
 
-    threshold *= aTerm_p->getSupportThreshold();
+    //threshold *= aTerm_p->getSupportThreshold();
+    threshold *= 1e-3;
     //    threshold *=  0.1;
     // if (aTerm_p->isNoOp()) 
     //   threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
@@ -1318,19 +1319,39 @@ namespace casa{
     // CountedPtr<CFCell>  cfc;
     // CountedPtr<ATerm> aTerm_l=aTerm_p;
     CFBuffer *cfb, *cbPtr=0;
+    CFCell  *cfc, *baseCFC=NULL;
     ATerm *aTerm_l=&*aTerm_p;
+    
+    cfb=&*(theMap(0));
+    cfc = &*(cfb->getCFCellPtr(0,0,0));
+    Double actualPA = getPA(vb), currentCFPA = cfc->pa_p.getValue("rad");
+    Double dPA = currentCFPA-actualPA;
+
+    if (fabs(dPA) <= fabs(rotateCFOTFAngleRad_p)) return;
+
+    LogIO log_l(LogOrigin("AWConvFunc", "rotate2"));
 
 //     Int Nth=1;
 // #ifdef HAS_OMP
 //     Nth=max(omp_get_max_threads()-2,1);
 // #endif
-
     for (Int irow=0;irow<nRow;irow++)
       {
 	cfb=&*(theMap(irow));
 	//	if ((!cfb.null()) && (cfb != cbPtr))
 	if ((cfb!=NULL) && (cfb != cbPtr))
 	  {
+	    // baseCFB_p = cfb->clone();
+	    // cerr << "NRef = " << baseCFB_p.nrefs() << endl;
+	    //
+	    // If the following messsage is emitted more than once, we
+	    // are in a heterogeneous-array case
+	    //
+	    log_l << "Rotating the base CFB from PA=" << cfb->getCFCellPtr(0,0,0)->pa_p.getValue("deg") 
+		  << " to " << actualPA*57.2957795131 
+		  << " " << cfb->getCFCellPtr(0,0,0)->shape_p
+		  << LogIO::POST;
+
 	    IPosition shp(cfb->shape());
 	    cbPtr = cfb;
 	    for(Int k=0;k<shp(2);k++)   // Mueller-loop
@@ -1340,14 +1361,13 @@ namespace casa{
 // #pragma omp for
 		for (Int i=0;i<shp(0);i++)      // Chan-loop
 		  {
-		    CFCell  *cfc;
 		    cfc = &*(cfb->getCFCellPtr(i,j,k));
-		    
+		    //baseCFC = &*(baseCFB_p->getCFCellPtr(i,j,k));
 		    // Call this for every VB.  Any optimization
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
 		    //		    if (rotateCF_p) 
-		    aTerm_l->rotate(vb,*cfc,rotateCFOTFAngleRad_p);
+		    aTerm_l->rotate2(vb,*baseCFC, *cfc,rotateCFOTFAngleRad_p);
 		  }
     }
 	  }

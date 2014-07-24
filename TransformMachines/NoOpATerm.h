@@ -101,6 +101,12 @@ namespace casa{
 			const Double& // rotAngle
 			) 
     {};
+    virtual void rotate2(const VisBuffer& ,//vb, 
+			CFCell&, // basecfs
+			CFCell&, // cfs
+			const Double& // rotAngle
+			) 
+    {};
     //
     // As the name indicates, this class should always return True
     //

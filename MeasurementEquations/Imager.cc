@@ -73,13 +73,9 @@
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
 #include <msvis/MSVis/MSUtil.h>
-#include <msvis/MSVis/VisSet.h>
+//#include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
-/////////#include <msvis/MSVis/VisBufferAsync.h>
-
-// Disabling Imager::correct() (gmoellen 06Nov20)
-//#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
 
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/UnitMap.h>
@@ -197,7 +193,7 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 Imager::Imager() 
-  :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), 
+  :  msname_p(""),  rvi_p(0), wvi_p(0), ft_p(0),
      cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), 
@@ -318,7 +314,7 @@ traceEvent(1,"Entering imager::defaults",25);
 
 
 Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
-  : msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
+  : msname_p(""),  rvi_p(0), wvi_p(0),
     ft_p(0), cft_p(0), se_p(0),
     sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
     mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
@@ -341,7 +337,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
 
 
 Imager::Imager(MeasurementSet& theMS, Bool compress)
-  :  msname_p(""),  vs_p(0), rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
+  :  msname_p(""),   rvi_p(0), wvi_p(0), ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      mssFreqSel_p(), mssChanSel_p(), viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0),
      prev_image_id_p(0), prev_mask_id_p(0)
@@ -361,7 +357,7 @@ Imager::Imager(MeasurementSet& theMS, Bool compress)
 }
 
 Imager::Imager(const Imager & other)
-  :  msname_p(""), vs_p(0), rvi_p(0), wvi_p(0), 
+  :  msname_p(""),  rvi_p(0), wvi_p(0),
      ft_p(0), cft_p(0), se_p(0),
      sm_p(0), vp_p(0), gvp_p(0), setimaged_p(False), nullSelect_p(False), 
      viewer_p(0), clean_panel_p(0), image_id_p(0), mask_id_p(0), prev_image_id_p(0), prev_mask_id_p(0)
@@ -397,9 +393,6 @@ Imager &Imager::operator=(const Imager & other)
     numMS_p=other.numMS_p;
     if (!mssel_p.null() && this != &other) {
       *mssel_p = *(other.mssel_p);
-    }
-    if (vs_p && this != &other) {
-      *vs_p = *(other.vs_p);
     }
     if (wvi_p && this != &other) {
       *wvi_p = *(other.wvi_p);
@@ -449,14 +442,10 @@ Imager::~Imager()
     //  delete ms_p;
     //}
     ms_p = 0;
-    if (vs_p) {
-      delete vs_p;
-    }
     if(rvi_p)
       delete rvi_p;
     rvi_p=wvi_p=0;
 
-    vs_p = 0;
     if (ft_p) {
       delete ft_p;
     }
@@ -541,10 +530,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
     
     (!ms_p->tableDesc().isColumn("CORRECTED_DATA")); // if no side effect then delete this statement?
     
-    /*if(vs_p) {
-      delete vs_p; vs_p=0;
-    }
-    */
+
     if(rvi_p){
       delete rvi_p;
       rvi_p=0;
@@ -609,7 +595,6 @@ Bool Imager::close()
   this->unlock();
   if(ft_p) delete ft_p; ft_p = 0;
   if(cft_p) delete cft_p; cft_p = 0;
-  if(vs_p) delete vs_p; vs_p = 0;
   if(rvi_p) delete rvi_p; 
   rvi_p=0;
   wvi_p=0;

@@ -33,6 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
@@ -170,6 +171,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     virtual void initializeToVis(ImageInterface<Complex>& image,
 			 const VisBuffer& vb);
+    virtual void initializeToVis(ImageInterface<Complex>& /*image*/,
+    			 const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
     // This version returns the gridded vis...should be used in conjunction 
     // with the version of 'get' that needs the gridded visdata 
     virtual void initializeToVis(ImageInterface<Complex>& image,
@@ -183,7 +186,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Initialize transform to Sky plane: initializes the image
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 			 const VisBuffer& vb);
-    
+    virtual void initializeToSky(ImageInterface<Complex>& /*image*/,  Matrix<Float>& /*weight*/,
+    			 const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
     // Finalize transform to Sky plane: flushes the image
     // cache and shows statistics if it is being used. DOES NOT
     // DO THE FINAL TRANSFORM!
@@ -194,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get actual coherence from grid by degridding
     void get(VisBuffer& vb, Int row=-1);
-    
+    void get(vi::VisBuffer2& vb, Int row=-1){throw(AipsError("not implemented"));};
     // Get the coherence from grid return it in the degrid 
     // is used especially when scratch columns are not 
     // present in ms.
@@ -241,7 +245,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	     FTMachine::Type type=FTMachine::OBSERVED);
-    
+    void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
+    	     FTMachine::Type type=FTMachine::OBSERVED){throw(AipsError("not implemented"));};
     // Make the entire image
     void makeImage(FTMachine::Type type,
 		   VisSet& vs,

@@ -101,6 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 template<class T> class TempImage;
+namespace vi{class VisBuffer2;};
 
 class GridBoth : public FTMachine {
 public:
@@ -152,7 +153,8 @@ public:
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
 		       const VisBuffer& vb);
-
+  void initializeToVis(ImageInterface<Complex>& /*image*/,
+  		       const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
   void finalizeToVis();
@@ -160,7 +162,8 @@ public:
   // Initialize transform to Sky plane: initializes the image
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
-
+  void initializeToSky(ImageInterface<Complex>& /*image*/,  Matrix<Float>& /*weight*/,
+  		       const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
@@ -168,11 +171,13 @@ public:
 
   // Get actual coherence from grid by degridding
   void get(VisBuffer& vb, Int row=-1);
+  void get(vi::VisBuffer2& /*vb*/, Int row=-1){throw(AipsError("not implemented"));};
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
-
+  void put(const vi::VisBuffer2& /*vb*/, Int row=-1, Bool dopsf=False,
+  	   FTMachine::Type type=FTMachine::OBSERVED){throw(AipsError("not implemented"));};
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);

@@ -71,7 +71,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ms_p=0;
     mssel_p=0;
     se_p=0;
-    vs_p=0;
     ft_p=0;
     cft_p=0;
     rvi_p=wvi_p=0;
@@ -248,7 +247,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //I don't think i need this if statement
       //   if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
       os << "Performing selection on MeasurementSet : " << thisms.tableName() << LogIO::POST;
-      //if(vs_p) delete vs_p; vs_p=0;
+
       //if(mssel_p) delete mssel_p; 
       mssel_p=0;
       
@@ -558,12 +557,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Block<Matrix<Int> > noChanSel;
       noChanSel.resize(numMS_p);
       Block<Int> sort(0);
-      //if(vs_p) delete vs_p; vs_p=0;
+
       if(rvi_p) delete rvi_p;
       rvi_p=0;
       wvi_p=0;
       
-      //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
+
       if(!(mssel_p->isWritable())){
 	rvi_p=new ROVisibilityIterator(blockMSSel_p, sort);
 	

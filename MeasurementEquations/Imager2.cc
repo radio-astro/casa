@@ -76,7 +76,7 @@
 #include <images/Images/ImageBeamSet.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
-#include <msvis/MSVis/VisSet.h>
+//#include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
 #include <msvis/MSVis/SubMS.h>
@@ -2576,155 +2576,6 @@ Bool Imager::createFTMachine()
     cft_p = new SimpleComponentFTMachine();
     AlwaysAssert(cft_p, AipsError);
   }
-  //
-  // Make PBWProject FT machine (for non co-planar imaging with
-  // antenna based PB corrections)
-  //
-  else if (ftmachine_p == "pbwproject"){
-    if (wprojPlanes_p<=1)
-      {
-	os << LogIO::NORMAL
-	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing pb-projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing pb + w-plane projection" // Loglevel PROGRESS
-	   << LogIO::POST;
-      }
-
-
-    if(!gvp_p) 
-      {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	ROMSColumns msc(*ms_p);
-	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
-                               skyPosThreshold_p);
-      }
-
-    ft_p = new nPBWProjectFT(//*ms_p, 
-			     wprojPlanes_p, cache_p/2,
-                            cfCacheDirName_p, doPointing, doPBCorr,
-                             tile_p, computePAStep_p, pbLimit_p, True);
-    //
-    // Explicit type casting of ft_p does not look good.  It does not
-    // pick up the setPAIncrement() method of PBWProjectFT without
-    // this
-    //
-    ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
-    if (doPointing)
-      {
-        try
-          {
-	    //            epJ = new EPJones(*vs_p, *ms_p);
-	    VisSet elVS(*rvi_p);
-            epJ = new EPJones(elVS);
-            RecordDesc applyRecDesc;
-            applyRecDesc.addField("table", TpString);
-            applyRecDesc.addField("interp",TpString);
-            Record applyRec(applyRecDesc);
-            applyRec.define("table",epJTableName_p);
-            applyRec.define("interp", "nearest");
-            epJ->setApply(applyRec);
-            ((nPBWProjectFT *)ft_p)->setEPJones(epJ);
-          }
-        catch(AipsError& x)
-          {
-            //
-            // Add some more useful info. to the message and translate
-            // the generic AipsError exception object to a more specific
-            // SynthesisError object.
-            //
-            String mesg = x.getMesg();
-            mesg += ". Error in loading pointing offset table.";
-            SynthesisError err(mesg);
-            throw(err);
-          }
-      }
-
-    AlwaysAssert(ft_p, AipsError);
-    cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
-  }
-  else if (ftmachine_p == "pbmosaic"){
-
-    if (wprojPlanes_p<=1)
-      {
-	os << LogIO::NORMAL
-	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing pb-mosaic" << LogIO::POST; // Loglevel PROGRESS
-      }
-    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing pb + w-plane projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-
-    if(!gvp_p) 
-      {
-	os << LogIO::NORMAL // Loglevel INFO
-           << "Using defaults for primary beams used in gridding" << LogIO::POST;
-	ROMSColumns msc(*ms_p);
-	gvp_p = new VPSkyJones(msc, True, parAngleInc_p, squintType_p,
-                               skyPosThreshold_p);
-      }
-    ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
-			  cfCacheDirName_p, /*True */doPointing, doPBCorr, 
-			  tile_p, computePAStep_p, pbLimit_p, True);
-    ((PBMosaicFT *)ft_p)->setObservatoryLocation(mLocation_p);
-    //
-    // Explicit type casting of ft_p does not look good.  It does not
-    // pick up the setPAIncrement() method of PBWProjectFT without
-    // this
-    //
-    os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
-    ((nPBWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
-
-    if (doPointing) 
-      {
-	try
-	  {
-	    // Warn users we are have temporarily disabled pointing cal
-	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
-	    //  TBD: Bring this up-to-date with new VisCal mechanisms
-	    VisSet elVS(*rvi_p);
-	    epJ = new EPJones(elVS, *ms_p);
-	    RecordDesc applyRecDesc;
-	    applyRecDesc.addField("table", TpString);
-	    applyRecDesc.addField("interp",TpString);
-	    Record applyRec(applyRecDesc);
-	    applyRec.define("table",epJTableName_p);
-	    applyRec.define("interp", "nearest");
-	    epJ->setApply(applyRec);
-	    ((nPBWProjectFT *)ft_p)->setEPJones(epJ);
-	  }
-	catch(AipsError& x)
-	  {
-	    //
-	    // Add some more useful info. to the message and translate
-	    // the generic AipsError exception object to a more specific
-	    // SynthesisError object.
-	    //
-	    String mesg = x.getMesg();
-	    mesg += ". Error in loading pointing offset table.";
-	    SynthesisError err(mesg);
-	    throw(err);
-	  }
-      }
-    
-    AlwaysAssert(ft_p, AipsError);
-    cft_p = new SimpleComponentFTMachine();
-    AlwaysAssert(cft_p, AipsError);
-
-  }
   else if(ftmachine_p=="both") {
       
     os << LogIO::NORMAL // Loglevel INFO
@@ -3910,35 +3761,6 @@ void Imager::makeVisSet(MeasurementSet& ms,
   //rvi_p->setRowBlocking(35);
   ////////////////////
 }
-/*
-void Imager::makeVisSet(MeasurementSet& ms, 
-			Bool compress, Bool mosaicOrder){
-
-
-  Block<Int> sort(0);
-  if(mosaicOrder){
-    sort.resize(4);
-    sort[0] = MS::FIELD_ID;
-    sort[1] = MS::ARRAY_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-  }
-  //else use default sort order
-  else{
-  
-    sort.resize(4);
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-  }
-  Matrix<Int> noselection;
-  Double timeInterval=0;
-
-  VisSet vs(ms,sort,noselection,useModelCol_p,timeInterval,compress);
-
-}
-*/
 
 void Imager::writeHistory(LogIO& os){
 

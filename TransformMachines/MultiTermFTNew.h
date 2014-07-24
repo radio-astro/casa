@@ -33,6 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -73,7 +74,8 @@ public:
   void initializeToVis(ImageInterface<Complex>& /*image*/, 
                        const VisBuffer& /*vb*/)
   {throw(AipsError("MultiTermFTNew::initializeToVis called without vectors !"));};
-
+  void initializeToVis(ImageInterface<Complex>& /*image*/,
+                         const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
    // Vectorized InitializeToVis
   //  void initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,PtrBlock<SubImage<Float> *> & modelImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
 
@@ -87,7 +89,8 @@ public:
   void initializeToSky(ImageInterface<Complex>& /*image*/,  
                        Matrix<Float>& /*weight*/, const VisBuffer& /*vb*/) 
    {throw(AipsError("MultiTermFTNew::initializeToSky() called without vectors!"));};
-
+  void initializeToSky(ImageInterface<Complex>& /*image*/,
+                         Matrix<Float>& /*weight*/, const vi::VisBuffer2& /*vb*/){throw(AipsError("not implemented"));};
   //  void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb, const Bool dopsf);
 
   virtual void initializeToSkyNew(const Bool dopsf,
@@ -110,11 +113,12 @@ public:
 
   // Do the degridding via subftm->get() and modify model-visibilities by Taylor-weights
   void get(VisBuffer& vb, Int row=-1);
-
+  void get(vi::VisBuffer2& /*vb*/, Int row=-1){throw(AipsError("not implemented"));};
   // Modify imaging weights with Taylor-weights and do gridding via subftm->put()
   void put(VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
-
+  void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
+  	   FTMachine::Type type=FTMachine::OBSERVED){throw(AipsError("not implemented"));};
   // Have a const version for compatibility with other FTMs.. Throw an exception if called.
   void put(const VisBuffer& /*vb*/, Int /*row*/=-1, Bool /*dopsf*/=False,
 	   FTMachine::Type /*type*/=FTMachine::OBSERVED)

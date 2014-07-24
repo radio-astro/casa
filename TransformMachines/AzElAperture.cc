@@ -33,21 +33,34 @@ namespace casa{
   void AzElAperture::rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncr) 
     {
       LogIO log_l(LogOrigin("AzElAperture", "rotate"));
+      Double R2D = 57.2957795131;
       // If the A-Term is a No-Op, the resulting CF is rotationally
       // symmetric.
       if (isNoOp()) return;
 
       Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
+      cerr << "AzEL: ######### " << cfc.pa_p.getValue("deg") << " " << actualPA*R2D << " " << cfc.getStorage()->shape() << endl;
       Double dPA = currentCFPA-actualPA;
+      //Double dPA = cachedCFCPA_p-actualPA;
       if (fabs(dPA) > fabs(rotAngleIncr))
 	//      if (fabs(actualPA-currentCFPA) > 0.0)
 	{
+	  //if (cachedCFCPA_p == 400.0) cachedCFCPA_p=currentCFPA;
+
+	  if (cachedCFC_p.nelements() == 0)
+	    {
+	      log_l << "Making a base copy of the current CFC@ PA=" << currentCFPA*R2D << LogIO::POST;
+	      cachedCFC_p.assign(*cfc.getStorage());
+	      cachedCFCPA_p = cfc.pa_p.getValue("rad");
+	    }
+	  dPA = cachedCFCPA_p-actualPA;
 	  Array<TT> inData;
-	  inData.assign(*cfc.getStorage());
+	  //inData.assign(*cfc.getStorage());
+	  inData.assign(cachedCFC_p);
 	  // log_l  << actualPA << " " << currentCFPA << LogIO::POST;
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
-	  
+	  log_l << "Rotating the base CFC from PA=" << cachedCFCPA_p*R2D << " to " << actualPA*R2D << " " << dPA*R2D << " " << inData.shape() << LogIO::POST;
 	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
 					     *cfc.getStorage(),
 					     dPA);//,"LINEAR");
@@ -62,6 +75,35 @@ namespace casa{
 	  //   cfc.makePersistent(name.str().c_str());
 	  //   ii++;
 	  // }
+	}
+    };
+
+  void AzElAperture::rotate2(const VisBuffer& vb, CFCell& baseCFC, CFCell& cfc, const Double& rotAngleIncr) 
+    {
+      LogIO log_l(LogOrigin("AzElAperture", "rotate"));
+
+      // If the A-Term is a No-Op, the resulting CF is rotationally
+      // symmetric.
+      if (isNoOp()) return;
+
+      Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
+      //Double baseCFCPA=baseCFC.pa_p.getValue("rad");
+
+      Double dPA = currentCFPA-actualPA;
+
+      if (fabs(dPA) > fabs(rotAngleIncr))
+	{
+	  Array<TT> inData;
+	  //inData.assign(*baseCFC.getStorage());
+	  //dPA = baseCFCPA-actualPA;
+	  dPA = currentCFPA-actualPA;
+	  inData.assign(*cfc.getStorage());
+
+	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
+					     *cfc.getStorage(),
+					     dPA);//,"LINEAR");
+					     // currentCFPA-actualPA);//,"LINEAR");
+	  cfc.pa_p=Quantity(actualPA, "rad");
 	}
     };
 };

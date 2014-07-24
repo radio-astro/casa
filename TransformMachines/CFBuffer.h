@@ -142,8 +142,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     ~CFBuffer() 
     {
-      LogIO log_l(LogOrigin("CFBuffer","~CFBuffer[R&D]"));
-      log_l << "CF Hits stats gathered: " << cfHitsStats << endl;
+      // LogIO log_l(LogOrigin("CFBuffer","~CFBuffer[R&D]"));
+      // log_l << "CF Hits stats gathered: " << cfHitsStats << endl;
     };
     
     CountedPtr<CFBuffer> clone();
@@ -310,6 +310,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   Int& xSupport, Int& ySupport, 
 		   const Double& freqVal, const Double& wValue, 
 		   const Int& muellerElement);
+    void setPA(Float& pa);
     RigidVector<Int,3> getIndex(const Double& freqVal, const Double& wValue, 
 				const Int& muellerElement);
     //-------------------------------------------------------------------------

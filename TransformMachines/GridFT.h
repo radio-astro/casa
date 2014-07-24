@@ -48,6 +48,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class UVWMachine;
+namespace vi { class VisBuffer2;}
 // <summary>  An FTMachine for Gridded Fourier transforms </summary>
 
 // <use visibility=export>
@@ -163,7 +164,9 @@ public:
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
   virtual void initializeToVis(ImageInterface<Complex>& image,
-		       const VisBuffer& vb);
+  		       const VisBuffer& vb){};
+  virtual void initializeToVis(ImageInterface<Complex>& image,
+		       const vi::VisBuffer2& vb);
   
   // Finalize transform to Visibility plane: flushes the image
   // cache and shows statistics if it is being used.
@@ -171,8 +174,9 @@ public:
 
   // Initialize transform to Sky plane: initializes the image
   virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
-		       const VisBuffer& vb);
-
+		       const VisBuffer& vb){};
+  virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
+  		       const vi::VisBuffer2& vb);
   
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
@@ -181,12 +185,14 @@ public:
 
 
   // Get actual coherence from grid by degridding
-  virtual void get(VisBuffer& vb, Int row=-1);
-
+  virtual void get(VisBuffer& vb, Int row=-1){};
+  virtual void get(vi::VisBuffer2& vb, Int row=-1);
 
   // Put coherence to grid by gridding.
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED);
+	   FTMachine::Type type=FTMachine::OBSERVED){};
+  virtual void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
+  	   FTMachine::Type type=FTMachine::OBSERVED);
   
   // Make the entire image
   void makeImage(FTMachine::Type type,
@@ -238,7 +244,7 @@ protected:
 
   // Is this record on Grid? check both ends. This assumes that the
   // ends bracket the middle
-  Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
+ // Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
 
 
   // Image cache

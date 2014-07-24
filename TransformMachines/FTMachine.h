@@ -60,6 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   class VisSet;
   class VisBuffer;
+  namespace vi{ class VisBuffer2;}
   class ROVisibilityIterator;
   class UVWMachine;
   class VisModelData;
@@ -147,7 +148,7 @@ public:
   virtual FTMachine* cloneFTM(){return NULL;};
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
-
+  virtual void initializeToVis(ImageInterface<Complex>& image, const vi::VisBuffer2& vb) = 0;
   // Vectorized InitializeToVis
   virtual void initializeToVis(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
 			       PtrBlock<SubImage<Float> *> & modelImageVec, 
@@ -170,7 +171,8 @@ public:
   // Initialize transform to Sky plane
   virtual void initializeToSky(ImageInterface<Complex>& image,
 			       Matrix<Float>& weight, const VisBuffer& vb) = 0;
-
+  virtual void initializeToSky(ImageInterface<Complex>& image,
+  			       Matrix<Float>& weight, const vi::VisBuffer2& vb) = 0;
   // Vectorized InitializeToSky
   virtual void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
 			       Block<Matrix<Float> >& weightsVec, 
@@ -203,12 +205,13 @@ public:
 
   // Get actual coherence from grid
   virtual void get(VisBuffer& vb, Int row=-1) = 0;
-
+  virtual void get(vi::VisBuffer2& vb, Int row=-1) = 0;
 
   // Put coherence to grid
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
 		   FTMachine::Type type= FTMachine::OBSERVED)=0;
-
+  virtual void put(const vi::VisBuffer2& vb, Int row=-1, Bool dopsf=False,
+  		   FTMachine::Type type= FTMachine::OBSERVED)=0;
   // Non const vb version - so that weights can be modified in-place
   // Currently, used only by MultiTermFT
   virtual void put(VisBuffer& vb, Int row=-1, Bool dopsf=False, 
@@ -286,12 +289,15 @@ public:
   // desired phase center.
   void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
 		 const VisBuffer& vb);
-
+  void rotateUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
+  		 const vi::VisBuffer2& vb);
   // Refocus on a finite distance
   void refocus(Matrix<Double>& uvw, const Vector<Int>& ant1,
 	       const Vector<Int>& ant2,
 	       Vector<Double>& dphase, const VisBuffer& vb);
-
+  void refocus(Matrix<Double>& uvw, const Vector<Int>& ant1,
+  	       const Vector<Int>& ant2,
+  	       Vector<Double>& dphase, const vi::VisBuffer2& vb);
   //helper function for openmp to call ...no private dependency
   static void locateuvw(const Double*& uvw, const Double*&dphase, const Double*& freq, const Int& nchan, const Double*& scale, const Double*& offset,  const Int& sampling, Int*& loc,Int*& off, Complex*& phasor, const Int& row, const Bool& doW=False); 
 		 
@@ -303,7 +309,7 @@ public:
 
   // Has this operator changed since the last application?
   virtual Bool changed(const VisBuffer& vb);
-
+  virtual Bool changed(const vi::VisBuffer2& vb);
   // Can this FTMachine be represented by Fourier convolutions?
   virtual Bool isFourier() {return False;}
 
@@ -400,8 +406,9 @@ protected:
   Bool useDoubleGrid_p;
 
   virtual void initMaps(const VisBuffer& vb);
+  virtual void initMaps(const vi::VisBuffer2& vb);
   virtual void initPolInfo(const VisBuffer& vb);
-
+  virtual void initPolInfo(const vi::VisBuffer2& vb);
 
   // Sum of weights per polarization and per chan
   Matrix<Double> sumWeight, sumCFWeight;
@@ -434,10 +441,10 @@ protected:
   Vector<Int> nVisChan_p;
   Bool matchChannel(const Int& spw, 
 		    const VisBuffer& vb);
-
+  Bool matchChannel(const vi::VisBuffer2& vb);
   //redo all spw chan match especially if ms has changed underneath 
   Bool matchAllSpwChans(const VisBuffer& vb);
-
+  Bool matchAllSpwChans(const vi::VisBuffer2& vb);
   //interpolate visibility data of vb to grid frequency definition
   //flag will be set the one as described in interpolateArray1D
   //return False if no interpolation is done...for e.g for nearest case
@@ -447,19 +454,28 @@ protected:
 					  Cube<Int>& flag,
 					  Matrix<Float>& weight,
 					  FTMachine::Type type=FTMachine::OBSERVED ); 
+  virtual Bool interpolateFrequencyTogrid(const vi::VisBuffer2& vb,
+  					  const Matrix<Float>& wt,
+  					  Cube<Complex>& data,
+  					  Cube<Int>& flag,
+  					  Matrix<Float>& weight,
+  					  FTMachine::Type type=FTMachine::OBSERVED );
   //degridded data interpolated back onto visibilities
   virtual Bool interpolateFrequencyFromgrid(VisBuffer& vb, 
 					    Cube<Complex>& data,
 					    FTMachine::Type type=FTMachine::MODEL );
-  
+  virtual Bool interpolateFrequencyFromgrid(vi::VisBuffer2& vb,
+  					    Cube<Complex>& data,
+  					    FTMachine::Type type=FTMachine::MODEL );
 
   //Interpolate visibilities to be degridded upon
   virtual void getInterpolateArrays(const VisBuffer& vb,
 				    Cube<Complex>& data, Cube<Int>& flag);
-
+  virtual void getInterpolateArrays(const vi::VisBuffer2& vb,
+  				    Cube<Complex>& data, Cube<Int>& flag);
 
   void setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube); 
-
+  void setSpectralFlag(const vi::VisBuffer2& vb, Cube<Bool>& modflagcube);
   //helper to save Measures in a record
   Bool saveMeasure(RecordInterface& rec, const String& name, String& error, const Measure& ms);
 
