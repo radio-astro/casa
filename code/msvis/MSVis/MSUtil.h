@@ -50,6 +50,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const MFrequency::Types freqframe=MFrequency::LSRK, 
 				  const Int fieldId=0);
     
+    //A version of the above for all the fields in the MS
+    static void getSpwInFreqRangeAllFields(Vector<Int>& spw, Vector<Int>& start,
+			  Vector<Int>& nchan,
+			  const MeasurementSet& ms,
+			  const Double freqStart,
+			  const Double freqEnd,
+			  const Double freqStep,
+			  const MFrequency::Types freqframe=MFrequency::LSRK);
 
     // The following wil provide the range of frequency convered in the frame requested by the spw, channel selection 
  

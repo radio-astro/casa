@@ -126,6 +126,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
  
   }
+  void MSUtil::getSpwInFreqRangeAllFields(Vector<Int>& outspw, Vector<Int>& outstart,
+  			  Vector<Int>& outnchan,
+  			  const MeasurementSet& ms,
+  			  const Double freqStart,
+  			  const Double freqEnd,
+  			  const Double freqStep,
+  			  const MFrequency::Types freqframe){
+	  Vector<Int> fldId;
+	  ROScalarColumn<Int> (ms, MS::columnName (MS::FIELD_ID)).getColumn (fldId);
+	  const Int option = Sort::HeapSort | Sort::NoDuplicates;
+	  const Sort::Order order = Sort::Ascending;
+
+	  Int nfields = GenSort<Int>::sort (fldId, order, option);
+
+	  fldId.resize(nfields, True);
+	  outspw.resize();
+	  outstart.resize();
+	  outnchan.resize();
+	  for (Int k=0; k < nfields; ++k){
+		  Vector<Int> locspw, locstart, locnchan;
+		  MSUtil::getSpwInFreqRange(locspw, locstart, locnchan, ms, freqStart, freqEnd, freqStep, freqframe, fldId[k]);
+		  for (Int j=0; j< locspw.shape()(0); ++j ){
+			  Bool hasthisspw=False;
+			  for (Int i=0; i< outspw.shape()(0); ++i){
+				  if(outspw[i]==locspw[j]){
+					  hasthisspw=True;
+					  if(locstart[j] < outstart[i]){
+						  Int endchan=outstart[i]+outnchan[i]-1;
+						  outstart[i]=locstart[j];
+						  if(endchan < (locstart[j]+ locnchan[j]-1))
+							  endchan=locstart[j]+ locnchan[j]-1;
+						  outnchan[i]=endchan+outstart[i]+1;
+					  }
+				  }
+			  }
+			  if(!hasthisspw){
+				  uInt nout=outspw.nelements();
+				  outspw.resize(nout+1);
+				  outnchan.resize(nout+1);
+				  outstart.resize(nout+1);
+				  outspw[nout]=locspw[j];
+				  outstart[nout]=locstart[j];
+				  outnchan[nout]=outnchan[j];
+
+
+			  }
+		  }
+
+	  }
+
+
+  }
   void MSUtil::getFreqRangeInSpw( Double& freqStart,
 				  Double& freqEnd, const Vector<Int>& spw, const Vector<Int>& start,
 				  const Vector<Int>& nchan,
