@@ -1052,7 +1052,7 @@ protected:
   //frequency is served as is
 
   Int getDataDescriptionId () const;
-  const MeasurementSet & getMeasurementSet() const;;
+  const MeasurementSet & getMeasurementSet() const;
   Int getMeasurementSetId() const;
   Int getNAntennas () const;
   MEpoch getEpoch () const;

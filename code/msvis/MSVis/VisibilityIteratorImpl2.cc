@@ -822,6 +822,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   msIter_p (0),
   nCorrelations_p (-1),
   nRowBlocking_p (0),
+  observatoryFrame_p (VisBuffer2::FrameNotSpecified),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
   sortColumns_p (sortColumns),
   spectralWindowChannelsCache_p (new SpectralWindowChannelsCache ()),
@@ -1428,6 +1429,8 @@ VisibilityIteratorImpl2::next ()
     // Attempt to advance to the next subchunk
 
     rowBounds_p.subchunkBegin_p = rowBounds_p.subchunkEnd_p + 1;
+    observatoryFrame_p = VisBuffer2::FrameNotSpecified; // flush cached value
+
 
     more_p = rowBounds_p.subchunkBegin_p < rowBounds_p.chunkNRows_p;
 
@@ -2668,7 +2671,15 @@ VisibilityIteratorImpl2::getReportingFrameOfReference () const
                 // Since selection was done by channels, the frequencies
                 // are native.
 
-                frame = getObservatoryFrequencyType ();
+                if (observatoryFrame_p == VisBuffer2::FrameNotSpecified){
+
+                    // No cached value, so look it up (somewhat price operation
+                    // which is why it's cached).  Cache flushed with VI movement
+
+                    observatoryFrame_p = getObservatoryFrequencyType ();
+                }
+
+                frame = observatoryFrame_p;
             }
         }
         else{

@@ -915,6 +915,7 @@ protected:
     mutable MSDerivedValues       msd_p; // Helper class holding MS derived values.
     Int                           nCorrelations_p;
     Int                           nRowBlocking_p; // suggested # of rows in a subchunk
+    mutable Int                   observatoryFrame_p; // cached value of observatory type
     PendingChanges                pendingChanges_p; // holds pending changes to VI properties
     Int                           reportingFrame_p; // default frequency reporting (not selecting)
                                                     // frame of reference
