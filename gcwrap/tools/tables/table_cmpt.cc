@@ -684,7 +684,7 @@ table::query(const std::string& query, const std::string& name,
 }
 
 ::casac::variant*
-table::calc(const std::string& expr, const std::string& prefix)
+table::calc(const std::string& expr, const std::string& prefix, const bool showtaql)
 {
   string str;
  *itsLog << LogOrigin(__func__, name());
@@ -703,7 +703,8 @@ table::calc(const std::string& expr, const std::string& prefix)
    //	 }
 
    TaQLResult result;
-   cerr << "TaQL string: " << str << endl;
+   if(showtaql)
+     cerr << "TaQL string: " << str << endl;
    result = tableCommand (str);
    if(result.isTable()){
      *itsLog << LogIO::SEVERE << "Result is a table tool please use table.taql for now till the developers fix this " << LogIO::POST;

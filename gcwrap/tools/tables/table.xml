@@ -1411,6 +1411,10 @@ or a record containing arrays. See the examples below.
      <description>TaQL prefix  for style and ordering etc ...check TaQL note 199 for usage</description>
      <value>using style base0, endincl, fortranorder</value>
      </param>
+     <param type="bool" name="showtaql">
+     <description>Show the full taql command used</description>
+     <value>false</value>
+     </param>
 
 </input>
 <returns type="any">
