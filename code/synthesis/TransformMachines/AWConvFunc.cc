@@ -1329,7 +1329,7 @@ namespace casa{
 
     if (fabs(dPA) <= fabs(rotateCFOTFAngleRad_p)) return;
 
-    LogIO log_l(LogOrigin("AWConvFunc", "rotate2"));
+    LogIO log_l(LogOrigin("AWConvFunc", "prepareConvFunction"));
 
 //     Int Nth=1;
 // #ifdef HAS_OMP
