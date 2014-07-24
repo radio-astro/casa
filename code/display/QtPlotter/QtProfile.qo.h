@@ -174,6 +174,7 @@ namespace casa {
 		static const String SHAPE_POINT;
 		static const String SHAPE_POLY;
 		static const QString FREQUENCY;
+		static const QString CHANNEL;
 
 	public slots:
 		void zoomIn();
@@ -426,7 +427,6 @@ namespace casa {
 
 		static const QString RADIO_VELOCITY;
 		static const QString VELOCITY;
-		static const QString CHANNEL;
 		static const QString OPTICAL;
 		static const QString AIR;
 		static const QString FRAME_REST;

@@ -369,6 +369,7 @@ namespace casa {
 					const Vector<Double>& x, const Vector<Double>& y, String shape,
 					int tabularAxis, ImageCollapserData::AggregateType function, String& unit,
 					const String& coordinateType, const Quantity *const restFreq, const String& frame){
+
 		DisplayCoordinateSystem cSys = imagePtr->coordinates();
 		uInt spectralAxis = 0;
 		if ( cSys.hasSpectralAxis()){
@@ -379,20 +380,27 @@ namespace casa {
 		}
 		Record regionRecord = getRegionRecord( shape, cSys, x, y);
 		QString pixelSpectralType(coordinateType.c_str());
-		if ( pixelSpectralType == QtProfile::FREQUENCY){
+		if ( pixelSpectralType == QtProfile::FREQUENCY ){
 			pixelSpectralType = "default";
 		}
+		else if ( pixelSpectralType == QtProfile::CHANNEL ){
+			pixelSpectralType = "default";
+			unit = "pixel";
+		}
+
 		PixelValueManipulatorData::SpectralType specType
 			= PixelValueManipulatorData::spectralType( pixelSpectralType.toStdString().c_str() );
 		Vector<Float> jyValues;
 		Vector<Float> xValues;
 		try {
 			PixelValueManipulator<Float> pvm(imagePtr, &regionRecord, "");
+
 			Record result = pvm.getProfile( spectralAxis, function, unit, specType,
 				restFreq, frame );
 			const String VALUE_KEY( "values");
 			if ( result.isDefined( VALUE_KEY )){
 				result.get( VALUE_KEY, jyValues );
+
 			}
 			const String COORD_KEY( "coords" );
 			if ( result.isDefined( COORD_KEY ) ){
