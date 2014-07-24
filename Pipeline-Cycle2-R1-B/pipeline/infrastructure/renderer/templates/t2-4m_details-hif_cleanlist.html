@@ -51,6 +51,7 @@ def get_plot(plots, field, spw, i, colname):
                 % for field in fields:
                     % for spw in spws:
                         % for pol in pols:
+                            %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
                                 <td rowspan="2">${field}</td>
                                 <td rowspan="2">${spw}</td>
@@ -70,46 +71,46 @@ def get_plot(plots, field, spw, i, colname):
                                     <tbody>
                                         <tr>
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
-                            %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
+                                %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)}</td>
-                            %else:
+                                %else:
                                             <td>-</td>
-                            %endif
-                            %if info_dict.get((field,str(spw),pol,'beam minor')) is not None:
+                                %endif
+                                %if info_dict.get((field,str(spw),pol,'beam minor')) is not None:
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
-                            %else:
+                                %else:
                                             <td>-</td>
-                            %endif
-                            %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
+                                %endif
+                                %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
-                            %else:
+                                %else:
                                             <td>-</td>
-                            %endif
-                            %if info_dict.get((field,str(spw),pol,'max')) is not None:
+                                %endif
+                                %if info_dict.get((field,str(spw),pol,'max')) is not None:
                                             <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'max')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                            %else:
+                                %else:
                                             <td>-</td>
-                            %endif
-                            %if info_dict.get((field,str(spw),pol,'image rms')) is not None:
+                                %endif
+                                %if info_dict.get((field,str(spw),pol,'image rms')) is not None:
                                             <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'image rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                            %else:
+                                %else:
                                             <td>-</td>
-                            %endif
+                                %endif
                                         </tr>
                                     </tbody>
                                     </table>
                                 </td>
 
-                            <% final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]%>
-                            <% plot = get_plot(plots_dict, field, str(spw), final_iter, 'image') %>
-                            % if plot is not None:
-                                <%
-                                renderer = hr.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
-                                with renderer.get_file() as fileobj:
-                                    fileobj.write(renderer.render())
-                                %>
+                                <% final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]%>
+                                <% plot = get_plot(plots_dict, field, str(spw), final_iter, 'image') %>
+                                % if plot is not None:
+                                    <%
+                                    renderer = hr.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
+                                    with renderer.get_file() as fileobj:
+                                        fileobj.write(renderer.render())
+                                    %>
                                 <td rowspan="2">
                                    <a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
                                      <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
@@ -118,9 +119,9 @@ def get_plot(plots, field, spw, i, colname):
                                      </img>
                                    </a>
                                 </td>
-                            %else:
+                                %else:
                                 <td>No image available</td>
-                            %endif
+                                %endif
                             </tr>
 
                             <tr>
@@ -139,6 +140,7 @@ def get_plot(plots, field, spw, i, colname):
                                     </table>
                                 </td>
                             </tr>
+                            %endif
                         %endfor
                     %endfor
                 %endfor
