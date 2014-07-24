@@ -330,7 +330,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 	if inputs.stokes == 'Q':
 	    ncorr = clheuristics.ncorr(int(spw.split(',')[0]))
 	    if ncorr <= 1 :
-	        LOG.warning('Q noise estimate invalid ncorrelation is %s' % ncorr )
+	        LOG.warning('%s/%s/spw%s Q noise estimate invalid ncorrelation is %s' %
+                  (field, intent, spw, ncorr))
 
         # Construct regex for string matching - escape likely problem
         # chars. Simpler way to do this ?
@@ -400,7 +401,7 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    else:
 	        result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
 	except Exception, e:
-            LOG.error('Clean error: %s' % (str(e)))
+            LOG.error('%s/%s/spw%s clean error: %s' % (field, intent, spw, str(e)))
 	finally:
 	    pass
 
