@@ -31,7 +31,7 @@
        <!--Solar System Objects are supported via the 'Butler-JPL-Horizons
        2010' standard.  -->
        Currently they are modeled as uniform
-       temperature disks based on their ephemerides at the time of
+       temperature disks based on their ephemeris at the time of
        observation (note that this may oversimplify objects, in
        particular asteroids). Specify the name of the object in the
        'field' parameter. 
@@ -130,7 +130,7 @@
                 <param type="any" name="spix" subparam="true">
                 <!--<param type="double" name="spix" subparam="true">-->
                         <any type="variant" limittypes="double doubleArray"/>
-			<description>Spectral index of fluxdensity</description>
+			<description>Spectral index (including higher terms) of I fluxdensity</description>
 			<value type="double">0.0</value>
 		</param>
 		<param type="string" name="reffreq" subparam="true">
@@ -139,11 +139,11 @@
 		</param>
                 <!-- for polarization fraction handling -->
 		<param type="doubleArray" name="polindex" subparam="true">
-			<description>Parameters of expansion of sqrt(Q^2+U^2) for linear polarization fraction</description>
+			<description>Coefficients of an expansion of frequency-dependent linear polarization fraction expression</description>
 			<value></value>
 		</param>
 		<param type="doubleArray" name="polangle" subparam="true">
-			<description> Angle, angle derivative and higher-order w/freq</description>
+			<description>Coefficients of an expansion of frequency-dependent polarization angle expression</description>
 			<value></value>
 		</param>
 		<param type="double" name="rm" subparam="true">
@@ -580,15 +580,17 @@
 		          will put in I,Q,U,V flux densities of 2.63,0.21,-0.33,
 			  and 0.02, respectively, in the model column.
 
-	    spix -- Spectral index for fluxdensity:
-		       S = fluxdensity * (freq/reffreq)**spix
-		Default: 0.0 (no effect)
+	    spix -- Spectral index for I flux density (a float or a list of float values):
+		       where S = fluxdensity * (freq/reffreq)**(spix[0]+spix[1]*log(freq/reffreq)+..)
+		Default: [] =>0.0 (no effect)
 		Only used if fluxdensity is being used.
 		N.B.: If fluxdensity is positive, and spix is nonzero, then reffreq
 		      must be set too!  (See below)
 
 		It is applied in the same way to all polarizations, and does
 		not account for Faraday rotation or depolarization.
+
+                Example: [-0.7, -0.15] for alpha and a curvature term
 
 	    reffreq -- The reference frequency for spix, given with units.
 		Default: '1GHz'; this is only here to prevent division by 0!
@@ -600,12 +602,33 @@
 
 		Examples: '86.0GHz', '4.65e9Hz'
 
+            polindex -- Coefficients of the frequency-dependent linear polarization index (polarization fraction) 
+                        expressed as,
+                        pol. index = sqrt(Q^2+U^2)/I = c0 + c1*((freq-reffreq)/reffreq) + c2*((freq-reffreq)/reffreq)^2 + ..
+                        When Q and U flux densities are given fluxdensity, c0 is determined from
+                        these flux densities and the entry for c0 in polindex is ignored. Or Q and U flux densities in
+                        fluxdensity can be set to 0.0 and then polindex[0] and polangle[0] are used to determine Q and U 
+                        at reffreq.
+                Default: []
+                Example: [0.2, -0.01] (= [c0,c1]) 
+
+            polangle -- Coefficients of the frequency-dependent linear polarization angle (in radians) expressed as,
+                        pol. angle = 0.5*arctan(U/Q) = d0 + d1*((freq-reffreq)/reffreq) + d2*((freq-reffreq)/reffreq)^2 + ..
+                        When Q and U flux densities are given fluxdensity, d0 is determined from
+                        these flux densities and the entry for d0 in polangle is ignored. Or Q and U flux densities in
+                        fluxdensity can be set to 0.0 and then polindex[0] and polangle[0] are used to determine Q and U
+                        at reffreq.
+                Default: []
+                Example: [0.57, 0.2] (=[d0,d1])
+
+            rm -- rotation measure (in rad/m^2)
+
        &gt;&gt;&gt; standard="fluxscale" expandable parameters
 	    fluxdict -- Output dictionary from fluxscale
-                Using the fluxscale results, the flux density, spectral index,
-                and reference freuquency are extracted and set to fluxdensity,
+                Using the flexibly results, the flux density, spectral index,
+                and reference frequency are extracted and set to fluxdensity,
                 spix, and reffreq parameters, respectively.
-                The field and spw selections can be used to sepecify subset of 
+                The field and spw selections can be used to specify subset of 
                 the fluxdict to be used to set the model. If they are left as 
                 default (field="", spw="") all fields and/or spws in 
                 the fluxdict (but those spws with fluxd=-1 will be skipped) are
@@ -630,7 +653,7 @@
 
 
     Returned dictionary: 
-        When the setjy task is excuted as setjy(vis='', ..), the flux densities used to set
+        When the setjy task is executed as setjy(vis='', ..), the flux densities used to set
         the model are returned as a Python dictionary with the format,
         {field Id: {spw Id: {fluxd: [I,Q,U,V] in Jy}, 'fieldName':field name }}, where
         field Id and spw Id are in string type. 
