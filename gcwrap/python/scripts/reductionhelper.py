@@ -347,8 +347,8 @@ def reducerecord(record):
         nrow_sky = ctxcal['nrow_sky']
         tsystime = ctxcal['time_tsys']
         nrow_tsys = ctxcal['nrow_tsys']
-        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
-        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (1, nchan))
+        offdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (nchan,))
+        facdata = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_FLOAT, (nchan,))
         #mask--------------------
         mask_temp = libsakurapy.new_uninitialized_aligned_buffer(libsakurapy.TYPE_BOOL, (nchan,))
         mask_bl = ctxbl['blmask']
@@ -382,7 +382,7 @@ def reducerecord(record):
                                                 cal_interp_order, nrow_tsys, tsystime, 
                                                 nchan, ctxcal['tsys'][ipol], 
                                                 1, datatime, facdata)
-            result_cal = libsakurapy.apply_position_switch_calibration(1, facdata, 
+            result_cal = libsakurapy.apply_position_switch_calibration(nchan, facdata, 
                                                                        nchan, data, offdata, data)
 
             ##masknaninf------------------------
@@ -396,7 +396,7 @@ def reducerecord(record):
 
             ##baseline--------------------------
             libsakurapy.logical_and(nchan, mask, mask_bl, mask_temp)
-            data = libsakurapy.subtract_baseline(nchan, data, mask, 
+            data = libsakurapy.subtract_baseline(nchan, data, mask_temp, 
                                                  ctxbl['context'], 
                                                  ctxbl['clip_threshold'], 
                                                  ctxbl['num_fitting_max'], 
