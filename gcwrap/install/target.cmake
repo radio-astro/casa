@@ -62,6 +62,8 @@ macro( casa_add_library module )
   target_link_libraries( lib${module} ${${module}_LINK_TO} )
 
   set_target_properties( lib${module} PROPERTIES SOVERSION ${CASA_API_VERSION} )
+  set_target_properties( lib${module} PROPERTIES INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+  set_target_properties( lib${module} PROPERTIES BUILD_WITH_INSTALL_RPATH 1 )
 
   install( TARGETS lib${module} LIBRARY DESTINATION lib )
 
