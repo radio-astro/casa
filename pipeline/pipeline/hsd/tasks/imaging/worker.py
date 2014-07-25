@@ -77,9 +77,6 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         LOG.debug('Members to be processed:')
         for (a,s) in zip(antenna_list, spwid_list):
             LOG.debug('\tAntenna %s Spw %s'%(a,s))
-
-        # imager tool
-        im = casatools.imager
     
         # qa tool
         qa = casatools.quanta
@@ -227,9 +224,6 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
                 if not (spw in spwsel):
                     spwsel.append(spw)
             spwsel_list = common.list_to_selection(spwsel)
-#                 LOG.debug('Registering data to imager: im.selectvis(vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
-#                 scansel = common.list_to_selection(scan)
-#                 im.selectvis(vis=vis, spw=spw, field=field, scan=scansel)
             # set-up image dependent parameters
             for p in cleanup_params: image_args[p] = None
             image_args['outfile'] = name
@@ -237,15 +231,6 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
             image_args['spw'] = spwsel_list
             image_args['scan'] = scansel_list
             LOG.debug('Executing sdimaging task: args=%s'%(image_args))
-#             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, stokes=stokes,
-#                            phasecenter=phasecenter, mode=mode, start=start,
-#                            nchan=nchan, step=step, restfreq=restfreq,
-#                            outframe=outframe, spw=-1)
-#             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
-#             im.setsdoptions(convsupport=convsupport, truncate=truncate,
-#                             gwidth=gwidth, jwidth=jwidth)
-#             im.makeimage(image=name)
-#             im.done()
             image_job = casa_tasks.sdimaging(**image_args)
                     
             # execute job
