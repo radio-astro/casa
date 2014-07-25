@@ -432,12 +432,14 @@ class MakeCleanListHeuristics(object):
     def imagename(self, output_dir=None, intent=None, field=None, spwspec=None):
         try:
             nameroot = self.context.project_structure.ousstatus_entity_id
+	    if nameroot == 'unknown':
+	        nameroot = 'oussid'
             # need to sanitize the nameroot here because when it's added
             # to filenamer as an asdm, os.path.basename is run on it with
             # undesirable results.
             nameroot = filenamer.sanitize(nameroot)
         except:
-            nameroot = 'multivis'
+            nameroot = 'oussid'
         namer = filenamer.Image()
         namer._associations.asdm(nameroot)
 
