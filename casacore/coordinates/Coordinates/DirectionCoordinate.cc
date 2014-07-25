@@ -808,18 +808,14 @@ DirectionCoordinate DirectionCoordinate::convert(
 		myClone.setReferenceConversion(type_p);
 	}
 	Vector<String> units = myClone.worldAxisUnits();
-
 	Vector<Double> x = myClone.referenceValue();
 	Vector<Quantity> myRefVal(2);
 	myRefVal[0] = Quantity(x[0], units[0]);
 	myRefVal[1] = Quantity(x[1], units[1]);
-
 	MDirection myRefDir(
 		myRefVal[0], myRefVal[1],
 		type_p
 	);
-
-
     x = increment();
     Vector<Quantity> inc(2);
     inc[0] = Quantity(x[0], units[0]);
@@ -846,11 +842,6 @@ DirectionCoordinate DirectionCoordinate::convert(
 	Double hypVal = sqrt(diffXVal*diffXVal + diffYVal*diffYVal);
 	Double origAngle = (fabs(diffYVal/inc[1].getValue("arcsec")) < 1e-8)
 		? 0 : asin(diffYVal/hypVal);
-	if (diffXVal > 0) {
-		// This is assuming a normal astronomer world where
-		// longitude values decrease to the right.
-		origAngle = C::pi - origAngle;
-	}
 	MDirection origWorldDir2(
 		origWorldVal2[0], origWorldVal2[1],
 		type_p
@@ -863,6 +854,7 @@ DirectionCoordinate DirectionCoordinate::convert(
 	Vector<Quantity> newRefDirVec(2);
 	newRefDirVec[0] = Quantity(newRefDir.getValue(units[0])[0], units[0]);
 	newRefDirVec[1] = Quantity(newRefDir.getValue(units[1])[1], units[1]);
+	cout << "converted ref dir " << newRefDirVec << endl;
 	Quantum<Vector<Double> > newWorld2Dir = MDirection::Convert(
 		origWorldDir2, directionType
 	)().getAngle();
@@ -881,9 +873,6 @@ DirectionCoordinate DirectionCoordinate::convert(
 	hypVal = sqrt(diffXVal*diffXVal+diffYVal*diffYVal);
 	Double newAngle = (fabs(diffYVal/inc[1].getValue("arcsec")) < 1e-8)
 		? 0 : asin(diffYVal/hypVal);
-	if (diffXVal > 0) {
-		newAngle = C::pi - newAngle;
-	}
 	angle = Quantity(newAngle - origAngle, "rad");
 
     Matrix<Double> xform(2, 2, 0);
