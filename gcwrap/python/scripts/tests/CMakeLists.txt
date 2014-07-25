@@ -197,5 +197,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_wvrgcal.py
   selection_syntax.py
   ../mpi4casa/test_mpi4casa.py
+  testutils.py
   unittests_list.txt
 )

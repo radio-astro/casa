@@ -16,6 +16,11 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
+try:
+    from testutils import copytree_ignore_subversion
+except:
+    from tests.testutils import copytree_ignore_subversion
+    
 from sdutil import tbmanager
     
 # to rethrow exception 
@@ -39,7 +44,7 @@ class sdcal2_unittest_base:
     taskname='sdcal2'
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcal2/'
     tolerance=1.0e-15
-
+    
     def _checkfile(self, name):
         isthere=os.path.exists(name)
         self.assertEqual(isthere,True,
@@ -177,12 +182,8 @@ class sdcal2_exceptions(sdcal2_unittest_base,unittest.TestCase):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.skytable)):
-            shutil.copytree(self.datapath+self.skytable, self.skytable)
-        if (not os.path.exists(self.tsystable)):
-            shutil.copytree(self.datapath+self.tsystable, self.tsystable)
+        for f in [self.rawfile, self.skytable, self.tsystable]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -345,10 +346,8 @@ class sdcal2_skycal_ps(sdcal2_caltest_base,unittest.TestCase):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.skytable)):
-            shutil.copytree(self.datapath+self.skytable, self.skytable)
+        for f in [self.rawfile, self.skytable]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -397,12 +396,8 @@ class sdcal2_skycal_otf(sdcal2_caltest_base,unittest.TestCase):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.outfile)):
-            shutil.copytree(self.datapath+self.outfile_ref, self.outfile_ref)
-        if (not os.path.exists(self.skytable_ref)):
-            shutil.copytree(self.datapath+self.skytable_ref, self.skytable_ref)
+        for f in [self.rawfile, self.outfile_ref, self.skytable_ref]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -457,12 +452,8 @@ class sdcal2_skycal_otfraster(sdcal2_caltest_base,unittest.TestCase):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.outfile)):
-            shutil.copytree(self.datapath+self.outfile_ref, self.outfile_ref)
-        if (not os.path.exists(self.skytable_ref)):
-            shutil.copytree(self.datapath+self.skytable_ref, self.skytable_ref)
+        for f in [self.rawfile, self.outfile_ref, self.skytable_ref]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -517,10 +508,8 @@ class sdcal2_tsyscal(sdcal2_caltest_base,unittest.TestCase):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.tsystable)):
-            shutil.copytree(self.datapath+self.tsystable, self.tsystable)
+        for f in [self.rawfile, self.tsystable]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -573,10 +562,8 @@ class sdcal2_tsyscal_average(sdcal2_caltest_base,unittest.TestCase):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.tsystable)):
-            shutil.copytree(self.datapath+self.tsystable, self.tsystable)
+        for f in [self.rawfile, self.tsystable]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -685,16 +672,12 @@ class sdcal2_applycal(sdcal2_caltest_base,unittest.TestCase):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.skytable)):
-            shutil.copytree(self.datapath+self.skytable, self.skytable)
-        if (not os.path.exists(self.tsystable)):
-            shutil.copytree(self.datapath+self.tsystable, self.tsystable)
-        for ref in self.reftables:
-            if (not os.path.exists(ref)):
-                shutil.copytree(self.datapath+ref, ref)
-                
+        for f in [self.rawfile, self.skytable, self.tsystable]:
+            copytree_ignore_subversion(self.datapath, f)
+
+        for f in self.reftables:
+            copytree_ignore_subversion(self.datapath, f)
+
         default(sdcal2)
 
     def tearDown(self):
@@ -795,14 +778,8 @@ class sdcal2_test_selection(selection_syntax.SelectionSyntaxTest,
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.reffile)):
-            shutil.copytree(self.datapath+self.reffile, self.reffile)
-        if (not os.path.exists(self.sky_table)):
-            shutil.copytree(self.datapath+self.sky_table, self.sky_table)
-        if (not os.path.exists(self.tsys_table)):
-            shutil.copytree(self.datapath+self.tsys_table, self.tsys_table)
+        for f in [self.rawfile, self.reffile, self.sky_table, self.tsys_table]:
+            copytree_ignore_subversion(self.datapath, f)
 
         default(sdcal2)
 
@@ -1478,9 +1455,9 @@ class sdcal2_skycal_flag(sdcal2_flag_base):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-                
+        for f in [self.rawfile]:
+            copytree_ignore_subversion(self.datapath, f)
+        
         default(sdcal2)
 
     def tearDown(self):
@@ -1512,9 +1489,9 @@ class sdcal2_tsyscal_flag(sdcal2_flag_base):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-                
+        for f in [self.rawfile]:
+            copytree_ignore_subversion(self.datapath, f)
+
         default(sdcal2)
 
     def tearDown(self):
@@ -1550,9 +1527,9 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
     
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.rawfile)):
-            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-                
+        for f in [self.rawfile]:
+            copytree_ignore_subversion(self.datapath, f)
+
         default(sdcal2)
 
     def tearDown(self):
