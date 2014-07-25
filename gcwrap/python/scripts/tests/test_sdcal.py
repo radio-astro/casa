@@ -1033,6 +1033,393 @@ class sdcal_test_selection(selection_syntax.SelectionSyntaxTest,
         ref_denomi[idx_ref] = almostzero
         return (data_arr-ref_arr)/ref_denomi
 
+###
+# Test flag handling in ALMA position switch calibration
+###
+class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test flag handling in ALMA position switch calibration
+    
+    Data file: calpsALMA_flagtest[_rowflagged].asap
+    - six artificial spectra with constant time interval
+    - the only ON-source spectrum is at the middle in time
+      sequence (irow=2), while all the others are OFF-source
+      spectra.
+    - the ON-spectrum is row-flagged in
+      'calpsALMA_flagtest_rowflagged.asap', while it is not
+      row-flagged in 'calpsALMA_flagtest.asap'.
+    - one of the OFF spectra at irow=1 is row-flagged and
+      has large constant spectrum values (200.0)
+    - the first 5 channels of the spectrum at irow=3 are
+      flagged and have large spectrum values (400.0).
+    - the 5th and 6th (index=4 and 5) channels of the
+      ON-source spectrum are flagged.
+    - the last channel is flagged for all OFF-source spectra.
+    - the values at non-flagged channels in non-row-flagged
+      spectra is equal to (irow+1), e.g., the first
+      OFF-spectrum has constant values 1.0 and the
+      ON-spectrum has constant values 3.0.
+
+    Proper flag handling in sdcal:
+    (1) ON-spectra
+        - if row-flagged, calibration must not be applied
+        - if not row-flagged, calibration must be done for
+          all channels even if channel-flagged.
+        - if no OFF-data available for a channel, calibration
+          is impossible so no change in values, also the
+          channel must be flagged
+        - other channel flags and row-flag must not be
+          changed after calibration
+    (2) OFF-spectra
+        - if row-flagged, the spectra must not be used for
+          calibration.
+        - if channel-flagged in a non-row-flagged spectrum,
+          the channels must not be used for calibration.
+    """
+    # Input and output names
+    raw1file='calpsALMA_flagtest.asap'
+    raw2file='calpsALMA_flagtest_rowflagged.asap'
+    ref1file='calpsALMA_flagtest.cal.asap'
+    ref2file='calpsALMA_flagtest_rowflagged.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'TestFlagPSALMA'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.raw1file)):
+            shutil.copytree(self.datapath+self.raw1file, self.raw1file)
+        if (not os.path.exists(self.raw2file)):
+            shutil.copytree(self.datapath+self.raw2file, self.raw2file)
+        if (not os.path.exists(self.ref1file)):
+            shutil.copytree(self.datapath+self.ref1file, self.ref1file)
+        if (not os.path.exists(self.ref2file)):
+            shutil.copytree(self.datapath+self.ref2file, self.ref2file)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.raw1file)):
+            shutil.rmtree(self.raw1file)
+        if (os.path.exists(self.raw2file)):
+            shutil.rmtree(self.raw2file)
+        if (os.path.exists(self.ref1file)):
+            shutil.rmtree(self.ref1file)
+        if (os.path.exists(self.ref2file)):
+            shutil.rmtree(self.ref2file)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _comparecal( self, name, reffile ):
+        self._checkfile(name)
+        sp=self._getspectra(name)
+        spref=self._getspectra(reffile)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(sp.shape[0]):
+            diff=self._diff(sp[irow],spref[irow])
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def testFlagPSALMA01(self):
+        """Test FlagPSALMA01: for non-row-flagged ON-data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref1file)
+
+    def testFlagPSALMA02(self):
+        """Test FlagPSALMA02: for row-flagged ON-data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref2file)
+
+###
+# Test flag handling in GBT position switch calibration
+###
+class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test flag handling in GBT position switch calibration
+    
+    Data file: calpsGBT_flagtest[_rowflagged].asap
+    - six artificial spectra with constant time interval
+    - the only ON-source spectrum is at the middle in time
+      sequence (irow=2), while all the others are OFF-source
+      spectra.
+    - the ON-spectrum is row-flagged in
+      'calpsGBT_flagtest_rowflagged.asap', while it is not
+      row-flagged in 'calpsGBT_flagtest.asap'.
+    - one of the OFF spectra at irow=1 is row-flagged and
+      has large constant spectrum values (200.0)
+    - the first 5 channels of the spectrum at irow=3 are
+      flagged and have large spectrum values (400.0).
+    - the 5th and 6th (index=4 and 5) channels of the
+      ON-source spectrum are flagged.
+    - the last channel is flagged for all OFF-source spectra.
+    - the values at non-flagged channels in non-row-flagged
+      spectra is equal to (irow+1), e.g., the first
+      OFF-spectrum has constant values 1.0 and the
+      ON-spectrum has constant values 3.0.
+
+    Proper flag handling in sdcal:
+    (1) ON-spectra
+        - if row-flagged, calibration must not be applied
+        - if not row-flagged, calibration must be done for
+          all channels even if channel-flagged.
+        - if no OFF-data available for a channel, calibration
+          is impossible so no change in values, also the
+          channel must be flagged
+        - other channel flags and row-flag must not be
+          changed after calibration
+    (2) OFF-spectra
+        - if row-flagged, the spectra must not be used for
+          calibration.
+        - if channel-flagged in a non-row-flagged spectrum,
+          the channels must not be used for calibration.
+    """
+    # Input and output names
+    raw1file='calpsGBT_flagtest.asap'
+    raw2file='calpsGBT_flagtest_rowflagged.asap'
+    ref1file='calpsGBT_flagtest.cal.asap'
+    ref2file='calpsGBT_flagtest_rowflagged.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'TestFlagPSGBT'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.raw1file)):
+            shutil.copytree(self.datapath+self.raw1file, self.raw1file)
+        if (not os.path.exists(self.raw2file)):
+            shutil.copytree(self.datapath+self.raw2file, self.raw2file)
+        if (not os.path.exists(self.ref1file)):
+            shutil.copytree(self.datapath+self.ref1file, self.ref1file)
+        if (not os.path.exists(self.ref2file)):
+            shutil.copytree(self.datapath+self.ref2file, self.ref2file)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.raw1file)):
+            shutil.rmtree(self.raw1file)
+        if (os.path.exists(self.raw2file)):
+            shutil.rmtree(self.raw2file)
+        if (os.path.exists(self.ref1file)):
+            shutil.rmtree(self.ref1file)
+        if (os.path.exists(self.ref2file)):
+            shutil.rmtree(self.ref2file)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _comparecal( self, name, reffile ):
+        self._checkfile(name)
+        sp=self._getspectra(name)
+        spref=self._getspectra(reffile)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(sp.shape[0]):
+            diff=self._diff(sp[irow],spref[irow])
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def testFlagPSGBT01(self):
+        """Test FlagPSGBT01: for non-row-flagged ON-data (GBT position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref1file)
+
+    def testFlagPSGBT02(self):
+        """Test FlagPSGBT02: for row-flagged ON-data (GBT position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref2file)
+
+###
+# Test flag handling in calibrating ALMA OTF data
+###
+class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test flag handling in calibrating ALMA OTF data (lissajous scan)
+    
+    Data file: lissajous_flagtest.asap
+    - ON spectrum at irow=100 is row-flagged. Calibration must
+      not be applied to this spectrum so the output value of this
+      spectrum (about 8 or 9) must not be modified. 
+    - ON spectrum at irow=101 is channel-flagged. This spectrum
+      must be calibrated.
+    - The spectra at irow=40 and 41, which are to be marked as
+      OFF spectra with fraction parameter of '10%', are row-flagged
+      and have huge spetrum values. They must not be used for
+      calibration, so the calibrated spectra must have values
+      much smaller than unity (actually smaller than about 0.03).
+
+    Proper flag handling in sdcal:
+    (1) ON-spectra
+        - if row-flagged, calibration must not be applied
+        - if not row-flagged, calibration must be done for
+          all channels even if channel-flagged.
+        - channel flags and row-flag must not be changed after calibration
+    (2) OFF-spectra
+        - if row-flagged, the spectra must not be used for
+          calibration.
+        - if channel-flagged in a non-row-flagged spectrum,
+          the channels must not be used for calibration.
+    """
+    # Input and output names
+    rawfile='lissajous_flagtest.asap'
+    reffile='lissajous_flagtest.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'TestFlagOTF'
+    calmode='otf'
+    fraction='10%'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testFlagOTF01(self):
+        """Test FlagOTF01: for ALMA OTF data"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+
+        tb.open(self.rawfile)
+        spec_rowflagged_input = tb.getcell('SPECTRA', 100)
+        tb.close()
+        tb.open(self.reffile)
+        spec_rowflagged_output = tb.getcell('SPECTRA', 52)
+        spec_output  = tb.getcol('SPECTRA')[0]
+        cflag_output = tb.getcol('FLAGTRA')[0]
+        rflag_output = tb.getcol('FLAGROW')
+        tb.close()
+
+        #check row-flagged ON spectrum is not calibrated
+        self.assertTrue(self._diff(spec_rowflagged_input, spec_rowflagged_output) < 1e-5)
+        #check other ON spectra is calibrated so have values less than ~0.3
+        spec_output[52] = 0.0
+        self.assertTrue(all(spec_output < 0.03))
+        #check channel flags not modified
+        self.assertEqual(cflag_output[53], 128)
+        cflag_output[53] = 0
+        self.assertTrue(all(cflag_output == 0))
+        #check row flags not modified
+        self.assertEqual(rflag_output[52], 1)
+        rflag_output[52] = 0
+        self.assertTrue(all(rflag_output == 0))
+
+###
+# Test flag handling in calibrating ALMA OTF raster data
+###
+class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
+    """
+    Test flag handling in calibrating ALMA OTF raster data
+    
+    Data file: raster_flagtest.asap
+    - ON spectrum at irow=50 is row-flagged. Calibration must
+      not be applied to this spectrum so the output value of this
+      spectrum (about 8 or 9) must not be modified. 
+    - ON spectrum at irow=51 is channel-flagged. This spectrum
+      must be calibrated.
+    - The spectra at irow=60 and 61, which are to be marked as
+      OFF spectra with fraction parameter of '10%', are row-flagged
+      and have huge spetrum values. They must not be used for
+      calibration, so the calibrated spectra must have values
+      much smaller than unity (actually smaller than about 0.01).
+
+    Proper flag handling in sdcal:
+    (1) ON-spectra
+        - if row-flagged, calibration must not be applied
+        - if not row-flagged, calibration must be done for
+          all channels even if channel-flagged.
+        - channel flags and row-flag must not be changed after calibration
+    (2) OFF-spectra
+        - if row-flagged, the spectra must not be used for
+          calibration.
+        - if channel-flagged in a non-row-flagged spectrum,
+          the channels must not be used for calibration.
+    """
+    # Input and output names
+    rawfile='raster_flagtest.asap'
+    reffile='raster_flagtest.cal.asap'
+    prefix=sdcal_unittest_base.taskname+'TestFlagOTFRASTER'
+    calmode='otfraster'
+    fraction='10%'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdcal)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testFlagOTF01(self):
+        """Test FlagOTF01: for ALMA OTF raster data"""
+        outname=self.prefix+self.postfix
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+
+        irow_rowflagged_input  = 50
+        irow_rowflagged_output = 44
+        irow_chanflagged_output = 45
+
+        tb.open(self.rawfile)
+        spec_rowflagged_input = tb.getcell('SPECTRA', irow_rowflagged_input)
+        tb.close()
+        tb.open(self.reffile)
+        spec_rowflagged_output = tb.getcell('SPECTRA', irow_rowflagged_output)
+        spec_output  = tb.getcol('SPECTRA')[0]
+        cflag_output = tb.getcol('FLAGTRA')[0]
+        rflag_output = tb.getcol('FLAGROW')
+        tb.close()
+
+        #check row-flagged ON spectrum is not calibrated
+        self.assertTrue(self._diff(spec_rowflagged_input, spec_rowflagged_output) < 1e-5)
+        #check other ON spectra is calibrated so have values less than ~0.3
+        spec_output[irow_rowflagged_output] = 0.0
+        self.assertTrue(all(spec_output < 0.01))
+        #check channel flags not modified
+        self.assertEqual(cflag_output[irow_chanflagged_output], 128)
+        cflag_output[irow_chanflagged_output] = 0
+        self.assertTrue(all(cflag_output == 0))
+        #check row flags not modified
+        self.assertEqual(rflag_output[irow_rowflagged_output], 1)
+        rflag_output[irow_rowflagged_output] = 0
+        self.assertTrue(all(rflag_output == 0))
+
+
 
 def suite():
     return [sdcal_test0, sdcal_test1,
@@ -1040,4 +1427,8 @@ def suite():
             sdcal_test4, sdcal_test5,
             sdcal_test_edgemarker_generic,
             sdcal_test_edgemarker_raster,
-            sdcal_test_selection]
+            sdcal_test_selection,
+            sdcal_testFlagPSALMA,   #sdcal_testFlagPSGBT,
+            sdcal_testFlagOTF,
+            sdcal_testFlagOTFRASTER
+            ]
