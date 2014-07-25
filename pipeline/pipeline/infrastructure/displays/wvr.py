@@ -150,14 +150,17 @@ class WVRPhaseVsBaselineChart(object):
         LOG.debug('Finding maximum phase offset over all scans/spws/corrs/antennas')
         for scan in plot_scans:
             for spw in spws:
-                # find the data description for this scan. Just one dd expected,
-                # bail out if not.
-                dd = [dd for dd in scan.data_descriptions 
-                      if dd.spw.id == spw.id]
-                if len(dd) != 1:
+                # find the data description for this scan. Just one dd 
+                # expected.
+                dds = [dd for dd in scan.data_descriptions 
+                       if dd.spw.id is spw.id]
+                if len(dds) is not 1:
+                    LOG.info('Bypassing plot generation for %s scan %s spw '
+                             '%s. Expected 1 matching data description but '
+                             'got %s.', 
+                             self.ms.basename, scan.id, spw.id, len(dds))
                     continue
-                else:
-                    dd = dd[0]
+                dd = dds[0]
                 # we expect the number and identity of the caltable 
                 # correlations for this scan to match those in the MS, so we
                 # can enumerate over the correlations in the MS scan.  

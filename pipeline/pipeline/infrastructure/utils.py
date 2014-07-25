@@ -659,3 +659,37 @@ class OrderedDefaultdict(collections.OrderedDict):
         args = (self.default_factory,) if self.default_factory else ()
         return self.__class__, args, None, None, self.iteritems()
 
+def get_intervals(context, calapp):
+    """
+    Get the integration intervals for scans processed by a calibration.
+    
+    The scan and spw selection is formed through inspection of the 
+    CalApplication representing the calibration. 
+
+    :param ms: the MeasurementSet domain object
+    :param calapp: the CalApplication representing the calibration
+    :return: a ilst of datetime objects representing the unique scan intervals 
+    """
+    ms = context.observing_run.get_ms(calapp.vis)
+
+    from_intent = calapp.origin.inputs['intent']
+    # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
+    # etc. We need this in pipeline intents.
+    pipeline_intent = to_pipeline_intent(ms, from_intent)
+    scans = ms.get_scans(scan_intent=pipeline_intent)
+
+    # let CASA parse spw arg in case it contains channel spec
+    spw_ids = set([spw_id for (spw_id, _, _, _) 
+                   in spw_arg_to_id(calapp.vis, calapp.spw)])
+    
+    all_solints = set()
+    for scan in scans:
+        scan_spw_ids = set([spw.id for spw in scan.spws])
+        # scan with intent may not have data for the spws used in
+        # the gaincal call, eg. X20fb, so only get the solint for 
+        # the intersection
+        solints = [scan.mean_interval(spw_id) 
+                   for spw_id in spw_ids.intersection(scan_spw_ids)]
+        all_solints.update(set(solints))
+    
+    return all_solints

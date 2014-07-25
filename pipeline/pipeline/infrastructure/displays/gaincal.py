@@ -153,22 +153,31 @@ class PhaseVsBaselineChart(common.PlotBase):
         # combination we want to plot
         LOG.debug('Finding data ranges for all spws/corrs/antennas')
         wrappers = []
-        for spw in spws:
-            # find the data description for this scan. Just one dd expected.
-            dd = [dd for dd in scans[0].data_descriptions 
-                  if dd.spw.id == spw.id][0]
-            # we expect the number and identity of the caltable 
-            # correlations for this scan to match those in the MS, so we
-            # can enumerate over the correlations in the MS scan.  
-            for corr_id, _ in enumerate(dd.corr_axis):
-                for antenna in self.ms.antennas:
-                    selection = data_before.filter(antenna=[antenna.id], spw=[spw.id])
-                    try:
-                        wrapper = self.get_data_object(selection, corr_id)
-                    except ValueError:
-                        continue
-                    
-                    wrappers.append(wrapper)
+        for scan in scans:
+            for spw in spws:
+                # find the data description for this scan. Just one dd 
+                # expected.
+                dds = [dd for dd in scan.data_descriptions 
+                       if dd.spw.id is spw.id]
+                if len(dds) is not 1:
+                    LOG.info('Bypassing plot generation for %s scan %s spw '
+                             '%s. Expected 1 matching data description but '
+                             'got %s.', 
+                             self.ms.basename, scan.id, spw.id, len(dds))
+                    continue
+                dd = dds[0]
+                # we expect the number and identity of the caltable 
+                # correlations for this scan to match those in the MS, so we
+                # can enumerate over the correlations in the MS scan.  
+                for corr_id, _ in enumerate(dd.corr_axis):
+                    for antenna in self.ms.antennas:
+                        selection = data_before.filter(antenna=[antenna.id], spw=[spw.id])
+                        try:
+                            wrapper = self.get_data_object(selection, corr_id)
+                        except ValueError:
+                            continue
+                        
+                        wrappers.append(wrapper)
                      
         xlim = self.get_xlim(wrappers)
         ylim = self.get_ylim(wrappers)                        

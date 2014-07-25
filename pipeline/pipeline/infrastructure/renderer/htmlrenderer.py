@@ -2012,7 +2012,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
 
-            applications.extend(self.get_gaincal_applications(result, ms))
+            applications.extend(self.get_gaincal_applications(context, result, ms))
 
             # generate the phase structure plots
             plotter = gaincal.RMSOffsetVsRefAntDistanceChart(context, result)
@@ -2106,7 +2106,7 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
 
         return ctx
     
-    def get_gaincal_applications(self, result, ms):
+    def get_gaincal_applications(self, context, result, ms):
         applications = []
         
         calmode_map = {'p':'Phase only',
@@ -2121,27 +2121,10 @@ class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
             
             # Convert solint=int to a real integration time. 
             # solint is spw dependent; science windows usually have the same
-            # integration time, though that's not guaranteed by the MS.
+            # integration time, though that's not guaranteed.
             if solint == 'int':
-                from_intent = calapp.origin.inputs['intent']
-                
-                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
-                # etc. We need this in pipeline intents.
-                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
-                scans = ms.get_scans(scan_intent=pipeline_intent)
-
-                # let CASA parse spw arg in case it contains channel spec
-                spw_ids = [spw_id for (spw_id, _, _, _) 
-                           in utils.spw_arg_to_id(calapp.vis, calapp.spw)]
-                
-                all_solints = set()
-                for spw_id in spw_ids:                    
-                    spw_solints = set([scan.mean_interval(spw_id) 
-                                       for scan in scans])
-                    all_solints.update(spw_solints)
-                
                 in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in all_solints]  
+                           for dt in utils.get_intervals(context, calapp)]
                 solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
             
             gaintable = os.path.basename(calapp.gaintable)
@@ -2380,8 +2363,8 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
-            applications.extend(self.get_bandpass_applications(result, ms))
-            phaseup_applications.extend(self.get_phaseup_applications(result, ms))
+            applications.extend(self.get_bandpass_applications(context, result, ms))
+            phaseup_applications.extend(self.get_phaseup_applications(context, result, ms))
             ms_refant = ms.reference_antenna.split(',')[0]
 
             # need two summary plots: one for the refant, one for the mode
@@ -2442,7 +2425,7 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
 
         return ctx
 
-    def get_phaseup_applications(self, result, ms):
+    def get_phaseup_applications(self, context, result, ms):
         # return early if phase-up was not activated
         if result.inputs.get('phaseup', False) != True:
             return []
@@ -2470,25 +2453,8 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
             # solint is spw dependent; science windows usually have the same
             # integration time, though that's not guaranteed by the MS.
             if solint == 'int':
-                from_intent = calapp.origin.inputs['intent']
-                
-                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
-                # etc. We need this in pipeline intents.
-                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
-                scans = ms.get_scans(scan_intent=pipeline_intent)
-
-                # let CASA parse spw arg in case it contains channel spec
-                spw_ids = [spw_id for (spw_id, _, _, _) 
-                           in utils.spw_arg_to_id(calapp.vis, result.inputs['spw'])]
-                
-                all_solints = set()
-                for spw_id in spw_ids:                    
-                    spw_solints = set([scan.mean_interval(spw_id) 
-                                       for scan in scans])
-                    all_solints.update(spw_solints)
-                
                 in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in all_solints]  
+                           for dt in utils.get_intervals(context, calapp)]
                 solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
             
             calmode = calapp.origin.inputs.get('calmode', 'N/A')
@@ -2509,7 +2475,7 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
 
         return applications
     
-    def get_bandpass_applications(self, result, ms):
+    def get_bandpass_applications(self, context, result, ms):
         applications = []
         
         bandtype_map = {'B'    :'Channel',
@@ -2525,25 +2491,8 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
             # solint is spw dependent; science windows usually have the same
             # integration time, though that's not guaranteed by the MS.
             if solint == 'int':
-                from_intent = calapp.origin.inputs['intent']
-                
-                # from_intent is given in CASA intents, ie. *AMPLI*, *PHASE*
-                # etc. We need this in pipeline intents.
-                pipeline_intent = utils.to_pipeline_intent(ms, from_intent)
-                scans = ms.get_scans(scan_intent=pipeline_intent)
-
-                # let CASA parse spw arg in case it contains channel spec
-                spw_ids = [spw_id for (spw_id, _, _, _) 
-                           in utils.spw_arg_to_id(calapp.vis, calapp.spw)]
-                
-                all_solints = set()
-                for spw_id in spw_ids:                    
-                    spw_solints = set([scan.mean_interval(spw_id) 
-                                       for scan in scans])
-                    all_solints.update(spw_solints)
-                
                 in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in all_solints]  
+                           for dt in utils.get_intervals(context, calapp)]
                 solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
             
             gaintable = os.path.basename(calapp.gaintable)
