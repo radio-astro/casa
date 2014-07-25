@@ -142,7 +142,10 @@ def _imregrid_to_new_ref_frame(
             'INFO'
         )
         casalog.post("...making a straight copy...", 'INFO')
-        shutil.copytree(imagename, output)
+        subi = _myia.subimage(output)
+        _myia.done()
+        csys.done()
+        subi.done()
         return True
     casalog.post(
         "Changing coordinate system from " + oldrefcode
@@ -154,6 +157,7 @@ def _imregrid_to_new_ref_frame(
     dirrefpix = csys.referencepixel("direction")["numeric"]
     shape = _myia.shape()
     centerpix = [int(shape[diraxes[0]]/2), int(shape[diraxes[1]]/2)]
+    print "csys ref 1 ", csys.referencevalue()
     if centerpix[0] != dirrefpix[0] or centerpix[1] != dirrefpix[1]:
         casalog.post(
             "Center direction pixel and reference pixel are "
@@ -161,6 +165,8 @@ def _imregrid_to_new_ref_frame(
             + "the reference pixel equal to the center pixel. "
             + "The output image will have this modified coordinate system."
         )
+        # so toworld() works in the correct frame
+        csys.setconversiontype(oldrefcode)
         newrefpix = csys.referencepixel()["numeric"]
         newrefpix[diraxes[0]] = centerpix[0]
         newrefpix[diraxes[1]] = centerpix[1]
@@ -171,7 +177,7 @@ def _imregrid_to_new_ref_frame(
         _myia.done()
         _myia = tsub
         _myia.setcoordsys(csys.torecord())
-                
+    print "csys ref 2 ", csys.referencevalue()         
     angle = csys.convertdirection(newrefcode)
     mysin = qa.getvalue(qa.sin(angle))
     mycos = qa.getvalue(qa.cos(angle))

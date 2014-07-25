@@ -430,6 +430,26 @@ class imregrid_test(unittest.TestCase):
         expec = myia.getchunk()
         self.assertTrue((got == expec).all())
         
+        imregrid(
+            imagename=datapath + "nrefcode.im", template="GALACTIC",
+            output=out6, overwrite=True
+        )
+        myia.open(out6)
+        got = myia.getchunk()
+        myia.open(datapath + "mmm.im")
+        expec = myia.getchunk()
+        self.assertTrue((got == expec).all())
+        
+        imregrid(
+            imagename=datapath + "nrefcode_t.im", template="GALACTIC",
+            output=out6, overwrite=True
+        )
+        myia.open(out6)
+        got = myia.getchunk()
+        myia.open(datapath + "mmm_t.im")
+        expec = myia.getchunk()
+        self.assertTrue((got == expec).all())
+        
     def test_ref_code_preserves_position(self):
         """Test that regridding to new refcode preserves source positions"""
         gal = "mygalactic.im"
