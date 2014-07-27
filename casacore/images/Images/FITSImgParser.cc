@@ -150,8 +150,9 @@ String FITSImgParser::get_extlist_string(const String &delimiter, const String &
 
 	// add the individual extensions
 	for (uInt index=0; index < numhdu_p; index++){
-		if (extensions_p[index].has_data())
-			bigString += fitsmarker + extensions_p[index].get_extexpr() + delimiter;
+	  if (extensions_p[index].has_data()){
+	    bigString += fitsmarker + extensions_p[index].get_extexpr() + delimiter;
+	  }
 	}
 
 	// return the String
@@ -858,19 +859,18 @@ String FITSExtInfo::get_extexpr(void)
 {
 	String extexpr=name_p + "[";
 
+	ostringstream oss;
+	oss << extindex_p;
+	extexpr += String(oss);
+
 	if (extname_p.length() > 0){
-		extexpr += extname_p;
+		extexpr += ":" + extname_p;
 
 		if (extversion_p > -1){
 		ostringstream os;
 		os << extversion_p;
 		extexpr += "," + String(os);
 		}
-	}
-	else {
-		ostringstream os;
-		os << extindex_p;
-		extexpr += String(os);
 	}
 
 	extexpr += "]";
