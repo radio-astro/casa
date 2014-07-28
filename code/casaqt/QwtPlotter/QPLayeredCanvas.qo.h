@@ -376,7 +376,7 @@ private:
     QList<QPainter*> m_printPainters;
     
     // Current draw thread, or NULL for none.
-    QPDrawThread* m_drawThread;
+    mutable QPDrawThread* m_drawThread;
     
     // Flag for whether a redraw currently in progress should be restarted.
     bool m_redrawWaiting;
@@ -395,7 +395,7 @@ private:
     
     // Initializes object (meant to be called from constructor).
     void initialize();
-    
+
 private slots:
     // Slot for when the current draw thread is finished.
     void itemDrawingFinished();
