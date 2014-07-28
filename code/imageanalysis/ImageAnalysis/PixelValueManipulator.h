@@ -33,6 +33,9 @@ template <class T> class PixelValueManipulator : public ImageTask<T> {
 
 public:
 
+	// regionRec = 0 => no region selected, full image used
+	// mask = "" => No additional mask specification, although image default mask will be used
+	// if one exists.
 	PixelValueManipulator(
 		const SPCIIT image,
 		const Record *const regionRec,
@@ -63,7 +66,7 @@ public:
 	// "sqrtsum", "sqrtsum_npix", sqrtsum_npix_beam", "stddev", "sum", "variance",  and "zero". Aggregation
 	// of values occurs along all axes orthogonal to the one specified. One may specify the unit in which
 	// coordinate values are calculated using the <src>unit</src> parameter. If unit starts with "pix", then
-	// pixel coordinates are calculated, world units otherwise. If pixel coordinates, the values are
+	// pixel coordinates are calculated, world coordinates otherwise. If pixel coordinates, the values are
 	// relative to the zeroth pixel on the corresponding axis of the input image.  If specified and it
 	// doesn't start with "pix", the unit must be conformant with
 	// the unit of <src>axis</src> in the coordinate system of the image, or it must be a unit that this axis
