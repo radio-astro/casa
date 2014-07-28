@@ -636,8 +636,10 @@
 		default: {}
                  
 
-        usescratch  -- If False: 'virtual' model is created. The model is saved in the header 
-        and model visibilities are evaluated when calculating calibration or plotting in plotms.
+        usescratch  -- If False: 'virtual' model is created. The model information is saved 
+        either in the SOURCE_MODEL column in the SOURCE table (if one exists) or in the keyword 
+        of the main table in the MS and model visibilities are evaluated on the fly when calculating 
+        calibration or plotting in plotms.
         If True: the model visibility will be evaluated and saved on disk in the MODEL_DATA 
         column.  This will increase your ms in size by a factor of 1.5 (w.r.t. the case where 
         you only have the DATA and the CORRECTED_DATA column).  Use True if you need to interact 
