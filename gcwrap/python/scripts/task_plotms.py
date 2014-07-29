@@ -104,7 +104,7 @@ def plotms(vis=None, plotindex=None,
         msselect -- TaQL selection expression
                     default: '' (all).
     
-    averagedata -- data averaing parameters flag
+    averagedata -- data averaging parameters flag
                    default: False.
       &gt;&gt;&gt; averagedata expandable parameters
         avgchannel -- average over channel?  either blank for none, or a value
