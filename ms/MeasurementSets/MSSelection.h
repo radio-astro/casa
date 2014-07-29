@@ -416,22 +416,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Set the maximum value acceptable for SCAN, OBSERVATION or
     // SUB-ARRAY IDs. The main-table columns for these do not refere
-    // to rows of sub-tables and therefore there is not cheap way to
-    // find a valid range for these which can be used in the parses to
-    // generate error or warning messages if a value outside the range
-    // is used in the expressions.  The default maximum value for
-    // scan, observation and sub-array IDs is 1000.
+    // to rows of sub-tables and therefore there is no cheap way to
+    // find a valid range for these which can be used in the parsers
+    // to generate error or warning messages if a value outside the
+    // range is used in the expressions.  The default maximum value
+    // for scan, observation and sub-array IDs is 1000.
     inline void setMaxScans(const Int& n=1000) {maxScans_p=n;};
     inline void setMaxObs(const Int& n=1000)   {maxObs_p=n;};
     inline void setMaxArray(const Int& n=1000) {maxArray_p=n;};
     
+    // Set the error handler to be used for reporting errors while
+    // parsing the type of expression give by the first argument.
     void setErrorHandler(const MSExprType type, MSSelectionErrorHandler* mssEH,
 			 const Bool overRide=False);
     
+    // Initialize the error handler.  This is set the error-handler to
+    // the user supplied error handler via setErrorHandler() or to the
+    // default built-in error handler.
     void initErrorHandler(const MSExprType tye=NO_EXPR);
 
+    // Execute the handleError() method of the error-handlers.  This
+    // is called in the catch code for any exceptions emitted from any
+    // of the parsers. It is also called at the end of the
+    // parsing cycle.
     void runErrorHandler();
+
+    // Return the pointer to the MS used internally.
     const MeasurementSet* getMS(MSSelectableTable* msLike);
+
   private:
     // Set into the order of the selection expression
     Bool setOrder(MSSelection::MSExprType type);
