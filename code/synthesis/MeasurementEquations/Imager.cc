@@ -6075,7 +6075,7 @@ Bool Imager::sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& 
     papoly.setCoefficients(papars);
     qflux.resize(nf);
     uflux.resize(nf);
-    Unit ghz("GHz"); 
+    Unit ghz("Hz"); 
     Double f0 = reffreq.get(ghz).getValue();
 
     for (uInt cfidx = 0; cfidx < (uInt)nf; cfidx++) {
@@ -6086,19 +6086,18 @@ Bool Imager::sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& 
       Double qfluxval = ipi * iiflux/sqrt(1.0 + tan(2.0*ipa) * tan(2.0*ipa));
       Double ufluxval = sqrt(ipi * ipi * iiflux * iiflux - qfluxval * qfluxval);
       //debug
-      //if (cfidx<3) cerr<<"sjy_calcquflux:: poli="<<ipi<<" pola="<<ipa<<endl;
+      //if (cfidx<10) cerr<<"sjy_calcquflux:: poli="<<ipi<<" pola="<<ipa<<" qflux="<<qfluxval<<" uflux="<<ufluxval<<endl;
       if (rotMeas!=0.0 ) {
-        //Double rotangle = rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
-        Double rotangle = rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
-        //if (cfidx<3) cerr<<"rotangle="<<rotangle<<endl;
-        qflux[cfidx] = qfluxval*cos(2*rotangle) - ufluxval*sin(2*rotangle);
-        uflux[cfidx] = qfluxval*sin(2*rotangle) + ufluxval*cos(2*rotangle); 
+        Double rotangle = 2*rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
+        //if (cfidx<10) cerr<<"rotangle="<<rotangle<<endl;
+        qflux[cfidx] = qfluxval*cos(rotangle) - ufluxval*sin(rotangle);
+        uflux[cfidx] = qfluxval*sin(rotangle) + ufluxval*cos(rotangle); 
       }
       else { 
         qflux[cfidx] = qfluxval; 
         uflux[cfidx] = ufluxval; 
       }
-      //cerr<<"uflux/qfluxi["<<cfidx<<"]="<<uflux[cfidx]/qflux[cfidx]<<endl;
+      //if (cfidx<10) cerr<<"uflux/qflux["<<cfidx<<"]="<<uflux[cfidx]/qflux[cfidx]<<endl;
     }
   }
   catch (...) {
