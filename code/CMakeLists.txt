@@ -954,13 +954,11 @@ endif()
 #
 # Sqlite3
 #
-
-find_package ( SQLITE 3.3.6)
-if( NOT SQLITE_FOUND )
-  message (WARNING "Sqlite3 package not found")
-endif ( NOT SQLITE_FOUND )
-
-
+casa_find( SQLITE
+  VERSION 3.3.6
+  PREFIX_HINTS ${SQLITE_ROOT_DIR}
+  INCLUDES sqlite3.h
+  LIBS sqlite3 )
 
 #
 # RPFITS (Fortran)

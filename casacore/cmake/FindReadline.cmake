@@ -36,7 +36,8 @@ if(NOT READLINE_FOUND)
     HINTS ${READLINE_ROOT_DIR} PATH_SUFFIXES include)
   find_library(READLINE_LIBRARY readline
     HINTS ${READLINE_ROOT_DIR} PATH_SUFFIXES lib)
-  find_library(NCURSES_LIBRARY ncurses)   # readline depends on libncurses
+  find_library(NCURSES_LIBRARY ncurses
+    HINTS ${READLINE_ROOT_DIR} PATH_SUFFIXES lib)   # readline depends on libncurses
   mark_as_advanced(READLINE_INCLUDE_DIR READLINE_LIBRARY NCURSES_LIBRARY)
 
   include(FindPackageHandleStandardArgs)

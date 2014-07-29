@@ -31,7 +31,9 @@
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <casa/aips.h>
 
-class casac::variant;
+namespace casac {
+  class variant;
+};
 
 namespace casa {
 

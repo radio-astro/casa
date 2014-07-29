@@ -143,12 +143,14 @@ set( WCSLIB_PATHS "${casaroot}/${arch};/usr/local;/usr" )
 # CASA (only alma/ASDM)
 #
 find_path( LIBXML2_INCLUDE_DIR libxml/xmlversion.h 
+	   HINTS ${LIBXML2_ROOT_DIR}/include
            PATH_SUFFIXES libxml2 )
 if( LIBXML2_INCLUDE_DIR MATCHES "NOTFOUND$" )
    message( FATAL_ERROR "libxml/xmlversion.h could not be found. Please check!" )
 endif()
 message( STATUS "LIBXML2_INCLUDE_DIR = " ${LIBXML2_INCLUDE_DIR} )
 find_path( LIBXML2_LIBRARY libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}
+	   HINTS ${LIBXML2_ROOT_DIR}
            PATHS /usr
            PATH_SUFFIXES lib64 lib )
 #find_path( LIBXML2_LIBRARY libxml2.so )
