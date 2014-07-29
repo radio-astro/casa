@@ -1,7 +1,0 @@
-LVL  := $(C++OPTLVL)
-LVL0 := -O0
- 
-tArray := 0
-tMaskArrExcp := 0
- 
-C++OPTLVL = $(LVL$($*))
