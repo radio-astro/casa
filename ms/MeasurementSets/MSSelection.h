@@ -413,9 +413,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const String& arrayExpr       = "",
 	       const String& stateExpr       = "",
 	       const String& observationExpr = "");
-    
-    void setMaxScans(const Int& n) {maxScans_p=n;};
-    void setMaxObs(const Int& n) {maxObs_p=n;};
+
+    // Set the maximum value acceptable for SCAN, OBSERVATION or
+    // SUB-ARRAY IDs. The main-table columns for these do not refere
+    // to rows of sub-tables and therefore there is not cheap way to
+    // find a valid range for these which can be used in the parses to
+    // generate error or warning messages if a value outside the range
+    // is used in the expressions.  The default maximum value for
+    // scan, observation and sub-array IDs is 1000.
+    inline void setMaxScans(const Int& n=1000) {maxScans_p=n;};
+    inline void setMaxObs(const Int& n=1000)   {maxObs_p=n;};
+    inline void setMaxArray(const Int& n=1000) {maxArray_p=n;};
     
     void setErrorHandler(const MSExprType type, MSSelectionErrorHandler* mssEH,
 			 const Bool overRide=False);
