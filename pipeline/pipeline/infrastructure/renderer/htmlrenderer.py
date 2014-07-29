@@ -5495,7 +5495,9 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
                      'channelmap': {'type': 'channel_map',
                                     'plot_title': 'Channel Map'},
                      'rmsmap': {'type': 'rms_map',
-                                'plot_title': 'Baseline RMS Map'}}
+                                'plot_title': 'Baseline RMS Map'},
+                     'integratedmap': {'type': 'sd_integrated_map',
+                                       'plot_title': 'Integrated Intensity Map'}}
         for (key, value) in map_types.items():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
             summary = self._summary_plots(plot_list)
@@ -6456,7 +6458,7 @@ renderer_map = {
         hsd.tasks.SDBaselineOld  : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=False),
         hsd.tasks.SDBaseline     : T2_4MDetailsSingleDishBaselineRenderer(always_rerender=False),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html', always_rerender=False),
-        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
+        hsd.tasks.SDImaging      : T2_4MDetailsSingleDishImagingRenderer(always_rerender=True),
         hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsSingleDishFlagBaselineRenderer(always_rerender=False),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsSingleDishPlotFlagBaselineRenderer(always_rerender=False),

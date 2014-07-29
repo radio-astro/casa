@@ -18,6 +18,7 @@ import gaincal_cli
 import gencal_cli
 import hanningsmooth_cli
 import immath_cli
+import immoments_cli
 import importasdm_cli
 import importevla_cli
 import listobs_cli
@@ -314,6 +315,9 @@ class CASATaskJobGenerator(object):
 
     def immath(self, *v, **k):
         return self._get_job(immath_cli.immath_cli, *v, **k)    
+
+    def immoments(self, *v, **k):
+        return self._get_job(immoments_cli.immoments_cli, *v, **k)    
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)

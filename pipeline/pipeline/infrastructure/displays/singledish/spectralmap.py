@@ -64,10 +64,6 @@ class SDSpectralMapDisplay(SDImageDisplay):
     MaxNhPanel = 5
     MaxNvPanel = 5
     
-    @property
-    def num_valid_spectrum(self):
-        return self.inputs.num_valid_spectrum
-
     def plot(self):
         self.init()
         
@@ -169,7 +165,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
         plot_list = []
 
-        axes_manager = SpectralMapAxesManager(NhPanel, NvPanel, self.inputs.brightnessunit,
+        axes_manager = SpectralMapAxesManager(NhPanel, NvPanel, self.brightnessunit,
                                               Format, FreqLocator,
                                               TickSize)
         axes_list = axes_manager.axes_list

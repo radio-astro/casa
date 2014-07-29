@@ -112,7 +112,6 @@ class SpectralImage(object):
 class SDImageDisplayInputs(SingleDishDisplayInputs):
     def __init__(self, context, result):
         super(SDImageDisplayInputs,self).__init__(context, result)
-        self.image = SpectralImage(self.imagename)
         
     @property
     def imagename(self):
@@ -157,41 +156,6 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
     def source(self):
         return self.result.outcome['image'].sourcename
 
-    @property
-    def nx(self):
-        return self.image.nx
-
-    @property
-    def ny(self):
-        return self.image.ny
-
-    @property
-    def nchan(self):
-        return self.image.nchan
-
-    @property
-    def npol(self):
-        return self.image.npol
-    
-    @property
-    def brightnessunit(self):
-        return self.image.brightnessunit
-
-    @property
-    def num_valid_spectrum(self):
-        return self.__reshape2d(self.result.outcome['validsp'])
-
-    @property
-    def rms(self):
-        return self.__reshape2d(self.result.outcome['rms'])
-
-    @property
-    def edge(self):
-        return self.result.outcome['edge']
-
-    def __reshape2d(self, array2d):
-        array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
-        return numpy.flipud(array3d)
 
 class SDInspectionDisplay(object):
     __metaclass__ = abc.ABCMeta
@@ -256,7 +220,6 @@ class SDCalibrationDisplay(object):
         stage_dir = os.path.join(report_dir, 'stage%d'%(results.stage_number))
         plots = []
         for result in results:
-            #table = result.outcome.applytable
             if result is None or result.outcome is None:
                 plot = None
             else:
@@ -280,11 +243,13 @@ class SDImageDisplay(object):
 
         self.context = self.inputs.context
         self.stage_dir = self.inputs.stage_dir
-        self.image = self.inputs.image
+        self.image = None
+        self.imagename = self.inputs.imagename
         self.spw = self.inputs.spw
         self.antenna = self.inputs.antenna
 
     def init(self):
+        self.image = SpectralImage(self.imagename)
         qa = casatools.quanta
         self.nchan = self.image.nchan
         self.data = self.image.data
@@ -292,6 +257,7 @@ class SDImageDisplay(object):
         self.nx = self.image.nx
         self.ny = self.image.ny
         self.npol = self.image.npol
+        self.brightnessunit = self.image.brightnessunit
         (refpix, refval, increment) = self.image.spectral_axis(unit='GHz')
         self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
         self.velocity = self.image.to_velocity(self.frequency, freq_unit='GHz')
@@ -322,12 +288,27 @@ class SDImageDisplay(object):
 
     @property
     def id_spectral(self):
-        return self.image.id_spectral
+        return self.image.id_spectral if self.image is not None else None
     
     @property
     def id_stokes(self):
-        return self.image.id_stokes
+        return self.image.id_stokes if self.image is not None else None
 
+    @property
+    def num_valid_spectrum(self):
+        return self.__reshape2d(self.inputs.result.outcome['validsp'])
+
+    @property
+    def rms(self):
+        return self.__reshape2d(self.inputs.result.outcome['rms'])
+
+    @property
+    def edge(self):
+        return self.inputs.result.outcome['edge']
+
+    def __reshape2d(self, array2d):
+        array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
+        return numpy.flipud(array3d)
 
 
 
