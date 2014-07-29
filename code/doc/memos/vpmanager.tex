@@ -1,0 +1,1035 @@
+\documentclass[12pt]{article}
+%\documentstyle[12pt,amsmath]{article}
+%\usepackage{html}
+\usepackage{epsf}
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx, color}  % The figure package
+\usepackage{palatino}
+\usepackage{natbib}     % Package used for bib. citation
+\usepackage{txfonts}
+
+\setlength{\textwidth}{15.00cm}
+\setlength{\oddsidemargin}{0.75cm}
+\setlength{\evensidemargin}{0.5cm}
+
+\pagestyle{myheadings}
+
+\begin{document}
+\title{The CASA vpmanager tool\\ and the VPManager class}
+\author{D. Petry (ESO, Garching)}
+\date{Apr 25, 2013\\%{\small (Updated: )}
+}
+\maketitle
+\normalsize
+\markboth{}{The vpmanager tool and the VPManager class}
+%\begin{center}
+%  \htmladdnormallinkfoot{PDF
+%    Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}
+%\end{center}
+
+\begin{abstract}
+\noindent
+The VPManager class in the synthesis module of CASA code permits 
+CASA imaging and simulation routines to hook up to the vpmanager and let it determine
+which antenna responses to use for which observatory.
+
+The vpmanager tool (by default "vp" in casapy) is the Python user interface to the VPManager
+class. It has methods to set up a list of primary beams or voltage patterns
+({\it antenna responses}) and then select in detail 
+which of them is used for which observatory.
+The distinction of several antenna types for a given observatory (heterogeneous
+arrays) is supported.
+ 
+Antenna responses can be selected from either internally 
+hard-coded ones, or response-groups defined via an AntennaResponses table, or
+user-defined analytic primary beams.
+\end{abstract}
+
+\section{Overview}
+
+The vpmanager tool is the CASA Python object which constitutes the
+user interface to the VPManager C++ class. By default it is named "vp" in casapy.
+This document describes
+the upgraded version of the tool and class to be included in CASA 4.2.
+It is in terms of high-level functionality identical to the version introduced in CASA 3.4,
+however, in CASA 4.2 it was made thread-safe.
+
+The VPManager class is implemented as a singleton, i.e. internally there is only one instance
+at all times. This instance accessed via the static VPManager::Instance() method. It is permanent 
+until casapy is exited. It can be reinitialised via the VPManager::reset() method.
+
+The vp tool connects to the single instance of VPManager.
+All settings the user makes with the tool, have effect immediately and are then used
+by all parts of CASA which access the VPManager class (i.e. eventually all imaging and simulation
+routines).
+
+In order to enable parallelization, a standard thread-safe locking mechanism using
+the casacore {\it Mutex} class protects from simultaneous access
+to the VPManager. This is transparent to both the application programmer and the tool user.
+
+The VPManager instance keeps a simple database of available antenna responses, the {\it vplist}.
+This list is initialized at the startup of CASA or by calling the reset() method
+of the class. In the vp tool, the reset call can be triggered using
+\begin{verbatim}
+   vp.reset()
+\end{verbatim}
+
+In order to support heterogeneous interferometer arrays, VPManager permits the use
+of {\it antenna types} in addition to observatory or {\it telescope} names.
+
+For defining a simple response which is only spatially scaled by frequency but otherwise
+constant, a simple call to the vp tool is sufficient, e.g.:
+\begin{verbatim}
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='12.0m',
+                     blockagediam='0.75m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+\end{verbatim}
+This will create a new entry in the vplist for an analytic Airy disk antenna response
+and make it the default response for telescope "ALMA".
+Subsequent requests to VPManager for a ALMA antenna response will get this Airy disk.
+Using the {\tt vp.setuserdefault} method, the default can be unset again or changed
+to a different entry in the vplist.
+
+If whole {\it response systems} are to be defined for a given telescope, the use of an
+{\it AntennaResponses table} is possible. Such a table can be set up using the 
+vp tool method
+{\tt createantresp()} 
+and then connected to a telescope using a command like
+\begin{verbatim}
+vp.setpbantresptable(telescope='ALMA',
+                     antresppath=casa['dirs']['data']
+                     +'/alma/responses/AntennaResponses-ALMA-RT',
+                     dopb=True)
+\end{verbatim}
+where the value of the {\tt antresppath} parameter indicates the path to the AntennaResponses table.
+Subsequent requests for ALMA antenna responses to VPManager will start a search in the 
+indicated AntennaResponses table for responses matching given parameters.
+Presently supported search parameters in VPManager::getvp() and vp.getvp() are:
+\begin{itemize}
+\item antenna type
+\item observation time (used for versioning and for reference frame transformations)
+\item frequency (as a Measure, the reference frame is respected)
+\item observing direction (to support elevation and azimuth dependent responses)
+\end{itemize}
+An example of a call to vp.getvp() is
+\begin{verbatim}
+        myrecord = vp.getvp(telescope='ALMA',
+                            antennatype = 'DV',
+                            obstime = '2009/07/24/10:00:00',
+                            freq = 'TOPO 100GHz',
+                            obsdirection = 'AZEL 30deg 60deg')
+\end{verbatim}
+
+If the default antenna response for the given telescope is not defined via an AntennaResponses
+table, the observation parameters {\tt obstime}, {\tt freq}, and {\tt obsdirection} are not needed 
+and can be omitted. The parameter {\tt antennatype} defaults to empty string. So if no antenna types
+are distinguished for the given telescope, the simplest call to getvp becomes
+\begin{verbatim}
+       myrecord = vp.getvp(telescope='HATCREEK')
+\end{verbatim}
+
+During initialization, VPManager will look for entries in the column "AntennaResponses"
+of the CASA "Observatories" table. If there are non-blank entries, the string found will be
+interpreted as the path to the default AntennaResponses table for the given telescope. 
+
+Note that the casacore AntennaResponses C++ class (which is used by VPManager to
+administrate the AntennaResponses tables) also supports the additional search parameters
+"receiver type" and "beam number". A general interface to the response file name search
+is available through the vp.getrespimagename() method. But presently this accesses only
+AntennaResponse tables which are entered as the default table in the Observatories table.
+
+Generally, the vp tool methods provide functionality:
+to set up new analytic antenna responses,
+select which antenna responses from the vplist to use for which telescope and antenna type, 
+access the contents of the vplist,
+create and access an AntennaResponses table,
+create and load a voltage pattern table.
+
+The latter is achieved with the methods vp.saveastable() and vp.loadfromtable() which
+can be used to save the vplist and the defaults in a CASA table and reload
+them at a later time.
+
+In section \ref{secvptoolmethods}, the methods are described in more detail.
+The appendix \ref{appex} gives example Python scripts.
+The appendices \ref{appVPMan} and \ref{appVPManex} show the methods of the VPManager C++ class
+and give an example of how to use it to get a primary beam in application code.
+But beforehand, section \ref{seclib} describes the library of predefined responses 
+available to the vpmanager and section \ref{secvp} describes the use of a voltage pattern table.
+Finally, section \ref{secrt} describes the access to ray traced responses for ALMA.
+
+\section{The antenna responses library accessible to the vp tool}
+\label{seclib}
+
+\subsection{Common antenna responses}
+
+Many common voltage pattern (vp) and primary beam (pb)
+models have been coded into CASA.  Currently, the recognized models include
+DEFAULT, ALMA, ACA, ATCA\_L1, ATCA\_L2, ATCA\_L3, ATCA\_S, ATCA\_C, ATCA\_X, GBT, GMRT,
+HATCREEK, NRAO12M, NRAO140FT, OVRO, VLA, VLA\_INVERSE, VLA\_NVSS,
+VLA\_2NULL, VLA\_4, VLA\_P, VLA\_L, VLA\_C, VLA\_X, VLA\_U, VLA\_K, VLA\_Q,
+WSRT, and WSRT\_LOW.  In all cases, the VP/PB model and the beam squint (if
+present) scale linearly with wavelength.  If DEFAULT is selected, the
+appropriate VP/PB model is selected for the telescope and observing frequency.
+
+\subsection{1-D Beam Models} 
+Most beam models are rotationally symmetric (excepting
+beam squint).  From the beam parameterization in terms of the various
+coefficients and other terms, an internal lookup table with 10000 elements is
+created for application of the VP/PB to an image.
+
+\subsection{Beam Squint} The VP/PB models include beam squint.  The VLA\_L,
+VLA\_C, VLA\_X, VLA\_U, VLA\_K, and VLA\_Q models (which are the defaults for
+those VLA bands), have the appropriate squint magnitude and orientation, though
+the orientation has not been verified through processing actual data.
+
+\section{The voltage pattern table}
+\label{secvp}
+
+In the original design of the vpmanager (before the refactoring in 2011),
+the only way to communicate with the imaging routines was via the so-called
+voltage pattern table. This functionality still exists in the present tool.
+However, it is recommended that all CASA code now use the VPManager::getvp()
+methods and access the VPManager::Instance() directly.
+
+A new voltage pattern table can be generated by the vp tool using the vp.saveastable()
+method.  The vp description table can then be read by imager's
+imager.setvp() method, which instantiates the
+corresponding voltage patterns from the descriptions and applies them
+to the images.
+
+\begin{verbatim}
+#
+# Lets say we want an Airy Disk voltage pattern for our
+# HATCREEK data, but we want to use the system default
+# for the OVRO data:
+#
+vp.setpbairy(telescope='HATCREEK', dopb=T, dishdiam='6.0m',
+             blockagediam='0.6m',  maxrad='2arcmin',
+             reffreq='100GHz', dosquint=F)
+#
+vp.setcannedpb(telescope='OVRO', dopb=T, commonpb='DEFAULT', dosquint=F)
+#
+vp.summarizevps()
+#
+vp.saveastable(tablename='California.Beaming')
+#
+\end{verbatim}
+
+The voltage pattern table created by vp.saveastable() can also
+be loaded back into the vpmanager thereby restoring a previous state
+using the method vp.loadfromtable().
+
+\section{The vp tool methods}
+\label{secvptoolmethods}
+
+For an up-to-date reference of the individual method parameters, please use help vp.{\it method}
+within casapy. 
+ 
+\begin{description}
+\item[vpmanager]
+   Construct a vpmanager tool (note: the underlying VPManager is a singleton).
+   The vpmanager constructor has no arguments.
+ 
+  \item[saveastable]
+Save the vp or pb descriptions as a table.  Each description is in a different
+row of the table. (bool)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  tablename:  Name of table to save vp descriptions in 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+}
+ 
+\item[loadfromtable]
+Load the vp or pb descriptions from a table (deleting all previous definitions) (bool)
+{\small
+\begin{verbatim}
+    --- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+      tablename:  Name of table to load vp descriptions from 
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
+\end{verbatim} 
+}
+
+
+  \item[summarizevps]
+Summarize the currently accumulated VP descriptions to the logger. (bool)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  verbose:  Print out full record? Otherwise, print summary. false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+ 
+  \item[setcannedpb]
+   Select a vp/pb from our library of common pb models
+   If 'DEFAULT' is selected, the system default for that telescope and frequency is used. (record)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  commonpb:  List of common vp/pb models: DEFAULT code figures it out DEFAULT 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement:  Increment in Parallactic Angle for asymmetric (i.e., squinted) 
+                vp application 720deg 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+ 
+  \item[setpbairy]
+   Make an airy disk vp.   
+   Information sufficient to create a portion of the Airy disk voltage pattern.
+   The Airy disk pattern is formed by Fourier transforming a uniformly illuminated
+   aperture and is given by
+   \begin{equation}
+     vp_p(i) = ( areaRatio * 2.0 * j_{1}(x)/x 
+     - 2.0 * j_{1}(x*lengthRatio)/(x*lengthRatio) )/ areaNorm,
+   \end{equation}
+   where areaRatio is the dish area divided by the blockage area, lengthRatio
+   is the dish diameter divided by the blockage diameter, and 
+   \begin{equation}
+     x = \frac{i * maxrad * 7.016 * dishdiam/24.5m}{N_{samples} * 1.566 * 60}.
+   \end{equation}
+   (record)
+ 
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  dishdiam:  Effective diameter of dish 25.0m 
+  blockagediam:  Effective diameter of subreflector blockage 2.5m 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 0.8deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  squintdir:  Offset (Measure) of RR beam from pointing center, azel frame 
+              (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0GHz 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement:  Increment in Parallactic Angle for asymmetric (i.e., squinted) 
+                vp application 720deg 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[setpbcospoly]
+   Make a vp/pb from a polynomial of scaled cosines.
+   A voltage pattern or primary beam of the form
+   \begin{equation}
+     VP(x) = \sum_{i} ( coeff_{i} \cos^{2i}( scale_{i} x).
+   \end{equation}
+   This is a generalization of the WSRT primary beam model. (record)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  coeff:  Vector of coefficients of cosines -1
+  scale:  Vector of scale factors of cosines -1 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 0.8deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  isthispb:  Do these parameters describe a PB or a VP? PB 
+  squintdir:  Offset (Measure) of RR beam from pointing center, azel frame 
+              (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0GHz 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement:  Increment in Parallactic Angle for asymmetric (i.e., squinted)
+                vp application 720deg 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+ 
+  \item[setpbgauss]
+   Make a Gaussian vp/pb.
+   Make a Gaussian primary beam given by
+   \begin{equation}
+     PB(x) =  e^{- (x/(halfwidth*\sqrt{1/\log(2)})) }.
+   \end{equation}
+   (record)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  halfwidth:  Half power half width of the Gaussian at the reffreq 0.5deg 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 1.0deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  isthispb:  Do these parameters describe a PB or a VP? PB 
+  squintdir:  Offset (Measure) of RR beam from pointing center, azel frame 
+              (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0GHz 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement:  Increment in Parallactic Angle for asymmetric (i.e., squinted) 
+               vp application 720deg 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+}
+ 
+  \item[setpbinvpoly]
+   Make a vp/pb as an inverse polynomial.
+   The inverse polynomial describes the inverse of the VP or PB
+   as a polynomial of even powers:
+   \begin{equation}
+     1/VP(x) = \sum_{i} coeff_{i} * x^{2i}.
+   \end{equation}
+   (record)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  coeff:  Coefficients of even powered terms -1 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 0.8deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  isthispb:  Do these parameters describe a PB or a VP? PB 
+  squintdir: Offset (Measure) of RR beam from pointing center, azel frame 
+              (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement: Increment in Parallactic Angle for asymmetric (i.e., squinted) 
+               vp application 720deg 
+      usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+}
+
+ 
+  \item[setpbnumeric]
+   Make a vp/pb from a user-supplied vector.
+   Supply a vector of vp/pb sample values taken on a regular grid between x=0 and
+   x=maxrad.  We perform sinc interpolation to fill in the lookup table.
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  vect:  Vector of vp/pb samples uniformly spaced from 0 to maxrad -1 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 0.8deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  isthispb:  Do these parameters describe a PB or a VP? PB 
+  squintdir:  Offset (Measure) of RR beam from pointing center, azel frame 
+              (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0GHz 
+  dosquint:  Enable the natural beam squint found in the common vp model false 
+  paincrement:  Increment in Parallactic Angle for asymmetric (i.e., squinted) 
+                vp application 720deg 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+ 
+  \item[setpbimage]
+   Make a vp/pb from a user-supplied image
+
+   Supply an image of the E Jones elements. The format of the 
+   image is:
+   \begin{description}
+   \item[Shape] nx by ny by 4 complex polarizations (RR, RL, LR, LL or
+     XX, XY, YX, YY) by 1 channel.
+   \item[Direction coordinate] Az, El
+   \item[Stokes coordinate] All four ``stokes'' parameters must be present
+     in the sequence RR, RL, LR, LL or XX, XY, YX, YY.
+   \item[Frequency] Only one channel is currently needed - frequency 
+     dependence beyond that is ignored. 
+   \end{description}
+
+   If a compleximage is specified the real and imaginary images is to be left empty.
+
+   The other option is to provide the real and imaginary part of the E-Jones as separable {\tt float} images
+   On that case
+   one or two images may be specified - the real (must be present) and
+   imaginary parts (optional). 
+
+   Note that beamsquint must be intrinsic to the images themselves.
+   This will be accounted for correctly by regridding of the images
+   from Az-El to Ra-Dec according to the parallactic angle.
+   (record)
+ 
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  realimage:  Real part of vp as an image 
+  imagimage:  Imaginary part of vp as an image 
+  compleximage:  complex vp as an image of complex numbers; 
+                 if specified realimage and imagimage are ignored 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[setpbpoly]
+   Make a vp/pb from a polynomial.
+   The VP or PB is described as a polynomial of even powers:
+   \begin{equation}
+     VP(x) = \sum_{i} coeff_{i} * x^{2i}.
+   \end{equation}
+   (record)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? VLA 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  coeff:  Coefficients of even powered terms -1 
+  maxrad:  Maximum radial extent of the vp/pb (scales with 1/freq) 
+           0.8deg 
+  reffreq:  Frequency at which maxrad is specified 1.0GHz 
+  isthispb:  Do these parameters describe a PB or a VP? PB 
+  squintdir:  Offset (Measure) of RR beam from pointing center, 
+              azel frame (scales with 1/freq) 
+  squintreffreq:  Frequency at which the squint is specified 1.0GHz 
+  dosquint:  Enable the natural beam squint found in the common vp model 
+             false 
+  paincrement:  Increment in Parallactic Angle for asymmetric 
+                (i.e., squinted) vp application 720 
+  usesymmetricbeam:  Not currently used false 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[setpbantresptable]
+   Declare a reference to an antenna responses table.
+   Declare a reference to an antenna responses table containing a set of VP/PB definitions.
+   (bool)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? 
+  othertelescope:  If telescope=="OTHER", specify name here 
+  dopb:  Should we apply the vp/pb to this telescope's data? true 
+  antresppath:  The path to the antenna responses table 
+                (absolute or relative to CASA data dir.) 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[reset]
+   Reinitialize the VPManager. This will erase the vplist and defaults defined on the command line.
+   During initialization, VPManager will look for entries in the column "AntennaResponses"
+   of the CASA "Observatories" table. If there are non-blank entries, the string found will be
+   interpreted as the path to the default AntennaResponses table for the given telescope. 
+   (bool)
+
+  \item[setuserdefault]
+   Select the VP which is to be used for the given telescope and antenna type.
+   Overwrites a previous default. 
+   There can be one global default for each telescope and one specific default
+   for each (telescope, antennatype) pair. The global default will be used when
+   no antenna type is given or no specific default for the (telescope, antennatype) 
+   pair exists. A vplistnum=-2 will unset an existing default for the 
+   (telescope, antennatype) pair.(bool)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  vplistnum:  The number of the vp as displayed by summarizevps() 
+              or -1 for internal or -2 for unset, default -1 
+  telescope:  Which telescope in the MS will use this vp/pb? 
+  anttype:  Which antennatype will use this vp/pb? Default: "" = all 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[getuserdefault]
+   Get the vp list number of the present default VP/PB for the given parameters.
+   A return value of $-1$ means that the common library default PB for the telescope 
+   is presently the default. (int)  
+   
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope in the MS will use this vp/pb? 
+  anttype:  Which antennatype will use this vp/pb? Default: "" = all 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+  \item[getanttypes]
+   Return the list of available antenna types for the given telescope, antennatype
+   and observation parameters. (string array)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Telescope name 
+  obstime:  Time of the observation 
+            (for versioning and reference frame calculations) 
+  freq:  Frequency of the observation 
+         (may include reference frame, default: LSRK) 
+  obsdirection:  Direction of the observation 
+                 (may include reference frame, default: J2000). 
+                 default: Zenith =  AZEL 0deg 90deg 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+  \item[numvps]
+   Return the number of vps/pbs available for the given parameters.
+   Can be used to determine the number of antenna types.
+   Note: if a global response is defined for the telescope, this will increase the count of
+   available vps/pbs by 1. (int)
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Telescope name 
+  obstime:  Time of the observation 
+               (for versioning and reference frame calculations) 
+  freq:  Frequency of the observation 
+         (may include reference frame, default: LSRK) 
+  obsdirection:  Direction of the observation 
+                 (may include reference frame, default: J2000). 
+                 default: Zenith = AZEL 0deg 90deg 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+
+  \item[getvp]
+   Return the default vps/pbs {\it record} for the given parameters.
+   Record is empty if no matching vp/pb could be found. (record)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Telescope name 
+  obstime:  Time of the observation 
+            (for versioning and reference frame calculations), 
+            e.g. 2011/12/12T00:00:00 
+  freq:  Frequency of the observation 
+             (may include reference frame, default: LSRK) 
+  antennatype:  The antenna type as a string, e.g. "DV" 
+  obsdirection:  Direction of the observation 
+                (may include reference frame, default: J2000), 
+                 default: AZEL 0deg 90deg 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+  \item[createantresp]
+   Create a standard-format AntennaResponses table. (bool)
+
+{\small
+\begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  imdir:  Path to the directory containing the response images 
+  starttime:  Time from which onwards the response is valid, 
+              format YYYY/MM/DD/hh:mm:ss 
+  bandnames:  List containing the names of the observatory's frequency bands 
+  bandminfreq:  List containing the lower edges of the observatory's 
+                frequency bands, e.g. ["80GHz","120GHz"] 
+  bandmaxfreq:  List containing the upper edges of the observatory's 
+                frequency bands, e.g. ["120GHz","180GHz"] 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+   
+The AntennaResponses table serves CASA to look up the location of images describing the
+response of observatory antennas. Three types of images are supported: "VP" - real voltage patterns,
+"AIF" - complex aperture illumination patterns, "EFP" - complex electric field patterns.
+For each image, a validity range can be defined in Azimuth, Elevation, and Frequency.
+Furthermore, an antenna type (for heterogeneous arrays), a receiver type (for the case of
+several receivers on the same antenna having overlapping frequency bands), and a beam number
+(for the case of multiple beams per antenna) are associated with each response image.
+
+The images need to be stored in a single directory DIR of arbitrary name and need to
+have file names following the pattern
+{\small
+\begin{verbatim}
+obsname_beamnum_anttype_rectype_azmin_aznom_azmax_elmin_elnom_elmax\
+_freqmin_freqnom_freqmax_frequnit_comment_functype.im
+\end{verbatim}
+}
+where the individual name elements mean the following (none of the elements may contain 
+the space character, but they may be empty strings if they are not numerical values):
+\begin{description}
+\item[obsname] - name of the observatory as in the Observatories table, e.g. "ALMA"
+\item[beamnum] - the numerical beam number (integer) for the case of multiple beams, e.g. 0
+\item[anttype] - name of the antenna type, e.g. "DV"
+\item[rectype] - name of the receiver type, e.g. ""
+\item[azmin, aznom, azmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Azimuth where this response is valid, e.g. "-10.5\_0.\_10.5"
+\item[elmin, elnom, elmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Elevation where this response is valid, e.g. "10.\_45.\_80."
+\item[freqmin, freqnom, freqmax] - numerical value (degrees) of the minimal, the nominal, and 
+  the maximal Frequency (in units of frequnit) where this response is valid, e.g. "84.\_100.\_116."
+\item[frequnit] - the unit of the previous three frequencies, e.g. "GHz"
+\item[comment] - any string containing only characters permitted in file names and not empty space
+\item[functype] - the type of the image as defined above ("VP", "AIF", or "EFP")
+ \end{description}
+
+The createantresp method will then extract the parameters from all the images in DIR
+and create the lookup table in the same directory.
+
+  \item[getrespimagename]
+    Given the observatory name, the antenna type, the receiver type, the observing frequency, the
+    observing direction, and the beam number, find the applicable response image and return its name.
+    (string)
+
+{\small
+    \begin{verbatim}
+--- --- --- --- --- --- Parameters  --- --- --- --- --- ---
+  telescope:  Which telescope is described by this response? 
+  starttime:  Time at which the response has to be valid, 
+              format YYYY/MM/DD/hh:mm:ss 
+  frequency:  The frequency at which the response has to be valid, 
+              e.g. "100GHz" 
+  functype:  Type of the responsefunction requested, e.g. "EFP" ANY 
+  anttype:  Antenna type (observatory-dependent) 
+  azimuth:  Azimuth of the observation 
+            (at the location of the observatory, 0 is North), 
+            e.g. "5deg" 0deg 
+  elevation:  Elevation of the observation 
+            (at the location of the observatory, 0 is North), 
+            e.g. "60deg" 45deg 
+  rectype:  Receiver type (observatory-dependent) 
+  beamnumber:  Beam number (for the case of multiple beams per receiver) 0 
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+\end{verbatim} 
+} 
+
+\end{description}
+
+\section{Access to ray traced responses for ALMA}
+\label{secrt}
+
+The AntennaResponses table class supports the responses function type INTERNAL which
+means that the responses are generated by CASA using Walter Brisken's ray tracing code.
+
+The VPManager also supports this type, however, only for the telescopes ALMA, ACA, and OSF.
+This happens via the class ALMACalcIlluminationConvFunc in VPManager::getvp().
+
+VPManager::getvp() will generate ray traced response images and store them in the current
+working directory under standard names with the format
+\begin{verbatim}
+  BeamCalcTmpImage_<telescope>_<antennatype>_<frequency>MHz
+\end{verbatim}
+The images are reused if they already exist.
+If the user wants to regenerate them, they first need to be deleted.
+
+\newpage
+\appendix
+
+\section{vp tool usage examples}
+\label{appex}
+
+\subsection{Define Airy beams for ALMA antenna types}
+\begin{verbatim}
+  vp.reset()
+  vp.setpbairy(telescope='ALMA',
+               dishdiam='11m',
+               blockagediam='0.75m',
+               maxrad='1.784deg',
+               reffreq='1.0GHz',
+               dopb=True)
+  myid1 = vp.getuserdefault('ALMA')
+  
+  vp.setpbairy(telescope='ALMA',
+               dishdiam='6m',
+               blockagediam='0.75m',
+               maxrad='3.5deg',
+               reffreq='1.0GHz',
+               dopb=True)
+  myid2 = vp.getuserdefault('ALMA')
+
+  vp.setuserdefault(myid1, 'ALMA', 'DV')
+  vp.setuserdefault(myid1, 'ALMA', 'DA')
+  vp.setuserdefault(myid1, 'ALMA', 'PM')
+  vp.setuserdefault(myid2, 'ALMA', 'CM')
+  # unset the global default for ALMA such that only the explicitly
+  # defined antenna types are valid
+  vp.setuserdefault(-2, 'ALMA', '')
+ \end{verbatim}
+
+\subsection{Define a reference to an AntennaResponses table for ALMA}
+\begin{verbatim}
+  vp.setpbantresptable(telescope='ALMA',
+                       antresppath=casa['dirs']['data']
+                       +'/alma/responses/AntennaResponses-ALMA-RT',
+                       dopb=True)
+\end{verbatim}
+
+\newpage
+
+\section{VPManager class public methods}
+\label{appVPMan}
+
+{\small
+\begin{verbatim}
+// this is a SINGLETON class
+static VPManager* Instance();
+
+void reset(Bool verbose=False);
+ 
+Bool saveastable(const String& tablename);
+
+Bool loadfromtable(const String& tablename);
+
+Bool summarizevps(const Bool verbose);
+
+
+Bool setcannedpb(const String& tel, 
+                 const String& other, 
+                 const Bool dopb,
+                 const String& commonpb,
+                 const Bool dosquint, 
+                 const Quantity& paincrement, 
+                 const Bool usesymmetricbeam,
+                 Record& rec);
+
+Bool setpbairy(const String& telescope, const String& othertelescope, 
+               const Bool dopb, const Quantity& dishdiam, 
+               const Quantity& blockagediam, 
+               const Quantity& maxrad, 
+               const Quantity& reffreq, 
+               MDirection& squintdir, 
+               const Quantity& squintreffreq, const Bool dosquint, 
+               const Quantity& paincrement, 
+               const Bool usesymmetricbeam,
+               Record& rec);
+
+Bool setpbcospoly(const String& telescope, const String& othertelescope,
+                  const Bool dopb, const Vector<Double>& coeff,
+                  const Vector<Double>& scale,
+                  const Quantity& maxrad,
+                  const Quantity& reffreq,
+                  const String& isthispb,
+                  MDirection& squintdir,
+                  const Quantity& squintreffreq, const Bool dosquint,
+                  const Quantity& paincrement,
+                  const Bool usesymmetricbeam,
+                  Record& rec);
+
+Bool setpbgauss(const String& tel, const String& other, const Bool dopb,
+                const Quantity& halfwidth, const Quantity maxrad, 
+                const Quantity& reffreq, const String& isthispb, 
+                MDirection& squintdir, const Quantity& squintreffreq,
+                const Bool dosquint, const Quantity& paincrement, 
+                const Bool usesymmetricbeam, Record& rec);
+
+Bool setpbinvpoly(const String& telescope, const String& othertelescope,
+                  const Bool dopb, const Vector<Double>& coeff,
+                  const Quantity& maxrad,
+                  const Quantity& reffreq,
+                  const String& isthispb,
+                  MDirection& squintdir,
+                  const Quantity& squintreffreq, const Bool dosquint,
+                  const Quantity& paincrement,
+                  const Bool usesymmetricbeam,
+                  Record& rec);
+\end{verbatim}
+
+\begin{verbatim}
+Bool setpbnumeric(const String& telescope, const String& othertelescope,
+                  const Bool dopb, const Vector<Double>& vect,
+                  const Quantity& maxrad,
+                  const Quantity& reffreq,
+                  const String& isthispb,
+                  MDirection& squintdir,
+                  const Quantity& squintreffreq, const Bool dosquint,
+                  const Quantity& paincrement,
+                  const Bool usesymmetricbeam,
+                  Record &rec);
+
+Bool setpbimage(const String& telescope, const String& othertelescope, 
+                const Bool dopb, const String& realimage, 
+                const String& imagimage, const String& compleximage, 
+                Record& rec);
+
+Bool setpbpoly(const String& telescope, const String& othertelescope,
+               const Bool dopb, const Vector<Double>& coeff,
+               const Quantity& maxrad,
+               const Quantity& reffreq,
+               const String& isthispb,
+               MDirection& squintdir,
+               const Quantity& squintreffreq, const Bool dosquint,
+               const Quantity& paincrement,
+               const Bool usesymmetricbeam,
+               Record &rec);
+
+
+Bool setpbantresptable(const String& telescope, const String& othertelescope,
+                       const Bool dopb, const String& tablepath);
+                      // no record filled, need to access via getvp()
+
+// set the default voltage pattern for the given telescope
+Bool setuserdefault(const Int vplistfield,
+                    const String& telescope,
+                    const String& antennatype="");
+
+Bool getuserdefault(Int& vplistfield,
+                    const String& telescope,
+                    const String& antennatype="");
+
+Bool getanttypes(Vector<String>& anttypes,
+                 const String& telescope,
+                 const MEpoch& obstime,
+                 const MFrequency& freq, 
+                 const MDirection& obsdirection); 
+                
+
+
+        
+\end{verbatim}
+
+
+\begin{verbatim}
+// return number of voltage patterns satisfying the given constraints
+Int numvps(const String& telescope,
+           const MEpoch& obstime,
+           const MFrequency& freq, 
+           const MDirection& obsdirection=MDirection(Quantity( 0., "deg"),
+                                                     Quantity(90., "deg"), 
+                                                     MDirection::AZEL)
+           ); 
+
+// get the voltage pattern satisfying the given constraints
+Bool getvp(Record &rec,
+           const String& telescope,
+           const MEpoch& obstime,
+           const MFrequency& freq, 
+           const String& antennatype="", 
+           const MDirection& obsdirection=MDirection(Quantity( 0., "deg"),
+                                                     Quantity(90., "deg"), 
+                                                     MDirection::AZEL)
+           ); 
+
+// get a general voltage pattern for the given telescope and ant type if available
+Bool getvp(Record &rec,
+           const String& telescope,
+           const String& antennatype=""
+           ); 
+
+\end{verbatim}
+}
+
+\newpage
+
+\section{VPManager usage examples - access from C++ code}
+\label{appVPManex}
+
+Example of how to obtain a PBMath object for a given observation.
+{\small
+\begin{verbatim}
+
+PBMath* myPBp = 0;	
+
+String telescope; 
+String antennatype;
+MEpoch mObsTime;
+MFrequency mFreq;
+MDirection mObsDir;
+
+// insert code here to fill telescope, antennatype, mObsTime, mFreq, and  mObsDir
+
+Record rec;
+
+if(!VPManager::Instance()->getvp(rec, telescope, mObsTime, mFreq, antennatype, mObsDir)){
+    os << LogIO::SEVERE << "Could not obtain PB from vpmanager." << LogIO::POST;
+    return False;
+}
+
+myPBp = new PBMath(rec);
+
+
+\end{verbatim}
+}
+\newpage
+
+If the observation parameters time, frequency, and observation direction are not known
+at the time of the call, the simplified overloaded version of the getvp() method can
+be used.
+{\small
+\begin{verbatim}
+
+PBMath* myPBp = 0;	
+
+String telescope; 
+String antennatype;
+
+// insert code here to fill telescope and antennatype
+
+Record rec;
+
+if(!VPManager::Instance()->getvp(rec,telescope, antennatype)){
+    os << LogIO::SEVERE << "Could not obtain PB from vpmanager." << LogIO::POST;
+    return False;
+}
+
+myPBp = new PBMath(rec);
+
+\end{verbatim}
+}
+This works if the user has not set the default beam to point to an AntennaResponses table.
+If an AntennaResponses table has to be accessed, the above
+call to getvp() will give an appropriate error message and return False.
+
+\newpage
+
+A Vector of the unique antenna types can be obtained with the getanttypes() method:
+{\small
+\begin{verbatim}
+
+String telescope; 
+
+MEpoch mObsTime;
+MFrequency mFreq;
+MDirection mObsDir;
+
+Bool rval;
+
+Vector<String> antTypes;
+
+rval = VPManager::Instance()->getanttypes(antTypes, 
+                                          telescope, mObsTime, mFreq, mObsDir);
+
+if(!rval){
+    os << LogIO::SEVERE << "No responses available for telescope "
+       << telescope << LogIO::POST;
+    return False;
+}
+
+\end{verbatim}
+}
+This will set the Vector of Strings {\tt antTypes} to contain one entry
+for each valid antenna type. 
+
+NOTE:If there is a global response for the telescope (i.e. one without a specific antenna type),
+the Vector will contain an element which is an empty String.
+So if there is a global response, the size of the antTypes Vector in the example above 
+will be 1 + the number of specific antenna types. 
+
+If there is no response at all for the given parameters, getanttypes() will return False
+and the Vector will be empty.
+
+The method numvps() will internally call getanttypes() and return the size of the
+antTypes Vector.
+
+\end{document}

@@ -1,0 +1,138 @@
+<html>
+<head>
+<title>CASA Table Browser Help :: General Use</title>
+<link type="text/css" rel="stylesheet"href="style.css">
+</head>
+<body><a name="_top"></a>
+<h1>General Use</h1>
+<div class="toc"><a href="index.html">Home</a> :: General Use
+<ul style="margin-left: -15px"><li><a href="#tasks">Tasks</a><ul style="margin-left: -15px">
+<li><a href="#tasks0">Requirements</a></li>
+<li><a href="#tasks1">Usage</a></li>
+<li><a href="#tasks2">CASA Version</a></li>
+</ul>
+</li>
+<li><a href="#information">Information</a><ul style="margin-left: -15px">
+<li><a href="#information0">CASA Table Data Types</a></li>
+<li><a href="#information1">Useful Links</a></li>
+</ul>
+</li>
+
+</div><div>
+
+<div class="highlighted"><a name="tasks"></a><h2>Tasks</h2></div>
+<div class="highlighted2"><a name="tasks0"></a><h3>Requirements</h3></div>
+
+                CasaBrowser is meant to be distributed with the CASA system and
+                will not work as a standalone application.  When CASA is
+                installed, a Qt version of at least 4.3.0 is required.  In
+                addition, the Qwt library is also required to enable plotting.
+                The version of Qwt must be at least 5.0.2.
+            
+
+<br />&nbsp;<br />
+
+[ <a href="#_top">top</a> || <a href="index.html">home</a> ]
+
+<br />&nbsp;<br />
+
+<div class="highlighted2"><a name="tasks1"></a><h3>Usage</h3></div>
+
+                Once CASA has been installed and built, the executable for
+                CasaBrowser can be found in the [CASA]/[architecture]/bin/
+                directory (for example: /casa/linux_gnu/bin).  Since this
+                directory is placed on the path, the executable should be
+                runnable from any location.<br/><br/>
+                CasaBrowser can be run in two ways:<br/>
+                <ul><li><code>casabrowser</code><br/>
+                When run with no arguments, a CasaBrowser window will open without
+                any tables.  The menubar can be then be used to open table(s) as
+                desired.<br/></li>
+                <li><code>casabrowser path/to/table</code><br/>
+                When run with one or more arguments, a CasaBrowser window will
+                open and display each of the provided tables (provided that they
+                are valid).</li></ul><h3> </h3><br/>
+                CasaBrowser is also accessible from within casapy by using the
+                browsetable() command.
+            
+
+<br />&nbsp;<br />
+
+[ <a href="#_top">top</a> || <a href="index.html">home</a> ]
+
+<br />&nbsp;<br />
+
+<div class="highlighted2"><a name="tasks2"></a><h3>CASA Version</h3></div>
+4.3.0 (trunk r29360)
+
+<br />&nbsp;<br />
+
+[ <a href="#_top">top</a> || <a href="index.html">home</a> ]
+
+<br />&nbsp;<br />
+
+
+
+<br />&nbsp;<br />
+
+<div class="highlighted"><a name="information"></a><h2>Information</h2></div>
+<div class="highlighted2"><a name="information0"></a><h3>CASA Table Data Types</h3></div>
+
+                The following datatypes are supported by the table browser:
+                <ul><li>Float</li>
+                    <li>Float Array</li>
+                    <li>Double<br/>Date: a special type of Double</li>
+                    <li>Double Array</li>
+                    <li>Integer</li>
+                    <li>Integer Array</li>
+                    <li>Unsigned Integer</li>
+                    <li>Unsigned Integer Array</li>
+                    <li>Short Integer</li>
+                    <li>Short Integer Array</li>
+                    <li>Complex</li>
+                    <li>Complex Array</li>
+                    <li>DComplex</li>
+                    <li>DComplex Array</li>
+                    <li>Boolean</li>
+                    <li>Boolean Array</li>
+                    <li>String</li>
+                    <li>String Array</li>
+                    <li>Unsigned Character</li>
+                    <li>Unsigned Character Array</li>
+                    <li>Character</li>
+                    <li>Character Array</li>
+                    <li>Table</li>
+                    <li>Record</li></ul><h3> </h3><br/>
+                The following CASA data types are not supported by the table
+                browser:
+                <ul><li>Unsigned Short Integer</li>
+                    <li>Unsigned Short Integer Array</li>
+                    <li>Other</li></ul><h3> </h3><br/>
+                For more information see the CASA table documentation.
+            
+
+<br />&nbsp;<br />
+
+[ <a href="#_top">top</a> || <a href="index.html">home</a> ]
+
+<br />&nbsp;<br />
+
+<div class="highlighted2"><a name="information1"></a><h3>Useful Links</h3></div>
+
+                <ul><li>CASA Homepage: http://casa.nrao.edu</li>
+                    <li>CASA Table Documentation:
+                        http://aips2.nrao.edu/docs/tables/implement/Tables.html
+                        </li>
+                    <li>TaQL Documentation:
+                         http://aips2.nrao.edu/docs/notes/199/199.html</li>
+                </ul><h3> </h3>
+            
+
+<br />&nbsp;<br />
+
+[ <a href="#_top">top</a> || <a href="index.html">home</a> ]
+
+<br />&nbsp;<br />
+
+</div></body>
+</html>
