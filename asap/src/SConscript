@@ -1,0 +1,34 @@
+import os,glob,shutil
+
+# import root environment
+Import( "env")
+myenv = env.Clone()
+
+# gather cpp files
+cpps = env.SGlob("*.cpp")
+cpps.remove("Plotter2.cpp")
+pycpps = env.SGlob("python_*.cpp")
+for pf in pycpps:
+    cpps.remove(pf)
+pycpps.remove("python_Plotter2.cpp")
+
+# location of libcasav.a
+myenv.Prepend( LIBPATH = ['#/build'] )
+myenv['SHLIBPREFIX']=""   #gets rid of lib prefix
+myenv.Append(CCFLAGS=["-DWCSLIB_GETWCSTAB"])
+# need to create library here to fool  scons linker
+libasap =  myenv.StaticLibrary(target = "asap", source = cpps)
+myenv.Prepend( LIBS =  ['asap'] )
+
+shenv = myenv.Clone()
+pyrapdir = shenv.get("pyrapint", None)
+if pyrapdir:
+    shenv.PrependUnique(CPPPATH=pyrapdir)    
+    pycpps += shenv.Glob('%s/pyrap/*/*.cc' % pyrapdir)
+# Finally create the library for the module
+if not hasattr(shenv, "LoadableModule"):
+    shenv.LoadableModule = shenv.SharedLibrary
+so = shenv.LoadableModule( target = "_asap.so", source = pycpps, SHLIBSUFFIX="" )
+#test = shenv.Program("test", cpps)
+Return("so")
+
