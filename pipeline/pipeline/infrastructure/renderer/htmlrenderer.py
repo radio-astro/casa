@@ -3213,6 +3213,11 @@ class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
 
         field_ids = set([(f.id, f.name) for f in fields])
 
+        field = fields[0]
+        LOG.warning('Bypassing brightest field selection due to problem with '
+                    'visstat. Using Field %s (%s).', field.id, field.name)
+        return field.id
+
         # holds the mapping of field name to mean flux 
         average_flux = {}
     
