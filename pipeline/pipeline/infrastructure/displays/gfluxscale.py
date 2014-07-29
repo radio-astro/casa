@@ -255,6 +255,9 @@ class GFluxscaleSummaryChart(BasebandSummaryChart):
             uvrange["uvdist"] = numpy.array([0,0])
         
         #Get amp min/max   for vertical axis
+        #Visstat call removed for 4.2.2 release
+        
+        '''
         try:
             visstat_args = {'vis'          : result.vis,
                             'axis'         : 'amp',
@@ -273,7 +276,9 @@ class GFluxscaleSummaryChart(BasebandSummaryChart):
             LOG.warn("Unable to obtain plotting ranges for gfluxscale amps.")
             pltmin = 0
             pltmax = 0
-    
+        '''
+        pltmin = 0
+        pltmax = 0
 
     
         plot_args = {'ydatacolumn' : ydatacolumn,
