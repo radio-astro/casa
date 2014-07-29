@@ -9,6 +9,7 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 from .. import common
 from ..common import temporary_filename
+from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -76,9 +77,6 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         LOG.debug('Members to be processed:')
         for (a,s) in zip(antenna_list, spwid_list):
             LOG.debug('\tAntenna %s Spw %s'%(a,s))
-
-        # imager tool
-        im = casatools.imager
     
         # qa tool
         qa = casatools.quanta
@@ -194,21 +192,49 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
         convsupport = 3
     
         temporary_name = imagename.rstrip('/')+'.tmp'
+        cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
+        image_args = {'field': field, 
+                      'mode': mode,
+                      'nchan': nchan,
+                      'start': start,
+                      'width': step,
+                      'outframe': outframe,
+                      'gridfunction': gridfunction,
+                      'convsupport': convsupport,
+                      'truncate': truncate,
+                      'gwidth': gwidth,
+                      'jwidth': jwidth,
+                      'imsize': [nx, ny],
+                      'cell': [qa.tos(cellx), qa.tos(celly)],
+                      'phasecenter': phasecenter,
+                      'restfreq': restfreq,
+                      'stokes': stokes}
         with temporary_filename(temporary_name) as name:
             # imaging
+            infile_list = []
+            spwsel_list = []
+            scansel_list = []
+            spwsel = []
             for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
-                LOG.debug('Registering data to imager: im.selectvis(vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
-                scansel = common.list_to_selection(scan)
-                im.selectvis(vis=vis, spw=spw, field=field, scan=scansel)
-            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly, stokes=stokes,
-                           phasecenter=phasecenter, mode=mode, start=start,
-                           nchan=nchan, step=step, restfreq=restfreq,
-                           outframe=outframe, spw=-1)
-            im.setoptions(ftmachine='sd', gridfunction=gridfunction)
-            im.setsdoptions(convsupport=convsupport, truncate=truncate,
-                            gwidth=gwidth, jwidth=jwidth)
-            im.makeimage(image=name)
-            im.done()
+                LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
+                infile_list.append(vis)
+                scansel_list.append(common.list_to_selection(scan))
+                # WORKAROUND for a bug in sdimaging
+                #spwsel_list.append(common.list_to_selection(utils.to_list(spw)))
+                if not (spw in spwsel):
+                    spwsel.append(spw)
+            spwsel_list = common.list_to_selection(spwsel)
+            # set-up image dependent parameters
+            for p in cleanup_params: image_args[p] = None
+            image_args['outfile'] = name
+            image_args['infiles'] = infile_list
+            image_args['spw'] = spwsel_list
+            image_args['scan'] = scansel_list
+            LOG.debug('Executing sdimaging task: args=%s'%(image_args))
+            image_job = casa_tasks.sdimaging(**image_args)
+                    
+            # execute job
+            self._executor.execute(image_job)
             
             # post imaging process
             # cut margin area

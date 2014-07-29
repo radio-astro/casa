@@ -35,6 +35,7 @@ import visstat_cli
 
 import sdcal2_cli
 import sdflag_cli 
+import sdimaging_cli 
 import sdsave_cli 
 
 from . import casatools
@@ -361,6 +362,9 @@ class CASATaskJobGenerator(object):
     
     def sdflag(self, *v, **k):
         return self._get_job(sdflag_cli.sdflag_cli, *v, **k)
+    
+    def sdimaging(self, *v, **k):
+        return self._get_job(sdimaging_cli.sdimaging_cli, *v, **k)
     
     def sdsave(self, *v, **k):
         return self._get_job(sdsave_cli.sdsave_cli, *v, **k) 
