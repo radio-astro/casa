@@ -383,6 +383,11 @@
                    example: using wildcard characters, 
                             intent="*CALIBRATE_AMPLI*"
                             will match field(s) contains CALIBRATE_AMPLI in a list of intents
+                   WARNING: If a source with a specific field id has scans that can be distiguishable
+                            with intent selection, one should set usescatch=True. Otherwise, any existing
+                            model of the source may be cleared and overwritten even if the part of the scans
+                            not selected by intent.
+    
 
     scalebychan -- This determines whether the fluxdensity set in the model is
             calculated on a per channel basis. If False then it only one
@@ -643,7 +648,9 @@
         If True: the model visibility will be evaluated and saved on disk in the MODEL_DATA 
         column.  This will increase your ms in size by a factor of 1.5 (w.r.t. the case where 
         you only have the DATA and the CORRECTED_DATA column).  Use True if you need to interact 
-        with the MODEL_DATA in python, say.
+        with the MODEL_DATA in python, say. Also, use True if you need finer than field and spw 
+        selections using scans/time (and when use with intent selection, please see WARNING section in the
+        intent parameter description).
 
         *By running usescratch=T, it will remove the existing virtual model from previous runs.
         usescratch=F will not remove the existing MODEL_DATA but in subsequent process
