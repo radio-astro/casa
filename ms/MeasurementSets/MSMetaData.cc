@@ -1769,7 +1769,7 @@ std::set<Double> MSMetaData::getTimesForScan(const Int scan) {
 }
 
 void MSMetaData::_getTimesAndInvervals(
-	std::map<Int, vector<Double> >& scanToTimeRangeMap,
+	std::map<Int, std::pair<Double, Double> >& scanToTimeRangeMap,
 	std::map<Int, std::map<uInt, Double> >& scanSpwToAverageIntervalMap
 ) const {
 	if (! _scanToTimeRangeMap.empty()) {
@@ -1785,14 +1785,17 @@ void MSMetaData::_getTimesAndInvervals(
 	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator dIter = dataDescIDs->begin();
 
+	/*
 	String timeCentroidColName = MeasurementSet::columnName(
 		MSMainEnums::TIME_CENTROID
 	);
 	Vector<Double> timeCentroids = ScalarColumn<Double>(
 		*_ms, timeCentroidColName
 	).getColumn();
+	*/
+	Vector<Double> times = *_getTimes();
 
-	Vector<Double>::const_iterator  tIter = timeCentroids.begin();
+	Vector<Double>::const_iterator  tIter = times.begin();
 	String intervalColName = MeasurementSet::columnName(MSMainEnums::INTERVAL);
 	Vector<Double> intervals = ScalarColumn<Double>(*_ms, intervalColName).getColumn();
 	Vector<Double>::const_iterator  iIter = intervals.begin();
@@ -1802,12 +1805,12 @@ void MSMetaData::_getTimesAndInvervals(
 	while (sIter != sEnd) {
 		Double half = *iIter/2;
 		if (scanToTimeRangeMap.find(*sIter) == scanToTimeRangeMap.end()) {
-			scanToTimeRangeMap[*sIter] = vector<Double>(2, *tIter-half);
-			scanToTimeRangeMap[*sIter][1] = *tIter+half;
+			scanToTimeRangeMap[*sIter] = std::make_pair<Double, Double>(*tIter-half, *tIter+half);
+			//scanToTimeRangeMap[*sIter][1] = *tIter+half;
 		}
 		else {
-			scanToTimeRangeMap[*sIter][0] = min(scanToTimeRangeMap[*sIter][0], *tIter-half);
-			scanToTimeRangeMap[*sIter][1] = max(scanToTimeRangeMap[*sIter][1], *tIter+half);
+			scanToTimeRangeMap[*sIter].first = min(scanToTimeRangeMap[*sIter].first, *tIter-half);
+			scanToTimeRangeMap[*sIter].second = max(scanToTimeRangeMap[*sIter].second, *tIter+half);
 		}
 		scanSpwToAverageIntervalMap[*sIter][dataDesIDToSpwMap.find(*dIter)->second] += *iIter;
 		counts[*sIter][dataDesIDToSpwMap.find(*dIter)->second]++;
@@ -1839,12 +1842,30 @@ void MSMetaData::_getTimesAndInvervals(
 	}
 }
 
-vector<Double> MSMetaData::getTimeRangeForScan(Int scan) const {
+std::pair<Double, Double> MSMetaData::getTimeRangeForScan(Int scan) const {
 	_checkScan(scan, getScanNumbers());
-	std::map<Int, vector<Double> > scanToTimeRangeMap;
+	std::map<Int, std::pair<Double,Double> > scanToTimeRangeMap;
 	std::map<Int, std::map<uInt, Double> > scanSpwToAverageIntervalMap;
 	_getTimesAndInvervals(scanToTimeRangeMap, scanSpwToAverageIntervalMap);
 	return scanToTimeRangeMap[scan];
+}
+
+std::pair<Double, Double> MSMetaData::getTimeRange() const {
+	std::map<Int, std::pair<Double,Double> > scanToTimeRangeMap;
+	std::map<Int, std::map<uInt, Double> > scanSpwToAverageIntervalMap;
+	_getTimesAndInvervals(scanToTimeRangeMap, scanSpwToAverageIntervalMap);
+	std::map<Int, std::pair<Double,Double> >::const_iterator iter = scanToTimeRangeMap.begin();
+	std::map<Int, std::pair<Double,Double> >::const_iterator end = scanToTimeRangeMap.end();
+	std::pair<Double, Double> timerange = std::make_pair<Double, Double>(
+		iter->second.first, iter->second.second
+	);
+	iter++;
+	while (iter != end) {
+		timerange.first = min(timerange.first, iter->second.first);
+		timerange.second = max(timerange.second, iter->second.second);
+		iter++;
+	}
+	return timerange;
 }
 
 std::map<uInt, Double> MSMetaData::getAverageIntervalsForScan(Int scan) const {
@@ -1852,7 +1873,7 @@ std::map<uInt, Double> MSMetaData::getAverageIntervalsForScan(Int scan) const {
 	if (! _scanSpwToIntervalMap.empty()) {
 		return _scanSpwToIntervalMap[scan];
 	}
-	std::map<Int, vector<Double> > scanToTimeRangeMap;
+	std::map<Int, std::pair<Double, Double> > scanToTimeRangeMap;
 	std::map<Int, std::map<uInt, Double> > scanSpwToIntervalMap;
 	_getTimesAndInvervals(
 		scanToTimeRangeMap,
