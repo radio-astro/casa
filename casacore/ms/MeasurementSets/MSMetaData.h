@@ -197,10 +197,10 @@ public:
 	// The return values come from the TIME column.
 	std::set<Double> getTimesForScan(const Int scan);
 
-	// get the time range for the specified scan. The vector returned will contain two elements,
-	// the start and stop time of the scan, determined from min(TIME_CENTROID(x)-0.5*INTERVAL(x)) and
-	// max(TIME_CENTROID(x)-0.5*INTERVAL(x))
-	std::vector<Double> getTimeRangeForScan(Int scan) const;
+	// get the time range for the specified scan. The pair will contain
+	// the start and stop time of the scan, determined from min(TIME(x)-0.5*INTERVAL(x)) and
+	// max(TIME(x)-0.5*INTERVAL(x))
+	std::pair<Double, Double> getTimeRangeForScan(Int scan) const;
 
 	// get the times for the specified scan
 	// std::set<Double> getTimesForScan(const uInt scan) const;
@@ -350,6 +350,10 @@ public:
 		Int& ant1, Int& ant2, Double& time, uInt row
 	) const;
 
+	// get the time range for the entire dataset. min(TIME(x) - 0.5*INTERVAL(x)) to
+	// max(TIME(x) + 0.5*INTERVAL(x))
+	std::pair<Double, Double> getTimeRange() const;
+
 private:
 
 	// (array_id, observation_id, scan_number, field_id) -> stuff mappings
@@ -422,7 +426,7 @@ private:
 	const String _taqlTableName;
 	const vector<const Table*> _taqlTempTable;
 	mutable std::tr1::shared_ptr<ArrayColumn<Bool> > _flagsColumn;
-	mutable std::map<Int, vector<Double> > _scanToTimeRangeMap;
+	mutable std::map<Int, std::pair<Double, Double> > _scanToTimeRangeMap;
 	mutable std::map<Int, std::map<uInt, Double> > _scanSpwToIntervalMap;
 	mutable Bool _spwInfoStored;
 	vector<std::map<Int, Quantity> > _firstExposureTimeMap;
@@ -595,7 +599,7 @@ private:
 	) const;
 
 	void _getTimesAndInvervals(
-		std::map<Int, vector<Double> >& scanToTimeRangeMap,
+		std::map<Int, std::pair<Double, Double> >& scanToTimeRangeMap,
 		std::map<Int, std::map<uInt, Double> >& scanSpwToIntervalMap
 	) const;
 

@@ -237,9 +237,14 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	}
 
 	//ROMSColumns msc(*pMS);
+	/*
 	std::set<Double> times = _msmd->getTimesForScans(std::set<Int>());
 	Double startTime = *times.begin();
 	Double stopTime = *(--times.end());
+	*/
+	std::pair<Double, Double> timerange = _msmd->getTimeRange();
+	Double startTime = timerange.first;
+	Double stopTime = timerange.second;
 	//minMax(startTime, stopTime, msc.time().getColumn());
 	Double exposTime = stopTime - startTime;
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
@@ -577,7 +582,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 
 					// new btime:
 					// btime=thistime;
-					btime = _msmd->getTimeRangeForScan(thisscan)[0];
+					btime = _msmd->getTimeRangeForScan(thisscan).first;
 					// next last day is this day
 					lastday=day;
 
@@ -588,15 +593,15 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 
 				//						etime=thistime;
 				//etime=timecol(nrow-1);   //CAS-2751
-				etime = _msmd->getTimeRangeForScan(thisscan)[1];
+				etime = _msmd->getTimeRangeForScan(thisscan).second;
 			} else {
-				vector<Double> timeRange = _msmd->getTimeRangeForScan(thisscan);
+                std::pair<Double, Double> timeRange = _msmd->getTimeRangeForScan(thisscan);
 				// initialize btime and etime
 				//btime=thistime;
-				btime = timeRange[0];
+				btime = timeRange.first;
 				//						etime=thistime;
 				//etime=timecol(nrow-1);  //CAS-2751
-				etime = timeRange[1];
+				etime = timeRange.second;
 				// no longer first time thru
 				firsttime=False;
 			}

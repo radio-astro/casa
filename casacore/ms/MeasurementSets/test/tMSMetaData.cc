@@ -1375,6 +1375,13 @@ void testIt(MSMetaData& md) {
 			);
 		}
 		{
+			cout << "*** Test getTimeRange()" << endl;
+			std::pair<Double, Double> timerange = md.getTimeRange();
+			AlwaysAssert(near(timerange.first, 4842824745.020, 1e-12), AipsError);
+			AlwaysAssert(near(timerange.second, 4842830012.448, 1e-12), AipsError);
+
+		}
+		{
 			cout << "*** cache size " << md.getCache() << endl;
 		}
 	}
