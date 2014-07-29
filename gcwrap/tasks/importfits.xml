@@ -17,8 +17,8 @@
 		default: none; example: imagename='3C273XC1.image'
 	whichrep -- If fits image has multiple coordinate reps, choose one.
 		default: 0 means first; example: whichrep=1
-	whichhdu -- If fits file contains multiple images, choose this one
-		default=0 meaning first; example: whichhdu=1
+	whichhdu -- If fits file contains multiple images, choose this one (0 == first)
+		default=-1 use the first valid one; example: whichhdu=1
 	zeroblanks -- Set blanked pixels to zero (not NaN)
 		default=True; example: zeroblanks=True
 	overwrite -- Overwrite pre-existing imagename
@@ -49,8 +49,8 @@
 		</param>
 
 		<param type="int" name="whichhdu">
-			<description>If its file contains multiple images,, choose one.</description>
-			<value>0</value>
+			<description>If its file contains multiple images, choose one (0 = first HDU, -1 = first valid image).</description>
+			<value>-1</value>
 		</param>
 
 		<param type="bool" name="zeroblanks">
