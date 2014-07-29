@@ -40,10 +40,9 @@ namespace casa {
 LogFile::LogFile(const String& filename) :
 	_filename(filename), _append(False), _fileHandle(-1),
 	_fileIO(0) {
-	ThrowIf(
-		filename.empty(),
-		"LogFile::LogFile(): file name cannot be empty"
-	);
+	if (filename.empty()) {
+		throw AipsError("LogFile::LogFile(): file name cannot be empty");
+	}
 	OutputDestinationChecker::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &_filename;
@@ -51,21 +50,20 @@ LogFile::LogFile(const String& filename) :
 	logFile.replaceable = True;
 	LogIO log;
 	OutputDestinationChecker::checkOutput(logFile, log);
-	ThrowIf(
-		_filename.empty(),
-		"Cannot create log file"
-	);
+	if (_filename.empty()) {
+		throw AipsError("Cannot create log file");
+	}
 }
 
 LogFile::~LogFile() {}
 
-Bool LogFile::open() {
+Bool LogFile::openFile() {
 
 	File log(_filename);
 	switch (File::FileWriteStatus status = log.getWriteStatus()) {
 	case File::OVERWRITABLE:
 		if (_append) {
-			_fileHandle = ::open(_filename.c_str(), O_RDWR | O_APPEND);
+			_fileHandle = open(_filename.c_str(), O_RDWR | O_APPEND);
 		}
 		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
 	case File::CREATABLE:
@@ -76,8 +74,8 @@ Bool LogFile::open() {
 		}
 		break;
 	default:
-		ThrowCc(
-			"Programming logic error. This block should never be reached"
+		throw AipsError(
+			"LogFile::_open(): Programming logic error. This block should never be reached"
 		);
 		break;
 	}
@@ -85,23 +83,23 @@ Bool LogFile::open() {
 	return True;
 }
 
-void LogFile::close() const {
+void LogFile::closeFile() const {
 	if (_fileHandle > 0) {
 		FiledesIO::close(_fileHandle);
 	}
 }
 
 Bool LogFile::write(
-	const String& output, const Bool openFile, const Bool closeFile
+	const String& output, const Bool open, const Bool close
 ) {
-	if (openFile) {
-		if (! open()) {
+	if (open) {
+		if (! openFile()) {
 			return False;
 		}
 	}
 	_fileIO->write(output.length(), output.c_str());
-	if (closeFile) {
-		close();
+	if (close) {
+		closeFile();
 	}
 	return True;
 }

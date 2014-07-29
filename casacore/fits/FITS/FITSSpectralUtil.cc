@@ -445,14 +445,10 @@ Bool FITSSpectralUtil::toFITSHeader(String &ctype,
 	}
 
 	if (!FITSSpectralUtil::specsysFromFrame(specsys, referenceFrame)) {
-	  if(!specsys.empty()){ // i.e. if specsys is not undefined
-	    logger << LogIO::WARN << "Cannot turn spectral type# " << Int(referenceFrame) 
-		   << " into a FITS SPECSYS keyword. Will use \"" << specsys << "\" instead."
-		   << LogIO::POST;
-	  }
-	  else{ // make sure also velref is not written if specsys is undefined
-	    haveAlt = False;
-	  }
+	  logger << LogIO::WARN << "Cannot turn spectral type# " << 
+	    Int(referenceFrame) <<	
+	    " into a FITS SPECSYS keyword. Will use " << specsys <<
+	    LogIO::POST;
 	}
     }
 
@@ -711,9 +707,8 @@ Bool FITSSpectralUtil::specsysFromFrame(String &specsys,
     case MFrequency::TOPO:
 	specsys = "TOPOCENT";
 	break;
-    case MFrequency::Undefined:
     default:
-	specsys = "";
+	specsys = "TOPOCENT";
 	result = False;
     }
     return result;
@@ -749,7 +744,7 @@ Bool FITSSpectralUtil::frameFromSpecsys(MFrequency::Types& refFrame, String& spe
       refFrame = MFrequency::TOPO;
     }
     else{
-      refFrame = MFrequency::Undefined;
+      refFrame = MFrequency::TOPO;
       result = False;
     }
     return result;

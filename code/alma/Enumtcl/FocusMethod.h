@@ -25,7 +25,7 @@
 using namespace FocusMethodMod;
 
 template<>
- struct enum_set_traits<FocusMethodMod::FocusMethod> : public enum_set_traiter<FocusMethodMod::FocusMethod,3,FocusMethodMod::HOLOGRAPHY> {};
+ struct enum_set_traits<FocusMethodMod::FocusMethod> : public enum_set_traiter<FocusMethodMod::FocusMethod,2,FocusMethodMod::FIVE_POINT> {};
 
 template<>
 class enum_map_traits<FocusMethodMod::FocusMethod,void> : public enum_map_traiter<FocusMethodMod::FocusMethod,void> {
@@ -41,8 +41,6 @@ public:
      (FocusMethodMod::THREE_POINT,ep((int)FocusMethodMod::THREE_POINT,"THREE_POINT","un-documented")));
     m_.insert(pair<FocusMethodMod::FocusMethod,EnumPar<void> >
      (FocusMethodMod::FIVE_POINT,ep((int)FocusMethodMod::FIVE_POINT,"FIVE_POINT","un-documented")));
-    m_.insert(pair<FocusMethodMod::FocusMethod,EnumPar<void> >
-     (FocusMethodMod::HOLOGRAPHY,ep((int)FocusMethodMod::HOLOGRAPHY,"HOLOGRAPHY","un-documented")));
     return true;
   }
   static map<FocusMethodMod::FocusMethod,EnumPar<void> > m_;

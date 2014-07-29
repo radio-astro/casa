@@ -27,8 +27,8 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
-set( CASA_MINOR_VERSION 3 )
-set( CASA_PATCH_VERSION 0 )
+set( CASA_MINOR_VERSION 2 )
+set( CASA_PATCH_VERSION 2 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
 ###
@@ -210,7 +210,7 @@ if( APPLE )
             endif()
             if( archflag STREQUAL x86_64 )
                 if(CMAKE_SYSTEM MATCHES ^Darwin-11)
-                    set ( casa_packages /opt/casa/darwin11 )
+                    set ( casa_packages /opt/casa/01 )
                 else()
                     set ( casa_packages /opt/casa/darwin10-64b )
                 endif()
@@ -347,25 +347,6 @@ endif()
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
-SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
-if( NOT NO_SOVERSION )
-    set( epochdelta 1385614800 )
-    if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
-        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
-                         OUTPUT_VARIABLE __casa_soversion )
-    elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
-        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
-                         OUTPUT_VARIABLE __casa_soversion )
-    else( )
-        execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
-                         OUTPUT_VARIABLE __casa_soversion )
-    endif( )
-    set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
-    message( STATUS "Shared object version number ${casa_soversion}" )
-else( )
-    message( STATUS "User disabled shared library versioning" )
-endif( )
-
 set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
@@ -396,7 +377,6 @@ else()
     COMMAND echo "doxygen was not found."
     )
 endif()
-
 
 #
 # Create casainit.(c)sh
@@ -469,43 +449,9 @@ file( WRITE ${casaroot}/casainit.csh
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
 # rpath when installing)
-set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
+set( CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib:arbitraryExtraPaddingToAllowForRpathGrowth" )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
-
-set( PREFIX ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
-set( INCLUDE ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "casa include file install directory" FORCE )
-set( LDDPATH "" CACHE STRING "path for (DY)LD_LIBRARY_PATH" FORCE )
-set( LDDPRELOAD "" CACHE STRING "libraries to be pre-loaded at runtime" FORCE )
-set( LIBVERSION ${casa_soversion} CACHE STRING "shared library version number" FORCE )
-
-
-###
-### these are duplicated from casadef.cmake...
-###
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASAREVISION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASASRCURL
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-###
-###
-
-configure_file( ${CMAKE_SOURCE_DIR}/install/casa-config.in ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config @ONLY )
-file( COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config
-	  DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-	  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
-	                   GROUP_READ GROUP_EXECUTE
-                        WORLD_READ WORLD_EXECUTE )
-
 
 # Preprocessor definitions
 add_definitions( 
@@ -567,7 +513,7 @@ endif()
 message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (second)" )
 message ( STATUS "casa_packages=${casa_packages} (second)" )
 
-set( boost_components regex program_options filesystem thread serialization system)
+set( boost_components regex program_options filesystem thread serialization)
 find_package( Boost REQUIRED ${boost_components} )
 
 message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
@@ -778,7 +724,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.251
+           VERSION 1.0.221
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -969,6 +915,13 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
 # If doing so, then "include( ${QT_USE_FILE} )" does not work (because QT_USE_FILE is not cached?).
 
+#
+# CAS-6021
+# Note: this must be done AFTER Qt is set up to prevent Qt options from overriding these options.
+# See http://stackoverflow.com/questions/10085945/cmake-cflags-cxxflags-modification
+if (APPLE)
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_GLIBCXX_DEBUG -U_GLIBCXX_DEBUG_PEDANTIC" )
+endif (APPLE)
 
 # QWT (requires Qt)
 casa_find( QWT
@@ -1048,28 +1001,29 @@ else()
     casa_add_module( graphics CASACORE X11 WCSLIB Boost)
   endif()
 endif()
+
+
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
-casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
-casa_add_module( components stdcasa CASACORE)
-casa_add_module( imageanalysis CASACORE Boost components)
+casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics Boost)
+casa_add_module( imageanalysis CASACORE Boost)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
-casa_add_module( msvis CASACORE Boost asdmstman )
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis)
-casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4 msvis)
+casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis)
+casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4)
 casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
+casa_add_module( components stdcasa CASACORE)
 casa_add_module( guitools CASACORE QT4 QWT synthesis)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines components)
+casa_add_module( display CASACORE WCSLIB QT4 casaqt guitools synthesis imageanalysis Boost stdcasa casadbus spectrallines)
 casa_add_module( plotms CASACORE QT4 casaqt synthesis Boost )
 casa_add_module( calanalysis CASACORE synthesis Boost)
-casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
+casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis )
 #casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost synthesis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost)
-casa_add_module( mstransform CASACORE msvis imageanalysis asdmstman)
+casa_add_module( mstransform CASACORE synthesis)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()

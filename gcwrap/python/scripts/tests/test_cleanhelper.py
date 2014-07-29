@@ -34,7 +34,7 @@ class cleanhelper_test(unittest.TestCase):
     spw=''
     nchan=1
     start=0
-    width=1
+    width=0
     restfreq=''
     field=''
     phasecenter="J2000 17:45:40.0 -29.00.28"
@@ -57,13 +57,7 @@ class cleanhelper_test(unittest.TestCase):
             os.system('rm -rf ' + self.msfile)
   
         shutil.copytree(self.datapath+self.msfile, self.msfile)
-
         self.imset = cleanhelper(im, self.msfile, (usescratch or mosweight))
-        self.imset.datsel(field=self.field, spw=self.spw, nchan=self.nchan,
-                         start=self.start, width=self.width,
-                         timerange='', uvrange='', antenna='', scan='', 
-                         observation='',intent='', usescratch=usescratch)
-
 
     def tearDown(self):
         if (os.path.exists(self.msfile)):
@@ -125,6 +119,7 @@ class cleanhelper_test(unittest.TestCase):
           imageids='sf'
         else:
           imsizes, phasecenters, imageids=self.imset.readoutlier(self.outlierfile)
+        #print "imsizes,imageids=", imsizes,imageids
         self.imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                             cell=self.cell, stokes=self.stokes, mode=self.mode, 
                             spw=self.spw, nchan=self.nchan, start=self.start,
@@ -221,7 +216,7 @@ class cleanhelper_test(unittest.TestCase):
     def testMakemaskimagebox(self):
         """[Cleanhelper makemaskimage test: 2 boxes]"""
         self.run_defineimages(sf=True)
-        print "int boxes test"
+        print "int boxes"
         ibmask=[[100,85,120,95],[145,145,155,155]]
         maskimage=self.imset.imagelist[0]+'.0.mask'
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=ibmask)
@@ -232,7 +227,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-        print "float box and int box test"
+        print "float box and int box"
         fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
@@ -241,23 +236,23 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-        print "numpy.int boxes test"
+        print "numpy.int boxes"
         import numpy as np
         box1=[np.int_(i) for i in ibmask[0]] 
         box2=[np.int_(i) for i in ibmask[1]] 
         numpyintmask=[box1,box2]
-        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=numpyintmask)
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.int box maskimage does not exist")
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.int boxes failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-        print "numpy.float boxes test"
+        print "numpy.float boxes"
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
-        numpyfloatmask=[box1,box2]
-        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=numpyfloatmask)
+        numpyintmask=[box1,box2]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," numpy.float box maskimage does not exist")
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on numpy.float boxes failed")

@@ -46,8 +46,7 @@ VLAProjectFilter::VLAProjectFilter(const String& projectName)
 }
 
 VLAProjectFilter::VLAProjectFilter(const VLAProjectFilter& other) 
-  : VLAFilter(),
-  itsProject(other.itsProject)
+  :itsProject(other.itsProject)
 {
   DebugAssert(ok(), AipsError);
 }

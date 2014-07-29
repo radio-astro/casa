@@ -9,6 +9,7 @@ from asap.flagplotter import flagplotter
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdflagold(infile, antenna, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, showflagged, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
         worker.initialize()
@@ -88,9 +89,9 @@ class sdflag_worker(sdutil.sdtask_template):
         sorg.set_selection(self.get_selector_by_list())
         
         # Copy the original data (CAS-3987)
-        if self.is_disk_storage \
-           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)):
+        if is_scantable(self.infile) and self.is_disk_storage:
             self.scan = sorg.copy()
+            sorg.set_selection()
         else:
             self.scan = sorg
 

@@ -29,7 +29,7 @@
 #define SYNTHESIS_CONVFUNCDISKCACHE_H
 
 #include <casa/Arrays/Matrix.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Array.h>

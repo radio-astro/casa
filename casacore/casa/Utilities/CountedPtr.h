@@ -589,7 +589,7 @@ public:
 #else // when defined (USE_SHARED_PTR) is true
 
 
-// #include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
 #include <tr1/memory>
 
 namespace casa { //#Begin casa namespace

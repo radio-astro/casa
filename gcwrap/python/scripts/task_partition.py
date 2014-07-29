@@ -4,7 +4,7 @@ import string
 import copy
 import math
 from taskinit import *
-from parallel.parallel_data_helper import ParallelDataHelper
+from task_mstransform import MSTHelper
 import flaghelper as fh
 
 def partition(vis,
@@ -12,9 +12,9 @@ def partition(vis,
            createmms,
            separationaxis,
            numsubms,
+           parallel,
            flagbackup,      # only for MMS
-           disableparallel, # HIDDEN parameter to create an MMS in sequential
-           ddistart,        # HIDDEN parameter to be used when merging sub-tables
+           ddistart,        # to be used by mstransform internally. Hidden parameter!
            datacolumn,
            field,
            spw, 
@@ -38,10 +38,12 @@ def partition(vis,
     createmms -- Boolean flag if we're creating Multi MS
                   default: True
         separationaxis -- what axis do we intend to split on.
-                   default = 'auto'
-                   Options: 'scan','spw','auto'
+                   default = 'both'
+                   Options: 'scan','spw','both'
         numsubms -- Number of sub-MSs to create.
                     default: 64
+        parallel -- Run in parallel or sequential.
+                   default: True
         flagbackup -- Backup the FLAG column of the output MMS
                    default: True
                    
@@ -86,29 +88,31 @@ def partition(vis,
     casalog.origin('partition')
     
     # Initiate the helper class    
-    pdh = ParallelDataHelper('partition', locals()) 
+    msth = MSTHelper(locals()) 
     
     # Validate input and output parameters
     try:
-        pdh.setupIO()
+        msth.setupIO()
     except Exception, instance:
         casalog.post('%s'%instance,'ERROR')
         return False
 
     if createmms:   
-
-        if disableparallel:
-            pdh.bypassParallelProcessing(1)
-        else:
-            pdh.bypassParallelProcessing(0)
         
+        # The user decides to run in parallel or sequential
+        if not parallel:
+            casalog.post('Will process the MS in sequential')
+            msth.bypassParallelProcessing(1)
+        else:
+            msth.bypassParallelProcessing(0)
+            casalog.post('Will process the MS in parallel')
+
         # Get a cluster
-        pdh.setupCluster(thistask='partition')
+        msth.setupCluster(thistask='partition')
         
         # Execute the jobs using simple_cluster
         try:
-            pdh.go()
-            pdh.bypassParallelProcessing(0)
+            msth.go()
         except Exception, instance:
             casalog.post('%s'%instance,'ERROR')
             return False
@@ -130,7 +134,7 @@ def partition(vis,
                     
         # Gather all the parameters in a dictionary.        
         config = {}
-        config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
+        config = msth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
                     feed=feed)
@@ -172,6 +176,4 @@ def partition(vis,
                      'WARN')
         return False
 
-    mslocal = None
-    
     return True

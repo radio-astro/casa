@@ -54,13 +54,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </input>
 <example>
 
-The list of data sets given in the vis argument are chronologically concatenated 
-into an output data set in concatvis, i.e. the data sets in vis are first ordered
-by the time of their earliest integration and then concatenated.  
-
-If concatvis already exists (e.g., it is the same as the first input data set), 
-then the other input data sets will be appended to the concatvis data set.  
-There is no limit to the number of input data sets.
+The list of data sets given in the vis argument are concatenated into an output
+data set in concatvis.  If concatvis already exists (e.g., it is the same as the
+first input data set), then the other input data sets will be appended to the
+concatvis data set.  There is no limit to the number of input data sets.
 
 If none of the input data sets have any scratch columns (model and corrected
 columns), none are created in the concatvis.  Otherwise these columns are

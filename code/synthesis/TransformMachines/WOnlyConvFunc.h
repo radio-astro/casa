@@ -75,11 +75,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool makeAverageResponse(const VisBuffer& /*vb*/, 
 			     const ImageInterface<Complex>& /*image*/,
 			     ImageInterface<Float>& /*theavgPB*/,
-			     Bool /*reset*/=True) {return False;};
+			     Bool /*reset*/=True) {};
     Bool makeAverageResponse(const VisBuffer& /*vb*/, 
 			     const ImageInterface<Complex>& /*image*/,
 			     ImageInterface<Complex>& /*theavgPB*/,
-			     Bool /*reset*/=True) {return False;};
+			     Bool /*reset*/=True) {};
   protected:
     void setSupport(Array<Complex>& convFunc, CFStore& cfs);
 

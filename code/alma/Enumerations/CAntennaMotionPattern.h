@@ -56,7 +56,7 @@ namespace AntennaMotionPatternMod
   //! AntennaMotionPattern.
   //! Motion pattern of antenna , e.g. in a calibration scan.
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AntennaMotionPattern
@@ -78,10 +78,6 @@ namespace AntennaMotionPatternMod
     TEST /*!< Reserved for development. */
      ,
     UNSPECIFIED /*!< Unspecified pattern. */
-     ,
-    STAR /*!<  */
-     ,
-    LISSAJOUS /*!<  */
      
   };
   typedef AntennaMotionPattern &AntennaMotionPattern_out;
@@ -121,10 +117,6 @@ class CAntennaMotionPattern {
 	static const std::string& sTEST; /*!< A const string equal to "TEST".*/
 	
 	static const std::string& sUNSPECIFIED; /*!< A const string equal to "UNSPECIFIED".*/
-	
-	static const std::string& sSTAR; /*!< A const string equal to "STAR".*/
-	
-	static const std::string& sLISSAJOUS; /*!< A const string equal to "LISSAJOUS".*/
 	
 
 	/**

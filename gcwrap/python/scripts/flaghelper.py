@@ -8,7 +8,8 @@ import time
 import ast
 import copy
 from taskinit import *
-from parallel.parallel_task_helper import ParallelTaskHelper
+from tasks import *
+import flagdata as flagdata
 from collections import deque
 # needed in Python 2.6
 from OrderedDictionary import OrderedDict
@@ -122,8 +123,7 @@ class Parser():
 #        return OrderedDict((entry[0],ast.literal_eval(entry[1])) for entry in [entry.split(self.second,1) for entry in new])
 
     def initialsplit(self,string):
-        nstring = string.strip()
-        return nstring.split(self.prime)
+        return string.split(self.prime)
 
 
 #######################################################
@@ -150,7 +150,7 @@ def isCalTable(msname):
     
     elif tbinfo['type'] == 'Measurement Set':
         # MMS type
-        if tbinfo['subType'] == 'CONCATENATED' and ParallelTaskHelper.isParallelMS(msname):
+        if tbinfo['subType'] == 'CONCATENATED':
             retval = 2
         else:
             # MS type
@@ -1757,14 +1757,7 @@ def evaluateParameters(pardict):
                 val = val.strip("'")
             if val.count('"') > 0:
                 val = val.strip('"')
-            
-            # CAS-6553 cannot have only one quote. remove it
-            if val.count("'") == 1:
-                val = val.replace("'", '')
-            if val.count('"') == 1:
-                val = val.replace('"', '')
-                
-            newval = str(val).strip()
+            newval = str(val)
             cmddict[key] = newval
             continue
         
@@ -1791,14 +1784,7 @@ def evaluateParameters(pardict):
                         val = val.strip("'")
                     if val.count('"') > 0:
                         val = val.strip('"')
-                        
-                    # CAS-6553 cannot have only one quote. remove it
-                    if val.count("'") == 1:
-                        val = val.replace("'", '')
-                    if val.count('"') == 1:
-                        val = val.replace('"', '')
-                        
-                    newval = str(val).strip()
+                    newval = str(val)
         
         cmddict[key] = newval
     
@@ -4260,8 +4246,4 @@ def evalString(cmdline):
     
     return cmddict
 
-
-
-
-    
 

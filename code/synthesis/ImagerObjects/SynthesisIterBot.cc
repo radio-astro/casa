@@ -62,10 +62,10 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
-					       itsLoopController(new SIIterBot_state(actionRequestSync)),
-                                               dbus_thread(NULL) {
-	  //		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%p)\n", this );
-	  //		fflush( stderr );
+										   itsLoopController(new SIIterBot_state(actionRequestSync)),
+										   dbus_thread(NULL) {
+		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%x)\n", this );
+		fflush( stderr );
 	}
 
 	void SynthesisIterBot::openDBus( ) {
@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dbus_thread = NULL;
 		}
 		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
-		os << LogIO::DEBUG1 << "SynthesisIterBot destroyed" << LogIO::POST;
+		os << "SynthesisIterBot destroyed" << LogIO::POST;
 	}
 
 	void SynthesisIterBot::setIterationDetails(Record iterpars) {
@@ -127,11 +127,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void SynthesisIterBot::setupIteration(Record iterpars) {
 		LogIO os( LogOrigin("SynthesisIterBot","setupIteration",WHERE) );
-		os << "Set Iteration Control Options" << LogIO::POST;
+		os << "Set Iteration Control Options." << LogIO::POST;
 		try {
 			setIterationDetails(iterpars);
 		} catch(AipsError &x) {
-			throw( AipsError("Error in setting iteration parameters : "+x.getMesg()) );
+			throw( AipsError("Error in constructing SkyModel : "+x.getMesg()) );
 		}
 	} //end of setupIteration
   
@@ -148,8 +148,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
   
   
-	int SynthesisIterBot::cleanComplete() {
-		int returnValue=0;
+	bool SynthesisIterBot::cleanComplete() {
+		bool returnValue;
 		try {
 			//Float peakResidual = itsLoopController.getPeakResidual(); // This should go..
 			if ( itsLoopController )

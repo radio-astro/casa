@@ -64,7 +64,7 @@ public:
 								// Output
 								Vector<Double>& newCHAN_FREQ,
 								Vector<Double>& newCHAN_WIDTH,
-								Double& weightScale,
+							    Double& weightScale,
 								// Input (original grid)
 								const Vector<Double>& oldCHAN_FREQ,
 								const Vector<Double>& oldCHAN_WIDTH,

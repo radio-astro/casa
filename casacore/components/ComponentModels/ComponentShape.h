@@ -166,9 +166,6 @@ public:
   const Quantum<Double>& refDirectionErrorLong() const;
   // </group>
 
-  // copy direction info from that object to this object
-  void copyDirectionInfo(const ComponentShape& that);
-
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
   // between zero and one (inclusive).

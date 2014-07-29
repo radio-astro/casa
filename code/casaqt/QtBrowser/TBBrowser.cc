@@ -221,7 +221,7 @@ bool TBBrowser::closeTable(String name) {
 
 QStringList TBBrowser::getColumnsAt(unsigned int index) {
     QStringList cols;
-    if(available && index < tables.size()) {
+    if(available && 0 <= index && index < tables.size()) {
         vector<String> fields=tables.at(index)->getTable()->getColumnHeaders();
         for(unsigned int i = 0; i < fields.size(); i++) {
             cols << fields.at(i).c_str();
@@ -231,13 +231,13 @@ QStringList TBBrowser::getColumnsAt(unsigned int index) {
 }
 
 bool TBBrowser::columnIsHidden(unsigned int index, int col) {
-    if(available && index < tables.size())
+    if(available && 0 <= index && index < tables.size())
         return tables.at(index)->getTableWidget()->isColumnHidden(col);
     else return false;
 }
 
 void TBBrowser::setColumnHidden(unsigned int index, int col, bool hidden) {
-    if(available && index < tables.size()) {
+    if(available && 0 <= index && index < tables.size()) {
         tables.at(index)->getDataTab()->hideColumn(col, hidden);
     }
 }

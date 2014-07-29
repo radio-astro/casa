@@ -102,14 +102,18 @@ AnnotationBase::AnnotationBase(
   _convertedFreqLimits(0), _stokes(stokes),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
   _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
-	ThrowIf(
-		! csys.hasDirectionCoordinate(),
-		"Coordinate system has no direction coordinate"
-	);
-	ThrowIf (
-		! MDirection::getType(_directionRefFrame, dirRefFrameString),
-		"Unknown coordinate frame " + dirRefFrameString
-	);
+	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
+	if (!csys.hasDirectionCoordinate()) {
+		throw AipsError(
+			preamble + "Coordinate system has no direction coordinate"
+		);
+	}
+	if (! MDirection::getType(_directionRefFrame, dirRefFrameString)) {
+		throw AipsError(
+			preamble + "Unknown coordinate frame "
+			+ dirRefFrameString
+		);
+	}
 	setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrame,
 		dopplerString, restfreq

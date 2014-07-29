@@ -272,14 +272,6 @@ String SystemCallError::errorMessage(int error)
 #endif
 }
 
-SystemCallError::SystemCallError (int error, const String &msg, const String &filename,
-                                  uInt lineNumber, Category c)
-  : AipsError (msg + String::format (": errno=%d: %s", error,
-				     errorMessage (error).c_str()),
-             filename, lineNumber, c),
-  itsError (error)
-{}
-
 
 // Exception which causes an abort instead of continuing
 AbortError::AbortError(const Char *str,Category c)

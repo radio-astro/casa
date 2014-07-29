@@ -33,8 +33,7 @@ TASKLIST = [
             'uvcontsub',
             'vishead',
             'wvrgcal',
-            'concat', # shared with virtualconcat
-            'hanningsmooth'
+            'concat' # shared with virtualconcat
             ]
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'
@@ -56,7 +55,6 @@ def usage():
     print '   --ignore          do no create MMS for the given <tasks>.'
     print '   --list            print the list of tasks from TASKLIST and exit.'
     print '   --parallel        create MMSs in parallel using simple_cluster.'
-    print '   --axis            separationaxis to use (spw, scan, both); default:both'
     print 'NOTE: it will look for MS data in the data repository under unittest.\r'
     print '=========================================================================='
 
@@ -74,7 +72,7 @@ def selectList(nolist):
     
     
 # Function to call partitionhelper.convertToMMS()
-def mmstest(mytask, parallel, axis):
+def mmstest(mytask, parallel):
 
     TESTPATH = DATAPATH + 'unittest/'
     INPPATH = TESTPATH + mytask
@@ -82,7 +80,7 @@ def mmstest(mytask, parallel, axis):
 
     print '--------- Will create MMS data for test_'+mytask
     ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, parallel=parallel, 
-                    axis=axis, createmslink=True, cleanup=True)
+                    createmslink=True, cleanup=True)
 
       
 # Location of the data repository
@@ -91,12 +89,13 @@ if not os.environ.has_key('CASAPATH'):
     os._exit(2)
     
 
-def main(thislist, parallel=False, axis='both'):
+def main(thislist, parallel=False):
     
     if thislist == []:
         print 'Need list of tasks to run.'
         usage()
         os._exit(0)
+    
         
     # Loop through task list
     for t in thislist:
@@ -104,10 +103,7 @@ def main(thislist, parallel=False, axis='both'):
             print 'ERROR: task '+t+' is not in TASKLIST. Run this script with -l for the full list.'
             os._exit(0)
             
- #       if t == 'flagdata':
-#            axis='scan'
-            
-        mmstest(t, parallel, axis)
+        mmstest(t, parallel)
 
     from tasks import partition
 
@@ -187,7 +183,7 @@ if __name__ == "__main__":
                     
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "ailpx:", ["all", "ignore","list","parallel","axis="])
+                opts,args=getopt.getopt(sys.argv[i+2:], "ailp", ["all", "ignore","list","parallel"])
                 
             except getopt.GetoptError, err:
                 # Print help information and exit:
@@ -198,7 +194,6 @@ if __name__ == "__main__":
             # List of tests to run
             tasknames = []
             
-            axis = 'both'
             parallel = False            
             ignore = False
             all = False
@@ -213,16 +208,12 @@ if __name__ == "__main__":
                     if o in ("-p", "--parallel"):
                         parallel = True
                         continue
-
-                    if o in ("x", "--axis"):
-                        axis = a
-                        continue
                     
                     if o in ("-a", "--all"):
                         all = True
                         tasknames = TASKLIST
                         break
-                                        
+                    
                     elif o in ("-i", "--ignore"):
                         # Will ignore the tasks given in args
                         ignore = True
@@ -248,7 +239,7 @@ if __name__ == "__main__":
                     tasknames = selectList(args)
                 
     try:                 
-        main(tasknames, parallel, axis)
+        main(tasknames, parallel)
     except:
         traceback.print_exc()
     

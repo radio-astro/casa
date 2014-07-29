@@ -7,6 +7,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdplotold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()

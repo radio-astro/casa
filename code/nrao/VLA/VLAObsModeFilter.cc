@@ -60,8 +60,7 @@ VLAObsModeFilter::VLAObsModeFilter(const Vector<String>& obsModes)
 }
 
 VLAObsModeFilter::VLAObsModeFilter(const VLAObsModeFilter& other) 
-  : VLAFilter(),
-  itsObsModes()
+  :itsObsModes()
 {
   DebugAssert(ok(), AipsError);
   itsObsModes.resize();

@@ -34,7 +34,7 @@
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <images/Images/TempImage.h>
 #include <casa/Exceptions.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 namespace casa
 {
   class VLAIlluminationConvFunc: public IlluminationConvFunc

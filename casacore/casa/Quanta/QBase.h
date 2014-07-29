@@ -37,8 +37,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 
-class LogIO;
-
 //# Typedefs
 
 // 
@@ -148,8 +146,6 @@ protected:
 // <group name=Output>
 // Output declaration
 ostream &operator<<(ostream &os, const QBase &meas);
-LogIO &operator<<(LogIO &os, const QBase &meas);
-
 // </group>
 
 

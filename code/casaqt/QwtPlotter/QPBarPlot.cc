@@ -138,7 +138,7 @@ void QPBarPlot::setAreaFill(const PlotAreaFill& areaFill) {
 // Protected Methods //
 
 void QPBarPlot::draw_(QPainter* p, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     /*

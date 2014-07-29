@@ -30,7 +30,6 @@
 #include <ms/MeasurementSets/MSRange.h>
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 
 #include <measures/Measures/MeasTable.h>
 #include <iostream>
@@ -741,6 +740,42 @@ calibrater::initweights()
   return retval;
 }
 
+bool calibrater::changeWeightConvention()
+{
+
+	if (!itsMS)
+	{
+		*itsLog << LogIO::SEVERE << "Must first open a MeasurementSet." << endl << LogIO::POST;
+		return false;
+	}
+
+	Bool retval = True;
+
+	try
+	{
+		logSink_p.clearLocally();
+		LogIO os(LogOrigin("calibrater", "changeWeightConvention"), logSink_p);
+		os << "Beginning changeWeightConvention---------------------------" << LogIO::POST;
+
+		// Update HISTORY table
+		itsCalibrater->writeHistory(os);
+
+		// Apply the calibration solutions to the uv-data
+		retval = itsCalibrater->changeWeightConvention();
+		AlwaysAssert (retval, AipsError);
+
+		os << "Finished changing weight convention" << LogIO::POST;
+
+	}
+	catch (AipsError x)
+	{
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+	return retval;
+}
+
 //----------------------------------------------------------------------------
 //Fluxscale - bootstrap the flux density scale from std. amplitude calibrators
 casac::record* calibrater::fluxscale(
@@ -751,13 +786,8 @@ casac::record* calibrater::fluxscale(
 		      const std::string& listfile,
 		      const bool append, 
 		      const std::vector<int>& refspwmap,
-                      const float gainthreshold,
-                      const std::string& antenna,
-                      const std::string& timerange,
-                      const std::string& scan,
                       const bool incremental,
-                      const int fitorder,
-                      const bool display)
+                      const int fitorder)
 {
 
   casac::record* poOutput;
@@ -797,16 +827,11 @@ casac::record* calibrater::fluxscale(
 			     refspwmap,
 			     toCasaString(transfer),
 			     append,
-                             gainthreshold, 
-                             antenna,
-                             timerange,
-                             scan,
 			     oFluxD,
 			     tranidx,
 			     oListFile,
                              incremental,
-                             fitorder,
-                             display);
+                             fitorder);
 
     // Associate the field IDs with the field numbers
 

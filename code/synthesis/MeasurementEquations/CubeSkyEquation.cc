@@ -66,11 +66,11 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisBufferUtil.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBufferUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
@@ -413,12 +413,8 @@ void  CubeSkyEquation::predict(Bool incremental, MS::PredefinedColumns col) {
 	    for (Int model=0; model < (sm_->numberOfModels());++model){
 	      Record ftrec;
 	      String error;
-	      String modImage=vi.ms().getPartNames()[0];
-	      if(!(vi.ms().source().isNull()))
-		modImage=(vi.ms()).source().tableName();
-	      modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 	      //cerr << "in ftrec saving" << endl;
-	      if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
+	      if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 		throw(AipsError("Error in record saving:  "+error));
 	      vi.putModel(ftrec, False, ((model>0) || incremental || (cubeSlice > 0)));
 	    }
@@ -852,13 +848,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 		      for (Int model=0; model < (sm_->numberOfModels());++model){
 			Record ftrec;
 			String error;
-			String modImage=wvi_p->ms().getPartNames()[0];
-			if(!(wvi_p->ms().source().isNull()))
-			  modImage=(wvi_p->ms()).source().tableName();
-			modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
-		       
 			//cerr << "in ftrec saving" << endl;
-			if(!(ftm_p[model]->toRecord(error, ftrec, True, modImage)))
+			if(!(ftm_p[model]->toRecord(error, ftrec, True)))
 			  throw(AipsError("Error in saving model;  "+error));
 			wvi_p->putModel(ftrec, False, ((model>0) || predictedComp || incremental || (cubeSlice >0)));
 		      }
@@ -1727,6 +1718,8 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
     Block<Vector<Int> > nchanb;
     Block<Vector<Int> > incrb=blockChanInc_p;
     vi.getSpwInFreqRange(spwb, startb, nchanb, start, end, chanwidth);
+    cerr << "CSE: " << start << " " << end << " " << chanwidth << endl
+     	 << "     " << spwb[0] << " " << startb[0] << " " << nchanb[0] << " " << incrb[0] << endl;
     if(spwb.nelements()==0)
         return False;
 
@@ -1943,19 +1936,15 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 	      {
 		if (((NewMultiTermFT *)ft_)->getDOPBCorrection())
 		  {
-		    ////// PBSQWeight
-		    le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
-		    ///// PBWeight
-		    //le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		    //le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		     le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		    gSSliceVec->copyData(le);
 		  }
 	      }
 	    else
 	      {
-		////// PBSQWeight
-		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
-		////// PBWeight
-		//le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		//le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/(sqrt(*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
+		le=LatticeExpr<Float>(iif((*ggSSliceVec)>(pbLimit), (*gSSliceVec)/((*ggSSliceVec)), 0.0)); // The negative sign is in FTM::normalizeImage()
 		gSSliceVec->copyData(le);
 	      }
 	    

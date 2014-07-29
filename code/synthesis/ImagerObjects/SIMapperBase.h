@@ -34,12 +34,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/VisBufferImpl2.h>
-#include <msvis/MSVis/VisBuffer2Adapter.h>
-
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
 
@@ -55,137 +51,83 @@ class SIMapperBase
  public:
   // Default constructor
 
-  SIMapperBase( CountedPtr<VPSkyJones>& vp );
-
+  SIMapperBase( CountedPtr<SIImageStore> imagestore, 
+            CountedPtr<FTMachine> ftmachine, 
+            Int mapperid);
   virtual ~SIMapperBase();
 
   ///// Major Cycle Functions
 
-  virtual void finalizeDegrid(){};
+  // For KG : Need to add 'vb' coming into these functions.
+  // Would be good to make these pure virtual, but need to keep base-class implementation for initial testing.
+  virtual void initializeGrid();
+  virtual void grid();
+  virtual void finalizeGrid();
 
-  //////////////// NEW VI/VB versions
-  virtual void initializeGrid(const vi::VisBuffer2& , const Bool dopsf=False)=0;
-  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type )=0;
-  virtual void finalizeGrid(const vi::VisBuffer2& , const Bool )=0;
-  virtual void initializeDegrid(const vi::VisBuffer2& , const Int row=-1 )=0;
-  virtual void degrid(vi::VisBuffer2& )=0;
+  virtual void initializeDegrid();
+  virtual void degrid();
+  virtual void finalizeDegrid();
+  virtual void initializeGrid(const vi::VisBuffer2& )
+  {cout <<"Calling MapperBase initializeGrid !"<< endl;initializeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type )
+  {cout <<"Calling MapperBase grid !"<< endl;grid();};//{throw(AipsError("Not implemented"));};
+  virtual void finalizeGrid(const vi::VisBuffer2& , const Bool )
+  {cout <<"Calling MapperBase finalizeGrid !"<< endl;finalizeGrid();};//{throw(AipsError("Not implemented"));};
 
-  //////////////// OLD VI/VB versions
-  virtual void initializeGrid(VisBuffer& , Bool dopsf=False)=0;
-  virtual void grid(VisBuffer& , Bool , FTMachine::Type )=0;
-  virtual void finalizeGrid(VisBuffer& , Bool dopsf=False)=0;
-  virtual void initializeDegrid(VisBuffer& , Int row=-1)=0;
-  virtual void degrid(VisBuffer& )=0;
+  virtual void initializeDegrid(const vi::VisBuffer2& , const Int row=-1 )
+  {cout <<"Calling MapperBase initializeDegrid !"<< endl;initializeDegrid();};//{throw(AipsError("Not implemented"));};
+  virtual void degrid(vi::VisBuffer2& )
+  {cout <<"Calling MapperBase degrid !"<< endl;degrid();};//{throw(AipsError("Not implemented"));};
+  ////////////////OLD VI/VB versions
+  virtual void initializeGrid(const VisBuffer& )
+  {cout <<"Calling MapperBase initializeGrid !"<< endl;initializeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void grid(const VisBuffer& , Bool , FTMachine::Type )
+  {cout <<"Calling MapperBase grid !"<< endl;grid();};//{throw(AipsError("Not implemented"));};
+  virtual void finalizeGrid(const VisBuffer& , const Bool dopsf=False)
+  {cout <<"Calling MapperBase finalizeGrid !"<< endl;finalizeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void initializeDegrid(const VisBuffer& , const Int row=-1)
+  {cout <<"Calling MapperBase initializeDegrid !"<< endl;initializeDegrid();};//{throw(AipsError("Not implemented"));};
+  virtual void degrid(VisBuffer& )
+  {cout <<"Calling MapperBase degrid !"<< endl;degrid();};//{throw(AipsError("Not implemented"));};
 
   ////////////////////////////////////Return value is false if no valid ftm or CompList is available
-  virtual Bool getFTMRecord(Record & rec, const String diskimage=String(""))=0;
-  virtual Bool getCLRecord(Record & rec)=0;
+  virtual Bool getFTMRecord(Record & rec);
+  virtual Bool getCLRecord(Record & rec);
 
-  virtual String getImageName()=0;//{return itsImages->getName();};
-  virtual CountedPtr<SIImageStore> imageStore()=0;//{return itsImages;};
+  String getImageName();
+  CountedPtr<SIImageStore> imageStore(){return itsImages;};
 
-  virtual Bool releaseImageLocks()=0;
+  virtual Bool releaseImageLocks();
 
 protected:
   //////////////////// Member Functions
-  void initializeGridCore2(const vi::VisBuffer2& vb, 
-			   CountedPtr<FTMachine>&  ftm,
-			   ImageInterface<Complex>& complexImage);
-  //			   Matrix<Float>& sumWeights);
-  void initializeGridCore(const VisBuffer& vb, 
-			  CountedPtr<FTMachine>&  ftm,
-			  ImageInterface<Complex>& complexImage);
-			  //			  Matrix<Float>& sumWeights);
-  
-  void gridCore2(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col,
-		CountedPtr<FTMachine>&  ftm, Int row);
-  void gridCore(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
-		CountedPtr<FTMachine>&  ftm, Int row);
 
-  
-  void finalizeGridCore(const Bool dopsf,
-			CountedPtr<FTMachine>&  ftm,
-			ImageInterface<Float>& targetImage,
-			ImageInterface<Float>& sumwtImage,
-			ImageInterface<Float>& weightImage,
-			Bool fillWeightImage);
-  
-
-  void initializeDegridCore2(const vi::VisBuffer2& vb, 
-			    CountedPtr<FTMachine>&  ftm,
-			    ImageInterface<Float>& modelImage,
-			    ImageInterface<Complex>& complexImage);
-  void initializeDegridCore(const VisBuffer& vb, 
-			    CountedPtr<FTMachine>&  ftm,
-			    ImageInterface<Float>& modelImage,
-			    ImageInterface<Complex>& complexImage);
-  
-  
-  void degridCore2(vi::VisBuffer2& vb, CountedPtr<FTMachine>& ftm, 
-		  CountedPtr<ComponentFTMachine>& cftm, ComponentList& cl);
-  void degridCore(VisBuffer& vb, CountedPtr<FTMachine>& ftm, 
-		  CountedPtr<ComponentFTMachine>& cftm, ComponentList& cl);
-
-  void addImageMiscInfo(ImageInterface<Float>& target, 
-			CountedPtr<FTMachine>& ftm);
-  //			Matrix<Float>& sumwt);
-
-  Bool useWeightImage(CountedPtr<FTMachine>& ftm);
+  void initImages();
   
   ///////////////////// Member Objects
+
+  CountedPtr<FTMachine> ft_p, ift_p; 
+
+  CountedPtr<CoordinateSystem> itsCoordSys;
+  IPosition itsImageShape;
+
+  CountedPtr<SIImageStore> itsImages;
+
+  CountedPtr<ComponentFTMachine> cft_p;
+  ComponentList cl_p;
+  /*
+  String itsImageName;
+  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;
+  */  
+
+  // This is only for testing. In the real-world, this is the data....
+  Array<Float> itsOriginalResidual;
 
   // These are supporting params
   Bool itsIsModelUpdated;
   Int itsMapperId;
 
-
-  // Members used only for image-domain mosaics.
-
-  Bool itsDoImageMosaic;
-
-  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
-  ComponentList clCorrupted_p;
-  CountedPtr<VPSkyJones> ejgrid_p, ejdegrid_p;
-  VisBuffer ovb_p;
-  Bool firstaccess_p;
-
-  void initializeGridCoreMos(const VisBuffer& vb, 
-			  CountedPtr<FTMachine>&  ftm,
-			     ImageInterface<Complex>& complexImage,
-			     Bool firstaccess=False);
-  //			  Matrix<Float>& sumWeights);
-  
-  void gridCoreMos(const VisBuffer& vb, Bool dopsf, FTMachine::Type col,
-		   CountedPtr<FTMachine>&  ftm, Int row,
-		   ImageInterface<Float>& targetImage,
-		   ImageInterface<Float>& sumwtImage,
-		   ImageInterface<Float>& weightImage,
-		   //				 Matrix<Float>& sumWeights,
-		   ImageInterface<Complex>& complexImage);
-
-  
-  void finalizeGridCoreMos(const Bool dopsf,
-			   CountedPtr<FTMachine>&  ftm,
-			   ImageInterface<Float>& targetImage,
-			   ImageInterface<Float>& sumwtImage,
-			   ImageInterface<Float>& weightImage,
-			   //			   Matrix<Float>& sumWeights,
-			   ImageInterface<Complex>& compleximage,
-			   VisBuffer& vb);
-				 
-  void initializeDegridCoreMos(const VisBuffer& vb, 
-			    CountedPtr<FTMachine>&  ftm,
-			    ImageInterface<Float>& modelImage,
-			       ImageInterface<Complex>& complexImage,
-			       CountedPtr<ComponentFTMachine>& cftm,
-			       ComponentList& cl);
-
-  void degridCoreMos(VisBuffer& vb, CountedPtr<FTMachine>& ftm, 
-		     CountedPtr<ComponentFTMachine>& cftm,
-		     ImageInterface<Float>& modelImage,
-		     ImageInterface<Complex>& complexImage);
-		     
-  void finalizeDegridCoreMos(){};
+  /////////////////// All input parameters
 
 };
 

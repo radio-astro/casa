@@ -51,8 +51,8 @@ const String ImagePrimaryBeamCorrector::_class = "ImagePrimaryBeamCorrector";
 uInt _tempTableNumber = 0;
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const SPCIIF image,
-		const SPCIIF pbImage,
+		const ImageTask::shCImFloat image,
+		const ImageTask::shCImFloat pbImage,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
 	const String& chanInp, const String& stokes,
@@ -60,7 +60,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : ImageTask<Float>(
+) : ImageTask(
 		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
 	), _pbImage(pbImage->cloneII()), _cutoff(cutoff),
 	_mode(mode), _useCutoff(useCutoff) {
@@ -69,7 +69,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
-		const SPCIIF image,
+		const ImageTask::shCImFloat image,
 	const Array<Float>& pbArray,
 	const Record *const &regionPtr,
 	const String& region, const String& box,
@@ -78,7 +78,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : ImageTask<Float>(
+) : ImageTask(
 		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
 	), _cutoff(cutoff), _mode(mode), _useCutoff(useCutoff) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -133,10 +133,8 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 				_pbImage->coordinates().directionCoordinate()
 			)
 		) {
-			ThrowCc(
-				"Coordinate systems of image and template are different: "
-				+ csys.errorMessage()
-			);
+			*_getLog() << "Coordinate systems of image and template are different: "
+				<< csys.errorMessage() << LogIO::EXCEPTION;
 		}
 		else {
 			// direction coordinates and image shapes are the same
@@ -159,19 +157,20 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 		)
 	);
 	if (pbCopy->ndim() == 2) {
-		ThrowIf(
+		if (
 			! _getImage()->coordinates().directionCoordinate().near(
 				pbCopy->coordinates().directionCoordinate()
-			),
-			"Direction coordinates of input image and primary beam "
-			"image are different. Cannot do primary beam correction."
-		);
+			)
+		) {
+			*_getLog() << "Direction coordinates of input image and primary beam "
+				<< "image are different. Cannot do primary beam correction."
+				<< LogIO::EXCEPTION;
+		}
 	}
 	else {
-		ThrowCc(
-			"Input image and primary beam image have different shapes. "
-			"Cannot do primary beam correction."
-		);
+		*_getLog() << "Input image and primary beam image have different shapes. "
+			<< "Cannot do primary beam correction."
+			<< LogIO::EXCEPTION;
 	}
 	_pbImage.reset(pbCopy);
 	LatticeStatistics<Float> ls(*_pbImage);
@@ -199,7 +198,7 @@ CasacRegionManager::StokesControl ImagePrimaryBeamCorrector::_getStokesControl()
 	return CasacRegionManager::USE_ALL_STOKES;
 }
 
-SPIIF ImagePrimaryBeamCorrector::correct(
+ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
@@ -247,16 +246,47 @@ SPIIF ImagePrimaryBeamCorrector::correct(
     	False, AxesSpecifier(), _getStretch()
     );
 	tmpStore.reset(0);
-
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage;
+	if (_getOutname().empty()) {
+		outImage.reset(
+			new TempImage<Float>(
+				TiledShape(subImage.shape()), subImage.coordinates()
+			)
+		);
+		if (subImage.hasPixelMask()) {
+			dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(subImage.pixelMask());
+		}
+		if (pbSubImage.hasPixelMask()) {
+			LatticeExpr<Bool> mask(pbSubImage.pixelMask());
+			if (outImage->hasPixelMask()) {
+				mask = mask && outImage->pixelMask();
+			}
+			dynamic_cast<TempImage<Float> *>(outImage.get())->attachMask(
+				mask
+			);
+		}
+		ImageUtilities::copyMiscellaneous(*outImage, subImage);
+	}
+	else {
+		_removeExistingOutfileIfNecessary();
+		String mask = "";
+	    Record empty;
+		outImage = SubImageFactory<Float>::createImage(
+			subImage, _getOutname(), empty,
+			mask, False, False, False, False
+		);
+	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage
 		: subImage*pbSubImage;
-	SPIIF outImage = _prepareOutputImage(subImage);
 	outImage->copyData(expr);
-    if (! wantReturn) {
-    	outImage.reset();
+
+    if (wantReturn) {
+    	return outImage->cloneII();
     }
-    return outImage;
+    else {
+    	return 0;
+    }
 }
 }
 

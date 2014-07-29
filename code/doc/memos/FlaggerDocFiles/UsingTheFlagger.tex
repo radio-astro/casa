@@ -726,25 +726,42 @@ flagdata command-line help.
 
 \item For the autoflagging agents (clip, tfcrop, rflag) it is possible to
 choose the column to operate with, using the 'datacolumn' parameter, being 'FPARAM',
-'CPARAM' and 'SNR' the currently supported columns. 
+'CPARAM' and 'SNR' the currently supported columns. The given column will be validated and the 
+correct one will be chosen based on the type of input:
 
 \begin{verbatim}
 # giving the correct datacolumn in the task
 flagdata(vis='cal.fewscans.bpass', mode='clip', datacolumn='CPARAM', clipminmax=[0.,6.],clipzeros=True)
 
-# using the agentflagger tool
+# using the default datacolumn in the agentflagger tool
 af.open('cal.fewscans.bpass')
 af.selectdata()
 af.parseclipparameters(clipminmax=[0.,6.],datacolumn='CPARAM', clipzeros=True)
 INFO    AgentFlagger::parseAgentParameters  Validating data column CPARAM based on input type
+INFO    AgentFlagger::parseAgentParameters  Will use data column CPARAM
 af.init()
 af.run()
 af.done()
 
 \end{verbatim}
 
-There is no default data column for cal tables and the task will exit with an
-error if a valid data column is not given.
+There is no default data column for cal tables. The task has DATA as the default for MSs. Once the
+framework has detected the input to be a cal table, it will try to use the given data column. If that
+does not exist (such as DATA), it will try to use FPARAM, then CPARAM. If none of the them exist, it
+will exit with an error.
+
+\begin{verbatim}
+# using the flagdata task
+flagdata(vis='cal.fewscans.bpass', mode='clip', clipminmax=[0.,6.])
+
+# using the default datacolumn in the agentflagger tool
+...
+af.parseclipparameters(clipminmax=[0.,6.])
+INFO    AgentFlagger::parseAgentParameters  Validating data column DATA based on input type
+WARN    AgentFlagger::validateDataColumn    Only FPARAM, CPARAM and SNR are supported for cal tables
+INFO    AgentFlagger::parseAgentParameters  Will use data column CPARAM
+...
+\end{verbatim}
 
 \item Only for the autoflagging modes, it is also possible to choose the element of interest to inspect for
 flagging, through the correlation parameter, specifying a list of comma-separated

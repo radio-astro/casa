@@ -74,8 +74,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // so the compiler might issue a warning.
       // On RHEL4 gcc-3.4.6 gave an error for a reinterpret_cast,
       // so we have to use a C-style cast.
-      reinterpret_cast<void(*)()>(initfunc)();
-      //((void(*)())initfunc)();
+      ///      reinterpret_cast<void(*)()>(initfunc)();
+      ((void(*)())initfunc)();
     }
   }
 

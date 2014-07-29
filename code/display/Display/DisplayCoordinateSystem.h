@@ -31,7 +31,7 @@
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <components/ComponentModels/SkyComponentFactory.h>
+#include <images/Images/ImageUtilities.h>
 
 namespace casa {
 
@@ -123,11 +123,7 @@ namespace casa {
 
             const LinearCoordinate &linearCoordinate( unsigned int which ) const
                 { return cs_.linearCoordinate(which); }
-            bool hasPolarizationCoordinate() const { return cs_.hasPolarizationCoordinate(); }
 
-            Int polarizationAxisNumber(Bool doWorld=False) const {
-            	return cs_.polarizationAxisNumber(doWorld);
-            }
             const StokesCoordinate &stokesCoordinate( int which = -1 ) const
                 { return which < 0 ? cs_.stokesCoordinate( ) : cs_.stokesCoordinate(which); }
 
@@ -195,11 +191,11 @@ namespace casa {
 
             // CoordinateUtil wrappers...
             bool setRestFrequency( String& errorMsg, const String& unit, const Double& value )
-                { return cs_.setRestFrequency( errorMsg, Quantity(value, unit) ); }
+                { return CoordinateUtil::setRestFrequency( errorMsg, cs_, unit, value ); }
             bool setSpectralState( String& errorMsg,const String& unit, const String& spcquant)
                 { return CoordinateUtil::setSpectralState( errorMsg, cs_, unit, spcquant ); }
             bool setSpectralConversion( String& errorMsg, const String frequencySystem )
-                { return cs_.setSpectralConversion( errorMsg, frequencySystem); }
+                { return CoordinateUtil::setSpectralConversion( errorMsg, cs_, frequencySystem); }
             bool setSpectralFormatting( String& errorMsg, const String& unit, const String& spcquant )
                 { return CoordinateUtil::setSpectralFormatting( errorMsg, cs_, unit, spcquant ); }
             bool setDirectionUnit( const string& unit, Int which=-1)
@@ -216,9 +212,9 @@ namespace casa {
 
 
             // from ImageUtilities...
-            void worldWidthsToPixel( LogIO& /*os*/, Vector<double>& dParameters, const Vector<Quantum<Double> >& parameters,
+            void worldWidthsToPixel( LogIO &os, Vector<double>& dParameters, const Vector<Quantum<Double> >& parameters,
                                      const IPosition& pixelAxes, bool doRef=false ) const {
-                SkyComponentFactory::worldWidthsToPixel(dParameters, parameters, cs_, pixelAxes, doRef );
+                ImageUtilities::worldWidthsToPixel(os, dParameters, parameters, cs_, pixelAxes, doRef );
             }
 
 			// adjust this coordinate system to match the 'other' coordinate system

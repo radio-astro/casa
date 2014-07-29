@@ -3,7 +3,7 @@ import shutil
 import numpy
 from taskinit import *
 from cleanhelper import *
-im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
+im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
           uvrange, antenna, scan, observation, intent, mode, resmooth,gridmode,
@@ -21,8 +21,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     casalog.origin('clean')
     casalog.post('nchan='+str(nchan)+' start='+str(start)+' width='+str(width))  
     #If using new FT-Machines, do not use the on-the-fly model_data columns.
-    # if (gridmode == 'advancedaprojection'):
-    #     raise Exception, 'This mode is not yet ready for use'
+    if (gridmode == 'advancedaprojection'):
+        raise Exception, 'This mode is not yet ready for use'
 
         
     if gridmode == 'advancedaprojection' and usescratch==False:
@@ -257,6 +257,29 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             localnchan=nchan
             localstart=start
             localwidth=width
+        ##### Warn that we cannot save model larger than 2GB in complex 
+        ##### Table record issue in SOURCE table---CAS 5425
+        ###### should be removed when the ticket is fixed
+        ###rough estimates for pol will overestimate it for cases like RRLL
+        localnpol=len(str(stokes))
+#        maximsize=max(imsize) if(type(imsize)==list or type(imsize)==tuple) else imsize
+
+        ## Remember... imsize can be an integer or a list or tuple or list of lists or tuples !
+        if  type(imsize)==list or type(imsize)==tuple :
+            if len(imsize)>0 and ( type( imsize[0] ) == list or type( imsize[0] ) == tuple ) :
+                maximsize=imsize[0][0]
+                for fldsize in imsize:
+                    maximsize = max( maximsize, max(fldsize) )
+            else:
+                maximsize = max(imsize)
+        else:
+            maximsize = imsize
+        
+        imvol=localnchan*maximsize*maximsize*localnpol
+        if((imvol > 60e6) and (not usescratch)):
+            casalog.post("please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column", "ERROR")
+            raise ValueError,  'please set usescratch=True for large images till we fix a problem of saving large images in the virtual model_data column'
+        #######End of warn section for CAS-5425
         #setup for 'per channel' clean
         dochaniter=False
         #if interactive and chaniter:
@@ -719,9 +742,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     pbcov_image += '.pbcoverage'
                 maskimage = imset.make_mask_from_threshhold(pbcov_image, maskimg) 
             if not imset.skipclean: 
-#                print "imager.clean() starts"
-#                if(os.path.exists(residualimage[0])):
-#                    imset.setReferenceFrameLSRK( residualimage[0] )
+                #print "imager.clean() starts"
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
                             model=modelimages, residual=residualimage,
@@ -753,11 +774,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ## Set frame conversion layer for all masks at the end. This doesn't happen from C++.
             ## This is because setReferenceFrame is called within makemultifieldmask2 to
             ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
-            ###### CAS-6676 : for nterms>1, internal images are in LSRK, but for nterms=1
-            ######                  they're 'dataframe'=TOPO.  The mask needs to be in the correct
-            ######                  frame for re-use when restarting clean.
-            if nterms==1 :  
-                imset.setFrameConversionForMasks()
+            imset.setFrameConversionForMasks()
             if(resmooth):
                 for k in range(len(modelimages)):
                     imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], "common")

@@ -43,7 +43,6 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/TabularSpectrum.h>
 #include <casa/Exceptions/Error.h>
-#include <casa/Containers/ContainerIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Containers/Record.h>
@@ -63,8 +62,6 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <measures/Measures/MeasureHolder.h>
-
-#include <stdcasa/cboost_foreach.h>
 
 using namespace std;
 
@@ -94,7 +91,7 @@ componentlist::~componentlist()
 }
 
 bool componentlist::open(const std::string& filename, const bool nomodify,
-                         const bool /*log*/)
+                         const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "open"));
 
@@ -122,13 +119,13 @@ bool componentlist::open(const std::string& filename, const bool nomodify,
   return rstat;
 }
 
-int componentlist::asciitocomponentlist(const std::string& /*filename*/,
-                                        const std::string& /*asciifile*/,
-                                        const std::string& /*refer*/,
-                                        const std::string& /*format*/,
-                                        const ::casac::record& /*direction_*/,
-                                        const ::casac::record& /*spectrum*/,
-                                        const ::casac::record& /*flux*/, const bool /*log*/)
+int componentlist::asciitocomponentlist(const std::string& filename,
+                                        const std::string& asciifile,
+                                        const std::string& refer,
+                                        const std::string& format,
+                                        const ::casac::record& direction_,
+                                        const ::casac::record& spectrum,
+                                        const ::casac::record& flux, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "asciitocomponentlist"));
 
@@ -150,7 +147,7 @@ int componentlist::asciitocomponentlist(const std::string& /*filename*/,
 }
 
 bool componentlist::concatenate(const ::casac::variant& list,
-                                const std::vector<int>& which, const bool /*log*/)
+                                const std::vector<int>& which, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "concatenate"));
 
@@ -217,7 +214,7 @@ bool componentlist::concatenate(const ::casac::variant& list,
 }
 
 bool
-componentlist::remove(const std::vector<int>& which, const bool /*log*/)
+componentlist::remove(const std::vector<int>& which, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "remove"));
 
@@ -265,7 +262,7 @@ bool componentlist::purge()
   return rstat;
 }
 
-bool componentlist::recover(const bool /*log*/)
+bool componentlist::recover(const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "recover"));
 
@@ -330,7 +327,7 @@ std::vector<int> componentlist::indices()
   return rstat;
 }
 
-bool componentlist::sort(const std::string& criteria, const bool /*log*/)
+bool componentlist::sort(const std::string& criteria, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "sort"));
 
@@ -378,10 +375,10 @@ bool componentlist::isphysical(const std::vector<int>& which)
   return rstat;
 }
 
-std::vector<double> componentlist::sample(const ::casac::variant& /*direction_*/, 
-                                          const ::casac::variant& /*pixellatsize*/, 
-                                          const ::casac::variant& /*pixellongsize*/, 
-                                          const ::casac::variant& /*frequency*/)
+std::vector<double> componentlist::sample(const ::casac::variant& direction_, 
+                                          const ::casac::variant& pixellatsize, 
+                                          const ::casac::variant& pixellongsize, 
+                                          const ::casac::variant& frequency)
 {
   itsLog->origin(LogOrigin("componentlist", "sample"));
 
@@ -401,7 +398,7 @@ std::vector<double> componentlist::sample(const ::casac::variant& /*direction_*/
   return rstat;
 }
 
-bool componentlist::rename(const std::string& filename, const bool /*log*/)
+bool componentlist::rename(const std::string& filename, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "rename"));
 
@@ -423,7 +420,7 @@ bool componentlist::rename(const std::string& filename, const bool /*log*/)
   return rstat;
 }
 
-bool componentlist::simulate(const int howmany, const bool /*log*/)
+bool componentlist::simulate(const int howmany, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "simulate"));
 
@@ -495,7 +492,7 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
       casa::MDirection theDir;
       ::casac::variant *tmpdir=0;
       //Default case
-      if(String(dir.toString())==String("[]")){
+      if(String(dir.toString())==String("")){
         tmpdir=new ::casac::variant(std::string("J2000 00h00m00.0 90d00m00"));
       }
       else{
@@ -523,7 +520,7 @@ bool componentlist::addcomponent(const ::casac::variant& flux,
       setspectrum(which, spectrumtype, index);
       MFrequency theFreq;
       ::casac::variant *tmpfreq=0;
-      if(String(freq.toString())== String("[]")){
+      if(String(freq.toString())== String("")){
         tmpfreq=new ::casac::variant(std::string("LSRK 1.420GHz"));
       }
       else{
@@ -580,7 +577,7 @@ bool componentlist::close(const bool log)
   return rstat;
 }
 
-  bool componentlist::edit(const int /*which*/, const bool /*log*/)
+bool componentlist::edit(const int which, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "edit"));
 
@@ -700,8 +697,8 @@ std::string componentlist::getlabel(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      rstat = itsList->component(which).label().c_str();
+      const Int c = checkIndex(which, "getlabel");
+      rstat = itsList->component(c).label().c_str();
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -715,7 +712,7 @@ std::string componentlist::getlabel(const int which)
 }
 
 bool componentlist::setlabel(const int which, const std::string& value,
-                             const bool /*log*/)
+                             const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setlabel"));
 
@@ -738,13 +735,13 @@ bool componentlist::setlabel(const int which, const std::string& value,
 
 std::vector<double> componentlist::getfluxvalue(const int which)
 {
-  itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
+  itsLog->origin(LogOrigin("componentlist", "getfluxvalue"));
+
   std::vector<double> rstat(0);
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      Vector<DComplex> fluxes = itsList->component(which).flux().value();
-
+      Int i = checkIndex(which, "getfluxvalue");
+      Vector<DComplex> fluxes = itsList->component(i).flux().value();
       Vector<Double> realfluxes(fluxes.nelements());
       for (uInt k=0; k < fluxes.nelements(); ++k){
         realfluxes[k]=real(fluxes[k]);
@@ -770,8 +767,8 @@ std::string componentlist::getfluxunit(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      rstat=itsList->component(which).flux().unit().getName();
+      Int i = checkIndex(which, "getfluxunit");
+      rstat=itsList->component(i).flux().unit().getName();
     }
     else{
       *itsLog << LogIO::WARN
@@ -785,7 +782,7 @@ std::string componentlist::getfluxunit(const int which)
   return rstat;
 }
 
-std::string componentlist::getfluxpol(const int /*which*/)
+std::string componentlist::getfluxpol(const int which)
 {
   itsLog->origin(LogOrigin("componentlist", "getfluxpol"));
 
@@ -806,126 +803,93 @@ std::string componentlist::getfluxpol(const int /*which*/)
   return rstat;
 }
 
-std::vector<double> componentlist::getfluxerror(const int which) {
-	itsLog->origin(LogOrigin("componentlist", __FUNCTION__));
-	try{
-		ThrowIf(
-			! itsList || ! itsBin,
-			"componentlist is not opened, please open first"
-		);
-		_checkIndex(which);
-		Vector<DComplex> fluxes = itsList->component(which).flux().errors();
-		vector<Double> realfluxes;
-		foreach_(DComplex flux, fluxes) {
-	        realfluxes.push_back(real(flux));
-		}
-		return realfluxes;
-	}
-	catch (const AipsError& x){
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	    RETHROW(x)
-	}
-	return vector<double>();
+std::vector<double> componentlist::getfluxerror(const int which)
+{
+  itsLog->origin(LogOrigin("componentlist", "getfluxerror"));
+
+  // TODO : IMPLEMENT ME HERE !
+  std::vector<double> rstat(0);
+  try{
+    if(itsList && itsBin){
+      *itsLog << LogIO::WARN << "getfluxerror not implemented yet" << LogIO::POST;
+    } else {
+      *itsLog << LogIO::WARN
+              << "componentlist is not opened, please open first" << LogIO::POST;
+    }
+  }
+  catch (AipsError x){
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x)
+  }
+  return rstat;
 }
 
-bool componentlist::setflux(
-	const int which, const ::casac::variant& varvalue,
-	const std::string& unit,
-	const std::string& polarization,
-	const ::casac::variant& error, const bool /*log*/
-) {
-	itsLog->origin(LogOrigin("componentlist", "setflux"));
+bool componentlist::setflux(const int which, const ::casac::variant& varvalue,
+                            const std::string& unit,
+                            const std::string& polarization,
+                            const ::casac::variant& error, const bool log)
+{
+  itsLog->origin(LogOrigin("componentlist", "setflux"));
 
-	bool rstat(false);
-	try{
-		ThrowIf(
-			! itsList || ! itsBin,
-			"componentlist is not opened, please open first"
-		);
-		Flux<Double> newFlux;
-		const ComponentType::Polarisation pol = (ComponentType::Polarisation)(checkFluxPol(polarization));
-		newFlux.setPol(pol);
+  bool rstat(false);
+  try{
+    if(itsList && itsBin){
+      Flux<Double> newFlux;
+      const ComponentType::Polarisation pol = (ComponentType::Polarisation)(checkFluxPol(polarization));
+      newFlux.setPol(pol);
 
-		const Unit fluxUnit(unit);
-		if (fluxUnit != Unit("Jy")) {
-			*itsLog << "The flux units must have the same dimensions as the Jansky"
-				<< endl << "Flux not changed on any components"
-				<< LogIO::EXCEPTION;
-		}
-		newFlux.setUnit(fluxUnit);
-		//Deal with the value...complex for nothing for now
-		Vector<Complex> value;
-		if( String(varvalue.toString()) == String("[]") ||
-		    (varvalue.type()== ::casac::variant::INTVEC) ||
-		    (varvalue.type()==::casac::variant::INT) ||
-		    (varvalue.type()== ::casac::variant::DOUBLEVEC) ||
-		    (varvalue.type()==::casac::variant::DOUBLE) ||
-		    (varvalue.type()== ::casac::variant::COMPLEXVEC) ||
-		    (varvalue.type()==::casac::variant::COMPLEX)
-		) {  
-		  Vector<DComplex> tmpintvec= varvalue.toComplexVec().size() > 0 ? Vector<DComplex>(varvalue.toComplexVec()): Vector<DComplex>(4, 0.0);
-			value.resize(tmpintvec.size());
-			convertArray(value, tmpintvec);
-		}
-		else{
-			throw(AipsError("Could not understand the type of flux value variable"));
-		}
-		variant::TYPE errorType = error.type();
-		Vector<DComplex> errs;
-		if(
-			(errorType == ::casac::variant::INTVEC) ||
-			(errorType == ::casac::variant::INT) ||
-			(errorType == ::casac::variant::DOUBLEVEC) ||
-			(errorType ==::casac::variant::DOUBLE) ||
-			(errorType == ::casac::variant::COMPLEXVEC) ||
-			(errorType ==::casac::variant::COMPLEX)
-		) {
-			Vector<DComplex> tmpError(error.toComplexVec());
-			ThrowIf(
-				tmpError.size() != value.size(),
-				"Error array must have same length as value array"
-			);
-			errs.resize(tmpError.size());
-			convertArray(errs, tmpError);
-		}
+      const Unit fluxUnit(unit);
+      if (fluxUnit != Unit("Jy")) {
+        *itsLog << "The flux units must have the same dimensions as the Jansky"
+                << endl << "Flux not changed on any components"
+                << LogIO::EXCEPTION;
+      }
+      newFlux.setUnit(fluxUnit);
+      //Deal with the value...complex for nothing for now
+      Vector<Complex> value;
+      if( (varvalue.type()== ::casac::variant::INTVEC) || 
+          (varvalue.type()==::casac::variant::INT) ||
+          (varvalue.type()== ::casac::variant::DOUBLEVEC) ||
+          (varvalue.type()==::casac::variant::DOUBLE) || 
+          (varvalue.type()== ::casac::variant::COMPLEXVEC) ||
+          (varvalue.type()==::casac::variant::COMPLEX)){
+        Vector<DComplex> tmpintvec(varvalue.toComplexVec());
+        value.resize(tmpintvec.size());
+        convertArray(value, tmpintvec);
+      }
+      else{
+        throw(AipsError("Could not understand the type of flux value variable"));
+	  
+      }
 
-		if ((value.size() == 1) &&  (pol == ComponentType::STOKES)) {
-			newFlux.setValue(real(value[0]));
-			if (errs.size() == 1) {
-				newFlux.setErrors(errs);
-			}
-		}
-		else if (value.size() == 4) {
-			Vector<Double> tmpC(4);
-			Vector<Double> tmpE(errs.size());
-			for(int i=0;i<4;i++) {
-				tmpC[i] = real(value[i]);
-				if (tmpE.size() == 4) {
-					tmpE[i] = real(errs[i]);
-				}
-			}
-			newFlux.setValue(tmpC);
-			if (tmpE.size() == 4) {
-				newFlux.setErrors(tmpE[0], tmpE[1], tmpE[2], tmpE[3]);
-			}
-		}
-		else {
-			*itsLog << "The flux must have one or four elements," << endl
-				<< "one element can only be used if the polarization is 'Stokes'."
-				<< endl << "Flux not changed on any components"
-				<< LogIO::EXCEPTION;
-		}
-		const Vector<Int> intVec = checkIndices(which, "setflux",
-				"Flux not changed on any components");
-		itsList->setFlux(intVec, newFlux);
-		rstat = true;
-
-	}
-	catch (AipsError x){
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		RETHROW(x)
-	}
-	return rstat;
+      if ((value.size() == 1) &&  (pol == ComponentType::STOKES)) {
+        newFlux.setValue(real(value[0]));
+      } else if (value.size() == 4) {
+        Vector<Double> tmpC(4);
+        for(int i=0;i<4;i++){
+          tmpC[i] = real(value[i]);
+        }
+        newFlux.setValue(tmpC);
+      } else {
+        *itsLog << "The flux must have one or four elements," << endl
+                << "one element can only be used if the polarization is 'Stokes'."
+                << endl << "Flux not changed on any components"
+                << LogIO::EXCEPTION;
+      }
+      const Vector<Int> intVec = checkIndices(which, "setflux",
+                                              "Flux not changed on any components");
+      itsList->setFlux(intVec, newFlux);
+      rstat = true;
+    } else {
+      *itsLog << LogIO::WARN
+              << "componentlist is not opened, please open first" << LogIO::POST;
+    }
+  }
+  catch (AipsError x){
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x)
+  }
+  return rstat;
 }
 
 bool componentlist::convertfluxunit(const int which, const std::string& unit)
@@ -990,8 +954,8 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
   ::casac::record *retval = 0;
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      casa::MDirection refdir = itsList->component(which).shape().refDirection();
+      const Int c = checkIndex(which, "getrefdir");
+      casa::MDirection refdir = itsList->component(c).shape().refDirection();
       ostringstream oss;
       refdir.print(oss);
       *itsLog << LogIO::NORMAL3 << String(oss) << LogIO::POST;
@@ -1017,8 +981,8 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
   return retval;
 }
 
-std::string componentlist::getrefdirra(const int /*which*/, const std::string& /*unit*/,
-                                       const int /*precision*/)
+std::string componentlist::getrefdirra(const int which, const std::string& unit,
+                                       const int precision)
 {
   itsLog->origin(LogOrigin("componentlist", "getrefdirra"));
 
@@ -1038,8 +1002,8 @@ std::string componentlist::getrefdirra(const int /*which*/, const std::string& /
   return rstat;
 }
 
-std::string componentlist::getrefdirdec(const int /*which*/, const std::string& /*unit*/,
-                                        const int /*precision*/)
+std::string componentlist::getrefdirdec(const int which, const std::string& unit,
+                                        const int precision)
 {
   itsLog->origin(LogOrigin("componentlist", "setrefdir"));
 
@@ -1067,8 +1031,8 @@ std::string componentlist::getrefdirframe(const int which)
   std::string rstat("");
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      casa::MDirection md = itsList->component(which).shape().refDirection();
+      const Int c = checkIndex(which, "getrefdirframe");
+      casa::MDirection md = itsList->component(c).shape().refDirection();
       rstat = md.getRefString().c_str();
     } else {
       *itsLog << LogIO::WARN
@@ -1083,7 +1047,7 @@ std::string componentlist::getrefdirframe(const int which)
 }
 
 bool componentlist::setrefdir(const int which, const ::casac::variant& ra, 
-                              const ::casac::variant& dec, const bool /*log*/)
+                              const ::casac::variant& dec, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setrefdir"));
 
@@ -1112,7 +1076,7 @@ bool componentlist::setrefdir(const int which, const ::casac::variant& ra,
 }
 
 bool componentlist::setrefdirframe(const int which, const std::string& frame,
-                                   const bool /*log*/)
+                                   const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setrefdirframe"));
 
@@ -1289,7 +1253,7 @@ bool componentlist::setshape(const int which, const std::string& type,
                              const ::casac::variant& minoraxiserror,
                              const ::casac::variant& positionangleerror,
                              const std::vector<double>& optionalparms,
-                             const bool /*log*/)
+                             const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setshape"));
 
@@ -1372,9 +1336,9 @@ bool componentlist::setshape(const int which, const std::string& type,
   return rstat;
 }
 
-bool componentlist::convertshape(const int /*which*/, const std::string& /*majoraxis*/,
-                                 const std::string& /*minoraxis*/,
-                                 const std::string& /*positionangle*/)
+bool componentlist::convertshape(const int which, const std::string& majoraxis,
+                                 const std::string& minoraxis,
+                                 const std::string& positionangle)
 {
   itsLog->origin(LogOrigin("componentlist", "convertshape"));
   
@@ -1527,110 +1491,7 @@ bool componentlist::setspectrum(const int which, const std::string& eltype,
   return rstat;
 }
 
-bool componentlist::setstokesspectrum(const int which, const std::string& eltype,
-				      const std::vector<double>& index, const std::vector<double>& tabfreqs, const std::vector<double>& tabi, const std::vector<double>& tabq, 
-				      const std::vector<double>& tabu,  const std::vector<double>& tabv, const ::casac::variant& reffreq,  
-				      const std::string& freqframe)
-{
-  itsLog->origin(LogOrigin("componentlist", "setspectrum"));
-
-
-  bool rstat(false);
-  try {
-    if(itsList && itsBin){
-      String type(eltype);
-      type.upcase();
-      if(type.contains("TABU"))
-	 type="Tabular Spectrum";	 
-      if(type.contains("SPECTRAL"))
-	 type="Spectral Index";
-       ComponentType::SpectralShape reqSpectrum = ComponentType::spectralShape(type);
-       SpectralModel* spectrumPtr = ComponentType::construct(reqSpectrum);
-       if (spectrumPtr == 0) {
-         *itsLog << LogIO::SEVERE
-                << "Could not translate the spectral type to a known value." << endl
-                << "Known types are:" << endl;
-         for(uInt i = 0; i < ComponentType::NUMBER_SPECTRAL_SHAPES - 1; ++i){
-           reqSpectrum = static_cast<ComponentType::SpectralShape>(i);
-           *itsLog << "\t" << ComponentType::name(reqSpectrum) + String("\n");
-         } 
-         *itsLog << "Spectrum not changed." << LogIO::POST;
-         return false;
-       }
-       if(reqSpectrum==ComponentType::TABULAR_SPECTRUM){
-	 if(tabfreqs.size() <2)
-	   throw(AipsError("There need to be at least 2 points in a tabular spectrum to interpolate in between"));
-	 if(tabfreqs.size() != tabi.size())
-	   throw(AipsError("lengths of tabular frequencies and I values have to be the same"));
-	 if(tabfreqs.size() != tabq.size())
-	   throw(AipsError("lengths of tabular frequencies and Q values have to be the same"));
-	 if(tabfreqs.size() != tabu.size())
-	   throw(AipsError("lengths of tabular frequencies and U values have to be the same"));
-	  if(tabfreqs.size() != tabv.size())
-	   throw(AipsError("lengths of tabular frequencies and V values have to be the same"));
-	 Vector<MVFrequency> freqs(tabfreqs.size());
-	 Vector<Flux<Double> > fluxval(tabfreqs.size());
-	 for (Int i=0; i < Int(tabfreqs.size()) ; ++i){
-	   freqs[i]=casa::Quantity(tabfreqs[i], "Hz");
-	   fluxval[i]=Flux<Double>(tabi[i], tabq[i], tabu[i], tabv[i]);
-	 }
-	 MFrequency::Types freqFrameType;
-	 if(!MFrequency::getType(freqFrameType, freqframe))
-	   throw(AipsError(String(freqframe) + String(" is not a frequency frame that is understood")));
-	 MFrequency refreq(freqs[0], freqFrameType);
-	 delete spectrumPtr;
-	 spectrumPtr=new TabularSpectrum(refreq, freqs, fluxval, MFrequency::Ref(freqFrameType));
-	 
-
-       }
-       else{
-	 String errorMessage;
-	 Record rec;
-	 Record freqRec;
-	 
-	 casa::Quantity freqQ=String(reffreq.toString()) != String("[]") ? casaQuantity(reffreq) : casa::Quantity(1.4, "GHz");
-	 MFrequency::Types eltype;
-	 if(!MFrequency::getType(eltype, freqframe))
-	   throw(AipsError(String(freqframe) + String(" is not a frequency frame that is understood")));
-	 MeasureHolder(MFrequency(freqQ, eltype)).toRecord(errorMessage,freqRec);
-	  setfreq(which, freqQ.get("GHz").getValue(), "GHz", True);
-	  setfreqframe(which, freqframe, True);
-	 rec.defineRecord("frequency", freqRec);
-	 *itsLog << LogIO::DEBUG1 << "index: " << index << LogIO::POST;
-	 // Vector<Double> indexVec(index);
-	 // if(indexVec.nelements() > 0)
-	 //   rec.define("index", indexVec[0]);
-	 // else
-	 rec.define("index", index[0]);
-	 if(index.size() == 4)
-	   rec.define("stokesindex", Vector<Double>(index));
-	 if (!spectrumPtr->fromRecord(errorMessage, rec)) {
-	   *itsLog << LogIO::SEVERE
-		   << "Could not parse the spectrum parameters. The error was:" << endl
-		   << "\t" << errorMessage << endl
-		   << "Spectrum not changed."
-		   << LogIO::POST;
-	   return false;
-	 }
-       }
-       Vector<Int> intVec(1, which);
-       itsList->setSpectrumParms(intVec, *spectrumPtr);
-       delete spectrumPtr;
-
-       rstat = true;
-    } else {
-      *itsLog << LogIO::WARN
-              << "componentlist is not opened, please open first" << LogIO::POST;
-    }
-  }
-  catch (AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x)
-  }
-  return rstat;
-}
-
-::casac::record* componentlist::getfreq(const int /*which*/)
+::casac::record* componentlist::getfreq(const int which)
 {
   itsLog->origin(LogOrigin("componentlist", "getfreq"));
 
@@ -1651,7 +1512,7 @@ bool componentlist::setstokesspectrum(const int which, const std::string& eltype
   return rstat;
 }
 
-double componentlist::getfreqvalue(const int /*which*/)
+double componentlist::getfreqvalue(const int which)
 {
   itsLog->origin(LogOrigin("componentlist", "getfreqvalue"));
 
@@ -1672,7 +1533,7 @@ double componentlist::getfreqvalue(const int /*which*/)
   return rstat;
 }
 
-std::string componentlist::getfrequnit(const int /*which*/)
+std::string componentlist::getfrequnit(const int which)
 {
   itsLog->origin(LogOrigin("componentlist", "getfrequnit"));
 
@@ -1693,7 +1554,7 @@ std::string componentlist::getfrequnit(const int /*which*/)
   return rstat;
 }
 
-std::string componentlist::getfreqframe(const int /*which*/)
+std::string componentlist::getfreqframe(const int which)
 {
   itsLog->origin(LogOrigin("componentlist", "getfreqframe"));
 
@@ -1715,7 +1576,7 @@ std::string componentlist::getfreqframe(const int /*which*/)
 }
 
 bool componentlist::setfreq(const int which, const double value,
-                            const std::string& unit, const bool /*log*/)
+                            const std::string& unit, const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setfreq"));
 
@@ -1742,7 +1603,7 @@ bool componentlist::setfreq(const int which, const double value,
 }
 
 bool componentlist::setfreqframe(const int which, const std::string& frame,
-                                 const bool /*log*/)
+                                 const bool log)
 {
   itsLog->origin(LogOrigin("componentlist", "setfreqframe"));
   
@@ -1795,15 +1656,15 @@ bool componentlist::convertfrequnit(const int which, const std::string& unit)
 }
 
 
-::casac::record* componentlist::getcomponent(const int which, const bool /*iknow*/)
+::casac::record* componentlist::getcomponent(const int which, const bool iknow)
 {
   itsLog->origin(LogOrigin("componentlist", "getcomponent"));
 
   casac::record *rstat(0);
   try{
     if(itsList && itsBin){
-      _checkIndex(which);
-      const SkyComponent& listRef(itsList->component(which));
+      Int c=checkIndex(which, "getcomponent");
+      const SkyComponent& listRef(itsList->component(c));
       String error;
       Record leRec;
       if(!listRef.toRecord(error, leRec)){
@@ -1825,7 +1686,7 @@ bool componentlist::convertfrequnit(const int which, const std::string& unit)
   return rstat;
 }
 
-bool componentlist::add(const ::casac::record& thecomponent, const bool /*iknow*/)
+bool componentlist::add(const ::casac::record& thecomponent, const bool iknow)
 {
   itsLog->origin(LogOrigin("componentlist", "add"));
 
@@ -1857,8 +1718,8 @@ bool componentlist::add(const ::casac::record& thecomponent, const bool /*iknow*
   return rstat;
 }
 
-bool componentlist::replace(const int /*which*/, const ::casac::record& /*list*/,
-                            const std::vector<int>& /*whichones*/)
+bool componentlist::replace(const int which, const ::casac::record& list,
+                            const std::vector<int>& whichones)
 {
   itsLog->origin(LogOrigin("componentlist", "replace"));
 
@@ -1906,7 +1767,7 @@ bool componentlist::summarize(const int which) {
 	return rstat;
 }
 
-bool componentlist::iscomponentlist(const ::casac::variant& /*tool*/)
+bool componentlist::iscomponentlist(const ::casac::variant& tool)
 {
   itsLog->origin(LogOrigin("componentlist", "iscomponentlist"));
 
@@ -1980,12 +1841,17 @@ int componentlist::checkFluxPol(const String& polString)
   return pol;
 }
 
-void componentlist::_checkIndex(int which) const {
-	Int m = itsList->nelements() - 1;
-	ThrowIf(
-		which < 0 || which > m,
-		"Index out of range. The component number must be between 0 and " + String::toString(m)
-    );
+int componentlist::checkIndex(int which, const String& function) const
+{
+  itsLog->origin(LogOrigin("componentlist", function));
+
+  if (which < 0 || which >= static_cast<Int>(itsList->nelements())){
+    *itsLog << "Index out of range." << endl
+            << "The component number is less than one or greater than"
+            << " the list length"
+            << LogIO::EXCEPTION;
+  }
+  return which;
 }
 
 } // casac namespace

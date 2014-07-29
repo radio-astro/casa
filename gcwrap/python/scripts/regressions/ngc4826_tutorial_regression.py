@@ -860,8 +860,7 @@ clean(vis='ngc4826.tutorial.16apr98.src.split.ms',
 ### As we moved to clean by default in flat sigma rather than
 ### flat snr it converges less well
  ###     cyclefactor=1.5,niter=10000,threshold='45mJy',
-      multiscale=[],
-      cyclefactor=2, niter=10000, threshold='140mJy',
+      cyclefactor=4,niter=10000,threshold='45mJy',
       minpb=0.3,pbcor=False, usescratch=False)
 
 ### NOTE: mosaic data ...Sault weighting implies a noise unform image
@@ -1418,8 +1417,8 @@ testdate = '2010-04-29 (RR)'
 testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
-clean_offline_rms = 0.0599
-clean_momentzero_max = 159.22
+clean_offline_rms = 0.055416
+clean_momentzero_max = 151.66
 clean_momentzero_rms = 14.31
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
@@ -1437,9 +1436,9 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # jiggled around a fair bit.  The median is _not_ affected by the two spurious
 # blobs at 501.64 km/s, though.  (Verified by doing imstat with a tight polygon
 # region.)
-clean_offsrc_rms = 0.0557
-clean_offline_rms = 0.0550
-clean_momentzero_rms = 14.57
+clean_offsrc_rms = 0.0604
+clean_offline_rms = 0.0625
+clean_momentzero_rms = 14.05
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
@@ -1457,7 +1456,7 @@ model_pbcor_sum = 72.72
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
 clean_image_max = 1.4647
-clean_momentone_median = 415.9
+clean_momentone_median = 424.40
 clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 

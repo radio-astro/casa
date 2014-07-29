@@ -287,7 +287,6 @@ casa_add_executable( plotms tExportRangeLeftBottom test/tExportRangeLeftBottom.c
 casa_add_executable( plotms tExportRangeInternal test/tExportRangeInternal.cc )
 casa_add_executable( plotms tExportRangePipeline test/tExportRangePipeline.cc )
 casa_add_executable( plotms tTimeColorization test/tTimeColorization.cc )
-casa_add_executable( plotms tMultiplePlotTypes test/tMultiplePlotTypes.cc)
 casa_add_executable( plotms tTimeColorizationAveraging test/tTimeColorizationAveraging.cc )
 casa_add_executable( plotms tTimeIteration test/tTimeIteration.cc )
 casa_add_executable( plotms tTimeAveragingIteration test/tTimeAveragingIteration.cc )

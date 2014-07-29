@@ -5,15 +5,7 @@ import string
 import time
 from taskinit import *
 import viewertool
-###
-### if numpy is not available, make float64 and ndarray redundant checks...
-###
-try:
-    from numpy import float64 as float64
-    from numpy import ndarray as ndarray
-except:
-    float64 = float
-    ndarray = list
+
 
 class __imview_class(object):
     "imview() task with local state for created viewer tool"
@@ -422,14 +414,14 @@ class __imview_class(object):
             if type(array_size) != int:
                 casalog.post( "internal error: array_size is expected to be of type int", 'SEVERE')
                 raise Exception, "internal error: array_size is expected to be of type int"
-            if type(value) != list and not isinstance(value,ndarray):
+            if type(value) != list:
                 casalog.post( error_string + " must be a list", 'SEVERE')
                 raise Exception, error_string + " must be a list"
             if array_size > 0 and len(value) != array_size:
                 numbers = { '1': 'one', '2': 'two', '3': 'three' }
                 casalog.post( error_string + " can only be a " + numbers[str(array_size)] + " element numeric list", 'SEVERE')
                 raise Exception, error_string + " can only be a " + numbers[str(array_size)] + " element numeric list"
-            if not all(map( lambda x: type(x) == int or type(x) == float or isinstance(x,float64), value )):
+            if not all(map( lambda x: type(x) == int or type(x) == float, value )):
                 casalog.post( error_string + " must be a numeric list", 'SEVERE')
                 raise Exception, error_string + " must be a numeric list"
             return map( lambda x: otype(x), value )

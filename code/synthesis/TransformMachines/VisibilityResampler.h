@@ -33,10 +33,10 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/TransformMachines/VisibilityResamplerBase.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
-//#include <msvis/MSVis/AsynchronousTools.h>
+//#include <synthesis/MSVis/AsynchronousTools.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>

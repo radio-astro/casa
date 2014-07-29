@@ -139,8 +139,7 @@ public:
 	Bool makeMSBasicStructure(	String& msname,
 								String& whichDataCol,
 								const Vector<Int>& tileShape = Vector<Int> (1, 0),
-								const String& combine = "",
-								Table::TableOption option=Table::New);
+								const String& combine = "");
 
 	Bool isAllColumns(const Vector<MS::PredefinedColumns>& colNames);
 
@@ -154,16 +153,14 @@ public:
 									const Int npol, const String& telescop,
 									const Vector<MS::PredefinedColumns>& colNamesTok,
 									const Int obstype = 0, const Bool compress = False,
-									const asdmStManUseAlternatives asdmStManUse = DONT,
-									Table::TableOption option=Table::New);
+									const asdmStManUseAlternatives asdmStManUse = DONT);
 
 	// Same as above except allowing manual tileshapes
 	static MeasurementSet* setupMS(	const String& msname, const Int nchan,
 									const Int npol, const Vector<MS::PredefinedColumns>& colNamesTok,
 									const Vector<Int>& tileShape = Vector<Int> (1, 0),
 									const Bool compress = False,
-									const asdmStManUseAlternatives asdmStManUse = DONT,
-									Table::TableOption option=Table::New);
+									const asdmStManUseAlternatives asdmStManUse = DONT);
 
 
 	// The output MS must have (at least?) 1 of DATA, FLOAT_DATA, or LAG_DATA.
@@ -221,8 +218,6 @@ public:
 	void copyMainTableKeywords (TableRecord& outKeys,
 			const TableRecord& inKeys);
 
-	Int getProcessorId(Int dataDescriptionId, String msname);
-
 	// This falls between copyGenericSubtables() and the copiers for standard
 	// sub-tables like copyFeed().  It is for optional sub-tables like CALDEVICE
 	// and SYSPOWER which can be watched for by name and may need their
@@ -235,10 +230,9 @@ public:
 
 	Bool copyGenericSubtables();
 
-	// To consolidate several sub-tables when dealing with MMS
+	// To consolidate several SPW sub-tables
 	static Bool mergeSpwSubTables(Vector<String> filenames);
 	static Bool mergeDDISubTables(Vector<String> filenames);
-	static Bool mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
 
 	// Accesors for the MS objects
 	MeasurementSet * getInputMS() {return &ms_p;};

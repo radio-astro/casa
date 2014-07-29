@@ -35,7 +35,7 @@
 #include <guitools/Histogram/ChannelRangeWidget.qo.h>
 #include <guitools/Histogram/ZoomWidget.qo.h>
 #include <casa/Arrays/Vector.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <limits>
 
 #include <QDebug>
@@ -1039,12 +1039,7 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 
 	if ( histColor != fitCurveColor ){
 		if ( stepFunctionFilledAction.isChecked() ){
-			if( displayLogY ){
-				curve->setBaseline( 1 );
-			}
-			else {
-				curve->setBaseline( 0 );
-			}
+			curve->setBaseline( 0 );
 			QBrush brush;
 			brush.setColor( histColor );
 			brush.setStyle( Qt::SolidPattern );

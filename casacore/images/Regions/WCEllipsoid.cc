@@ -535,8 +535,6 @@ LCRegion* WCEllipsoid::doToLCRegion(
 			outCenter, outRadius, outShape
 		);
 	}
-
-	throw AipsError ("This should never be reached");
 }
 
 

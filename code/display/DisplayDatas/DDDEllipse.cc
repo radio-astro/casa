@@ -486,10 +486,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			tWorldParameters(1).setValue(tWorld(1));
 			tWorldParameters(1).setUnit(units(1));
 //
-			SkyComponentFactory::worldWidthsToPixel (itsPixelShape, tWorldParameters,
+			ImageUtilities::worldWidthsToPixel (itsLogger, itsPixelShape, tWorldParameters,
 			                                    itsCoordinateSystem, pixelAxes, itsDoRef);
 		} else {
-			SkyComponentFactory::worldWidthsToPixel (itsPixelShape, itsWorldParameters,
+			ImageUtilities::worldWidthsToPixel (itsLogger, itsPixelShape, itsWorldParameters,
 			                                    itsCoordinateSystem, pixelAxes, itsDoRef);
 		}
 
@@ -554,7 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pParameters[0] = itsPixelCenter[0];
 		pParameters[1] = itsPixelCenter[1];
 		for (uInt i=0; i<3; i++) pParameters[i+2] = itsPixelShape[i];
-		SkyComponentFactory::pixelWidthsToWorld (wParameters, pParameters,
+		ImageUtilities::pixelWidthsToWorld (itsLogger, wParameters, pParameters,
 		                                    itsCoordinateSystem, pixelAxes, itsDoRef);
 		itsWorldParameters(2) = wParameters.getMajor();
 		itsWorldParameters(3) = wParameters.getMinor();

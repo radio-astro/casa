@@ -41,8 +41,7 @@ An imagemetadata tool provides access to \casa\ image metadata.
 \medskip
 \noindent{\bf General}
 
-An imagemetadata tool provides access to an image's metadata. This tool
-fully supports float and complex valued images.
+An imagemetadata tool provides access to an image's metadata.
 
 <example> 
 
@@ -231,28 +230,13 @@ imd.done()
         Set a key-value pair if possible.
     </description>
     <example>
-    
-    Note that when setting the reference value of a polarizaiton axis, one must
-    provide an array of stokes/polarization strings (["I", "Q", "XX"]) that is the
-    same length as the stokes axis. If the stokes axis is degenerate, one can alternatively
-    provide a string indicating the stokes value.
-    
 imd.open("myim.im")
 # Set keyword "telescope" with value "Argus Array"
-if imd.set("telescope", "Argus Array"):
+if set("telescope", "Argus Array"):
     print "telescope has been updated"
 else:
     print "Unable to update telescope."
 imd.done()
-
-# set polarizations for an image with three pixels on the stokes axis crval3
-imd.open("myim.im")
-if imd.set("crval3", [XY, LL, "Q"]):
-    print "polarization values have been updated"
-else:
-    print "Unable to update polarization values."
-imd.done()
-
     </example>
 </method>
 

@@ -32,10 +32,6 @@ class sdflagmanager_worker(sdutil.sdtask_template):
 
     def initialize_scan(self):
         self.scan = sd.scantable(self.infile_abs, average=False)
-        
-        # CAS-5410 Use private tools inside task scripts
-#        fg = gentools(['fg'])[0]
-#        fg.done()
 
     def execute(self):
         if os.path.exists(self.sdfverfile):

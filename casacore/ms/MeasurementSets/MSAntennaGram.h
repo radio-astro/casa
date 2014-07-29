@@ -73,21 +73,9 @@ class TableExprNode;
   
 // Declare the bison parser (is implemented by bison command).
 // It returns a TaQL expression tree.
-  TableExprNode msAntennaGramParseCommand (MSSelectableTable& msLike,
-                                           const String& command, 
-                                           Vector<Int>& selectedAnts1,
-                                           Vector<Int>& selectedAnts2,
-                                           Matrix<Int>& selectedBaselines) ;
-  TableExprNode msAntennaGramParseCommand (MSAntennaParse* thisParser,
+  TableExprNode msAntennaGramParseCommand (const MSAntenna& msSubTable,
 					   const TableExprNode& col1TEN,
 					   const TableExprNode& col2TEN,
-                                           const String& command, 
-                                           Vector<Int>& selectedAnts1,
-                                           Vector<Int>& selectedAnts2,
-                                           Matrix<Int>& selectedBaselines) ;
-  TableExprNode msAntennaGramParseCommand (Table& subTable,
-					   TableExprNode& col1TEN,
-					   TableExprNode& col2TEN,
                                            const String& command, 
                                            Vector<Int>& selectedAnts1,
                                            Vector<Int>& selectedAnts2,

@@ -27,18 +27,7 @@
  *    pjt 14jun01 use WORDS_BIGENDIAN to figure out the pack routines
  *                removed 'trace' clutter from the old multiflow
  *    pjt 24jun01 PPC/powerpc is a BIGENDIAN (linux) machine
- *    pjt 21jun02 MIR4
- *    pjt  4jan05 merged in the new ATNF HAS_STRERROR
- *    pjt  6feb07 kludge for darwin_intel
- *    cgk 20dec07 make HAS_STRERROR be HAVE_STRERROR per configure.ac
  */
-
-#if !defined(MIR_SYSDEP_H)
-#define MIR_SYSDEP_H
-
-#include <sys/types.h>
-#include <unistd.h>
-
 
 #ifndef Null
 #define Null '\0'
@@ -75,13 +64,9 @@ typedef char Void;
 #define Const /* NULL */
 #define ARGS(s) ()
 #endif /* __STDC__ */
-#if !defined(__cplusplus)
-#define private static
-#endif /* __cplusplus */
-#endif /* MIRIAD_TYPES_DEFINED */
+#endif
 
 typedef int int2;
-typedef long long int int8;
 
 /************************************************************************/
 /*									*/
@@ -107,7 +92,7 @@ typedef long long int int8;
 /************************************************************************/
 
 #ifndef defined_params
-#if defined(convex) || defined(alpha) || defined(__alpha)
+#if defined(convex) || defined(alpha)
 #  define FORT_TRUE  -1
 #else
 #  define FORT_TRUE 1
@@ -120,14 +105,6 @@ typedef long long int int8;
 #define BUFALIGN 2
 #define BUFSIZE 16384
 
-/* Some machines have the "strerror" routine. Linux whinges significantly
-   if you use the "old" way of doing effectively what strerror does. */
-
-/* strerror is POSIX and should be supported under any POSIX.1 system */
-/* Moving check for strerror into configure steps to define HAVE_STRERROR */
-/* left old style build compatible check in bug.c */
-
-
 /*  Short cut routines when no conversion is necessary. These are
     used for any IEEE floating point machine with FITS ordered bytes.	
 
@@ -139,17 +116,12 @@ typedef long long int int8;
  */
 
 
-#ifndef WORDS_BIGENDIAN
-# if defined (sun) || defined (convex) || defined (mips) || defined(sgi) || defined(hpux)
-#  define WORDS_BIGENDIAN
-# endif
-# if defined(PPC) || defined(powerpc) || defined(darwin_ppc)
-#  define WORDS_BIGENDIAN
-# endif
+#if defined (sun) || defined (convex) || defined (mips) || defined(sgi) || defined(hpux)
+#define WORDS_BIGENDIAN
 #endif
 
-#if defined(i386)
-#undef WORDS_BIGENDIAN
+#if defined(PPC) || defined(powerpc)
+#define WORDS_BIGENDIAN
 #endif
 
 #ifdef WORDS_BIGENDIAN 
@@ -159,26 +131,5 @@ typedef long long int int8;
 #  define unpackd_c(a,b,c)  memcpy((char *)(b),(a),sizeof(double)*(c))
 #  define pack32_c(a,b,c)   memcpy((b),(char *)(a),sizeof(int)*(c))
 #  define unpack32_c(a,b,c) memcpy((char *)(b),(a),sizeof(int)*(c))
-
-void pack16_c(int *in, char *out, int n);
-void unpack16_c(char *in, int *out, int n);
-
-#else
-
-#if 1
-void pack16_c(int *in, char *out, int n);
-void unpack16_c(char *in, int *out, int n);
-void pack32_c(int *in, char *out, int n);
-void unpack32_c(char *in, int *out, int n);
-void pack64_c(int8 *in, char *out, int n);
-void unpack64_c(char *in, int8 *out, int n);
-void packr_c(float *in, char *out, int n);
-void unpackr_c(char *in, float *out, int n);
-void packd_c(double *in, char *out, int n);
-void unpackd_c(char *in, double *out, int n);
-#endif
-
 #endif
 #endif
-
-#endif /* MIR_SYSDEP_H */

@@ -38,7 +38,7 @@ namespace casa {
 
 // Constructors/Destructors //
 
-TBFilterRule::TBFilterRule(String f, tb::Comparator c, TBData* v, TBData* v2,
+TBFilterRule::TBFilterRule(String f, Comparator c, TBData* v, TBData* v2,
         bool n, bool a): field(f), comparator(c), value(v), value2(v2),
         isNot(n), anyField(a) { }
 
@@ -51,7 +51,7 @@ TBFilterRule::~TBFilterRule() {
 
 String TBFilterRule::getField() { return field; }
 
-tb::Comparator TBFilterRule::getComparator() { return comparator; }
+Comparator TBFilterRule::getComparator() { return comparator; }
 
 TBData* TBFilterRule::getValue() { return value; }
 
@@ -91,11 +91,11 @@ int TBFilterRule::rowPasses(TBTable* table, int row) {
     TBData* data = table->dataAt(row, j);
     String type = data->getType();
 
-    if(comparator == tb::EQUALS) {
+    if(comparator == EQUALS) {
         bool b = data->equals(value);
         if((b && isNot) || (!b && !isNot)) return -1;
         
-    } else if(comparator == tb::CONTAINS) {
+    } else if(comparator == CONTAINS) {
         bool wasLoaded = ((TBArrayData*)data)->isLoaded();
         TBArrayData* array = table->loadArray(row, j);
         bool b = array == NULL;
@@ -106,7 +106,7 @@ int TBFilterRule::rowPasses(TBTable* table, int row) {
         if(!wasLoaded) array->release();
         if(b) return -1;
         
-    } else if(comparator == tb::BETWEEN) {
+    } else if(comparator == BETWEEN) {
         double v = data->asDouble();
         double v1 = value->asDouble();
         double v2 = value2->asDouble();
@@ -120,7 +120,7 @@ int TBFilterRule::rowPasses(TBTable* table, int row) {
         if((!isNot && (v < v1 || v > v2)) ||
            (isNot && (v1 <= v && v <= v2))) return -1;
            
-    } else if(comparator == tb::CONTAINSBT) {
+    } else if(comparator == CONTAINSBT) {
         bool wasLoaded = ((TBArrayData*)data)->isLoaded();
         TBArrayData* array = table->loadArray(row, j);
         bool b = array == NULL;
@@ -131,12 +131,12 @@ int TBFilterRule::rowPasses(TBTable* table, int row) {
         if(!wasLoaded) array->release();
         if(b) return -1;
         
-    } else if(comparator == tb::LESSTHAN) {
+    } else if(comparator == LESSTHAN) {
         double v = data->asDouble();
         double v1 = value->asDouble();
         if((!isNot && v >= v1) || (isNot && v < v1)) return -1;
         
-    } else if(comparator == tb::CONTAINSLT) {
+    } else if(comparator == CONTAINSLT) {
         bool wasLoaded = ((TBArrayData*)data)->isLoaded();
         TBArrayData* array = table->loadArray(row, j);
         bool b = array == NULL;
@@ -147,12 +147,12 @@ int TBFilterRule::rowPasses(TBTable* table, int row) {
         if(!wasLoaded) array->release();
         if(b) return -1;
         
-    } else if(comparator == tb::GREATERTHAN) {
+    } else if(comparator == GREATERTHAN) {
         double v = data->asDouble();
         double v1 = value->asDouble();
         if((!isNot && v <= v1) || (isNot && v > v1)) return -1;
         
-    } else if(comparator == tb::CONTAINSGT) {
+    } else if(comparator == CONTAINSGT) {
         bool wasLoaded = ((TBArrayData*)data)->isLoaded();
         TBArrayData* array = table->loadArray(row, j);
         bool b = array == NULL;
@@ -178,19 +178,19 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
 
         // make sure type and comparator are compatable
         if(TBConstants::typeIsArray(type)) {
-            if(comparator == tb::EQUALS || comparator == tb::BETWEEN ||
-               comparator == tb::LESSTHAN || comparator == tb::GREATERTHAN)
+            if(comparator == EQUALS || comparator == BETWEEN ||
+               comparator == LESSTHAN || comparator == GREATERTHAN)
                 continue;
                         
             String t = TBConstants::arrayType(type);
-            if(!TBConstants::typeIsNumberable(t) && (comparator== tb::CONTAINSBT ||
-               comparator == tb::CONTAINSLT || comparator == tb::CONTAINSGT)) continue;
+            if(!TBConstants::typeIsNumberable(t) && (comparator== CONTAINSBT ||
+               comparator == CONTAINSLT || comparator == CONTAINSGT)) continue;
         } else {
-            if(!TBConstants::typeIsNumberable(type) && (comparator== tb::BETWEEN ||
-               comparator == tb::LESSTHAN || comparator == tb::GREATERTHAN)) continue;
+            if(!TBConstants::typeIsNumberable(type) && (comparator== BETWEEN ||
+               comparator == LESSTHAN || comparator == GREATERTHAN)) continue;
         }
 
-        if(comparator == tb::EQUALS) {
+        if(comparator == EQUALS) {
             bool b;
             if(TBConstants::typeIsNumberable(type))
                 b = data->asDouble() == value->asDouble();
@@ -199,7 +199,7 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
             
             if((b && !isNot) || (!b && isNot)) return j;
 
-        } else if(comparator == tb::CONTAINS) {
+        } else if(comparator == CONTAINS) {
             bool wasLoaded = ((TBArrayData*)data)->isLoaded();
             TBArrayData* array = table->loadArray(row, j);
             bool b = array != NULL;
@@ -215,7 +215,7 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
             if(!wasLoaded) array->release();
             if(b) return j;
         
-        } else if(comparator == tb::BETWEEN) {
+        } else if(comparator == BETWEEN) {
             double v = data->asDouble();
             double v1 = value->asDouble();
             double v2 = value2->asDouble();
@@ -229,7 +229,7 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
             if((!isNot && v >= v1 && v <= v2) || (isNot && (v < v1 || v > v2)))
                 return j;
             
-        } else if(comparator == tb::CONTAINSBT) {
+        } else if(comparator == CONTAINSBT) {
             bool wasLoaded = ((TBArrayData*)data)->isLoaded();
             TBArrayData* array = table->loadArray(row, j);
             bool b = array != NULL;
@@ -247,12 +247,12 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
             if(!wasLoaded) array->release();
             if(b) return j;
             
-        } else if(comparator == tb::LESSTHAN) {
+        } else if(comparator == LESSTHAN) {
             double v = data->asDouble();
             double v1 = value->asDouble();
             if((!isNot && v < v1) || (isNot && v >= v1)) return j;
             
-        } else if(comparator == tb::CONTAINSLT) {
+        } else if(comparator == CONTAINSLT) {
             bool wasLoaded = ((TBArrayData*)data)->isLoaded();
             TBArrayData* array = table->loadArray(row, j);
             bool b = array != NULL;
@@ -268,12 +268,12 @@ int TBFilterRule::anyFieldPasses(TBTable* table, int row) {
             if(!wasLoaded) array->release();
             if(b) return j;
             
-        } else if(comparator == tb::GREATERTHAN) {
+        } else if(comparator == GREATERTHAN) {
             double v = data->asDouble();
             double v1 = value->asDouble();
             if((!isNot && v > v1) || (isNot && v <= v1)) return j;
             
-        } else if(comparator == tb::CONTAINSGT) {
+        } else if(comparator == CONTAINSGT) {
             bool wasLoaded = ((TBArrayData*)data)->isLoaded();
             TBArrayData* array = table->loadArray(row, j);
             bool b = array != NULL;
@@ -394,60 +394,60 @@ void TBFilterRules::fieldChosen(int i) {
     comparatorChooser->clear();
     
     if(i == fieldChooser->count() - 1) {
-        comparatorChooser->addItem(TBConstants::compToString(tb::EQUALS).c_str());
-        comparatorChooser->addItem(TBConstants::compToString(tb::BETWEEN).c_str());
+        comparatorChooser->addItem(TBConstants::compToString(EQUALS).c_str());
+        comparatorChooser->addItem(TBConstants::compToString(BETWEEN).c_str());
         comparatorChooser->addItem(TBConstants::compToString(
-                tb::LESSTHAN).c_str());
+                LESSTHAN).c_str());
         comparatorChooser->addItem(TBConstants::compToString(
-                tb::GREATERTHAN).c_str());
+                GREATERTHAN).c_str());
         comparatorChooser->addItem(TBConstants::compToString(
-                tb::CONTAINS).c_str());
+                CONTAINS).c_str());
         comparatorChooser->addItem(TBConstants::compToString
-                (tb::CONTAINSBT).c_str());
+                (CONTAINSBT).c_str());
         comparatorChooser->addItem(TBConstants::compToString(
-                tb::CONTAINSLT).c_str());
+                CONTAINSLT).c_str());
         comparatorChooser->addItem(TBConstants::compToString(
-                tb::CONTAINSGT).c_str());
+                CONTAINSGT).c_str());
         
     } else {
         String type = table->getFields()->at(i)->getType();
         if(!TBConstants::typeIsArray(type)) {
             comparatorChooser->addItem(TBConstants::compToString(
-                    tb::EQUALS).c_str());
+                    EQUALS).c_str());
 
             if(TBConstants::typeIsNumberable(type)) {
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::BETWEEN).c_str());
+                        BETWEEN).c_str());
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::LESSTHAN).c_str());
+                        LESSTHAN).c_str());
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::GREATERTHAN).c_str());
+                        GREATERTHAN).c_str());
             }
             
         } else {
             comparatorChooser->addItem(TBConstants::compToString(
-                    tb::CONTAINS).c_str());
+                    CONTAINS).c_str());
 
             type = TBConstants::arrayType(type);
             if(TBConstants::typeIsNumberable(type)) {
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::CONTAINSBT).c_str());
+                        CONTAINSBT).c_str());
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::CONTAINSLT).c_str());
+                        CONTAINSLT).c_str());
                 comparatorChooser->addItem(TBConstants::compToString(
-                        tb::CONTAINSGT).c_str());
+                        CONTAINSGT).c_str());
             }
         }
     }
 }
 
 void TBFilterRules::comparatorChosen(QString cs) {
-    tb::Comparator c = TBConstants::stringToComp(qPrintable(cs));
-    bool b = c == tb::BETWEEN || c == tb::CONTAINSBT;
+    Comparator c = TBConstants::stringToComp(qPrintable(cs));
+    bool b = c == BETWEEN || c == CONTAINSBT;
     valueEdit2->setEnabled(b);
     andLabel->setEnabled(b);
 
-    if(c== tb::CONTAINS || c== tb::CONTAINSBT || c == tb::CONTAINSLT || c == tb::CONTAINSGT) {
+    if(c== CONTAINS || c== CONTAINSBT || c == CONTAINSLT || c == CONTAINSGT) {
         notChooser->setItemText(0, "does");
         notChooser->setItemText(1, "does not");
     } else {
@@ -480,7 +480,7 @@ void TBFilterRules::addRule() {
     TBConstants::strtrim(value);
     if(field.empty() || comp.empty() || value.empty()) return;
 
-    tb::Comparator comparator = TBConstants::stringToComp(comp);
+    Comparator comparator = TBConstants::stringToComp(comp);
 
     String value2;
     bool anyField = fieldChooser->currentIndex() == fieldChooser->count() - 1;
@@ -492,7 +492,7 @@ void TBFilterRules::addRule() {
 
     // check validity
     if(anyField) {
-        if(comparator != tb::EQUALS && comparator != tb::CONTAINS) {
+        if(comparator != EQUALS && comparator != CONTAINS) {
             String dt = TBConstants::TYPE_DATE;
             double d;
             
@@ -500,7 +500,7 @@ void TBFilterRules::addRule() {
                !TBConstants::valueIsValid(value, dt))
                 valid = false;
             
-            if(valid && (comparator == tb::BETWEEN || comparator == tb::CONTAINSBT)) {
+            if(valid && (comparator == BETWEEN || comparator == CONTAINSBT)) {
                 value2 = qPrintable(valueEdit2->text());
                 if(TBConstants::atod(value2, &d) != 1 &&
                    !TBConstants::valueIsValid(value2, dt))
@@ -509,7 +509,7 @@ void TBFilterRules::addRule() {
         }
         
         if(valid) {
-            String t = (comparator == tb::EQUALS || comparator == tb::CONTAINS) ?
+            String t = (comparator == EQUALS || comparator == CONTAINS) ?
                        TBConstants::TYPE_STRING : TBConstants::TYPE_DOUBLE;
             d1 = TBData::create(value, t);
             if(!value2.empty())
@@ -524,19 +524,19 @@ void TBFilterRules::addRule() {
             }
         }
     
-        if(comparator == tb::EQUALS || comparator == tb::LESSTHAN ||
-           comparator == tb::GREATERTHAN) {
+        if(comparator == EQUALS || comparator == LESSTHAN ||
+           comparator == GREATERTHAN) {
             valid = TBConstants::valueIsValid(value, type);
-        } else if(comparator == tb::CONTAINS || comparator == tb::CONTAINSLT ||
-                  comparator == tb::CONTAINSGT) {
+        } else if(comparator == CONTAINS || comparator == CONTAINSLT ||
+                  comparator == CONTAINSGT) {
             type = TBConstants::arrayType(type);
             valid = TBConstants::valueIsValid(value, type);
-        } else if(comparator == tb::BETWEEN) {
+        } else if(comparator == BETWEEN) {
             value2 = qPrintable(valueEdit2->text());
             TBConstants::strtrim(value2);
             valid = TBConstants::valueIsValid(value, type) &&
                     TBConstants::valueIsValid(value2, type);
-        } else if(comparator == tb::CONTAINSBT) {
+        } else if(comparator == CONTAINSBT) {
             type = TBConstants::arrayType(type);
             value2 = qPrintable(valueEdit2->text());
             TBConstants::strtrim(value2);
@@ -567,11 +567,11 @@ void TBFilterRules::addRule() {
         }
         
         rules->addRule(fr);
-        String str = (comparator == tb::CONTAINS || comparator == tb::CONTAINSBT ||
-                      comparator == tb::CONTAINSLT || comparator == tb::CONTAINSGT)?
+        String str = (comparator == CONTAINS || comparator == CONTAINSBT ||
+                      comparator == CONTAINSLT || comparator == CONTAINSGT)?
                         (isNot?"does not":"does"):(isNot?"is not":"is");
         str = field + " " + str + " " + comp + " " + value;
-        if(comparator == tb::BETWEEN || comparator == tb::CONTAINSBT)
+        if(comparator == BETWEEN || comparator == CONTAINSBT)
             str += " and " + value2;
         str += ".";
         listWidget->addItem(str.c_str());

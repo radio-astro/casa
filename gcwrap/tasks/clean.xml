@@ -1045,23 +1045,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		   on-source); this parameter will give more weight to 
  		   higher sensitivity fields in the overlap regions.
                ftmachine -- Gridding method for the mosaic;
-                   Options: 'ft' or 'mosaic'
+                   Options: 'ft' (standard interferometric gridding), 'sd'
+                   (standard single dish), 
+                   and 'mosaic' (grid using PB as convolution function).
                    default: 'mosaic'; 
-		   'ft' implies standard interferometric gridding. The residual visibilities are 
-                   imaged for each pointing and combined in the image plane with the 
-		   appropriate PB to make the mosaic.
-                    
-                   'mosaic' (grid using the Fourier transform of PB as convolution function 
-		   and mosaic combination is done in visibilities). 
                    ONLY if imagermode='mosaic' is chosen and
-                   ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA) or 
-                   wideband beam accounting 
-                   possible using the right convolution derived from primary beams for
-                   each baseline and for different frequencies
-                   CAVEAT: ftmachine='mosaic' uses Fourier transforms of the primary beams/pointing
-                   for mosaicing. Making an image which is too small for the pointing coverages will cause
-                   aliasing due to standard Fourier transform wrap around. 
-
+                   ftmachine='mosaic', is heterogeneous imaging (CARMA, ALMA)
+                   possible using the right convolution of primary beams for
+                   each baseline.
                scaletype -- Controls scaling of pixels in the image plane.
                    (controls what is seen if interactive=True)
                    It does *not* affect the scaling of the *final* image -
@@ -1246,7 +1237,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  				FWHM=5 kilo-lambda
                             outertaper=['5klambda','3klambda','45.0deg']
                             outertaper=['10arcsec'] on-sky FWHM 10 arcseconds
-                            outertaper=['300.0'] default units are lambda 
+                            outertaper=['300.0'] default units are meters 
  			        in aperture plane
                innertaper -- uv-taper in center of uv-plane
                    [bmaj,bmin,bpa] Gaussian scale at which taper falls to 
@@ -1277,8 +1268,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  		       'superuniform','briggsabs','radial'
 
   &gt;&gt;&gt; Weighting expandable parameters
-               For details on weighting please see Chapter3
-               of late Dr. Brigg's thesis (http://www.aoc.nrao.edu/dissertations/dbriggs)
                For weighting='briggs' and 'briggsabs'
                    robust -- Brigg's robustness parameter
                    default=0.0; example: robust=0.5;
@@ -1287,15 +1276,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    noise   -- noise parameter to use for Briggs "abs" 
  		   weighting
                    example noise='1.0mJy'
-               npixels -- uv-box used for weight calculation
-                              a box going from -npixel/2 to +npixel/2 on each side
-                              around a point is used to calculate weight density.
-                              0 means box is pixel size
-                   example npixels=2
+               npixels -- uv-cell area used for weight calculation
+                   example npixels=1
                    Default = 0
-	       Exception: when choosing superuniform it does not make sense to 
-	       use npixels=0 as it is  uniform thus if npixels is 0  it will be forced to 6 or 
-	       a box of -3pixels  to 3pixels
+                   superuniform:  0 Means 3x3 cells for weighting
+                     the cell weight is proportional to the weight of
+                     the 3x3 cells centered on it.
+                   superuniform = F means 1x1 cell for averaging weights.
+                   briggs/briggsabs: 0 is similar to 1x1 cell weight.
+                     1 may? be similar to 3X3 cells.
+                   Only npixels 0 or 1 recommended
                    
        restoringbeam -- Output Gaussian restoring beam for CLEAN image
                [bmaj, bmin, bpa] elliptical Gaussian restoring beam

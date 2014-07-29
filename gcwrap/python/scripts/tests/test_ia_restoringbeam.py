@@ -106,199 +106,48 @@ class ia_restoringbeam_test(unittest.TestCase):
         myia = self._myia
         nchan = 10
         npol = 4
-        for t in ['f', 'c']:
-            myia.fromshape(shape=[10, 10, npol, nchan], type=t)
-            self.assertFalse(bool(myia.restoringbeam()))
-            major = "4arcsec"
-            minor = "3arcsec"
-            pa = "10deg"
-            myia.setrestoringbeam(major=major, minor=minor, pa=pa, channel=20, polarization=2)
-            nmajor = "10arcsec"
-            nminor = "5arcsec"
-            npa = "40deg"
-            myia.setrestoringbeam(
-                major=nmajor, minor=nminor, pa=npa,
-                channel=2, polarization=1
-            )
-            beams = myia.restoringbeam()
-            self.assertTrue(beams["nChannels"] == nchan)
-            self.assertTrue(beams["nStokes"] == npol)
-            self.assertTrue(len(beams["beams"]) == nchan)
-            for chan in range(nchan):
-                rec = beams["beams"]["*" + str(chan)]
-                for pol in range(npol):
-                    bmaj = major
-                    bmin = minor
-                    bpa = pa
-                    if chan == 2 and pol == 1:
-                        bmaj = nmajor
-                        bmin = nminor
-                        bpa = npa
-                    beam = rec["*" + str(pol)]
-                    self.assertTrue(beam["major"] == qa.quantity(bmaj))
-                    self.assertTrue(beam["minor"] == qa.quantity(bmin))
-                    self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
-                    beam = myia.restoringbeam(channel=chan, polarization=pol)
-                    self.assertTrue(beam["major"] == qa.quantity(bmaj))
-                    self.assertTrue(beam["minor"] == qa.quantity(bmin))
-                    self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
-            for chan in [-1, 10]:
-                for pol in [-1, 10]:
-                    if chan != -1 or pol != -1:
-                        self.assertRaises(
-                            Exception, myia.restoringbeam,
-                            channel=chan, polarization=pol
-                        )
-                        
-    def test_copy_beams(self):
-        """Test copy beamset option - CAS-5435"""
-        myia = self._myia
-        imagename = "source.im"
-        nchan = 10
-        nstokes = 4
-        myia.fromshape(imagename, shape=[5,5, nchan, nstokes])
-        myia.setrestoringbeam(major="4arcsec", minor="2arcsec", pa="0deg", channel=0, polarization=0)
-        myia.setrestoringbeam(major="8arcsec", minor="4arcsec", pa="0deg", channel=2, polarization=2)
-        myia.done()
-        myia.fromshape("", shape=[10,10, nchan, nstokes])
-        self.assertRaises(
-            Exception, myia.setrestoringbeam,
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            imagename=imagename
+        myia.fromshape(shape=[10, 10, npol, nchan])
+        self.assertFalse(bool(myia.restoringbeam()))
+        major = "4arcsec"
+        minor = "3arcsec"
+        pa = "10deg"
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa, channel=20, polarization=2)
+        nmajor = "10arcsec"
+        nminor = "5arcsec"
+        npa = "40deg"
+        myia.setrestoringbeam(
+            major=nmajor, minor=nminor, pa=npa,
+            channel=2, polarization=1
         )
-        self.assertRaises(
-            Exception, myia.setrestoringbeam,
-            remove=True,
-            imagename=imagename
-        )
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        # test overwriting
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        myia.done()
-        # swap axes
-        myia.fromshape("", shape=[10,10, nstokes, nchan])
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        source = iatool()
-        source.fromshape(
-            imagename, shape=[5,5, nchan-1, nstokes-1],
-            overwrite=True
-        )
-        source.done()
-        # source has no beam
-        self.assertRaises(
-            Exception, myia.setrestoringbeam, imagename=imagename
-        )
-        source.open(imagename)
-        source.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.setrestoringbeam(
-            major="8arcsec", minor="8arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        # incompatible beam matrices
-        self.assertRaises(
-            Exception, myia.setrestoringbeam, imagename=imagename
-        )
-        source.fromshape(
-            imagename, shape=[5,5, nstokes],
-            overwrite=True
-        )
-        source.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.setrestoringbeam(
-            major="8arcsec", minor="4arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.done()
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        
-        source.fromshape(
-            imagename, shape=[5,5, nstokes, 1],
-            overwrite=True
-        )
-        source.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.setrestoringbeam(
-            major="8arcsec", minor="4arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.done()
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        
-        source.fromshape(
-            imagename, shape=[5,5, nchan],
-            overwrite=True
-        )
-        source.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.setrestoringbeam(
-            major="8arcsec", minor="4arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.done()
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        
-        source.fromshape(
-            imagename, shape=[5,5, nchan, 1],
-            overwrite=True
-        )
-        source.setrestoringbeam(
-            major="4arcsec", minor="2arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.setrestoringbeam(
-            major="8arcsec", minor="4arcsec", pa="0deg",
-            channel=0, polarization=0
-        )
-        source.done()
-        myia.setrestoringbeam(imagename=imagename)
-        self._compareBeams(myia, imagename)
-        
-        myia.done()
-        
-        
-    def _compareBeams(self, target, imagename):
-        source = iatool()
-        source.open(imagename)
-        tshape = target.shape()
-        sshape = source.shape()
-        tnchan = tshape[target.coordsys().findaxisbyname("spectral")]
-        tnstokes = tshape[target.coordsys().findaxisbyname("stokes")]
-        try:
-            snchan = sshape[source.coordsys().findaxisbyname("spectral")]
-        except:
-            snchan = 0
-        try:
-            snstokes = sshape[source.coordsys().findaxisbyname("stokes")]
-        except:
-            snstokes = 0
-        self.assertTrue(
-            (tnchan == snchan or snchan <= 1)
-            and (tnstokes == snstokes or snstokes <= 1)
-        )
-        for c in range(tnchan):
-            for p in range(tnstokes):
-                got = target.restoringbeam(channel=c, polarization=p)
-                sc = c
-                if (snchan == 0):
-                    sn = -1;
-                expec = source.restoringbeam(channel=sc, polarization=p)
-                self.assertTrue(got == expec)
-        source.done()
+        beams = myia.restoringbeam()
+        self.assertTrue(beams["nChannels"] == nchan)
+        self.assertTrue(beams["nStokes"] == npol)
+        self.assertTrue(len(beams["beams"]) == nchan)
+        for chan in range(nchan):
+            rec = beams["beams"]["*" + str(chan)]
+            for pol in range(npol):
+                bmaj = major
+                bmin = minor
+                bpa = pa
+                if chan == 2 and pol == 1:
+                    bmaj = nmajor
+                    bmin = nminor
+                    bpa = npa
+                beam = rec["*" + str(pol)]
+                self.assertTrue(beam["major"] == qa.quantity(bmaj))
+                self.assertTrue(beam["minor"] == qa.quantity(bmin))
+                self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
+                beam = myia.restoringbeam(channel=chan, polarization=pol)
+                self.assertTrue(beam["major"] == qa.quantity(bmaj))
+                self.assertTrue(beam["minor"] == qa.quantity(bmin))
+                self.assertTrue(beam["positionangle"] == qa.quantity(bpa))
+        for chan in [-1, 10]:
+            for pol in [-1, 10]:
+                if chan != -1 or pol != -1:
+                    self.assertRaises(
+                        Exception, myia.restoringbeam,
+                        channel=chan, polarization=pol
+                    )
 
 def suite():
     return [ia_restoringbeam_test]

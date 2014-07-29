@@ -1,3 +1,4 @@
+//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -22,21 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGEANALYSIS_IMAGEREGRIDDER_H
 #define IMAGEANALYSIS_IMAGEREGRIDDER_H
 
-#include <imageanalysis/ImageAnalysis/ImageRegridderBase.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <scimath/Mathematics/Interpolate2D.h>
 #include <casa/namespace.h>
+
+#include <tr1/memory>
 
 namespace casa {
 
 template <class T> class SubImage;
 template <class T> class TempImage;
 
-class ImageRegridder : public ImageRegridderBase<Float> {
+class ImageRegridder : public ImageTask {
 	// <summary>
 	// Top level interface which regrids an image to a specified coordinate system
 	// </summary>
@@ -52,11 +56,15 @@ class ImageRegridder : public ImageRegridderBase<Float> {
 	// </etymology>
 
 	// <synopsis>
-	// High level interface for regridding an image. Note that in the case of a complex-valued
-	// image, the image is first divided into its composite real and imaginary parts, and these
-	// parts are regridded independently. The resulting regridded images are combined to form
-	// the final regridded complex-valued image.
+	// High level interface for regridding an image.
 	// </synopsis>
+
+	// <example>
+	// <srcblock>
+	// ImageCollapser collapser();
+	// collapser.collapse();
+	// </srcblock>
+	// </example>
 
 public:
 
@@ -66,47 +74,82 @@ public:
 	// <group>
 
 	ImageRegridder(
-		const SPCIIF image,
+		const ImageTask::shCImFloat image,
 		const Record *const regionRec,
 		const String& maskInp, const String& outname, Bool overwrite,
 		const CoordinateSystem& csysTo, const IPosition& axes,
-		const IPosition& shape
+		const IPosition& shape, Bool dropdeg=False
 	);
 
-	// FIXME Add support to allow image and templateIm to be of different data types
 	ImageRegridder(
-		const SPCIIF image, const String& outname,
-		const SPCIIF templateIm, const IPosition& axes=IPosition(),
+		const ImageTask::shCImFloat image, const String& outname,
+		const ImageTask::shCImFloat templateIm, const IPosition& axes=IPosition(),
 		const Record *const regionRec=0,
 		const String& maskInp="", Bool overwrite=False,
-		const IPosition& shape=IPosition()
+		 Bool dropdeg=False, const IPosition& shape=IPosition()
 	);
 	// </group>
 
 	// destructor
 	~ImageRegridder();
 
-	// perform the regrid.
-	SPIIF regrid() const;
+	// perform the regrid. If <src>wantReturn</src> is True, return a pointer to the
+	// collapsed image. The returned pointer is created via new(); it is the caller's
+	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
+	// a NULL pointer is returned and pointer deletion is performed internally.
+	std::tr1::shared_ptr<ImageInterface<Float> > regrid(Bool wantReturn) const;
+
+	// regrid the spectral axis in velocity space rather than frequency space?
+	void setSpecAsVelocity(Bool v) { _specAsVelocity = v; }
 
 	inline String getClass() const { return _class; }
 
+	// Set interpolation method.
+	void setMethod(const String& method) { _method = Interpolate2D::stringToMethod(method); }
+
+	void setMethod(Interpolate2D::Method method) { _method = method; }
+
 	void setDebug(Int debug) { _debug = debug; }
 
+	void setDoRefChange(Bool d) { _doRefChange = d; }
+
+	void setReplicate(Bool r) { _replicate = r; }
+
+	void setDecimate(Int d) { _decimate = d; }
+
+	void setForceRegrid(Bool f) { _forceRegrid = f; }
+
+protected:
+	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+		return CasacRegionManager::USE_ALL_STOKES;
+	}
+
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<Coordinate::Type>(0);
+	}
+
 private:
-	Int _debug;
+	const CoordinateSystem _csysTo;
+	IPosition _axes, _shape, _kludgedShape;
+	Bool _dropdeg, _specAsVelocity, _doRefChange, _replicate, _forceRegrid;
+	Int _debug, _decimate;
 	static const String _class;
+	Interpolate2D::Method _method;
+	vector<String> _outputStokes;
+	uInt _nReplicatedChans;
 
 	// disallow default constructor
 	ImageRegridder();
 
-	SPIIF _regrid() const;
+	void _finishConstruction();
 
-	SPIIF _regridByVelocity() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > _regrid() const;
+
+	std::tr1::shared_ptr<ImageInterface<Float> > _regridByVelocity() const;
 
 	static Bool _doImagesOverlap(
-		SPCIIF image0,
-		SPCIIF image1
+		const ImageInterface<Float>& image0,
+		const ImageInterface<Float>& image1
 	);
 
 	static Vector<std::pair<Double, Double> > _getDirectionCorners(
@@ -119,12 +162,15 @@ private:
 		const std::set<Coordinate::Type>& coordsToRegrid
 	) const;
 
-	SPIIF _decimateStokes(SPIIF workIm) const;
+	void _decimateStokes(
+		std::tr1::shared_ptr<ImageInterface<Float> >& workIm
+	) const;
 
 	static Bool _doRectanglesIntersect(
 		const Vector<std::pair<Double, Double> >& corners0,
 		const Vector<std::pair<Double, Double> >& corners1
 	);
+
 
 };
 }

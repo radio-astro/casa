@@ -159,8 +159,6 @@ class Time {
 
    uInt seconds ();
 
-   double dseconds ();
-
    uInt minutes ();
 
    uInt hours ();

@@ -35,7 +35,6 @@ ft.xml
 gaincal.xml
 gencal.xml
 hanningsmooth.xml
-hanningsmooth2.xml
 imcollapse.xml
 imcontsub.xml
 imfit.xml
@@ -48,10 +47,8 @@ importevla.xml
 importfits.xml
 importfitsidi.xml
 importgmrt.xml
-importmiriad.xml
 importuvfits.xml
 importvla.xml
-imrebin.xml
 imreframe.xml
 imregrid.xml
 imsmooth.xml
@@ -78,7 +75,7 @@ plotcal.xml
 plotms.xml
 plotuv.xml
 plotweather.xml
-#plotxy.xml
+plotxy.xml
 partition.xml
 polcal.xml
 predictcomp.xml
@@ -126,10 +123,8 @@ simanalyze.xml
 slsearch.xml
 smoothcal.xml
 specfit.xml
-specsmooth.xml
 splattotable.xml
 split.xml
-split2.xml
 spxfit.xml
 statwt.xml
 tclean.xml

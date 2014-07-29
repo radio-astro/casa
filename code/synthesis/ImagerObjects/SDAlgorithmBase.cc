@@ -58,10 +58,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   SDAlgorithmBase::SDAlgorithmBase():
-    itsAlgorithmName("Test")
-    //    itsDecSlices (),
-    //    itsResidual(), itsPsf(), itsModel()
+    itsAlgorithmName("Test"),
+    tmpPos_p( IPosition() ),
+    itsImages( NULL ),
+    itsDecSlices (),
+    itsResidual(), itsPsf(), itsModel(),
+    itsComp(0.0)
  {
+
+   // TESTING place-holder for the position of the clean component.
+   tmpPos_p = IPosition(4,0,0,0,0);
+
  }
 
   SDAlgorithmBase::~SDAlgorithmBase()
@@ -76,218 +83,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDAlgorithmBase","deconvolve",WHERE) );
 
+    itsImages = imagestore;  // TODOO : This is a private store of all full images that all functions here can use.
+
     // Make a list of Slicers.
-    //partitionImages( imagestore );
+    partitionImages();
 
-    Int nSubChans, nSubPols;
-    queryDesiredShape(nSubChans, nSubPols, imagestore->getShape());
-
-    //    cout << "Check imstore from deconvolver : " << endl;
-    imagestore->validate();
-
-    //os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
-    os << "Run " << itsAlgorithmName << " minor-cycle on " ;
-    if( nSubChans >1 ) os << nSubChans << " chans " ;
-    if( nSubPols >1 ) os << nSubPols << " pols ";
-    if( nSubChans>1 || nSubPols>1) os << "of ";
-    os << "[" << imagestore->getName() << "]"
-       << " CycleThreshold=" << loopcontrols.getCycleThreshold()
+    os << "Run " << itsAlgorithmName << " minor-cycle on " << itsDecSlices.nelements() 
+       << " slices of [" << deconvolverid << "]:" << itsImages->getName()
+       << " [ CycleThreshold=" << loopcontrols.getCycleThreshold()
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
        << ", Gain=" << loopcontrols.getLoopGain()
-       << LogIO::POST;
+       << " ]" << LogIO::POST;
 
-    Float maxResidualAcrossPlanes=0.0;
 
-    for( Int chanid=0; chanid<nSubChans;chanid++)
+    for( uInt subimageid=0; subimageid<itsDecSlices.nelements(); subimageid++)
       {
-	for( Int polid=0; polid<nSubPols; polid++)
+	// Assign current subimages.
+	initializeSubImages( subimageid );
+
+	Int startiteration = loopcontrols.getIterDone();
+	Float peakresidual=0.0;
+	Float modelflux=0.0;
+	Int iterdone=0;
+
+	initializeDeconvolver( peakresidual, modelflux );
+
+	Float startpeakresidual = peakresidual;
+	Float startmodelflux = modelflux;
+
+	while ( ! checkStop( loopcontrols,  peakresidual ) )
 	  {
-	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
-	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
+	    // Optionally, fiddle with maskhandler for autoboxing.... 
+	    // mask = maskhandler->makeAutoBox();
 	    
-	    // Assign current subimages.
-	    //	initializeSubImages( imagestore, subimageid );
-	    
-	    Int startiteration = loopcontrols.getIterDone();
-	    Float peakresidual=0.0;
-	    Float modelflux=0.0;
-	    Int iterdone=0;
-	    //	Bool converged=False;
+	    takeOneStep( loopcontrols.getLoopGain(), 
+			 loopcontrols.getCycleNiter(), 
+			 loopcontrols.getCycleThreshold(),
+			 peakresidual, 
+			 modelflux,
+			 iterdone);
 
-	    // Or, call this from outside... in SynthesisImager.....
-	    //itsMaskHandler.makeAutoMask( itsImages );
-	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
-	    
-	    initializeDeconvolver( peakresidual, modelflux );
-	    
-	    Float startpeakresidual = peakresidual;
-	    Float startmodelflux = modelflux;
+	    //	    cout << "SDAlgoBase: After one step, residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << endl;
 
-	    Int stopCode = checkStop( loopcontrols,  peakresidual );
+	    loopcontrols.incrementMinorCycleCount( iterdone );
+	    loopcontrols.setPeakResidual( peakresidual );
+	    loopcontrols.addSummaryMinor( deconvolverid, subimageid, modelflux, peakresidual );
+	  }// end of minor cycle iterations for this subimage.
 
-	    //	    while ( ! checkStop( loopcontrols,  peakresidual ) )
-	    while ( stopCode==0 )
-	      {
-		
-		takeOneStep( loopcontrols.getLoopGain(), 
-			     loopcontrols.getCycleNiter(), 
-			     loopcontrols.getCycleThreshold(),
-			     peakresidual, 
-			     modelflux,
-			     iterdone);
-		
-		//os << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
-		
-		loopcontrols.incrementMinorCycleCount( iterdone );
-
-		stopCode = checkStop( loopcontrols,  peakresidual );
-
-		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
-					      modelflux, peakresidual );
-
-	      }// end of minor cycle iterations for this subimage.
-	    
-	    finalizeDeconvolver();
-	    
-	    // same as checking on itscycleniter.....
-	    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
-	    
-	    os << "[" << imagestore->getName();
-	    if(nSubChans>1) os << ":C" << chanid ;
-	    if(nSubPols>1) os << ":P" << polid ;
-	    Int iterend = loopcontrols.getIterDone();
-	    os << "]"
-	       <<" iters=" << ( (iterend>startiteration) ? startiteration+1 : startiteration )<< "->" << iterend
-	       << ", model=" << startmodelflux << "->" << modelflux
-	       << ", peakres=" << startpeakresidual << "->" << peakresidual ;
-
-	    switch (stopCode)
-	      {
-	      case 1: 
-		os << ", Reached cycleniter.";
-		break;
-	      case 2:
-		os << ", Reached cyclethreshold.";
-		break;
-	      case 3:
-		os << ", Minor cycle algorithm decided to stop early.";
-		break;
-	      default:
-		break;
-	      }
-
-	       os << LogIO::POST;
-	    
-	    loopcontrols.resetCycleIter(); 
-
-	    maxResidualAcrossPlanes = max ( maxResidualAcrossPlanes , peakresidual );
-
-	    
-	  }// end of SubImage Loop
+	finalizeDeconvolver();
 	
-	loopcontrols.setPeakResidual( maxResidualAcrossPlanes );
-
-
-      }
+	// same as checking on itscycleniter.....
+	loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
+	
+	os << "[D" << deconvolverid << ":S" << subimageid << "]"
+	   <<" iters=" << startiteration << "-" << loopcontrols.getIterDone()
+	   << ", peakres=" << startpeakresidual << "-" << peakresidual 
+	   << ", model=" << startmodelflux << "-" << modelflux
+	   << LogIO::POST;
+	
+	loopcontrols.resetCycleIter(); 
+	
+      }// end of SubImage Loop
   }// end of deconvolve
   
-  Int SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
+  Bool SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 
 				   Float currentresidual )
   {
     return loopcontrols.majorCycleRequired(currentresidual);
   }
 
-
-  void SDAlgorithmBase::setRestoringBeam( GaussianBeam restbeam, String usebeam )
-  {
-    itsRestoringBeam = restbeam;
-    itsUseBeam = usebeam;
-  }
-  
    void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmBase","restore",WHERE) );
-
-    os << "[" << imagestore->getName() << "] : Restoring model image." << LogIO::POST;
-    imagestore->restore( itsRestoringBeam, itsUseBeam );
-
-    ImageInfo ii = (imagestore->image())->imageInfo();
-    ii.setBeams( imagestore->getBeamSet() );
-    imagestore->printBeamSet();
-
-    try
-      {
-	(imagestore->image())->setImageInfo(ii);
-      }
-    catch( AipsError &x)
-      {
-	os << LogIO::WARN << "Cannot save restoring beams in image header for " << imagestore->getName() <<  " : " << x.getMesg() << LogIO::POST;
-      }
-  }
-
- 
-  void SDAlgorithmBase::pbcor(CountedPtr<SIImageStore> imagestore )
-  {
-
-    LogIO os( LogOrigin("SDAlgorithmBase","pbcor",WHERE) );
-
-    Int nSubChans, nSubPols;
-    queryDesiredShape(nSubChans, nSubPols, imagestore->getShape());
-
-    //    if( ! imagestore->checkValidity(False/*psf*/, False/*res*/,True/*wgt*/,False/*model*/,True/*image*/,
-    //				    False/*mask*/,False/*sumwt*/,
-    //				    True/*alpha*/, True/*beta*/) ) // alpha,beta will be ignored for single-term.
-    //      { throw(AipsError("Internal Error : Invalid ImageStore for " + imagestore->getName())); }
-
-    // Init the restored image here.
-    //    imagestore->image();
-    //    imagestore->model();
-
-    for( Int chanid=0; chanid<nSubChans;chanid++)
-      {
-	for( Int polid=0; polid<nSubPols; polid++)
-	  {
-	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
-	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
-	    itsImages->pbcorPlane();
-	  }
-      }
+    
+    os << "Smooth model and add residuals for " << imagestore->getName() 
+       << ". Optionally, PB-correct too." << LogIO::POST;
 
   }
-  
-  /*  
-  void SDAlgorithmBase::restorePlane()
-  {
 
-    LogIO os( LogOrigin("SDAlgorithmBase","restorePlane",WHERE) );
-    //     << ". Optionally, PB-correct too." << LogIO::POST;
-
-    try
-      {
-	// Fit a Gaussian to the PSF.
-	GaussianBeam beam = itsImages->getPSFGaussian();
-
-	os << "Restore with beam : " << beam.getMajor(Unit("arcmin")) << " arcmin, " << beam.getMinor(Unit("arcmin"))<< " arcmin, " << beam.getPA(Unit("deg")) << " deg)" << LogIO::POST; 
-	
-	// Initialize restored image
-	itsImage.set(0.0);
-	// Copy model into it
-	itsImage.copyData( LatticeExpr<Float>(itsModel )  );
-	// Smooth model by beam
-	StokesImageUtil::Convolve( itsImage, beam);
-	// Add residual image
-	itsImage.copyData( LatticeExpr<Float>( itsImage + itsResidual ) );
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Restoration Error " + x.getMesg() ) );
-      }
-
-  }
-  */
 
   // Use this decide how to partition
   // the image for separate calls to 'deconvolve'.
@@ -297,14 +174,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ///    - partitioned-image clean (facets ?)
   // Later, can add more complex partitioning schemes.... 
   // but there will be one place to do it, per deconvolver.
-  void SDAlgorithmBase::queryDesiredShape(Int &nchanchunks, Int &npolchunks, IPosition imshape) // , nImageFacets.
+  void SDAlgorithmBase::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
   {  
-    AlwaysAssert( imshape.nelements()==4, AipsError );
-    nchanchunks=imshape(3);  // Each channel should appear separately.
-    npolchunks=imshape(2); // Each pol should appear separately.
+    onechan = True;
+    onepol = True;
   }
 
-  /*
   /// Make a list of Slices, to send sequentially to the deconvolver.
   /// Loop over this list of reference subimages in the 'deconvolve' call.
   /// This will support...
@@ -312,11 +187,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///    - stokes cube clean
   ///    - partitioned-image clean (facets ?)
   ///    - 3D deconvolver
-  void SDAlgorithmBase::partitionImages( CountedPtr<SIImageStore> &imagestore )
+  void SDAlgorithmBase::partitionImages()
   {
     LogIO os( LogOrigin("SDAlgorithmBase","partitionImages",WHERE) );
 
-    IPosition imshape = imagestore->getShape();
+    IPosition imshape = itsImages->getShape();
 
 
     // TODO : Check which axes is which first !!!
@@ -353,85 +228,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
       }
 
-   }// end of partitionImages
-  */
+  }// end of partitionImages
 
-  /*
-  void SDAlgorithmBase::initializeSubImages( CountedPtr<SIImageStore> &imagestore, uInt subim)
+
+  void SDAlgorithmBase::initializeSubImages(uInt subim)
   {
-    itsResidual = SubImage<Float>( *(imagestore->residual()), itsDecSlices[subim], True );
-    itsPsf = SubImage<Float>( *(imagestore->psf()), itsDecSlices[subim], True );
-    itsModel = SubImage<Float>( *(imagestore->model()), itsDecSlices[subim], True );
-
-    itsImages = imagestore;
-
+    itsResidual = SubImage<Float>( *(itsImages->residual()), itsDecSlices[subim], True );
+    itsPsf = SubImage<Float>( *(itsImages->psf()), itsDecSlices[subim], True );
+    itsModel = SubImage<Float>( *(itsImages->model()), itsDecSlices[subim], True );
   }
-  */
+
 
   /////////// Helper Functions for all deconvolvers to use if they need it.
 
-  Bool SDAlgorithmBase::findMaxAbs(const Array<Float>& lattice,
+  Bool SDAlgorithmBase::findMaxAbs(const Matrix<Float>& lattice,
 					  Float& maxAbs,
 					  IPosition& posMaxAbs)
   {
-    //    cout << "findmax : lat shape : " << lattice.shape() << " posmax : " << posMaxAbs << endl;
+    
     posMaxAbs = IPosition(lattice.shape().nelements(), 0);
     maxAbs=0.0;
+    
     Float minVal;
     IPosition posmin(lattice.shape().nelements(), 0);
     minMax(minVal, maxAbs, posmin, posMaxAbs, lattice);
     //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
     if(abs(minVal) > abs(maxAbs)){
-      maxAbs=abs(minVal);
-      posMaxAbs=posmin;
-    }
-    return True;
-  }
-
-  Bool SDAlgorithmBase::findMaxAbsMask(const Array<Float>& lattice,
-				       const Array<Float>& mask,
-					  Float& maxAbs,
-					  IPosition& posMaxAbs)
-  {
-
-    //cout << "maxabsmask shapes : " << lattice.shape() << " " << mask.shape() << endl;
-
-    posMaxAbs = IPosition(lattice.shape().nelements(), 0);
-    maxAbs=0.0;
-    Float minVal;
-    IPosition posmin(lattice.shape().nelements(), 0);
-    minMaxMasked(minVal, maxAbs, posmin, posMaxAbs, lattice,mask);
-    //cout << "min " << minVal << "  " << maxAbs << "   " << max(lattice) << endl;
-    if(abs(minVal) > abs(maxAbs)){
-      maxAbs=abs(minVal);
+      maxAbs=minVal;
       posMaxAbs=posmin;
     }
     return True;
   }
   
-  /*
-
-  GaussianBeam SDAlgorithmBase::getPSFGaussian()
-  {
-
-    GaussianBeam beam;
-    try
-      {
-	if( itsPsf.ndim() > 0 )
-	  {
-	    StokesImageUtil::FitGaussianPSF( itsPsf, beam );
-	  }
-      }
-    catch(AipsError &x)
-      {
-	LogIO os( LogOrigin("SDAlgorithmBase","getPSFGaussian",WHERE) );
-	os << "Error in fitting a Gaussian to the PSF : " << x.getMesg() << LogIO::POST;
-	throw( AipsError("Error in fitting a Gaussian to the PSF" + x.getMesg()) );
-      }
-
-    return beam;
-  }
-
-*/  
+  
+  
 } //# NAMESPACE CASA - END
 

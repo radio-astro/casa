@@ -62,8 +62,8 @@
 
 #include <ms/MeasurementSets/MSColumns.h>
 
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/PBMath1DAiry.h>
@@ -471,7 +471,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeFFT::cfft2d(subim);
 	    LatticeFFT::cfft2d(subim2);
 
-       
+	    /////////////////////////////
+	    //Float maxVal=max(abs(subim)).getFloat();
+	    //subim.copyData((LatticeExpr<Complex>) (subim/maxVal));
+	    ///////////////////////////
 
 	 }
 	 /*
@@ -570,7 +573,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    lc.setLattice(pBSSub);
 	    //cerr << "SHAPES " << cFTempSub.shape() << "   " <<  lc.shape() << endl;
 	    cFTempSub.copyData(lc);
-	    //cFTempSub.copyData(pBScreen);
 	  }
 	  {
 	    SubImage<Complex>  pB2SSub(pB2Screen, slQ, False);
@@ -578,7 +580,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    LatticeConcat<Complex> lc(4);
 	    lc.setLattice(pB2SSub);
 	    cFTempSub2.copyData(lc);
-	    // cFTempSub2.copyData(pB2Screen);
 	    //weightConvFuncTemp.putSlice(pB2Screen.get(False), begin);
 
 	  }
@@ -739,7 +740,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        rec.define("pbclass", Int(pbClass_p));
        
     }
-    catch(AipsError& x) {
+    catch(AipsError x) {
       return False;
     }
     return True;   
@@ -778,8 +779,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       //Now that we are calculating all phase gradients on the fly ..
       ///we should clean up some and get rid of the cached variables
-      
-      convSize_p= nDefined_p > 0 ? (*(convSizes_p[0]))[0] : 0;
+      convSize_p=(*(convSizes_p[0]))[0];
       //convSave_p.resize();
       //rec.get("convsave", convSave_p);
       //weightSave_p.resize();
@@ -791,7 +791,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       pbClass_p=static_cast<PBMathInterface::PBClass>(rec.asInt("pbclass"));
       calcFluxScale_p=calcfluxscale;
     }
-    catch(AipsError& x) {
+    catch(AipsError x) {
       err=x.getMesg();
       return False;
     } 
@@ -891,8 +891,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  for (Int chan=0; chan < convFunc_p.shape()[3]; ++chan){
 	    begin[3]=chan;
 	    end[3]=chan;
-	    convFunc_p(begin, end).set(Complex(0.0));
-	    weightConvFunc_p(begin, end).set(Complex(0.0));
+	    convFunc_p(begin, end).set(0.0);
+	    weightConvFunc_p(begin, end).set(0.0);
 	  //convFunc_p.xyPlane(plane).set(0.0);
 	  //weightConvFunc_p.xyPlane(plane).set(0.0);
 	  }
@@ -998,7 +998,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    begin[3]=chan;
 	    //end[3]=chan;
 	    convPlane.resize(shape[0], shape[1]);
-	    convPlane.set(Complex(0.0));
+	    convPlane.set(0.0);
 	    convFuncLat.putSlice(convPlane, begin);
 	    weightConvFuncLat.putSlice(convPlane, begin);
 	  //convFunc_p.xyPlane(plane).set(0.0);
@@ -1017,7 +1017,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   Int HetArrayConvFunc::checkPBOfField(const VisBuffer& vb, 
-				       Vector<Int>& /*rowMap*/){
+					Vector<Int>& rowMap){
     
     toPix(vb);
     Vector<Int> pixdepoint(2);

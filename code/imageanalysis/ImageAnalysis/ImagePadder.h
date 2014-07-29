@@ -38,7 +38,7 @@ class MDirection;
 
 namespace casa {
 
-class ImagePadder : public ImageTask<Float> {
+class ImagePadder : public ImageTask {
 	// <summary>
 	// Top level interface for padding an image in direction space.
 	// </summary>
@@ -68,7 +68,7 @@ public:
 	// <group>
 
 	ImagePadder(
-			const SPCIIF  image,
+			const ImageTask::shCImFloat  image,
 		const Record *const regionRec=0,
 		const String& box="", const String& chanInp="",
 		const String& stokes="", const String& maskInp="",
@@ -84,7 +84,7 @@ public:
 	// padded image. The returned pointer is created via new(); it is the caller's
 	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
 	// a NULL pointer is returned and pointer deletion is performed internally.
-	SPIIF pad(const Bool wantReturn) const;
+	ImageInterface<Float>* pad(const Bool wantReturn) const;
 
 	// set the number of pixels to use for padding and their values and if they should be
 	// masked on each edge of the direction plane. <src>good</src>=True means the padding

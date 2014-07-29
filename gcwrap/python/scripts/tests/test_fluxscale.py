@@ -6,7 +6,6 @@ from __main__ import default
 from tasks import fluxscale
 from taskinit import *
 import unittest
-import exceptions
 
 
 ''' Python unit tests for the fluxscale task
@@ -62,14 +61,13 @@ class fluxscale1_test(unittest.TestCase):
         default('fluxscale')
 
     def tearDown(self):
-        #pass
         shutil.rmtree(self.msfile, ignore_errors=True)        
         os.system('rm -rf ngc5921*.fcal')
         os.system('rm -rf ngc5921*.gcal')
 
         
     def test_default(self):
-        '''Fluxscale test 1.1: Create a flux table using field=0 as reference'''
+        '''Fluxscale 1a: Create a flux table using field=0 as reference'''
         
         # Input
         gtable = self.gtable
@@ -112,6 +110,15 @@ class fluxscale1_test(unittest.TestCase):
                        'fieldName': '1445+09900002_0', 
                        'fitFluxdErr': 0.0}, 
                        'freq': np.array([  1.41266507e+09]), 
+                 '2': {'fitRefFreq': 0.0, 
+                       'spidxerr': np.array([ 0.,  0.,  0.]), 
+                       'spidx': np.array([ 0.,  0.,  0.]), 
+                       '0': {'fluxdErr': np.array([ 0.00304653,  0.        ,  0.        ,  0.        ]), 
+                             'numSol': np.array([ 54.,   0.,   0.,   0.]), 
+                             'fluxd': np.array([ 0.00604538,  0.        ,  0.        ,  0.        ])}, 
+                       'fitFluxd': 0.0, 
+                        'fieldName': 'N5921_2', 
+                       'fitFluxdErr': 0.0}, 
                  'spwName': np.array(['none'],dtype='|S5'), 
                  'spwID': np.array([0], dtype=np.int32)}
 
@@ -123,7 +130,7 @@ class fluxscale1_test(unittest.TestCase):
         
             
     def test_incremental(self): 
-        '''Fluxscale test 1.2: Create an incremental flux table using field=0 as reference'''
+        '''Fluxscale 1b: Create an incremental flux table using field=0 as reference'''
         # Input
         gtable = self.gtable
 
@@ -139,69 +146,6 @@ class fluxscale1_test(unittest.TestCase):
 
         # Compare the calibration table with a reference
         self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
-
-    def test_gainthreshold(self):
-        '''Fluxscale test 1.3: gainthreshold parameter test'''
-        # Input
-        gtable = self.gtable
-
-        # Output
-        outtable = self.msfile + '.thres.fcal'
-
-        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
-                  transfer='1445*', gainthreshold=0.05,incremental=True)
-        self.assertTrue(os.path.exists(outtable))
-
-        # File to compare with
-        #reference = self.reffile2
-
-        # Compare the calibration table with a reference
-        #self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
-
-    def test_antennasel(self):
-        '''Fluxscale test 1.4: antenna de-selection test'''
-        # Input
-        gtable = self.gtable
-
-        # Output
-        outtable = self.msfile + '.antsel.fcal'
-
-        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
-                  transfer='1445*', antenna='!24',incremental=True)
-        self.assertTrue(os.path.exists(outtable))
-
-        # File to compare with
-        #reference = self.reffile2
-
-        # Compare the calibration table with a reference
-        #self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
-
-    def test_antennaselwithtime(self):
-        '''Fluxscale test 1.5: empy selection case: antenna with time selection test'''
-        # Input
-        gtable = self.gtable
-
-        # Output
-        outtable = self.msfile + '.antsel.fcal'
-
-        # This time selection deselect all the data for the reference source and would raise an exception.
-        try:
-          thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
-                  transfer='1445*', antenna='!24', timerange='>1995/04/13/09:38:00', incremental=True)
-        except exceptions.RuntimeError, instance:
-          print "Expected exception raised:",instance
-
-    def test_antennaselwithscan(self):
-        '''Fluxscale test 1.6: antenna selection with scan selection test'''
-        # Input
-        gtable = self.gtable
-
-        # Output
-        outtable = self.msfile + '.antsel.fcal'
-
-        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1331*',
-                  transfer='1445*', antenna='!24', scan='1~5', incremental=True)
-        self.assertTrue(os.path.exists(outtable))
 
 
 class fluxscale2_test(unittest.TestCase):

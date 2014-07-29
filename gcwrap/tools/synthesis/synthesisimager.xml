@@ -47,48 +47,7 @@ This is used to construct {\tt synthesisimager} tool.
 </method>
 
 <!-- ===================================== -->
-
-   <method type="function" name="selectdata">
-   <shortdescription>Select data from one MS</shortdescription>
-
-<description>
-</description>
-<input>
-     <param type="record" name="selpars">
-     <description>All parameters that control selection within one MS</description>
-     <value type="record"></value>
-     </param>
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-   <method type="function" name="defineimage">
-   <shortdescription>Define image coordinate systems FTMs</shortdescription>
-
-<description>
-</description>
-<input>
-     <param type="record" name="impars">
-     <description>All parameters that control image coordinate system definition</description>
-     <value type="record"></value>
-     </param>
-
-     <param type="record" name="gridpars">
-     <description>All parameters that control ftmachines and gridding parameters</description>
-     <value type="record"></value>
-     </param>
-
-</input>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-
-
-<!-- ===================================== -->
-<!-- 
+ 
    <method type="function" name="selectdata">
    <shortdescription>Select data from one MS</shortdescription>
 
@@ -183,9 +142,8 @@ multiple MSs.
 <returns type="bool"/>
 </method>
 
--->
+<!-- ===================================== -->
 
-<!--
    <method type="function" name="defineimage">
    <shortdescription>Define the image coordinate systems and types</shortdescription>
 
@@ -347,62 +305,11 @@ Define the image coordinate systems and shapes.
      <value></value>
      </param>
 
-     <param type="bool" name="aterm">
-     <description>Double Precision gridding or not</description>
-     <value>true</value>
-     </param>
-
-     <param type="bool" name="psterm">
-     <description>Double Precision gridding or not</description>
-     <value>true</value>
-     </param>
-
-     <param type="bool" name="mterm">
-     <description>Double Precision gridding or not</description>
-     <value>false</value>
-     </param>
-
-     <param type="bool" name="wbawp">
-     <description>Double Precision gridding or not</description>
-     <value>true</value>
-     </param>
-
-     <param type="string" name="cfcache">
-     <description>Name of convolution function</description>
-     <value></value>
-     </param>
-
-     <param type="bool" name="dopointing">
-     <description>Double Precision gridding or not</description>
-     <value>false</value>
-     </param>
-
-     <param type="bool" name="dopbcorr">
-     <description>Double Precision gridding or not</description>
-     <value>true</value>
-     </param>
-
-     <param type="bool" name="conjbeams">
-     <description>Double Precision gridding or not</description>
-     <value>true</value>
-     </param>
-
-     <param type="float" name="computepastep">
-     <description>Double Precision gridding or not</description>
-     <value>360.0</value>
-     </param>
-
-     <param type="float" name="rotatepastep">
-     <description>Double Precision gridding or not</description>
-     <value>5.0</value>
-     </param>
-
 
 </input>
 <returns type="bool"/>
 </method>
 
--->
 <!-- ===================================== -->
 
 
@@ -450,11 +357,6 @@ Define the image coordinate systems and shapes.
      <value>false</value>
      </param>
 
-     <param type="stringArray" name="uvtaper">
-     <description>Parameters of uv-taper Gaussian</description>
-     <value></value>
-     </param>
-
 
 </input>
 <returns type="bool"/>
@@ -473,18 +375,10 @@ Define the image coordinate systems and shapes.
 </method>
 
 <!-- ===================================== -->
+
+
    <method type="function" name="predictmodel">
    <shortdescription>Predict model visibilities.</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
-   <method type="function" name="predictcalmodel">
-   <shortdescription>Predict model visibilities for calibration ( setjy ).</shortdescription>
 
 <description>
 </description>

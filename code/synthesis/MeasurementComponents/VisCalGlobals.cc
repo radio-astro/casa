@@ -32,7 +32,6 @@
 #include <synthesis/MeasurementComponents/BPoly.h>
 #include <synthesis/MeasurementComponents/EJones.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
-#include <synthesis/MeasurementComponents/FJones.h>
 #include <synthesis/MeasurementComponents/KJones.h>
 #include <synthesis/MeasurementComponents/LJJones.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
@@ -185,9 +184,6 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   
   else if (uptype.contains("EVLAGAIN"))
     throw(AipsError("Please regenerate EVLA Sw Pow table using gencal."));
-
-  else if (uptype.contains("ZTEC") || uptype.contains("FJONES") )  // zenith tec model
-    return new FJones(vs);
 
   else {
     cout << "attempted type = " << type << endl;

@@ -35,7 +35,11 @@
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 
+
+#include <memory>
+
 namespace casa { //#Begin namespace casa
+
 
 //# Member templates
 template <class MT>

@@ -33,8 +33,8 @@
 namespace casa {
 
 PeakIntensityFluxDensityConverter::PeakIntensityFluxDensityConverter(
-		const SPCIIF  image
-) : ImageTask<Float>(
+		const ImageTask::shCImFloat  image
+) : ImageTask(
 		image, "", 0, "", "", "", "", "", ""
 	), _size(Angular2DGaussian::NULL_BEAM), _shape(ComponentType::GAUSSIAN),
 	_beam(GaussianBeam::NULL_BEAM) {
@@ -57,7 +57,7 @@ Quantity PeakIntensityFluxDensityConverter::fluxDensityToPeakIntensity(
 	GaussianBeam beam = _beam;
 	if (brightnessUnit.getName().contains("/beam") && beam.isNull()) {
 		beam = ImageUtilities::makeFakeBeam(
-			*_getLog(), csys, _getVerbosity() >= ImageTask<Float>::WHISPER
+			*_getLog(), csys, _getVerbosity() >= ImageTask::WHISPER
 		);
 		hadToMakeFakeBeam = True;
 	}
@@ -78,7 +78,7 @@ Quantity PeakIntensityFluxDensityConverter::peakIntensityToFluxDensity(
 	GaussianBeam beam = _beam;
 	if (brightnessUnit.getName().contains("/beam") && beam.isNull()) {
 		beam = ImageUtilities::makeFakeBeam(
-			*_getLog(), csys, _getVerbosity() >= ImageTask<Float>::WHISPER
+			*_getLog(), csys, _getVerbosity() >= ImageTask::WHISPER
 		);
 		hadToMakeFakeBeam = True;
 	}

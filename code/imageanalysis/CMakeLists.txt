@@ -18,7 +18,6 @@
 #
 
 casa_add_library( imageanalysis
-
 Annotations/AnnAnnulus.cc
 Annotations/AnnCenterBox.cc
 Annotations/AnnCircle.cc
@@ -36,18 +35,12 @@ Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
 ImageAnalysis/AntennaResponses.cc
-ImageAnalysis/CasaImageBeamSet.cc
-ImageAnalysis/ComplexImageRegridder.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
-ImageAnalysis/ImageCollapserData.cc
-ImageAnalysis/ImageFactory2.cc
+ImageAnalysis/ImageCollapser.cc
 ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
-ImageAnalysis/ImageMetaData.cc
-ImageAnalysis/ImageMetaDataBase.cc
-ImageAnalysis/ImageMetaDataRW.cc
 ImageAnalysis/ImageMomentsProgress.cc
 ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
@@ -58,8 +51,8 @@ ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageRegridder.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
+ImageAnalysis/ImageTask.cc
 ImageAnalysis/PeakIntensityFluxDensityConverter.cc
-ImageAnalysis/PixelValueManipulatorData.cc
 ImageAnalysis/ProfileFitResults.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
@@ -68,20 +61,13 @@ ImageAnalysis/SpectralFitter.cc
 IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
-IO/ImageFitterResults.cc
 IO/ImageProfileFitterResults.cc
 IO/LogFile.cc
 IO/OutputDestinationChecker.cc
 IO/ProfileFitterEstimatesFileParser.cc
 
 Regions/CasacRegionManager.cc
-Utilities/SpectralImageUtil.cc
 )
-
-install (FILES
-    ImageTypedefs.h
-     DESTINATION include/casacode/imageanalysis
-    )
 
 install (FILES
 	Annotations/AnnAnnulus.h
@@ -106,68 +92,37 @@ install (FILES
 	IO/FitterEstimatesFileParser.h
 	IO/LogFile.h
     IO/OutputDestinationChecker.h
-    IO/ImageFitterResults.h
     IO/ImageProfileFitterResults.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
 	DESTINATION include/casacode/imageanalysis/IO
 	)
 install (FILES
-        Utilities/SpectralImageUtil.h
-	DESTINATION include/casacode/imageanalysis/Utilities
-         )
-install (FILES
 	ImageAnalysis/AntennaResponses.h
-	ImageAnalysis/BeamManipulator.h
-	ImageAnalysis/BeamManipulator.tcc
-	ImageAnalysis/CasaImageBeamSet.h
-	ImageAnalysis/ComplexImageRegridder.h
 	ImageAnalysis/ComponentImager.h
-	ImageAnalysis/Image1DSmoother.h
-	ImageAnalysis/Image1DSmoother.tcc
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
-	ImageAnalysis/ImageAnalysis2.tcc
-    ImageAnalysis/ImageBoxcarSmoother.h
-    ImageAnalysis/ImageBoxcarSmoother.tcc
 	ImageAnalysis/ImageCollapser.h
-	ImageAnalysis/ImageCollapser.tcc
-	ImageAnalysis/ImageCollapserData.h
-	ImageAnalysis/ImageConcatenator.h
-    ImageAnalysis/ImageConcatenator.tcc
-    ImageAnalysis/ImageConvolver.h
+	ImageAnalysis/ImageConvolver.h
 	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageCropper.h
 	ImageAnalysis/ImageCropper.tcc
-	ImageAnalysis/ImageDecimator.h
-    ImageAnalysis/ImageDecimator.tcc
-    ImageAnalysis/ImageDecimatorData.h
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
-	ImageAnalysis/ImageFactory.h
-	ImageAnalysis/ImageFactory.tcc
 	ImageAnalysis/ImageFFT.h
-	ImageAnalysis/ImageFFTer.h
-	ImageAnalysis/ImageFFTer.tcc
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
-    ImageAnalysis/ImageHanningSmoother.h
-    ImageAnalysis/ImageHanningSmoother.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
-    ImageAnalysis/ImageHistory.h
-    ImageAnalysis/ImageHistory.tcc
 	ImageAnalysis/ImageInputProcessor.h
-	ImageAnalysis/ImageInputProcessor2.tcc
 	ImageAnalysis/ImageMaskAttacher.h
     ImageAnalysis/ImageMaskAttacher.tcc
-    ImageAnalysis/ImageMaskedPixelReplacer.h
-    ImageAnalysis/ImageMaskedPixelReplacer.tcc
 	ImageAnalysis/ImageMetaData.h
-    ImageAnalysis/ImageMetaDataBase.h
+    ImageAnalysis/ImageMetaData.tcc
     ImageAnalysis/ImageMetaDataRW.h
+    ImageAnalysis/ImageMetaDataRW.tcc
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
     ImageAnalysis/ImageMomentsProgress.h
@@ -177,16 +132,11 @@ install (FILES
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
-    ImageAnalysis/ImageRebinner.h
-    ImageAnalysis/ImageRebinner.tcc
     ImageAnalysis/ImageRegridder.h
-    ImageAnalysis/ImageRegridderBase.h
-    ImageAnalysis/ImageRegridderBase.tcc
 	ImageAnalysis/ImageSourceFinder.h
 	ImageAnalysis/ImageSourceFinder.tcc
 	ImageAnalysis/ImageStatsCalculator.h
 	ImageAnalysis/ImageTask.h
-    ImageAnalysis/ImageTask.tcc
 	ImageAnalysis/ImageTransposer.h
 	ImageAnalysis/ImageTwoPtCorr.h
 	ImageAnalysis/ImageTwoPtCorr.tcc
@@ -195,9 +145,6 @@ install (FILES
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
 	ImageAnalysis/PeakIntensityFluxDensityConverter.h
-	ImageAnalysis/PixelValueManipulator.h
-	ImageAnalysis/PixelValueManipulator.tcc
-	ImageAnalysis/PixelValueManipulatorData.h
 	ImageAnalysis/ProfileFitResults.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
@@ -231,7 +178,6 @@ casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/tCasaImageBeamSet.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )

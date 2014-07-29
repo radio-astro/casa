@@ -82,8 +82,7 @@ def flagcmd(
                         
             # Apply flag cmds
             if flagcmds.keys().__len__() == 0:
-                raise Exception, 'There are no unapplied flags in the input. '\
-                                'Set useapplied=True to also use the previously-applied flags.'
+                raise Exception, 'There is 0 flag cmds in input'
             
             # List flags on the screen/logger
             if action == 'list':
@@ -96,8 +95,16 @@ def flagcmd(
                 
             # Save the flag cmds to an output file
             if savepars:
+                # These cmds came from the internal FLAG_CMD, only list on the screen
+#                if outfile == '':
+#                    casalog.post('Saving to FLAG_CMD is not supported', 'WARN')
+#                        
+#                else:
+#                    casalog.post('Saving commands to ' + outfile)
                 fh.writeFlagCommands(vis, flagcmds, False, '', outfile, True)
-                                                                
+
+                                
+                                
         else:
             # Input vis is an MS
 
@@ -105,22 +112,22 @@ def flagcmd(
             mslocal2.open(vis)
             timd = mslocal2.range(['time'])
             mslocal2.close()
-            if timd.__len__() != 0:
-                ms_startmjds = timd['time'][0]
-                ms_endmjds = timd['time'][1]
-                t = qa.quantity(ms_startmjds, 's')
-                t1sdata = t['value']
-                ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
-                ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
-                t0 = qa.totime(ms_startdate + '/00:00:00.00')
-                t0d = qa.convert(t0, 'd')
-                t0s = qa.convert(t0, 's')
-                t = qa.quantity(ms_endmjds, 's')
-                t2sdata = t['value']
-                ms_endtime = qa.time(t, form='ymd', prec=9)[0]
-                # NOTE: could also use values from OBSERVATION table col TIME_RANGE
-                casalog.post('MS spans timerange ' + ms_starttime + ' to '
-                             + ms_endtime)
+    
+            ms_startmjds = timd['time'][0]
+            ms_endmjds = timd['time'][1]
+            t = qa.quantity(ms_startmjds, 's')
+            t1sdata = t['value']
+            ms_starttime = qa.time(t, form='ymd', prec=9)[0][0]
+            ms_startdate = qa.time(t, form=['ymd', 'no_time'])[0]
+            t0 = qa.totime(ms_startdate + '/00:00:00.00')
+            t0d = qa.convert(t0, 'd')
+            t0s = qa.convert(t0, 's')
+            t = qa.quantity(ms_endmjds, 's')
+            t2sdata = t['value']
+            ms_endtime = qa.time(t, form='ymd', prec=9)[0]
+            # NOTE: could also use values from OBSERVATION table col TIME_RANGE
+            casalog.post('MS spans timerange ' + ms_starttime + ' to '
+                         + ms_endtime)
     
             myflagcmd = {}
             cmdlist = []
@@ -159,6 +166,7 @@ def flagcmd(
                     raise ValueError, "Unsupported action='unapply' for inpmode='list'"
     
                 # ##### TO DO: take time ranges calculation into account ??????
+                # Parse the input file
                 # Parse the input file
                 try:            
                     # Input commands are given in a list
@@ -240,9 +248,7 @@ def flagcmd(
             # Before performing any action on the flag cmds, check them! 
             vrows = myflagcmd.keys()   
             if vrows.__len__() == 0:
-                raise Exception, 'There are no unapplied flags in the input. '\
-                    'Set useapplied=True to also use the previously-applied flags.'
-
+                raise Exception, 'There are no flag commands in input'
             else:
                 casalog.post('Read ' + str(vrows.__len__())
                              + ' lines from input')
@@ -259,6 +265,7 @@ def flagcmd(
             if action == 'list':
     
                 # List the flag cmds on the screen
+#                listFlagCmd(myflagcmd, myoutfile='', listmode=listmode)
                 listFlagCommands(myflagcmd, listmode=listmode)
 
                 # Save the flag cmds to the outfile
@@ -474,7 +481,6 @@ def readFromTable(
         return
     
     myflagcmd = {}
-
     if nrows > 0:
         nflagd = 0
         if myflagrows.__len__() > 0:

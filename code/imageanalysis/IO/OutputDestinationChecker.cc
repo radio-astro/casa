@@ -28,8 +28,6 @@
 
 #include <casa/OS/File.h>
 
-#include <stdcasa/cboost_foreach.h>
-
 namespace casa {
 
 OutputDestinationChecker::OutputDestinationChecker() {}
@@ -42,9 +40,9 @@ void OutputDestinationChecker::checkOutput(OutputStruct& output, LogIO& log) {
 	Bool required = output.required;
 	Bool replaceable = output.replaceable;
 	if (name.empty()) {
-		ThrowIf(
-			required, label + " cannot be blank"
-		);
+		if (required) {
+			log << label << " cannot be blank" << LogIO::EXCEPTION;
+		}
 		return;
 	}
 	LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;
@@ -79,10 +77,12 @@ void OutputDestinationChecker::checkOutput(OutputStruct& output, LogIO& log) {
 void OutputDestinationChecker::checkOutputs(
 	std::vector<OutputStruct> * const output, LogIO& log
 ) {
-	if (output) {
-		foreach_(OutputStruct elem, *output) {
-			checkOutput(elem, log);
-		}
-	}
+	for (
+		std::vector<OutputStruct>::iterator iter = output->begin();
+		iter != output->end();
+		iter++
+	) {
+		checkOutput(*iter, log);
+    }
 }
 } 

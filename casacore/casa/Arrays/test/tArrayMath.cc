@@ -96,7 +96,7 @@ void NAME()\
   T* ap = a.data();\
   T* ep = e.data();\
   for (uInt i=0; i<a.size(); ++i) {\
-    ap[i] = static_cast<T> ((i+1)/120.);\
+    ap[i] = (i+1)/120.;\
     ep[i] = OPER ap[i];\
   }\
   AlwaysAssertExit (allEQ(OPER a, e));\
@@ -343,14 +343,6 @@ void testMinMax1()
   indgen (a);
   a.data()[11] = -3;
   a.data()[66] = 1000;
-
-  Vector<Double> x = indgen(10, 4.0, 3.0);
-  for (uInt i=0; i<10; i++) {;
-  	  AlwaysAssertExit(x[i] == 4 + 3*i);
-  }
-
-
-
   Int minval, maxval;
   IPosition minpos, maxpos;
   // Unmasked minmax.

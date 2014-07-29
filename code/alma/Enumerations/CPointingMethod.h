@@ -56,7 +56,7 @@ namespace PointingMethodMod
   //! PointingMethod.
   //!  [CalDM.CalPointing] Method of pointing measurement
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PointingMethod
@@ -70,8 +70,6 @@ namespace PointingMethodMod
     CROSS /*!< Cross scan */
      ,
     CIRCLE /*!< Circular scan */
-     ,
-    HOLOGRAPHY /*!<  */
      
   };
   typedef PointingMethod &PointingMethod_out;
@@ -103,8 +101,6 @@ class CPointingMethod {
 	static const std::string& sCROSS; /*!< A const string equal to "CROSS".*/
 	
 	static const std::string& sCIRCLE; /*!< A const string equal to "CIRCLE".*/
-	
-	static const std::string& sHOLOGRAPHY; /*!< A const string equal to "HOLOGRAPHY".*/
 	
 
 	/**

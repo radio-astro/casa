@@ -14,11 +14,7 @@ namespace casa {
 	clone->setRangeY(m_RangeY.min, m_RangeY.max);
 	clone->setBoundingRect(bounding_box);
 // 	clone->setBoundingRect(QwtDoubleRect(m_RangeX.min, m_RangeY.min, m_RangeX.max, m_RangeY.max));
-	int dataXSize = static_cast<int>(m_DataSize.x);
-	int dataYSize = static_cast<int>(m_DataSize.y);
-
-	clone->setData(m_Array, dataXSize, dataYSize, m_minValue, m_maxValue);
-
+	clone->setData(m_Array, m_DataSize.x, m_DataSize.y, m_minValue, m_maxValue);
 	clone->length_ = length_;
 	// if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", m_RealToArray.x, m_RealToArray.y );
 	// if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", clone->m_RealToArray.x, clone->m_RealToArray.y );
@@ -26,7 +22,7 @@ namespace casa {
     }
 
 
-    void QtRasterData:: initRaster( const QwtDoubleRect &r, const QSize &/*raster*/ ) {
+    void QtRasterData:: initRaster( const QwtDoubleRect &r, const QSize &raster ) {
 	bounding_box = r;
 	m_RealToArray.x = (bounding_box.right() - bounding_box.left()) / (m_DataSize.x - 1);
 	m_RealToArray.y = (bounding_box.bottom() - bounding_box.top()) / (m_DataSize.y - 1);

@@ -33,9 +33,9 @@
 #include <ms/MeasurementSets/MSProcessorColumns.h>
 
 // VI/VB infrastructure
-#include <msvis/MSVis/StokesVector.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
@@ -843,7 +843,7 @@ public:
 	virtual bool flushFlags() {return false;}
 	virtual String getTableName() {return String("none");}
 	virtual bool parseExpression(MSSelection &/*parser*/) {return true;}
-	virtual bool checkIfColumnExists(String /*column*/) {return true;}
+	virtual bool checkIfColumnExists(String column) {return true;}
 	virtual bool summarySignal() {return true;}
 
 	// Set the iteration approach

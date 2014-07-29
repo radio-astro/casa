@@ -435,8 +435,7 @@ protected:
 
 } //# NAMESPACE CASA - END
 
-#ifndef AIPS_NO_TEMPLATE_SRC
+#ifndef CASACORE_NO_AUTO_TEMPLATES
 #include <imageanalysis/ImageAnalysis/MomentsBase.tcc>
-#endif
-
+#endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

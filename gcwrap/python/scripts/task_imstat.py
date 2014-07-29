@@ -6,16 +6,12 @@ def imstat(
     logfile=None, append=None
 ):
     _myia = iatool()
-    _myrg = rgtool()
-    _mycs = cstool()
     try:
         casalog.origin('imstat')
         _myia.open(imagename)
-        _mycs = _myia.coordsys()
-        csrec = _mycs.torecord()
-        shape =  _myia.shape()
-        reg = _myrg.frombcs(
-            csrec, shape,
+        mycsys = _myia.coordsys()
+        reg = rg.frombcs(
+            mycsys.torecord(), _myia.shape(),
             box, chans, stokes, "a", region
         )
         retValue = _myia.statistics(
@@ -29,5 +25,3 @@ def imstat(
         raise
     finally:
         _myia.done()
-        _myrg.done()
-        _mycs.done()

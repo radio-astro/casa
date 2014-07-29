@@ -24,9 +24,6 @@ MSFits/SDSysCalHandler.cc
 MSFits/SDWeatherHandler.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_msfits PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_msfits casa_ms casa_fits)
 
 add_subdirectory (apps)

@@ -731,7 +731,7 @@ void GBTScanLogReader::setStateTable(const String &fileName) const
 }
 
 void GBTScanLogReader::doScanCheck() {
-    if (maxScan_p < 0) maxScan_p = INT_MAX;
+    if (maxScan_p < 0) maxScan_p = LONG_MAX;
     if (minScan_p > maxScan_p) {
 	Int tmp = minScan_p;
 	minScan_p = maxScan_p;

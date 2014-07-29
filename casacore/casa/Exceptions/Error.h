@@ -433,9 +433,6 @@ public:
   // and the errno.
   SystemCallError(const String &funcName, int error, Category c=GENERAL);
 
-  SystemCallError (int error, const String &msg, const String &filename, uInt lineNumber,
-                   Category c = GENERAL);
-
   // Destructor which does nothing.
   ~SystemCallError() throw();
 

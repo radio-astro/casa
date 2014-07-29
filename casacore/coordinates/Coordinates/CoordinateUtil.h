@@ -186,13 +186,7 @@ class Unit;
 // </thrown>
 //
 // <todo asof="1997/01/23">
-//   Many of these methods belong in the CoordinateSystem class,
-//   eg all the add* methods, and in fact CoordinateSystem already has analogs
-//   for many of them. The factory methods which create a CoordinateSystem
-//   could also arguably go in CoordinateSystem as static methods. Having a separate
-//   utility class that really just has methods that operate on or create CoordinateSystem
-//   objects makes no sense. CoordinateUtil is the antithesis of object oriented design,
-//   and we need to endeavor to expunge it from our system.
+//   <li> This code does all I want at the moment
 // </todo>
 
 //  <linkfrom anchor=defaultAxes classes="CoordinateSystem">
@@ -232,21 +226,6 @@ static void addLinearAxes (CoordinateSystem & coords,
 // Add a spectral axis to the user supplied CoordinateSystem. See the
 // synopsis above for the current default values.
 static void addFreqAxis(CoordinateSystem& coords);
-
-
-// Add one axis for each of the specified coordinate types.
-// Returns the number of axes added.
-// If silent==True, existing axes are silently ignored.
-// This should really be a method of CoordinateSystem, but the
-// code was moved from ImageUtilities which makes heavy use
-// of CoordUtil methods (which aren't available to CoordinateSystem)
-static uInt addAxes (
-	CoordinateSystem& csys,
-	Bool direction,
-	Bool spectral, const String& stokes,
-	Bool linear, Bool tabular,
-	Bool silent=False
-);
 
 // Return a 2-dimensional coordinate system with RA/DEC axes only. 
 static CoordinateSystem defaultCoords2D();
@@ -404,6 +383,12 @@ static Bool dropRemovedAxes (
 // Returns False and an error message if it can't find the sky.
    static Bool findSky(String& errorMessage, Int& dirCoord, Vector<Int>& pixelAxes,
                        Vector<Int>& worldAxes, const CoordinateSystem& cSys);
+//
+
+// Does the CoordinateSystem hold just the sky ?  Exception if not.
+// Returns True if CS pixel axis 0 is the longitude and 1 latitude  
+// else returns False
+   static Bool isSky (LogIO& os, const CoordinateSystem& cSys);
 
 // Do the specified axes hold the sky ?  Returns False if no DirectionCoordinate
 // or if only one axis of the DirectionCoordinate is held or the specified
@@ -446,12 +431,26 @@ static Bool dropRemovedAxes (
    static Bool setSpectralState (String& errorMsg, CoordinateSystem& cSys, 
                                  const String& unit, const String& spcquant);
 
+// Set rest frequency of SpectralCoordinate in CoordinateSystem.
+// Unit must be consistent with Hz or m.
+// Returns False if invalid inputs (and CS not changed) and an error message.
+   static Bool setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
+   		                        const String& unit,
+   		                        const Double& value);
+
 // Set velocity state of SpectralCoordinate in CoordinateSystem.
 // Unit must be consistent m/s and the doppler a valid MDoppler string.
 // For no change, leave either String empty.
 // Returns False if invalid inputs (and CS not changed) and an error message. 
    static Bool setVelocityState (String& errorMsg, CoordinateSystem& cSys, 
                                  const String& unit, const String& spcquant);
+
+// Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
+// so that pixel<->world go to the specified frequency system (a valid
+// MFrequency::Types string).  Returns False if frequency system invalid
+// or if no DirectionCoordinate or if cant get Date/Epoch
+   static Bool setSpectralConversion (String& errorMsg, CoordinateSystem& cSys,
+                                      const String frequencySystem);
 
 // Set default format unit and doppler velocity state of SpectralCoordinate in CoordinateSystem.
 // Unit can be consistent with Hz or m/s

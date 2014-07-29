@@ -57,7 +57,7 @@ namespace PolarizationTypeMod
   //! The polarizations a single receptor can detect
 
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PolarizationType

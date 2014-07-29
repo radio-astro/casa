@@ -658,7 +658,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not ok:
             raise RuntimeError, 'setmiscinfo failed in fitsreflect'
         myim.sethistory(history=["A","B","C","D"])
-        history = myim.history(F)
+        history = myim.history(F,F)
         #
         p1 = myim.getregion()
         m1 = myim.getregion(getmask=T)
@@ -710,7 +710,7 @@ def imagetest(which=None, size=[32,32,8]):
         if not (mi['hello'] == 'hello') or not (mi['world'] == 'world'):
             raise RuntimeError, 'miscinfo changed after fits in fitsreflect'
         #
-        history2 = myim2.history(F);
+        history2 = myim2.history(F,F);
         #Behaviour of history logged in FITS changed (2007/10/02)
         #Grab just the messages (indices 2, 4, 6, ...)
 	#
@@ -1668,6 +1668,163 @@ def imagetest(which=None, size=[32,32,8]):
          ###
         return cleanup(testdir)
 
+        
+    def test8():
+        info('');
+        info('');
+        info('');
+        info('Test 8 - imagecalc constructor');
+
+        # Make the directory
+        testdir = 'imagetest_temp'
+        if not cleanup(testdir):
+            note("Cleanup failed", "SEVERE")
+            return false
+        try:
+            os.mkdir(testdir)
+        except IOError, e:
+            note(e, "SEVERE")
+            raise RuntimeError, "mkdir " + testdir + " fails!"
+
+        #
+        imname = testdir+'/'+'ia.fromarray1.image'
+        imname2 = testdir+'/'+'ia.fromshape2.image'
+        imname3 = testdir+'/'+'imagecalc.image'
+        imshape = [10,20,5]
+        data = make_data(imshape)
+        #
+        try:
+            myim = true
+            note('Expect SEVERE error and Exception here')
+            myim = ia.imagecalc(outfile=imname3, pixels='i_like_doggies')
+        except Exception, e:
+            note('Caught expected Exception')
+            myim = false
+        if myim:
+            stop('imagecalc constructor 1 unexpectedly did not fail')
+        myim = ia.newimagefromarray(outfile=imname, pixels=data)
+        if not myim:
+            stop('ia.fromarray constructor 1 failed')
+        stats = myim.statistics(force=T, list=F)
+        if not stats: fail()
+        myim.done()
+        #
+        myim = ia.newimagefromshape(outfile=imname2,
+                                    shape=[2*imshape[0], 2*imshape[1],
+                                           2*imshape[2]])
+        if not myim:
+            stop('imagefromshape constructor 1 failed')
+        myim.done()
+        #
+        ex = imname+'+'+imname2
+        try:
+            myim = true
+            note('Expect SEVERE error and Exception here')
+            myim = ia.imagecalc(outfile=imname3, pixels=ex)
+        except Exception, e:
+            note('Caught expected Exception')
+            myim = false
+        if myim:
+            stop('imagecalc constructor 2 unexpectedly did not fail')
+        #
+        # Need the double quotes because of / in expression
+        #
+        ex = '"'+imname+'"'+'+'+'"'+imname+'"'
+        myim = ia.imagecalc(outfile=imname3, pixels=ex)
+        if not myim:
+            stop('imagecalc constructor 3 failed')
+        stats2 = myim.statistics(force=T, list=F)
+        if not stats2: fail()
+        if (stats2['max'] != 2*(stats['max'])):
+            stop('imagecalc 3 image has wrong data values')
+        if (stats2['min'] != 2*(stats['min'])):
+            stop('imagecalc 3 image has wrong data values')
+        ia.close()  # needed to remove table lock preventing myim.done
+        if not myim.remove(done=T): fail()
+
+        ###
+        return cleanup(testdir)
+
+
+        
+    def test9():
+        info('')
+        info('')
+        info('')
+        info('Test 9 - readonly imagecalc constructors')
+
+        # Make the directory
+        testdir = 'imagetest_temp'
+        if not cleanup(testdir):
+            note("Cleanup failed", "SEVERE")
+            return false
+        try:
+            os.mkdir(testdir)
+        except IOError, e:
+            note(e, "SEVERE")
+            raise RuntimeError, "mkdir " + testdir + " fails!"
+        #
+        imname = testdir+'/'+'ia.fromarray1.image'
+        imname2 = testdir+'/'+'ia.fromshape2.image'
+        imshape = [10,20,5]
+        data = make_data(imshape)
+        #
+        try:
+            myim = true
+            note('Expect SEVERE error and Exception here')
+            myim = ia.imagecalc(pixels='i_like_doggies')
+        except Exception, e:
+            note('Caught expected Exception')
+            myim = false
+        if myim:
+            stop('expr constructor 1 unexpectedly did not fail')
+        myim = ia.newimagefromarray(outfile=imname, pixels=data)
+        if not myim:
+            stop('ia.fromarray constructor 1 failed')
+        stats = myim.statistics(force=T, list=F)
+        if not stats:
+            stop('statistics 1 failed')
+        ok = myim.done()
+        if not ok:
+            stop('done 1 failed')
+        myim = ia.newimagefromshape(outfile=imname2,
+                                    shape=[2*imshape[0],2*imshape[1],
+                                           2*imshape[2]])
+        if not myim:
+            stop('ia.fromshape constructor 1 failed')
+        ok = myim.done()
+        if not ok:
+            stop('done 2 failed')
+        #
+        ex = '"'+imname+'"'+'+'+'"'+imname2+'"'
+        try:
+            myim = true
+            note('Expect SEVERE error and Exception here')
+            myim = ia.imagecalc(pixels=ex)
+        except Exception, e:
+            note('Caught expected Exception')
+            myim = false
+        if myim:
+            stop('expr constructor 2 unexpectedly did not fail')
+        #
+        ex = '"'+imname+'"'+'+'+'"'+imname+'"'
+        myim = ia.imagecalc(pixels=ex)
+        if not myim:
+            stop('expr constructor 3 failed')
+        stats2 = myim.statistics(force=T, list=F)
+        if not stats2:
+            stop('statistics 2 failed')
+        if (stats2['max'] != 2*(stats['max'])):
+            stop('expr image has wrong data values')
+        if (stats2['min'] != 2*(stats['min'])):
+            stop('imagecalc image has wrong data values')
+        ok = myim.done()
+        if not ok:
+            stop('done 3 failed')
+        ###
+        return cleanup(testdir)
+
+        
     def test10():
         # Test methods
         #   is_image, imagetools, imagedones
@@ -3594,6 +3751,142 @@ def imagetest(which=None, size=[32,32,8]):
         ###
         return cleanup(testdir)
 
+    def test18():
+        #
+        # Test methods
+        #   hanning
+        #
+        info('');
+        info('');
+        info('');
+        info('Test 18 - hanning');
+        # Make the directory
+        testdir = 'imagetest_temp'
+        if not cleanup(testdir):
+            return False
+        try:
+            os.mkdir(testdir)
+        except IOError, e:
+            note(e, "SEVERE")
+            raise RuntimeError, "mkdir " + testdir + " fails!"
+        # Make image
+        imname = testdir+'/'+'ia.fromshape.image'
+        imshape = [10,20]
+        myim = ia.newimagefromshape(outfile=imname, shape=imshape)
+        if not myim:
+            stop('ia.fromshape constructor 1 failed')
+        pixels = myim.getchunk()
+        if len(pixels)==0:
+            stop('getchunk 1 failed')
+        for i in range(pixels.shape[0]):
+            for j in range(pixels.shape[1]):
+                if pixels[i][j]>-10000:
+                    pixels[i][j]=1
+        ok = myim.putchunk(pixels)
+        if not ok:
+            stop('putchunk 1 failed')
+        #
+        try:
+            note('Expect SEVERE error and Exception here')
+            myim2 = myim.hanning(region='fish');
+        except Exception, e:
+            note('Caught expected Exception')
+            myim2 = false
+        if myim2:
+            stop('hanning 1 unexpectedly did not fail')
+        try:
+            note('Expect SEVERE error and Exception here')
+            myim2 = myim.hanning(axis=19)
+        except Exception, e:
+            note('Caught expected Exception')
+            myim2 = false
+        if myim2:
+            stop('hanning 2 unexpectedly did not fail')
+        try:
+            note('Expect SEVERE error and Exception here')
+            myim2 = myim.hanning(drop='fish')
+        except Exception, e:
+            note('Caught expected Exception:'+str(e))
+            myim2 = false
+        if myim2:
+            stop('hanning 3 unexpectedly did not fail')
+        try:
+            note('Expect SEVERE error and Exception here')
+            myim2 = myim.hanning(outfile=[1,2,3])
+        except Exception, e:
+            note('Caught expected Exception:'+str(e))
+            myim2 = false
+        if myim2:
+            stop('hanning 4 unexpectedly did not fail')
+        #
+        hanname = testdir+'/'+'hanning.image'
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=F)
+        if not myim2:
+            stop('hanning 5 failed')
+        if not all(myim2.shape(),myim.shape()):
+            stop('Output image has wrong shape (1)')
+        pixels2 = myim2.getchunk()
+        if len(pixels2)==0:
+            stop('getchunk 2 failed')
+        if not alleqnum(pixels2,1,tolerance=0.0001):
+            stop('hanning image pixels have wrong value (1)')
+        ok = myim2.remove(done=T)
+        if not ok:
+            stop('Failed to remove'+hanname)
+        #
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=T)
+        if not myim2:
+            stop('hanning 6 failed')
+        shape2 = [myim.shape()[0]/2-1,myim.shape()[1]]
+        if not all(myim2.shape(),shape2):
+            stop('Output image has wrong shape (2)')
+        pixels2 = myim2.getchunk()
+        if len(pixels2)==0:
+            stop('getchunk 3 failed')
+        if not alleqnum(pixels2,1,tolerance=0.0001):
+            stop('Hanning image pixels have wrong value (2)')
+        ok = myim2.remove(done=T)
+        if not ok:
+            stop('Failed to remove'+hanname)
+        #
+        pixels = myim.getregion()
+        mask = myim.getregion(getmask=true)
+        if len(pixels)==0 or len(mask)==0:
+            stop('getregion 1 failed')
+        mask[0,0] = F
+        mask[1,0] = F
+        mask[2,0] = F
+        mask[3,0] = F
+        ok = myim.putregion(pixelmask=mask)
+        if not ok:
+            stop('putregion 1 failed')
+        myim2 = myim.hanning(outfile=hanname, axis=0, drop=F)
+        if not myim2:
+            stop('hanning 7 failed')
+        pixels2 = myim2.getregion()
+        mask2 = myim2.getregion(getmask=true)
+        if not ok:
+            stop('getregion 2 failed')
+        ok = (mask2[0,0]==F and mask2[1,0]==F)
+        ok = ok and mask2[2,0]==F
+        ok = ok and mask2[3,0]==F
+        if not ok:
+            stop('Hanning image mask is wrong (1)')
+        ok = pixels2[0,0]==0 and pixels2[1,0]==0
+        ok = ok and pixels2[2,0]==0
+        ok = ok and pixels2[3,0]==0.25
+        if not ok:
+            stop('Hanning image pixels have wrong value (3)')
+        ok = myim2.done()
+        if not ok:
+            stop('Done 1 failed')
+        #
+        ok = myim.done()
+        if not ok:
+            stop('Done 2 failed')
+        ###
+        return cleanup(testdir)
+
     def test19():
         #
         # Test methods
@@ -4306,6 +4599,153 @@ def imagetest(which=None, size=[32,32,8]):
             stop('failed fitcomponents 1')
         return cleanup(testdir)
 
+   
+    def test26():
+        #
+        # Test methods
+        #   fft
+        info('')
+        info('')
+        info('')
+        info('Test 26 - fft')
+        # Make the directory
+        testdir = 'imagetest_temp'
+        if not cleanup(testdir):
+            return False
+        try:
+            os.mkdir(testdir)
+        except IOError, e:
+            note(e, "SEVERE")
+            raise RuntimeError, "mkdir " + testdir + " fails!"
+
+        # Open test image (has sky coordinates)
+        aipspath = os.environ.get("CASAPATH").split()[0]
+        testname = aipspath+'/data/demo/Images/test_image'
+        testim = ia.newimage(testname)
+        if not testim:
+            stop('image constructor failed')
+        testshape = testim.shape()
+        if len(testshape)!=3:
+            stop('testimage has unexpected shaped')
+
+        #
+        # FFT sky
+        #
+        rname = testdir+'/'+'real'
+        iname = testdir+'/'+'imag'
+        aname = testdir+'/'+'amp'
+        pname = testdir+'/'+'phase'
+        ok = testim.fft(real=rname, imag=iname, phase=pname, amp=aname)
+        if not ok:
+            stop('skyfft failed')
+        #
+        im1 = ia.newimage(rname)
+        if not im1:
+            stop('Failed to open real image (1)')
+        im2 = ia.newimage(iname)
+        if not im2:
+            stop('Failed to open imaginary image (1)')
+        im3 = ia.newimage(aname)
+        if not im3:
+            stop('Failed to open amplitude image (1)')
+        im4 = ia.newimage(pname)
+        if not im4:
+            stop('Failed to open phase image (1)')
+        #
+        trc = testim.shape()
+        trc[2] = 0
+        a1 = im1.getchunk(trc=trc)
+        a2 = im2.getchunk(trc=trc)
+        a3 = im3.getchunk(trc=trc)
+        a4 = im4.getchunk(trc=trc)
+        #
+        #include 'fftserver.g'
+        #fft = fftserver()
+        from numpy.fft import fft2
+        p = testim.getchunk(trc=trc)
+        #c = fft.realtocomplexfft(p)
+        c = fft2(p)
+        b1 = c.real
+        b2 = c.imag
+        b3 = abs(c)  # sqrt( real(x)^2 + imag(x)^2 )
+        note('NEED TO SORT OUT COMPARISON WITH NUMPY.FFT RESULT')
+        #b4 = arg(c)  # atan( imag(x) / real(x) )
+        #from numpy import atan2
+        #b4 = atan2(c.imag , c.real)
+        ##
+        ##diff = abs(a1-b1)
+        #if not alleq(a1,b1,tolerance=1e-6):
+        #    stop('real values incorrect (1)')
+        ##diff = abs(a2-b2)
+        #if not alleq(a2,b2,tolerance=1e-6):
+        #    stop('imaginary values incorrect (1)')
+        ##diff = abs(a3-b3)
+        #if not alleq(a3,b3,tolerance=1e-5):
+        #    stop('amplitude values incorrect (1)')
+        ##diff = abs(a4-b4)
+        #if not alleq(a4,b4,tolerance=1e-6):
+        #    stop('phase values incorrect (1)')
+        #
+        ok =im1.remove(T) and im2.remove(T) and im3.remove(T) and im4.remove(T)
+        if not ok:
+            stop('Done 1 failed')
+        #
+        # FFT whole image
+        #
+        ndim = len(testim.shape())
+        axes = range(ndim)
+        ok = testim.fft(real=rname, imag=iname, phase=pname, amp=aname, axes=axes)
+        if not ok:
+            stop('whole image fft failed')
+        #
+        im1 = ia.newimage(rname)
+        if not im1:
+            stop('Failed to open real image (2)')
+        im2 = ia.newimage(iname)
+        if not im2:
+            stop('Failed to open imaginary image (2)')
+        im3 = ia.newimage(aname)
+        if not im3:
+            stop('Failed to open amplitude image (2)')
+        im4 = ia.newimage(pname)
+        if not im4:
+            stop('Failed to open phase image (2)')
+        #
+        a1 = im1.getchunk()
+        a2 = im2.getchunk()
+        a3 = im3.getchunk()
+        a4 = im4.getchunk()
+        #
+        #include 'fftserver.g'
+        #fft = fftserver()
+        p = testim.getchunk()
+        #c = fft.realtocomplexfft(p)
+        c = fft2(p)
+        b1 = c.real
+        b2 = c.imag
+        b3 = abs(c)
+        note('NEED TO SORT OUT COMPARISON WITH NUMPY.FFT RESULT')
+        #b4 = arg(c)
+        ##
+        ##diff = abs(a1-b1)
+        #if not alleq(a1,b1,tolerance=1e-6):
+        #    stop('real values incorrect (2)')
+        #diff = abs(a2-b2)
+        #if not alleq(a2,b2,tolerance=1e-6):
+        #    stop('imaginary values incorrect (2)')
+        #diff = abs(a3-b3)
+        #if not alleq(a3,b3,tolerance=2e-5):
+        #    stop('amplitude values incorrect (2)')
+        #diff = abs(a4-b4)
+        #if not alleq(a4,b4,tolerance=1e-6):
+        #    stop('phase values incorrect (2)')
+        #
+        ok = testim.done() and im1.done() and im2.done() and im3.done() and im4.done()
+        if not ok:
+            stop('Done 2 failed')
+        #
+        return cleanup(testdir)
+
     def test28():
         #
         # Test methods
@@ -4451,40 +4891,23 @@ def imagetest(which=None, size=[32,32,8]):
         if not myim2: stop('convolve2d 4 failed')
         if not myim2.done(): stop ('done 4 failed')
         if not myim.done(): stop('done 5 failed')
-        """ 
-        I have no idea why anyone would want to do this, this is nonsensical and
-        even though convolve2d() used to complete with these parameters, the resulting
-        image had no meaning. convolve2d() does not work correctly for non-square pixels,
-        and certainly does not give a proper result when the axes represent different
-        domains, since there is no proper result in that case for a gaussian kernel (the only
-        kernel supported at this time). I've added exception throwing for those cases, so ia.convolve2d()
-        now fails. Tests should reflect real
-        world use cases, not picking parameters randomly from parameter space just to show
-        that a method completes for that nonsensical case. That's a bug, not a feature, and
-        the method should fail.
         #
         # Now try a mixed axis convolution
         #
         mycs = cs.newcoordsys(direction=T, linear=1)
         nz = 32
         imshape = [nx,ny,nz]
-        print "*** ea"
         centre = [imshape[0]/2,imshape[1]/2,imshape[2]/2]
         myim = ia.newimagefromshape(shape=imshape, csys=mycs.torecord())
         if not myim: stop('ia.fromshape constructor 2 failed')
-        print "*** fa"
         if not mycs.done(): stop ('done 6 failed')
         #
         #myim2 = myim.convolve2d (major=20, minor=10, axes=[1,3])
         note('EXPECT WARNING MESSAGE HERE')
-        print "*** fb"
         myim2 = myim.convolve2d (major='20pix', minor='10pix', axes=[0,2])
-        print "*** fc"
-        print "*** ba"
         if not myim2: stop('convolve2d 5 failed')
         if not myim2.done(): stop ('done 7 failed')
         if not myim.done(): stop('done 8 failed')
-        """
         #
         # Now do some non autoscaling
         #
@@ -4521,7 +4944,6 @@ def imagetest(which=None, size=[32,32,8]):
         #
         # Now some forced errors
         #
-        nz = 32
         imshape = [nx,ny,nz]
         centre = [imshape[0]/2,imshape[1]/2,imshape[2]/2]
         myim = ia.newimagefromshape(shape=imshape)
@@ -4859,15 +5281,14 @@ def imagetest(which=None, size=[32,32,8]):
             info('Testing Image type '+rec[mytype]['type'])
             #
             myim = rec[mytype]['tool']
-            nhist = len(myim.history(False))
             ok = myim.sethistory(history=hii)
             if not ok: fail()
-            hio = myim.history(list=F)
+            hio = myim.history(list=F, browse=F)
             if not hio: fail()
-            if (len(hii)!=len(hio[nhist])):
+            if (len(hii)!=len(hio[0])):
                 fail('History length does not reflect')
             for i in range(len(hii)):
-                if (hii[i]!=hio[nhist][i]):
+                if (hii[i]!=hio[0][i]):
                     fail('History fields do not reflect')
             #
             ok = myim.setmiscinfo(mii)
@@ -5308,6 +5729,8 @@ def imagetest(which=None, size=[32,32,8]):
     test5()
     test6()
     test7()
+    test8()
+    test9()
     test10()
     #test11()
     test12()
@@ -5316,11 +5739,13 @@ def imagetest(which=None, size=[32,32,8]):
     test15()
     test16()
     test17()
+    test18()
     test19()
     test20()
     test22()
     test24()
     test25()
+    test26()  # needs comparison to numpy.fft result implemented
     test28()
     test29()
     test30()  # are abs/rel/world/pixel output values correct?

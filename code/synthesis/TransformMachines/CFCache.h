@@ -29,14 +29,13 @@
 #define SYNTHESIS_CFCACHE_H
 
 #include <casa/Arrays/Matrix.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Logging/LogIO.h>
-#include <casa/OS/Directory.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
 #include <lattices/Lattices/LatticeCache.h>
@@ -44,7 +43,6 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/CFStore.h>
-#include <synthesis/TransformMachines/CFStore2.h>
 #include <synthesis/TransformMachines/CFDefs.h>
 #include <synthesis/TransformMachines/Utils.h>
 // #include <casa/Tables/Table.h>
@@ -132,9 +130,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return *this;
     }
 
-    void init()
-    {freqList.resize(0); wList.resize(0); muellerList.resize(0); cfNameList.resize(0);}
-
     vector<Double> freqList, wList;
     vector<Int> muellerList;
     vector<String> cfNameList;
@@ -146,14 +141,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public:
     typedef Vector< CFStore > CFStoreCacheType;
-    typedef Vector< CFStore2 > CFStoreCacheType2;
     typedef vector<CFCacheTable> CFCacheTableType;
     CFCache(const char *cfDir="CF"):
-      memCache2_p(), memCacheWt2_p(),memCache_p(), memCacheWt_p(), 
-      cfCacheTable_p(), XSup(), YSup(), paList(), 
+      memCache_p(), memCacheWt_p(), cfCacheTable_p(), XSup(), YSup(), paList(), 
       paList_p(), key2IndexMap(),
       Dir(""), cfPrefix(cfDir), aux("aux.dat"), paCD_p(), avgPBReady_p(False),
-      avgPBReadyQualifier_p(""), OTODone_p(False)
+      avgPBReadyQualifier_p("")
     {};
     CFCache& operator=(const CFCache& other);
     ~CFCache();
@@ -167,8 +160,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     void initCache();
     void initCache2();
-    void initPolMaps(PolMapType& polMap, PolMapType& conjPolMap);
-    inline Bool OTODone() {return OTODone_p;}
     //
     // Compute the size of the memory cache in bytes
     //
@@ -248,14 +239,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int locateConvFunction(CFStore& cfs, const Int Nw, const Float pa, const Float dPA, 
 			   const String& nameQualifier="",
 			   const Int mosXPos=0, const Int mosYPos=0);
-
-    void getCFParams(const String& fileName,
-		     Array<Complex>& pixelBuffer,
-		     CoordinateSystem& coordSys, 
-		     Double& sampling,
-		     Double& paVal,
-		     Int& xSupport, Int& ySupport,
-		     Double& fVal, Double& wVal, Int& mVal);
     //
     // Methods to write the auxillary information from the memory
     // cache to the disk cache.  Without this call, the disk cache
@@ -270,10 +253,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Bool avgPBReady(const String& qualifier=String("")) 
     {return (avgPBReady_p && (avgPBReadyQualifier_p == qualifier));};
-
-    void summarize(CFStoreCacheType2& memCache, const String& message, const Bool cfsInfo=True);
-
-    CFStoreCacheType2 memCache2_p, memCacheWt2_p;
 
   private:
     CFStoreCacheType memCache_p, memCacheWt_p;
@@ -304,11 +283,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      Float convSampling);
     CFStoreCacheType& getMEMCacheObj(const String& nameQualifier);
 
-    void fillCFSFromDisk(const Directory dirObj, const String& pattern, CFStoreCacheType2& memStore, Bool showInfo=False);
-
     Bool avgPBReady_p;
     String avgPBReadyQualifier_p;
-    Bool OTODone_p;
   };
 }
 

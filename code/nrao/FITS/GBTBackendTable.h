@@ -113,7 +113,7 @@ public:
     // backend, if there are more than one banks involved, it
     // may vary with sampler.  The default implementation is
     // to return a constant.
-    virtual uInt nchan(uInt /*whichSampler*/) const {return itsNchan;}
+    virtual uInt nchan(uInt whichSampler) const {return itsNchan;}
 
     // The number of elements along the sampler axis.
     virtual uInt nsamp() const {return itsNsamp;}

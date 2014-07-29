@@ -237,7 +237,7 @@ class csvclean_test1(unittest.TestCase):
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
     def test17(self):
-        '''Csvclean 17: Verify statistics of image---DISABLED'''
+        '''Csvclean 17: Verify statistics of image'''
         self.res = csvclean(vis=self.msfile,imagename=self.img,field='2',imsize=[500,500],
                             niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec',phasecenter=0)
         ia.open(self.img+'.image')
@@ -245,10 +245,6 @@ class csvclean_test1(unittest.TestCase):
         ia.close()
         print stats
         retValue = self.verify_stats(stats)
-        
-        ####Forcing True 
-        retValue['success']=True
-
         self.assertTrue(retValue['success'],retValue['error_msgs'])
         
     def test18(self):

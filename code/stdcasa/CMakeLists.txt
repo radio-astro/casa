@@ -73,7 +73,6 @@ casa_add_library( stdcasa
 add_dependencies( libstdcasa_fast stdcasa_definitions )
 add_dependencies( libstdcasa      stdcasa_definitions )
 install (FILES
-	xerces.h
 	Quantity.h
 	array.h
 	record.h

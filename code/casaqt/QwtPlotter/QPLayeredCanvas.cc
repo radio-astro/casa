@@ -440,7 +440,8 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         const_cast<QPDrawThread*&>(m_drawThread)->cancel();
         m_parent->logMethod(CLASS_NAME, "drawItems", false);
         return;
-    } else const_cast<bool&>(m_redrawWaiting) = false;
+    }
+    else const_cast<bool&>(m_redrawWaiting) = false;    
         
     // Set up operation.
     PlotOperationPtr op = m_parent->operationDraw();
@@ -514,11 +515,14 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         if ( this->m_parent != NULL ){
         	useThreading = this->m_parent->isThreading();
         }
+
         if ( useThreading ){
         	drawThread->start();
         }
         else {
         	drawThread->run();
+        	delete m_drawThread;
+        	m_drawThread = NULL;
         }
     } else {
         // Finish operation.

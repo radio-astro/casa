@@ -970,51 +970,49 @@ def coordsystest():
         #
         mycs = cs.newcoordsys()
         if not mycs: fail('coordsys constructor 1 failed')
-        """
-        find coordinate and findaxis tests are now in test_coordsys.py
+
         # findcoordinate
         #local pa, wa
-        
         try:
             note('Expect SEVERE error and Exception here')
-            ok = mycs.findcoordinate('fish', 1)['return']
+            ok = mycs.findcoordinate('fish', 1)
         except Exception, e:
             note('Caught expected Exception')
             ok = false
         if ok:
             return stop('findcoordinate 1 unexpectedly did not fail')
-        ok = mycs.findcoordinate('dir', 20)['return']
-        if ok:
+        ok = mycs.findcoordinate('dir', 20)
+        if ok[0]:
             return stop('findcoordinate 2 unexpectedly did not fail')
         if not mycs.done(): fail()
         #
         mycs = cs.newcoordsys(direction=T, stokes="I V", spectral=T, linear=2)
         if not mycs: fail('coordsys constructor 1 failed')
         ok = mycs.findcoordinate('dir',0)
-        if not ok['return']:
+        if not ok or not ok[0]:
             return stop('findcoordinate 3 failed')
-        pa = ok['pixel']
-        wa = ok['world']
+        pa = ok[1]
+        wa = ok[2]
         if not (pa[0] == 0 and pa[1] == 1):
             return stop('find 3 pixel axes are wrong')
         if not (wa[0] == 0 and wa[1] == 1):
             return stop('find 3 world axes are wrong')
         #
         ok = mycs.findcoordinate('stokes',0)
-        if not ok['return']:
+        if not ok or not ok[0]:
             return stop('findcoordinate 4 failed')
-        pa=ok['pixel']
-        wa=ok['world']
+        pa=ok[1]
+        wa=ok[2]
         if not pa==2:
             return stop('findcoordinate 4 pixel axes are wrong')
         if not wa==2:
             return stop('findcoordinate 4 world axes are wrong')
         #
         ok = mycs.findcoordinate('spectral',0)
-        if not ok['return']:
+        if not ok or not ok[0]:
             return stop('findcoordinate 5 failed')
-        pa=ok['pixel']
-        wa=ok['pixel']
+        pa=ok[1]
+        wa=ok[2]
         if not pa==3:
             return stop('findcoordinate 5 pixel axes are wrong')
         if not wa==3:
@@ -1022,10 +1020,10 @@ def coordsystest():
         #
         #
         ok = mycs.findcoordinate('linear',0)
-        if not ok['return']:
+        if not ok or not ok[0]:
             return stop('findcoordinate 6 failed')
-        pa=ok['pixel']
-        wa=ok['world']
+        pa=ok[1]
+        wa=ok[2]
         if not (pa[0]==4 and pa[1]==5):
             return stop('findcoordinate 6 pixel axes are wrong')
         if not (wa[0]==4 and wa[1]==5):
@@ -1039,26 +1037,30 @@ def coordsystest():
         #local coord, axisincoord
         #
         ok = mycs.findaxis(T, 0)
-        coord=ok['coordinate']
-        axisincoord=ok['axisincoordinate']
+        if not ok[0]: fail()
+        coord=ok[1]
+        axisincoord=ok[2]
         if (coord!=0 or axisincoord!=0):
             return stop('findaxis 0 values are wrong')
         #
         ok = mycs.findaxis(T, 1)
-        coord=ok['coordinate']
-        axisincoord=ok['axisincoordinate']
+        if not ok[0]: fail()
+        coord=ok[1]
+        axisincoord=ok[2]
         if (coord!=0 or axisincoord!=1):
             return stop('findaxis 1 values are wrong')
         #
         ok = mycs.findaxis(T, 2)
-        coord=ok['coordinate']
-        axisincoord=ok['axisincoordinate']
+        if not ok[0]: fail()
+        coord=ok[1]
+        axisincoord=ok[2]
         if (coord!=1 or axisincoord!=0):
             return stop('findaxis 2 values are wrong')
         #
         ok = mycs.findaxis(T, 3)
-        coord=ok['coordinate']
-        axisincoord=ok['axisincoordinate']
+        if not ok[0]: fail()
+        coord=ok[1]
+        axisincoord=ok[2]
         if (coord!=1 or axisincoord!=1):
             return stop('findaxis 3 values are wrong')
         #
@@ -1071,7 +1073,6 @@ def coordsystest():
         if ok:
             return stop('findaxis 4 unexpectedly found the axis')
         #
-        """
         if not mycs.done(): fail()
 
         ###
@@ -1815,9 +1816,9 @@ def coordsystest():
 
         # velocity
         ok = mycs.findcoordinate('spectral')
-        if not ok['return']: fail()
-        pa = ok['pixel']
-        wa = ok['world']
+        if not ok[0]: fail()
+        pa = ok[1]
+        wa = ok[2]
         #
         sAxis = pa
         dopplerin = 'radio'

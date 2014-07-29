@@ -9,6 +9,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdstatold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
     with sdutil.sdtask_manager(sdstat_worker, locals()) as worker:
         worker.initialize()

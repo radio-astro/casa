@@ -106,17 +106,18 @@ GaussianBeam ImageInfo::restoringBeam(
 
 
 void ImageInfo::setRestoringBeam(const GaussianBeam& beam) {
-	ThrowIf (
-		_beams.hasMultiBeam(),
-		"This object has multiple beams. They must be removed before you can define a single global restoring beam"
-	);
-    ThrowIf(
-    	beam.isNull(),
-    	"Beam is null and therefore invalid."
-    );
+	if (_beams.hasMultiBeam()) {
+		throw AipsError(
+			"This object has multiple beams. They must be removed before you can define a single global restoring beam"
+		);
+	}
+    if (beam.isNull()) {
+    	throw AipsError("Beam is null and therefore invalid.");
+    }
     ImageBeamSet bs(beam);
     _beams = bs;
 }
+
 
 void ImageInfo::_setRestoringBeam(const Record& inRecord) {
 	if (_beams.hasMultiBeam()) {
@@ -295,13 +296,23 @@ Bool ImageInfo::toRecord(
     outRecord.define("imagetype", ImageInfo::imageType(itsImageType));
     outRecord.define("objectname", itsObjectName);
     if (_beams.hasMultiBeam()) {
-    	try {
-    		outRecord.defineRecord("perplanebeams", _beams.toRecord());
-    	}
-    	catch (const AipsError& x) {
-    		error = x.getLastMessage();
-    		return False;
-    	}
+        Record perPlaneBeams;
+        perPlaneBeams.define("nChannels", _beams.nchan());
+        perPlaneBeams.define("nStokes", _beams.nstokes());
+        Record rec;
+        uInt count = 0;
+        const Array<GaussianBeam>& beams = _beams.getBeams();
+        Array<GaussianBeam>::const_iterator iterEnd = beams.end();
+        for (Array<GaussianBeam>::const_iterator iter=beams.begin();
+             iter!=iterEnd; ++iter, ++count) {
+          if (iter->isNull()) {
+            error = "Invalid per plane beam found";
+            return False;
+          }
+          Record rec = iter->toRecord();
+          perPlaneBeams.defineRecord("*" + String::toString(count), rec);
+        }
+        outRecord.defineRecord("perplanebeams", perPlaneBeams);
     }
     return ok;
 }
@@ -330,7 +341,40 @@ Bool ImageInfo::fromRecord(String& error, const RecordInterface& inRecord) {
 	}
 	if (inRecord.isDefined("perplanebeams")) {
 		Record hpBeams = inRecord.asRecord("perplanebeams");
-		_beams = ImageBeamSet::fromRecord(hpBeams);
+		if (!hpBeams.isDefined("nChannels")) {
+			error = "perplanebeams subrecord has no nChannels field";
+			return False;
+		}
+		if (!hpBeams.isDefined("nStokes")) {
+			error = "perplanebeams subrecord has no nStokes field";
+			return False;
+		}
+		uInt nchan = hpBeams.asuInt("nChannels");
+		_beams.resize(nchan, hpBeams.asuInt("nStokes"));
+		Record rec;
+		uInt count = 0;
+		uInt chan = 0;
+		uInt stokes = 0;
+		Array<GaussianBeam>::const_iterator iterend = _beams.getBeams().end();
+		for (
+			Array<GaussianBeam>::const_iterator iter =
+			_beams.getBeams().begin(); iter != iterend; ++iter, ++count
+		) {
+			String field = "*" + String::toString(count);
+			if (!hpBeams.isDefined(field)) {
+				error = "Field " + field
+					+ " is not defined in the per plane beams subrecord";
+				return False;
+			}
+			_beams.setBeam(
+				chan, stokes,
+				GaussianBeam::fromRecord(hpBeams.asRecord(field))
+			);
+			if (++chan == nchan) {
+				chan = 0;
+				stokes++;
+			}
+		}
 	}
 	return True;
 }
@@ -556,10 +600,6 @@ void ImageInfo::setBeam(
 void ImageInfo::setBeam(
     const Int channel, const Int stokes, const GaussianBeam& beam
 ) {
-	ThrowIf(
-		_beams.empty(),
-		"Logic error: setAllBeams() or setBeams() must be called prior to setBeam()"
-	);
     _beams.setBeam(channel, stokes, beam);
 }
 
@@ -604,57 +644,49 @@ Record ImageInfo::beamToRecord(const Int channel, const Int stokes) const {
 }
 
 
-void ImageInfo::checkBeamSet(
-	const CoordinateSystem& coords,
-	const IPosition& shape,
-	const String& imageName
-) const {
-	if (!hasBeam()) {
-		return;
-	}
-	// Adapt the info as needed.
-	/*
+void ImageInfo::checkBeamSet (const CoordinateSystem& coords,
+                              const IPosition& shape,
+                              const String& imageName,
+                              LogIO& logSink) const
+{
+  if (!hasBeam()) {
+    return;
+  }
+  // Adapt the info as needed.
+  logSink << LogOrigin("ImageInfo", __FUNCTION__);
+  /*
    // removing this constraint because PV images do not have a direction coordinate
    // but users still want to carry beam information along.
-  	  if (! coords.hasDirectionCoordinate()) {
+  if (! coords.hasDirectionCoordinate()) {
     logSink << "Image " << imageName << " has no direction coordinate so "
             << "cannot have per plane beams." << LogIO::EXCEPTION;
-  	  }
-	 */
-	uInt beamChannels = _beams.nchan();
-	uInt crdChannels = 1;
-	if (coords.hasSpectralAxis()) {
-		Int specAxisNum = coords.spectralAxisNumber();
-		crdChannels = shape[specAxisNum];
-	}
-	uInt beamStokes = _beams.nstokes();
-	uInt crdStokes = 1;
-	if (coords.hasPolarizationCoordinate()) {
-		Int polAxisNum = coords.polarizationAxisNumber();
-		crdStokes = shape[polAxisNum];
-	}
-	// Either the imageinfo has 1 channel or crdChannels channels.
-	// Same for Stokes.
-	ThrowIf(
-		beamChannels != 1  &&  beamChannels != crdChannels,
-		"Number of channels is not consistent"
-	);
-	ThrowIf(
-		beamStokes != 1  &&  beamStokes != crdStokes,
-		"Number of polarizations is not consistent"
-	);
-	// Check if no null beams.
-	Array<GaussianBeam>::const_iterator iterEnd=_beams.getBeams().end();
-	for (
-		Array<GaussianBeam>::const_iterator iter=_beams.getBeams().begin();
-		iter!=iterEnd; ++iter
-	) {
-		ThrowIf(
-			iter->isNull(),
-			"At least one of the beams in the beam set of "
-			+ imageName + " is null and thus invalid"
-		);
-	}
+  }
+  */
+  uInt beamChannels = _beams.nchan();
+  uInt crdChannels = 1;
+  if (coords.hasSpectralAxis()) {
+    Int specAxisNum = coords.spectralAxisNumber();
+    crdChannels = shape[specAxisNum];
+  }
+  uInt beamStokes = _beams.nstokes();
+  uInt crdStokes = 1;
+  if (coords.hasPolarizationCoordinate()) {
+    Int polAxisNum = coords.polarizationAxisNumber();
+    crdStokes = shape[polAxisNum];
+  }
+  // Either the imageinfo has 1 channel or crdChannels channels.
+  // Same for Stokes.
+  AlwaysAssert ((beamChannels == 1  ||  beamChannels == crdChannels)  &&
+                (beamStokes == 1  ||  beamStokes == crdStokes), AipsError);
+  // Check if no null beams.
+  Array<GaussianBeam>::const_iterator iterEnd=_beams.getBeams().end();
+  for (Array<GaussianBeam>::const_iterator iter=_beams.getBeams().begin();
+       iter!=iterEnd; ++iter) {
+    if (iter->isNull()) {
+      logSink << "At least one of the beams in the beam set of "
+              << imageName << " is null and thus invalid" << LogIO::EXCEPTION;
+    }
+  }
 }
 
 void ImageInfo::checkBeamShape (uInt& nchan, uInt& npol,
@@ -860,14 +892,8 @@ Double ImageInfo::getBeamAreaInPixels(
 		! hasBeam(),
 		"There is no beam set associated with this object"
 	);
-	return getBeamAreaInPixels(restoringBeam(channel, stokes), dc);
-}
-
-Double ImageInfo::getBeamAreaInPixels(
-	const GaussianBeam& beam, const DirectionCoordinate& dc
-) {
 	Quantity pixelArea = dc.getPixelArea();
-	return beam.getArea(pixelArea.getUnit())/pixelArea.getValue();
+	return restoringBeam(channel, stokes).getArea(pixelArea.getUnit())/pixelArea.getValue();
 }
 
 } //# NAMESPACE CASA - END

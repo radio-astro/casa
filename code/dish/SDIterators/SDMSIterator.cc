@@ -66,10 +66,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SDMSIterator::SDMSIterator(const String &msName, const Record &selection,
 			   Table::TableOption opt, TableLock::LockOption lockoption,
 			   Bool useCorrectedData)
-  : ok_p(False), rec_p(0), ms_p(0), thisRow_p(0),
-    correctedData_p(useCorrectedData), romsCols_p(0), stdTabRows_p(0),
-    nsTabRows_p(0), nsIndexes_p(0), nsTables_p(0), 
-    sec_p("s"), toAzEl_p(0)
+    : ok_p(False), rec_p(0), ms_p(0), thisRow_p(0), correctedData_p(useCorrectedData),
+      romsCols_p(0), stdTabRows_p(0), nsTabRows_p(0), nsIndexes_p(0), nsTables_p(0), 
+      sec_p("s"), toAzEl_p(0)
 {
     if (opt == Table::New || 
 	opt == Table::NewNoReplace || 
@@ -85,10 +84,9 @@ SDMSIterator::SDMSIterator(const String &msName, const Record &selection,
 }
 
 SDMSIterator::SDMSIterator(const SDMSIterator& other)
-  : SDIterator(other), ok_p(False), rec_p(0), ms_p(0), thisRow_p(0),
-    correctedData_p(other.correctedData_p), romsCols_p(0), stdTabRows_p(0),
-    nsTabRows_p(0), nsIndexes_p(0), nsTables_p(0), 
-    sec_p("s"), toAzEl_p(0)
+    : ok_p(False), rec_p(0), ms_p(0), thisRow_p(0), correctedData_p(other.correctedData_p),
+      romsCols_p(0), stdTabRows_p(0), nsTabRows_p(0), nsIndexes_p(0), nsTables_p(0), 
+      sec_p("s"), toAzEl_p(0)
 {
     ms_p = new MeasurementSet(*other.ms_p);
     AlwaysAssert(ms_p, AipsError);
@@ -1001,7 +999,7 @@ void SDMSIterator::copyOther()
     }
 }
 
-  Bool SDMSIterator::replaceAll(const SDRecord& /*rec*/, Bool /*rowIsNew*/)
+Bool SDMSIterator::replaceAll(const SDRecord& rec, Bool rowIsNew)
 {
     // this doesn't work yet
     return False;
@@ -1375,18 +1373,17 @@ void SDMSIterator::init()
 }
 
 
-  void SDMSIterator::createMS(const String& /*msName*/, 
-                              TableLock::LockOption /*lockoption*/,
-                              Table::TableOption /*opt*/)
+void SDMSIterator::createMS(const String &msName, TableLock::LockOption lockoption,
+			    Table::TableOption opt)
 {
 }
 
-  Bool SDMSIterator::put(const SDRecord& /*rec*/)
+Bool SDMSIterator::put(const SDRecord& rec)
 {
     return False;
 }
 
-  Bool SDMSIterator::appendRec(const SDRecord& /*rec*/)
+Bool SDMSIterator::appendRec(const SDRecord& rec)
 {
     return False;
 }

@@ -20,118 +20,6 @@ except:
     import tests.selection_syntax as selection_syntax
 
 
-### Utilities for reading blparam file
-class FileReader( object ):
-    def __init__( self, filename ):
-        self.__filename = filename
-        self.__data = None
-        self.__nline = None
-
-    def read( self ):
-        if self.__data is None:
-            f = open(self.__filename, 'r')
-            self.__data = f.readlines()
-            f.close()
-            self.__nline = len( self.__data )
-        return
-
-    def nline( self ):
-        self.read()
-        return self.__nline
-
-    def index( self, txt, start ):
-        return self.__data[start:].index( txt ) + 1 + start
-
-    def getline( self, idx ):
-        return self.__data[idx]
-
-class BlparamFileParser( FileReader ):
-    def __init__( self, blfile ):
-        FileReader.__init__( self, blfile )
-        self.__nrow = None
-        self.__coeff = None
-        self.__rms = None
-        self.__ctxt = 'Baseline parameters\n'
-        self.__rtxt = 'Results of baseline fit\n'
-
-    def nrow( self ):
-        self.read()
-        if self.__nrow is None:
-            return self._nrow()
-        else:
-            return self.__nrow
-
-    def coeff( self ):
-        self.read()
-        if self.__coeff is None:
-            self.parseCoeff()
-        return self.__coeff
-
-    def rms( self ):
-        self.read()
-        if self.__rms is None:
-            self.parseRms()
-        return self.__rms
-
-    def _nrow( self ):
-        self.__nrow = 0
-        for i in xrange(self.nline()):
-            if self.getline( i ) == self.__ctxt:
-                self.__nrow += 1
-        return self.__nrow
-
-    def parse( self ):
-        self.read()
-        self.parseCoeff()
-        self.parseRms()
-        return
-        
-    def parseCoeff( self ):
-        self.__coeff = []
-        nrow = self.nrow()
-        idx = 0
-        while ( len(self.__coeff) < nrow ):
-            try:
-                idx = self.index( self.__ctxt, idx )
-                coeffs = []
-                while( self.getline( idx ) != self.__rtxt ):
-                    coeff = self.__parseCoeff( idx )
-                    coeffs += coeff
-                    idx += 1
-                self.__coeff.append( coeffs )
-            except:
-                break
-        return
-
-    def parseRms( self ):
-        self.__rms = []
-        nrow = self.nrow()
-        idx = 0
-        while ( len(self.__rms) < nrow ):
-            try:
-                idx = self.index( self.__rtxt, idx )
-                self.__rms.append( self.__parseRms( idx ) )
-            except:
-                break   
-        return
-
-    def __parseCoeff( self, idx ):
-        return parseCoeff( self.getline( idx ) )
-
-    def __parseRms( self, idx ):
-        return parseRms( self.getline( idx ) )
-
-def parseCoeff( txt ):
-    clist = txt.rstrip( '\n' ).split(',')
-    ret = []
-    for c in clist:
-        ret.append( float( c.split('=')[1] ) )
-    return ret
-    
-def parseRms( txt ):
-    t = txt.lstrip().rstrip( '\n' )[6:]
-    return float( t )
-
 class sdbaseline_unittest_base:
     """
     Base class for sdbaseline unit test
@@ -325,7 +213,6 @@ class sdbaseline_basicTest( sdbaseline_unittest_base, unittest.TestCase ):
     def tearDown( self ):
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        os.system('rm -rf '+self.outroot+'*')
 
     def test01( self ):
         """Test 0: maskmode = 'auto'"""
@@ -484,7 +371,7 @@ class sdbaseline_maskTest( sdbaseline_unittest_base, unittest.TestCase ):
 #                             self.blrefroot+self.tid)
         if (os.path.exists(self.infile)):
             shutil.rmtree(self.infile)
-        os.system('rm -rf '+self.outroot+'*')
+
 
     def testblmask01( self ):
         """Mask test 1: test masklist (list) with maskmode = 'auto'"""
@@ -939,7 +826,6 @@ class sdbaseline_funcTest( unittest.TestCase ):
             shutil.rmtree(self.infile_cspline)
         if os.path.exists(self.infile_sinusoid):
             shutil.rmtree(self.infile_sinusoid)
-        os.system('rm -rf '+self.outroot+'*')
 
     def testCSpline01( self ):
         """Test CSpline01: Cubic spline fitting with maskmode = 'list'"""
@@ -1029,7 +915,6 @@ class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
     def tearDown( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
-        os.system('rm -rf '+self.outroot+'*')
 
     def test01multi( self ):
         """test01multi: Test the task works with multi IF data"""
@@ -1111,7 +996,6 @@ class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):
     def tearDown( self ):
         if os.path.exists(self.infile):
             shutil.rmtree(self.infile)
-        os.system('rm -rf '+self.outroot+'*')
 
     def testMT( self ):
         """Storage Test MT: storage='memory' and insitu=T"""
@@ -1992,178 +1876,120 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
 
         self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
 
-class sdbaseline_flagTest( unittest.TestCase ):
-    """
-    Unit tests for task sdbaseline. No interactive testing.
-    This test is to verify the proper flag handling in sdbaseline that
-       (1) for row-flagged spectra, neither fitting nor subtraction should be executed.
-       (2) if a channel is flagged, it will not be used for baseline calculation,
-           but the baseline subtraction at the channel should be made.
-       (3) no flag values themselves should be modified.
-           
-    The list of tests:
-    testFlagPoly01     --- test polynomial fitting with maskmode = 'list'
-    testFlagPoly02     --- test polynomial fitting with maskmode = 'auto'
-    testFlagCheby01    --- test Chebyshev polynomial fitting with maskmode = 'list'
-    testFlagCheby02    --- test Chebyshev polynomial fitting with maskmode = 'auto'
-    testFlagCSpline01  --- test cubic spline fitting with maskmode = 'list'
-    testFlagCSpline02  --- test cubic spline fitting with maskmode = 'auto'
-    testFlagSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
-    testFlagSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
-
-    Note: the rms noise of input data for the tests *02 is 1.0.
-    """
-    tol01 = 1.0e-6
-    tol02 = 1.0 # large value owing to uncertainty in linefinder results and
-                # to small channel numbers. enough for this testing.
-    # Data path of input/output
-    datapath = os.environ.get('CASAPATH').split()[0] + \
-              '/data/regression/unittest/sdbaseline/'    
-    # Input and output names
-    infile_01 = 'sdbaseline_flagtest_withoutnoise.asap'
-    infile_02 = 'sdbaseline_flagtest_withnoise.asap'
-    outroot = 'sdbaseline_test'
-    tid = None
-
-    def setUp( self ):
-        if os.path.exists(self.infile_01):
-            shutil.rmtree(self.infile_01)
-        shutil.copytree(self.datapath+self.infile_01, self.infile_01)
-        if os.path.exists(self.infile_02):
-            shutil.rmtree(self.infile_02)
-        shutil.copytree(self.datapath+self.infile_02, self.infile_02)
-
-        default(sdbaseline)
-
-    def tearDown( self ):
-        if os.path.exists(self.infile_01):
-            shutil.rmtree(self.infile_01)
-        if os.path.exists(self.infile_02):
-            shutil.rmtree(self.infile_02)
-        os.system('rm -rf '+self.outroot+'*')
-
-    def testFlagPoly01( self ):
-        """Test FlagPoly01: Polynomial fitting with maskmode = 'list'"""
-        self.tid = "FlagPoly01"
-        infile = self.infile_01
-        mode = "list"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol01)
-
-    def testFlagPoly02( self ):
-        """Test FlagPoly02: Polynomial fitting with maskmode = 'auto'"""
-        self.tid = "FlagPoly02"
-        infile = self.infile_02
-        mode = "auto"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol02)
-
-    def testFlagCheby01( self ):
-        """Test FlagCheby01: Chebyshev Polynomial fitting with maskmode = 'list'"""
-        self.tid = "FlagCheby01"
-        infile = self.infile_01
-        mode = "list"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol01)
-
-    def testFlagCheby02( self ):
-        """Test FlagCheby02: Chebyshev Polynomial fitting with maskmode = 'auto'"""
-        self.tid = "FlagCheby02"
-        infile = self.infile_02
-        mode = "auto"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol02)
-
-    def testFlagCSpline01( self ):
-        """Test FlagCSpline01: Cubic spline fitting with maskmode = 'list'"""
-        self.tid = "FlagCSpline01"
-        infile = self.infile_01
-        mode = "list"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol01)
-
-    def testFlagCSpline02( self ):
-        """Test FlagCSpline02: Cubic spline fitting with maskmode = 'auto'"""
-        self.tid = "FlagCSpline02"
-        infile = self.infile_02
-        mode = "auto"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1)
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol02)
-
-    def testFlagSinusoid01( self ):
-        """Test FlagSinusoid01: Sinusoidal Polynomial fitting with maskmode = 'list'"""
-        self.tid = "FlagSinusoid01"
-        infile = self.infile_01
-        mode = "list"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol01)
-
-    def testFlagSinusoid02( self ):
-        """Test FlagSinusoid02: Sinusoidal Polynomial fitting with maskmode = 'auto'"""
-        self.tid = "FlagSinusoid02"
-        infile = self.infile_02
-        mode = "auto"
-        outfile = self.outroot+self.tid+".asap"
-        
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
-        self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self._checkResult(infile, outfile, self.tol02)
-
-    def _checkResult(self, infile, outfile, tol):
-        tb.open(infile)
-        inspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
-        inchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
-        inrowf = tb.getcol('FLAGROW')
-        tb.close()
-
-        tb.open(outfile)
-        outspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
-        outchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
-        outrowf = tb.getcol('FLAGROW')
-        tb.close()
-
-        #check if the values of row-flagged spectra are not changed
-        for i in xrange(2):
-            self.assertTrue(all(inspec[i]==outspec[i]))
-            
-        #check if flagged channels are (1) excluded from fitting, but are
-        #(2) the targets of baseline subtraction.
-        #  if the difference values between the input and output spectra
-        #  (input-output) are almost 1.0 (for tests *01) or distribute around
-        #  1.0 (for tests *02), it can be recognised that both of the above
-        # requirements are satisfied. actually, the mean of the (input-output)
-        # values is examined if it is close enough to 1.0.
-        #print '***************'+str(abs((inspec[2]-outspec[2]).mean()-1.0))
-        self.assertTrue(abs((inspec[2]-outspec[2]).mean()-1.0) < tol)
-        
-        #check if flag values are not changed in the output file.
-        for i in xrange(len(inchnf)):
-            self.assertTrue(all(inchnf[i]==outchnf[i]))
-        self.assertTrue(all(inrowf==outrowf))
-
 def suite():
     return [sdbaseline_basicTest, sdbaseline_maskTest, sdbaseline_funcTest,
             sdbaseline_multi_IF_test, sdbaseline_storageTest,
-            sdbaseline_selection_syntax,
-            sdbaseline_flagTest]
+            sdbaseline_selection_syntax]
+
+### Utilities for reading blparam file
+class FileReader( object ):
+    def __init__( self, filename ):
+        self.__filename = filename
+        self.__data = None
+        self.__nline = None
+
+    def read( self ):
+        if self.__data is None:
+            f = open(self.__filename, 'r')
+            self.__data = f.readlines()
+            f.close()
+            self.__nline = len( self.__data )
+        return
+
+    def nline( self ):
+        self.read()
+        return self.__nline
+
+    def index( self, txt, start ):
+        return self.__data[start:].index( txt ) + 1 + start
+
+    def getline( self, idx ):
+        return self.__data[idx]
+
+class BlparamFileParser( FileReader ):
+    def __init__( self, blfile ):
+        FileReader.__init__( self, blfile )
+        self.__nrow = None
+        self.__coeff = None
+        self.__rms = None
+        self.__ctxt = 'Baseline parameters\n'
+        self.__rtxt = 'Results of baseline fit\n'
+
+    def nrow( self ):
+        self.read()
+        if self.__nrow is None:
+            return self._nrow()
+        else:
+            return self.__nrow
+
+    def coeff( self ):
+        self.read()
+        if self.__coeff is None:
+            self.parseCoeff()
+        return self.__coeff
+
+    def rms( self ):
+        self.read()
+        if self.__rms is None:
+            self.parseRms()
+        return self.__rms
+
+    def _nrow( self ):
+        self.__nrow = 0
+        for i in xrange(self.nline()):
+            if self.getline( i ) == self.__ctxt:
+                self.__nrow += 1
+        return self.__nrow
+
+    def parse( self ):
+        self.read()
+        self.parseCoeff()
+        self.parseRms()
+        return
+        
+    def parseCoeff( self ):
+        self.__coeff = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__coeff) < nrow ):
+            try:
+                idx = self.index( self.__ctxt, idx )
+                coeffs = []
+                while( self.getline( idx ) != self.__rtxt ):
+                    coeff = self.__parseCoeff( idx )
+                    coeffs += coeff
+                    idx += 1
+                self.__coeff.append( coeffs )
+            except:
+                break
+        return
+
+    def parseRms( self ):
+        self.__rms = []
+        nrow = self.nrow()
+        idx = 0
+        while ( len(self.__rms) < nrow ):
+            try:
+                idx = self.index( self.__rtxt, idx )
+                self.__rms.append( self.__parseRms( idx ) )
+            except:
+                break   
+        return
+
+    def __parseCoeff( self, idx ):
+        return parseCoeff( self.getline( idx ) )
+
+    def __parseRms( self, idx ):
+        return parseRms( self.getline( idx ) )
+
+def parseCoeff( txt ):
+    clist = txt.rstrip( '\n' ).split(',')
+    ret = []
+    for c in clist:
+        ret.append( float( c.split('=')[1] ) )
+    return ret
+    
+def parseRms( txt ):
+    t = txt.lstrip().rstrip( '\n' )[6:]
+    return float( t )
+

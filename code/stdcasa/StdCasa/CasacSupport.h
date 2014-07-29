@@ -82,6 +82,6 @@ Bool             casaMEpoch(const ::casac::variant& theVar,
  	 // will return a 0 element vector. Any other type will cause an exception to be thrown.
  	 vector<bool> toVectorBool(const ::casac::variant& v, const String& varName);
 
- 	 Vector<String> toCasaVectorString(const vector<string>& vs);
+
 
 }

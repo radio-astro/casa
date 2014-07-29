@@ -155,31 +155,11 @@ namespace casa{
   //
   //---------------------------------------------------------------
   //
-  void CFStore2::primeTheCFB()
-  {
-    IPosition shp=getShape();
-    for (Int i=0; i<shp(0); i++)
-      for (Int j=0; j<shp(1); j++)
-	getCFBuffer(i,j)->primeTheCache();
-  }
-  //
-  //---------------------------------------------------------------
-  //
   void CFStore2::initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq)
   {
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	storage_p(i,j)->initMaps(vb, freqSelection, imRefFreq);
-  }
-  //
-  //---------------------------------------------------------------
-  //
-  void CFStore2::initPolMaps(PolMapType& polMap, PolMapType& conjPolMap)
-  {
-    IPosition shp=getShape();
-    for (Int i=0; i<shp(0); i++)
-      for (Int j=0; j<shp(1); j++)
-	getCFBuffer(i,j)->initPolMaps(polMap, conjPolMap);
   }
   //
   //---------------------------------------------------------------

@@ -79,39 +79,37 @@ class ia_summary_test(unittest.TestCase):
     
     def tearDown(self):
         self._myia.done()
-        self.assertTrue(len(tb.showcache()) == 0)
         
     def test_beams(self):
         """test per plane beams get accounted for correctly"""
         myia = self._myia
         shape = [10, 10, 10, 4]
-        for t in ['f', 'c']:
-            myia.fromshape("", shape, type=t)
-            bmaj = qa.quantity("4arcsec")
-            bmin = qa.quantity("2arcsec")
-            bpa = qa.quantity("40deg")
-            myia.setrestoringbeam(major=bmaj, minor=bmin, pa=bpa, channel=0, polarization=0)
-            cmaj = qa.quantity("7arcsec")
-            cmin = qa.quantity("5arcsec")
-            cpa = qa.quantity("80deg")
-            myia.setrestoringbeam(major=cmaj, minor=cmin, pa=cpa, channel=6, polarization=3)
-            summary = myia.summary()
-            self.assertTrue(summary.has_key("perplanebeams"))
-            beams = summary["perplanebeams"]["beams"]
-            for c in range(shape[2]):
-                for p in range(shape[3]):
-                    beam = beams["*" + str(c)]["*" + str(p)]
-                    majax = beam["major"]
-                    minax = beam["minor"]
-                    pa = beam["positionangle"]
-                    if c == 6 and p == 3:
-                        self.assertTrue(majax == cmaj)
-                        self.assertTrue(minax == cmin)
-                        self.assertTrue(pa == cpa)
-                    else:
-                        self.assertTrue(majax == bmaj)
-                        self.assertTrue(minax == bmin)
-                        self.assertTrue(pa == bpa)
+        myia.fromshape("", shape)
+        bmaj = qa.quantity("4arcsec")
+        bmin = qa.quantity("2arcsec")
+        bpa = qa.quantity("40deg")
+        myia.setrestoringbeam(major=bmaj, minor=bmin, pa=bpa, channel=0, polarization=0)
+        cmaj = qa.quantity("7arcsec")
+        cmin = qa.quantity("5arcsec")
+        cpa = qa.quantity("80deg")
+        myia.setrestoringbeam(major=cmaj, minor=cmin, pa=cpa, channel=6, polarization=3)
+        summary = myia.summary()
+        self.assertTrue(summary.has_key("perplanebeams"))
+        beams = summary["perplanebeams"]["beams"]
+        for c in range(shape[2]):
+            for p in range(shape[3]):
+                beam = beams["*" + str(c)]["*" + str(p)]
+                majax = beam["major"]
+                minax = beam["minor"]
+                pa = beam["positionangle"]
+                if c == 6 and p == 3:
+                    self.assertTrue(majax == cmaj)
+                    self.assertTrue(minax == cmin)
+                    self.assertTrue(pa == cpa)
+                else:
+                    self.assertTrue(majax == bmaj)
+                    self.assertTrue(minax == bmin)
+                    self.assertTrue(pa == bpa)
 
 def suite():
     return [ia_summary_test]

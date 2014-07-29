@@ -104,12 +104,6 @@ namespace asdm {
 			, "illumOffset"
 		
 			, "position"
-		
-			, "skyCoupling"
-		
-			, "numChan"
-		
-			, "skyCouplingSpectrum"
 				
 	};
 	
@@ -125,7 +119,7 @@ namespace asdm {
     
     	 "antennaId" , "spectralWindowId" , "timeInterval" , "feedId" , "numReceptor" , "beamOffset" , "focusReference" , "polarizationTypes" , "polResponse" , "receptorAngle" , "receiverId" 
     	,
-    	 "feedNum" , "illumOffset" , "position" , "skyCoupling" , "numChan" , "skyCouplingSpectrum" 
+    	 "feedNum" , "illumOffset" , "position" 
     
 	};
 	        			
@@ -863,9 +857,6 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		oss << "<feedNum/>\n"; 
 		oss << "<illumOffset/>\n"; 
 		oss << "<position/>\n"; 
-		oss << "<skyCoupling/>\n"; 
-		oss << "<numChan/>\n"; 
-		oss << "<skyCouplingSpectrum/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</FeedTable>\n";
 
@@ -1009,12 +1000,6 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
     attributesSeq.push_back("illumOffset") ; 
     	 
     attributesSeq.push_back("position") ; 
-    	 
-    attributesSeq.push_back("skyCoupling") ; 
-    	 
-    attributesSeq.push_back("numChan") ; 
-    	 
-    attributesSeq.push_back("skyCouplingSpectrum") ; 
     	
      
     

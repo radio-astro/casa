@@ -32,7 +32,7 @@
 
 
 #include <iostream>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
 
@@ -100,12 +100,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangeInternal:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile, 260000, 261000, -1 );
+	ok = tUtil::checkFile( outFile, 80000, 110000, -1 );
 	cout << "tExportRangeInternal:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
 	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 49000, 50000, -1 );
+		ok = tUtil::checkFile( outFile2, 80000, 110000, -1 );
 		cout << "tExportRangeInternal:  Result of second save file check="<<ok<<endl;
 	}
 	return tUtil::exitMain( false );

@@ -37,9 +37,6 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 
-#include<synthesis/ImagerObjects/SIImageStore.h>
-#include<synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class SDMaskHandler 
@@ -50,14 +47,15 @@ public:
   SDMaskHandler();
   ~SDMaskHandler();
 
-  void resetMask(CountedPtr<SIImageStore> imstore);
+
+  // Copy constructor and assignment operator
+  //Imager(const Imager&);
+  //Imager& operator=(const Imager&);
 
   void makeMask();
 
   // Return a reference to an imageinterface for the mask.
-  void makeAutoMask(CountedPtr<SIImageStore> imstore);
-
-  void makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit);
+  void makeAutoMask();
 
 protected:
 

@@ -151,14 +151,14 @@ namespace casa{
   //---------------------------------------------------------------
   //
   //  template <class T>  void CFBuffer<T>
-  RigidVector<Int, 3> CFBuffer::setParams(const Int& inu, const Int& iw, const Int& /*ipx*/, const Int& /*ipy*/,
+  RigidVector<Int, 3> CFBuffer::setParams(const Int& i, const Int& j, const Int& /*ipx*/, const Int& /*ipy*/,
 					  CoordinateSystem& cs, Float& sampling,
 					  Int& xSupport, Int& ySupport, 
 					  const Double& freqValue, const Double& wValue, 
 					  const Int& muellerElement)
   {
     RigidVector<Int,3> ndx=getIndex(freqValue, wValue, muellerElement);
-    ndx(0)=inu; ndx(1)=iw;//ndx(2) = muellerElements_p(ipx)(ipy);
+    ndx(0)=i; ndx(1)=j;//ndx(2) = muellerElements_p(ipx)(ipy);
     cfCells_p(ndx(0),ndx(1),ndx(2))->sampling_p = sampling;
     cfCells_p(ndx(0),ndx(1),ndx(2))->xSupport_p = xSupport;
     cfCells_p(ndx(0),ndx(1),ndx(2))->ySupport_p = ySupport;
@@ -403,22 +403,7 @@ namespace casa{
   }
 
 
-  void CFBuffer::primeTheCache()
-  {
-    //
-    // In each CFCell of this CFBuffer, cache things that might be
-    // required in tight loops and can be expensive to extract
-    // otherwise.
-    //
-    IPosition cfCShape=cfCells_p.shape();
-    for (Int i=0; i < cfCShape(0); i++)
-      for (Int j=0; j < cfCShape(1); j++)
-	for (Int k=0; k < cfCShape(2); k++)
-	  getCFCellPtr(i,j,k)->initCache();
-  }
-
-  void CFBuffer::initMaps(const VisBuffer&, // vb, 
-			  const Matrix<Double>& freqSelection, const Double& imRefFreq)
+  void CFBuffer::initMaps(const VisBuffer& vb, const Matrix<Double>& freqSelection, const Double& imRefFreq)
   {
     Vector<Double> spwList=freqSelection.column(0);
     Int maxSpw=(Int)(max(spwList));
@@ -450,15 +435,9 @@ namespace casa{
 
   }
 
-  void CFBuffer::initPolMaps(PolMapType& polMap, PolMapType& conjPolMap) 
-  {
-    muellerElementsIndex_p = polMap;
-    conjMuellerElementsIndex_p = conjPolMap;
-  }
-
   void CFBuffer::getFreqNdxMaps(Vector<Vector<Int> >& freqNdx, Vector<Vector<Int> >& conjFreqNdx)
   {
-    Int nspw;
+    Int nspw, nchan;
     nspw=freqNdxMap_p.nelements();
     freqNdx.resize(nspw);
     for (Int s=0;s<nspw;s++)
@@ -541,50 +520,6 @@ namespace casa{
     ASSIGNVVofI(st.conjFreqNdxMap, conjFreqNdx, doAlloc);
   }
   
-  //
-  //----------------------------------------------------------------------
-  //
-  void CFBuffer::fill(const Int& /*nx*/, const Int& /*ny*/, 
-		      const Vector<Double>& freqValues,
-		      const Vector<Double>& wValues,
-		      const PolMapType& muellerElements)
-  {
-
-    LogIO log_l(LogOrigin("CFBuffer", "fillBuffer[R&D]"));
-    for (uInt imx=0;imx<muellerElements.nelements();imx++) // Loop over all MuellerElements
-      for (uInt imy=0;imy<muellerElements(imx).nelements();imy++)
-    	{
-	    for (uInt inu=0;inu<freqValues.nelements();inu++) // All freq. channels
-	      {
-    		for (uInt iw=0;iw<wValues.nelements();iw++)     // All w-planes
-    		  {
-		    log_l << " CF("
-			  << "M:"<<muellerElements(imx)(imy) 
-			  << ",C:" << inu 
-			  << ",W:" << iw << "): ";
-		    Vector<Double> ftRef(2);
-
-		    // ftRef(0)=cfWtBuf.shape()(0)/2.0;
-		    // ftRef(1)=cfWtBuf.shape()(1)/2.0;
-		    CoordinateSystem ftCoords;//=cs_l;
-		    // SynthesisUtils::makeFTCoordSys(cs_l, cfWtBuf.shape()(0), ftRef, ftCoords);
-
-		    // cfb.setParams(inu,iw,imx,imy,//muellerElements(imx)(imy),
-		    // 		  ftCoords, sampling, xSupport, ySupport,
-		    // 		  freqValues(inu), wValues(iw), muellerElements(imx)(imy));
-		    // cfb.getCFCellPtr(freqValues(inu), wValues(iw), 
-		    // 		     muellerElements(imx)(imy))->pa_p=Quantity(vbPA,"rad");
-		    //
-		    // Now tha the CFs have been computed, cache its
-		    // paramters in CFCell for quick access in tight
-		    // loops (in the re-sampler, e.g.).
-		    //
-		    (getCFCellPtr(freqValues(inu), wValues(iw), 
-				  muellerElements(imx)(imy)))->initCache();
-    		  }
-	      }
-    	}
-  }
 } // end casa namespace
 
 

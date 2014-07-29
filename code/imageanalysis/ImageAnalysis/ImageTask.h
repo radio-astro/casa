@@ -1,24 +1,49 @@
+//# tSubImage.cc: Test program for class SubImage
+//# Copyright (C) 1998,1999,2000,2001,2003
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This program is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU General Public License as published by the Free
+//# Software Foundation; either version 2 of the License, or (at your option)
+//# any later version.
+//#
+//# This program is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+//# more details.
+//#
+//# You should have received a copy of the GNU General Public License along
+//# with this program; if not, write to the Free Software Foundation, Inc.,
+//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
-#include <casa/Containers/Record.h>
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
-#include <imageanalysis/ImageTypedefs.h>
+#include <casa/IO/FiledesIO.h>
+
 #include <imageanalysis/IO/OutputDestinationChecker.h>
-#include <imageanalysis/Regions/CasacRegionManager.h>
+#include <casa/namespace.h>
 
-namespace casac {
-class variant;
-}
+#include <tr1/memory>
 
 namespace casa {
 class LogFile;
-template <class T> class ArrayLattice;
 
-template <class T> class ImageTask {
 
+class ImageTask {
     // <summary>
-    // Virtual base class for image analysis tasks.
+    // Virtual base class for image tasking.
     // </summary>
 
     // <reviewed reviewer="" date="" tests="" demos="">
@@ -37,6 +62,8 @@ template <class T> class ImageTask {
 
 public:
 
+	typedef  std::tr1::shared_ptr<const ImageInterface<Float> > shCImFloat;
+
 	// verbosity levels
 	enum Verbosity {
 		QUIET,
@@ -54,7 +81,6 @@ public:
 
     inline void setStretch(const Bool stretch) { _stretch = stretch;}
 
-    // tacitly does nothing if <src>lf</src> is the empty string.
     void setLogfile(const String& lf);
 
     void setLogfileAppend(const Bool a);
@@ -65,35 +91,6 @@ public:
 
     void setVerbosity(Verbosity verbosity) { _verbosity = verbosity; }
 
-    // These messages will appear in the product image history upon the call to
-    // _prepareOutputImage(). They will be located immediately after the input
-    // image's copied history. The first value in the pair is the log origin.
-    // The second is the associated message. If this method is called more than once
-    // on the same object, messages from subsequent calls are appended to the
-    // end of messages set in prior calls.
-    void addHistory(const vector<std::pair<String, String> >& msgs) const;
-
-    void addHistory(const LogOrigin& origin, const String& msg) const;
-
-    void addHistory(const LogOrigin& origin, const vector<String>& msgs) const;
-
-    // This adds standard history messages regarding the task that was run and
-    // input parameters used. The vectors must have the same length
-    void addHistory(
-    	const LogOrigin& origin, const String& taskname,
-    	const vector<String>& paramNames, const vector<casac::variant>& paramValues
-    ) const;
-
-    // suppress writing the history on _prepareOutputImage() call. Useful for
-    // not writing history to intermediate image products.
-    void suppressHistoryWriting(Bool b) { _suppressHistory = b; }
-
-    // get the history associated with the task. Does not include the
-    // history of the input image.
-    vector<std::pair<String, String> > getHistory() {return _newHistory;}
-
-    void setDropDegen(Bool d) { _dropDegen = d; }
-
 protected:
 
 	// if <src>outname</src> is empty, no image will be written
@@ -101,7 +98,7 @@ protected:
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
 
    	ImageTask(
-   		const SPCIIT image,
+   		const shCImFloat image,
     	const String& region, const Record *const &regionPtr,
     	const String& box, const String& chanInp,
     	const String& stokes, const String& maskInp,
@@ -110,14 +107,14 @@ protected:
 
    	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
-    virtual std::vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
+    virtual vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.
 
     virtual void _construct(Bool verbose=True);
 
-    inline const SPCIIT _getImage() const {return _image;}
+    inline const shCImFloat _getImage() const {return _image;}
 
     inline const String& _getMask() const {return _mask;}
 
@@ -133,7 +130,7 @@ protected:
 
     // Represents the minimum set of coordinates necessary for the
     // task to function.
-    virtual std::vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
+    virtual vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
 
     void _removeExistingOutfileIfNecessary() const;
 
@@ -151,6 +148,8 @@ protected:
 
     inline Bool _getStretch() const {return _stretch;}
 
+    //const String& _getLogfile() const;
+
     const std::tr1::shared_ptr<LogFile> _getLogFile() const;
 
     Bool _writeLogfile(
@@ -162,49 +161,39 @@ protected:
 
     void _closeLogfile() const;
 
-    virtual inline Bool _supportsMultipleRegions() const {return False;}
+    virtual inline Bool _supportsMultipleRegions() {return False;}
 
-    virtual inline Bool _supportsMultipleBeams() {return True;}
-
-    // If outname != NULL, use the value supplied. If is NULL, use the value of _outname.
-    // Create a TempImage or PagedImage depending if outname/_outname is empty or not. Generally meant
+    // Create a TempImage or PagedImage depending if _outname is empty or not. Generally meant
     // for the image to be returned to the UI or the final image product that the user will want.
     // values=0 => the pixel values from the image will be used
     // mask=0 => the mask attached to the image, if any will be used, outShape=0 => use image shape, coordsys=0 => use image coordinate
-    // system. overwrite is only used if outname != NULL.
-    SPIIT _prepareOutputImage(
-    	const ImageInterface<T>& image, const Array<T> *const values=0,
+    // system
+    std::tr1::shared_ptr<ImageInterface<Float> > _prepareOutputImage(
+    	const ImageInterface<Float>& image, const Array<Float> *const values=0,
     	const ArrayLattice<Bool> *const mask=0,
-    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0,
-    	const String *const outname=0, Bool overwrite=False
+    	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
 
     Verbosity _getVerbosity() const { return _verbosity; }
 
     Bool _getOverwrite() const { return _overwrite; }
 
-    virtual Bool _mustHaveSquareDirectionPixels() const {return False;}
-
-    Bool _getDropDegen() const { return _dropDegen; }
-
 private:
-    const SPCIIT _image;
+    const shCImFloat _image;
     std::tr1::shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname;
-    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend,
-    	_suppressHistory, _dropDegen;
+    String _region, _box, _chan, _stokesString, _mask, _outname /*, _logfile */;
+    Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
+    //Int _logFD;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
 	std::tr1::shared_ptr<LogFile> _logfile;
-	mutable vector<std::pair<String, String> > _newHistory;
+
+
+
+
 };
-
 }
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <imageanalysis/ImageAnalysis/ImageTask.tcc>
-#endif
 
 #endif

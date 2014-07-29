@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.50 2014/07/16 21:20:34 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.49 2014/04/25 21:31:53 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.50 2014/07/16 21:20:34 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.49 2014/04/25 21:31:53 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -726,7 +726,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print " showpoints: draw points for the data (default=F for amp, T for phase)"
         print " solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=30)"
         print " spw: must be single ID or list or range (e.g. 0~4, not the original ID)"
-        print " subplot: 11..81,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored"
+        print " subplot: 11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored"
         print " timeranges: show only these timeranges, the first timerange being 0"
         print " xaxis: 'chan' or 'freq'"
         print " yaxis: 'amp', 'tsys', 'phase', or 'both' amp&phase == 'ap'; append 'db' for dB"
@@ -937,7 +937,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print "Unrecognized option for overlay: only 'antenna', 'spw', 'baseband', 'time' and 'antenna,time' are supported."
         return()
        
-    allowedFrames = [11,21,31,41,51,61,71,81,22,32,42] # [11,22,32,42]
+    allowedFrames = [11,22,32,42]
     if (int(subplot) > 100):
         # This will accept 111, 221, 321, 421, etc.
         subplot /= 10
@@ -946,7 +946,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       print "(with an optional trailing digit that is ignored)."
       return()
   
-    if ((int(subplot) % 2) == 1):
+    if (subplot == 11):
         timeHorizontalSpacing = 0.06*1.3 # *1.3 is for HH:MM:SS (timeFormat=3 in drawOverlayTimeLegends)
     else:
         timeHorizontalSpacing = 0.05*1.3 # *1.3 is for HH:MM:SS
@@ -974,7 +974,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     # Plotting settings
     minPhaseRange = 0.2
     plotfiles = []
-    if (int(subplot) % 2 == 1):
+    if (int(subplot) == 11):
       mysize = '10'
       titlesize = 10
     elif (int(subplot) == 22 or int(subplot) == 32):
@@ -986,17 +986,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     maxCharsBeforeReducingTitleFontSize = 72
     if (type(subplot) == str):
         subplot = int(subplot)
-    if (subplot in allowedFrames == False):
-        print "Invalid subplot = %d.  Valid options are: %s" % (subplot,str(allowedFrames))
+    validSubplots = [11,22,32,42]
+    if (subplot in validSubplots == False):
+        print "Invalid subplot = %d.  Valid options are: %s" % (subplot,str(validSubplots))
         return()
     xframeStart = int(subplot)*10  # i.e. 110 or 220 or 420
     firstFrame = xframeStart + 1
     lastFrame = xframeStart + (subplot/10)*(subplot%10)
-    bottomRowFrames = [111,212,313,414,515,616,717,818,223,224,325,326,427,428]  # try to make this more general
-    leftColumnFrames = [111,211,212,311,312,313,411,412,413,414,511,512,513,514,515,611,612,613,614,615,616,
-                      711,712,713,714,715,716,717,811,812,813,814,815,816,817,818,221,223,321,323,325,421,423,425,427]
-    rightColumnFrames = [111,211,212,311,312,313,411,412,413,414,511,512,513,514,515,611,612,613,614,615,616,
-                       711,712,713,714,715,716,717,811,812,813,814,815,816,817,818,222,224,322,324,326,422,424,426,428]
+    bottomRowFrames = [111,223,224,325,326,427,428]  # try to make this more general
+    leftColumnFrames = [111,221,223,321,323,325,421,423,425,427]
+    rightColumnFrames = [111,222,224,322,324,326,422,424,426,428]
     subplotCols = subplot % 10
     subplotRows = subplot/10
     ystartPolLabel = 1.0-0.04*subplotRows

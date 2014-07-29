@@ -24,7 +24,7 @@
 		</param>
 
 		<param type="string" name="caltype">
-			<description>The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\',\'ztec\'</description>
+			<description>The calibration type: \'amp\',\'ph\', \'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\'</description>
 			<value></value>
                         <allowed kind="enum">
                             <value>amp</value>
@@ -42,7 +42,6 @@
                             <value>gc</value>
                             <value>gceff</value>
                             <value>eff</value>
-                            <value>ztec</value>
                         </allowed>
 		</param>
 

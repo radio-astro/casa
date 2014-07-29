@@ -29,7 +29,7 @@
 #ifndef SYNTHESIS_SIMPCOMPONENTGRIDMACHINE_H
 #define SYNTHESIS_SIMPCOMPONENTGRIDMACHINE_H
 
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/ComponentFTMachine.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>

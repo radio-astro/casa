@@ -26,7 +26,7 @@
 //# $Id$
 #include <boost/math/special_functions/round.hpp>
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
@@ -43,14 +43,13 @@
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/ImageUtilities.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayIter.h>
@@ -515,8 +514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Double maxVF=max(visFreq);
       Double minIF=min(imageFreq_p);
       Double maxIF=max(imageFreq_p);
-      if( ((minIF-fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) > maxVF) ||   
-	  ((maxIF+fabs(imageFreq_p[1]-imageFreq_p[0])/2.0) < minVF)){
+      if( (minIF > maxVF) ||   (maxIF < minVF)){
 	//This function should not have been called with image 
 	//being out of bound of data...but still
 	interpVisFreq_p.resize(imageFreq_p.nelements());
@@ -953,31 +951,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   Bool FTMachine::toRecord(String& error, RecordInterface& outRecord, 
-			   Bool withImage, const String diskimage) {
+			   Bool withImage) {
     // Save the FTMachine to a Record
     //
     outRecord.define("name", this->name());
     if(withImage){
-      if(diskimage != ""){
-	try{
-	  PagedImage<Complex> imCopy(TiledShape(toVis_p ? griddedData.shape(): image->shape()), image->coordinates(), diskimage);
-	  toVis_p ? imCopy.put(griddedData) : imCopy.copyData(*image);
-	  ImageUtilities::copyMiscellaneous(imCopy, *image);
-	}
-	catch(...){
-	  throw(AipsError(String("Failed to save model image "+diskimage+String(" to disk")))); 
-	}
-	outRecord.define("diskimage", diskimage);
-	
-      }
-      else{
-	Record imrec;
-	TempImage<Complex> imCopy(griddedData.shape(), image->coordinates());
-	imCopy.put(griddedData) ;
-	ImageUtilities::copyMiscellaneous(imCopy, *image);
-	if(imCopy.toRecord(error, imrec))
-	  outRecord.defineRecord("image", imrec);
-      }
+      
+      Record imrec;
+      if(image->toRecord(error, imrec))
+	outRecord.defineRecord("image", imrec);
+      
     }
     outRecord.define("nantenna", nAntenna_p);
     outRecord.define("distance", distance_p);
@@ -1043,44 +1026,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     uvwMachine_p=0; //when null it is reconstructed from mImage_p and mFrame_p
     //mFrame_p is not necessary as it is generated in initMaps from mLocation_p
-    inRecord.get("nx", nx);
-    inRecord.get("ny", ny);
-    inRecord.get("npol", npol);
-    inRecord.get("nchan", nchan);
-    inRecord.get("nvischan", nvischan);
-    inRecord.get("nvispol", nvispol);
     cmplxImage_p=NULL;
-    inRecord.get("tovis", toVis_p);
     if(inRecord.isDefined("image")){
       cmplxImage_p=new TempImage<Complex>();
       image=&(*cmplxImage_p);
-      
       const Record rec=inRecord.asRecord("image");
       if(!cmplxImage_p->fromRecord(error, rec))
-	return False;   
+	return False;      
       
     }
-    else if(inRecord.isDefined("diskimage")){
-      String theDiskImage;
-      inRecord.get("diskimage", theDiskImage);
-      try{
-	cmplxImage_p=new PagedImage<Complex> (theDiskImage);
-	image=&(*cmplxImage_p);
-      }
-      catch(...){
-	throw(AipsError(String("Failure to load ")+theDiskImage+String(" image from disk")));
-      }
-    }
-    if(toVis_p && !cmplxImage_p.null()) {
-	griddedData.resize(image->shape());
-	griddedData=image->get();
-    }
-    else if(!toVis_p){
-      IPosition gridShape(4, nx, ny, npol, nchan);
-      griddedData.resize(gridShape);
-      griddedData=Complex(0.0);
-    }
-
+    
     nAntenna_p=inRecord.asuInt("nantenna");
     distance_p=inRecord.asDouble("distance");
     lastFieldId_p=inRecord.asInt("lastfieldid");
@@ -1099,7 +1054,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       mImage_p=mh.asMDirection();
     }
     
-   
+    inRecord.get("nx", nx);
+    inRecord.get("ny", ny);
+    inRecord.get("npol", npol);
+    inRecord.get("nchan", nchan);
+    inRecord.get("nvischan", nvischan);
+    inRecord.get("nvispol", nvispol);
     { const Record rec=inRecord.asRecord("mlocation_rec");
       MeasureHolder mh;
       if(!mh.fromRecord(error, rec))
@@ -1146,7 +1106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     inRecord.get("usedoublegrid", useDoubleGrid_p);
     inRecord.get("cfstokes", cfStokes_p);
     inRecord.get("polinuse", polInUse_p);
-    
+    inRecord.get("tovis", toVis_p);
     
     inRecord.get("sumweight", sumWeight);
     if(toVis_p){
@@ -1372,7 +1332,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       anymatchChan= (anymatchChan || matchthis);
       anyTopo=anyTopo || ((MFrequency::castType(vb.msColumns().spectralWindow().measFreqRef()(selectedSpw_p[k]))==MFrequency::TOPO) && freqFrameValid_p);
     }
-    
     // if TOPO and valid frame things may match later but not now  thus we'll go 
     // through the data 
     // hoping the user made the right choice
@@ -1403,7 +1362,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     vb.lsrFrequency(spw, lsrFreq, condoo, !freqFrameValid_p);
     doConversion_p[spw]=condoo;
-
+    
     if(lsrFreq.nelements() ==0){
       return False;
     }
@@ -1729,6 +1688,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // storeImg(String("wt.im"),*(weightImageVec[0]));
     // storeImg(String("stokes.im"),*(resImageVec[0]));
 
+    cerr << "pblimit " << pbLimit_p << endl;
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,
@@ -1740,12 +1700,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   };
   
-  void FTMachine::setSkyJones(Vector<CountedPtr<SkyJones> >& sj){
+  void FTMachine::setSkyJones(Vector<SkyJones *>& sj){
     sj_p.resize();
     sj_p=sj;
-    cout << "FTM : Set Sky Jones of length " << sj_p.nelements() << " and types ";
-    for( uInt i=0;i<sj_p.nelements();i++) cout << sj_p[i]->type() << " ";
-    cout << endl;
   }
   // Convert complex correlation planes to float Stokes planes
   void FTMachine::correlationToStokes(ImageInterface<Complex>& compImage, 
@@ -1772,14 +1729,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::stokesToCorrelation(ImageInterface<Float>& modelImage,
 				      ImageInterface<Complex>& compImage)
   {
-    /*
-    StokesCoordinate stcomp=compImage.coordinates().stokesCoordinate(compImage.coordinates().findCoordinate(Coordinate::STOKES));
-    StokesCoordinate stfloat = modelImage.coordinates().stokesCoordinate(modelImage.coordinates().findCoordinate(Coordinate::STOKES));
-
-    cout << "Stokes types : complex : " << stcomp.stokes() << "    float : " << stfloat.stokes() << endl;
-    cout << "Shapes : complex : " << compImage.shape() << "   float : " << modelImage.shape() << endl;
-    */
-
     //Pol axis need not be same
     AlwaysAssert(modelImage.shape()[0]==compImage.shape()[0], AipsError);
     AlwaysAssert(modelImage.shape()[1]==compImage.shape()[1], AipsError);
@@ -1905,190 +1854,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      //     else  cout << " Normalized (" << normtype << ") Source Loc : " << skyImage.getAt(psource) << endl; 
     
   }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////  For use with the new framework 
-  ///// (Sorry about these copies, but need to keep old system working)
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // Vectorized InitializeToVis
-  void FTMachine::initializeToVisNew(const VisBuffer& vb,
-				     CountedPtr<SIImageStore> imstore)
-  {
-    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
-
-    Matrix<Float> tempWts;
-
-    // Convert from Stokes planes to Correlation planes
-    stokesToCorrelation(*(imstore->model()), *(imstore->forwardGrid()));
-
-    if(vb.polFrame()==MSIter::Linear) {
-      StokesImageUtil::changeCStokesRep(*(imstore->forwardGrid()),
-					StokesImageUtil::LINEAR);
-    }
-    else {
-      StokesImageUtil::changeCStokesRep(*(imstore->forwardGrid()),
-					StokesImageUtil::CIRCULAR);
-    }
-   
-    //------------------------------------------------------------------------------------
-    // Image Mosaic only :  Multiply the input model with the Primary Beam
-    if(sj_p.nelements() >0 ){
-      for (uInt k=0; k < sj_p.nelements(); ++k){
-	(sj_p(k))->apply(*(imstore->forwardGrid()), *(imstore->forwardGrid()), vb, 0, True);
-      }
-    }
-    //------------------------------------------------------------------------------------
-
-    // Call initializeToVis
-    initializeToVis(*(imstore->forwardGrid()), vb); // Pure virtual
-    
-  };
-  
-  // Vectorized finalizeToVis is not implemented because it does nothing and is never called.
-  
-  // Vectorized InitializeToSky
-  void FTMachine::initializeToSkyNew(const Bool dopsf, 
-				     const VisBuffer& vb, 
-				     CountedPtr<SIImageStore> imstore)
-    
-  {
-    AlwaysAssert(imstore->getNTaylorTerms(False)==1, AipsError);
-    
-    // Make the relevant float grid. 
-    // This is needed mainly for facetting (to set facet shapes), but is harmless for non-facetting.
-    if( dopsf ) { imstore->psf(); } else { imstore->residual(); } 
-
-    // Initialize the complex grid (i.e. tell FTMachine what array to use internally)
-    Matrix<Float> sumWeight;
-    initializeToSky(*(imstore->backwardGrid()) , sumWeight , vb);
-
-  };
-  
-  // Vectorized finalizeToSky
-  void FTMachine::finalizeToSkyNew(Bool dopsf, 
-				   const VisBuffer& vb,
-				   CountedPtr<SIImageStore> imstore  )				   
-  {
-    // Check vector lengths. 
-    AlwaysAssert( imstore->getNTaylorTerms(False)==1, AipsError);
-
-    Matrix<Float> sumWeights;
-    finalizeToSky(); 
-
-    //------------------------------------------------------------------------------------
-    // Straightforward case. No extra primary beams. No image mosaic
-    if(sj_p.nelements() == 0 ) 
-      {
-	correlationToStokes( getImage(sumWeights, False) , ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ), dopsf);
-	
-	if( useWeightImage() && dopsf ) { 
-	  getWeightImage( *(imstore->weight())  , sumWeights); 
-	  // Fill weight image only once, during PSF generation. Remember.... it is normalized only once
-	  // during PSF generation.
-	}
-	
-	AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
-		      ((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
-
-	(imstore->sumwt())->put( sumWeights.reform((imstore->sumwt())->shape()) );
-	
-      }
-    //------------------------------------------------------------------------------------
-    // Image Mosaic only :  Multiply the residual, and weight image by the PB.
-    else 
-      {
-      
-      // Take the FT of the gridded values. Writes into backwardGrid(). 
-      getImage(sumWeights, False);
-
-      // Multiply complex image grid by PB.
-      if( !dopsf )
-	{
-	  for (uInt k=0; k < sj_p.nelements(); ++k){
-	    (sj_p(k))->apply(*(imstore->backwardGrid()), *(imstore->backwardGrid()), vb, 0, True);
-	  }
-	}
-
-      // Convert from correlation to Stokes onto a new temporary grid.
-      SubImage<Float>  targetImage( ( dopsf ? *(imstore->psf()) : *(imstore->residual()) ) , True);
-      TempImage<Float> temp( targetImage.shape(), targetImage.coordinates() );
-      correlationToStokes( *(imstore->backwardGrid()), temp, False);
-
-      // Add the temporary Stokes image to the residual or PSF, whichever is being made.
-      LatticeExpr<Float> addToRes( targetImage + temp );
-      targetImage.copyData(addToRes);
-      
-      // Now, do the same with the weight image and sumwt ( only on the first pass )
-      if( dopsf )
-	{
-	  SubImage<Float>  weightImage(  *(imstore->weight()) , True);
-	  TempImage<Float> temp(weightImage.shape(), weightImage.coordinates());
-	  getWeightImage(temp, sumWeights);
-
-	  for (uInt k=0; k < sj_p.nelements(); ++k){
-	    (sj_p(k))->applySquare(temp,temp, vb, -1);
-	  }
-
-	  LatticeExpr<Float> addToWgt( weightImage + temp );
-	  weightImage.copyData(addToWgt);
-	  
-	  AlwaysAssert( ( (imstore->sumwt())->shape()[2] == sumWeights.shape()[0] ) && 
-			((imstore->sumwt())->shape()[3] == sumWeights.shape()[1] ) , AipsError );
-
-	  SubImage<Float>  sumwtImage(  *(imstore->sumwt()) , True);
-	  TempImage<Float> temp2(sumwtImage.shape(), sumwtImage.coordinates());
-	  temp2.put( sumWeights.reform(sumwtImage.shape()) );
-	  LatticeExpr<Float> addToWgt2( sumwtImage + temp2 );
-	  sumwtImage.copyData(addToWgt2);
-	  
-	  //cout << "In finalizeGridCoreMos : sumwt : " << sumwtImage.get() << endl;
-	  
-	}
-
-    }
-    //------------------------------------------------------------------------------------
-
-
-    
-    return;
-  };
-
-  Bool FTMachine::changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow)
-  {
-    firstRow=False;
-    internalRow=False;
-
-    if( sj_p.nelements()==0 ) 
-      {throw(AipsError("Internal Error : Checking changedSkyJones, but it is not yet set."));}
-
-    CountedPtr<SkyJones> ej = sj_p[0];
-    if(ej.null())
-      return False;
-    if(ej->changed(vb,0))
-      firstRow=True;
-    Int row2temp=0;
-    if(ej->changedBuffer(vb,0,row2temp)) {
-      internalRow=True;
-    }
-    return (firstRow || internalRow) ;
-  }
-  
-
-  /*
-  /// Move to individual FTMs............ make it pure virtual.
-  Bool FTMachine::useWeightImage()
-  {
-    if( name() == "GridFT" || name() == "WProjectFT" )  
-      { return False; }
-    else
-      { return True; }
-  }
-  */
-
+ 
 } //# NAMESPACE CASA - END
 

@@ -63,7 +63,7 @@ msplot = casac.msplot()
 pmtool = casac.plotms()
 calplot = casac.calplot()
 table = casac.table()
-#flagger = casac.flagger()
+flagger = casac.flagger()
 agentflagger = casac.agentflagger()
 image = casac.image()
 imagepol = casac.imagepol()
@@ -107,7 +107,6 @@ from ft import  ft
 from gaincal import  gaincal
 from gencal import  gencal
 from hanningsmooth import  hanningsmooth
-from hanningsmooth2 import  hanningsmooth2
 from imcontsub import  imcontsub
 from imfit import  imfit
 from imhead import  imhead
@@ -135,7 +134,7 @@ from partition import partition
 from plotants import  plotants
 from plotcal import  plotcal
 from plotms import  plotms
-#from plotxy import  plotxy
+from plotxy import  plotxy
 from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy
@@ -145,7 +144,6 @@ from simanalyze import  simanalyze
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split
-from split2 import split2
 from uvcontsub import  uvcontsub
 from uvmodelfit import  uvmodelfit
 from uvsub import  uvsub

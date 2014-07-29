@@ -44,12 +44,12 @@ QPRasterMap::~QPRasterMap() { }
 
 QwtColorMap* QPRasterMap::copy() const { return new QPRasterMap(); }
 
-QRgb QPRasterMap::rgb(const QwtDoubleInterval& /*interval*/, double value) const {
+QRgb QPRasterMap::rgb(const QwtDoubleInterval& interval, double value) const {
     if(m_isARGB) return static_cast<QRgb>(value);
     else         return 0xFF000000 | static_cast<QRgb>(value);
 }
 
-unsigned char QPRasterMap::colorIndex(const QwtDoubleInterval& /*interval*/,
+unsigned char QPRasterMap::colorIndex(const QwtDoubleInterval& interval,
         double value) const {
     return static_cast<unsigned char>(value); }
 

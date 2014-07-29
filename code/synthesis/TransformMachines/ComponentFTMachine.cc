@@ -25,15 +25,15 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Quanta/Euler.h>
 #include <casa/Quanta/RotMatrix.h>
 #include <measures/Measures/MDirection.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/ComponentFTMachine.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/Array.h>

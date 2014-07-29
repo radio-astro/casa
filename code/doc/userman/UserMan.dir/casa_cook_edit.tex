@@ -23,8 +23,44 @@
 % JO 2012-05-06 Release 3.4.0 edits
 % JO 2012-09-27 Release 4.0.0 edits
 % JO 2013-04-23 Release 4.1.0 edits
-% JO 2013-10-16 Release 4.2.0 edits
 
+
+%\documentclass[11pt]{article}
+%\usepackage{fancyhdr}
+%\usepackage{pslatex}
+%\usepackage{epsfig}
+%\usepackage{natbib}
+%\usepackage{amssymb}
+%\usepackage{amsmath}
+%\usepackage{times}
+%\usepackage{wrapfig}
+%\usepackage{listings}
+%\usepackage{multicol}
+%\usepackage{longtable}          % package to allow for multiple page tables
+%\usepackage{enumerate}          % package to allow for more control over enumerate environment
+%\usepackage{deluxetable}
+%\usepackage{url}
+%\usepackage{boxedminipage}
+
+
+%\renewcommand{\topfraction}{1.0}
+%\renewcommand{\bottomfraction}{1.0}
+%\renewcommand{\textfraction}{0.0}
+
+%\setlength {\textwidth}{6.5in}
+%\hoffset=-1.0in
+%\oddsidemargin=1.00in
+%\marginparsep=0.0in
+%\marginparwidth=0.0in
+% \setlength {\textheight}{9.0in}
+%\voffset=-1.0in
+%\topmargin=1.0in
+%\headheight=0.00in
+%\headsep=0.00in
+%\headsep=0.00in
+%\footskip=0.30in
+
+%\begin{document}
 
 
 
@@ -91,7 +127,7 @@ directory will contain a {\tt flags.Original} in it containing
 a copy of the original flags in the {\tt MAIN} table of the MS
 so that you have a backup.  It will also contain a file called
 {\tt FLAG\_VERSION\_LIST} that has the information on the various
-flag versions there. The {\tt flagversions} are cumulative, i.e. a
+flag versions there. The {\tt flagversions} are cumulative, ie. a
 specific version number contains all the flags from the lower version
 numbers, too. 
 
@@ -418,7 +454,7 @@ The X and Y axes of a plot are selected by clicking on the {\bf Plots $>$ Axes} 
   which are fully calibrated, the units should be Jy).
 
 \item {\bf Wt} and {\bf Wt*Amp} --- the weight of the visibility and
-  the product of the weight and the amplitude
+  the prodict of the weight and the amplitude
 
 
 \item {\bf Flag} --- Data which are flagged have Flag = 1, whereas unflagged data are set to Flag = 0. Note that, to display flagged data, you will have to click on the {\bf Plots $>$ Display} tab and choose a {\bf Flagged Points Symbol} (\S~\ref{section:edit.plot.plotms.symbol}).
@@ -438,7 +474,7 @@ The X and Y axes of a plot are selected by clicking on the {\bf Plots $>$ Axes} 
 \item {\bf ParAngle} and {\bf Ant-ParAng} --- Parallactic angle in
   units of degrees. {\bf ParAngle} is the fiducial parallactic angle
   for all antennae in the array, while {\bf Ant-ParAng} plots the
-  parallactic angle for each individual antenna (their parallactic
+  parallactic ange for each individual antenna (their parallactic
   angles will differ by small amounts, because each antenna is located
   at a slightly different longitude, latitude, and elevation).
 
@@ -627,9 +663,7 @@ By checking the boxes next to {\bf Extend Flags} and {\bf Correlation}, flags wi
 \subsubsection{Averaging Data}
 \label{section:edit.plot.plotms.average}
 
-The {\bf Plots $>$ Data} tab enables averaging of the data in order to
-increase signal-to-noise of the plotted points or to increase plotting
-speed. The options for {\bf Averaging} are: 
+The {\bf Plots $>$ Data} tab enables averaging of the data in order to increase signal-to-noise of the plotted points or to increase plotting speed.The options for {\bf Averaging} ar e: 
 \begin{itemize}
    \item {\bf channel}
    \item {\bf time}
@@ -820,23 +854,14 @@ SiO_21_20 SiO_22_21 SiO_23_22'
 \subsubsection{Shifting the Phase Center}
 \label{section:edit.plot.plotms.phcen}
 
-The plot's phase center can be shifted in the {\bf Plots $>$ Trans}
-tab. Enter the X and Y shifts in units of arcseconds in the blank
-boxes under {\bf Phase center shift}.
+The plot's phase center can be shifted in the {\bf Plots $>$ Trans} tab. Enter the X and Y shifts in units of arcseconds in the blank boxes under {\bf Phase center shift}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Plot Ranges}
 \label{section:edit.plot.plotms.range}
 
-The X and Y ranges of the plot can be set in the {\bf Plots $>$ Axes}
-tab. By default, the circle next to {\bf Automatic} will be checked,
-and the ranges will be auto-scaled. To define the range, click on the
-circle below {\bf Automatic} and enter a minimum and maximum value in
-the blank boxes (as for the X Axis in Figure
-\ref{fig:plotms_axes}. Note that if identical values are placed in the
-blank boxes ({\tt xmin=xmax} and/or {\tt ymin=ymax}), then the values
-will be ignored and a best guess will be made to auto-range that axis.
+The X and Y ranges of the plot can be set in the {\bf Plots $>$ Axes} tab. By default, the circle next to {\bf Automatic} will be checked, and the ranges will be auto-scaled. To define the range, click on the circle below {\bf Automatic} and enter a minimum and maximum value in the blank boxes (as for the X Axis in Figure \ref{fig:plotms_axes}. Note that if identical values are placed in the blank boxes ({\tt xmin=xmax} and/or {\tt ymin=ymax}), then the values will be ignored and a best guess will be made to auto-range that axis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -849,22 +874,11 @@ set in the {\bf Plots $>$ Canvas} tab. To change the plot title, under
 enter the desired text. 
 %(note that this is independent of the plot's title in the {\bf Plot
 %Selection} menu; see \S~\ref{section:edit.plot.plotms.window}). 
-To change the X- and Y-axis labels, similarly click on the circles
-next to the blank boxes under {\bf Show X Axis} and {\bf Show Y Axis}
-and type the desired text in the blank box. To display these new
-labels, simply click the {\bf Plot} button.
+To change the X- and Y-axis labels, similarly click on the circles next to the blank boxes under {\bf Show X Axis} and {\bf Show Y Axis} and type the desired text in the blank box. To display these new labels, simply click the {\bf Plot} button.
 
-The user can determine the locations of axis labels in the {\bf Plots
-  $>$ Axes} tab. The X-axis label switches from the bottom to the top
-of the plot depending on what is selected for {\bf Attach
-  to:}. Similarly for the Y-Axis, the user can choose to attach axis
-labels and tick marks to the {\bf Top} or {\bf Bottom} (note that the
-axis labels have been attached to the {\bf Bottom} and {\bf Right} in
-Figure \ref{fig:plotms_axes}.
+The user can determine the locations of axis labels in the {\bf Plots $>$ Axes} tab. The X-axis label switches from the bottom to the top of the plot depending on what is selected for {\bf Attach to:}. Similarly for the Y-Axis, the user can choose to attach axis labels and tick marks to the {\bf Top} or {\bf Bottom} (note that the axis labels have been attached to the {\bf Bottom} and {\bf Right} in Figure \ref{fig:plotms_axes}.
 
-Finally, axis labels can be removed all together by unchecking the
-boxes next to {\bf Show X Axis} and {\bf Show Y Axis} on the {\bf
-  Plots $>$ Canvas} tab.
+Finally, axis labels can be removed all together by unchecking the boxes next to {\bf Show X Axis} and {\bf Show Y Axis} om the {\bf Plots $>$ Canvas} tab.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1050,17 +1064,17 @@ on 'Plot' for the same purpose.
 \subsection{Plotting and Editing using {\tt plotxy}}
 \label{section:edit.plot.plotxy}
 
-%\begin{wrapfigure}{h}{\textwidth}
-%  \begin{boxedminipage}{\textwidth}
-%    \centerline
-{\bf Inside the Toolkit:}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\bf Inside the Toolkit:}
      Access to {\tt matplotlib} is also provided through 
      the {\tt pl} tool. 
      See below for a description of the {\tt pl} tool functions. 
-%  \end{boxedminipage}
-%\end{wrapfigure}
+  \end{boxedminipage}
+\end{wrapfigure}
 
-%\vspace{3cm}
+\vspace{5cm}
 
 {\bf ALERT:} The {\tt plotxy} code is fragile and slow, and is being replaced by the {\tt plotms} (\S~\ref{section:edit.plot.plotms}). We retain {\tt plotxy} in this release as not all functionality is available yet in {\tt plotms}.
 
@@ -1581,11 +1595,11 @@ plotxy('n5921.ms','u','v',       # plot uv-coverage for n5921.ms data set
   versus channel ({\bf top}), antenna array configuration ({\bf bottom left})
   and the resulting uv coverage ({\bf bottom right}). The commands to
   make these three panels respectively are: 
-  1) {\it plotxy('ngc5921.ms', xaxis='channel',
+  1) {\tt plotxy('ngc5921.ms', xaxis='channel',
     datacolumn='data', field='0', subplot=211, plotcolor='',
     plotsymbol='go')}
-  2) {\it plotxy('ngc5921.ms', xaxis='x', field='0', subplot=223, plotsymbol='r.')}, 
-  3) {\it plotxy('ngc5921.ms', xaxis='u', yaxis='v', field='0',
+  2) {\tt plotxy('ngc5921.ms', xaxis='x', field='0', subplot=223, plotsymbol='r.')}, 
+  3) {\tt plotxy('ngc5921.ms', xaxis='u', yaxis='v', field='0',
     subplot=224, plotsymbol='b,',figfile='ngc5921\_multiplot.png')}.
   }
 \hrulefill
@@ -1683,7 +1697,7 @@ and re-enter, you will see your previous edits.
 \caption{\label{fig:markflags.plotxy} Plot of amplitude versus
 uv distance, before (left) and after (right) flagging two marked regions.
 The call was:
-{\it plotxy(vis='ngc5921.ms', xaxis='uvdist', field='1445*')}.
+{\tt plotxy(vis='ngc5921.ms',xaxis='uvdist', field='1445*')}.
 }
 \hrulefill
 \end{center}
@@ -1780,8 +1794,7 @@ toolkit command {\tt me.linelist()}.  For example:
 \small
 \begin{verbatim}
 CASA <14>: me.linelist()
-  Out[14]: 'C109A CI CII166A DI H107A H110A H138B H166A H240A H272A
-            H2CO HE110A HE138B HI OH1612 OH1665 OH1667 OH1720'
+  Out[14]: 'C109A CI CII166A DI H107A H110A H138B H166A H240A H272A H2CO HE110A HE138B HI OH1612 OH1665 OH1667 OH1720'
 \end{verbatim}
 \normalsize
 {\bf ALERT:} The list of known lines in CASA is currently very
@@ -1953,7 +1966,7 @@ correlation = 'RL LR'
 plotxy()
 
 #---------------------------------------------------------------------
-# Now do calibrator 0137+331
+# Now do calibrater 0137+331
 field = '0137+331'
 correlation = 'RR LL'
 xaxis = 'uvdist'
@@ -2004,7 +2017,7 @@ plotxy()
 # Here you will see that the final scan at 22:00:00 UT is bad
 # Draw a box around it and flag it!
 
-# Now look at what's left
+# Now look at whats left
 correlation = 'RR LL'
 xaxis = 'uvdist'
 spw = '1'
@@ -2015,9 +2028,9 @@ plotxy()
 
 # As you step through, you will see that Antenna 9 (ID=8) is often 
 # bad in this spw. If you box and do Locate (or remember from
-# 0137+331) it's probably a bad time.
+# 0137+331) its probably a bad time.
 
-# The easiest way to kill it:
+# The easiset way to kill it:
 
 antenna = '9'
 iteration = ''
@@ -2129,8 +2142,7 @@ The inputs to {\tt flagdata} are:
 #  flagdata :: All-purpose flagging task based on data-selections and flagging modes/algorithms.
 vis                 =         ''        #  Name of MS file or calibration table to flag
 mode                =   'manual'        #  Flagging mode
-     field          =         ''        #  Field names or field index
-                                        #  numbers: '' ==> all, field='0~2,3C286'
+     field          =         ''        #  Field names or field index numbers: '' ==> all, field='0~2,3C286'
      spw            =         ''        #  Spectral-window/frequency/channel: '' ==> all, spw='0:17~19'
      antenna        =         ''        #  Antenna/baselines: '' ==> all, antenna ='3,VA04'
      timerange      =         ''        #  Time range: '' ==> all,timerange='09:14:0~09:54:0'
@@ -2138,20 +2150,16 @@ mode                =   'manual'        #  Flagging mode
      scan           =         ''        #  Scan numbers: '' ==> all
      intent         =         ''        #  Observation intent: '' ==> all, intent='CAL*POINT*'
      array          =         ''        #  (Sub)array numbers: '' ==> all
-     uvrange        =         ''        #  UV range: '' ==> all;
-                                        #  uvrange ='0~100klambda', default units=meters
+     uvrange        =         ''        #  UV range: '' ==> all; uvrange ='0~100klambda', default units=meters
      observation    =         ''        #  Observation ID: '' ==> all
      feed           =         ''        #  Multi-feed numbers: Not yet implemented
      autocorr       =      False        #  Flag auto-correlations
 
-action              =    'apply'        #  Action to perform in MS
-                                        #  and/or in inpfile (none/apply/calculate)
-     display        =         ''        #  Display data and/or
-                                        #  end-of-MS reports at runtime (data/report/both).
+action              =    'apply'        #  Action to perform in MS and/or in inpfile (none/apply/calculate)
+     display        =         ''        #  Display data and/or end-of-MS reports at runtime (data/report/both).
      flagbackup     =       True        #  Back up the state of flags before the run
 
-savepars            =      False        #  Save the current parameters
-                                        #  to the FLAG_CMD table or to a file
+savepars            =      False        #  Save the current parameters to the FLAG_CMD table or to a file
 async               =      False        #  If true the taskname must be started using flagdata(...)
 
 \end{verbatim}
@@ -2205,7 +2213,7 @@ followed by the polarization products (using an underscore in between ``\_'' )
 \normalsize
 
 {\tt 'WVR'} refers to the water vapour radiometer of ALMA data. Note that
-the operators {\tt ABS,ARG,RE}, etc. are written only once as the first
+the operators {\tt ABS,ARG,RE}, etc are written only once as the first
 value.  if more than one correlation is given, the operator will be
 applied to all of them. An example would be 
 
@@ -2327,8 +2335,7 @@ parameters will be flagged or unflagged, depending on the {\tt
 \begin{verbatim}
 mode                =     'list'        #  Flagging mode (list/manual/clip/shadow/quack/el
                                         #   evation/tfcrop/rflag/extend/unflag/summary)
-     inpfile        =         ''        #  Input ASCII file, list of
-                                        #  files or Python list of strings with 
+     inpfile        =         ''        #  Input ASCII file, list of files or Python list of strings with 
 
                                         #   flag commands.
      reason         =      'any'        #  Select by REASON types
@@ -2383,11 +2390,12 @@ flagdata(vis='vis',mode='list', inpfile=cmds)
 \end{verbatim}
 \normalsize
 
+The syntax should be written with quotes e.g. {\tt mode='manual'
+  antenna='ea10'} but will usually also be accepted without the quotes
+(like {\tt mode=manual antenna=ea10}). Spaces are only allowed to
+separate pairs of parameters, not adjacent to the equal '=' signs or
+inside strings and there are no commas between the subparameters on each line.
 
-
-The syntax needs to be written with quotes e.g. {\it mode=’manual’ antenna=’ea10’}. There should be no
-space between {\it key=value}. Spaces are used to separate pairs of
-parameters, not commas.
 
 
 
@@ -2409,17 +2417,15 @@ mode                =     'clip'        #  Flagging mode (list/manual/clip/shado
 \normalsize
 
 in addition to the regular selection parameters, {\tt mode='clip'}
-also has an option to select between a number of scratch columns in
-{\tt datacolumn}. This includes the usual {\tt DATA}, {\tt CORRECTED},
-etc., and also clipping based on data weights {\tt WEIGHT}, {\tt
-  WEIGHT\_SPECTRUM} as well as other MS columns. {\tt clipminmax} selects the
-range of values to be clipped -- usually this is combined with {\tt
-  clipoutside=True} to clip everything {\it but} the values covered in
-{\tt clipminmax}. The data can also be averaged over the selected {\tt
-  spw} channel ranges by setting {\tt channelavg=True}. {\tt clip}
-will also flag 'NaN', 'inf', and '-inf' values by default and can flag
-exact zero values (these are sometimes produced by the JVLA
-correlator) using the {\tt clipzeros} parameter.
+also has an option to select between the {\tt DATA}, {\tt
+  CORRECTED\_DATA} and other scratch columns for 
+operation. {\tt clipminmax} selects the range of values to be clipped
+-- usually this is combined with {\tt clipoutside=True} to clip
+everything {\it but} the values covered in {\tt clipminmax}. The data can
+also be averaged over the selected {\tt spw} channel ranges by setting
+{\tt channelavg=True}. {\tt clip} will also flag 'NaN', 'inf', and
+'-inf' values by default and can flag exact zero values (these are sometimes
+produced by the JVLA correlator) using the {\tt clipzeros} parameter.
 
 
 Note : For modes {\tt clip, tfcrop} and {\tt rflag}, channel-ranges
@@ -2461,10 +2467,8 @@ mode                =    'quack'        #  Flagging mode (list/manual/clip/shado
                                         #   elevation/tfcrop/rflag/extend/unflag/summary)
 ...
      quackinterval  =        0.0        #  Quack n seconds from scan beginning or end
-     quackmode      =      'beg'        #  Quack mode. 'beg' ==>
-                                        #  beginning of scan.'endb' ==> end of
-                                        #   scan. 'end' ==> all but
-                                        #   end of scan. 'tail' ==> all but
+     quackmode      =      'beg'        #  Quack mode. 'beg' ==> beginning of scan.'endb' ==> end of
+                                        #   scan. 'end' ==> all but end of scan. 'tail' ==> all but
                                         #   beginning of scan
      quackincrement =      False        #  Flag incrementally in time?
 \end{verbatim}
@@ -2529,9 +2533,6 @@ mode                =   'tfcrop'        #  Flagging mode (list/manual/clip/shado
                                         #   window statistics (none,sum,std,both)
      halfwin        =          1        #  Half-width of sliding window to use with
                                         #   'usewindowstats' (1,2,3).
-     extendflags    =       True        #  Extend flags along time,
-                                        #  frequency and correlation.
-
 \end{verbatim}
 \normalsize
 
@@ -2551,7 +2552,7 @@ construct an average bandpass. Construct an estimate of a clean
 bandpass (without RFI) via a robust piece-wise polynomial fit to the
 average bandpass shape.
 
-Note : A robust fit is computed in up to 5 iterations. It begins with a
+Note : A robust fit is computed in upto 5 iterations. It begins with a
 straight line fit across the full range, and gradually increases to
 'maxnpieces' number of pieces with third-order polynomials in each
 piece. At each iteration, the stddev between the data and the fit is
@@ -2575,7 +2576,7 @@ range-based clipping will flag good sections of the bandpass.
 \item Perform iterative flagging (robust flagging) of points deviating from
 a value of 1.
 
-Flagging is done in up to 5 iterations. In each iteration, for every
+Flagging is done in upto 5 iterations. In each iteration, for every
 timestep, calculate the stddev of the bandpass-flattened data, flag
 all points further than N times stddev from the fit, and recalculate
 the stddev. At each iteration, the same relative threshold is applied
@@ -2589,19 +2590,19 @@ fit.)
 
 \end{enumerate}
 
-%It is usually helpful to extend the flags along time, frequency and
-%correlation using the {\tt "extend"}
-%mode in a second step within the same flagging run. See the example
-%below:
-%
-%\small
-%\begin{verbatim}
-%  cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum'", 
-%         "mode='extend' extendpols=True growtime=50.0 growaround=True"]
-%                     
-%  flagdata(vis, mode='list', inpfile=cmd)     
-%\end{verbatim}
-%\normalsize
+It is usually helpful to extend the flags along time, frequency and
+correlation using the {\tt "extend"}
+mode in a second step within the same flagging run. See the example
+below:
+
+\small
+\begin{verbatim}
+  cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum'", 
+         "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                     
+  flagdata(vis, mode='list', inpfile=cmd)     
+\end{verbatim}
+\normalsize
 
 
 The default parameters of the tfcrop implementation are optimized for
@@ -2619,11 +2620,6 @@ a-priori} , they can be protected from automatic flagging by
 de-selecting those frequency-ranges via the 'spw' data-selection
 parameter.
 
-The {\tt extendflag} parameter will clean up small portions of data
-between flagged data points along time and/or frequency when more than
-50\% of all timeranges or 80\% of all channels are already flagged. It
-will also extend the flags to the other polarizations. Alternatively,
-{\tt mode='extend'} can be used.
 
 For a detailed description of the {\tt tfcrop parameters} and some
 examples, we refer to the inline help of {\tt flagdata} and to
@@ -2655,7 +2651,6 @@ mode                =    'rflag'        #  Flagging mode (list/manual/clip/shado
                                         #   than spectralmax [aips:fparm(6)]
      spectralmin    =        0.0        #  Flag whole spectrum if freqdev is less than
                                         #   spectralmin [aips:fparm(5)]
-     extendflags    =       True        #  Extend flags along time, frequency and correlation.
                                        
 \end{verbatim}
 \normalsize
@@ -2693,29 +2688,23 @@ user supplied (or auto-calculated) thresholds.
    \end{enumerate}
 \end{enumerate}
 
-%It is usually helpful to extend the flags along time, frequency and
-%correlation using the {\tt "extend"}
-%mode in a second step within the same flagging run. See the example
-%below:
-%
-%\small
-%\begin{verbatim}
-%  cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum'", 
-%         "mode='extend' extendpols=True growtime=50.0 growaround=True"]
-%                     
-%  flagdata(vis, mode='list', inpfile=cmd)     
-%\end{verbatim}
-%\normalsize
+It is usually helpful to extend the flags along time, frequency and
+correlation using the {\tt "extend"}
+mode in a second step within the same flagging run. See the example
+below:
 
-The {\tt extendflag} parameter will clean up small portions of data
-between flagged data points along time and/or frequency when more than
-50\% of all timeranges or 80\% of all channels are already flagged. It
-will also extend the flags to the other polarizations. Alternatively,
-{\tt mode='extend'} can be used.
+\small
+\begin{verbatim}
+  cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum'", 
+         "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                     
+  flagdata(vis, mode='list', inpfile=cmd)     
+\end{verbatim}
+\normalsize
 
-Again, we would like to refer to the inline help and to
-\url{http://www.aoc.nrao.edu/~rurvashi/FlaggerDocs/FlaggerDocs.html}
-for a more comprehensive description with examples.
+       Again, we would like to refer to the inline help and to
+       \url{http://www.aoc.nrao.edu/~rurvashi/FlaggerDocs/FlaggerDocs.html}
+       for a more comprehensive description with examples.
 
 
 \subsubsection{Extend}
@@ -2759,13 +2748,13 @@ mode                =   'extend'        #  Flagging mode (list/manual/clip/shado
 \end{verbatim}
 \normalsize
 
-Although the modes {\tt tfcrop} and {\tt rflag} already have {\tt
-  extendflag} parameters, some autoflagging algorithms may still leave
-small islands of unflagged data behind, data that are surrounded by
-flagged visibilities in the time-frequency space. Although the
-algorithm may deem these visibilities as good ones, they are
-frequently affected by low-level RFI that spills from the adjacent,
-flagged points and one may wish to clean those up.
+The {\tt extend} mode may be most useful after running the {\tt
+  tfcrop} or {\tt rflag} autoflagging procedures. Sometimes, these
+algorithms leave small islands of unflagged data behind, data that are
+surrounded by flagged visibilities in the time-frequency
+space. Although the algorithm may deem these visibilities as good
+ones, they are frequently affected by low-level RFI that spills from
+the adjacent, flagged points and one may wish to clean those up.
 
 
 {\tt ntime} specifies the time ranges over which to clean up,
@@ -2878,17 +2867,14 @@ inpmode             =    'table'        #  Input mode for flag commands(table/li
      inpfile        =         ''        #  Source of flag commands
      tablerows      =         []        #  Rows of inpfile to read
      reason         =      'any'        #  Select by REASON types
-     useapplied     =      False        #  Select commands whose rows
-                                        #  have APPLIED column set to True
+     useapplied     =      False        #  Select commands whose rows have APPLIED column set to True
 
 action              =    'apply'        #  Action to perform in MS and/or in inpfile
                                         #   (apply/unapply/list/plot/clear/extract)
-     flagbackup     =       True        #  Automatically backup the
-                                        #   FLAG column before execution
+     flagbackup     =       True        #  Automatically backup the FLAG column before execution
 
 savepars            =      False        #  Save flag commands to the MS or to a file
-async               =      False        #  If true the taskname must
-                                        #  be started using flagcmd(...)
+async               =      False        #  If true the taskname must be started using flagcmd(...)
 
 \end{verbatim}
 \normalsize
@@ -2943,8 +2929,7 @@ inpmode             =    'table'        #  Input mode for flag commands(table/li
      inpfile        =         ''        #  Source of flag commands
      tablerows      =         []        #  Rows of inpfile to read
      reason         =      'any'        #  Select by REASON types
-     useapplied     =      False        #  Select commands whose rows
-                                        #  have APPLIED column set to
+     useapplied     =      False        #  Select commands whose rows have APPLIED column set to
                                         #   True
 \end{verbatim}
 \normalsize
@@ -2972,14 +2957,13 @@ and apply them to a calibration table given in the parameter
 
 \small
 \begin{verbatim}
-     flagcmd(vis='cal-X54.B1', inpmode='table', 
-             inpfile='uid___A002_X2a5c2f_X54.ms', action='apply')
+     flagcmd(vis='cal-X54.B1', inpmode='table', inpfile='uid___A002_X2a5c2f_X54.ms', action='apply')
 \end{verbatim}
 \normalsize
 
 \subsubsection{Input flag mode {\tt 'list'}}
 \label{section:edit.flagcmd.inpmode.list}
-This mode allows one to insert a list of strings with flagging
+This mode allows one to insert a list of strings with ﬂagging
 commands, the name of a ﬁle or a list of filenames that contains these
 commands equivalent to the {\tt mode='list'} in {\tt flagdata}
 (\S\,\ref{section:edit.flagdata.mode.list}). E.g. a file {\it
@@ -3132,8 +3116,7 @@ This choice opens the sub-parameters:
 \begin{verbatim}
 action              =  'unapply'        #  Action to perform in MS and/or in inpfile
                                         #   (apply/unapply/list/plot/clear/extract)
-     flagbackup     =       True        #  Automatically backup the
-                                        #   FLAG column before execution
+     flagbackup     =       True        #  Automatically backup the FLAG column before execution
 
 \end{verbatim}
 \normalsize
@@ -3322,7 +3305,7 @@ observation=''
         
 
 Note: a command consisting only of selection key-value pairs is a
-basic {\tt "manual"} operation, i.e. flag the data meeting the selection
+basic {\tt "manual"} operation, ie. flag the data meeting the selection
           
         
 \item Modes specific parameters with default values (for further details,
@@ -3473,8 +3456,7 @@ The default inputs are:
 #  browsetable :: Browse a table (MS, calibration table, image)
 
 tablename         =         ''  #   Name of input table
-async             =      False  #  If true the taskname must be
-                                #  started using browsetable(...)
+async             =      False  #  If true the taskname must be started using browsetable(...)
 
 \end{verbatim}
 \normalsize

@@ -8,6 +8,7 @@ import commands
 import numpy as np
 from __main__ import *
 from taskinit import *
+from tasks import *
 
 
 class convertToMMS():
@@ -15,7 +16,6 @@ class convertToMMS():
                  inpdir=None, \
                  mmsdir=None, \
                  parallel=False, \
-                 axis='auto', \
                  createmslink=False, \
                  cleanup=False):
 
@@ -25,7 +25,6 @@ class convertToMMS():
         self.inpdir = inpdir
         self.outdir = mmsdir
         self.parallel = parallel
-        self.axis = axis
         self. createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
         self.cleanup = cleanup        
@@ -94,7 +93,7 @@ class convertToMMS():
         # Create an MMS for each MS in list
         for ms in mslist:
             casalog.post('Will create an MMS for '+ms)
-            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.parallel, self.axis)
+            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.parallel)
             if not ret:
                 sys.exit(2)
             
@@ -225,14 +224,13 @@ class convertToMMS():
         return fileslist
 
 
-    def runPartition(self, ms, mmsdir, createlink, runmode, axis):
+    def runPartition(self, ms, mmsdir, createlink, runmode):
         '''Run partition with default values to create an MMS.
            ms         --> full pathname of the MS
            mmsdir     --> directory to save the MMS to
            createlink --> when True, it will create a symbolic link to the
                          just created MMS in the same directory with extension .ms  
            runmode   --> run partition in parallel or sequential
-           axis      --> separationaxis to use (spw, scan, auto)
         '''
         from tasks import partition
 
@@ -260,7 +258,7 @@ class convertToMMS():
         # Run partition   
         default('partition')
         partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', flagbackup=False,
-                  parallel=runmode, separationaxis=axis)
+                  parallel=runmode)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created
@@ -290,8 +288,6 @@ class convertToMMS():
         print '   inpdir <dir>        directory with input MS.'
         print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
         print '                       the MMS in a directory called mmsdir in the current directory.'
-        print '   parallel=False      run partition in parallel or not.'
-        print "   axis='auto'         separationaxis parameter of partition (spw,scan,auto)."
         print '   createmslink=False  if True it will create a link to the new MMS with extension .ms.'
         print '   cleanup=False       if True it will remove the output directory before starting.\n'
         
@@ -493,12 +489,9 @@ def getSpwIds(msfile, myscan, selection={}):
 
 
 def getScanSpwSummary(mslist=[]):
-    """ Get a consolidated dictionary with scan, spw, channel information
+    '''Get a consolidated dictionary with scan, spw, channel information
        of a list of MSs. It adds the nrows of all sub-scans of a scan.
-       
-       Keyword arguments:
        mslist    --> list with names of MSs
-       
        Returns a dictionary such as:
        mylist=['subms1.ms','subms2.ms']
        outdict = getScanSpwSummary(mylist)
@@ -514,8 +507,7 @@ def getScanSpwSummary(mslist=[]):
                                  2: {'nchans': array([63]),
                                      'nrows': 1890,
                                      'spwIds': array([0])}},
-                      'size': '72M'}}
-    """
+                      'size': '72M'}}'''
                      
     if mslist == []:
         return {}
@@ -642,12 +634,10 @@ def getMMSSpwIds(thisdict):
     return spwlist
 
 def getDiskUsage(msfile):
-    """Return the size in bytes of an MS or MMS in disk.
-    
-    Keyword arguments:
+    '''Return the size in bytes of an MS or MMS in disk.
        msfile  --> name of the MS
-       This function will return a value given by the command du -hs
-    """
+       This function will return a value given by
+       the command du -hs'''
     
     from subprocess import Popen, PIPE, STDOUT
 
@@ -681,18 +671,11 @@ def getSubtables(vis):
     return theSubTables
 
 
-def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], parallelaxis=''):
-    """Create a Multi-MS from a list of MSs
-    
-    Keyword arguments:
-        outputvis        -- name of the output MMS
-        submslist        -- list of input subMSs to create the output from
-        copysubtables    -- True will copy the sub-tables from the first subMS to the others in the
-                            output MMS. Default to False.
-        omitsubtables    -- List of sub-tables to omit when copying to output MMS. They will be linked instead
-        parallelasxis    -- Optionally, set the value to be written to AxisType in table.info of the output MMS
-                            Usually this value comes from the separationaxis keyword of partition or mstransform.
-    """
+def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[]):
+    '''
+    Create an MMS named outputvis from the submss in list submslist.
+    The subtables in omitsubtables are linked instead of copied.
+    '''
 
     if os.path.exists(outputvis):
         raise ValueError, "Output MS already exists"
@@ -712,8 +695,7 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
                                    True,  # nomodify
                                    False, # lock
                                    copysubtables,
-                                   omitsubtables
-                                   ) # when copying the subtables, omit these
+                                   omitsubtables) # when copying the subtables, omit these
         except:
             mymstool.close()
             raise
@@ -753,10 +735,6 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
             for s in omitsubtables:
                 os.system('rm -rf '+s) # shutil does not work in the general case
                 os.symlink('../'+mastersubms+'/'+s, s)
-                
-        # Write the AxisType info in the MMS
-        if parallelaxis != '':
-            setAxisType(outputvis, parallelaxis)
 
     except:
         theproblem = str(sys.exc_info())
@@ -767,110 +745,5 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
 
     return True
 
-def axisType(mmsname):
-    """Get the axisType information from a Multi-MS. The AxisType information
-       is usually added for Multi-MS with the axis which data is parallelized across.
-       
-       Keyword arguments:
-           mmsname    --    name of the Multi-MS
 
-        It returns the value of AxisType or an empty string if it doesn't exist.
-    """
-    tblocal = tbtool()
-    
-    axis = ''
-
-    try:
-        tblocal.open(mmsname, nomodify=True)
-    except:
-        raise ValueError, "Unable to open table %s" % mmsname
-    
-    tbinfo = tblocal.info()
-    tblocal.close()
-    
-    if tbinfo.has_key('readme'):
-        readme = tbinfo['readme']
-        readlist = readme.splitlines()
-        for val in readlist:
-            if val.__contains__('AxisType'):
-                a,b,axis = val.partition('=')
-                
-                
-    return axis.strip()
-
-def setAxisType(mmsname, axis=''):
-    """Set the AxisType keyword in a Multi-MS info. If AxisType already
-       exists, it will be overwritten.
-    
-    Keyword arguments:
-        mmsname    --    name of the Multi-MS
-        axis       --    parallel axis of the Multi-MS. Options: scan; spw or scan,spw
-        
-        Return True on success, False otherwise.
-    """
-    
-    if axis == '':
-        raise ValueError, "Axis value cannot be empty"
-    
-    tblocal = tbtool()
-    try:
-        tblocal.open(mmsname, nomodify=False)
-    except:
-        raise ValueError, "Unable to open table %s" % mmsname
-    
-    import copy
-
-    tbinfo = tblocal.info()
-    readme = ''
-    # Save original readme
-    if tbinfo.has_key('readme'):
-        readme = tbinfo['readme']
-
-    # Check if AxisType already exist and remove it
-    if axisType(mmsname) != '':
-        print 'WARN: Will overwrite the existing AxisType value'
-        readlist = readme.splitlines()
-        newlist = copy.deepcopy(readlist)
-        for val in newlist:
-            if val.__contains__('AxisType'):
-                readlist.remove(val)
-
-        # Recreate the string
-        nr = ''
-        for val in readlist:
-            nr = nr + val + '\n'
-
-        readme=nr.rstrip()
-        
-        
-    # Preset for axis info
-    axisInfo = "AxisType = "
-    axis.rstrip()
-    axisInfo = axisInfo + axis + '\n'
-    
-    # New readme
-    newReadme = axisInfo + readme
-    
-    # Create readme record
-    readmerec = {'readme':newReadme}
-    
-    tblocal.putinfo(readmerec)
-    tblocal.close()
-    
-    # Check if the axis was correctly added
-    check_axis = axisType(mmsname)
-
-    if check_axis != axis:
-        return False
- 
-    return True
-    
-    
-    
-    
-    
-    
-    
-    
-    
 

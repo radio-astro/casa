@@ -31,7 +31,7 @@
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Slice.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/System/PGPlotterInterface.h>
     
 #include <casa/stdio.h>

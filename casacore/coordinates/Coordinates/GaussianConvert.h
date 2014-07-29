@@ -32,6 +32,8 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <components/ComponentModels/GaussianBeam.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

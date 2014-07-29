@@ -165,8 +165,7 @@ void FlagAgentExtension::setAgentParameters(Record config)
 }
 
 bool
-FlagAgentExtension::computeAntennaPairFlags(const vi::VisBuffer2 &/*visBuffer*/,
-				FlagMapper &flags,Int /*antenna1*/,Int /*antenna2*/,vector<uInt> &/*rows*/)
+FlagAgentExtension::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// Set logger origin
 	logger_p->origin(LogOrigin(agentName_p,__FUNCTION__,WHERE));
@@ -243,11 +242,11 @@ FlagAgentExtension::computeAntennaPairFlags(const vi::VisBuffer2 &/*visBuffer*/,
 		} // For timestep
 
 		// Apply grow flags to the common modified flag cube
-		for (uInt timestep_i=0;timestep_i<static_cast<uInt>(nTimesteps);timestep_i++)
+		for (uInt timestep_i=0;timestep_i<nTimesteps;timestep_i++)
 		{
-			for (uInt chan_j=0;chan_j<static_cast<uInt>(nChannels);chan_j++)
+			for (uInt chan_j=0;chan_j<nChannels;chan_j++)
 			{
-				for (uInt pol_k=0;pol_k<static_cast<uInt>(nPols);pol_k++)
+				for (uInt pol_k=0;pol_k<nPols;pol_k++)
 				{
 					if (growFlags->operator()(pol_k,chan_j+1,timestep_i+1))
 					{

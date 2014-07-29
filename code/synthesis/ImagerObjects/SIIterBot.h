@@ -50,10 +50,11 @@
 #include <casadbus/interfaces/SynthImager.adaptor.h>
 #endif
 
+/* Future Decl */
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 	class Record;
-
 	class SIIterBot_adaptor;
 
 	class SIIterBot_callback {
@@ -94,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			// virtual bool majorCycleRequired(Float currentPeakResidual);
 
-			int cleanComplete();
+			bool cleanComplete();
     
 			/* --- Functions for interacting with Minor Cycle Control --- */
 			Record getMinorCycleControls();

@@ -23,10 +23,6 @@ casa_add_library( mstransform
  MSTransform/MSTransformManager.cc
  MSTransform/MSTransformDataHandler.cc
  MSTransform/MSTransformRegridder.cc
- MSTransform/MSTransformBufferImpl.cc
- MSTransform/MSTransformIterator.cc
- MSTransform/MSTransformIteratorFactory.cc
- MSTransform/MSUVBin.cc
 )
 
 install (FILES
@@ -34,13 +30,6 @@ install (FILES
 	MSTransform/MSTransformManager.h
 	MSTransform/MSTransformDataHandler.h
 	MSTransform/MSTransformRegridder.h
-	MSTransform/MSTransformBufferImpl.h
-	MSTransform/MSTransformIterator.h
-	MSTransform/MSTransformIteratorFactory.h
-	MSTransform/MSUVBin.h
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
 
-casa_add_test( mstransform MSTransform/test/tMSTransformIterator.cc )
-casa_add_assay( mstransform MSTransform/test/tMSBin.cc )
-casa_add_executable( mstransform msuvbin apps/msuvbin/msuvbin.cc )

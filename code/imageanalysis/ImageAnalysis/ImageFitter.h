@@ -1,3 +1,4 @@
+//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -22,20 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #ifndef IMAGES_IMAGEFITTER_H
 #define IMAGES_IMAGEFITTER_H
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
-
-#include <components/ComponentModels/ComponentList.h>
+#include <measures/Measures/Stokes.h>
 #include <lattices/LatticeMath/Fit2D.h>
+#include <components/ComponentModels/ComponentList.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <images/Images/SubImage.h>
 
-#include <imageanalysis/IO/ImageFitterResults.h>
+#include <components/ComponentModels/ComponentType.h>
+#include <casa/namespace.h>
+
+#include <tr1/memory>
 
 namespace casa {
 
-class ImageFitter : public ImageTask<Float> {
+class ImageFitter : public ImageTask {
 	// <summary>
 	// Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
 	// ultimately call fitsky to do fitting
@@ -66,15 +72,13 @@ class ImageFitter : public ImageTask<Float> {
 	// </example>
 
 public:
-	/*
 	enum CompListWriteControl {
 		NO_WRITE,
 		WRITE_NO_REPLACE,
 		OVERWRITE
 	};
-	*/
 
-	// constructor appropriate for API calls.
+	// constructor approprate for API calls.
 	// Parameters:
 	// <ul>
 	// <li>imagename - the name of the input image in which to fit the models</li>
@@ -98,25 +102,25 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-		const SPCIIF image, const String& region,
-		const Record *const &regionRec,
+			const ImageTask::shCImFloat image, const String& region,
+		const Record *const regionRec,
 		const String& box="",
 		const String& chanInp="", const String& stokes="",
 		const String& maskInp="",
+		const Vector<Float>& includepix = Vector<Float>(0),
+		const Vector<Float>& excludepix = Vector<Float>(0),
+		const String& residualInp="", const String& modelInp="",
 		const String& estiamtesFilename="",
-		const String& newEstimatesInp="", const String& compListName=""
+		const String& newEstimatesInp="", const String& compListName="",
+		const CompListWriteControl writeControl=NO_WRITE
 	);
 
 	// destructor
 	~ImageFitter();
 
 	// Do the fit. If componentList is specified, store the fitted components in
-	// that object. The first list in the returned pair represents the convolved components.
-	// The second list represents the deconvolved components. If the image has no beam,
-	// the two lists will be the same.
-	std::pair<ComponentList, ComponentList> fit();
-
-	void setWriteControl(ImageFitterResults::CompListWriteControl x) { _writeControl = x; }
+	// that object.
+	ComponentList fit();
 
 	inline String getClass() const {return _class;}
 
@@ -132,7 +136,7 @@ public:
 
 	// set the zero level estimate. Implies fitting of zero level should be done. Must be
 	// called before fit() to have an effect.
-	void setZeroLevelEstimate(Double estimate, Bool isFixed);
+	void setZeroLevelEstimate(const Double estimate, const Bool isFixed);
 
 	// Unset zero level (resets to zero). Implies fitting of zero level should not be done.
 	// Call prior to fit().
@@ -142,82 +146,34 @@ public:
 	// an exception if the zero level was not fit for.
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
-	// set rms level for calculating uncertainties. If not positive, an exception is thrown.
-	void setRMS(const Quantity& rms);
-
-	void setIncludePixelRange(const std::pair<Float, Float>& r) {
-		_includePixelRange.reset(new std::pair<Float, Float>(r));
-	}
-
-	void setExcludePixelRange(const std::pair<Float, Float>& r) {
-		_excludePixelRange.reset(new std::pair<Float, Float>(r));
-	}
-
-	// set the output model image name
-	void setModel(const String& m) { _model = m; }
-
-	// set the output residual image name
-	void setResidual(const String& r) { _residual = r; }
-
-	// set noise correlation beam FWHM
-	void setNoiseFWHM(const Quantity& q);
-
-	// in pixel widths
-	void setNoiseFWHM(Double d);
-
-	// clear noise FWHM, if the image has no beam, use the uncorrelated noise equations.
-	// If the image has a beam(s) use the correlated noise equations with theta_N =
-	// the geometric mean of the beam major and minor axes.
-	void clearNoiseFWHM();
-
-	// The Record holding all the output info
-	Record getOutputRecord() const {return _output; }
-
 protected:
-    virtual inline Bool _supportsMultipleRegions() const {return True;}
+    virtual inline Bool _supportsMultipleRegions() {return True;}
+
 
 private:
-
-    typedef GaussianBeam Angular2DGaussian;
-
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;
-	std::tr1::shared_ptr<std::pair<Float, Float> > _includePixelRange, _excludePixelRange;
-	ComponentList _estimates, _curConvolvedList, _curDeconvolvedList;
-	Vector<String> _fixed, _deconvolvedMessages;
-	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed, _correlatedNoise, _useBeamForNoise;
+	Vector<Float> _includePixelRange, _excludePixelRange;
+	ComponentList _estimates, _curResults;
+	Vector<String> _fixed;
+	Bool _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
 		_positionAngles, _positionAngleErrors;
-	vector<Quantity> _allConvolvedPeakIntensities, _allConvolvedPeakIntensityErrors, _allSums;
-	vector<GaussianBeam> _allBeams;
-	vector<Double> _allBeamsPix, _allBeamsSter;
-	vector<uInt> _allChanNums;
-	vector<Bool> _isPoint;
-	Record _residStats, inputStats, _output;
-	Double _rms;
+	Record _residStats, inputStats;
+	Double chiSquared;
 	String _kludgedStokes;
-	ImageFitterResults::CompListWriteControl _writeControl;
+	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
 	uInt _curChan;
 	Double _zeroLevelOffsetEstimate;
 	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 	Int _stokesPixNumber, _chanPixNumber;
-	ImageFitterResults _results;
-	std::auto_ptr<Quantity> _noiseFWHM;
-	Quantity _pixWidth;
 
 	const static String _class;
 
-	void _fitLoop(
-		Bool& anyConverged, ComponentList& convolvedList,
-		ComponentList& deconvolvedList, SPIIF templateImage,
-		SPIIF residualImage, SPIIF modelImage,
-		/*LCMask& completePixelMask, */ String& resultsString
-	);
-
-	vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
+	vector<OutputDestinationChecker::OutputStruct> _getOutputs();
 
 	vector<Coordinate::Type> _getNecessaryCoordinates() const;
 
@@ -225,17 +181,26 @@ private:
 
 	void _finishConstruction(const String& estimatesFilename);
 
-	//String _resultsHeader() const;
+	String _resultsHeader() const;
 
 	// summarize the results in a nicely formatted string
-	String _resultsToString(uInt nPixels) const;
+	String _resultsToString();
 
 	//summarize the size details in a nicely formatted string
 	String _sizeToString(const uInt compNumber) const;
 
+	String _fluxToString(uInt compNumber) const;
+
 	String _spectrumToString(uInt compNumber) const;
 
-	void _setDeconvolvedSizes();
+	// Write the estimates file using this fit.
+	void _writeNewEstimatesFile() const;
+
+	// Set the flux densities and peak intensities of the fitted components.
+	void _setFluxes();
+
+	// Set the convolved sizes of the fitted components.
+	void _setSizes();
 
 	void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
 
@@ -245,7 +210,7 @@ private:
 
 	String _statisticsToString() const;
 
-	SPIIF _createImageTemplate() const;
+	SubImage<Float> _createImageTemplate() const;
 
 	void _writeCompList(ComponentList& list) const;
 
@@ -258,10 +223,11 @@ private:
 	    Array<Bool>& pixelMask, Bool& converged,
 	    Double& zeroLevelOffsetSolution,
 	    Double& zeroLevelOffsetError,
-	    std::pair<Int, Int>& pixelOffsets,
-		const Vector<String>& models, Bool fitIt,
-		Bool deconvolveIt,
-		Double zeroLevelEstimate
+	    const uInt& chan,
+		const Vector<String>& models,
+		const Bool fitIt,
+		const Bool deconvolveIt, const Bool list,
+		const Double zeroLevelEstimate
 	);
 
 	Vector<Double> _singleParameterEstimate(
@@ -278,40 +244,12 @@ private:
 	) const;
 
 	void _encodeSkyComponentError(
-		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
+		LogIO& os, SkyComponent& sky,
+		Double facToJy, const ImageInterface<Float>& subIm,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
 		Stokes::StokesTypes stokes, Bool xIsLong
 	) const;
 
-	void _doConverged(
-		ComponentList& convolvedList, ComponentList& deconvolvedList,
-		Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
-		SPIIF& residualImage, SPIIF& modelImage,
-		std::tr1::shared_ptr<TempImage<Float> >& tImage,
-		std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
-		Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
-		Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages, const IPosition& planeShape,
-		const Array<Float>& pixels, const Array<Bool>& pixelMask, const Fit2D& fitter,
-		SPIIF templateImage
-	);
-
-	Quantity _pixelWidth();
-
-	void _calculateErrors();
-
-	Double _getRMS() const;
-
-	Double _correlatedOverallSNR(
-		uInt comp, Double a, Double b, Double signalToNoise
-	) const;
-
-	GaussianBeam _getCurrentBeam() const;
-
-	void _createOutputRecord(const ComponentList& convolved, const ComponentList& decon);
-
-	void _setSum(const SkyComponent& comp, const SubImage<Float>& im);
-
-	void _setBeam(GaussianBeam& beam, uInt ngauss);
 };
 }
 

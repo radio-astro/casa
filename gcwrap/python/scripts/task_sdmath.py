@@ -117,7 +117,7 @@ class sdmath_worker(sdutil.sdtask_template):
             self.expr=regex.sub("scanlist['%s']" % skey ,self.expr)
         self.expr="tmpout="+self.expr
         exec(self.expr)
-
+        
         # set flux unit
         if tmpout.get_fluxunit() != fluxunit_now:
             tmpout.set_fluxunit(fluxunit_now)

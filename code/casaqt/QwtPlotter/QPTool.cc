@@ -139,7 +139,7 @@ void QPPanTool::detach() {
 
 // Private Slots //
 
-void QPPanTool::panned(int /*px*/, int /*py*/) {
+void QPPanTool::panned(int px, int py) {
     QPCanvas* c = dynamic_cast<QPCanvas*>(m_canvas);
     if(c != NULL) {
         m_stack->addRegion(c->axesRanges(m_xAxis, m_yAxis), m_xAxis, m_yAxis);

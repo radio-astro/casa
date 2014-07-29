@@ -195,10 +195,6 @@ aips.cc
 version.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_casa PROPERTIES SOVERSION ${casa_soversion} )
-endif()
-
 if (HDF5_FOUND)
     list (APPEND de_libraries ${HDF5_LIBRARIES})
 endif (HDF5_FOUND)
@@ -503,8 +499,6 @@ Quanta/QMath.h
 Quanta/QMath.tcc
 Quanta/Quantum.h
 Quanta/Quantum.tcc
-Quanta/QVector.h
-Quanta/QVector.tcc
 Quanta/QuantumHolder.h
 Quanta/QuantumType.h
 Quanta/RotMatrix.h

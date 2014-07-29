@@ -95,7 +95,7 @@ namespace CalTypeMod
      ,
     CAL_WVR /*!<  */
      ,
-    CAL_APPPHASE /*!< Calibration for phasing of ALMA. Applicable at ALMA. */
+    CAL_APPPHASE /*!< Phasing loop data on the slow  timescale. Requested by the APP project. */
      
   };
   typedef CalType &CalType_out;

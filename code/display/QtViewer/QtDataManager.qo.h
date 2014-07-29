@@ -47,14 +47,12 @@
 //#   E.g. <QApplication> needs the X11 definition of 'Display'
 #include <display/QtViewer/QtDataManager.ui.h>
 #include <display/QtViewer/QtDataMgrMsSelect.ui.h>
-#include <display/QtViewer/VOParam.ui.h>
-#include <casaqt/QtDBus/dVO.h>
 #include <graphics/X11/X_exit.h>
 #include <display/Utilities/Lowlevel.h>
 #include <set>
 #include <list>
 #include <tr1/memory>
-#include <tr1/tuple>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -65,20 +63,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	namespace viewer {
 		class Region;
-
-        namespace dvo {
-            // entry of flexible VO parameters...
-            class param : public QGroupBox, public Ui::VOParam {
-                Q_OBJECT
-                public:
-                    param( QListWidget *l, QListWidgetItem *i, QWidget *parent=0 ) : QGroupBox(parent), list(l), item(i) { setupUi(this); }
-                protected:
-                    void mousePressEvent ( QMouseEvent * event );
-                private:
-                    QListWidget *list;
-                    QListWidgetItem *item;
-            };
-        }
 	}
 
 	class QtDataManager : public QWidget, private Ui::QtDataManager {
@@ -106,8 +90,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	protected:
 
-        void showEvent( QShowEvent *event );
-        void enterEvent( QEvent  *event );
 		void showDisplayButtons(int,const QString &name=QString((const char *)0));
 		void hideDisplayButtons();
 		QColor getDirColor(int);
@@ -186,13 +168,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		void region_item_state_change(QTreeWidgetItem*,int);
 		void region_selection_change( viewer::Region *rgn, bool selected );
-
-        //---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
-        //  VO controls...
-        //---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
-        void addVOParam( );
-        void removeVOParam( );
-        //---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
 
     private slots:
          void enable_disable_slice( const QString & );
@@ -348,117 +323,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
         bool slice_available;
         bool regrid_available;
-
-        void setupVO( );
-        // returns true if everything is OK...
-        bool updateVOstatus( );
-        QPushButton *new_vo_dismiss_button( QTableWidgetItem*, QString, QString );
-        bool collect_vo_parameters( double &ra, double &dec, double &ra_size, double &dec_size, QVariantMap &params );
-        void vo_flag_missing_param( QLineEdit *widget );
-        // (enabled, gui label, vo parameter name,vo parameter default,entry box)
-        typedef std::tr1::tuple<bool,QString,QString,QString,viewer::dvo::param*> vo_param_t;
-        std::vector<vo_param_t> voparameters;
-        edu::nrao::casa::dVO dvo;
-        std::set<QWidget*> dvo_missing_parameters;
-
-        std::map<QString,int> vo_label2col;
-        std::vector<QString> vo_urls;
-        std::vector<QString> vo_labels;
-        std::vector<QString> vo_labels_tip;
-
-        QColor vo_default_bg;
-		struct dvo_working_item {
-			int id;
-			unsigned int count;
-			bool operator<( const dvo_working_item &other ) const { return id < other.id; }
-			operator int( ) const { return id; }
-			dvo_working_item( int i ) : id(i), count(0) { }
-			dvo_working_item( QDBusPendingReply<int> i ) : id(i), count(0) { }
-			// set find etc. yeilds constant iterators (even though changes to
-			// the set item may have no effect on set ordering...)
-			void increment( ) const { ((dvo_working_item*)this)->count += 1; }
-		};
-		std::set<dvo_working_item> dvo_working_set;
-		QPushButton *vo_current_action;
-
-		void vo_clear_status_delayed( int seconds );
-		void vo_action_with_timeout( int id, int seconds, QString msg );
-		bool vo_action_with_timeout_active( ) const { return vo_action_timeout->isActive( ); }
-		void vo_action_with_timeout_reset( ) {
-			if ( vo_action_with_timeout_active( ) ) vo_action_timeout->start( );
-		}
-		void vo_action_with_timeout_complete( );
-
-    private slots:
-
-		void vo_service_select( const QString &service ) { vo_selected_service = service; }
-		void vo_selection_changed( );
-
-		void vo_clear_table( ) {
-			vo_table->clear( );
-			vo_table->setRowCount( 0 );
-			vo_init_columns( );
-			vo_label2col.clear( );
-			vo_urls.clear( );
-			vo_labels.clear( );
-			vo_labels_tip.clear( );
-		}
-        void vo_launch_query( );
-		void vo_fetch_data( );
-        void vo_clear_param( );
-        void vo_query_begin( int, const QString&, const QtStringMap& );
-        void vo_query_complete( int, const QString&, const QtStringMap& );
-        void vo_query_description( int, const QString&, const QtStringMap& );
-        void vo_query_row( int, const QString&, const QtStringMap& );
-		void vo_error( int, const QString&, const QString& );
-		void vo_dismiss_row( );
-		void vo_fetch_complete( int, QString );
-		void vo_fetch_progress(int,QString,double,double,double,double);
-
-		void vo_clear_status( );
-		void vo_disable_actions( );
-		void vo_enable_actions( );
-		void vo_action_timed_out( );
-
-	private:
-		void error( const QString &msg ) {
-			vo_status->setStyleSheet("color: red");
-			vo_status->setText( msg );
-		}
-		void status( const QString &msg ) {
-			vo_status->setStyleSheet("color: black");
-			vo_status->setText( msg );
-		}
-		void warning( const QString &msg ) {
-			vo_status->setStyleSheet("color: orange");
-			vo_status->setText( msg );
-		}
-
-		void vo_init_columns( ) {
-			vo_table->setColumnCount( 2 );
-			vo_table->setColumnWidth(0,30);
-			QTableWidgetItem *first = new QTableWidgetItem( "" );
-			vo_table->setHorizontalHeaderItem(0,first);
-			QTableWidgetItem *second = new QTableWidgetItem( "1" );
-			vo_table->setHorizontalHeaderItem(1,second);
-		}
-
-        QDoubleValidator *ra_val;
-        QDoubleValidator *dec_val;
-        QDoubleValidator *ra_size_val;
-        QDoubleValidator *dec_size_val;
-
-		QTimer *vo_action_timeout;
-		int vo_action_timeout_id;
-		QString vo_action_timeout_msg;
-		bool vo_actions_are_enabled;
-
-		std::map<QString,QString> vo_service_name_to_url;
-		QString vo_selected_service;
-		std::vector<int> vo_selected_rows;
-
-		friend void lambda_dsoc_test_pre_( QtDataManager& );
 	};
+
+
 
 } //# NAMESPACE CASA - END
 

@@ -1340,6 +1340,28 @@ cb.close()
 </example>
 </method>
 
+<method type="function" name="changeWeightConvention">
+   <shortdescription>Modify the WEIGHT column dividing between the number of
+   channels in order to be compliant with 4.2.2 WEIGHT convention</shortdescription>
+
+<returns type="bool"/>
+
+<description>
+
+Modify the WEIGHT column dividing between the number of 
+channels in order to be compliant with 4.2.2 WEIGHT convention
+
+</description>
+
+<example>
+
+cb.open('ngc5921.ms')
+cb.changeWeightConvention()
+cb.close()
+
+</example>
+</method>
+
 
 
 <method type="function" name="fluxscale">
@@ -1383,30 +1405,6 @@ cb.close()
      <value>-1</value>
      </param>
 
-     <param type="float" direction="in" name="gainthreshold">
-     <description>Threshold of gain amplitudes with respect to the median value to be used in 
-     flux scale calculation. Default: -1.0 (no threshold) </description>
-     <value>-1.0</value>
-     </param>
-
-     <param type="string" direction="in" name="antenna">
-     <description>antenna selection/de-selection in
-     flux scale calculation. Default: ""(include all antennas) </description>
-     <value></value>
-     </param>
-
-     <param type="string" direction="in" name="timerange">
-     <description>timerage sub-selection with antenna selection in
-     flux scale calculation. Default: ""(include all) </description>
-     <value></value>
-     </param>
-
-     <param type="string" direction="in" name="scan">
-     <description>scan sub-selection with antenna selection in
-     flux scale calculation. Default: ""(include all) </description>
-     <value></value>
-     </param>
-
      <param type="bool" direction="in" name="incremental">
      <description>create a incremental caltable</description>
      <value>false</value>
@@ -1417,10 +1415,6 @@ cb.close()
      <value>1</value>
      </param>
      
-     <param type="bool" direction="in" name="display">
-     <description>display statistics of the flux ratios</description>
-     <value>false</value>
-     </param>
 </input>
 
 <returns type="record">
@@ -1438,7 +1432,7 @@ of known flux density.  This is necessary when the flux densities
 of some of your calibrators were unknown (and thus were assumed
 to be 1 Jy) during G solving.
 
-The bootstrapping is achieved by comparing the median gain norm of the
+The bootstrapping is achieved by comparing the mean gain norm of the
 calibration solutions derived for the calibrators specified in {\stfaf
 reference} (one or more sources with known flux densities at the time
 of G solving) with that of the calibrators specified in {\stfaf
@@ -1480,21 +1474,10 @@ fields there), and specifying 2 for the 2nd spw is actually
 inconsequential (though required so that the specification of 4 for spw 3
 is properly interpretted).
 
-The  gain values used in the flux scaling determination skewed by 
-outliers. The parameters, {\tt gainthreshold} and {\tt antenna} can be used
-to limit the input gain solutions to be included in the flux scale determination.
-Use the {\tt gainthreshold} is a threshold in \% from the median values of the 
-gain solutions to be used. Use the {\tt antenna} to select or de-selesect (using the
-MSSelection syntax) antenna(s). Futher refinements on the selection based on 
-timerange and scan are possible.
- 
 The derived flux densities for the transfer fields will be reported in
-the logger, and returned to the Python dictionary specified in {\tt
+the logger, and returned to the glish variable specified in {\tt
 fluxd}.  This will be an 2D array of shape [number-of-spectral-windows
-X number-of-fields]. When mulitple spectral windows are involved the spectral
-index will also be reported by fitting the determined flux densities across
-the freuquencies. The order of a polynomcial to be fitted can be specified with 
-{\tt fitorder}.
+X number-of-fields].
 
 Note that elevation-dependent gain effects may render the basic
 assumption used here invalid, and so should be corrected for prior to

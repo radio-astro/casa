@@ -286,7 +286,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: -1 (all baselines, i.e. all antenna in case of auto data)
                 example: 0, 'DV01'
         stokes -- select data based on stokes or polarization type 
-                default: '' (use all polarizations)
+                default: '' (= Stokes I)
                 example: 'XX'
         gridfunction -- gridding function for imaging
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 

@@ -186,9 +186,9 @@ Int LCPolygon::truncateStart (Float v)
   Int res;
   Float vt = floor(v+0.1);
   if (near(vt, v))  {
-    res = static_cast<int> (v+0.1);
+    res = v+0.1;
   } else {
-    res = static_cast<int> (v+1);
+    res = v+1;
   }
   return std::max (res, 0);
 }
@@ -199,9 +199,9 @@ Int LCPolygon::truncateEnd (Float v, Int maxEnd)
   Int res;
   Float vt = floor(v+0.1);
   if (near(vt, v))  {
-    res = static_cast<int> (v+0.1);
+    res = v+0.1;
   } else {
-    res = static_cast<int> (v);
+    res = v;
   }
   return std::min (res, maxEnd);
 }
@@ -317,7 +317,7 @@ void LCPolygon::fillMask (Bool* mask, Int ny, Int nx,
     if (near (ptrY[i], ptrY[i+1])) {
       dir[i] = 0;                         // vertical line
       // Fill vertical line if on pixel.
-      Int y = static_cast<int> (ptrY[i]);
+      Int y = ptrY[i];
       if (y >= blcy  &&  y < ny+blcy  &&  near(Float(y), ptrY[i])) {
         Int xs, xe;
         if (ptrX[i] < ptrX[i+1]) {

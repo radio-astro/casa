@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/SkyComponent.h>
@@ -283,7 +283,7 @@ public:
   virtual Int support(const VisBuffer& vb, const CoordinateSystem& cs)=0;
 
   virtual void setThreshold(const Float t){threshold_p=t;};
-  virtual Float threshold(){return  threshold_p;};
+  virtual const Float threshold(){return threshold_p;};
 
 
 protected:

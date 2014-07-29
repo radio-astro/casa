@@ -76,7 +76,7 @@ namespace casa{
 					  Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					  Vector<Double>& off, Vector<Int>& convOrigin, 
 					  Vector<Int>& /*cfShape*/, Vector<Int>& loc, Vector<Int>& igrdpos,
-					   Double& /*sinDPA*/, Double& /*cosDPA*/,
+					  Double& /*sinDPA*/, Double& cosDPA,
 					  Bool& pointingOffset, Bool dopsf);
   template
   Complex AWVisResampler::accumulateOnGrid(Array<Complex>& grid, Complex* __restrict__& convFuncV, 
@@ -84,7 +84,7 @@ namespace casa{
 					  Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					  Vector<Double>& off, Vector<Int>& convOrigin, 
 					  Vector<Int>& /*cfShape*/, Vector<Int>& loc, Vector<Int>& igrdpos,
-					   Double& /*sinDPA*/, Double& /*cosDPA*/,
+					  Double& /*sinDPA*/, Double& cosDPA,
 					  Bool& pointingOffset, Bool dopsf);
   // template
   // void AWVisResampler::accumulateFromGrid(Complex& nvalue, const DComplex* __restrict__& grid, 
@@ -121,8 +121,8 @@ namespace casa{
 				  const Int* convOrigin,
   				  Complex& nvalue,
 				  Double& wVal,
-  				  Bool& /*finitePointingOffset*/,
-  				  Bool& /*doPSFOnly*/,
+  				  Bool& finitePointingOffset,
+  				  Bool& doPSFOnly,
   				  Complex* __restrict__ gridStore,
   				  Int* iloc,
   				  Complex& norm,
@@ -136,8 +136,8 @@ namespace casa{
 				  const Int* convOrigin,
   				  Complex& nvalue,
 				  Double& wVal,
-  				  Bool& /*finitePointingOffset*/,
-  				  Bool& /*doPSFOnly*/,
+  				  Bool& finitePointingOffset,
+  				  Bool& doPSFOnly,
   				  DComplex* __restrict__ gridStore,
   				  Int* iloc,
   				  Complex& norm,
@@ -158,8 +158,10 @@ namespace casa{
     // fiddle with this logic at your own risk (can easily lead to a
     // lot of grief. --Sanjay).
     //
-    timer_p.mark();
+    // if (wndx != 1)
+    //    cerr << "F, W, M: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << wVal << endl;
 
+    timer_p.mark();
     if (wVal > 0.0) 
       {
 	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])));
@@ -195,8 +197,8 @@ namespace casa{
 				  const Int* convOrigin,
   				  Complex& nvalue,
 				  Double& wVal,
-  				  Bool& /*finitePointingOffset*/,
-  				  Bool& /*doPSFOnly*/,
+  				  Bool& finitePointingOffset,
+  				  Bool& doPSFOnly,
   				  T* __restrict__ gridStore,
   				  Int* iloc,
   				  Complex& norm,
@@ -231,8 +233,8 @@ namespace casa{
 					   Complex& nvalue,Double& wVal, 
 					   Vector<Int>& scaledSupport, Vector<Float>& scaledSampling, 
 					   Vector<Double>& off, Vector<Int>& convOrigin, 
-					   Vector<Int>& /*cfShape*/, Vector<Int>& loc, Vector<Int>& igrdpos,
-					   Double& /*sinDPA*/, Double& /*cosDPA*/,
+					   Vector<Int>& cfShape, Vector<Int>& loc, Vector<Int>& igrdpos,
+					   Double& sinDPA, Double& cosDPA,
 					   Bool& finitePointingOffset,
 					   Bool doPSFOnly)
   {
@@ -338,8 +340,7 @@ namespace casa{
 					const Vector<Int>&cfShape,
 					const Vector<Int>& convOrigin,
 					const Double& /*cfRefFreq*/,
-                                        const Double& /*imRefFreq*/,
-					const Int& spwID, const Int& fieldId)
+                                        const Double& /*imRefFreq*/)
   {
     LogIO log_l(LogOrigin("AWVisResampler","cachePhaseGrad[R&D]"));
     //cout << "# " << cfRefFreq << " " << imRefFreq << endl;
@@ -350,9 +351,8 @@ namespace casa{
     	)
       {
 	log_l << "Computing phase gradiant for pointing offset " 
-	      << pointingOffset << cfShape << " " << cached_phaseGrad_p.shape() 
-	      << "(SPW: " << spwID << " Field: " << fieldId << ")"
-	      << LogIO::POST;
+	      << pointingOffset << cfShape 
+	      <<LogIO::POST;
 	Int nx=cfShape(0), ny=cfShape(1);
 	Double grad;
 	Complex phx,phy;
@@ -417,7 +417,6 @@ namespace casa{
     Complex norm;
     Vector<Int> cfShape;
     cfShape=vbRow2CFBMap_p(0)->getStorage()(0,0,0)->getStorage()->shape().asVector();
-
     Vector<Int> convOrigin = (cfShape)/2;
     Double sinDPA=0.0, cosDPA=1.0, cfRefFreq;
     //    Double cfScale=1.0;
@@ -475,17 +474,17 @@ namespace casa{
     iloc = 0;
 
     // timer.mark();
-    IPosition shp=vbs.flagCube_p.shape();
-    Cube<Bool> allPolNChanDone_l(shp(0),shp(1),1);
+   Cube<Bool> allPolNChanDone_l;
    if (accumCFs)
      {
+       allPolNChanDone_l.assign(vbs.flagCube_p);
        for (Int ipol=0;ipol<nDataPol;ipol++)
          {
            if (polMap_p(ipol) < 0)
              {
                for (Int ichan=0;ichan<nDataChan;ichan++)
-                 //for (Int irow=rbeg;irow<rend;irow++)
-                   allPolNChanDone_l(ipol,ichan,0)=True;
+                 for (Int irow=rbeg;irow<rend;irow++)
+                   allPolNChanDone_l(ipol,ichan,irow)=True;
              }
          }
 
@@ -582,7 +581,7 @@ namespace casa{
 				    {
 				      igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
 				      
-				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,0)=True;
+				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=True;
 				      
 				      // ConjPlane = cfMap_p[ipol];
 				      // PolnPlane = conjCFMap_p[ipol];
@@ -613,8 +612,7 @@ namespace casa{
 					  convOrigin=cfShape/2;
 					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
 					  if (finitePointingOffsets && !psfOnly)
-					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
-							     ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
+					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
 					  
 					  cacheAxisIncrements(cfShape, cfInc_p);
 					  
@@ -669,7 +667,7 @@ runTimeG7_p += timer_p.real();
     
     //    Vector<Int> convOrigin = (cfShape-1)/2;
     Vector<Int> convOrigin = (cfShape)/2;
-    Double sinDPA=0.0, cosDPA=1.0, cfRefFreq;//cfScale=1.0
+    Double sinDPA=0.0, cosDPA=1.0, cfScale=1.0, cfRefFreq;
     //    Int wndx = 0, fndx=0;
     
     rbeg=0;
@@ -759,7 +757,7 @@ runTimeG7_p += timer_p.real();
 	    //	    iloc[2]=max(0, min(nw, loc[2]));
 	    
 	    Bool isOnGrid;
-	    if ((isOnGrid=onGrid(nx, ny, nw, loc, support))) {
+	    if (isOnGrid=onGrid(nx, ny, nw, loc, support)) {
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 		
 		if(!flagCube(ipol,ichan,irow)) { 

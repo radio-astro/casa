@@ -41,7 +41,7 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSourceColumns.h>
 
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
@@ -50,19 +50,7 @@
 #include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFT.h>
-#include <synthesis/TransformMachines/MultiTermFTNew.h>
 #include <synthesis/TransformMachines/SetJyGridFT.h>
-
-namespace {
-
-  casa::VisModelDataI * createVisModelData (){
-    return new casa::VisModelData ();
-  }
-
-  bool initializeVisModelDataFactory = casa::VisModelDataI::setFactory (createVisModelData);
-
-}
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -76,12 +64,6 @@ VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
 
 
   }
-
-VisModelDataI *
-VisModelData::clone ()
-{
-    return new VisModelData (* this);
-}
 
 void VisModelData::listModel(const MeasurementSet& thems){
  
@@ -121,31 +103,9 @@ void VisModelData::listModel(const MeasurementSet& thems){
     
 }
 
-void VisModelData::deleteDiskImage(MeasurementSet& theMS, const String& theKey){
-  TableRecord theRec;
-  if(!VisModelData::getModelRecord(theKey, theRec, theMS))
-    return;
-  if(theRec.isDefined("numft")){
-    Int numft=0;
-    numft=theRec.asInt("numft");
-    for (Int k=0; k < numft; ++k){
-      String ftname=String("ft_")+String::toString(k);
-      const Record& ftrec=theRec.asRecord(ftname);
-      if(ftrec.asRecord("container").isDefined("diskimage")){
-	String diskim=ftrec.asRecord("container").asString("diskimage");
-	if(Table::canDeleteTable(diskim))
-	  Table::deleteTable(diskim);
-      }
-
-    }
-  }
-
-
-}
 void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey){
 
 
-  deleteDiskImage(theMS, theKey);
   if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
     if(theMS.source().keywordSet().isDefined(theKey)){
       Int rowid=theMS.source().keywordSet().asInt(theKey);
@@ -203,18 +163,9 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
   }
-  ////Cleaning out orphaned image disk models
-  String srctable=thems.source().tableName();
-  Vector<String> possibleFT(2); 
-  possibleFT(0)=srctable+"/FT_MODEL*";
-  possibleFT(1)=theParts[0]+"/FT_MODEL*";
   
-  Vector<String> ftmods=Directory::shellExpand(possibleFT);
-  for (uInt kk=0; kk < ftmods.nelements(); ++kk){
-    if(Table::canDeleteTable(ftmods[kk])){
-      Table::deleteTable(ftmods[kk]);
-    }
-  }
+
+
 
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
@@ -608,17 +559,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       if(!fCol.sourceId().isNull()){
 	Int sid=fCol.sourceId().get(fieldIds[0]);
 	Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
-	if(rows.nelements() > 0) 
-	  row=rows[0];
-	else{
-	  LogIO logio;
-	  logio << "Invalid Source_id "+String::toString(sid)+" found in FIELD table\n" 
-		<<"Model is being written at Source ID 0 position which will be erased\n" 
-                << "Fix the FIELD table before proceeding " 
-		<<  LogIO::WARN << LogIO::POST;
-    
-	}
-	  
+	if(rows.nelements() > 0) row=rows[0];
       }
       putRecordByKey(theMS, elkey, theRec, row);
       for (uInt k=0; k < fieldIds.nelements();  ++k){
@@ -693,9 +634,6 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     //  cerr << "keys " << k << "  is  " << newTab.rwKeywordSet().name(k) << " type " << newTab.rwKeywordSet().dataType(k) << endl;
     //}
     ////////////////////////
-    //if image for a given key is on disk and not incrementing ...lets remove it
-    if(!incremental) 
-      deleteDiskImage(newTab, elkey);
     putModelRecord(validfieldids, outRec, newTab);  
     //if(newTab.rwKeywordSet().isDefined(elkey))
     //	newTab.rwKeywordSet().removeField(elkey);
@@ -861,15 +799,6 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       return new MosaicFT(ftrec);
     if(name=="SetJyGridFT")
       return new SetJyGridFT(ftrec);
-    if(name=="MultiTermFTNew")
-      return new MultiTermFTNew(ftrec);
-    //When the following have constructors from Record they should be uncommented
-    //   if(name=="AWProjectFT")
-    //  return new AWProjectFT(ftrec);
-    //if(name=="AWProjectWBFT")
-    //  return new  AWProjectWBFT(ftrec);
-    //if(name=="MultiTermAWProjectWBFT")
-    //  return new MultiTermAWProjectWBFT(ftrec);
     return NULL;
   }
 

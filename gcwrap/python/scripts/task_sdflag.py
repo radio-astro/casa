@@ -17,6 +17,7 @@ def sdflag(infile, antenna, mode, unflag, field, spw, timerange, scan, pol, beam
 class sdflag_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdflag_worker,self).__init__(**kwargs)
+        self.dosave = True
 
         # initialize plotter
         self.__init_plotter()
@@ -83,6 +84,11 @@ class sdflag_worker(sdutil.sdtask_template):
             self.scan = sorg.copy()
         else:
             self.scan = sorg
+
+        if self.is_disk_storage \
+           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)):
+            # no need to save explicitly if disk storage and infile==outfile
+            self.dosave = False
 
         # data selection
         self.scan.set_selection(self.get_selector())
@@ -217,7 +223,8 @@ class sdflag_worker(sdutil.sdtask_template):
 
     def save(self):
         self.scan.set_selection(None)
-        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+        if self.dosave:
+            sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
     def prior_plot(self):
         nr = self.scan.nrow()

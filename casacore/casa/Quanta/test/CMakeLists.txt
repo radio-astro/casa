@@ -1,7 +1,6 @@
 set (tests
 tQuantum
 tQuantumHolder
-tQVector
 tUnit
 )
 

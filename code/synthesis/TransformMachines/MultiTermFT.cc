@@ -25,8 +25,8 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -55,7 +55,6 @@
 #include <casa/sstream.h>
 
 #include <synthesis/TransformMachines/MultiTermFT.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 
 // This is the list of FTMachine types supported by MultiTermFT
 #include <synthesis/TransformMachines/GridFT.h>
@@ -347,7 +346,7 @@ void MultiTermFT::initMaps(const VisBuffer& vb){
   //---------------------------------------------------------------------------------------------------
   //------------------------ To / From Records ---------------------------------------------------------
   //---------------------------------------------------------------------------------------------------
-Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
+  Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for term " << thisterm_p << endl;
     Bool retval = True;
@@ -357,15 +356,10 @@ Bool MultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImag
       return False;
 
     Record subFTContainer;
-    String elimage="";
-    if(diskimage != ""){
-      elimage=diskimage+String("_")+ String::toString(rand());
-      while(Table::isReadable(elimage))
-	    elimage=diskimage+String("_")+ String::toString(rand());
-    }
-    subftm_p->toRecord(error, subFTContainer,withImage, elimage);
+    subftm_p->toRecord(error, subFTContainer,withImage);
     
     outRec.defineRecord("subftm",subFTContainer);
+    
     outRec.define("subftname", subFTMname_p);
     outRec.define("nterms",nterms_p);
     outRec.define("thisterm",thisterm_p);

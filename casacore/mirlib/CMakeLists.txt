@@ -17,9 +17,6 @@ xyio.c
 xyzio.c
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_mirlib PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_mirlib casa_casa)
 
 install (

@@ -252,24 +252,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   const TableExprNode *MSTimeParse::selectTimeRange(const MEpoch& lowboundTime,
 						    const MEpoch& upboundTime,
-						    bool edgeInclusive,
-						    Float edgeWidth)
+						    bool)
   {
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
-    Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure/2.0 : edgeWidth;
+
+    //    ROMSMainColumns mainColumns_p(*ms_p);
+
+    // TableExprRange range(mainColumns_p.time(), lowerBound, upperBound);
+    // TableExprNode tens(range);
+    // Block<TableExprRange> brange;
+    // TableExprNodeColumn tenc(*ms(), "TIME");
+    // TableExprNodeRep::createRange(brange, &tenc, lowerBound, upperBound);
+    // TableExprNodeSet tens(brange);
+    // TableExprNode condition = (ms()->col(colName).in(brange[0]));
 
     if (lowerBound > upperBound)
       throw(MSSelectionTimeError("lower bound > upper bound"));
 
-    TableExprNode condition;
-    if (!edgeInclusive)
-      condition = (columnAsTEN_p >= lowerBound &&
-		   (columnAsTEN_p <= upperBound));
-    else
-      condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < edgeWidth_l)) &&
-		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < edgeWidth_l)));
+    // ostringstream exprString;
+    // exprString << colName << " >= " << lowerBound << " && " << colName << " <= " << upperBound;
+    // TableExprNode condition = RecordGram::parse(*ms(), exprString);
 
+    // TableExprNode condition = (ms()->col(colName) >= lowerBound &&
+    //  			       (ms()->col(colName) <= upperBound));
+    TableExprNode condition = (columnAsTEN_p >= lowerBound &&
+     			       (columnAsTEN_p <= upperBound));
+
+    // TableExprNode condition = (columnAsTEN_p >= lowerBound &&
+    //  			       (columnAsTEN_p <= upperBound));
     accumulateTimeList(lowerBound, upperBound);
 
     return addCondition(condition);

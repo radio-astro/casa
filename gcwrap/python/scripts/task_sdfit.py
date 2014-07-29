@@ -125,12 +125,6 @@ class sdfit_worker(sdutil.sdtask_template):
     
         for irow in range(scantab.nrow()):
             casalog.post( "start row %d" % (irow) )
-            # check for FLAGROW
-            if scantab._getflagrow(irow):
-                casalog.post( "Row %d is flagged. skip fitting " % irow)
-                self.fitparams.append([[0,0,0]])
-                self.result['nfit']+=[-1]
-                continue
             numlines = self.nlines[irow] if isinstance(self.nlines,list) \
                        else self.nlines
 
@@ -328,20 +322,15 @@ class sdfit_worker(sdutil.sdtask_template):
         # Now find the lines for each row in scantable
         self.nlines=[]
         for irow in range(scantab.nrow()):
+            self.nlines.append(fl.find_lines(mask=self.defaultmask,nRow=irow,edge=self.edge))
+            # Get ranges    
             ptout="SCAN[%d] IF[%d] POL[%d]: " %(scantab.getscan(irow), scantab.getif(irow), scantab.getpol(irow))
-            if scantab._getflagrow(irow):
-                self.nlines.append(0)
-                ll = ()
-                casalog.post( ptout+"Skipping flagged row %d" % irow)
+            if ( self.nlines[irow] > 0 ):
+                ll = fl.get_ranges()
+                casalog.post( ptout+"Found %d lines at %s" % (self.nlines[irow], str(ll) ) )
             else:
-                self.nlines.append(fl.find_lines(mask=self.defaultmask,nRow=irow,edge=self.edge))
-                # Get ranges
-                if ( self.nlines[irow] > 0 ):
-                    ll = fl.get_ranges()
-                    casalog.post( ptout+"Found %d lines at %s" % (self.nlines[irow], str(ll) ) )
-                else:
-                    ll = ()
-                    casalog.post( ptout+"Nothing found.", priority = 'WARN' )
+                ll = ()
+                casalog.post( ptout+"Nothing found.", priority = 'WARN' )
 
             # This is a linear list of pairs of values, so turn these into a list of lists
             self.linelist.append(to_list_of_list(ll))

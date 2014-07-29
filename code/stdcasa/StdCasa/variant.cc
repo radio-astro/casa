@@ -524,10 +524,10 @@ std::vector<long long> variant::toLongVec() const {
    switch(typev) {
       case LONG:
 	    return std::vector<long long>(1, val.l );
+	 break;
       case LONGVEC :
 	    return *val.lv;
-      default:
-	    return std::vector<long long>( );
+	 break;
    }
 }
 
@@ -1579,8 +1579,8 @@ int variant::vec_size( ) const {
 	case DOUBLEVEC: return (*val.dv).size();
 	case COMPLEXVEC: return (*val.cv).size();
 	case STRINGVEC: return (*val.sv).size();
-	default: return 1;
     }
+    return 1;
 }
 
 void variant::resize( int size ) {
@@ -1594,9 +1594,6 @@ void variant::resize( int size ) {
 		break;
 	    case INT:
 		asIntVec(size);
-		break;
-	    case LONG:
-		asLongVec(size);
 		break;
 	    case DOUBLE:
 		asDoubleVec(size);
@@ -1613,9 +1610,6 @@ void variant::resize( int size ) {
 	    case INTVEC:
 		(*val.iv).resize(size);
 		break;
-	    case LONGVEC:
-		(*val.lv).resize(size);
-		break;
 	    case DOUBLEVEC:
 		(*val.dv).resize(size);
 		break;
@@ -1625,14 +1619,11 @@ void variant::resize( int size ) {
 	    case STRINGVEC:
 		(*val.sv).resize(size);
 		break;
-	    case RECORD:
-		break;
 	}
     } else {
 	switch (typev) {
 	    case BOOL:
 	    case INT:
-	    case LONG:
 	    case DOUBLE:
 	    case COMPLEX:
 	    case STRING:
@@ -1643,9 +1634,6 @@ void variant::resize( int size ) {
 	    case INTVEC:
 		(*val.iv).resize(size);
 		break;
-	    case LONGVEC:
-		(*val.lv).resize(size);
-		break;
 	    case DOUBLEVEC:
 		(*val.dv).resize(size);
 		break;
@@ -1654,8 +1642,6 @@ void variant::resize( int size ) {
 		break;
 	    case STRINGVEC:
 		(*val.sv).resize(size);
-		break;
-	    case RECORD:
 		break;
 	}
     }
@@ -1675,30 +1661,6 @@ void variant::dump() const {
 	    case LONGVEC :
 		    std::cerr << (*val.lv)[0] << std::endl;
 		    break;
-	    default:
-		    break;
-	}
-}
-
-bool variant::empty() const {
-	switch (typev) {
-	case BOOL:
-	case INT:
-	case LONG:
-	case DOUBLE:
-	case COMPLEX:
-		return false;
-	case STRING:
-		return val.s->empty();
-	case BOOLVEC:
-	case INTVEC:
-	case LONGVEC:
-	case DOUBLEVEC:
-	case COMPLEXVEC:
-	case STRINGVEC:
-		return size() == 0;
-	case RECORD:
-		return val.recordv->empty();
 	}
 }
 

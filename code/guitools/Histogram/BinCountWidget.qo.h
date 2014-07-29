@@ -44,12 +44,8 @@ public:
 signals:
 	void binCountChanged( int binCount );
 
-private slots:
-	void binValueChanged( int value );
-	void binCountTextChanged( const QString& binCount );
-
 private:
-	//Added because custom widgets as menu items were appearing transparent
+	//Added to fix the problem that custom menu items are transparent
 	//on the MAC.
 	void setDefaultBackground();
     Ui::BinCountWidgetClass ui;

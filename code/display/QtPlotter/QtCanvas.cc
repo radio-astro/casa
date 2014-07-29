@@ -256,10 +256,9 @@ namespace casa {
 				xRangeEnd = qMin( newXEnd, xRangeEnd );
 				update();
 				emit xRangeChanged(xRangeStart,xRangeEnd);
-
-
 			}
 		}
+		//emit xRangeChanged(1.0,0.0);
 	}
 
 	int QtCanvas::getLineCount() {

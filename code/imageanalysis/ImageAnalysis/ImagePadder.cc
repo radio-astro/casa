@@ -37,13 +37,13 @@ namespace casa {
 const String ImagePadder::_class = "ImagePadder";
 
 ImagePadder::ImagePadder(
-		const SPCIIF image,
+		const ImageTask::shCImFloat image,
 	const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
 	const Bool overwrite
-) : ImageTask<Float>(
+) : ImageTask(
 		image, "", regionRec, box, chanInp, stokes,
 		maskInp, outname, overwrite
 	), _nPixels(0), _value(0), _good(False) {
@@ -61,7 +61,7 @@ void ImagePadder::setPaddingPixels(
 	_good = good;
 }
 
-SPIIF ImagePadder::pad(const Bool wantReturn) const {
+ImageInterface<Float>* ImagePadder::pad(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
@@ -92,15 +92,13 @@ SPIIF ImagePadder::pad(const Bool wantReturn) const {
 	ArrayLattice<Float> values(valArray);
 	values.putSlice(subImage.get(), blc);
 	const Array<Float>& vals = values.get();
-	SPIIF outImage(
-        _prepareOutputImage(
-		    subImage, &vals, &mask, &outShape, &newCoords
-	    )
-    );
-	if (! wantReturn) {
-		outImage.reset();
+	std::tr1::shared_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(
+		subImage, &vals, &mask, &outShape, &newCoords
+	);
+	if (wantReturn) {
+		return outImage->cloneII();
 	}
-	return outImage;
+	return 0;
 }
 
 String ImagePadder::getClass() const {

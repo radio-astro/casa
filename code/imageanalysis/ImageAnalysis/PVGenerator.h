@@ -36,7 +36,7 @@ class MDirection;
 
 namespace casa {
 
-class PVGenerator : public ImageTask<Float> {
+class PVGenerator : public ImageTask {
 	// <summary>
 	// Top level interface for generating position-velocity images
 	// </summary>
@@ -76,7 +76,7 @@ public:
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
-		const SPCIIF image,
+			const ImageTask::shCImFloat image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
@@ -85,42 +85,15 @@ public:
 	// destructor
 	~PVGenerator();
 
-	// perform the collapse. Returns a pointer to the
+	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
 	// collapsed image.
-	SPIIF generate() const;
+	std::tr1::shared_ptr<ImageInterface<Float> > generate(const Bool wantReturn) const;
 
-	// set the end points of the slice in direction space. Input values represent pixel
-	// coordinates in the input image.
+	// set the endpoints of the slice in direction space. Input values represent pixel
+	// locations.
 	void setEndpoints(
-		const std::pair<Double, Double>& start,
-		const std::pair<Double, Double>& end
-	);
-
-	// set end points given center in pixels, length of segment in pixels, and position angle
-	// taken in the normal astronomical sense, measured from north through east.
-	void setEndpoints(
-		const std::pair<Double, Double>& center, Double length,
-		const Quantity& pa
-	);
-
-	void setEndpoints(
-		const std::pair<Double, Double>& center, const Quantity& length,
-		const Quantity& pa
-	);
-
-	void setEndpoints(
-		const MDirection& center, const Quantity& length,
-		const Quantity& pa
-	);
-
-	// <src>length in pixels</src>
-	void setEndpoints(
-		const MDirection& center, Double length,
-		const Quantity& pa
-	);
-
-	void setEndpoints(
-		const MDirection& start, const MDirection& end
+		const Double startx, const Double starty,
+		const Double endx, const Double endy
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging
@@ -129,15 +102,12 @@ public:
 	// pixel lying on the slice.
 	// Note this average is done after the image has been rotated.
 	void setWidth(uInt width);
-	// This will set the width by rounding <src>q</src> up so that the width is an odd number of pixels.
-	void setWidth(const Quantity& q);
 
 	String getClass() const;
 
 	// set the unit to be used for the offset axis in the resulting image (from calling
 	// generate()). Must conform to angular units
 	void setOffsetUnit(const String& s);
-
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -151,9 +121,6 @@ protected:
 		return v;
  	}
 
-    virtual Bool _mustHaveSquareDirectionPixels() const {return True;}
-
-
 private:
 	std::auto_ptr<vector<Double> > _start, _end;
 	uInt _width;
@@ -166,9 +133,6 @@ private:
 
 	void _checkWidth(const Int64 xShape, const Int64 yShape) const;
 
-	Quantity _increment() const;
-
-	static String _pairToString(const std::pair<Double, Double>& p);
 
 };
 }

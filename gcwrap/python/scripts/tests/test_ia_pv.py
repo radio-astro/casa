@@ -75,8 +75,7 @@ import numpy
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
 
 def run_ia_pv(
-    imagename, outfile, start, end, width,
-    center=[], length=[], pa=[]
+    imagename, outfile, start, end, width
 ):
     myia = iatool()
     myia.open(imagename)
@@ -84,20 +83,17 @@ def run_ia_pv(
         myia.done()
         raise Exception
     res = myia.pv(
-        outfile=outfile, start=start, end=end, width=width,
-        center=center, length=length, pa=pa
+        outfile=outfile, start=start, end=end, width=width
     )
     myia.done()
     return res
 
 def run_impv(
-    imagename, outfile, start, end, width,
-    center=[], length=[], pa=[], mode="coords"
+    imagename, outfile, start, end, width
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, width=width, center=center, length=length,
-        mode=mode, pa=pa
+        end=end, width=width
     )
 
 
@@ -137,126 +133,51 @@ class ia_pv_test(unittest.TestCase):
         myia.done()
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
-        for code in [0, 1]:
+        for code in [run_ia_pv, run_impv]:
             # no width
-            for i in range(7):
-                if i == 0:
-                    start = [2, 5]
-                    end = [7, 5]
-                    mode = "coords"
-                elif i == 1:
-                    start = ["3.00000038arcmin", "0'"]
-                    end = ["2.15980000e+04'", "0arcmin"]
-                    mode = "coords"
-                if i == 2:
-                    start = ["0h0m12s", "0d0m0s" ]
-                    end = ["23:59:52", "0.0.0"]
-                    mode = "coords"
-                if i == 3:
-                    center = [4.5, 5]
-                    length = 5
-                    pa = "90deg"
-                    mode = "length"
-                if i == 4:
-                    center = ["0:0:02", "0.0.0"]
-                    length = 5
-                    pa = "90deg"
-                    mode = "length"
-                if i == 5:
-                    center = ["0:0:02", "0.0.0"]
-                    length = "5arcmin"
-                    pa = "90deg"
-                    mode = "length"
-                if i == 6:
-                    center = [4.5, 5]
-                    length = "5arcmin"
-                    pa = "90deg"
-                    mode = "length"
-                outfile = "test_pv_" + str(code) + str(i)
-                if i <= 2:
-                    if code == 0:
-                        xx = run_ia_pv(
-                            imagename=imagename, outfile=outfile, start=start,
-                            end=end, width=1
-                        )
-                    elif code == 1:
-                        xx = run_impv(
-                            imagename=imagename, outfile=outfile, start=start,
-                            end=end, width=1, mode=mode
-                        )
-                else:
-                    if code == 0:
-                        xx = run_ia_pv(
-                            imagename=imagename, outfile=outfile, start=[],
-                            end=[], width=1, center=center, length=length,
-                            pa=pa
-                        )
-                    elif code == 1:
-                        print "*** mode ", mode
-                        xx = run_impv(
-                            imagename=imagename, outfile=outfile, start=[],
-                            end=[], width=1, center=center, length=length,
-                            pa=pa, mode=mode
-                        )
-                if (type(xx) == type(ia)):
-                    xx.done()
-                self.assertTrue(len(tb.showcache())== 0)
-                pv.open(outfile)
-                expec = [6, 10]
-                got = pv.shape()
-                self.assertTrue((got == expec).all())
-                expec = numpy.zeros(got)
-                for i in range(10):
-                    expec[:,i] = range(2,8)
-                got = pv.getchunk()
-                self.assertTrue((got == expec).all())
-                self.assertTrue(pv.getchunk(getmask=T).all())
-                got = pv.toworld([0,0,0])['numeric'][1]
-                self.assertTrue(abs(got - expeccoord) < 1e-6)
-                gotinc = pv.coordsys().increment()["numeric"]
-                # the position offset axis always has units of arcsec, the units
-                # in the input image were arcmin
-                self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
-                pv.done()
-            
-            
+            outfile = "test_pv_" + str(code)
+            xx = code(
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], width=1
+            )
+            if (type(xx) == type(ia)):
+                xx.done()
+            self.assertTrue(len(tb.showcache())== 0)
+            pv.open(outfile)
+            expec = [6, 10]
+            got = pv.shape()
+            self.assertTrue((got == expec).all())
+            expec = numpy.zeros(got)
+            for i in range(10):
+                expec[:,i] = range(2,8)
+            got = pv.getchunk()
+            self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
+            got = pv.toworld([0,0,0])['numeric'][1]
+            self.assertTrue(abs(got - expeccoord) < 1e-6)
+            gotinc = pv.coordsys().increment()["numeric"]
+            # the position offset axis always has units of arcsec, the units
+            # in the input image were arcmin
+            self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
             # width > 1
-            for i in range(5):
-                outfile = "test_pv_1_" + str(code) + str(i)
-                if i == 0:
-                    width = 3;
-                elif i == 1:
-                    width = "3arcmin"
-                elif i == 2:
-                    width = "1.1arcmin"
-                elif i == 3:
-                    width = qa.quantity("1.2arcmin")
-                elif i == 4:
-                    # width units different from axis units, CAS-5975
-                    width = qa.quantity("72000marcsec")
-                if code == 0:
-                    xx = run_ia_pv(
-                        imagename=imagename, outfile=outfile, start=[2, 5],
-                        end=[7, 5], width=width
-                    )
-                elif code == 1:
-                    xx = run_impv(
-                        imagename=imagename, outfile=outfile, start=[2, 5],
-                        end=[7, 5], width=width, mode="coords"
-                    )
-                if (type(xx) == type(ia)):
-                    xx.done()
-                pv.open(outfile)
-                expec = [6, 10]
-                got = pv.shape()
-                self.assertTrue((got == expec).all())
-                expec = numpy.zeros(got)
-                for i in range(10):
-                    expec[:,i] = range(3,9)
-                got = pv.getchunk()
-                self.assertTrue((got == expec).all())
-                self.assertTrue(pv.getchunk(getmask=T).all())
-                pv.done()
+            outfile = "test_pv_1_" + str(code)
+            xx = code(
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], width=3
+            )
+            if (type(xx) == type(ia)):
+                xx.done()
+            pv.open(outfile)
+            expec = [6, 10]
+            got = pv.shape()
+            self.assertTrue((got == expec).all())
+            expec = numpy.zeros(got)
+            for i in range(10):
+                expec[:,i] = range(3,9)
+            got = pv.getchunk()
+            self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
+            pv.done()
         
     def test_stretch(self):
         """ia.pv(): Test stretch parameter"""
@@ -392,33 +313,6 @@ class ia_pv_test(unittest.TestCase):
             )
         ) 
         
-    def test_pa(self):
-        """Test that when pa is given, the start of the slice is at pa and end is at pa-180deg"""
-        myia = self.ia
-        myia.open(datapath + "pv_patest_exp.im")
-        expec = myia.getchunk()
-        myia.done()
-        imagename = datapath + "pv_patest.im"
-        
-        for length in [19, "19arcmin"]:
-            for center in [
-                [9,9], ["00h00m4s", "-0d1m"], "00:00:04 -0d1m",
-                "GALACTIC +096.21.17.792 -060.12.37.929"
-            ]:
-                pa = "45deg"
-                if type(center)==str and center.startswith("G"):
-                    # pa = "68.46450771415163deg"
-                    pa = "68.464508deg"
-                outfile = "pv_patest_got" + str(length) + str(center) + ".im"
-                impv(
-                     imagename=imagename, outfile=outfile,
-                     center=center, length=length, pa=pa,
-                     mode="length"
-                )
-                myia.open(outfile)
-                got = myia.getchunk()
-                myia.done()
-                self.assertTrue(abs(got/expec - 1).max() < 1e-6)
-
+    
 def suite():
     return [ia_pv_test]

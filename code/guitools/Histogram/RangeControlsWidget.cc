@@ -80,11 +80,8 @@ void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 	}
 }
 
-void RangeControlsWidget::setImage(const std::tr1::shared_ptr<const ImageInterface<Float > > image ){
+void RangeControlsWidget::setImage( const ImageTask::shCImFloat image ){
 	this->image = image;
-	Unit unit = this->image->units();
-	QString unitStr( unit.getName().c_str());
-	ui.unitsLabel->setText( unitStr );
 }
 
 void RangeControlsWidget::percentageChanged( const QString& newPercentage ){
@@ -129,24 +126,14 @@ void RangeControlsWidget::clearRange(){
 }
 
 pair<double,double> RangeControlsWidget::getMinMaxValues() const {
-	double minValue = 0;
-	double maxValue = 0;
-	if ( ! ui.percentileCheckBox->isChecked() ){
-		QString minValueStr = ui.minLineEdit->text();
-		QString maxValueStr = ui.maxLineEdit->text();
-		minValue = minValueStr.toDouble();
-		maxValue = maxValueStr.toDouble();
-		if ( minValue > maxValue ){
-			double tmp = minValue;
-			minValue = maxValue;
-			maxValue = tmp;
-		}
-	}
-	else {
-		if ( percentCalculator != NULL ){
-			minValue = percentCalculator->getRangeMin();
-			maxValue = percentCalculator->getRangeMax();
-		}
+	QString minValueStr = ui.minLineEdit->text();
+	QString maxValueStr = ui.maxLineEdit->text();
+	double minValue = minValueStr.toDouble();
+	double maxValue = maxValueStr.toDouble();
+	if ( minValue > maxValue ){
+		double tmp = minValue;
+		minValue = maxValue;
+		maxValue = tmp;
 	}
 	pair<double,double> maxMinValues(minValue,maxValue);
 	return maxMinValues;
@@ -204,7 +191,7 @@ RangeControlsWidget::~RangeControlsWidget(){
 //                       Percentage Calculator
 //*************************************************************************
 
-PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
+PercentageCalculator::PercentageCalculator( float minValue, float maxValue, const ImageTask::shCImFloat image ){
 	this->minValue = minValue;
 	this->maxValue = maxValue;
 	this->image = image;

@@ -285,53 +285,6 @@ namespace asdm {
 	
 
 	
-  		
-		
-		x->skyCouplingExists = skyCouplingExists;
-		
-		
-			
-				
-		x->skyCoupling = skyCoupling;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->numChanExists = numChanExists;
-		
-		
-			
-				
-		x->numChan = numChan;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x->skyCouplingSpectrumExists = skyCouplingSpectrumExists;
-		
-		
-			
-		x->skyCouplingSpectrum.length(skyCouplingSpectrum.size());
-		for (unsigned int i = 0; i < skyCouplingSpectrum.size(); ++i) {
-			
-				
-			x->skyCouplingSpectrum[i] = skyCouplingSpectrum.at(i);
-	 			
-	 		
-	 	}
-			
-		
-	
-
-	
 	
 		
 	
@@ -560,53 +513,6 @@ namespace asdm {
 			
 			x.position[i] = position.at(i).toIDLLength();
 			
-	 	}
-			
-		
-	
-
-	
-  		
-		
-		x.skyCouplingExists = skyCouplingExists;
-		
-		
-			
-				
-		x.skyCoupling = skyCoupling;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x.numChanExists = numChanExists;
-		
-		
-			
-				
-		x.numChan = numChan;
- 				
- 			
-		
-	
-
-	
-  		
-		
-		x.skyCouplingSpectrumExists = skyCouplingSpectrumExists;
-		
-		
-			
-		x.skyCouplingSpectrum.length(skyCouplingSpectrum.size());
-		for (unsigned int i = 0; i < skyCouplingSpectrum.size(); ++i) {
-			
-				
-			x.skyCouplingSpectrum[i] = skyCouplingSpectrum.at(i);
-	 			
-	 		
 	 	}
 			
 		
@@ -852,56 +758,6 @@ namespace asdm {
 	
 
 	
-		
-		skyCouplingExists = x.skyCouplingExists;
-		if (x.skyCouplingExists) {
-		
-		
-			
-		setSkyCoupling(x.skyCoupling);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		numChanExists = x.numChanExists;
-		if (x.numChanExists) {
-		
-		
-			
-		setNumChan(x.numChan);
-  			
- 		
-		
-		}
-		
-	
-
-	
-		
-		skyCouplingSpectrumExists = x.skyCouplingSpectrumExists;
-		if (x.skyCouplingSpectrumExists) {
-		
-		
-			
-		skyCouplingSpectrum .clear();
-		for (unsigned int i = 0; i <x.skyCouplingSpectrum.length(); ++i) {
-			
-			skyCouplingSpectrum.push_back(x.skyCouplingSpectrum[i]);
-  			
-		}
-			
-  		
-		
-		}
-		
-	
-
-	
 	
 		
 	
@@ -1053,42 +909,6 @@ namespace asdm {
 		
 		
 		Parser::toXML(position, "position", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (skyCouplingExists) {
-		
-		
-		Parser::toXML(skyCoupling, "skyCoupling", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (numChanExists) {
-		
-		
-		Parser::toXML(numChan, "numChan", buf);
-		
-		
-		}
-		
-	
-
-  	
- 		
-		if (skyCouplingSpectrumExists) {
-		
-		
-		Parser::toXML(skyCouplingSpectrum, "skyCouplingSpectrum", buf);
 		
 		
 		}
@@ -1248,38 +1068,6 @@ namespace asdm {
 			
 								
 	  		setPosition(Parser::get1DLength("position","Feed",rowDoc));
-	  			
-	  		
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<skyCoupling>")) {
-			
-	  		setSkyCoupling(Parser::getFloat("skyCoupling","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<numChan>")) {
-			
-	  		setNumChan(Parser::getInteger("numChan","Feed",rowDoc));
-			
-		}
- 		
-	
-
-	
-  		
-        if (row.isStr("<skyCouplingSpectrum>")) {
-			
-								
-	  		setSkyCouplingSpectrum(Parser::get1DFloat("skyCouplingSpectrum","Feed",rowDoc));
 	  			
 	  		
 		}
@@ -1471,54 +1259,6 @@ namespace asdm {
 	
 		
 	Length::toBin(position, eoss);
-		
-	
-
-	}
-
-	eoss.writeBoolean(skyCouplingExists);
-	if (skyCouplingExists) {
-	
-	
-	
-		
-						
-			eoss.writeFloat(skyCoupling);
-				
-		
-	
-
-	}
-
-	eoss.writeBoolean(numChanExists);
-	if (numChanExists) {
-	
-	
-	
-		
-						
-			eoss.writeInt(numChan);
-				
-		
-	
-
-	}
-
-	eoss.writeBoolean(skyCouplingSpectrumExists);
-	if (skyCouplingSpectrumExists) {
-	
-	
-	
-		
-		
-			
-		eoss.writeInt((int) skyCouplingSpectrum.size());
-		for (unsigned int i = 0; i < skyCouplingSpectrum.size(); i++)
-				
-			eoss.writeFloat(skyCouplingSpectrum.at(i));
-				
-				
-						
 		
 	
 
@@ -1745,65 +1485,6 @@ void FeedRow::positionFromBin(EndianIStream& eis) {
 	}
 	
 }
-void FeedRow::skyCouplingFromBin(EndianIStream& eis) {
-		
-	skyCouplingExists = eis.readBoolean();
-	if (skyCouplingExists) {
-		
-	
-	
-		
-			
-		skyCoupling =  eis.readFloat();
-			
-		
-	
-
-	}
-	
-}
-void FeedRow::numChanFromBin(EndianIStream& eis) {
-		
-	numChanExists = eis.readBoolean();
-	if (numChanExists) {
-		
-	
-	
-		
-			
-		numChan =  eis.readInt();
-			
-		
-	
-
-	}
-	
-}
-void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
-		
-	skyCouplingSpectrumExists = eis.readBoolean();
-	if (skyCouplingSpectrumExists) {
-		
-	
-	
-		
-			
-	
-		skyCouplingSpectrum.clear();
-		
-		unsigned int skyCouplingSpectrumDim1 = eis.readInt();
-		for (unsigned int  i = 0 ; i < skyCouplingSpectrumDim1; i++)
-			
-			skyCouplingSpectrum.push_back(eis.readFloat());
-			
-	
-
-		
-	
-
-	}
-	
-}
 	
 	
 	FeedRow* FeedRow::fromBin(EndianIStream& eis, FeedTable& table, const vector<string>& attributesSeq) {
@@ -1944,33 +1625,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 		positionExists = true;
 		 
 		position = ASDMValuesParser::parse1D<Length>(s);
-		
-	}
-	
-	
-	// Convert a string into an float 
-	void FeedRow::skyCouplingFromText(const string & s) {
-		skyCouplingExists = true;
-		 
-		skyCoupling = ASDMValuesParser::parse<float>(s);
-		
-	}
-	
-	
-	// Convert a string into an int 
-	void FeedRow::numChanFromText(const string & s) {
-		numChanExists = true;
-		 
-		numChan = ASDMValuesParser::parse<int>(s);
-		
-	}
-	
-	
-	// Convert a string into an float 
-	void FeedRow::skyCouplingSpectrumFromText(const string & s) {
-		skyCouplingSpectrumExists = true;
-		 
-		skyCouplingSpectrum = ASDMValuesParser::parse1D<float>(s);
 		
 	}
 	
@@ -2393,147 +2047,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 	
 
 	
-	/**
-	 * The attribute skyCoupling is optional. Return true if this attribute exists.
-	 * @return true if and only if the skyCoupling attribute exists. 
-	 */
-	bool FeedRow::isSkyCouplingExists() const {
-		return skyCouplingExists;
-	}
-	
-
-	
- 	/**
- 	 * Get skyCoupling, which is optional.
- 	 * @return skyCoupling as float
- 	 * @throw IllegalAccessException If skyCoupling does not exist.
- 	 */
- 	float FeedRow::getSkyCoupling() const  {
-		if (!skyCouplingExists) {
-			throw IllegalAccessException("skyCoupling", "Feed");
-		}
-	
-  		return skyCoupling;
- 	}
-
- 	/**
- 	 * Set skyCoupling with the specified float.
- 	 * @param skyCoupling The float value to which skyCoupling is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setSkyCoupling (float skyCoupling) {
-	
- 		this->skyCoupling = skyCoupling;
-	
-		skyCouplingExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark skyCoupling, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearSkyCoupling () {
-		skyCouplingExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute numChan is optional. Return true if this attribute exists.
-	 * @return true if and only if the numChan attribute exists. 
-	 */
-	bool FeedRow::isNumChanExists() const {
-		return numChanExists;
-	}
-	
-
-	
- 	/**
- 	 * Get numChan, which is optional.
- 	 * @return numChan as int
- 	 * @throw IllegalAccessException If numChan does not exist.
- 	 */
- 	int FeedRow::getNumChan() const  {
-		if (!numChanExists) {
-			throw IllegalAccessException("numChan", "Feed");
-		}
-	
-  		return numChan;
- 	}
-
- 	/**
- 	 * Set numChan with the specified int.
- 	 * @param numChan The int value to which numChan is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setNumChan (int numChan) {
-	
- 		this->numChan = numChan;
-	
-		numChanExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark numChan, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearNumChan () {
-		numChanExists = false;
-	}
-	
-
-	
-	/**
-	 * The attribute skyCouplingSpectrum is optional. Return true if this attribute exists.
-	 * @return true if and only if the skyCouplingSpectrum attribute exists. 
-	 */
-	bool FeedRow::isSkyCouplingSpectrumExists() const {
-		return skyCouplingSpectrumExists;
-	}
-	
-
-	
- 	/**
- 	 * Get skyCouplingSpectrum, which is optional.
- 	 * @return skyCouplingSpectrum as vector<float >
- 	 * @throw IllegalAccessException If skyCouplingSpectrum does not exist.
- 	 */
- 	vector<float > FeedRow::getSkyCouplingSpectrum() const  {
-		if (!skyCouplingSpectrumExists) {
-			throw IllegalAccessException("skyCouplingSpectrum", "Feed");
-		}
-	
-  		return skyCouplingSpectrum;
- 	}
-
- 	/**
- 	 * Set skyCouplingSpectrum with the specified vector<float >.
- 	 * @param skyCouplingSpectrum The vector<float > value to which skyCouplingSpectrum is to be set.
- 	 
- 	
- 	 */
- 	void FeedRow::setSkyCouplingSpectrum (vector<float > skyCouplingSpectrum) {
-	
- 		this->skyCouplingSpectrum = skyCouplingSpectrum;
-	
-		skyCouplingSpectrumExists = true;
-	
- 	}
-	
-	
-	/**
-	 * Mark skyCouplingSpectrum, which is an optional field, as non-existent.
-	 */
-	void FeedRow::clearSkyCouplingSpectrum () {
-		skyCouplingSpectrumExists = false;
-	}
-	
-
-	
 	///////////////////////////////////////////////
 	// Extrinsic Table Attributes getters/setters//
 	///////////////////////////////////////////////
@@ -2799,18 +2312,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 	
 
 	
-		skyCouplingExists = false;
-	
-
-	
-		numChanExists = false;
-	
-
-	
-		skyCouplingSpectrumExists = false;
-	
-
-	
 	
 
 	
@@ -2820,12 +2321,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 	
 	
 	
-	
-
-	
-
-	
-
 	
 
 	
@@ -2866,9 +2361,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 	 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
 	 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
 	 fromBinMethods["position"] = &FeedRow::positionFromBin; 
-	 fromBinMethods["skyCoupling"] = &FeedRow::skyCouplingFromBin; 
-	 fromBinMethods["numChan"] = &FeedRow::numChanFromBin; 
-	 fromBinMethods["skyCouplingSpectrum"] = &FeedRow::skyCouplingSpectrumFromBin; 
 	
 	
 	
@@ -2930,18 +2422,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 				
 	fromTextMethods["position"] = &FeedRow::positionFromText;
 		 	
-	 
-				
-	fromTextMethods["skyCoupling"] = &FeedRow::skyCouplingFromText;
-		 	
-	 
-				
-	fromTextMethods["numChan"] = &FeedRow::numChanFromText;
-		 	
-	 
-				
-	fromTextMethods["skyCouplingSpectrum"] = &FeedRow::skyCouplingSpectrumFromText;
-		 	
 		
 	}
 	
@@ -2977,18 +2457,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 
 	
 		positionExists = false;
-	
-
-	
-		skyCouplingExists = false;
-	
-
-	
-		numChanExists = false;
-	
-
-	
-		skyCouplingSpectrumExists = false;
 	
 
 	
@@ -3051,27 +2519,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 		else
 			positionExists = false;
 		
-		if (row.skyCouplingExists) {
-			skyCoupling = row.skyCoupling;		
-			skyCouplingExists = true;
-		}
-		else
-			skyCouplingExists = false;
-		
-		if (row.numChanExists) {
-			numChan = row.numChan;		
-			numChanExists = true;
-		}
-		else
-			numChanExists = false;
-		
-		if (row.skyCouplingSpectrumExists) {
-			skyCouplingSpectrum = row.skyCouplingSpectrum;		
-			skyCouplingSpectrumExists = true;
-		}
-		else
-			skyCouplingSpectrumExists = false;
-		
 		}
 		
 		 fromBinMethods["antennaId"] = &FeedRow::antennaIdFromBin; 
@@ -3090,9 +2537,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 		 fromBinMethods["feedNum"] = &FeedRow::feedNumFromBin; 
 		 fromBinMethods["illumOffset"] = &FeedRow::illumOffsetFromBin; 
 		 fromBinMethods["position"] = &FeedRow::positionFromBin; 
-		 fromBinMethods["skyCoupling"] = &FeedRow::skyCouplingFromBin; 
-		 fromBinMethods["numChan"] = &FeedRow::numChanFromBin; 
-		 fromBinMethods["skyCouplingSpectrum"] = &FeedRow::skyCouplingSpectrumFromBin; 
 			
 	}
 
@@ -3261,9 +2705,6 @@ void FeedRow::skyCouplingSpectrumFromBin(EndianIStream& eis) {
 		result["feedNum"] = &FeedRow::feedNumFromBin;
 		result["illumOffset"] = &FeedRow::illumOffsetFromBin;
 		result["position"] = &FeedRow::positionFromBin;
-		result["skyCoupling"] = &FeedRow::skyCouplingFromBin;
-		result["numChan"] = &FeedRow::numChanFromBin;
-		result["skyCouplingSpectrum"] = &FeedRow::skyCouplingSpectrumFromBin;
 			
 		
 		return result;	

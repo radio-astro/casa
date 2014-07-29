@@ -243,14 +243,9 @@ def split_core(vis, outputvis, datacolumn, field, spw, width, antenna,
         myms.open(vis, nomodify=True)
     else:
         raise ValueError, 'Visibility data set not found - please verify the name'
-
     if os.path.exists(outputvis):
         myms.close()
         raise ValueError, "Output MS %s already exists - will not overwrite." % outputvis
-
-    if (os.path.exists(outputvis+".flagversions")):
-        myms.close()
-        raise ValueError, "The flagversions \"%s.flagversions\" for the output MS already exist. Please delete." % outputvis
 
     # No longer needed.  When did it get put in?  Note that the default
     # spw='*' in myms.split ends up as '' since the default type for a variant

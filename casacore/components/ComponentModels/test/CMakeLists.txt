@@ -13,12 +13,12 @@ tFluxStandard3
 tFluxStandard4
 tGaussianComponent
 tGaussianShape
+tGaussianBeam
 tLimbDarkenedDiskShape
 tPointComponent
 tPointShape
 tSkyCompRep
 tSpectralIndex
-tTabularSpectrum
 )
 
 foreach (test ${tests})

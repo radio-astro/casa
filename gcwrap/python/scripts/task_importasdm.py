@@ -5,6 +5,15 @@ import flaghelper as fh
 from casac import casac
 
 
+# Hack to address CAS-6411, CAS-6412, and CAS-6413.
+import platform
+def set_library_paths_before_system_call(command_line):
+    if platform.system() == "Darwin":
+        if os.getenv("DYLD_FRAMEWORK_PATH"):
+            command_line = "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:" + os.getenv("DYLD_FRAMEWORK_PATH") + " " + command_line
+    return os.system(command_line)
+
+
 def importasdm(
     asdm=None,
     vis=None,
@@ -199,14 +208,16 @@ def importasdm(
                     execute_string += ' -logfile ' + casalog.logfile()
                 casalog.post('execute_string is')
                 casalog.post('   ' + execute_string)
-                ret = os.system(execute_string)
+                # ret = os.system(execute_string)
+                # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+                ret = set_library_paths_before_system_call(execute_string)
                 if ret != 0 and not showversion:
                     casalog.post(theexecutable
                                  + ' terminated with exit code '
                                  + str(ret), 'SEVERE')
                                         # raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
                     raise Exception, \
-                        'ASDM conversion error, please check if it is a valid ASDM.'
+                        'ASDM conversion error, please check if it is a valid ASDM.\nIf the ASDM is valid, the import failure may be related to problems with the libxml2 library.\nPlease consult the \"Known Issues\" page http://casa.nrao.edu/release_ki.shtml .'
             else:
                 casalog.post('You have to build ASAP to be able to create single-dish data.'
                              , 'SEVERE')
@@ -263,9 +274,9 @@ def importasdm(
             if singledish:
                 viso = vis.rstrip('/') + '.importasdm.tmp.ms'
         else:
-            viso = asdm.rstrip("/") + '.ms'
-            visoc = asdm.rstrip("/") + '-wvr-corrected.ms'
-            vis = asdm.rstrip("/")
+            viso = asdm + '.ms'
+            visoc = asdm + '-wvr-corrected.ms'
+            vis = asdm
             if singledish:
                 viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                 vis = asdm.rstrip('/') + '.asap'
@@ -330,14 +341,16 @@ def importasdm(
                      + ' standalone invoked as:')
         # print execute_string
         casalog.post(execute_string)
-        exitcode = os.system(execute_string)
+        # exitcode = os.system(execute_string)
+        # Hack to address CAS-6411, CAS-6412, and CAS-6413.
+        exitcode = set_library_paths_before_system_call(execute_string)
         if exitcode != 0:
             if not showversion:
                 casalog.post(theexecutable
                              + ' terminated with exit code '
                              + str(exitcode), 'SEVERE')
                 raise Exception, \
-                    'ASDM conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+                    'ASDM conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.\nIf the ASDM is valid, the import failure may be related to problems with the libxml2 library.\nPlease consult the \"Known Issues\" page http://casa.nrao.edu/release_ki.shtml .'
 
         if showversion:
             return

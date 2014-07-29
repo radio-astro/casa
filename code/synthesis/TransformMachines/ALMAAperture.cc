@@ -140,12 +140,6 @@ namespace casa{
     return bandID;
   }
   
-  void ALMAAperture::makeFullJones(ImageInterface<Complex>& pbImage,
-				   const VisBuffer& vb,
-				   Bool doSquint, Int& bandID, Double freqVal)
-  {
-    throw(AipsError("ALMAAperture::makeJones() not yet implemented"));
-  }
   
   void ALMAAperture::applySky(ImageInterface<Complex>& outImage,  // the image (cube if there is more than one pol)
 			                                           // upon return: FTed convolution pair of AIFs given by the cfKey  

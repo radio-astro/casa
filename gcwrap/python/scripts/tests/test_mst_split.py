@@ -1205,12 +1205,8 @@ class split_test_sw_and_fc(SplitChecker):
 #                             scan='', array='', uvrange='',
 #                             correlation='', async=False)
             default(mstransform)
-            if int(spwwidth[1]) == 1:
-                chanbool = False
-            else:
-                chanbool = True
             splitran = mstransform(self.inpms, outms, datacolumn='data',
-                             spw=spwwidth[0], chanaverage=chanbool,
+                             spw=spwwidth[0], chanaverage=True,
                              chanbin=int(spwwidth[1]),
                              antenna='VA03,VA05&',               # Case sensitive
                              createmms=False)

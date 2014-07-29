@@ -1433,9 +1433,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			uInt nnew = nelements(), nold = itsAxisLabellers.nelements();
 			for(uInt i=nnew; i<nold; i++) {
-				WCCSNLAxisLabeller* axisLabeller = (WCCSNLAxisLabeller*)itsAxisLabellers[i];
-				delete axisLabeller;
-				itsAxisLabellers[i] = NULL;
+				delete ((WCCSNLAxisLabeller *)itsAxisLabellers[i]);
 			}
 
 // forceSmaller=True necessary here; otherwise, after
@@ -1446,6 +1444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Copy the DisplayCoordinateSystem for the Axis Labeller.
 // We copy the working version which has been reordered to
 // the display axes order  and who knows what else done to it !
+
 			DisplayCoordinateSystem axisLabelCS = itsCoordSys;
 
 			// Remove all hidden pixel axes and assign replacement value

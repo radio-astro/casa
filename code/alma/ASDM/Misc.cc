@@ -173,11 +173,7 @@ namespace asdm {
 
   void ASDMUtils::DotXMLFilter::operator()(directory_entry& p) {
     if (!extension(p).compare(".xml")) {
-#if (BOOST_FILESYSTEM_VERSION == 3)
-      filenames->push_back(p.path().string());
-#else
       filenames->push_back(p.string());
-#endif
     }
   }
  

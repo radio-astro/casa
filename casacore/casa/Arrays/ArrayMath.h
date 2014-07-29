@@ -612,7 +612,6 @@ template<class T>  void indgen(Array<T> &a);
 // most rapidly.
 template<class T>  void indgen(Array<T> &a, T start);
 
-template<class T> Vector<T> indgen(uInt length);
 
 // Sum of every element of the array.
 template<class T> T sum(const Array<T> &a);

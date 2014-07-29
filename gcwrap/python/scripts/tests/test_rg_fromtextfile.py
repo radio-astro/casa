@@ -84,8 +84,6 @@ cas_3259r = "CAS-3259.rgn"
 cas_3260t = "CAS-3260.txt"
 cas_3260r = "CAS-3260.rgn"
 
-datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
-
 def deep_equality(a, b):
     if (type(a) != type(b)):
         print "types don't match, a is a " + str(type(a)) + " b is a " + str(type(b))
@@ -133,6 +131,7 @@ class rg_fromtextfile_test(unittest.TestCase):
     ]
     
     def setUp(self):
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
         for im in self._fixtures:
             shutil.copy(datapath + im, im)
         self.ia = iatool()
@@ -266,22 +265,6 @@ class rg_fromtextfile_test(unittest.TestCase):
             csys=self.ia.coordsys().torecord(),shape=self.ia.shape()
         )
         self.assertTrue(self.ia.statistics(region=reg)['npts'] == 901)
-        
-    def test_ellipse(self):
-        """Test ellipse for image in GALACTIC and file in J2000"""
-        self.ia.open(datapath + "gal.im")
-        reg = rg.fromtextfile(
-            datapath + "testEllipse90deg.crtf",
-            csys = self.ia.coordsys().torecord(),
-            shape=self.ia.shape()
-        )
-        subi = self.ia.subimage("", region=reg)
-        self.ia.open(datapath + "galwj2kellipse.im")
-        expec = self.ia.getchunk(getmask=True)
-        self.ia.done()
-        got = subi.getchunk(getmask=True)
-        subi.done()
-        self.assertTrue((got == expec).all())
-        
+
 def suite():
     return [rg_fromtextfile_test]

@@ -9,6 +9,7 @@ from asap.flagplotter import flagplotter
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator("sdflag")
 def sdflag2old(infile, antenna, specunit, restfreq, frame, doppler, mode, unflag, scans, field, timerange, ifs, pols, maskflag, clipminmax, clipoutside, showflagged, rows, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
         worker.initialize()
@@ -18,6 +19,7 @@ def sdflag2old(infile, antenna, specunit, restfreq, frame, doppler, mode, unflag
 class sdflag_worker(sdutil.sdtask_template):
     def __init__(self, **kwargs):
         super(sdflag_worker,self).__init__(**kwargs)
+        self.dosave = True
 
         # initialize plotter
         self.__init_plotter()
@@ -84,6 +86,11 @@ class sdflag_worker(sdutil.sdtask_template):
             self.scan = sorg.copy()
         else:
             self.scan = sorg
+
+        if self.is_disk_storage \
+           and (sdutil.get_abspath(self.project) == sdutil.get_abspath(self.infile)):
+            # no need to save explicitly if disk storage and infile==outfile
+            self.dosave = False
 
         # data selection
         #self.scan.set_selection(self.get_selector())
@@ -186,7 +193,8 @@ class sdflag_worker(sdutil.sdtask_template):
 
     def save(self):
         self.scan.set_selection(None)
-        sdutil.save(self.scan, self.project, self.outform, self.overwrite)
+        if self.dosave:
+            sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
     def prior_plot(self):
         nr = self.scan.nrow()

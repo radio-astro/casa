@@ -31,359 +31,353 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // All FlagReports must have 'type' and 'name' defined.
 FlagReport::FlagReport(String type,String name, String title, String xlabel, 
-        String ylabel):Record(),logger_p()
+                                   String ylabel):Record(),logger_p()
 {
-    logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
+        logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
 
-    // Type of report. Options : none, list, plotraster, plotpoints
-    if( ! ( type == "list" || type == "none" || type == "plotraster"
-            || type == "plotpoints") )
-    {
-        logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
-        type="none";
-    }
+        // Type of report. Options : none, list, plotraster, plotpoints
+        if( ! ( type == "list" || type == "none" || type == "plotraster" 
+             || type == "plotpoints") )
+	{
+	       logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
+	       type="none";
+	}
 
-    define( RecordFieldId("type") , type );
+        define( RecordFieldId("type") , type );
 
-    if( type == "list" ) // List of reports
-    {
-        define( RecordFieldId("nreport") , (Int)0 );
-    }
-    else // One report
-    {
+        if( type == "list" ) // List of reports
+ 	{
+	      define( RecordFieldId("nreport") , (Int)0 );
+	}
+        else // One report
+	{
+	      define( RecordFieldId("name") , name );
+	}
+
+        // One report of type "plot"
+        if( type == "plotraster" ||  type == "plotpoints")
+	{
+	       define( RecordFieldId("title") , title );
+	       define( RecordFieldId("xlabel") , xlabel );
+	       define( RecordFieldId("ylabel") , ylabel );
+	       define( RecordFieldId("ndata") , (Int)0 );
+	}
+
+}
+
+  FlagReport::FlagReport(String type, String name, const Record &other)
+{
+
+        assign(other);
+	logger_p = casa::LogIO();
+
+        // Type of report. Options : none, summary
+        if( ! ( type == "summary" || type == "rflag" || type == "none" ) )
+	{
+	       logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
+	       type="none";
+	}
+
+        if( isDefined("type") )
+	  {
+	    logger_p << LogIO::WARN << "Overwriting field 'type' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
+	  }
+        define( RecordFieldId("type") , type );
+
+        if( isDefined("name") )
+	  {
+	    logger_p << LogIO::WARN << "Overwriting field 'name' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
+	  }
         define( RecordFieldId("name") , name );
-    }
-
-    // One report of type "plot"
-    if( type == "plotraster" ||  type == "plotpoints")
-    {
-        define( RecordFieldId("title") , title );
-        define( RecordFieldId("xlabel") , xlabel );
-        define( RecordFieldId("ylabel") , ylabel );
-        define( RecordFieldId("ndata") , (Int)0 );
-    }
 
 }
 
-FlagReport::FlagReport(String type, String name, const Record &other)
+  FlagReport::FlagReport(const Record &other)
 {
+        assign(other);
+	logger_p = casa::LogIO();
+	
+	if( ! isDefined( "type" ) )
+	  {
+	    // add a type='none' field, and send for validation checks.
+	    define( RecordFieldId("type") , "none" );
+	  }
 
-    assign(other);
-    logger_p = casa::LogIO();
-
-    // Type of report. Options : none, summary
-    if( ! ( type == "summary" || type == "rflag" || type == "none" ) )
-    {
-        logger_p << LogIO::WARN << "Invalid FlagReport type : " << type << ". Setting to 'none' " << LogIO::POST;
-        type="none";
-    }
-
-    if( isDefined("type") )
-    {
-        logger_p << LogIO::WARN << "Overwriting field 'type' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
-    }
-    define( RecordFieldId("type") , type );
-
-    if( isDefined("name") )
-    {
-        logger_p << LogIO::WARN << "Overwriting field 'name' of input record by that supplied in this FlagReport constructor : " << type << LogIO::POST;
-    }
-    define( RecordFieldId("name") , name );
+	if( ! isDefined( "name" ) )
+	  {
+	    // add a type='none' field, and send for validation checks.
+	    define( RecordFieldId("name") , "UnknownAgent" );
+	  }
 
 }
-
-FlagReport::FlagReport(const Record &other)
-{
-    assign(other);
-    logger_p = casa::LogIO();
-
-    if( ! isDefined( "type" ) )
-    {
-        // add a type='none' field, and send for validation checks.
-        define( RecordFieldId("type") , "none" );
-    }
-
-    if( ! isDefined( "name" ) )
-    {
-        // add a type='none' field, and send for validation checks.
-        define( RecordFieldId("name") , "UnknownAgent" );
-    }
-
-}
-
-FlagReport::~FlagReport()
-{
-}
-
-// Add a FlagReport of any type to a FlagReport of type "list".
-// If it is a single report, add as a subRecord
-// If it is a list of reports, append this list, and re-index.
-Bool
-FlagReport::addReport(FlagReport inpReport)
-{
+  
+  FlagReport::~FlagReport()
+  {
+  }
+  
+  // Add a FlagReport of any type to a FlagReport of type "list".
+  // If it is a single report, add as a subRecord
+  // If it is a list of reports, append this list, and re-index.
+  Bool
+  FlagReport::addReport(FlagReport inpReport)
+  {
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
+    
     // Verify and read type of current record
-    if( !verifyFields() )
-    {
-        return False;
-    }
-
+    if( !verifyFields() ) 
+      {
+	return False;
+      }
+    
     // Reports can be added only to flagreports of type 'list'
-    if( reportType() != String("list"))
-    {
-        logger_p << LogIO::WARN << "Current FlagReport must be of type 'list' " << LogIO::POST;
-        return False;
-    }
-
+    if( reportType() != String("list")) 
+      { 
+	logger_p << LogIO::WARN << "Current FlagReport must be of type 'list' " << LogIO::POST; 
+	return False; 
+      }
+    
     // Now that we know it's of type list, read nreport
     Int numReport = nReport();
-
+    
     // React to different types of input FlagReports
-    if( inpReport.reportType() != String("list")) // It's not a list.
-    {
-        if ( inpReport.reportType() != String("none") ) // It's not empty either. Add as a subRecord.
-        {
-            defineRecord( RecordFieldId(String("report")+String::toString(numReport)) , inpReport );
-            define( RecordFieldId("nreport") , (Int)(numReport+1) );
-        }
-    }
+    if( inpReport.reportType() != String("list")) // It's not a list. 
+      {
+	if ( inpReport.reportType() != String("none") ) // It's not empty either. Add as a subRecord.
+	  {
+	    defineRecord( RecordFieldId(String("report")+String::toString(numReport)) , inpReport );
+	    define( RecordFieldId("nreport") , (Int)(numReport+1) );
+	  }
+      }
     else // It's a list. Append the input list to the current one, re-indexing appropriately
-    {
-        Int nInpReps = inpReport.nReport();
-
-        for(Int rep=0;rep<nInpReps;rep++)
-        {
-            defineRecord( RecordFieldId(String("report")+String::toString(numReport+rep)) , inpReport.asRecord( (String("report")+String::toString(rep)) ) );
-        }
-        define( RecordFieldId("nreport") , (Int)(numReport + nInpReps) );
-    }
+      {
+	Int nInpReps = inpReport.nReport();
+	
+	for(Int rep=0;rep<nInpReps;rep++)
+	  {
+	    defineRecord( RecordFieldId(String("report")+String::toString(numReport+rep)) , inpReport.asRecord( (String("report")+String::toString(rep)) ) );
+	  }
+	define( RecordFieldId("nreport") , (Int)(numReport + nInpReps) );
+      }
     return True;
-}// end of addReport
-
-//----------------------------------------------------------------------------------------------
-Bool
-FlagReport::addData(Array<Float> data)
-{
+  }// end of addReport
+  
+  //----------------------------------------------------------------------------------------------
+  Bool
+  FlagReport::addData(Array<Float> data)
+  {
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
+    
     String thisType = reportType();
-    Bool retval = True;
-
+    
     if( thisType != "plotraster" )
-    {
-        logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotraster' " << LogIO::POST;
-        //		return False;
-        retval = False;
-    }
+      {
+	logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotraster' " << LogIO::POST; 
+	return False;
+      }
     else
-    {
-        Int numData = nData();
-        if(numData == 1)
-        {
-            logger_p << LogIO::WARN << "Cannot overlay raster plots." << LogIO::POST;
-            //			return False;
-            retval = False;
-
-        }
-        else
-        {
-            define( RecordFieldId(String("data")+String::toString(numData)) , data );
-            define( RecordFieldId("ndata") , (Int)(numData+1) );
-            retval = True;
-        }
-    }
-
-    return retval;
-}
-
-//----------------------------------------------------------------------------------------------
-Bool
-FlagReport::addData(String plottype, Vector<Float> xdata, Vector<Float> ydata, String errortype, Vector<Float> error, String label)
-{
+      {
+	Int numData = nData();
+	if(numData == 1)
+	  {
+	    logger_p << LogIO::WARN << "Cannot overlay raster plots." << LogIO::POST; 
+	    return False;
+	    
+	  }
+	else
+	  {
+	    define( RecordFieldId(String("data")+String::toString(numData)) , data );
+	    define( RecordFieldId("ndata") , (Int)(numData+1) );
+	  }
+      }
+  }
+  
+  //----------------------------------------------------------------------------------------------
+  Bool
+  FlagReport::addData(String plottype, Vector<Float> xdata, Vector<Float> ydata, String errortype, Vector<Float> error, String label)
+  {
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
+    
     String thisType = reportType();
     if( thisType != "plotpoints" )
-    {
-        logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotpoints' " << LogIO::POST;
-        return False;
-    }
+      {
+	logger_p << LogIO::WARN << "Current FlagReport must be of type 'plotpoints' " << LogIO::POST; 
+	return False;
+      }
     else
-    {
-        Int numData = nData();
-        define( RecordFieldId(String("plottype")+String::toString(numData)) , plottype );
-        define( RecordFieldId(String("xdata")+String::toString(numData)) , xdata );
-        define( RecordFieldId(String("ydata")+String::toString(numData)) , ydata );
-        define( RecordFieldId(String("label")+String::toString(numData)) , label );
-        define( RecordFieldId("ndata") , (Int)(numData+1) );
-
-        if( error.nelements() > 0 )
-        {
-            define( RecordFieldId(String("error")+String::toString(numData)) , error );
-            define( RecordFieldId(String("errortype")+String::toString(numData)) , errortype );
-        }
-
-    }
+      {
+	Int numData = nData();
+	define( RecordFieldId(String("plottype")+String::toString(numData)) , plottype );
+	define( RecordFieldId(String("xdata")+String::toString(numData)) , xdata );
+	define( RecordFieldId(String("ydata")+String::toString(numData)) , ydata );
+	define( RecordFieldId(String("label")+String::toString(numData)) , label );
+	define( RecordFieldId("ndata") , (Int)(numData+1) );
+	
+	if( error.nelements() > 0 )
+	  {
+	    define( RecordFieldId(String("error")+String::toString(numData)) , error );
+	    define( RecordFieldId(String("errortype")+String::toString(numData)) , errortype );
+	  }
+	
+      }
 
     return True;
-}
-
-//----------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------
-
-String
-FlagReport::reportType()
-{
+  }
+  
+  //----------------------------------------------------------------------------------------------
+  //----------------------------------------------------------------------------------------------
+  
+  String
+  FlagReport::reportType()
+  {
     String thisType;
-    if( ! isDefined("type") )
-    {
-        ostringstream xxx;
-        print(xxx);
-        cout << "Report with no type : " << xxx.str() << endl;
-    }
+    if( ! isDefined("type") ) 
+      {
+	ostringstream xxx;
+	print(xxx);
+	cout << "Report with no type : " << xxx.str() << endl;
+      }
     get( RecordFieldId("type") , thisType );
     return thisType;
-}
-
-Int
-FlagReport::nReport()
-{
+  }
+  
+  Int
+  FlagReport::nReport()
+  {
     if( reportType() != "list" )
-    {
-        return -1;
-    }
+      {
+	return -1;
+      }
     else
-    {
-        Int nrep;
-        get( RecordFieldId("nreport") , nrep );
-        return nrep;
-    }
-}
-
-Int
-FlagReport::nData()
-{
+      {
+	Int nrep;
+	get( RecordFieldId("nreport") , nrep );
+	return nrep;
+      }
+  }
+  
+  Int
+  FlagReport::nData()
+  {
     String thisType = reportType();
-
+    
     if( thisType != "plotraster" &&  thisType != "plotpoints" )
-    {
-        return -1;
-    }
+      {
+	return -1;
+      }
     else
-    {
-        Int ndat;
-        get( RecordFieldId("ndata") , ndat );
-        return ndat;
-    }
-}
-
-Bool
-FlagReport::accessReport(Int index, FlagReport &outReport)
-{
+      {
+	Int ndat;
+	get( RecordFieldId("ndata") , ndat );
+	return ndat;
+      }
+  }
+  
+  Bool
+  FlagReport::accessReport(Int index, FlagReport &outReport)
+  {
     // Verify and read type of current record
-    if( !verifyFields() )
-    {
-        return False;
-    }
-
+    if( !verifyFields() ) 
+      {
+	return False;
+      }
+    
     if( reportType() != "list" )
-    {
-        return False;
-    }
-
+      {
+	return False;
+      }
+    
     if( index < 0 || index >= nReport() )
-    {
-        return False;
-    }
-
+      {
+	return False;
+      }
+    
     String repName(String("report")+String::toString(index));
-    outReport = subRecord( RecordFieldId(repName) );
+    outReport = subRecord( RecordFieldId(repName) ); 
     return True;
-}
-
-
-//----------------------------------------------------------------------------------------------
-
-// Check that all required fields have valid values.
-Bool
-FlagReport::verifyFields()
-{
+  }
+  
+  
+  //----------------------------------------------------------------------------------------------
+  
+  // Check that all required fields have valid values.
+  Bool
+  FlagReport::verifyFields()
+  {
     logger_p.origin(LogOrigin("FlagReport",__FUNCTION__,WHERE));
-
-    if( ! (isDefined("type") ) )
-    {
-        logger_p << LogIO::WARN << "Invalid FlagReport state ! No type is defined." << LogIO::POST;
-        return False;
-    }
-
+    
+    if( ! (isDefined("type") ) ) 
+      { 
+	logger_p << LogIO::WARN << "Invalid FlagReport state ! No type is defined." << LogIO::POST; 
+	return False; 
+      }
+    
     // Read type of current record
     String thisType;
     get( RecordFieldId("type") , thisType );
-
+    
     // For a FlagReport of type "list", check that nreport exists and is correct.
     if(thisType == "list")
-    {
-        if( ! isDefined("nreport") )
-        {
-            logger_p << LogIO::WARN << "No 'nreport' defined" << LogIO::POST;
-            return False; // nreport field is not defined
-        }
-        else // check that nreport subRecords exist, and verify each one.
-        {
-            Int nReps;
-            get( RecordFieldId("nreport") , nReps );
-            for(Int rep=0; rep<nReps; rep++)
-            {
-                String repname = String("report")+String::toString(rep);
-                if( ! isDefined(repname) )
-                {
-                    logger_p << LogIO::WARN << "Report : " << repname << " is not defined" << LogIO::POST;
-                    return False; // Does not contain a subReport
-                }
-                else
-                {
-                    FlagReport subRep(subRecord( RecordFieldId(repname) ));
-                    if( ! subRep.verifyFields() )
-                    {
-                        logger_p << LogIO::WARN << "Invalid subRecord for " << repname << LogIO::POST;
-                        return False; // subReport is invalid
-                    }
-                }
-            }
-        }
-    }
+      {
+	if( ! isDefined("nreport") ) 
+          {
+	    logger_p << LogIO::WARN << "No 'nreport' defined" << LogIO::POST;
+	    return False; // nreport field is not defined
+          }
+	else // check that nreport subRecords exist, and verify each one.
+	  {
+	    Int nReps;
+	    get( RecordFieldId("nreport") , nReps );
+	    for(Int rep=0; rep<nReps; rep++)
+	      {
+		String repname = String("report")+String::toString(rep);
+		if( ! isDefined(repname) ) 
+		  {
+		    logger_p << LogIO::WARN << "Report : " << repname << " is not defined" << LogIO::POST;
+		    return False; // Does not contain a subReport
+		  }
+		else
+		  {
+		    FlagReport subRep(subRecord( RecordFieldId(repname) ));
+		    if( ! subRep.verifyFields() ) 
+		      {
+			logger_p << LogIO::WARN << "Invalid subRecord for " << repname << LogIO::POST;
+			return False; // subReport is invalid
+		      }
+		  }
+	      }
+	  }
+      }
     else if(thisType=="plotraster" || thisType=="plotpoints")
-    {
-        if( !isDefined("name") || !isDefined("title") ||
-                !isDefined("xlabel") || !isDefined("ylabel") ||
-                !isDefined("ndata") )
-        {
-            logger_p << LogIO::WARN << "Invalid FlagReport of type " << thisType << LogIO::POST;
-            return False;
-        }
-
-        Int numData;
-        get( RecordFieldId("ndata") , numData);
-
-        for(Int dat=0;dat<numData;dat++)
-        {
-            if(  (thisType=="plotraster" && ! isDefined(String("data")+String::toString(dat)) )  ||
-                    ( (thisType=="plotpoints")  && (!isDefined(String("xdata")+String::toString(dat)) || !isDefined(String("ydata")+String::toString(dat)) ) ) )
-            {
-                logger_p << LogIO::WARN << "Data for  " << dat << " is not defined" << LogIO::POST;
-                return False; // Does not contain data.
-            }
-
-        }
-
-    }
+      {
+	if( !isDefined("name") || !isDefined("title") || 
+	    !isDefined("xlabel") || !isDefined("ylabel") ||
+	    !isDefined("ndata") )
+	  {
+	    logger_p << LogIO::WARN << "Invalid FlagReport of type " << thisType << LogIO::POST;
+	    return False;
+	  } 
+	
+	Int numData;
+	get( RecordFieldId("ndata") , numData);
+	
+	for(Int dat=0;dat<numData;dat++)
+	  {
+	    if(  (thisType=="plotraster" && ! isDefined(String("data")+String::toString(dat)) )  ||
+		 ( (thisType=="plotpoints")  && (!isDefined(String("xdata")+String::toString(dat)) || !isDefined(String("ydata")+String::toString(dat)) ) ) )
+	      {
+		logger_p << LogIO::WARN << "Data for  " << dat << " is not defined" << LogIO::POST;
+		return False; // Does not contain data.
+	      }
+	    
+	  }
+	
+      }
     // else it is of type 'summary' or 'none' and we don't check anything there.
-
+    
     return True;
-
-}// end of verifyFields()
-
-
+    
+  }// end of verifyFields()
+  
+  
 } //# NAMESPACE CASA - END
 

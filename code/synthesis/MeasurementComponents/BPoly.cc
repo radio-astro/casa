@@ -33,8 +33,8 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
 #include <casa/sstream.h>
 #include <casa/math.h>
 #include <casa/OS/Memory.h>

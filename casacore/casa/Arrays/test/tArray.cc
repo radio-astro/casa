@@ -1038,38 +1038,7 @@ int main()
 
         	}
         }
-        {
-        	cout << "*** Test std::vector constructor" << endl;
-        	std::vector<Double> v(5);
-        	v[0] = 2.2;
-        	v[1] = 3.3;
-        	v[2] = 4.4;
-        	v[3] = 5.5;
-        	v[4] = 6.6;
-        	Vector<Double> myvec(v);
-        	AlwaysAssertExit(v.size() == myvec.size());
-        	for (uInt i=0; i<5; i++) {
-            	AlwaysAssertExit(v[i] == myvec[i]);
-        	}
-
-        	std::vector<int> v2(2);
-        	v2[0] = 5;
-        	v2[1] = -2;
-        	Vector<Int> myvec2(v2);
-        	AlwaysAssertExit(v2.size() == myvec2.size());
-        	for (uInt i=0; i<2; i++) {
-        		AlwaysAssertExit(v2[i] == myvec2[i]);
-        	}
-
-        	Vector<Double> myvec3(v2);
-        	AlwaysAssertExit(v2.size() == myvec3.size());
-        	for (uInt i=0; i<2; i++) {
-        		AlwaysAssertExit(v2[i] == myvec3[i]);
-        	}
-
-        }
-    }
-    catch (const AipsError& x) {
+    } catch (const AipsError& x) {
 	cout << "\nCaught an exception: " << x.getMesg() << endl;
 	return 1;
     } 

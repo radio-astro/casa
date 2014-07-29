@@ -33,7 +33,6 @@ casa_add_library( synthesis
   TransformMachines/AWConvFuncEPJones.cc
   TransformMachines/AWProjectFT.cc
   TransformMachines/AWProjectWBFT.cc
-  TransformMachines/AWProjectWBFTNew.cc
   TransformMachines/AWVisResampler.cc
   TransformMachines/BeamCalc.cc
   TransformMachines/BeamCalcParams.cc
@@ -45,7 +44,6 @@ casa_add_library( synthesis
   TransformMachines/HetArrayConvFunc.cc
   TransformMachines/MosaicFT.cc
   TransformMachines/MultiTermFT.cc	
-  TransformMachines/MultiTermFTNew.cc	
   TransformMachines/NewMultiTermFT.cc	
   TransformMachines/PBMath1DAiry.cc
   TransformMachines/PBMath1D.cc
@@ -79,6 +77,66 @@ casa_add_library( synthesis
   fortran/wprojgrid.f
   fortran/faccumulateToGrid.f
   fortran/faccumulateFromGrid.f
+  MSVis/AsynchronousInterface.cc
+  MSVis/AsynchronousTools.cc
+  MSVis/CalVisBuffer.cc
+  MSVis/GroupProcessor.cc
+  MSVis/GroupWorker.cc
+  MSVis/MeasurementSet2.cc
+  MSVis/MSAnalysis.cc
+  MSVis/MsAverager.cc
+  MSVis/MSCalEnums.cc
+  MSVis/MSContinuumSubtractor.cc
+  MSVis/MSUVWGenerator.cc
+  MSVis/MSUtil.cc
+  MSVis/Partition.cc
+  MSVis/Reweighter.cc
+  MSVis/SelectAverageSpw.cc
+  MSVis/SimpleSubMS.cc
+  MSVis/SpectralWindow.cc
+  MSVis/StokesVector.cc
+  MSVis/StatWT.cc
+  MSVis/SubMS.cc
+  MSVis/UtilJ.cc
+  MSVis/VBContinuumSubtractor.cc
+  MSVis/VBGContinuumSubtractor.cc
+  MSVis/VBRemapper.cc
+  MSVis/VisBuffAccumulator.cc
+  MSVis/VisBuffer.cc
+  MSVis/VisBufferAsync.cc
+  MSVis/VisBufferAsyncWrapper.cc
+  MSVis/VisBufferUtil.cc
+  MSVis/VisBuffGroup.cc
+  MSVis/VisBuffGroupAcc.cc
+  MSVis/VisibilityIterator.cc
+  MSVis/VisibilityIteratorImpl.cc
+  MSVis/VisibilityIteratorImplAsync.cc
+  MSVis/VisibilityProcessing.cc 
+####   MSVis/AsynchronousInterface2.cc
+  MSVis/VisBuffer2.cc
+  MSVis/VisBufferImpl2.cc
+  MSVis/MsRows.cc
+  MSVis/Vbi2MsRow.cc
+####  MSVis/VisBufferImplAsync2.cc
+####  MSVis/VisBufferAsyncWrapper2.cc
+  MSVis/VisBufferComponents2.cc
+  MSVis/ViColumns2.cc
+  MSVis/ViFrequencySelection.cc
+  MSVis/ViImplementation2.cc
+  MSVis/VisibilityIterator2.cc
+  MSVis/VisibilityIteratorImpl2.cc
+  MSVis/TransformingVi2.cc
+  MSVis/AveragingTvi2.cc
+  MSVis/AveragingVi2Factory.cc
+  MSVis/FinalTvi2.cc
+####  MSVis/VisibilityIteratorImplAsync2.cc
+  MSVis/VisImagingWeight.cc
+  MSVis/VisIterator.cc
+  MSVis/VisSet.cc
+  MSVis/VisSetUtil.cc
+  MSVis/VisChunkAverager.cc
+  MSVis/VLAT.cc
+  MSVis/VWBT.cc
   CalTables/BJonesDesc.cc
   CalTables/BJonesMBuf.cc
   CalTables/BJonesMCol.cc
@@ -180,7 +238,6 @@ casa_add_library( synthesis
  MeasurementComponents/EJones.cc
  MeasurementComponents/EPJones.cc
  MeasurementComponents/EVLASwPow.cc
- MeasurementComponents/FJones.cc
  MeasurementComponents/GlobalFTMachineCallbacks.cc
  MeasurementComponents/GridBoth.cc
  MeasurementComponents/GSpline.cc
@@ -265,29 +322,25 @@ casa_add_library( synthesis
  Parallel/SerialTransport.cc
  Utilities/FixVis.cc
  Utilities/SigHandler.cc
+ Utilities/SpectralImageUtil.cc
  Utilities/ThreadCoordinator.cc
  fortran/fpbmos.f	
  fortran/fpbwproj.f	
  fortran/leakantso.f
  ImagerObjects/SynthesisImager.cc
  ImagerObjects/SIImageStore.cc
- ImagerObjects/SIImageStoreMultiTerm.cc
  ImagerObjects/SIMapperCollection.cc
+ ImagerObjects/SIMapperBase.cc
  ImagerObjects/SIMapper.cc
- ImagerObjects/SIMapperImageMosaic.cc
  ImagerObjects/SynthesisIterBot.cc
  ImagerObjects/SIMinorCycleController.cc
  ImagerObjects/SIIterBot.cc
  ImagerObjects/SynthesisDeconvolver.cc
  ImagerObjects/SDAlgorithmBase.cc
  ImagerObjects/SDAlgorithmHogbomClean.cc
- ImagerObjects/SDAlgorithmMSMFS.cc
- ImagerObjects/SDAlgorithmMSClean.cc
- ImagerObjects/SDAlgorithmClarkClean.cc
- ImagerObjects/SDAlgorithmMEM.cc
+ ImagerObjects/SDAlgorithmTest.cc
  ImagerObjects/SDMaskHandler.cc
- ImagerObjects/SynthesisNormalizer.cc
- ImagerObjects/SynthesisUtilMethods.cc
+ ImagerObjects/SynthesisParSync.cc
   )
 
 install (FILES
@@ -393,6 +446,74 @@ install (FILES
 	DESTINATION include/casacode/synthesis/IDL
 	)
 install (FILES
+	MSVis/AsynchronousInterface.h
+	MSVis/AsynchronousInterface2.h
+	MSVis/AsynchronousTools.h
+	MSVis/CalVisBuffer.h
+	MSVis/GroupProcessor.h
+	MSVis/GroupWorker.h
+        MSVis/MeasurementSet2.h
+	MSVis/MSAnalysis.h
+	MSVis/MSCalEnums.h
+	MSVis/MSContinuumSubtractor.h
+	MSVis/MSMoments.h
+	MSVis/MSUVWGenerator.h
+	MSVis/MSUtil.h
+	MSVis/MsAverager.h
+	MSVis/Partition.h
+	MSVis/Reweighter.h
+	MSVis/SelectAverageSpw.h
+	MSVis/SimpleSubMS.h
+        MSVis/SpectralWindow.h
+	MSVis/StatWT.h
+	MSVis/StokesVector.h
+	MSVis/SubMS.h
+	MSVis/UtilJ.h
+	MSVis/VBContinuumSubtractor.h
+	MSVis/VBGContinuumSubtractor.h
+	MSVis/VBRemapper.h
+	MSVis/VLAT.h
+	MSVis/VWBT.h
+	MSVis/VisBuffAccumulator.h
+	MSVis/VisBuffGroup.h
+	MSVis/VisBuffGroupAcc.h
+	MSVis/VisBuffer.h
+	MSVis/VisBufferAsync.h
+	MSVis/VisBufferAsyncWrapper.h
+	MSVis/VisBufferComponents.h
+	MSVis/VisBufferUtil.h
+	MSVis/VisChunkAverager.h
+	MSVis/VisImagingWeight.h
+	MSVis/VisIterator.h
+	MSVis/VisSet.h
+	MSVis/VisSetUtil.h
+	MSVis/VisibilityIterator.h
+	MSVis/VisibilityIteratorImpl.h
+	MSVis/VisibilityIteratorImplAsync.h
+        MSVis/AsynchronousInterface2.h
+        MSVis/VisBuffer2Adapter.h
+        MSVis/VisBuffer2.h
+        MSVis/VisBufferAsyncWrapper2.h
+        MSVis/VisBufferComponents2.h
+        MSVis/VisBufferImpl2.h
+        MSVis/VisBufferImplAsync2.h
+        MSVis/ViColumns2.h
+        MSVis/ViFrequencySelection.h
+        MSVis/ViImplementation2.h
+        MSVis/VisibilityIterator2.h
+        MSVis/VisibilityIteratorImpl2.h
+        MSVis/VisibilityIteratorImplAsync2.h
+        MSVis/TransformingVi2.h
+	MSVis/AveragingVi2Factory.h
+	MSVis/AveragingTvi2.h
+	MSVis/FinalTvi2.h
+	MSVis/VisibilityProcessing.h
+	MSVis/MSMoments.tcc
+	MSVis/VisBuffer.tcc
+	MSVis/VisibilityIterator.tcc
+	DESTINATION include/casacode/synthesis/MSVis
+	)
+install (FILES
 	MeasurementComponents/ACoh.h
 	MeasurementComponents/AMueller.h
 	MeasurementComponents/BPoly.h
@@ -411,7 +532,6 @@ install (FILES
 	MeasurementComponents/EJones.h
 	MeasurementComponents/EPJones.h
 	MeasurementComponents/ExpCache.h
-	MeasurementComponents/FJones.h
 	MeasurementComponents/GSpline.h
 	MeasurementComponents/GlobalFTMachineCallbacks.h
 	MeasurementComponents/GridBoth.h
@@ -507,23 +627,18 @@ install (FILES
 install (FILES
 	ImagerObjects/SynthesisImager.h
 	ImagerObjects/SIImageStore.h
-	ImagerObjects/SIImageStoreMultiTerm.h
 	ImagerObjects/SIMapperCollection.h
+	ImagerObjects/SIMapperBase.h
 	ImagerObjects/SIMapper.h
-	ImagerObjects/SIMapperImageMosaic.h
 	ImagerObjects/SynthesisIterBot.h
 	ImagerObjects/SIMinorCycleController.h
 	ImagerObjects/SIIterBot.h
 	ImagerObjects/SynthesisDeconvolver.h
 	ImagerObjects/SDMaskHandler.h
-	ImagerObjects/SynthesisNormalizer.h
-	ImagerObjects/SynthesisUtilMethods.h
+	ImagerObjects/SynthesisParSync.h
 	ImagerObjects/SDAlgorithmBase.h
 	ImagerObjects/SDAlgorithmHogbomClean.h
-	ImagerObjects/SDAlgorithmMSMFS.h
-	ImagerObjects/SDAlgorithmMSClean.h
-	ImagerObjects/SDAlgorithmClarkClean.h
-	ImagerObjects/SDAlgorithmMEM.h
+	ImagerObjects/SDAlgorithmTest.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
@@ -555,7 +670,6 @@ install (FILES
 	TransformMachines/HetArrayConvFunc.h
 	TransformMachines/MosaicFT.h
 	TransformMachines/MultiTermFT.h
-	TransformMachines/MultiTermFTNew.h
 	TransformMachines/NewMultiTermFT.h
 	TransformMachines/PBMath.h
 	TransformMachines/PBMath1D.h
@@ -586,7 +700,6 @@ install (FILES
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
         TransformMachines/AWProjectWBFT.h
-        TransformMachines/AWProjectWBFTNew.h
 	TransformMachines/AWVisResampler.h
 	TransformMachines/AzElAperture.h
 	TransformMachines/EVLAAperture.h
@@ -606,12 +719,22 @@ install (FILES
 	Utilities/AppRC.h
 	Utilities/FixVis.h
 	Utilities/ThreadCoordinator.h
+        Utilities/SpectralImageUtil.h
 	DESTINATION include/casacode/synthesis/Utilities
 	)
 casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
 casa_add_executable( synthesis imageconcat apps/utils/imageconcat.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSIIterBot.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSynthesisImager.cc )
+casa_add_assay( synthesis MSVis/test/tHanningSmooth.cc )
+casa_add_assay( synthesis MSVis/test/tMSCalEnums.cc )
+casa_add_assay( synthesis MSVis/test/tUVSub.cc )
+casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
+casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
+casa_add_assay( synthesis MSVis/test/VisibilityProcessing_Test.cc )
+casa_add_assay( synthesis MSVis/test/AveragingTvi2_Test.cc MSVis/test/MsFactory.cc )
+casa_add_assay( synthesis MSVis/test/VisibilityIterator_Test.cc MsFactory.cc )
+casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
@@ -622,7 +745,6 @@ casa_add_assay( synthesis MeasurementComponents/test/tEVLAAperture.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tAlgoPClark.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tBeamSquint.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tCalibrater.cc )
-casa_add_assay( synthesis MeasurementComponents/test/tFJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tKJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath2D.cc )

@@ -56,7 +56,7 @@ namespace FocusMethodMod
   //! FocusMethod.
   //!  [CalDM.CalFocus] Method of focus measurement
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum FocusMethod
@@ -64,8 +64,6 @@ namespace FocusMethodMod
     THREE_POINT /*!< Three-point measurement */
      ,
     FIVE_POINT /*!< Five-point measurement */
-     ,
-    HOLOGRAPHY /*!<  */
      
   };
   typedef FocusMethod &FocusMethod_out;
@@ -91,8 +89,6 @@ class CFocusMethod {
 	static const std::string& sTHREE_POINT; /*!< A const string equal to "THREE_POINT".*/
 	
 	static const std::string& sFIVE_POINT; /*!< A const string equal to "FIVE_POINT".*/
-	
-	static const std::string& sHOLOGRAPHY; /*!< A const string equal to "HOLOGRAPHY".*/
 	
 
 	/**

@@ -27,9 +27,9 @@
 
 #include <synthesis/MeasurementComponents/UVMod.h>
 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <measures/Measures.h>

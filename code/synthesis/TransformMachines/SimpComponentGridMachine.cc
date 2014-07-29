@@ -32,7 +32,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/SpectralModel.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>

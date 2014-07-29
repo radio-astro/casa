@@ -150,19 +150,8 @@ public:
    inline vector<String> getMessages() { return _messages; }
 
    inline void clearMessages() { _messages.resize(0); }
-
-
-protected:
-
-   typedef typename NumericTraits<T>::PrecisionType AccumType;
-
-   virtual Bool _canDoFlux() const;
-
-   virtual Quantum<AccumType> _flux(
-	AccumType sum, Double beamAreaInPixels
-   ) const;
-
 private:
+
 // Data
 
    LogIO os_p;
@@ -170,7 +159,7 @@ private:
    IPosition blc_;
    Int precision_;
    Bool _showRobust, _recordMessages;
-   mutable vector<String> _messages;
+   vector<String> _messages;
 
 // Virtual functions.  See LatticeStatistics for more information
 // about these, or see the implementation.
@@ -178,7 +167,7 @@ private:
 // Get label for higher order axes
    virtual void getLabels(String& higherOrder, String& xAxis, const IPosition& dPos) const;
 
-    // Get beam area in pixels if possible. Return False if the beam area could not be
+    // Get beam volume if possible. Return False if the beam area could not be
     // calculated.
     virtual Bool _getBeamArea(
     	Array<Double>& beamArea
@@ -190,6 +179,7 @@ private:
                             Int oWidth, DataType type);
 
 // List the statistics
+   typedef typename NumericTraits<T>::PrecisionType AccumType;
    virtual Bool listStats (Bool hasBeam, const IPosition& dPos,
                            const Matrix<AccumType>& ord);
 

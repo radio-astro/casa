@@ -106,56 +106,56 @@ const String TBConstants::QUERY_ARRAY = "array";
 const String TBConstants::QUERY_UPDATE = "updat";
 const String TBConstants::QUERY_FULL = "qfull";
 
-String TBConstants::compToString(tb::Comparator c) {
+String TBConstants::compToString(Comparator c) {
     switch(c) {
-    case tb::EQUALS: return "equal to";
-    case tb::CONTAINS: return "contain";
-    case tb::BETWEEN: return "between";
-    case tb::CONTAINSBT: return "contain (between)";
-    case tb::LESSTHAN: return "less than";
-    case tb::CONTAINSLT: return "contain (less than)";
-    case tb::GREATERTHAN: return "greater than";
-    case tb::CONTAINSGT: return "contain (greater than)";
+    case EQUALS: return "equal to";
+    case CONTAINS: return "contain";
+    case BETWEEN: return "between";
+    case CONTAINSBT: return "contain (between)";
+    case LESSTHAN: return "less than";
+    case CONTAINSLT: return "contain (less than)";
+    case GREATERTHAN: return "greater than";
+    case CONTAINSGT: return "contain (greater than)";
     }
     return "";
 }
 
-tb::Comparator TBConstants::stringToComp(String str) {
+Comparator TBConstants::stringToComp(String str) {
     String s = "equal to";
-    if(equalsIgnoreCase(str, s)) return tb::EQUALS;
+    if(equalsIgnoreCase(str, s)) return EQUALS;
     s = "contain";
-    if(equalsIgnoreCase(str, s)) return tb::CONTAINS;
+    if(equalsIgnoreCase(str, s)) return CONTAINS;
     s = "between";
-    if(equalsIgnoreCase(str, s)) return tb::BETWEEN;
+    if(equalsIgnoreCase(str, s)) return BETWEEN;
     s = "contain (between)";
-    if(equalsIgnoreCase(str, s)) return tb::CONTAINSBT;
+    if(equalsIgnoreCase(str, s)) return CONTAINSBT;
     s = "less than";
-    if(equalsIgnoreCase(str, s)) return tb::LESSTHAN;
+    if(equalsIgnoreCase(str, s)) return LESSTHAN;
     s = "contain (less than)";
-    if(equalsIgnoreCase(str, s)) return tb::CONTAINSLT;
+    if(equalsIgnoreCase(str, s)) return CONTAINSLT;
     s = "greater than";
-    if(equalsIgnoreCase(str, s)) return tb::GREATERTHAN;
+    if(equalsIgnoreCase(str, s)) return GREATERTHAN;
     s = "contain (greater than)";
-    if(equalsIgnoreCase(str, s)) return tb::CONTAINSGT;
+    if(equalsIgnoreCase(str, s)) return CONTAINSGT;
 
-    return tb::EQUALS;
+    return EQUALS;
 }
 
-String TBConstants::bFormToString(tb::BooleanFormat bf) {
-    if(bf == tb::DEFAULT) return "default";
-    else if(bf == tb::TRUEFALSE) return "true/false";
-    else if(bf == tb::TF) return "t/f";
-    else if(bf == tb::B10) return "1/0";
+String TBConstants::bFormToString(BooleanFormat bf) {
+    if(bf == DEFAULT) return "default";
+    else if(bf == TRUEFALSE) return "true/false";
+    else if(bf == TF) return "t/f";
+    else if(bf == B10) return "1/0";
     else return "";
 }
 
-tb::BooleanFormat TBConstants::stringToBForm(String str) {
-    if(equalsIgnoreCase(str, "default")) return tb::DEFAULT;
-    else if(equalsIgnoreCase(str, "true/false")) return tb::TRUEFALSE;
-    else if(equalsIgnoreCase(str, "t/f")) return tb::TF;
-    else if(equalsIgnoreCase(str, "1/0")) return tb::B10;
+BooleanFormat TBConstants::stringToBForm(String str) {
+    if(equalsIgnoreCase(str, "default")) return DEFAULT;
+    else if(equalsIgnoreCase(str, "true/false")) return TRUEFALSE;
+    else if(equalsIgnoreCase(str, "t/f")) return TF;
+    else if(equalsIgnoreCase(str, "1/0")) return B10;
     
-    return tb::DEFAULT;
+    return DEFAULT;
 }
 
 const int TBConstants::SLICER_ROW_AXIS = -1;

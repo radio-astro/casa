@@ -14,7 +14,6 @@ Functionals/FunctionFactoryErrors.cc
 Functionals/FunctionalProxy.cc
 Functionals/SerialHelper.cc
 Mathematics/Combinatorics.cc
-Mathematics/GaussianBeam.cc
 Mathematics/MathFunc2.cc
 Mathematics/Interpolate2D.cc
 Mathematics/FFTPack.cc
@@ -31,11 +30,6 @@ Mathematics/MedianSlider.cc
 Mathematics/VectorKernel.cc
 Mathematics/VanVleck.cc
 )
-
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_scimath PROPERTIES SOVERSION ${casa_soversion} )
-    set_target_properties( casa_scimath_f PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 
 if (FFTW3_FOUND)
     target_link_libraries (casa_scimath casa_scimath_f ${FFTW3_LIBRARIES})
@@ -238,7 +232,6 @@ Mathematics/DFTServer.tcc
 Mathematics/FFTPack.h
 Mathematics/FFTServer.h
 Mathematics/FFTW.h
-Mathematics/GaussianBeam.h
 Mathematics/Geometry.h
 Mathematics/Gridder.h
 Mathematics/Gridder.tcc

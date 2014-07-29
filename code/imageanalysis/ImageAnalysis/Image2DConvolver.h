@@ -28,15 +28,13 @@
 #ifndef IMAGES_IMAGE2DCONVOLVER_H
 #define IMAGES_IMAGE2DCONVOLVER_H
 
-#include <imageanalysis/ImageAnalysis/ImageTask.h>
 
+//# Includes
 #include <casa/aips.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Array.h>
 #include <scimath/Mathematics/VectorKernel.h>
 #include <casa/Quanta/Quantum.h>
-
-#include <tr1/memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -92,24 +90,18 @@ class GaussianBeam;
 // <todo asof="2001/08/28">
 //   <li> 
 // </todo>
+ 
 
-template <class T> class Image2DConvolver : public ImageTask<T> {
+template <class T> class Image2DConvolver
+{
 public:
-
-	Image2DConvolver(
-		const SPCIIT image, const Record *const &regionPtr,
-	    const String& mask, const String& outname, const Bool overwrite
-	);
-
-	// Destructor
-	~Image2DConvolver() {}
 
 	// Convolve.   If the output image needs a mask and doesn't have one,
 	// it will be given one if possible.  The miscInfo, imageInfo,
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
 	static void convolve(
-		LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
+		LogIO& os, ImageInterface<T>& imageOut,
 		const ImageInterface<T>& imageIn,
 		const VectorKernel::KernelTypes kernelType,
 		const IPosition& pixelAxes,
@@ -119,39 +111,7 @@ public:
 		const Bool targetres=False
 	);
 
-	SPIIT convolve();
-
-	void setKernel(
-		const String& type, const Quantity& major, const Quantity& minor,
-		const Quantity& pa
-	);
-
-	void setScale(Double d) { _scale = d; }
-
-	void setAxes(const std::pair<uInt, uInt>& axes);
-
-	void setTargetRes(Bool b) { _targetres = b; }
-
-	String getClass() const { const static String c = "Image2DConvolver"; return c; }
-
-protected:
-
-   	virtual CasacRegionManager::StokesControl _getStokesControl() const {
-   		return CasacRegionManager::USE_ALL_STOKES;
-   	}
-
-    virtual vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>();
-    }
-
-    virtual inline Bool _supportsMultipleRegions() const {return True;}
-
 private:
-    VectorKernel::KernelTypes _type;
-    Double _scale;
-    Quantity _major, _minor, _pa;
-    IPosition _axes;
-    Bool _targetres;
 
 	// This class contains all static methods. Do not allow it to
 	// be instantiated.
@@ -161,21 +121,21 @@ private:
 	// Copy constructor.  Uses reference semantics.
 	Image2DConvolver(const Image2DConvolver<T> &other);
 
-
+	// Destructor
+	~Image2DConvolver();
 
 	// Assignment operator. Uses reference semantics.
 	Image2DConvolver &operator=(const Image2DConvolver<T> &other);
 
 
 	static void _checkKernelParameters(
-		VectorKernel::KernelTypes kernelType,
-		const Vector<Quantity>& parameters
+		LogIO& os, VectorKernel::KernelTypes kernelType,
+		const Vector<Quantum<Double> >& parameters
 	);
 
-	// returns the value by which pixel values will be scaled
-	static T _dealWithRestoringBeam (
+	static void _dealWithRestoringBeam (
 		LogIO& os, String& brightnessUnitOut, GaussianBeam& beamOut,
-		const Array<T>& kernelArray, const T kernelVolume,
+		Array<T>& kernelArray, const T kernelVolume,
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes, const CoordinateSystem& cSys,
@@ -191,33 +151,35 @@ private:
 		const Vector<Double>& parameters
 	);
 
-	static void _fillGaussian(
+	static void fillGaussian(
 		T& maxVal, T& volume, Matrix<T>& pixels,
 		T height, T xCentre, T yCentre,
 		T majorAxis, T ratio, T positionAngle
 	);
 
 	static T _makeKernel(
-		Array<T>& kernel,
+		LogIO& os, Array<T>& kernel,
 		VectorKernel::KernelTypes kernelType,
 		const Vector<Quantity>& parameters,
 		const IPosition& axes,
 		const ImageInterface<T>& inImage
 	);
 
-	static IPosition _shapeOfKernel(
+	static IPosition shapeOfKernel(
 		const VectorKernel::KernelTypes kernelType,
 		const Vector<Double>& parameters,
 		const uInt ndim, const IPosition& axes
 	);
 
-	static uInt _sizeOfGaussian(const Double width, const Double nSigma);
+	static uInt sizeOfGaussian(const Double width, const Double nSigma);
 
 	static Vector<Quantity> _getConvolvingBeamForTargetResolution(
-		const Vector<Quantity>& targetBeamParms,
+		LogIO& os, const Vector<Quantity>& targetBeamParms,
 		const GaussianBeam& inputBeam
 	);
 };
+
+
 
 } //# NAMESPACE CASA - END
 

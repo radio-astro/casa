@@ -116,11 +116,6 @@ public:
     // <group>
     T *ptr() { return ptr_p; }
     const T *ptr() const { return ptr_p; }
-
-    T* operator ->() { return ptr_p; }
-
-    const T* operator ->() const { return ptr_p; }
-
     // </group>
 
     // Attempt to automatically release a pointer when required. If the
@@ -130,8 +125,6 @@ public:
     operator T *() { return ptr_p; }
     operator const T *() const { return ptr_p; }
     // </group>
-
-
 
     // See if the pointer points to a C-array.
     Bool isCArray() const {return isCarray_p;}

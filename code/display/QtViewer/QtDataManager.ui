@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>858</width>
-    <height>594</height>
+    <width>709</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -21,6 +21,1394 @@
    <string>Data Manager -- Viewer</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_4">
+   <item>
+    <widget class="QTabWidget" name="tabs">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>load</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_9">
+       <item>
+        <widget class="QFrame" name="load_top_frame_">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="_3">
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="dirLabel_">
+            <property name="text">
+             <string>directory:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="load_directory"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QTreeWidget" name="load_tree_widget_">
+           <property name="minimumSize">
+            <size>
+             <width>260</width>
+             <height>140</height>
+            </size>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="indentation">
+            <number>16</number>
+           </property>
+           <column>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="displayGroupBox_">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>330</width>
+             <height>230</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>loading options</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignHCenter</set>
+           </property>
+           <layout class="QVBoxLayout" name="_5">
+            <property name="margin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QGroupBox" name="ms_selection_box">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>75</height>
+               </size>
+              </property>
+              <property name="title">
+               <string>selection</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_3">
+               <property name="margin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QScrollArea" name="ms_selection_scrollbox">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::NoFrame</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Plain</enum>
+                 </property>
+                 <property name="lineWidth">
+                  <number>0</number>
+                 </property>
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="ms_selection_scroll_widget">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>318</width>
+                    <height>50</height>
+                   </rect>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="load_info_box">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>160</height>
+               </size>
+              </property>
+              <widget class="QGroupBox" name="load_ibox11">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext11">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox21">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>36</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext21">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox31">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>75</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext31">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox41">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>110</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext41">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox12">
+               <property name="geometry">
+                <rect>
+                 <x>162</x>
+                 <y>0</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext12">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox22">
+               <property name="geometry">
+                <rect>
+                 <x>162</x>
+                 <y>36</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext22">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox32">
+               <property name="geometry">
+                <rect>
+                 <x>162</x>
+                 <y>75</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext32">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QGroupBox" name="load_ibox42">
+               <property name="geometry">
+                <rect>
+                 <x>163</x>
+                 <y>110</y>
+                 <width>160</width>
+                 <height>41</height>
+                </rect>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="title">
+                <string>value</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <widget class="QLineEdit" name="load_itext42">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>20</y>
+                  <width>159</width>
+                  <height>16</height>
+                 </rect>
+                </property>
+                <property name="palette">
+                 <palette>
+                  <active>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </active>
+                  <inactive>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>232</red>
+                      <green>232</green>
+                      <blue>232</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </inactive>
+                  <disabled>
+                   <colorrole role="Base">
+                    <brush brushstyle="SolidPattern">
+                     <color alpha="255">
+                      <red>212</red>
+                      <green>208</green>
+                      <blue>200</blue>
+                     </color>
+                    </brush>
+                   </colorrole>
+                  </disabled>
+                 </palette>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="acceptDrops">
+                 <bool>false</bool>
+                </property>
+                <property name="maxLength">
+                 <number>50</number>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </widget>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="leftMargin">
+               <number>1</number>
+              </property>
+              <property name="topMargin">
+               <number>1</number>
+              </property>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_2">
+                <item>
+                 <widget class="QPushButton" name="rasterButton_">
+                  <property name="text">
+                   <string>raster image</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="contourButton_">
+                  <property name="text">
+                   <string>contour map</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="oldPanelButton_">
+                  <property name="text">
+                   <string>old window</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="catalogButton_">
+                  <property name="text">
+                   <string>sky catalog</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="vectorButton_">
+                  <property name="text">
+                   <string>vector map</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="markerButton_">
+                  <property name="text">
+                   <string>marker map</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="newPanelButton_">
+                  <property name="text">
+                   <string>new window</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="regionButton_">
+                  <property name="text">
+                   <string>load regions</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="lelGB_">
+         <property name="title">
+          <string>LEL expression</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
+         </property>
+         <layout class="QVBoxLayout" name="_2">
+          <property name="margin">
+           <number>2</number>
+          </property>
+          <item>
+           <widget class="casa::QtLELEdit" name="lelEdit_"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="slice_frame">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>save image</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_8">
+       <item>
+        <widget class="QFrame" name="image_top_frame">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="_12">
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="dirLabel_2">
+            <property name="text">
+             <string>directory:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="image_directory"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QTreeWidget" name="image_data_list_">
+           <property name="minimumSize">
+            <size>
+             <width>260</width>
+             <height>140</height>
+            </size>
+           </property>
+           <property name="indentation">
+            <number>16</number>
+           </property>
+           <column>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QTreeWidget" name="image_file_list_">
+             <property name="minimumSize">
+              <size>
+               <width>260</width>
+               <height>140</height>
+              </size>
+             </property>
+             <property name="indentation">
+              <number>16</number>
+             </property>
+             <column>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <widget class="QRadioButton" name="save_casa_img">
+              <property name="geometry">
+               <rect>
+                <x>20</x>
+                <y>1</y>
+                <width>102</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>casa image</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QRadioButton" name="save_fits_img">
+              <property name="geometry">
+               <rect>
+                <x>150</x>
+                <y>1</y>
+                <width>102</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>fits image</string>
+              </property>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="img_output_label">
+          <property name="geometry">
+           <rect>
+            <x>6</x>
+            <y>10</y>
+            <width>91</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>output name:</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="img_output_name">
+          <property name="geometry">
+           <rect>
+            <x>98</x>
+            <y>10</y>
+            <width>451</width>
+            <height>22</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="img_do_save">
+          <property name="geometry">
+           <rect>
+            <x>560</x>
+            <y>4</y>
+            <width>114</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>save</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="img_output_error">
+         <property name="styleSheet">
+          <string notr="true">color : rgb(255, 0, 12)</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="save_regions">
+      <attribute name="title">
+       <string>save region</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QFrame" name="region_top_frame">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="_13">
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="dirLabel_3">
+            <property name="text">
+             <string>directory:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="region_directory"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QTreeWidget" name="region_data_list">
+           <property name="minimumSize">
+            <size>
+             <width>260</width>
+             <height>140</height>
+            </size>
+           </property>
+           <property name="indentation">
+            <number>16</number>
+           </property>
+           <column>
+            <property name="text">
+             <string>1</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QTreeWidget" name="region_file_list">
+             <property name="minimumSize">
+              <size>
+               <width>260</width>
+               <height>140</height>
+              </size>
+             </property>
+             <property name="indentation">
+              <number>16</number>
+             </property>
+             <column>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_2">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <widget class="QRadioButton" name="save_casa_region">
+              <property name="geometry">
+               <rect>
+                <x>7</x>
+                <y>5</y>
+                <width>120</width>
+                <height>20</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>casa region file</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="QFrame" name="frame_5">
+              <property name="geometry">
+               <rect>
+                <x>128</x>
+                <y>3</y>
+                <width>209</width>
+                <height>27</height>
+               </rect>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <widget class="QRadioButton" name="save_ds9_region">
+               <property name="geometry">
+                <rect>
+                 <x>4</x>
+                 <y>2</y>
+                 <width>115</width>
+                 <height>20</height>
+                </rect>
+               </property>
+               <property name="text">
+                <string>ds9 region file</string>
+               </property>
+              </widget>
+              <widget class="QComboBox" name="save_ds9_csys">
+               <property name="geometry">
+                <rect>
+                 <x>123</x>
+                 <y>1</y>
+                 <width>80</width>
+                 <height>22</height>
+                </rect>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>22</height>
+                </size>
+               </property>
+               <item>
+                <property name="text">
+                 <string>pixel</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>j2000</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>b1950</string>
+                </property>
+               </item>
+              </widget>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QFrame" name="frame_4">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <widget class="QLabel" name="region_output_label">
+          <property name="geometry">
+           <rect>
+            <x>6</x>
+            <y>6</y>
+            <width>91</width>
+            <height>22</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>output name:</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="region_output_name">
+          <property name="geometry">
+           <rect>
+            <x>98</x>
+            <y>7</y>
+            <width>451</width>
+            <height>22</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="region_do_save">
+          <property name="geometry">
+           <rect>
+            <x>560</x>
+            <y>4</y>
+            <width>114</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>save</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="region_output_error">
+         <property name="styleSheet">
+          <string notr="true">color : rgb(255, 0, 12)</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
    <item>
     <widget class="QWidget" name="bottomWidget_" native="true">
      <layout class="QHBoxLayout" name="_6">
@@ -37,2008 +1425,9 @@
        <number>12</number>
       </property>
       <item>
-       <widget class="QTabWidget" name="tabs">
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>16777206</height>
-         </size>
-        </property>
-        <property name="palette">
-         <palette>
-          <active>
-           <colorrole role="Text">
-            <brush brushstyle="SolidPattern">
-             <color alpha="255">
-              <red>0</red>
-              <green>0</green>
-              <blue>0</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </active>
-          <inactive>
-           <colorrole role="Text">
-            <brush brushstyle="SolidPattern">
-             <color alpha="255">
-              <red>69</red>
-              <green>69</green>
-              <blue>69</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </inactive>
-          <disabled>
-           <colorrole role="Text">
-            <brush brushstyle="SolidPattern">
-             <color alpha="255">
-              <red>255</red>
-              <green>0</green>
-              <blue>0</blue>
-             </color>
-            </brush>
-           </colorrole>
-          </disabled>
-         </palette>
-        </property>
-        <property name="currentIndex">
-         <number>0</number>
-        </property>
-        <widget class="QWidget" name="tab_2">
-         <attribute name="title">
-          <string>load</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <item>
-           <widget class="QFrame" name="load_top_frame_">
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="_3">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="dirLabel_">
-               <property name="text">
-                <string>directory:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="load_directory"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4">
-            <item>
-             <widget class="QTreeWidget" name="load_tree_widget_">
-              <property name="minimumSize">
-               <size>
-                <width>260</width>
-                <height>140</height>
-               </size>
-              </property>
-              <property name="focusPolicy">
-               <enum>Qt::NoFocus</enum>
-              </property>
-              <property name="indentation">
-               <number>16</number>
-              </property>
-              <column>
-               <property name="text">
-                <string>1</string>
-               </property>
-              </column>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="displayGroupBox_">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>330</width>
-                <height>230</height>
-               </size>
-              </property>
-              <property name="title">
-               <string>loading options</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignHCenter</set>
-              </property>
-              <layout class="QVBoxLayout" name="_5">
-               <property name="margin">
-                <number>0</number>
-               </property>
-               <item>
-                <widget class="QGroupBox" name="ms_selection_box">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>75</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>selection</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_3">
-                  <property name="margin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QScrollArea" name="ms_selection_scrollbox">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="frameShape">
-                     <enum>QFrame::NoFrame</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Plain</enum>
-                    </property>
-                    <property name="lineWidth">
-                     <number>0</number>
-                    </property>
-                    <property name="widgetResizable">
-                     <bool>true</bool>
-                    </property>
-                    <widget class="QWidget" name="ms_selection_scroll_widget">
-                     <property name="geometry">
-                      <rect>
-                       <x>0</x>
-                       <y>0</y>
-                       <width>318</width>
-                       <height>50</height>
-                      </rect>
-                     </property>
-                    </widget>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QFrame" name="load_info_box">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>160</height>
-                  </size>
-                 </property>
-                 <widget class="QGroupBox" name="load_ibox11">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext11">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox21">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>36</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext21">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox31">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>75</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext31">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox41">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>110</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext41">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox12">
-                  <property name="geometry">
-                   <rect>
-                    <x>162</x>
-                    <y>0</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext12">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox22">
-                  <property name="geometry">
-                   <rect>
-                    <x>162</x>
-                    <y>36</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext22">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox32">
-                  <property name="geometry">
-                   <rect>
-                    <x>162</x>
-                    <y>75</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext32">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QGroupBox" name="load_ibox42">
-                  <property name="geometry">
-                   <rect>
-                    <x>163</x>
-                    <y>110</y>
-                    <width>160</width>
-                    <height>41</height>
-                   </rect>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="title">
-                   <string>value</string>
-                  </property>
-                  <property name="flat">
-                   <bool>true</bool>
-                  </property>
-                  <widget class="QLineEdit" name="load_itext42">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>20</y>
-                     <width>159</width>
-                     <height>16</height>
-                    </rect>
-                   </property>
-                   <property name="palette">
-                    <palette>
-                     <active>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </active>
-                     <inactive>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>232</red>
-                         <green>232</green>
-                         <blue>232</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </inactive>
-                     <disabled>
-                      <colorrole role="Base">
-                       <brush brushstyle="SolidPattern">
-                        <color alpha="255">
-                         <red>212</red>
-                         <green>208</green>
-                         <blue>200</blue>
-                        </color>
-                       </brush>
-                      </colorrole>
-                     </disabled>
-                    </palette>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="acceptDrops">
-                    <bool>false</bool>
-                   </property>
-                   <property name="maxLength">
-                    <number>50</number>
-                   </property>
-                   <property name="frame">
-                    <bool>false</bool>
-                   </property>
-                   <property name="readOnly">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </widget>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout">
-                 <property name="leftMargin">
-                  <number>1</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>1</number>
-                 </property>
-                 <item>
-                  <layout class="QVBoxLayout" name="verticalLayout_2">
-                   <item>
-                    <widget class="QPushButton" name="rasterButton_">
-                     <property name="text">
-                      <string>raster image</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="contourButton_">
-                     <property name="text">
-                      <string>contour map</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="oldPanelButton_">
-                     <property name="text">
-                      <string>old window</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="catalogButton_">
-                     <property name="text">
-                      <string>sky catalog</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                 <item>
-                  <layout class="QVBoxLayout" name="verticalLayout">
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <item>
-                    <widget class="QPushButton" name="vectorButton_">
-                     <property name="text">
-                      <string>vector map</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="markerButton_">
-                     <property name="text">
-                      <string>marker map</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="newPanelButton_">
-                     <property name="text">
-                      <string>new window</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="regionButton_">
-                     <property name="text">
-                      <string>load regions</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="lelGB_">
-            <property name="title">
-             <string>LEL expression</string>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-            <property name="checkable">
-             <bool>false</bool>
-            </property>
-            <layout class="QVBoxLayout" name="_2">
-             <property name="margin">
-              <number>2</number>
-             </property>
-             <item>
-              <widget class="casa::QtLELEdit" name="lelEdit_"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_7">
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>5</number>
-             </property>
-             <item>
-              <widget class="QFrame" name="frame_6">
-               <property name="frameShape">
-                <enum>QFrame::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Raised</enum>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_6">
-                <property name="leftMargin">
-                 <number>4</number>
-                </property>
-                <property name="topMargin">
-                 <number>8</number>
-                </property>
-                <property name="rightMargin">
-                 <number>4</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>8</number>
-                </property>
-                <item>
-                 <widget class="QCheckBox" name="show_slice">
-                  <property name="text">
-                   <string>slice</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QCheckBox" name="showLEL_">
-                  <property name="text">
-                   <string>LEL</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="regrid">
-               <property name="minimumSize">
-                <size>
-                 <width>90</width>
-                 <height>45</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>regrid velocity axis...</string>
-               </property>
-               <property name="title">
-                <string>velocity regrid</string>
-               </property>
-               <property name="flat">
-                <bool>true</bool>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_11">
-                <property name="leftMargin">
-                 <number>8</number>
-                </property>
-                <property name="topMargin">
-                 <number>4</number>
-                </property>
-                <property name="rightMargin">
-                 <number>8</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>4</number>
-                </property>
-                <item>
-                 <widget class="QComboBox" name="regrid_method">
-                  <item>
-                   <property name="text">
-                    <string>none</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>bilinear</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>nearest</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>bicubic</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="slice_frame">
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Plain</enum>
-            </property>
-            <property name="lineWidth">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="tab">
-         <attribute name="title">
-          <string>save image</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_8">
-          <item>
-           <widget class="QFrame" name="image_top_frame">
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="_12">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="dirLabel_2">
-               <property name="text">
-                <string>directory:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="image_directory"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QTreeWidget" name="image_data_list_">
-              <property name="minimumSize">
-               <size>
-                <width>260</width>
-                <height>140</height>
-               </size>
-              </property>
-              <property name="indentation">
-               <number>16</number>
-              </property>
-              <column>
-               <property name="text">
-                <string>1</string>
-               </property>
-              </column>
-             </widget>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_7">
-              <item>
-               <widget class="QTreeWidget" name="image_file_list_">
-                <property name="minimumSize">
-                 <size>
-                  <width>260</width>
-                  <height>140</height>
-                 </size>
-                </property>
-                <property name="indentation">
-                 <number>16</number>
-                </property>
-                <column>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                </column>
-               </widget>
-              </item>
-              <item>
-               <widget class="QFrame" name="frame">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <widget class="QRadioButton" name="save_casa_img">
-                 <property name="geometry">
-                  <rect>
-                   <x>20</x>
-                   <y>1</y>
-                   <width>102</width>
-                   <height>20</height>
-                  </rect>
-                 </property>
-                 <property name="text">
-                  <string>casa image</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-                <widget class="QRadioButton" name="save_fits_img">
-                 <property name="geometry">
-                  <rect>
-                   <x>150</x>
-                   <y>1</y>
-                   <width>102</width>
-                   <height>20</height>
-                  </rect>
-                 </property>
-                 <property name="text">
-                  <string>fits image</string>
-                 </property>
-                </widget>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_3">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <widget class="QLabel" name="img_output_label">
-             <property name="geometry">
-              <rect>
-               <x>6</x>
-               <y>10</y>
-               <width>91</width>
-               <height>22</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>output name:</string>
-             </property>
-            </widget>
-            <widget class="QLineEdit" name="img_output_name">
-             <property name="geometry">
-              <rect>
-               <x>98</x>
-               <y>10</y>
-               <width>451</width>
-               <height>22</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="img_do_save">
-             <property name="geometry">
-              <rect>
-               <x>560</x>
-               <y>4</y>
-               <width>114</width>
-               <height>32</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>save</string>
-             </property>
-            </widget>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="img_output_error">
-            <property name="styleSheet">
-             <string notr="true">color : rgb(255, 0, 12)</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::PlainText</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="save_regions">
-         <attribute name="title">
-          <string>save region</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_6">
-          <item>
-           <widget class="QFrame" name="region_top_frame">
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="_13">
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="dirLabel_3">
-               <property name="text">
-                <string>directory:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="region_directory"/>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QTreeWidget" name="region_data_list">
-              <property name="minimumSize">
-               <size>
-                <width>260</width>
-                <height>140</height>
-               </size>
-              </property>
-              <property name="indentation">
-               <number>16</number>
-              </property>
-              <column>
-               <property name="text">
-                <string>1</string>
-               </property>
-              </column>
-             </widget>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_5">
-              <item>
-               <widget class="QTreeWidget" name="region_file_list">
-                <property name="minimumSize">
-                 <size>
-                  <width>260</width>
-                  <height>140</height>
-                 </size>
-                </property>
-                <property name="indentation">
-                 <number>16</number>
-                </property>
-                <column>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                </column>
-               </widget>
-              </item>
-              <item>
-               <widget class="QFrame" name="frame_2">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>24</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <widget class="QRadioButton" name="save_casa_region">
-                 <property name="geometry">
-                  <rect>
-                   <x>7</x>
-                   <y>5</y>
-                   <width>120</width>
-                   <height>20</height>
-                  </rect>
-                 </property>
-                 <property name="text">
-                  <string>casa region file</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-                <widget class="QFrame" name="frame_5">
-                 <property name="geometry">
-                  <rect>
-                   <x>128</x>
-                   <y>3</y>
-                   <width>209</width>
-                   <height>27</height>
-                  </rect>
-                 </property>
-                 <property name="frameShape">
-                  <enum>QFrame::StyledPanel</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Raised</enum>
-                 </property>
-                 <widget class="QRadioButton" name="save_ds9_region">
-                  <property name="geometry">
-                   <rect>
-                    <x>4</x>
-                    <y>2</y>
-                    <width>115</width>
-                    <height>20</height>
-                   </rect>
-                  </property>
-                  <property name="text">
-                   <string>ds9 region file</string>
-                  </property>
-                 </widget>
-                 <widget class="QComboBox" name="save_ds9_csys">
-                  <property name="geometry">
-                   <rect>
-                    <x>123</x>
-                    <y>1</y>
-                    <width>80</width>
-                    <height>22</height>
-                   </rect>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>22</height>
-                   </size>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>pixel</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>j2000</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>b1950</string>
-                   </property>
-                  </item>
-                 </widget>
-                </widget>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_4">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <widget class="QLabel" name="region_output_label">
-             <property name="geometry">
-              <rect>
-               <x>6</x>
-               <y>6</y>
-               <width>91</width>
-               <height>22</height>
-              </rect>
-             </property>
-             <property name="text">
-              <string>output name:</string>
-             </property>
-            </widget>
-            <widget class="QLineEdit" name="region_output_name">
-             <property name="geometry">
-              <rect>
-               <x>98</x>
-               <y>7</y>
-               <width>451</width>
-               <height>22</height>
-              </rect>
-             </property>
-            </widget>
-            <widget class="QPushButton" name="region_do_save">
-             <property name="geometry">
-              <rect>
-               <x>560</x>
-               <y>4</y>
-               <width>114</width>
-               <height>30</height>
-              </rect>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>save</string>
-             </property>
-            </widget>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="region_output_error">
-            <property name="styleSheet">
-             <string notr="true">color : rgb(255, 0, 12)</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::PlainText</enum>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="virtual_obs">
-         <attribute name="title">
-          <string>VO</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_12">
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
-          </property>
-          <property name="margin">
-           <number>10</number>
-          </property>
-          <item>
-           <widget class="QTableWidget" name="vo_table">
-            <property name="toolTip">
-             <string>matching virtual observatory records...</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_8a">
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_10">
-             <property name="leftMargin">
-              <number>5</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>5</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <item>
-              <widget class="QScrollArea" name="scrollArea">
-               <property name="toolTip">
-                <string>required parameters...</string>
-               </property>
-               <property name="widgetResizable">
-                <bool>true</bool>
-               </property>
-               <widget class="QWidget" name="scrollAreaWidgetContents">
-                <property name="geometry">
-                 <rect>
-                  <x>0</x>
-                  <y>0</y>
-                  <width>763</width>
-                  <height>101</height>
-                 </rect>
-                </property>
-                <layout class="QGridLayout" name="gridLayout">
-                 <item row="0" column="0">
-                  <widget class="QGroupBox" name="vo_ra_label">
-                   <property name="minimumSize">
-                    <size>
-                     <width>90</width>
-                     <height>45</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string>Right Ascension of interest...</string>
-                   </property>
-                   <property name="title">
-                    <string>RA (ICRS)</string>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_13">
-                    <property name="leftMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>4</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>4</number>
-                    </property>
-                    <item>
-                     <widget class="QLineEdit" name="vo_ra">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>18</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QGroupBox" name="vo_ra_sze_label">
-                   <property name="minimumSize">
-                    <size>
-                     <width>90</width>
-                     <height>45</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string>Size of the area of interest, in degrees...</string>
-                   </property>
-                   <property name="title">
-                    <string>RA size (deg)</string>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_14">
-                    <property name="leftMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>4</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>4</number>
-                    </property>
-                    <item>
-                     <widget class="QLineEdit" name="vo_ra_size">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>18</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QGroupBox" name="vo_dec_label">
-                   <property name="minimumSize">
-                    <size>
-                     <width>90</width>
-                     <height>45</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string>Declination of interest...</string>
-                   </property>
-                   <property name="title">
-                    <string>DEC (ICRS)</string>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_15">
-                    <property name="leftMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>4</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>4</number>
-                    </property>
-                    <item>
-                     <widget class="QLineEdit" name="vo_dec">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>18</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QGroupBox" name="vo_dec_sze_label">
-                   <property name="minimumSize">
-                    <size>
-                     <width>90</width>
-                     <height>45</height>
-                    </size>
-                   </property>
-                   <property name="toolTip">
-                    <string>Size of the area of interest, in degrees...</string>
-                   </property>
-                   <property name="title">
-                    <string>DEC size (deg)</string>
-                   </property>
-                   <property name="flat">
-                    <bool>true</bool>
-                   </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_16">
-                    <property name="leftMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>4</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>8</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>4</number>
-                    </property>
-                    <item>
-                     <widget class="QLineEdit" name="vo_dec_size">
-                      <property name="minimumSize">
-                       <size>
-                        <width>0</width>
-                        <height>18</height>
-                       </size>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="vo_service">
-            <item>
-             <property name="text">
-              <string>NRAO/DSOC Test Service</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Chandra X-ray Observatory Data Archive</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Chandra Source Catalog</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="frame_8b">
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_7b">
-             <property name="leftMargin">
-              <number>5</number>
-             </property>
-             <property name="topMargin">
-              <number>2</number>
-             </property>
-             <property name="rightMargin">
-              <number>5</number>
-             </property>
-             <property name="bottomMargin">
-              <number>2</number>
-             </property>
-             <item>
-              <widget class="QListWidget" name="vo_flex_params">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="toolTip">
-                <string>flexible parameters which can be added to the parameter set...</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QWidget" name="widgetb" native="true">
-               <layout class="QVBoxLayout" name="verticalLayout_17">
-                <item>
-                 <widget class="QPushButton" name="voaddb">
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777198</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="toolTip">
-                   <string>add flexible parameter to the parameter set...</string>
-                  </property>
-                  <property name="text">
-                   <string>&gt;&gt;&gt;</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="voremoveb">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="toolTip">
-                   <string>remove flexible parameter from the parameter set...</string>
-                  </property>
-                  <property name="text">
-                   <string>&lt;&lt;&lt;</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListWidget" name="vo_flex_params_entry">
-               <property name="toolTip">
-                <string>flexible parameters included in the parameter set...</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QFrame" name="vo_status_frame">
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
-             <property name="margin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLabel" name="vo_status">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="vo_contour">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>contour</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="vo_raster">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>raster</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="vo_query">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>append new results to the query set...</string>
-               </property>
-               <property name="text">
-                <string>query</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="vo_clear">
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="toolTip">
-                <string>clear query set...</string>
-               </property>
-               <property name="text">
-                <string>clear</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QWidget" name="universal_options" native="true">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <layout class="QHBoxLayout" name="leave_open_layout">
-      <property name="leftMargin">
-       <number>1</number>
-      </property>
-      <property name="topMargin">
-       <number>1</number>
-      </property>
-      <item>
-       <widget class="QPushButton" name="cancelButton_">
+       <widget class="QPushButton" name="updateButton_">
         <property name="text">
-         <string>close</string>
+         <string>update</string>
         </property>
        </widget>
       </item>
@@ -2056,13 +1445,145 @@
        </spacer>
       </item>
       <item>
-       <widget class="QCheckBox" name="leaveOpen_">
-        <property name="text">
-         <string>leave open</string>
+       <widget class="QWidget" name="universal_options" native="true">
+        <layout class="QHBoxLayout" name="leave_open_layout">
+         <property name="leftMargin">
+          <number>1</number>
+         </property>
+         <property name="topMargin">
+          <number>1</number>
+         </property>
+         <item>
+          <widget class="QCheckBox" name="leaveOpen_">
+           <property name="text">
+            <string>leave open</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="frame_7">
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
         </property>
-        <property name="checked">
-         <bool>true</bool>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
         </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QFrame" name="frame_6">
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_10">
+            <property name="leftMargin">
+             <number>4</number>
+            </property>
+            <property name="topMargin">
+             <number>8</number>
+            </property>
+            <property name="rightMargin">
+             <number>4</number>
+            </property>
+            <property name="bottomMargin">
+             <number>8</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="showLEL_">
+              <property name="text">
+               <string>LEL</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="show_slice">
+              <property name="text">
+               <string>slice</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+<!--     <item alignment="Qt::AlignVCenter"> -->
+         <item>
+          <widget class="QGroupBox" name="regrid">
+           <property name="minimumSize">
+            <size>
+             <width>90</width>
+             <height>45</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>regrid velocity axis...</string>
+           </property>
+           <property name="title">
+            <string>velocity regrid</string>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_11">
+            <property name="leftMargin">
+             <number>8</number>
+            </property>
+            <property name="topMargin">
+             <number>4</number>
+            </property>
+            <property name="rightMargin">
+             <number>8</number>
+            </property>
+            <property name="bottomMargin">
+             <number>4</number>
+            </property>
+            <item>
+             <widget class="QComboBox" name="regrid_method">
+              <item>
+               <property name="text">
+                <string>none</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>bilinear</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>nearest</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>bicubic</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="save_options" native="true">
+        <layout class="QHBoxLayout" name="open_options_layout">
+         <property name="leftMargin">
+          <number>1</number>
+         </property>
+         <property name="topMargin">
+          <number>1</number>
+         </property>
+        </layout>
        </widget>
       </item>
       <item>
@@ -2079,9 +1600,9 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="updateButton_">
+       <widget class="QPushButton" name="cancelButton_">
         <property name="text">
-         <string>update</string>
+         <string>close</string>
         </property>
        </widget>
       </item>

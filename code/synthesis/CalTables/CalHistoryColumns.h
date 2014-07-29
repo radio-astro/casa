@@ -34,7 +34,7 @@
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <synthesis/CalTables/CalTable.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

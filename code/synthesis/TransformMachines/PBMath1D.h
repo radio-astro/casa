@@ -268,8 +268,7 @@ protected:
   // PB' = azimuthal fit to: ( VP(x+s)**2 + VP(x-s)**2 )/2
   // VP' = sqrt(PB')
   void symmetrizeSquintedBeam();
-  
-  void applyXLine(const Complex*& in, Complex*& out, Float*& rx2, Complex*& vp, const Float ry2, const Int ipower, const Bool conjugate, const Bool inverse, const Bool forward, const Int nx, const Int iy, const Double rmax2, const Double factor, const Double inverseIncrementRadius, const Float cutoff);
+
   // The parameterized representation is for the VP, not the PB.
   // Internally, a reference frequency of 1 GHz is used, and the
   // radius is in units of arcminutes.

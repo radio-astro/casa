@@ -21,9 +21,6 @@
 //# $Id: $
 
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
-#include <tables/Tables/TableProxy.h>
-#include <tables/Tables/TableParse.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -149,6 +146,8 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 		return my_colNameVect;
 	}
 
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
 	uInt nNames;
 
 	if(col.contains("ALL"))
@@ -167,11 +166,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	// Whether or not the MS has the columns is checked by verifyColumns().
 	// Unfortunately it cannot be done here because this is a static method.
 
-
-	/*
-	 * jagonzal: Redundant logging message (this info is already provided by MSTransformManager)
-	 *
-	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 	// "NONE" is used by the destructor
 	if(col != "NONE")
 	{
@@ -183,7 +177,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 
 		os << " column" << (my_colNameVect.nelements() > 1 ? "s." : ".") << LogIO::POST;
 	}
-	*/
 
 	my_colNameStr = col;
 	return my_colNameVect;
@@ -266,9 +259,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	}
 	if (nFound == 0) throw(AipsError("Did not find and select any data columns."));
 
-	/*
-	 * jagonzal: Redundant logging message (this info is already provided by MSTransformManager)
-	 *
 	os << LogIO::NORMAL << "Using ";
 
 	for (uInt i = 0; i < nFound; ++i)
@@ -277,7 +267,6 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 	}
 
 	os << "column" << (nFound > 1 ? "s." : ".") << LogIO::POST;
-	*/
 
 	my_colNameStr = col;
 
@@ -786,8 +775,7 @@ void MSTransformDataHandler::selectTime(Double timeBin, String timerng)
 Bool MSTransformDataHandler::makeMSBasicStructure(	String& msname,
 													String& colname,
 													const Vector<Int>& tileShape,
-													const String& combine,
-													Table::TableOption)
+													const String& combine)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 
@@ -1109,13 +1097,12 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
                                 					const Int nCorr, const String& telescop,
                                 					const Vector<MS::PredefinedColumns>& colNames,
                                 					const Int obstype,const Bool compress,
-                                					const asdmStManUseAlternatives asdmStManUse,
-                                					Table::TableOption option)
+                                					const asdmStManUseAlternatives asdmStManUse)
  {
 	//Choose an appropriate tileshape
 	IPosition dataShape(2, nCorr, nchan);
 	IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-	return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress, asdmStManUse,option);
+	return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress, asdmStManUse);
  }
 
 // -----------------------------------------------------------------------
@@ -1125,8 +1112,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
                                 					const Int nCorr,
                                 					const Vector<MS::PredefinedColumns>& colNamesTok,
                                 					const Vector<Int>& tshape, const Bool compress,
-                                					const asdmStManUseAlternatives asdmStManUse,
-                                					Table::TableOption option)
+                                					const asdmStManUseAlternatives asdmStManUse)
  {
 	if (tshape.nelements() != 3) throw(AipsError("TileShape has to have 3 elements "));
 
@@ -1220,7 +1206,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 		td.defineHypercolumn("TiledSigma", 2,stringToVector(MS::columnName(MS::SIGMA)));
 	}
 
-	SetupNewTable newtab(MSFileName, td, option);
+	SetupNewTable newtab(MSFileName, td, Table::New);
 
 	uInt cache_val = 32768;
 
@@ -1322,7 +1308,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 	MeasurementSet *ms = new MeasurementSet(newtab, lock);
 
 	// Set up the sub-tables for the UVFITS MS (we make new tables with 0 rows)
-	// Table::TableOption option = Table::New;
+	Table::TableOption option = Table::New;
 	createSubtables(*ms, option);
 
 	// Set the TableInfo
@@ -1375,7 +1361,7 @@ void MSTransformDataHandler::createSubtables(MeasurementSet& ms, Table::TableOpt
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>&)
+Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>& datacols)
 {
 	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 	Bool success = true;
@@ -2466,9 +2452,8 @@ Bool MSTransformDataHandler::copyAntenna()
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::copyFeed()
 {
-	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-
 	const MSFeed& oldFeed = mssel_p.feed();
+
 	MSFeed& newFeed = msOut_p.feed();
 	const ROMSFeedColumns incols(oldFeed);
 	MSFeedColumns outcols(newFeed);
@@ -2510,59 +2495,20 @@ Bool MSTransformDataHandler::copyFeed()
 
 		for (uInt k = 0; k < totalSelFeeds; ++k)
 		{
-
 			antCol.put(k, antNewIndex_p[antCol(k)]);
 			if (spwCol(k) > -1) spwCol.put(k, spwRelabel_p[spwCol(k)]);
 		}
 	}
 
-	// Check if selected spw is WVR data. WVR data does not have FEED data
-	// so it is not a failure if newFeed.nrow == 0
-	if (newFeed.nrow() < 1 and spw_p.size() == 1){
-		Int ddid = spw2ddid_p[0];
-		String inputMSName = ms_p.tableName();
-		Int procid = getProcessorId(ddid, inputMSName);
-
-		const MSProcessor oldProc = mssel_p.processor();
-		if (oldProc.nrow() != 0){
-			const ROMSProcessorColumns proccols(oldProc);
-			const ROScalarColumn<String>& ptype = proccols.type();
-			String proctype = ptype.asString(procid);
-
-			if (proctype.compare("RADIOMETER") == 0)
-				return true;
-		}
-
-	}
-
 	if (newFeed.nrow() < 1)
 	{
-//		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
 		os << LogIO::SEVERE << "No feeds were selected." << LogIO::POST;
 		return false;
 	}
 
 	return True;
 }
-
-// -----------------------------------------------------------------------
-//  Get the processorId corresponding to a given DDI
-// -----------------------------------------------------------------------
-Int MSTransformDataHandler::getProcessorId(Int dataDescriptionId, String msname)
-{
-    ostringstream taql;
-    taql << "SELECT PROCESSOR_ID from " << msname;
-    taql << " WHERE DATA_DESC_ID ==" << dataDescriptionId;
-    taql << " LIMIT 1";
-
-    casa::TableProxy *firstSelectedRow = new TableProxy(tableCommand(taql.str()));
-    Record colWrapper = firstSelectedRow->getVarColumn(String("PROCESSOR_ID"),0,1,1);
-    casa::Vector<Int> processorId = colWrapper.asArrayInt("r1");
-
-    delete firstSelectedRow;
-    return processorId[0];
-}
-
 
 // -----------------------------------------------------------------------
 //
@@ -3060,17 +3006,6 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 
 	uInt rowIndex = spwTable_0.nrow();
 
-	// Map subMS with spw_id to merge the FEED table later
-	Vector<uInt> mapSubmsSpwid;
-
-	// subMS_0000 starts with spw 0
-	uInt spwStart = 0;
-	mapSubmsSpwid.resize(filenames.size());
-	mapSubmsSpwid[0] = spwStart;
-
-	// for next subMS
-	spwStart = spwStart + rowIndex;
-
 	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
 	{
 		String filename_i = filenames(subms_index);
@@ -3078,14 +3013,7 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 		MSSpectralWindow spwTable_i = ms_i.spectralWindow();
 		MSSpWindowColumns spwCols_i(spwTable_i);
 
-		uInt nrow = spwTable_i.nrow();
-		spwTable_0.addRow(nrow);
-
-		// Map of this subMS to spw ID
-		mapSubmsSpwid[subms_index] = spwStart;
-
-		// for next subMS
-		spwStart = spwStart + nrow;
+		spwTable_0.addRow(spwTable_i.nrow());
 
 		for (uInt subms_row_index=0;subms_row_index<spwTable_i.nrow();subms_row_index++)
 		{
@@ -3104,16 +3032,6 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 			spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
 			spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
 
-			// Optional columns (BBC_NO, ASSOC_SPW_ID, ASSOC_NATURE)
-			if (spwCols_i.bbcNo().isNull()==false and spwCols_i.bbcNo().hasContent()==true)
-				spwCols_0.bbcNo().put(rowIndex,spwCols_i.bbcNo()(subms_row_index));
-
-			if (spwCols_i.assocSpwId().isNull()==false and spwCols_i.assocSpwId().hasContent()==true)
-				spwCols_0.assocSpwId().put(rowIndex,spwCols_i.assocSpwId()(subms_row_index));
-
-			if(spwCols_i.assocNature().isNull()==false and spwCols_i.assocNature().hasContent()==true)
-				spwCols_0.assocNature().put(rowIndex,spwCols_i.assocNature()(subms_row_index));
-
 			rowIndex += 1;
 		}
 	}
@@ -3121,7 +3039,6 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 	ms_0.flush(True);
 
 	mergeDDISubTables(filenames);
-	mergeFeedSubTables(filenames, mapSubmsSpwid);
 
 	return True;
 }
@@ -3147,6 +3064,7 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 		ddiTable_0.addRow(dditable_i.nrow());
 
+
 		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
 		{
 			// get the last spw id entered in the 0th DD table
@@ -3154,7 +3072,6 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
 			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
-			// SPW_ID cannot be the re-indexed value here
 			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
 			rowIndex += 1;
 		}
@@ -3164,85 +3081,6 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 
 	return True;
 }
-
-
-// -----------------------------------------------------------------------
-// Method to merge FEED sub-tables from SubMSs to create the MMS-level FEED sub-table
-// -----------------------------------------------------------------------
-Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
-{
-	String filename_0 = filenames(0);
-	MeasurementSet ms_0(filename_0,Table::Update);
-	MSFeed feedTable_0 = ms_0.feed();
-	MSFeedColumns feedCols_0(feedTable_0);
-
-	uInt rowIndex = feedTable_0.nrow();
-
-	if (filenames.size() != mapSubmsSpwid.size()){
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-		os 	<< LogIO::WARN << "There was an error merging the FEED tables of the subMSs"
-			<< LogIO::POST;
-		return false;
-	}
-
-	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
-	{
-		String filename_i = filenames(subms_index);
-		MeasurementSet ms_i(filename_i);
-		MSFeed feedtable_i = ms_i.feed();
-		MSFeedColumns feedcols_i(feedtable_i);
-
-		feedTable_0.addRow(feedtable_i.nrow());
-
-		// The starting SPW ID of this subMS is
-		uInt spwid = mapSubmsSpwid[subms_index];
-
-		uInt spw_i_previous = 0;
-
-		for (uInt subms_row_index=0;subms_row_index<feedtable_i.nrow();subms_row_index++)
-		{
-
-			uInt spw_i = feedcols_i.spectralWindowId().get(subms_row_index);
-			if (spw_i != spw_i_previous){
-				// increment spwid
-				spwid += 1;
-			}
-
-			// FEED table columns"
-			// POSITION BEAM_OFFSET POLARIZATION_TYPE POL_RESPONSE RECEPTOR_ANGLE ANTENNA_ID
-			// BEAM_ID FEED_ID INTERVAL NUM_RECEPTORS SPECTRAL_WINDOW_ID TIME FOCUS_LENGTH
-
-			feedCols_0.position().put(rowIndex,feedcols_i.position()(subms_row_index));
-			feedCols_0.beamOffset().put(rowIndex,feedcols_i.beamOffset()(subms_row_index));
-			feedCols_0.polarizationType().put(rowIndex,feedcols_i.polarizationType()(subms_row_index));
-			feedCols_0.polResponse().put(rowIndex,feedcols_i.polResponse()(subms_row_index));
-			feedCols_0.receptorAngle().put(rowIndex,feedcols_i.receptorAngle()(subms_row_index));
-			feedCols_0.antennaId().put(rowIndex,feedcols_i.antennaId()(subms_row_index));
-			feedCols_0.beamId().put(rowIndex,feedcols_i.beamId()(subms_row_index));
-			feedCols_0.feedId().put(rowIndex,feedcols_i.feedId()(subms_row_index));
-			feedCols_0.interval().put(rowIndex,feedcols_i.interval()(subms_row_index));
-			feedCols_0.numReceptors().put(rowIndex,feedcols_i.numReceptors()(subms_row_index));
-			feedCols_0.time().put(rowIndex,feedcols_i.time()(subms_row_index));
-
-			// optional column (?)
-			if (feedcols_i.focusLength().isNull()==false and feedcols_i.focusLength().hasContent()==true){
-				feedCols_0.focusLength().put(rowIndex,feedcols_i.focusLength()(subms_row_index));
-			}
-
-			// SPW_ID cannot be the re-indexed value here
-			feedCols_0.spectralWindowId().put(rowIndex,spwid);
-
-			spw_i_previous = feedcols_i.spectralWindowId().get(subms_row_index);
-
-			rowIndex += 1;
-		}
-	}
-
-	ms_0.flush(True);
-
-	return True;
-}
-
 
 // -----------------------------------------------------------------------
 // Work-around to copy the keywords of the FLOAT_DATA column to the output MS

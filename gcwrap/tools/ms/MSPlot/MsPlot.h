@@ -53,7 +53,7 @@
 #include <measures/Measures/MPosition.h>
 #include <flagging/Flagging/SLog.h>
 
-#include <msvis/MSVis/MsAverager.h>
+#include <synthesis/MSVis/MsAverager.h>
 
 
 namespace casa { //#! NAMESPACE CASA - BEGIN

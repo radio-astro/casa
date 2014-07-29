@@ -35,7 +35,7 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <images/Images/ImageInterface.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 //
 // <summary> 
 //

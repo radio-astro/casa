@@ -1,4 +1,4 @@
-\documentclass[12pt, twoside]{article}
+\documentclass[12pt]{article}
 %\documentstyle[12pt,amsmath]{article}
 \usepackage{html}
 \usepackage{epsf}
@@ -10,14 +10,11 @@
 %\usepackage{MnSymbol,wasysym}
 \usepackage{marvosym}
 
-\markboth{S. Bhatnagar}{MeasurementSet Selection Syntax}
-\pagestyle{myheadings}
-
-\setlength{\textheight}{23.0cm}
-\setlength{\textwidth}{17.00cm}
-\setlength{\topmargin}{-1.0cm}
-\setlength{\oddsidemargin}{0.1cm}
-\setlength{\evensidemargin}{0.1cm}
+%\setlength{\textheight}{23.0cm}
+\setlength{\textwidth}{15.00cm}
+%\setlength{\topmargin}{-1.5cm}
+\setlength{\oddsidemargin}{0.75cm}
+\setlength{\evensidemargin}{0.5cm}
 %\setlength{\parskip}{5pt}
 %\setlength{\parindent}{20pt}
 
@@ -27,63 +24,46 @@
 %\topmargin -1.5cm
 %\textheight 23cm
 %\parskip 1ex    % White space between paragraphs amount
-%\sffamily
-\renewcommand{\familydefault}{\sfdefault}
-
-
-\newcommand{\MSS} {{\tt MSSelection}}
-\newcommand{\MSSelection}    {\htmladdnormallinkfoot{{\tt MSSelection}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelection.html}}
-\newcommand{\MSSelectionError} {\htmladdnormallinkfoot{{\tt MSSelectionError}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionError.html}}
-\newcommand{\MSSelectionErrorHandler} {\htmladdnormallinkfoot{{\tt MSSelectionErrorHandler}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1MSSelectionErrorHandler.html}}
-\newcommand{\CalTables} {\htmladdnormallinkfoot{{\tt CalTables}}{http://casa.nrao.edu/active/docs/doxygen/html/classcasa\_1\_1CalTable.html}}
-\newcommand{\PDFVersion} {\htmladdnormallinkfoot{PDF Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}}
-
+\pagestyle{myheadings}
 
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: April 25, 2014)}}
+\date{June 15, 2007\\{\small (Updated: June 14, 2013)}}
 \maketitle
 \normalsize
+\markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
 \begin{center}
-  \PDFVersion
+  \htmladdnormallinkfoot{PDF
+    Version}{http://www.aoc.nrao.edu/~sbhatnag/misc/msselection.pdf}
 \end{center}
 
 \begin{abstract}
-  This note describes the syntax for the various expressions for
-  selecting data from the Measurement Set, implemented in the
-  \MSSelection\ module of CASACore.  All expressions consist of a
-  comma or semi-colon separated list of specifications.  Except
-  channel selection, the final product of parsing the expressions is a
-  Table Expression Node (TEN) which can be used to construct a table
-  with only the selected rows.  Higher level global methods to return
-  a selected table, given the user supplied expressions, are also
-  provided as part of this module.
+This note describes the syntax for the various expressions for
+selecting data from the Measurement Set.  This is the syntax that is
+implemented in the {\tt MSSelection} module of CASA.  The syntax is
+derived from an \htmladdnormallinkfoot{earlier
+  note}{http://almasw.hq.eso.org/almasw/bin/view/OFFLINE/DataSelection}
+on syntax definition.  All expressions consist of a comma or
+semi-colon separated list of specifications.  Except channel
+selection, the final product of parsing the expressions is a Table
+Expression Node (TEN) which can be used to construct a selected
+Measurement Set.  Higher level global methods to return a selected MS,
+given the user supplied expressions, are also provided as part of the
+{\tt MSSelection} module.
 
-  Error handling is done via the C++ exception handling mechanism.
-  The exceptions thrown by the \MSS\ module are of type
-  \MSSelectionError\ which is derived from {\tt AipsError} class.  The
-  exceptions generated from each individual expression parser are
-  further specializations of the {\tt MSSeletionError} class.
-  Application layer code therefore can have a finer level control on
-  error handling.  The module now also support externally plug-able
-  error handlers of type \MSSelectionErrorHandler. This allows
-  application layer code to have control on the resolution mechanism
-  of the exceptional states that may be reached during the parsing
-  cycle.
-
-  The \MSS\ module now can also be used for other tables
-  that follow the general data base design of the {\tt
-    MeasurementSet}.  The CASA \CalTables\ is an example which also
-  uses the \MSS\ module for data selection.
+Error handling is done via the C++ exception handling mechanism.  The
+exceptions thrown by the {\tt MSSelection} module are of type {\tt
+  MSSelectionError} which is derived from {\tt AipsError} class.  The
+exceptions generated from each individual expression parser are
+further specializations of the {\tt MSSeletionError} class.
+Application layer code therefore can have a finer level control on
+error handling.
 \end{abstract}
-\newpage
-\tableofcontents
-\newpage
 
 \section{General Syntax}
 \label{Sec:GENERALSYNTAX}
-A \MSS\ expression consists of a comma separated list of
+A MSSelection expression consists of a comma separated list of
 specifications.  Specifications are typically strings or numbers.
 Strings and numbers can be mixed to form a single list.  Elements of
 the list which can be converted to integers are treated as integer
@@ -174,7 +154,7 @@ Strings can include any character except the following:
 \begin{verbatim}
    ','   ';' '"'  '/'  ':' and NEWLINE
 \end{verbatim}
-(these are reserved characters for \MSS\ expression syntax).
+(these are reserved characters for MSSelection expression syntax).
 Strings that do not contain any of the characters used to construct
 regular expressions or patterns are used for exact matches.  Although
 it is highly discouraged to have name in the database containing the
@@ -185,7 +165,7 @@ are super-set of literal strings. I.e. literal string is a valid
 regular expression also).  This leaves the list '"', '*', '?', '{' and
   '}' as the list of printable character that cannot be part of a name
 (i.e., a name containing this character can never be matched in a
-\MSS\ expression).  If a need is felt to include these as well,
+MSSelection expression).  If a need is felt to include these as well,
 an escape mechanism can be included later (but I would prefer to
 enforce that {\bf at least} these characters not be part of any
 name!).  Following are some examples of strings/regular
@@ -219,8 +199,8 @@ name character are included as part of the name.  Hence
 
 \begin{itemize}
 \item field={\tt A , B , C} is same as field={\tt A,B,C}
-\item field={\tt A , BB~BB , C} is same as field={\tt A,BB~BB,C}
-  (first name is "A", second name is "BB~BB" and the third name is
+\item field={\tt A , BB BB , C} is same as field={\tt A,BB BB,C}
+  (first name is "A", second name is "BB BB" and the third name is
   "C")
 \item baseline={\tt 1 , 2 , 3 \& 4 , 5 , 6 ; 10 $\sim$ 11 \& 20 $\sim$
   30} is same as\\ baseline={\tt 1,2,3\&4,5,6;10$\sim$11\&20$\sim$30}
@@ -289,12 +269,11 @@ separated list of baseline specifications.
 \subsubsection{Antenna specification}
 
 An ANT can be given as a single \hyperref{string}{string (see Section
-}{)}{Sec:STRINGS} (literal/pattern/regular expression), single integer
-ID, a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of integer
-IDs or a comma separated list of integers.  For VLA-specific reasons
-(see Section~\ref{VLACONVENTION}), {\bf only} for antenna
-specifications, integers are first converted to strings and matched
-against the antenna names.  E.g.
+}{}{Sec:STRINGS} (literal/pattern/regular expression), single integer
+ID, a range of integer IDs or a comma separated list of integers.  For
+VLA-specific reasons (see Section~\ref{VLACONVENTION}), {\bf only} for
+antenna specifications, integers are first converted to strings and
+matched against the antenna names.  E.g.
 
 \begin{itemize}
 \item {\tt VLA:N1} corresponds to antenna named "VLA:N1".
@@ -310,12 +289,11 @@ The precise logic applied to the antenna specification (ANT) is as
 follows:
 
 \begin{enumerate}
-\item If ANT is an integer index (or a list or \hyperref{range}{range
-    (see Section }{)}{Sec:RANGE}), it is first used as a name (e.g. the
-  index 1 is converted to a string "1" etc.)  and matched against the
-  {\tt NAME} column of {\tt ANTENNA} sub-table.  If no match is found,
-  it is treated as an integer index and matched against the antenna
-  indices.
+\item If ANT is an integer index (or a list or range), it is first
+  used as a name (e.g. the index 1 is converted to a string "1" etc.)
+  and matched against the {\tt NAME} column of {\tt ANTENNA}
+  sub-table.  If no match is found, it is treated as an integer index
+  and matched against the antenna indices.
 
 \item If ANT is a string which cannot be converted to an integer, it
   is first matched against the {\tt NAME} column of the {\tt ANTENNA}
@@ -362,7 +340,6 @@ operator or a pair of antenna specifications separated by an operator.
 Operator can be one, two or three ampersands ({\tt '\&'}):
 
 \begin{table}[h!]
-\caption{Table of allowed baseline selection operators and their meaning.} 
 \begin{center}
 \begin{tabular}{|c|l|}
 \hline
@@ -376,6 +353,7 @@ Operator can be one, two or three ampersands ({\tt '\&'}):
 \hline
 \end{tabular}
 \end{center}
+\caption{Table of allowed baseline selection operators and their meaning.} 
 \label{BASELINEOP:TAB}
 \end{table}
 
@@ -387,53 +365,46 @@ Operator can be one, two or three ampersands ({\tt '\&'}):
 Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
 \begin{table}[h!]
-  \caption{Baseline specification syntax: ANT, ANT1 and ANT2 in the
-    table below represent a comma-separated list of antennas names or
-    a list of {\tt ANT@STATION} specifications.  {\tt ANT} and {\tt
-      STATION} in {\tt ANT@STATION} can themselves be comma-separated
-    lists enclosed in braces.}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
 {\bf Specification} & {\bf Meaning}\\
 \hline
 {\tt ANT}    & Select only cross-correlation baselines between all the\\
-             & antennas in {\tt ANT} and {\it all} other available antennas\\
+       & antennas in {\tt ANT} and {\it all} other available antennas\\
 \hline
 {\tt ANT\&}  & Select only cross-correlation baselines between antennas\\
-             & in {\tt ANT} only\\
+       & in {\tt ANT} only\\
 \hline
-{\tt ANT1 \& ANT2} & Select only cross-correlation baselines between antennas\\
-                   & in {\tt ANT1} and {\tt ANT2}\\
+{\tt ANT1 \& ANT2} & Select only cross-correlation baselines between\\
+       & antennas in {\tt ANT1} and {\tt ANT2}\\
 \hline
-{\tt ANT\&\&} & Select cross- {\it and} auto-correlation baselines between all\\
-              & the antennas in {\tt ANT} only\\
+{\tt ANT\&\&} & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in {\tt ANT} only\\
 \hline
-{\tt ANT\&\&*} & Select cross- {\it and} auto-correlation baselines between all\\
-               & the antennas in {\tt ANT} and {\it all} other available antennas\\
+{\tt ANT\&\&*} & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in {\tt ANT} and {\it all} other\\
+       &available antennas\\
 \hline
-{\tt ANT1 \&\& ANT2} & Select cross- {\it and} auto-correlation baselines between\\  
-                     & antennas in {\tt ANT1} and {\tt ANT2}\\
+{\tt ANT1 \&\& ANT2} & Select cross- {\it and} auto-correlation baselines\\
+       & between antennas in {\tt ANT1} and {\tt ANT2}\\
 \hline
-{\tt ANT\&\&\&}  & Select {\it only} auto-correlation baselines for antennas in {\tt ANT}\\
+{\tt ANT\&\&\&}  & Select {\it only} auto-correlation baselines for\\
+       &antennas in {\tt ANT}\\
 \hline
-{\tt !ANT}  & Excludes all baselines involving antennas in {\tt ANT}. {\tt ANT} can be\\ 
-            & any of the above expressions\\
+{\tt !ANT}  & Excludes all baselines involving antennas in {\tt ANT}.\\
+      & {\tt ANT} can be any of the above expressions\\
 \hline
-{\tt ANT1 ; !ANT2} & {\tt ANT1} and {\tt ANT2} can be any of the above
-expressions. This \\
-                   & selects only cross-correlation baselines between all the\\
-                   & antennas in {\tt ANT1} and {\it all} other available antennas {\bf except} \\
-                   & those involving antennas in {\tt ANT2}.\\ 
-\hline
-\hline
-{\tt A1@S1}        & Select baselines with antenna {\tt A1} on station {\tt S1} only\\
-\hline
-{\tt (A1,A2)@(S1,S2)}  & Select baselines with antenna {\tt A1} on station {\tt S1} or {\tt S2} and \\
-                       & antenna {\tt A2} on station {\tt S1} or {\tt S2}\\
+{\tt ANT1 ; !ANT2} & {\tt ANT1} and {\tt ANT2} can be any of the above expressions.\\
+             & This selects only cross-correlation baselines\\
+             & between all the antennas in {\tt ANT1} and {\it all}\\
+             & other available antennas {\bf except} those involving\\ 
+             & antennas in {\tt ANT2}.\\ 
 \hline
 \end{tabular}
 \end{center}
+\caption{Baseline specification syntax: ANT, ANT1 and ANT2 represent a
+  comma-separated list of antennas.} 
 \label{BASELINE:TAB}
 \end{table}
 Formally, baseline specification is of the form {\tt
@@ -516,12 +487,12 @@ something that does reflect that its a name and not get confused with
 integer indexes), for now, to accommodate the VLA tradition, the
 following logic is used:
 
-\begin{quote}
-{\it  Just for antenna selection, a user supplied integer (or integer
-  list) is converted to a string and matched against the antenna name.
-  If that fails, the normal logic of using an integer as an integer
-  and matching it with antenna index is done.}
-\end{quote}
+\begin{description}
+\item[] Just for antenna selection, a user supplied integer (or
+  integer list) is converted to a string and matched against the
+  antenna name.  If that fails, the normal logic of using an integer
+  as an integer and matching it with antenna index is done.
+\end{description}
 For example, if the antenna with index 17 is named "21", the string
 {\tt "21,VLA22"} will expand into an antenna index list of 17,22
 (assuming that the antenna named VLA22 has index 22).
@@ -553,7 +524,7 @@ and field codes before being used for matching.
 Since none of the following characters are used as part of the FIELD
 selection expressions, they can also be used as part of field names:
 ";", "\$", "\%", "!", "@", and "\#"\footnote{In case users loose their
-  patience with the NRAO Observation Preparation Tool (NRAO OPT) and
+  patience with the NRAO Observataion Prepration Tool (NRAO OPT) and
   start giving field names like ``{\tt @\#!\$\%;}'', to them we can say ``...we
   understand.'' {\bf \Smiley{}}}.
 
@@ -565,11 +536,10 @@ against the field code.  If still no field is selected, an exception
 of type MSSelectionFieldParseError is thrown.
 
 Field specifications can also be give by their integer IDs.  IDs can
-be a single ID or a \hyperref{range}{range (see Section }{)}{Sec:RANGE}
-of IDs (N0$\sim$N1).  Field ID selection can also be done using a
-boolean expression.  For a field specification of the form "$>$ID",
-all field IDs greater than ID are selected.  Similarly for "$<$ID" all
-field IDs smaller than ID are selected.
+be a single ID or a range of IDs (N0$\sim$N1).  Field ID selection can
+also be done using a boolean expression.  For a field specification of
+the form "$>$ID", all field IDs greater than ID are selected.
+Similarly for "$<$ID" all field IDs smaller than ID are selected.
 
 The field selection expression is a comma-separated list of field
 specifications.  E.g.
@@ -596,9 +566,8 @@ converted to internal Measurement Set units using the spectral window
 sensitive reference frequency.
 
 If only a single UVDIST is specified, all rows that exactly match the
-given UVDIST are selected.  When UVDIST is given as a
-\hyperref{range}{range (see Section }{)}{Sec:RANGE} in the format
-N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
+given UVDIST are selected.  When UVDIST is given as a range in the
+format N0$\sim$N1[UNIT] (where N0 and N1 are valid numbers), all rows
 corresponding to the uv-distance between N0 and N1 (N0 and N1
 included) are selected.
 
@@ -634,6 +603,7 @@ any of the above mentioned uv-distance specifications.  E.g.
 
 Frequency selection expression consists of two specifications
 separated by colon (':') in the form:
+
 \begin{verbatim}
       SPWSPEC[:CHANSPEC]
 \end{verbatim}
@@ -650,117 +620,93 @@ with the syntax for CHANSPEC list.
 
 \subsection{Spectral Window Specification Syntax}
 
-Spectral windows (SPW) specification can be of the following types:
-\begin{enumerate}
-\item an integer ID 
-\item a name (as a literal 
-\hyperref{string}{string (see Section}{)}{Sec:STRINGS} for exact match
-or a regular expression/pattern)
-\item a frequency value (value with a unit).  
-\end{enumerate}
+Spectral windows (SPW) specification can be a single ID or a list of
+spectral window integer IDs, a spectral window name (as a literal
+\hyperref{string}{string (see Section
+}{}{Sec:STRINGS} (for exact match)/regular expression/pattern) or a reference
+frequency value (value with a unit).  A single frequency specification
+is used for exact match with the REF\_FREQUENCY column of the
+SPECTRAL\_WINDOW sub-table.  A range of frequencies are used to select
+all SPWs which are within the given range.  The allowed units are Hz,
+KHz, MHz, GHz or THz.
 
-\subsubsection{Selection by ID}
+SPWs can also be selected via a boolean expression for integer IDs.
 
-SPWSPEC can be single integer, a list or a range of integers.  It can also be
-a list of boolean expressions involving IDs.  E.g.
 \begin{itemize}
-\item spwspec="$>$ID" will select all SPWs with ID greater than the specified
+\item "$>$ID" will select all SPWs with ID greater than the specified
   value.
-\item spwspec="$<$ID" will select all SPWs with ID lesser than the specified
+\item "$<$ID" will select all SPWs with ID lesser than the specified
   value.
-\item spwspec={\tt 1,2,3} selects spectral window IDs 1,2 and 3
-\item spwspec={\tt 1;2;3} same as above.  This style can be used along
+\item "$>$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
+\item "$<$FREQ" will select all SPWs, the reference frequencies of
+  which are greater than the given frequency converted to Hz.
+\end{itemize}
+E.g.
+\begin{itemize}
+\item spw={\tt 1,2,3} selects spectral window IDs 1,2 and 3
+\item spw={\tt 1;2;3} same as above.  This style can be used along
   with CHANSPEC
-\item spwspec={\tt 1$\sim$3} same as above
-\end{itemize}
-
-\subsubsection{Selection by name}
-
-SPWSPEC can be a name or a list of names which will be matched against
-the NAME column of the SPECTRAL\_WINDOW.  The name can be
-a string for literal matching, or a regular expression or a pattern.
-All SPWs that match the given name will be selected.  E.g.
-\begin{itemize}
-\item spwspec="LBAND" will select {\it a} SPW named ``{\tt LBAND}''.
-\item spwspec="SUBBAND*" will select all SPWs with the name starting with ``{\tt SUBBAND}''.
-\item spwspec="SUBBAND*0" will select all SPWs with name starting with ``{\tt
-    SUBBAND}'' and ending with ``{\tt 0}''.
-\end{itemize}
-
-\subsubsection{Selection by frequency}
-SPWSPEC can also be constructed using the reference frequency of the
-SPWs.  The reference frequency is defined as the average of the
-frequency corresponding to the first and the last channel for each
-SPW.  A single frequency specification is used for exact match with
-the reference frequency.  A \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} of frequencies are used to select all SPWs with the
-reference frequencies within the given range.  The allowed units are
-Hz, KHz, MHz, GHz or THz.  E.g.
-\begin{itemize}
-\item spwspec="$>$FREQ" will select all SPWs, the reference frequencies of
-  which are greater than the given frequency converted to Hz.
-\item spwspec="$<$FREQ" will select all SPWs, the reference frequencies of
-  which are greater than the given frequency converted to Hz.
-\item spwspec={\tt 327MHz} selects spectral window with a reference
+\item spw={\tt 1$\sim$3} same as above
+\item spw={\tt 327MHz} selects spectral window with a reference
   frequency equal to 327.0 MHz
-\item spwspec={\tt 327$\sim$610MHz} selects all spectral windows with
+\item spw={\tt 327$\sim$610MHz} selects all spectral windows with
   reference frequencies in the range [327.0, 610.0] MHz.
-\item spwspec={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
+\item spw={\tt 1421MHz, 1422MHz, 1423MHz} selects SPWs with reference
   frequency 1421.0, 1422.0 and 1423.0 MHz.
-\item spwspec={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
+\item spw={\tt 1421MHz; 1422MHz; 1423MHz} same as above.  This style
   can be used along with CHANSPEC.
-\item spwspec={\tt $>$327MHz} selects all spectral windows with reference
+\item spw={\tt $>$327MHz} selects all spectral windows with reference
   frequency greater than 327.0 MHz
-\item spwspec={\tt $<$327MHz} selects all spectral windows with reference
+\item spw={\tt $<$327MHz} selects all spectral windows with reference
   frequency less than 327.0 MHz
 \end{itemize}
 
-\subsection{Channel Specification Syntax}
+\subsection{Channel Selection Syntax}
 
-Channel specification\footnote{\it The \MSS\ module is currently
+Channel specification\footnote{\it MSSelection module is currently
   used to only parse the channel selection expression to produce the
   START,STOP,STEP tuples.  No channel based selection is actually
   applied to the data.  The list of tuples per SPW is passed to the
   application program layer and the interpretation of the tuples for
   actual selection depends on the application programmer.} (referred
-to as CHANSPEC in the following description) is a START, STOP, STEP
+to as CHANSPEC in the following description) is a START,STOP,STEP
 tuple corresponding to the first frequency channel, the last frequency
 channel and the step size to increment from the first to the last
-channel.  The START and STOP part of the tuple can be
-\hyperref{range}{range (see Section }{)}{Sec:RANGE} specification for
-the range [START, STOP] followed by an optional STEP size.
+channel.  The START and STOP part of the tuple can be range
+specification for the range [START, STOP] followed by an optional STEP
+size.
 
 START and STOP part of the tuple can be specified as a single integer
-or physical quantity or as a \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} of integers or physical quantities.  A single integer
-is treated as a channel index and the tuple corresponds to [ID,ID,1].
-A single physical quantity is matched with the exact frequency value
-of the channels and tuple of matched channel index is constructed as
-[ID,ID,1].  A \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
-integers given as N0$\sim$N1 is used to construct a tuple [N0,N1,1].
-Similarly for a range of physical quantities.
+or physical quantity or as a range of integers or physical quantities.
+A single integer is treated as a channel index and the tuple
+corresponds to [ID,ID,1].  A single physical quantity is matched with
+the exact frequency value of the channels and tuple of matched channel
+index is constructed as [ID,ID,1].  A range of integers given as
+N0$\sim$N1 is used to construct a tuple [N0,N1,1].  Similarly for a
+range of physical quantities.
 
 If a START,STOP part of the tuple specification is followed by
 "\char94 STEP", the STEP is used as the third value of the tuple.
 STEP specification is a single integer or physical quantity.
-E.g. 0$\sim$10\char94 2 is converted to a START, STOP, STEP tuple
+E.g. 0$\sim$10\char94 2 is converted to a START,STOP,STEP tuple
 [0,10,2].
 
 A channel selection expression is a semi-colon separated list of
 channel specifications.  E.g.
 
 \begin{itemize}
-\item chanspec={\tt 1;2;3} selects channels 1,2 and 3.
-\item chanspec={\tt 1$\sim$3} selects channels 1,2 and 3.
-\item chanspec={\tt 0$\sim$10\char94 2} selects channels in the range
+\item chan={\tt 1;2;3} selects channels 1,2 and 3.
+\item chan={\tt 1$\sim$3} selects channels 1,2 and 3.
+\item chan={\tt 0$\sim$10\char94 2} selects channels in the range
   [0,10] with a step size of 2
-\item chanspec={\tt 1421MHz} selects a frequency channel corresponding to
+\item chan={\tt 1421MHz} selects a frequency channel corresponding to
   the frequency 1421.0 MHz
-\item chanspec={\tt 1421$\sim$1500MHz} selects all channels in the range
+\item chan={\tt 1421$\sim$1500MHz} selects all channels in the range
   [1412.0, 1500.0] MHz
-\item chanspec={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels
+\item chan={\tt 1421$\sim$1500MHz\char94 10KHz} selects all channels
   in the range [1421.0, 1500.0] MHz in steps of 10 KHz.
-\item chanspec={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ;
+\item chan={\tt 1421$\sim$1500MHz\char94 10KHz ; 0$\sim$10\char94 2 ;
   20 ; 30; 40} selects all channels in the range [1421.0, 1500.0] MHz
   in steps of 10KHz, all channels with indexes in the range [0,10] in
   steps of 2 channels and channels 10, 20 and 30.
@@ -769,7 +715,7 @@ channel specifications.  E.g.
 \subsection{ Frequency Selection Syntax}
 
 The specifications for SPW and channels can be combined to form a
-fully qualified frequency selection expression of the form
+fully qualified frequency selection expression in the form
 SPWSPEC[:CHANSPEC] (square brackets indicate that :CHANSPEC is
 optional).  A frequency selection expression is a comma-separated list
 of SPWSPEC[:CHANSPEC] specifications.  Channel selections apply to all
@@ -809,40 +755,6 @@ SPWs selected by the SPWSPEC on the left of ':'.  E.g.
 \end{itemize}          
 
 \end{itemize}          
-
-Figure~\ref{FIG:SPW} shows an example frequency setup which makes
-clear the need to separate the full frequency selection expression
-into SPWSPEC and CHANSPEC parts.  SPW0 covers the frequency range
-1.0--2.0~GHz with SPW1 overlapping in the range 1.6--1.7~GHz, with a
-reference frequency of 1.5~GHz and 1.65~GHz respectively.  Even for
-the overlapping range of frequencies, the selection syntax must allow
-selection of channels from only SPW0 or only SPW1 or channels from
-both.  With independent specifications for SPW and channel selection,
-selection expressions can be constructed to select channels from SPW0
-\underline{\bf or} SPW1 or from SPW0 \underline{\bf and} SPW1. E.g.
-\begin{itemize}
-\item spw= ``{\tt * : 1.6$\sim$1.7GHz}'' will select all channels from
-  SPW0 \underline{\it and} SPW1 that are in the range
-\item spw= ``{\tt 1.5$\sim$1.65GHz : 1.6$\sim$1.7GHz}'' is the same as
-  above (selecting SPWs via reference frequency specification)
-\item spw=``{\tt 1.5MHz : 1.6$\sim$1.7GHz}'' will select all channels
-  from \underline{only} SPW0 that are in the range
-\item spw=``{\tt 0 : 1.6$\sim$1.7GHz}'' will select all channels
-  from \underline{only} SPW0 that are in the range
-\item spw=``{\tt 1.65MHz : 1.6$\sim$1.7GHz}'' same as above, with SPW0
-  selected via integer ID
-\item spw=``{\tt 1 : 1.6$\sim$1.7GHz}'' same as above, with SPW1
-  selected via integer ID
-
-\end{itemize}
-\begin{figure}
-\centerline{
-  \includegraphics[width=10cm]{FreqSettingExample.png}\qquad
-}
-\caption{Frequency setup with two overlapping SPWs.}
-\label{FIG:SPW}
-
-\end{figure}
       
 \subsubsection{Notes}
 
@@ -876,7 +788,7 @@ frequency and polarization description of the data\footnote{The
   combined main-table descriptor for spectral windows and polarization
   is the Data Description ID (DDID).  DDID represents a two-level
   indirection based on the the Spectral Window and Polarization
-  sub-tables (which are the real astrophysically relevant parameters
+  sub-tables (which are the real astro-physically relevant parameters
   of the database).}.  E.g., it is valid to have data at 1420MHz, with
 some fraction of the data recorded with only parallel hand
 polarizations (e.g. "RR" and "LL") and some fraction of the data
@@ -928,17 +840,17 @@ row number of the {\tt "STATE"} sub-table appropriate for each row in
 the main table.  The {\tt "OBS\_MODE"} column of the {\tt STATE}
 sub-table contains strings describing the observational intent.
 These intents are referred to as "scan intents" and the scan-intent
-expressions in the \MSS\ module can be used for data selection
+expressions in the MSSelection module can be used for data selection
 based on these intents.
 
 \subsection{Syntax}
 
 The scan-intent selection expression is a comma-separated list of
 specifications.  Each specification can be a \hyperref{string}{string (see Section
-}{)}{Sec:STRINGS} , an integer or an
-integer \hyperref{range}{range (see Section }{)}{Sec:RANGE}.  As in other such expressions, a range $[N0,N1]$ can be
+}{}{Sec:STRINGS} , an integer or an
+integer range.  As in other such expressions, a range $[N0,N1]$ can be
 specified as {\tt N0$\sim$N1} (see Section~\ref{Sec:RANGE}).  \hyperref{String}{String (see Section
-}{)}{Sec:STRINGS}  can
+}{}{Sec:STRINGS}  can
 be regular expressions or patterns or quoted-strings for as-is
 matching (see Section~\ref{Sec:STRINGS}). 
 
@@ -961,14 +873,6 @@ selected.  E.g. {\tt scanintent=*CAL* \& *BAND*} will select only
 those scans the intent strings of which contain the strings {\tt
   "CAL"} {\it and} {\tt "BAND"}.  See
 Section~\ref{Sec:SCANINTENTEXAMPLES} for more examples.
-
-\subsection{Examples}
-\label{Sec:SCANINTENTEXAMPLES}
-Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
-Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
-selection expressions and the corresponding list of selected scan
-numbers from Table~\ref{Tab:SCANINTENT}.
-
 \begin{table}[ht!]
 \caption{Example scan-intent table}
 \begin{center}
@@ -985,9 +889,16 @@ numbers from Table~\ref{Tab:SCANINTENT}.
 \end{center}
 \label{Tab:SCANINTENT}
 \end{table}
-\begin{table}[h!]
-\caption{Examples of scan-intent selection expressions for intents
-shown in Table~\ref{Tab:SCANINTENT}}
+\subsection{Examples}
+\label{Sec:SCANINTENTEXAMPLES}
+Table~\ref{Tab:SCANINTENT} shows an example-table of scan-intents.
+Table~\ref{Tab:SCANINTENTEXPR} shows a list of some scan-intent
+selection expressions and the corresponding list of selected scan
+numbers from Table~\ref{Tab:SCANINTENTEXPR}.
+
+\begin{table}[ht!]
+\caption{Example of scan-intent selection expressions for scan-intents
+in Table~\ref{Tab:SCANINTENT}}
 \begin{center}
 % This LaTeX table template is generated by emacs 23.2.1
 \begin{tabular}{|l|l|l|}
@@ -996,30 +907,39 @@ shown in Table~\ref{Tab:SCANINTENT}}
 {\bf selection expression}&{\bf scans}& \\
 \hline
 \hline
-{\small \tt CALI*}   & 0,1,2 & \\
+{\tt CALI*}   & 0,1,2 & \\
 \hline
-{\small \tt *PHASE}   & 0,2   & Matches {\small \tt CALIBRATE\_PHASE} but \\
-                      &       & not {\small \tt PHASE\_UNSPECIFIED} \\
+{\tt *PHASE}   & 0,2   & Matches \\
+               &       & {\tt CALIBRATE\_PHASE} but \\
+               &       & not {\tt PHASE\_UNSPECIFIED} \\
 \hline
-{\small \tt *UNSPEC*} & 3     & \\
+{\tt *UNSPEC*} & 3     & \\
 \hline
-{\small \tt *AMPLI, *PHASE} & 1,2 & {\small \tt *AMPLI} matches {\small \tt CALIBRATE\_AMPLI}; \\
-                            &     & {\small \tt *PHASE} matches {\small \tt CALIBRATE\_PHASE} \\
+{\tt *AMPLI, *PHASE} & 1,2 & {\tt *AMPLI} matches \\
+                     &     & {\tt CALIBRATE\_AMPLI}; \\
+                     &     & {\tt *PHASE} matches \\
+                     &     & {\tt CALIBRATE\_PHASE} \\
 \hline
-{\small \tt *AMP*} & 1,2,3 & {\small \tt *AMP*} matches {\small \tt CALIBRATE\_AMPLI} and \\
-                   &       & {\small \tt AMPLI\_UNSPECIFIED} \\
+{\tt *AMP*} & 1,2,3 & {\tt *AMP*} matches \\
+            &       & {\tt CALIBRATE\_AMPLI} and \\
+            &       & {\tt AMPLI\_UNSPECIFIED} \\
 \hline
-{\small \tt *BAND \& *PHASE} & 0,2 & {\small \tt *BAND} and {\small \tt *PHASE} are  simultaneous present \\
-                             &     & for scans 0 and 2 only \\
+{\tt *BAND \& *PHASE} & 0,2 & {\tt *BAND} and {\tt *PHASE} are \\
+                      &     & simultaneous present \\
+                      &     & for scans 0 and 2 only \\
 \hline
-{\small \tt AMP* \& *PHASE*} & 3 & {\small \tt *PHASE*} matches scans 0,2,3. {\small \tt AMP*} matches \\
-                             &   & only scan 3. \\
+{\tt AMP* \& *PHASE*} & 3 & {\tt *PHASE*} matches scans \\
+                      &   & 0,2,3. {\tt AMP*} matches \\
+                      &   & only scan 3. \\
 \hline
-{\small \tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches {\small \tt *BAND} {\it and} \\
-                                       &   & {\small \tt *PHASE*} {\it and} {\small \tt *AMP*} is scan 2 \\
+{\tt *BAND \& *PHASE* \& *AMP*} & 2 & Only scan that matches \\
+                                &   & {\tt *BAND} {\it and} \\
+                                &   & {\tt *PHASE*} {\it and} {\tt *AMP*} is \\
+                                &   & scan 2 \\
 \hline
-{\small \tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\small \tt *BAND \& *PHASE} selects scans 0,2. \\
-                                      &       & {\small \tt AMPLI*} selects scan 3 \\
+{\tt *BAND \& *PHASE*, AMPLI*} & 0,2,3 & {\tt *BAND \& *PHASE} \\
+                               &       & selects scans 0,2. \\
+                               &       & {\tt AMPLI*} selects scan 3 \\
 \hline
 \end{tabular}
 \end{center}
@@ -1033,30 +953,30 @@ The syntax for the specification of both these is therefore identical.
 
 \subsection{Syntax}
 
-Scan and Sub-array selection specification is a single integer (INT)
-or a \hyperref{range}{range (see Section }{)}{Sec:RANGE} of
-integers(N0$\sim$N1).  Scans and sub-arrays can also be selected via
-boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
-"$<$=INT"\footnote{{\it Programmers note:} The getScanList()
-  (getSubArrayList() for sub-arrays) method will return the list
-  generated from INT,INT,... or INT$\sim$INT or "$<$INT"
-  specification.  For "$>$INT" specification, the returned list will
-  be number from INT part of "$>$INT" up to the maxScans (maxArrays for
-  sub-arrays) set via MSSelection::setMaxScan()
-  (MSSelection::setMaxArray() for sub-arrays).  The default value of
-  maxScans/maxArrays is {\tt std::standard\_limits$<$int$>$::max()}
-  (i.e. the maximum value an integer can take on a machine).  It is
-  done this way since there is no efficient way of generating a list
-  of SCAN/ARRAY IDs present in the data and "$>$INT" is an unbounded
-  list of integers.  The list of scans IDs in the data can be {\bf
-    probably} generated using the MSRange class - but I think it can
-  be quite expensive.  So if it is necessary to know the precise list
-  of scans selected using the "$>$INT" specification, the application
-  programs will have to use MSRange class to get the range in the
-  data.  An intersection of the list from MSRange and the list from
-  MSSelection.getScanList() will be the actual selected scans
-  (intersection of two CASA vectors can be done using the
-  set\_intersection() global method in MSSelectionTools.h).  }.
+Scan and Sub-array selection specification is a single integer (INT) or
+a range of integers(N0$\sim$N1).  Scans and sub-arrays can also be selected
+via boolean expressions of the type "$>$INT", "$>$=INT", "$<$INT" or
+"$<$=INT"\footnote{{\it Programmers note:}
+The getScanList() (getSubArrayList() for sub-arrays) method will
+return the list generated from INT,INT,... or INT$\sim$INT or "$<$INT"
+specification.  For "$>$INT" specification, the returned list will be
+number from INT part of "$>$INT" upto the maxScans (maxArrays for
+sub-arrays) set via MSSelection::setMaxScan()
+(MSSelection::setMaxArray() for sub-arrays).  The default value of
+maxScans/maxArrays is {\tt std::standard\_limits$<$int$>$::max()}
+(i.e. the maximum value an integer can take on a machine).  It is done
+this way since there is no efficient way of generating a list of
+SCAN/ARRAY IDs present in the data and "$>$INT" is an unbounded list
+of integers.  The list of scans IDs in the data can be {\bf probably}
+generated using the MSRange class - but I think it can be quite
+expensive.  So if it is necessary to know the precise list of scans
+selected using the "$>$INT" specification, the application programs
+will have to use MSRange class to get the range in the data.  An
+intersection of the list from MSRange and the list from
+MSSelection.getScanList() will be the actual selected scans
+(intersection of two CASA vectors can be done using the
+set\_intersection() global method in MSSelectionTools.h).
+}.
 
 Full expression is a comma-separated list of any of the above index
 specifications.  E.g.
@@ -1071,11 +991,9 @@ specifications.  E.g.
 
 \newpage
 \appendix{}
-\section{Appendix: Using the {\tt MSSelection} module for other MS-like Tables}
-\newpage
 \section{Appendix: General Error Handling}
 
-The \MSS\ sub-system reports errors via the C++ exception
+The MSSelection sub-system reports errors via the C++ exception
 mechanism.  The objects thrown have the following inheritance
 hierarchy:
 
@@ -1099,17 +1017,16 @@ MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
 
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
-  Subarray,Poln,State\}ParseError} exception.  All other forms of
-errors (e.g. illegal \hyperref{range}{range (see Section
-}{)}{Sec:RANGE} specification N0$\sim$N1 where N0 $>$ N1) are reported
-by throwing an exception of type {\tt MSSelection\{Time, Spw, Field,
-  UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
+  Subarray,Poln,State\}ParseError} exception.  All other forms of errors
+(e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1) are
+reported by throwing an exception of type {\tt MSSelection\{Time, Spw,
+  Field, UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
-Hence, to catch all errors thrown from the \MSS\ sub-system,
-catch the \MSSelectionError\ object.  For more specific exception
+Hence, to catch all errors thrown from the MSSelection sub-system,
+catch the MSSelectionError object.  For more specific exception
 handling, catch the more qualified MSSelection*Error objects.  For
 catching only parsing errors, catch the MSSelection*ParseError object.
-As is obvious, any un-caught exception from the \MSS\ sub-system
+As is obvious, any un-caught exception from the MSSelection sub-system
 will be caught in the AipsError catch block.
 
 The exceptional error message consists of a human understandable
@@ -1123,29 +1040,26 @@ character.  E.g.
 
 The normal (default) behavior of the parsers is to throw an exception
 when an error is encountered during parsing cycle or in the
-rule-resolution code.  However there are cases where instead of
+rule-resolution code.  However there are cases where instead of the
 throwing an exception, the errors must be collected as they occur and
 resolution of the error done at the end of the parsing cycle.  In the
-\MSS\ module, this is achieved by installing an error handler
-object of type \MSSelectionErrorHandler\footnote{This is also the
+MSSelection module, this is achieved by handling the errors using an
+object of type {\tt MSSelectionErrorHanlder}\footnote{This is also the
   base-class from which all specializations of the error handlers must
-  be derived.} in the instance of the \MSS\ object.  This is the
-object that is used internally to handle errors in the \MSS\
-module.  The default error handler that comes pre-installed simply
-throws an exception of the appropriate kind when an error is
-encountered, recreating the normal behaviour of the C++ exception
-handling mechanism.
+  be derived.}.  The default error
+handler that comes pre-installed in the modules simply throws an
+exception of the appropriate kind when an error is encountered.
 
 To collect errors (and the error messages generated in the process) as
 they occur for later resolution, the client-side code can install a
 specialization of the error handler of type {\tt MSSelectionLogError},
 a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
-  MSSelection::setErrorHandler()} method.  At the appropriate place in
-the client code, a call to {\tt
-  MSSelectionErrorHandler::reportError()} can be made to display the
-collected error messages as warning messages. This behavior can be
-changed in a specialization of the {\tt MSSelectionErrorHandler} class
-by overloading the {\tt reportError} method.
+  MSSelection::setErrorHanlder()} method.  At the appropriate place in
+the code, a call to {\tt MSSelectionErrorHandler::reportError()} can be
+called to display the collected error messages as warning
+messages. This behavior can be changed in a specialization of the {\tt
+  MSSelectionErrorHandler} class by overloading the {\tt reportError}
+method.
 
 This mechanism of error handling is currently available for ANTENNA
 and STATE (a.k.a. ``intent selection'') selection expressions only.

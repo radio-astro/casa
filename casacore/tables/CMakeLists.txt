@@ -175,9 +175,6 @@ ${BISON_TableGram_OUTPUTS}
 ${FLEX_TableGram_OUTPUTS}
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_tables PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_tables casa_casa)
 
 add_subdirectory (apps)

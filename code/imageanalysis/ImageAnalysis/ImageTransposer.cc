@@ -18,9 +18,9 @@ namespace casa {
 const String ImageTransposer::_class = "ImageTransposer";
 
 ImageTransposer::ImageTransposer(
-		const SPCIIF image, const String& order, const String& outputImage
+		const ImageTask::shCImFloat image, const String& order, const String& outputImage
 )
-	: ImageTask<Float>(
+	: ImageTask(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	),
@@ -40,10 +40,10 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-		const SPCIIF image, const Vector<String> order,
+		const ImageTask::shCImFloat image, const Vector<String> order,
 	const String& outputImage
 )
-:  ImageTask<Float>(
+:  ImageTask(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
@@ -80,10 +80,10 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-		const SPCIIF image, uInt order,
+		const ImageTask::shCImFloat image, uInt order,
 	const String& outputImage
 )
-:  ImageTask<Float>(
+:  ImageTask(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	), _order(Vector<Int>()), _reverse(IPosition(0)) {
@@ -94,7 +94,7 @@ ImageTransposer::ImageTransposer(
 	_order = _getOrder(order);
 }
 
-SPIIF ImageTransposer::transpose() const {
+ImageInterface<Float>* ImageTransposer::transpose() const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	// get the image data
 	Array<Float> dataCopy = _getImage()->get();
@@ -120,7 +120,7 @@ SPIIF ImageTransposer::transpose() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	SPIIF output(
+	std::tr1::shared_ptr<ImageInterface<Float> > output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 
@@ -148,7 +148,7 @@ SPIIF ImageTransposer::transpose() const {
 			False, False, True, False
 		);
 	}
-	return output;
+	return output->cloneII();
 }
 
 ImageTransposer::~ImageTransposer() {}

@@ -86,12 +86,7 @@ def imsmooth(
     # boxcar, tophat and user-defined kernel's are not supported
     # yet.
 
-    if (
-        not (
-            kernel.startswith( 'g' ) or  kernel.startswith( 'b' )
-            or kernel.startswith('c')
-        )
-    ):
+    if ( not ( kernel.startswith( 'gaus' ) or  kernel.startswith( 'box' ) ) ):
         casalog.post( 'Our deepest apologies gaussian kernels is the only'
                       +' type supported at this time.', 'SEVERE' )
         return retValue
@@ -124,18 +119,7 @@ def imsmooth(
         pa=str(pa)+'deg'
         
     try:       
-        if ( kernel.startswith("g") or kernel.startswith("c")):
-            _myia.open(imagename)
-            if kernel.startswith("c"):
-                beam = _myia.commonbeam()
-                # add a small epsilon to avoid convolving with a null beam to reach
-                # a target resolution that already exists
-                beam['major'] = qa.mul(beam['major'], 1 + 1e-10)
-                beam['minor'] = qa.mul(beam['minor'], 1 + 1e-10)
-                major = ""
-                minor = ""
-                pa = ""
-                targetres = True
+        if ( kernel.startswith( "gaus" ) ):
             if (beam and (major or minor or pa)):
                 raise Exception, "You may specify only beam or the set of major/minor/pa"
             if not beam:
@@ -145,7 +129,10 @@ def imsmooth(
                     raise Exception, "Minor axis must be specified"
                 if not pa:
                     raise Exception, "Position angle must be specified"
-       
+
+            # GAUSSIAN KERNEL
+            casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
+            _myia.open( imagename )
             retia = _myia.convolve2d(
                 axes=[0,1], region=reg, major=major,
                 minor=minor, pa=pa, outfile=outfile,
@@ -154,7 +141,7 @@ def imsmooth(
             )
             return True
 
-        elif (kernel.startswith( "b" ) ):
+        elif (kernel.startswith( "box" ) ):
             if not major or not minor:
                 raise Exception, "Both major and minor must be specified."
             # BOXCAR KERNEL

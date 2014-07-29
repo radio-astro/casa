@@ -74,9 +74,8 @@ def usage():
     print 'Usage:\n'
     print 'casapy [casapy-options] -c runUnitTest.py [options] test_name\n'
     print 'Options:'
-    print '  no option              print this message and exit.'
-    print '  -a or --all            run all tests defined in '
-    print '                         trunk/gcwrap/python/scripts/tests/unittests_list.txt.'
+    print '  no option              run all tests defined in '
+    print '                         active/gcwrap/python/scripts/tests/unittests_list.txt.'
     print '  <test_name>            run only <test_name> (more tests are separated by spaces).'
     print '  -f or --file <list>    run the tests defined in an ASCII file <list>; one test per line.'
     print '  -d or --datadir <dir>  set an env. variable to a directory, TEST_DATADIR=<dir> '
@@ -84,11 +83,11 @@ def usage():
     print '  -m or --mem            show the memory used by the tests and the number of files left open.'
     print '  -g or --debug          set casalog.filter to DEBUG.'
     print '  -l or --list           print the list of tests from '
-    print '                         trunk/gcwrap/python/scripts/tests/unittests_list.txt.'
+    print '                         active/gcwrap/python/scripts/tests/unittests_list.txt.'
     print '  -s or --classes        print the classes from a test script (those returned by suite()).'
     print '  -H or --Help           print this message and exit.\n'
     print 'NOTE: it will look for tests in the install directory, which usually is \r'
-    print '      <casa_install_dir>/python/2.7/tests'
+    print '      <casa_install_dir>/python/2.6/tests'
     print 'See documentation in: http://www.eso.org/~scastro/ALMA/CASAUnitTests.htm\n'
     print '=========================================================================='
 
@@ -192,15 +191,14 @@ def main(testnames=[]):
     regstate = False
         
     listtests = testnames
-    if listtests == '--Help' or listtests == []:
+    if listtests == '--Help':
         usage()
         sys.exit()
-        
     if listtests == '--list':
         list_tests()
-        sys.exit()        
-                
-    if listtests == 'all':
+        sys.exit()
+        
+    if listtests == []:
         whichtests = 0
         # Get the full list of tests from file
         listtests = readfile(LISTofTESTS)
@@ -314,7 +312,7 @@ if __name__ == "__main__":
         
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "Halmgs:f:d:", ["Help","all","list","mem",
+                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmgs:f:d:", ["Help","list","mem",
                                                                      "debug","classes=","file=",
                                                                      "datadir="])
                 
@@ -332,63 +330,62 @@ if __name__ == "__main__":
             # the command line by removing this option and appending to the
             # testnames list in the args handling
             hasfile = False
-            alltests = False
             
-            #If no option is given, show the Help page
+            # If no option is given to this script, run all tests that are defined in
+            # ../gcwrap/python/scripts/tests/unittests_list.txt
             if opts == [] and args == []:
-                usage()
-                os._exit(0)
-                
-            
+                whichtests = 0
+                testnames = []
+            # run all tests in memory mode
+            elif (args == [] and opts.__len__() == 1 and opts[0][0] == "--mem"):
+                MEM = 1
+                whichtests = 0
+                testnames = []     
             # All other options       
-            for o, a in opts:
-                if o in ("-H", "--Help"):
-                    usage()
-                    os._exit(0) 
-                if o in ("-l", "--list"):
-                    list_tests()
-                    os._exit(0)
-                if o in ("-s", "--classes"): 
-                    testnames.append(a)
-                    getclasses(testnames)
-                    os._exit(0)
-                if o in ("-m", "--mem"):
-                    # run specific tests in mem mode            
-                    MEM = 1
-                elif o in ("-g", "--debug"):
-                    #Set the casalog to DEBUG
-                    casalog.filter('DEBUG')
-                elif o in ("-d", "--datadir"):
-                    # This will create an environmental variable called
-                    # TEST_DATADIR that can be read by the tests to use
-                    # an alternative location for the data. This is used 
-                    # to test tasks with MMS data
-                    # directory with test data
-                    datadir = a
-                    if not os.path.isdir(datadir):                            
-                        raise Exception, 'Value of --datadir is not a directory -> '+datadir  
-                    
-                    # Set an environmental variable for the data directory
-                    settestdir(datadir)
-                    if not os.environ.has_key('TEST_DATADIR'):    
-                        raise Exception, 'Could not create environmental variable TEST_DATADIR'                        
+            else:
+                for o, a in opts:
+                    if o in ("-H", "--Help"):
+                        usage()
+                        os._exit(0) 
+                    if o in ("-l", "--list"):
+                        list_tests()
+                        os._exit(0)
+                    if o in ("-s", "--classes"): 
+                        testnames.append(a)
+                        getclasses(testnames)
+                        os._exit(0)
+                    if o in ("-m", "--mem"):
+                        # run specific tests in mem mode            
+                        MEM = 1
+                    elif o in ("-g", "--debug"):
+                        #Set the casalog to DEBUG
+                        casalog.filter('DEBUG')
+                    elif o in ("-f", "--file"):
+                        hasfile = True
+                        testnames = a
+                    elif o in ("-d", "--datadir"):
+                        # This will create an environmental variable called
+                        # TEST_DATADIR that can be read by the tests to use
+                        # an alternative location for the data. This is used 
+                        # to test tasks with MMS data
+                        # directory with test data
+                        datadir = a
+                        if not os.path.isdir(datadir):                            
+                            raise Exception, 'Value of --datadir is not a directory -> '+datadir  
                         
-                elif o in ("-a", "--all"):
-                    alltests = True
-                    whichtests = 0
-                    testnames = 'all'
-                    break
-                elif o in ("-f", "--file"):
-                    hasfile = True
-                    testnames = a
-                    
-                else:
-                    assert False, "unhandled option"
+                        # Set an environmental variable for the data directory
+                        settestdir(datadir)
+                        if not os.environ.has_key('TEST_DATADIR'):    
+                            raise Exception, 'Could not create environmental variable TEST_DATADIR'
+                        
+                        
+                    else:
+                        assert False, "unhandled option"
 
 
-            # Deal with other arguments
-            if args != [] and not hasfile and not alltests:
-                testnames = args
+                # Deal with other arguments
+                if args != [] and not hasfile:
+                    testnames = args
                                         
         else:
             testnames = []

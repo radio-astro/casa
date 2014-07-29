@@ -30,12 +30,10 @@ class cleanhelper:
         ####
         if((type(imtool) != str) and (len(vis) !=0)):
             # for multi-mses input (not fully implemented yet)
-            if(type(vis)!=list):
-                vis=[vis]
-                self.sortedvisindx=[0]
-            self.initmultims(imtool, vis, usescratch)
-        #    else:
-        #        self.initsinglems(imtool, vis, usescratch)
+            if(type(vis)==list):
+                self.initmultims(imtool, vis, usescratch)
+            else:
+                self.initsinglems(imtool, vis, usescratch)
         #self.maskimages={}
         self.maskimages=odict()
         self.finalimages={}
@@ -54,15 +52,13 @@ class cleanhelper:
         self._casalog = casalog
         
     @staticmethod
-    def getsubtable(visname='', subtab='SPECTRAL_WINDOW'):
-        """needed because mms has it somewhere else
-        """
+    def getspwtable(visname=''):
         tb.open(visname)
-        spectable=string.split(tb.getkeyword(subtab))
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
         if(len(spectable) ==2):
             spectable=spectable[1]
         else:
-            spectable=visname+"/"+subtab
+            spectable=visname+"/SPECTRAL_WINDOW"
         return spectable
 
     def initsinglems(self, imtool, vis, usescratch):
@@ -131,7 +127,7 @@ class cleanhelper:
               # empty string = select all (='*', for msselectindex)
               inspw='*'
             mssel=ms.msseltoindex(vis=visname,spw=inspw)
-            spectable=self.getsubtable(visname, "SPECTRAL_WINDOW")
+            spectable=self.getspwtable(visname)
             tb.open(spectable)
             chanfreqs=tb.getvarcol('CHAN_FREQ')
             kys = chanfreqs.keys()
@@ -979,13 +975,8 @@ class cleanhelper:
         ia.calc('iif("'+outputmask+'"!=0.0,1.0,0.0)')
         ia.close()
         
-        ## CAS-5221 
-        #### CAS-6676 : Force frame to LSRK only if it's a fresh image being made.
-        ####                  If residual exists, then it's likely to not be in LSRK, so don't force the mask to be it.
-        ####                  The call to setFrameConversionForMasks() from task_clean.py would have set the
-        ####                  mask frame to match the ouput frame in the previous run.
-        if not os.path.exists(imagename+'.residual'):
-            self.setReferenceFrameLSRK( outputmask )
+        ## CAS-5221
+        self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
 
 
@@ -1009,8 +1000,7 @@ class cleanhelper:
             
         self.fieldindex=ms.msseltoindex(self.vis,field=field)['field'].tolist()
         if(len(self.fieldindex)==0):
-            fieldtab=self.getsubtable(self.vis, 'FIELD')
-            tb.open(fieldtab)
+            tb.open(self.vis+'/FIELD')
             self.fieldindex=range(tb.nrows())
             tb.close()
         #weighting and tapering should be done together
@@ -1063,10 +1053,6 @@ class cleanhelper:
         ############################################################
         # Not sure I need this now.... Nov 15, 2010
         vislist.reverse()
-        writeaccess=True
-        for i in vislist: 
-            writeaccess=writeaccess and os.access(self.vis[i], os.W_OK)
-        #if any ms is readonly then no model will be stored, MSs will be in readmode only...but clean can proceed
         for i in vislist:
           # select apropriate parameters
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
@@ -1078,19 +1064,19 @@ class cleanhelper:
           inintent = selectedparams['intent']
           inuvrange=selectedparams['uvrange'] 
 
-          #if len(self.vis)==1:
+          if len(self.vis)==1:
             #print "single ms case"
-          #  self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
-          #                    spw=inspw,time=intimerange, baseline=inantenna,
-          #                    scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
-          #                    usescratch=usescratch)
-          #else:
+            self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
+                              spw=inspw,time=intimerange, baseline=inantenna,
+                              scan=inscan, observation=inobs, intent=inintent, uvrange=inuvrange,
+                              usescratch=usescratch)
+          else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
-          self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
-                            field=self.fieldindex[i], spw=inspw,time=intimerange,
-                            baseline=inantenna, scan=inscan,
-                            observation=inobs, intent=inintent,
-                            uvrange=inuvrange, usescratch=usescratch, writeaccess=writeaccess)
+            self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
+                              field=self.fieldindex[i], spw=inspw,time=intimerange,
+                              baseline=inantenna, scan=inscan,
+                              observation=inobs, intent=inintent,
+                              uvrange=inuvrange, usescratch=usescratch)
 
     # private function for datsel and datweightfilter
     def _selectlistinputs(self,nvis,indx,params):
@@ -1900,8 +1886,7 @@ class cleanhelper:
         cubeshape=ia.shape()
         if not (cubeshape[3] > (chan+inimshape[3]-1)):
             return False
-        #rg0=ia.setboxregion(blc=blc,trc=trc)
-        rg0=rg.box(blc=blc,trc=trc)
+        rg0=ia.setboxregion(blc=blc,trc=trc)
         if inimshape[0:3]!=cubeshape[0:3]: 
             return False
         #ia.putchunk(pixels=imdata,blc=blc)
@@ -1946,8 +1931,7 @@ class cleanhelper:
             fldid0=fldinds[0]
         if restf=='':
             #tb.open(self.vis+'/FIELD')
-            fldtab=self.getsubtable(self.vis[self.sortedvisindx[0]],'FIELD')
-            tb.open(fldtab)
+            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
             nfld = tb.nrows()
             if nfld >= fldid0:
               srcid=tb.getcell('SOURCE_ID',fldid0)
@@ -1959,8 +1943,7 @@ class cleanhelper:
             if srcid==-1:
                 raise TypeError, "Rest frequency info is not supplied"
             #tb.open(self.vis+'/SOURCE')
-            sourcetab=self.getsubtable(self.vis[self.sortedvisindx[0]], 'SOURCE')
-            tb.open(sourcetab)
+            tb.open(self.vis[self.sortedvisindx[0]]+'/SOURCE')
             tb2=tb.query('SOURCE_ID==%s' % srcid)
             tb.close()
             nsrc = tb2.nrows()
@@ -2018,7 +2001,7 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2120,7 +2103,7 @@ class cleanhelper:
         ###############
         debug=False
         ###############
-        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2193,8 +2176,7 @@ class cleanhelper:
 
         #get restfreq
         if restf=='':
-          fldtab=self.getsubtable(invis,'FIELD')
-          tb.open(fldtab)
+          tb.open(invis+'/FIELD')
           nfld=tb.nrows()
           try:
             if nfld >= selfield[0]:
@@ -2210,8 +2192,7 @@ class cleanhelper:
             if mode=='velocity':
               raise TypeError, "Rest frequency info is not supplied"
           try:
-            srctab=self.getsubtable(invis, 'SOURCE')
-            tb.open(srctab)
+            tb.open(invis+'/SOURCE')
             tb2=tb.query('SOURCE_ID==%s' % srcid)
             nsrc = tb2.nrows()
             if nsrc > 0 and tb2.iscelldefined('REST_FREQUENCY',0):
@@ -2242,9 +2223,12 @@ class cleanhelper:
         #else:
           # obstime not included here
         if debug: print "before ms.cvelfreqs (start,width,nchan)===>",start, width, nchan
-        newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
-                              start=start,width=width,phasec=inphasec, restfreq=restf,
-                              outframe=self.usespecframe,veltype=veltype).tolist()
+        try:
+            newfreqs=ms.cvelfreqs(spwids=selspw,fieldids=selfield,mode=mode,nchan=nchan,
+                                  start=start,width=width,phasec=inphasec, restfreq=restf,
+                                  outframe=self.usespecframe,veltype=veltype).tolist()
+        finally:
+            ms.close()
         #print newfreqs
         descendingnewfreqs=False
         if len(newfreqs)>1:
@@ -2263,7 +2247,6 @@ class cleanhelper:
             print "len(newfreqs)===>",len(newfreqs)
           else:
             print "newfreqs=",newfreqs
-        ms.close()
 
         # set output number of channels
         if nchan ==1:
@@ -2333,8 +2316,7 @@ class cleanhelper:
           if mode=="frequency":
             retstart=str(newfreqs[0])+'Hz'
           elif mode=="velocity":
-            #startfreq=str(newfreqs[-1])+'Hz'
-            startfreq=(str(max(newfreqs))+'Hz') if(start=="") else  (str(newfreqs[-1])+'Hz')
+            startfreq=str(newfreqs[-1])+'Hz'
             retstart=self.convertvf(startfreq,frame,field,restf,veltype)
           elif mode=="channel":
             # default start case, use channel selection from spw
@@ -2368,11 +2350,7 @@ class cleanhelper:
             ##v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
             #v1 = self.convertvf(str(newfreqs[1])+'Hz',frame,field,restf,veltype=veltype)
             #v0 = self.convertvf(str(newfreqs[0])+'Hz',frame,field,restf,veltype=veltype)
-            if(qa.lt(v0, v1) and start==""):
-                ###user used "" as start make sure step is +ve in vel as start is min vel possible for freqs selected
-                retwidth=qa.tos(qa.sub(v1, v0))
-            else:
-                retwidth = qa.tos(qa.sub(v0, v1))
+            retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
           else:
             retwidth=1
           if debug: print "setChan retwidth=",retwidth
@@ -2459,7 +2437,7 @@ class cleanhelper:
                 except:
                     wset[i][j]=-1
         #print wset
-        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         nr=tb.nrows()
         for i in range(len(wset)):
@@ -2613,15 +2591,13 @@ class cleanhelper:
             mdir = me.direction(mrf, ra, dec)
         else:
             #tb.open(self.vis+'/FIELD')
-            fldtab=self.getsubtable(self.vis[self.sortedvisindx[0]],'FIELD')
-            tb.open(fldtab)
+            tb.open(self.vis[self.sortedvisindx[0]]+'/FIELD')
             srcdir=tb.getcell('DELAY_DIR',dir)
             mrf=tb.getcolkeywords('DELAY_DIR')['MEASINFO']['Ref']
             tb.close()
             mdir = me.direction(mrf,str(srcdir[0][0])+'rad',str(srcdir[1][0])+'rad')
             #tb.open(self.vis+'/OBSERVATION')
-            obstab=self.getsubtable(self.vis[self.sortedvisindx[0]],'OBSERVATION')
-            tb.open(obstab)
+            tb.open(self.vis[self.sortedvisindx[0]]+'/OBSERVATION')
         telname=tb.getcell('TELESCOPE_NAME',0)
         # use time in main table instead?
         tmr=tb.getcell('TIME_RANGE',0)
@@ -2644,7 +2620,7 @@ class cleanhelper:
         (part copied from setChannelization)
         """
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        spectable=self.getsubtable(self.vis[self.sortedvisindx[0]], "SPECTRAL_WINDOW")
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()

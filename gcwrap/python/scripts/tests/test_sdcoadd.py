@@ -1316,63 +1316,6 @@ class sdcoadd_storageTest( sdcoadd_unittest_base, unittest.TestCase ):
         id_out = self._get_ids(infiles)
         self._compare_ids(id_out, id_ref)
 
-class sdcoadd_flagTest( sdcoadd_unittest_base, unittest.TestCase ):
-    """
-    Test for flag data handling. actually nothing to do with flagtra and flagrows.
-    """
-    # Data path of input/output
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcoadd/'
-    # Input and output names
-    inlist = [ 'flagtest.asap', 'flagtest.asap' ]
-    outname = "sdcoadd_out.asap"
-    flagged_row_list = [0,1,4,5]
-    flagged_chan_row_list = [1,2,5,6]
-    flagged_chan_list = [[5,9],[15,19],[94,98]]
-    
-    def setUp( self ):
-        for infile in self.inlist:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
-            shutil.copytree(self.datapath+infile, infile)
-        default(sdcoadd)
-
-    def tearDown( self ):
-        for thefile in self.inlist + [self.outname]:
-            if (os.path.exists(thefile)):
-                shutil.rmtree(thefile)
-
-    def testflag( self ):
-        """Flag Test"""
-        result = sdcoadd(infiles=self.inlist,outfile=self.outname)
-        self.assertEqual(result,None)
-        self.assertTrue(os.path.exists(self.outname),msg="No output written")
-        self.verifyflag(self.outname)
-
-    def verifyflag(self, outfile):
-        tb.open(outfile)
-        assert (tb.nrows() == 8)
-        for i in xrange(tb.nrows()):
-            rowflag = tb.getcell('FLAGROW', i)
-            rowflag_ref = 1 if self.get_index(i, self.flagged_row_list) >= 0 else 0
-            self.assertEqual(rowflag, rowflag_ref)
-
-            mask = tb.getcell('FLAGTRA', i)
-            mask_ref = numpy.zeros(100, numpy.int32)
-            if self.get_index(i, self.flagged_chan_row_list) >= 0:
-                for j in xrange(len(self.flagged_chan_list)):
-                    idx_start = self.flagged_chan_list[j][0]
-                    idx_end   = self.flagged_chan_list[j][1]+1
-                    for k in xrange(idx_start, idx_end):
-                        mask_ref[k] = 128
-            self.assertTrue(all(mask == mask_ref))
-        tb.close()
-
-    def get_index(self, value, list):
-        try:
-            return list.index(value)
-        except:
-            return -1
-    
 def suite():
     return [sdcoadd_basicTest, sdcoadd_mergeTest, sdcoadd_storageTest,
-            sdcoadd_freqtolTest, sdcoadd_flagTest]
+            sdcoadd_freqtolTest]

@@ -30,8 +30,6 @@
 
 #include <images/Images/SubImage.h>
 
-#include <imageanalysis/ImageTypedefs.h>
-
 #include <tr1/memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -103,15 +101,12 @@ public:
       Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
-  // return a true copy (ie underlying data is a copy of the original, not
-  // a reference) of the subimage selected in the given region.
-  // A PagedImage is returned if outfile is not blank or a TempImage
-  // is returned if it is.
-  static SPIIT createImage(
-	  const ImageInterface<T>& image,
+  // return a PagedImage if outfile is not blank or a SubImage if it is.
+  static std::tr1::shared_ptr<ImageInterface<T> > createImage(
+	  ImageInterface<T>& image,
 	  const String& outfile, const Record& region,
-	  const String& mask, Bool dropDegenerateAxes,
-	  Bool overwrite, Bool list, Bool extendMask
+	  const String& mask, const Bool dropDegenerateAxes,
+	  const Bool overwrite, const Bool list, const Bool extendMask
   );
 
   private:

@@ -47,13 +47,13 @@ namespace casa {
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
-		const SPCIIF image, const String& region,
+		const ImageTask::shCImFloat image, const String& region,
 	const Record *const &regionPtr,	const String& box,
 	const String& chans, const String& stokes,
 	const String& mask, const Int axis,
 	const uInt ngauss, const String& estimatesFilename,
 	const SpectralList& spectralList
-) : ImageTask<Float>(
+) : ImageTask(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
 	),
@@ -69,7 +69,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
 	_sigma(), _abscissaDivisor(1.0) {
-	*_getLog() << LogOrigin(_class, __func__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
     		*_getLog() << "Logic error: both a non-empty estimatesFilename "
@@ -103,28 +103,25 @@ ImageProfileFitter::ImageProfileFitter(
 				_nLorentzSinglets++;
 				break;
 			case SpectralElement::POWERLOGPOLY:
-				ThrowIf(
-					_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
-					"Only a single power logarithmic polynomial may be fit "
-					"and it cannot be fit simultaneously with other functions"
-				);
+				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
+					*_getLog() << "Only a single power logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
+						<< LogIO::EXCEPTION;
+				}
 				_nPLPCoeffs = _nonPolyEstimates[i]->get().size();
 				break;
 			case SpectralElement::LOGTRANSPOLY:
-				ThrowIf(
-					_nonPolyEstimates.nelements() > 1 || _polyOrder > 0,
-					"Only a single transformed logarithmic polynomial may "
-					"be fit and it cannot be fit simultaneously with other functions"
-				);
+				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
+					*_getLog() << "Only a single transformed logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
+						<< LogIO::EXCEPTION;
+				}
 				_nLTPCoeffs = _nonPolyEstimates[i]->get().size();
 				break;
 			default:
-				ThrowCc(
-					"Logic error: Only gaussian singlets, "
-					"gaussian multiplets, and lorentzian singlets, or a single power "
-					"logarithmic polynomial,  or a single log transformed polynomial are "
-				    "permitted in the spectralList input parameter"
-				);
+				*_getLog() << "Logic error: Only gaussian singlets, "
+					<< "gaussian multiplets, and lorentzian singlets, or a single power "
+					<< "logarithmic polynomial,  or a single log transformed polynomial are "
+				    << "permitted in the spectralList input parameter"
+				    << LogIO::EXCEPTION;
 				break;
 			}
 
@@ -177,7 +174,7 @@ Record ImageProfileFitter::fit() {
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
     _checkNGaussAndPolyOrder();
-    LogOrigin logOrigin(_class, __func__);
+    LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
     std::auto_ptr<ImageInterface<Float> > originalSigma(0);
     {
@@ -211,20 +208,18 @@ Record ImageProfileFitter::fit() {
     *_getLog() << logOrigin;
 	try {
 		if (! _multiFit) {
-			ImageCollapser<Float> collapser(
+			ImageCollapser collapser(
 				_subImage, IPosition(1, _fitAxis), True,
-				ImageCollapserData::MEAN, "", True
+				ImageCollapser::MEAN, "", True
 			);
-			SPIIF x = collapser.collapse();
+			std::auto_ptr<ImageInterface<Float> > x(
+				collapser.collapse(True)
+			);
 			// _subImage needs to be a SubImage<Float> object
-			_subImage.reset(
-				new SubImage<Float>(
-					SubImageFactory<Float>::createSubImage(
-						*x, Record(), "", _getLog().get(),
-						False, AxesSpecifier(), False
-					)
-				)
-			);
+			_subImage.reset(new SubImage<Float>(SubImageFactory<Float>::createSubImage(
+				*x, Record(), "", _getLog().get(),
+				False, AxesSpecifier(), False
+			)));
 			if (_sigma.get()) {
 				Array<Bool> sigmaMask = _sigma->get() != Array<Float>(_sigma->shape(), 0.0);
 				if (anyTrue(! sigmaMask)) {
@@ -236,25 +231,23 @@ Record ImageProfileFitter::fit() {
 					}
 					_sigma->pixelMask().put(sigmaMask);
 				}
-				ImageCollapser<Float> collapsedSigma(
+				ImageCollapser collapsedSigma(
 					_sigma, IPosition(1, _fitAxis), True,
-					ImageCollapserData::MEAN, "", True
+					ImageCollapser::MEAN, "", True
 				);
-				SPIIF collapsed = collapsedSigma.collapse();
-				std::tr1::shared_ptr<TempImage<Float> >ctmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(collapsed);
-				ThrowIf(
-					! ctmp, "Dynamic cast failed"
+				_sigma.reset(
+					dynamic_cast<TempImage<Float> *>(
+						collapsedSigma.collapse(True)
+					)
 				);
-				_sigma = ctmp;
 			}
 		}
 		_fitallprofiles();
 	    *_getLog() << logOrigin;
 	}
 	catch (const AipsError& x) {
-		ThrowCc(
-			"Exception during fit: " + x.getMesg()
-		);
+		*_getLog() << "Exception during fit: " << x.getMesg()
+			<< LogIO::EXCEPTION;
 	}
 	ImageProfileFitterResults resultHandler(
 		_getLog(), _getImage()->coordinates(), &_fitters,
@@ -299,21 +292,18 @@ Record ImageProfileFitter::fit() {
 }
 
 void ImageProfileFitter::setPolyOrder(Int p) {
-	*_getLog() << LogOrigin(_class, __func__);
-	ThrowIf(
-		p < 0,
-		"A polynomial cannot have a negative order"
-	);
-	ThrowIf(
-		_nPLPCoeffs > 0,
-		"Cannot simultaneously fit a polynomial and "
-		"a power logarithmic polynomial."
-	);
-	ThrowIf(
-		_nLTPCoeffs > 0,
-		"Cannot simultaneously fit a polynomial and "
-		"a logarithmic transformed polynomial"
-	);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	if (p < 0) {
+		*_getLog() << "A polynomial cannot have a negative order" << LogIO::EXCEPTION;
+	}
+	if (_nPLPCoeffs > 0) {
+		*_getLog() << "Cannot simultaneously fit a polynomial and a power logarithmic polynomial."
+			<< LogIO::EXCEPTION;
+	}
+	if (_nLTPCoeffs > 0) {
+		*_getLog() << "Cannot simultaneously fit a polynomial and a logarithmic transformed polynomial."
+			<< LogIO::EXCEPTION;
+	}
     _polyOrder = p;
 }
 
@@ -351,6 +341,7 @@ void ImageProfileFitter::setSigma(const Array<Float>& sigma) {
 	temp->put(sigma);
 	setSigma(temp.get());
 }
+
 
 void ImageProfileFitter::setSigma(const ImageInterface<Float> *const &sigma) {
 	if (anyTrue(sigma->get() < Array<Float>(sigma->shape(), 0.0))) {
@@ -430,7 +421,7 @@ Record ImageProfileFitter::getResults() const {
 
 void ImageProfileFitter::setAbscissaDivisor(Double d) {
 	if (! _isSpectralIndex) {
-		*_getLog() << LogOrigin(_class, __func__);
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a "
 			<< "spectral index function, and so setting the abscissa divisor "
 			<< "will have no effect in the fitting process." << LogIO::POST;
@@ -443,12 +434,12 @@ void ImageProfileFitter::setAbscissaDivisor(Double d) {
 void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	String fitAxisUnit = _getImage()->coordinates().worldAxisUnits()[_fitAxis];
 	if (! q.isConform(fitAxisUnit)) {
-		*_getLog() << LogOrigin(_class, __func__);
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << "Abscissa divisor unit " << q.getUnit() << " is not consistent with fit axis unit."
 			<< LogIO::EXCEPTION;
 	}
 	if (! _isSpectralIndex) {
-		*_getLog() << LogOrigin(_class, __func__);
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a spectral index function "
 			<< "and so setting the abscissa divisor will have no effect in the fitting process."
 			<< LogIO::POST;
@@ -456,6 +447,7 @@ void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 	_abscissaDivisor = q.getValue(fitAxisUnit);
 	_abscissaDivisorForDisplay = String::toString(q);
 }
+
 
 void ImageProfileFitter::_getOutputStruct(
     vector<OutputDestinationChecker::OutputStruct>& outputs
@@ -488,7 +480,7 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 		) == 0
 		&& ! _isSpectralIndex
 	) {
-		*_getLog() << LogOrigin(_class, __func__)
+		*_getLog() << LogOrigin(_class, __FUNCTION__)
 			<< "Number of non-polynomials is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
@@ -496,7 +488,7 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 }
 
 void ImageProfileFitter::_finishConstruction() {
-    LogOrigin logOrigin(_class, __func__);
+    LogOrigin logOrigin(_class, __FUNCTION__);
 
     if (_fitAxis >= (Int)_getImage()->ndim()) {
     	*_getLog() << "Specified fit axis " << _fitAxis
@@ -567,7 +559,7 @@ Double ImageProfileFitter::getWorldValue(
 }
 
 void ImageProfileFitter::_fitallprofiles() {
-	*_getLog() << LogOrigin(_class, __func__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	IPosition imageShape = _subImage->shape();
 	// Set default axis
 	CoordinateSystem cSys = _subImage->coordinates();
@@ -664,11 +656,17 @@ void ImageProfileFitter::_fitProfiles(
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 	String abscissaUnits = _isSpectralIndex ? "native" : "pix";
-	ThrowIf(
+	if (
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
-		), errMsg
-	);
+		)
+	) {
+		*_getLog() << errMsg << LogIO::EXCEPTION;
+	}
+	IPosition inTileShape = _subImage->niceCursorShape();
+	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
+	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
+
 	uInt nProfiles = 0;
 	uInt nFit = 0;
 	IPosition fitterShape = inShape;
@@ -690,23 +688,7 @@ void ImageProfileFitter::_fitProfiles(
 	Bool checkMinPts = _subImage->isMasked();
 	Array<Bool> fitMask;
 	if (checkMinPts) {
-		fitMask = (
-			partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis))
-			>= _minGoodPoints
-		);
-		IPosition oldShape = fitMask.shape();
-		IPosition newShape(fitMask.ndim() + 1);
-		uInt oldIndex = 0;
-		for (uInt i=0; i<newShape.size(); i++) {
-			if (i == (uInt)_fitAxis) {
-				newShape[i] = 1;
-			}
-			else {
-				newShape[i] = oldShape[oldIndex];
-				oldIndex++;
-			}
-		}
-		fitMask.assign(fitMask.reform(newShape));
+		fitMask = partialNTrue(_subImage->getMask(False), IPosition(1, _fitAxis)) >= _minGoodPoints;
 	}
 	SpectralList newEstimates = _nonPolyEstimates;
 
@@ -721,7 +703,6 @@ void ImageProfileFitter::_fitProfiles(
 	Double *divisorPtr = 0;
 
 	Vector<Double> abscissaValues(0);
-	Bool fitSuccess;
 	if (isSpectral) {
 		abscissaValues = fitter.makeAbscissa(
 			abcissaType, True, 0
@@ -739,9 +720,9 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	Bool abscissaSet = abscissaValues.size() > 0;
 
-	PtrHolder<const PolynomialSpectralElement> polyEl;
+	std::auto_ptr<PolynomialSpectralElement> polyEl(0);
 	if (_polyOrder >= 0) {
-		polyEl.set(new PolynomialSpectralElement(_polyOrder));
+		polyEl.reset(new PolynomialSpectralElement(_polyOrder));
 		if (newEstimates.nelements() > 0) {
 			newEstimates.add(*polyEl);
 		}
@@ -755,11 +736,8 @@ void ImageProfileFitter::_fitProfiles(
 		yfunc = casa::log;
 	}
 	uInt nOrigComps = newEstimates.nelements();
-	*_getLog() << LogOrigin(_class, __func__);
-	uInt mark = (uInt)max(1000.0, std::pow(10.0, log10(nPoints/100)));
-	IPosition inTileShape = _subImage->niceCursorShape();
-	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
-	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	uInt mark = max(1000, pow(Int(10), (Int)log10(nPoints/100)));
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (nProfiles % mark == 0 && nProfiles > 0 && showProgress) {
 			pProgressMeter->update(Double(nProfiles));
@@ -773,39 +751,44 @@ void ImageProfileFitter::_fitProfiles(
 			fitter.setAbscissa(abscissaValues);
 			abscissaSet = False;
 		}
-		ThrowIf (
+
+		if (
 			! fitter.setData(
 				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
-			), "Unable to set data"
-		);
+			)
+		) {
+			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
+		}
 		_setFitterElements(
 			fitter, newEstimates, polyEl, goodPos,
 			fitterShape, curPos, nOrigComps
 		);
+
+		nFit++;
+		Bool ok = False;
 		try {
-			fitSuccess = fitter.fit();
-			if (fitSuccess) {
+			ok = fitter.fit();
+			if (ok) {
 				_flagFitterIfNecessary(fitter);
-				fitSuccess = fitter.isValid();
+				ok = fitter.isValid();
 				if (
-					fitSuccess && _nonPolyEstimates.nelements() > 0
+					ok && _nonPolyEstimates.nelements() > 0
 				) {
 					goodPos.push_back(curPos);
 				}
 			}
 		}
 		catch (const AipsError& x) {
-			fitSuccess = False;
+			ok = False;
 		}
 		_fitters(curPos).reset(new ProfileFitResults(fitter));
 		// Evaluate and fill
 		if (pFit || pResid) {
 			_updateModelAndResidual(
-				pFit, pResid, fitSuccess, fitter, sliceShape, curPos,
+				pFit, pResid, ok, fitter, sliceShape, curPos,
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
-		nFit++;
 	}
 }
 
@@ -853,17 +836,19 @@ void ImageProfileFitter::_updateModelAndResidual(
 
 void ImageProfileFitter::_setFitterElements(
 	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-	const PtrHolder<const PolynomialSpectralElement>& polyEl,
+	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
 	const std::vector<IPosition>& goodPos,
 	const IPosition& fitterShape, const IPosition& curPos,
 	uInt nOrigComps
+
+
 ) const {
 	if (_nonPolyEstimates.nelements() == 0) {
 		if (! fitter.setGaussianElements (_nGaussSinglets)) {
 			*_getLog() << "Unable to set gaussian elements"
 				<< LogIO::EXCEPTION;
 		}
-		if (polyEl.ptr()) {
+		if (polyEl.get() != 0) {
 			fitter.addElement(*polyEl);
 		}
 	}
@@ -921,9 +906,8 @@ void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
 		if (abscissaValues.size() > 0) {
 			Double minAbs = min(abs(abscissaValues));
 			Double maxAbs = max(abs(abscissaValues));
-			Double l = (Int)log10(sqrt(minAbs*maxAbs));
-			Double p = std::pow(10.0, l);
-			setAbscissaDivisor(p);
+			Int l = (Int)log10(sqrt(minAbs*maxAbs));
+			setAbscissaDivisor(pow(10, l));
 		}
 	}
 	if (_abscissaDivisor != 1) {

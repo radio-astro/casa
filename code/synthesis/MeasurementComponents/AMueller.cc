@@ -28,9 +28,9 @@
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 //#include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
-#include <msvis/MSVis/VBContinuumSubtractor.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/VBContinuumSubtractor.h>
 #include <synthesis/MeasurementComponents/CalCorruptor.h>
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>

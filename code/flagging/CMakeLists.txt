@@ -35,6 +35,11 @@ casa_add_library( flagging
   Flagging/RFFlagCube.cc
   Flagging/RFRowClipper.cc
   Flagging/RFFloatLattice.cc
+  Flagging/LightFlagger.cc
+  Flagging/LFTimeFreqCrop.cc
+  Flagging/LFExamineFlags.cc
+  Flagging/LFExtendFlags.cc
+  Flagging/LFDisplayFlags.cc
   Flagging/FlagDataHandler.cc
   Flagging/FlagMSHandler.cc
   Flagging/FlagCalTableHandler.cc
@@ -74,7 +79,13 @@ install (FILES
 	Flagging/FlagReport.h
 	Flagging/FlagVersion.h
 	Flagging/Flagger.h
-	Flagging/FlagPlotServerProxy.h
+	Flagging/LFBase.h
+	Flagging/LFDisplayFlags.h
+	Flagging/LFExamineFlags.h
+	Flagging/LFExtendFlags.h
+	Flagging/LFPlotServerProxy.h
+	Flagging/LFTimeFreqCrop.h
+	Flagging/LightFlagger.h
 	Flagging/RFABase.h
 	Flagging/RFADiffBase.h
 	Flagging/RFAFlagCubeBase.h
@@ -115,8 +126,8 @@ casa_add_test( flagging Flagging/test/tFlagAgentClipping.cc )
 casa_add_test( flagging Flagging/test/tFlagAgentTimeFreqCrop.cc )
 casa_add_test( flagging Flagging/test/tFlagAgentBase.cc )
 casa_add_test( flagging Flagging/test/tFlagDataHandler.cc )
-#casa_add_test( flagging Flagging/test/tAutoflag.cc )
-#casa_add_test( flagging Flagging/test/tRFASelector.cc )
-#casa_add_test( flagging Flagging/test/tFlagger.cc )
-#casa_add_test( flagging Flagging/test/tRFCubeLattice.cc )
+casa_add_test( flagging Flagging/test/tAutoflag.cc )
+casa_add_test( flagging Flagging/test/tRFASelector.cc )
+casa_add_test( flagging Flagging/test/tFlagger.cc )
+casa_add_test( flagging Flagging/test/tRFCubeLattice.cc )
 casa_add_test( flagging Flagging/test/tAgentFlagger.cc )

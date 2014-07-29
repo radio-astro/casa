@@ -34,7 +34,6 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-#include <casa/Containers/ContainerIO.h>
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
@@ -52,11 +51,11 @@
 
 #include <measures/Measures/MeasTable.h>
 
-#include <msvis/MSVis/MSAnalysis.h>
-#include <msvis/MSVis/MSContinuumSubtractor.h>
-#include <msvis/MSVis/Partition.h>
-#include <msvis/MSVis/Reweighter.h>
-#include <msvis/MSVis/SubMS.h>
+#include <synthesis/MSVis/MSAnalysis.h>
+#include <synthesis/MSVis/MSContinuumSubtractor.h>
+#include <synthesis/MSVis/Partition.h>
+#include <synthesis/MSVis/Reweighter.h>
+#include <synthesis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Logging/LogOrigin.h>
@@ -68,10 +67,10 @@
 #include <tables/Tables/TableCopy.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisIterator.h>
 
 #include <lattices/Lattices/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
@@ -602,33 +601,29 @@ msmetadata* ms::metadata(const float cachesize) {
 	}
 }
 
-::casac::record* ms::summary(
-	bool verbose, const string& listfile, bool listunfl,
-	double cachesize, bool overwrite
-) {
-	if (detached()) {
-		return 0;
-	}
+::casac::record*
+ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
+{
   ::casac::record *header = 0;
   try {
-
-       *itsLog << LogOrigin("ms", __func__);
+     if(!detached()){
+       *itsLog << LogOrigin("ms", "summary");
        // pass the original MS name to the constructor
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
        mss.setListUnflaggedRowCount(listunfl);
        mss.setMetaDataCacheSizeInMB(cachesize);
        casa::Record outRec;
-       if (! listfile.empty()){
+       if (listfile != ""){
     	   File diskfile(listfile);
-    	   ThrowIf(
-    			   diskfile.exists() && ! overwrite,
-    			   "File: " + listfile + " already exists; delete "
-    			   "it, choose another name, or set overwrite=True."
-    	   );
-
-    	   *itsLog << LogIO::NORMAL << "Writing output to file: "
-    			   << listfile << LogIO::POST;
+    	   if (diskfile.exists()){
+    		   String errmsg = "File: "+ listfile +
+    		   " already exists; delete it or choose another name.";
+    		   throw(AipsError(errmsg));
+    	   }
+    	   else {
+    		   cout << "Writing output to file: " << listfile << endl;
+    	   }
 
     	   /* First, save output to a string so that LogMessages
     	      and time stamps can be removed from it */
@@ -668,12 +663,12 @@ msmetadata* ms::metadata(const float cachesize) {
     	   mss.list(*itsLog, outRec, verbose, True);
     	   header=fromRecord(outRec);
        }
+     }
+   } catch (AipsError x) {
+       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+       Table::relinquishAutoLocks(True);
+       RETHROW(x);
    }
-  	  catch (const AipsError& x) {
-  		  *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-  		  Table::relinquishAutoLocks(True);
-  		  RETHROW(x);
-  	  }
    Table::relinquishAutoLocks(True);
    return header;
 }
@@ -1876,8 +1871,7 @@ ms::cvel(const std::string& mode,
 
       if(needToClearModel){
 	*itsLog << LogIO::NORMAL  << "NOTE: any virtual model data will be cleared." << LogIO::POST;
-	CountedPtr<VisModelDataI> visModelData = VisModelDataI::create();
-	visModelData->clearModelI(*itsMS);
+	VisModelData::clearModel(*itsMS);
       }
 
     }
@@ -3250,7 +3244,7 @@ ms::detached()
   Bool rstat(False);
   try {
      if (itsMS->isNull()) {
-       *itsLog << LogOrigin("ms", __func__);
+       *itsLog << LogOrigin("ms", "detached");
        *itsLog << LogIO::SEVERE
               << "ms is not attached to a file - cannot perform operation.\n"
               << "Call ms.open('filename') to reattach." << LogIO::POST;

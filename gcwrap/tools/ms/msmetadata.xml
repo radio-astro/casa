@@ -474,17 +474,14 @@ windows in the dataset and close the tool.
                 </param>
                 <param type="int" direction="in" name="polid">
                     <description>Polarization ID.</description>
-                    <value>-1</value>
+                    <value>0</value>
                 </param>
             </input>
             <returns type="record"/>
             <description>
                 Get the exposure time for the specified scan, spwid, and polarizaiton ID. This is the exposure time
                 of the record with the lowest time stamp of the records associated with these parameters. Returns
-                a quantity dictionary. If polid is not specified (or specified and negative) and there is only one
-                polarization ID in for the specified combination of scan and spwid, then that polarization ID is used.
-                If there are multiple polarization IDs for the specified scan and spwid, a list of these is logged
-                and an empty dictionary is returned.
+                a quantity dictionary.
             </description>
             <example>
     msmd.open("my.ms")
@@ -547,8 +544,7 @@ windows in the dataset and close the tool.
             </input>
             <returns type="intArray"/>
             <description>
-                Get an array of the unique, zero-based field IDs for the specified field name. If the field name is the
-                empty string (the default), a list of all unique field IDs in the main table of the MS will be returned.
+                Get an array of the unique, zero-based field IDs for the specified field name.
             </description>
             <example>
     msmd.open("my.ms")
@@ -610,31 +606,6 @@ windows in the dataset and close the tool.
             </example>
         </method>
         
-        <method type="function" name="fieldsforsource">
-            <shortdescription>Get an array of the unique fields for the specified source ID.</shortdescription>
-             <input>
-                <param type="int" direction="in" name="source">
-                    <description>Zero-based source ID for which to return the fields.</description>
-                    <value>-1</value>
-                </param>
-                <param type="bool" direction="in" name="asnames">
-                    <description>If true, return the field names. If false, return the zero-based field IDs.</description>
-                    <value>false</value>
-                </param>
-            </input>
-            <returns type="any"/>
-            <description>
-                Get an array of the unique fields for the specified spectral window.
-            </description>
-            <example>
-    msmd.open("my.ms")
-    # get the field names for source ID 1
-    field_names = msmd.fieldsforsource(1, True)
-    # get the field IDs for source ID 1
-    field_IDs = msmd.fieldsforsource(1, False)
-    msmd.done()
-            </example>
-        </method>
         
         <method type="function" name="fieldsforspw">
             <shortdescription>Get an array of the unique fields for the specified spectral window.</shortdescription>
@@ -819,29 +790,6 @@ windows in the dataset and close the tool.
     field_names = msmd.namesforfields([8, 2])
     # get all field names
     all_field_nams = namesforfields()
-    msmd.done()
-            </example>
-        </method>
-         
-        <method type="function" name="namesforspws" direction="in">
-            <shortdescription>Get the name of the specified spws.</shortdescription>
-             <input>
-                <param type="any" direction="in" name="spwids">
-                    <description>Zero-based spw ID(s) for which to get the names (integer or interger array). Unspecified will return all spw names.</description>
-                     <value type="string"/>
-                    <any type="variant" limittypes="string int intArray"/>
-                </param>
-            </input>
-            <returns type="stringArray"/>
-            <description>
-                Get the name of the specified spw(s).
-            </description>
-            <example>
-    msmd.open("my.ms")
-    # get the name for spws 8 and 2.
-    spw_names = msmd.namesforspws([8, 2])
-    # get all spw names
-    all_spw_names = namesforspws()
     msmd.done()
             </example>
         </method>

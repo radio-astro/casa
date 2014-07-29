@@ -43,17 +43,14 @@
 #include <synthesis/CalTables/CTPatchedInterp.h>
 #include <synthesis/CalTables/CalSetMetaInfo.h>
 #include <synthesis/CalTables/VisCalEnum.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/CalVisBuffer.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/CalVisBuffer.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
 
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Timer.h>
-#include <casadbus/plotserver/PlotServerProxy.h>
-#include <casadbus/utilities/BusAccess.h>
-#include <casadbus/session/DBusSession.h>
 
 #include <iostream>
 #include <fstream>
@@ -325,15 +322,10 @@ public:
 			 const Vector<Int>& tranFieldIn,
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
-                         const Float& inGainThres,
-                         const String& antSel,
-                         const String& timerangeSel,
-                         const String& scanSel,
 			 fluxScaleStruct& oFluxScaleStruct,
 			 const String& oListFile,
                          const Bool& incremental,
-                         const Int& fitorder,
-                         const Bool& display)=0;
+                         const Int& fitorder)=0;
 
   // Report state:
   inline virtual void state() { stateSVC(True); };
@@ -614,15 +606,10 @@ public:
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
-                         const Float& ,
-                         const String& ,
-                         const String& ,
-                         const String& ,
 			 SolvableVisCal::fluxScaleStruct&,
 			 const String&,
                          const Bool&,
-                         const Int&,
-                         const Bool&)
+                         const Int&)
 	{ throw(AipsError("NYI")); };
 
   // SVM-specific write to caltable
@@ -763,15 +750,10 @@ public:
 		 const Vector<Int>& tranFieldIn,
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
-                 const Float& inGainThres,
-                 const String& antSel,
-                 const String& timerangeSel,
-                 const String& scanSel,
 		 SolvableVisCal::fluxScaleStruct& oFluxScaleStruct,
 		 const String& oListFile,
                  const Bool& incremental=False,
-                 const Int& fitorder=1,
-                 const Bool& display=False);
+                 const Int& fitorder=1);
 
   // SVJ-specific write to caltable
   virtual void keepNCT();
@@ -791,12 +773,6 @@ public:
 
   virtual void nearest(const Double , Array<Float>& ) {};
   virtual void nearest(const Double , Array<Complex>& ) {};
-
-  //plotting historgram
-  void setupPlotter();
-  void plotHistogram(const String& title, const Int index,
-                     const Vector<Double>& data, const Int nbin);
-
 protected:
  
   // Number of Cal Matrices to form on baseline axis
@@ -875,11 +851,7 @@ private:
   uInt wTime_p,  wField_p, wChan_p, wAmp_p, 
        wPhase_p, wFlag_p,  wPol_p,  wAntCol_p, 
        wTotal_p, wPreAnt_p;
-
-  //for plotting
-  PlotServerProxy* plotter_;
-  Vector<dbus::variant> panels_id_;
-
+          
 };
 
 // Global methods

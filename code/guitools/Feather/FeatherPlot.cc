@@ -30,7 +30,7 @@
 #include <guitools/Feather/ExternalAxisWidgetRight.h>
 #include <guitools/Feather/ExternalAxisWidgetBottom.h>
 #include <guitools/Feather/FeatherCurve.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <QHBoxLayout>
 #include <QtCore/qmath.h>

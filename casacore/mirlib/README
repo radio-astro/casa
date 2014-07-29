@@ -39,11 +39,11 @@ Although the BIMA and ATNF versions use a slightly different directory
 structure (January 1997), the source code is essentially the same. You 
 should be able to find all subroutines in $MIR/src/subs, except for
 miriad.h, which was specifically generated for the AIPS++ project.
-MIRIAD V4 (the CARMA version of MIRIAD) has been placed under CVS control,
-mirlib is based on that release (May 2014).
-This version can handle files >2GB. The file maxdimc.h was
-edited to allow larger problems to be handled.
-The code was edited to reduce the number of compiler warnings.
+MIRIAD V3 (the BIMA version of MIRIAD) has been placed under CVS control,
+mirlib is a direct extraction of that release (June 2001).
+A new version of this library will be needed to deal with 
+large (>2GB) files, which is to be extracted from the CARMA version
+of MIRIAD (2011).
 
 Most of the low level C code was developed by Bob Sault
 (rsault@atnf.csiro.au).

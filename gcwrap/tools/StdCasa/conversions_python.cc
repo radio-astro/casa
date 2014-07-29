@@ -846,9 +846,8 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		bool is_tuple = PyTuple_Check(ele) ? true : false;
 		int element_size = is_tuple ? PyTuple_Size(ele) : PyList_Size(ele);
 
-	      	if ( singleton_elements ){
+	      	if ( singleton_elements )
 		    return 0;
-		}
 		list_elements = true;
 		if ( number_elements < 0 )
 		    number_elements = element_size;

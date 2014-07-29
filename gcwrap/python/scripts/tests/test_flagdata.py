@@ -93,7 +93,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         default(flagdata)
 
     def setUp_alma_ms(self):
@@ -109,8 +109,7 @@ class test_base(unittest.TestCase):
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
         os.system('rm -rf ' + self.vis + '.flagversions')
-#        self.unflag_ms()
-        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        self.unflag_ms()
         default(flagdata)
 
     def setUp_data4tfcrop(self):
@@ -455,20 +454,6 @@ class test_rflag(test_base):
     def test_rflag2(self):
         '''flagdata:: mode = rflag : partially-specified thresholds'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
-                       freqdev=0.5, flagbackup=False, extendflags=False)
-        res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
-        self.assertEqual(res['flagged'], 52411)
-        self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
-        self.assertEqual(res['spw']['11']['flagged'], 0)
-        
-    def test_rflag_numpy_types(self):
-        '''flagdata:: mode = rflag : partially-specified thresholds using numpy types'''
-        # Results should be the same as in test_rflag2 above
-        import numpy as np
-        t1 = [np.int32(1), 10, np.float32(0.1)]
-        t2 = [1, np.int16(11), np.float64(0.07)]
-
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[t1,t2], \
                        freqdev=0.5, flagbackup=False, extendflags=False)
         res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
         self.assertEqual(res['flagged'], 52411)
@@ -1226,7 +1211,7 @@ class test_alma(test_base):
         mycmd = ["mode='manual' antenna='DA41'",
                  "mode='manual' autocorr=True"]
         
-        # The first cmd only flags cross-correlations of DV41
+        # The first cmd only flags cross-correlations of DV01
         # The second cmd only flags auto-corrs of all antennas
         # that have processor type=CORRELATOR. The radiometer
         # data should not be flagged, which is in spw=0
@@ -1444,14 +1429,12 @@ class test_list_file(test_base):
         # creat first input file
         myinput = "scan='1'\n"\
                 "scan='2'\n"\
-                "# a comment line\n"\
                 "scan='3'"
         filename1 = 'list7a.txt'
         create_input(myinput, filename1)
         
         # Create second input file
         myinput = "scan='5'\n"\
-                  " \n"\
                 "scan='6'\n"\
                 "scan='7'"        
         filename2 = 'list7b.txt'

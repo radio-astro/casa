@@ -1,6 +1,5 @@
 import urllib2
 import datetime
-import re
 from taskinit import *
 # for getting a single tool in gentools 
 (tb,)=gentools(['tb'])
@@ -125,8 +124,6 @@ def correct_ant_posns (vis_name, print_offsets=False):
 
     corrections_list = []
     for correction_line in correction_lines:
-        # remove any html tags 
-        corerction_line = re.sub(r"<.*>","",correction_line)
         correction_line_fields = correction_line.split()
         if (len(correction_line_fields) > 9):
             [c_year, moved_date, obs_date, put_date, put_time_str, ant, pad, Bx, By, Bz] = correction_line_fields

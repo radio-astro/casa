@@ -165,9 +165,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
   protected:
-    virtual void ftWeightImage(Lattice<Complex>& wtImage, 
-			       const Matrix<Float>& sumWt,
-			       const Bool& doFFTNorm);
+    void ftWeightImage(Lattice<Complex>& wtImage, 
+		       const Matrix<Float>& sumWt,
+		       const Bool& doFFTNorm);
 
     virtual void resampleDataToGrid(Array<Complex>& griddedData,VBStore& vbs, 
 				    const VisBuffer& vb, Bool& dopsf);
@@ -237,7 +237,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 				   Double area,
     // 				   Int& doGrad,
     // 				   Int paIndex);
-    Bool oneTimeMessage_p;
   };
 } //# NAMESPACE CASA - END
 

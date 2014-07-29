@@ -136,20 +136,6 @@
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 
 
 #include <ConversionException.h>
@@ -160,7 +146,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalFocus.h
-    \brief Generated from model's revision "-1", branch ""
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -182,7 +168,7 @@ typedef void (CalFocusRow::*CalFocusAttributeFromText) (const string& s);
 /**
  * The CalFocusRow class is a row of a CalFocusTable.
  * 
- * Generated from model's revision "-1", branch ""
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalFocusRow {
@@ -1133,293 +1119,6 @@ public:
 	
 
 
-	
-	// ===> Attribute astigmPlus, which is optional
-	
-	
-	
-	/**
-	 * The attribute astigmPlus is optional. Return true if this attribute exists.
-	 * @return true if and only if the astigmPlus attribute exists. 
-	 */
-	bool isAstigmPlusExists() const;
-	
-
-	
- 	/**
- 	 * Get astigmPlus, which is optional.
- 	 * @return astigmPlus as vector<Length >
- 	 * @throws IllegalAccessException If astigmPlus does not exist.
- 	 */
- 	vector<Length > getAstigmPlus() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set astigmPlus with the specified vector<Length >.
- 	 * @param astigmPlus The vector<Length > value to which astigmPlus is to be set.
- 	 
- 		
- 	 */
- 	void setAstigmPlus (vector<Length > astigmPlus);
-		
-	
-	
-	
-	/**
-	 * Mark astigmPlus, which is an optional field, as non-existent.
-	 */
-	void clearAstigmPlus ();
-	
-
-
-	
-	// ===> Attribute astigmPlusError, which is optional
-	
-	
-	
-	/**
-	 * The attribute astigmPlusError is optional. Return true if this attribute exists.
-	 * @return true if and only if the astigmPlusError attribute exists. 
-	 */
-	bool isAstigmPlusErrorExists() const;
-	
-
-	
- 	/**
- 	 * Get astigmPlusError, which is optional.
- 	 * @return astigmPlusError as vector<Length >
- 	 * @throws IllegalAccessException If astigmPlusError does not exist.
- 	 */
- 	vector<Length > getAstigmPlusError() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set astigmPlusError with the specified vector<Length >.
- 	 * @param astigmPlusError The vector<Length > value to which astigmPlusError is to be set.
- 	 
- 		
- 	 */
- 	void setAstigmPlusError (vector<Length > astigmPlusError);
-		
-	
-	
-	
-	/**
-	 * Mark astigmPlusError, which is an optional field, as non-existent.
-	 */
-	void clearAstigmPlusError ();
-	
-
-
-	
-	// ===> Attribute astigmMult, which is optional
-	
-	
-	
-	/**
-	 * The attribute astigmMult is optional. Return true if this attribute exists.
-	 * @return true if and only if the astigmMult attribute exists. 
-	 */
-	bool isAstigmMultExists() const;
-	
-
-	
- 	/**
- 	 * Get astigmMult, which is optional.
- 	 * @return astigmMult as vector<Length >
- 	 * @throws IllegalAccessException If astigmMult does not exist.
- 	 */
- 	vector<Length > getAstigmMult() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set astigmMult with the specified vector<Length >.
- 	 * @param astigmMult The vector<Length > value to which astigmMult is to be set.
- 	 
- 		
- 	 */
- 	void setAstigmMult (vector<Length > astigmMult);
-		
-	
-	
-	
-	/**
-	 * Mark astigmMult, which is an optional field, as non-existent.
-	 */
-	void clearAstigmMult ();
-	
-
-
-	
-	// ===> Attribute astigmMultError, which is optional
-	
-	
-	
-	/**
-	 * The attribute astigmMultError is optional. Return true if this attribute exists.
-	 * @return true if and only if the astigmMultError attribute exists. 
-	 */
-	bool isAstigmMultErrorExists() const;
-	
-
-	
- 	/**
- 	 * Get astigmMultError, which is optional.
- 	 * @return astigmMultError as vector<Length >
- 	 * @throws IllegalAccessException If astigmMultError does not exist.
- 	 */
- 	vector<Length > getAstigmMultError() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set astigmMultError with the specified vector<Length >.
- 	 * @param astigmMultError The vector<Length > value to which astigmMultError is to be set.
- 	 
- 		
- 	 */
- 	void setAstigmMultError (vector<Length > astigmMultError);
-		
-	
-	
-	
-	/**
-	 * Mark astigmMultError, which is an optional field, as non-existent.
-	 */
-	void clearAstigmMultError ();
-	
-
-
-	
-	// ===> Attribute illumOffset, which is optional
-	
-	
-	
-	/**
-	 * The attribute illumOffset is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffset attribute exists. 
-	 */
-	bool isIllumOffsetExists() const;
-	
-
-	
- 	/**
- 	 * Get illumOffset, which is optional.
- 	 * @return illumOffset as vector<vector<Length > >
- 	 * @throws IllegalAccessException If illumOffset does not exist.
- 	 */
- 	vector<vector<Length > > getIllumOffset() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set illumOffset with the specified vector<vector<Length > >.
- 	 * @param illumOffset The vector<vector<Length > > value to which illumOffset is to be set.
- 	 
- 		
- 	 */
- 	void setIllumOffset (vector<vector<Length > > illumOffset);
-		
-	
-	
-	
-	/**
-	 * Mark illumOffset, which is an optional field, as non-existent.
-	 */
-	void clearIllumOffset ();
-	
-
-
-	
-	// ===> Attribute illumOffsetError, which is optional
-	
-	
-	
-	/**
-	 * The attribute illumOffsetError is optional. Return true if this attribute exists.
-	 * @return true if and only if the illumOffsetError attribute exists. 
-	 */
-	bool isIllumOffsetErrorExists() const;
-	
-
-	
- 	/**
- 	 * Get illumOffsetError, which is optional.
- 	 * @return illumOffsetError as vector<vector<Length > >
- 	 * @throws IllegalAccessException If illumOffsetError does not exist.
- 	 */
- 	vector<vector<Length > > getIllumOffsetError() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set illumOffsetError with the specified vector<vector<Length > >.
- 	 * @param illumOffsetError The vector<vector<Length > > value to which illumOffsetError is to be set.
- 	 
- 		
- 	 */
- 	void setIllumOffsetError (vector<vector<Length > > illumOffsetError);
-		
-	
-	
-	
-	/**
-	 * Mark illumOffsetError, which is an optional field, as non-existent.
-	 */
-	void clearIllumOffsetError ();
-	
-
-
-	
-	// ===> Attribute fitRMS, which is optional
-	
-	
-	
-	/**
-	 * The attribute fitRMS is optional. Return true if this attribute exists.
-	 * @return true if and only if the fitRMS attribute exists. 
-	 */
-	bool isFitRMSExists() const;
-	
-
-	
- 	/**
- 	 * Get fitRMS, which is optional.
- 	 * @return fitRMS as vector<Length >
- 	 * @throws IllegalAccessException If fitRMS does not exist.
- 	 */
- 	vector<Length > getFitRMS() const;
-	
- 
- 	
- 	
- 	/**
- 	 * Set fitRMS with the specified vector<Length >.
- 	 * @param fitRMS The vector<Length > value to which fitRMS is to be set.
- 	 
- 		
- 	 */
- 	void setFitRMS (vector<Length > fitRMS);
-		
-	
-	
-	
-	/**
-	 * Mark fitRMS, which is an optional field, as non-existent.
-	 */
-	void clearFitRMS ();
-	
-
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -1697,13 +1396,6 @@ void offIntensityWasFixedFromBin( EndianIStream& eis);
 void peakIntensityFromBin( EndianIStream& eis);
 void peakIntensityErrorFromBin( EndianIStream& eis);
 void peakIntensityWasFixedFromBin( EndianIStream& eis);
-void astigmPlusFromBin( EndianIStream& eis);
-void astigmPlusErrorFromBin( EndianIStream& eis);
-void astigmMultFromBin( EndianIStream& eis);
-void astigmMultErrorFromBin( EndianIStream& eis);
-void illumOffsetFromBin( EndianIStream& eis);
-void illumOffsetErrorFromBin( EndianIStream& eis);
-void fitRMSFromBin( EndianIStream& eis);
 
 
 	 /**
@@ -2088,97 +1780,6 @@ private:
 	
  	
 
-	
-	// ===> Attribute astigmPlus, which is optional
-	
-	
-	bool astigmPlusExists;
-	
-
-	vector<Length > astigmPlus;
-
-	
-	
- 	
-
-	
-	// ===> Attribute astigmPlusError, which is optional
-	
-	
-	bool astigmPlusErrorExists;
-	
-
-	vector<Length > astigmPlusError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute astigmMult, which is optional
-	
-	
-	bool astigmMultExists;
-	
-
-	vector<Length > astigmMult;
-
-	
-	
- 	
-
-	
-	// ===> Attribute astigmMultError, which is optional
-	
-	
-	bool astigmMultErrorExists;
-	
-
-	vector<Length > astigmMultError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute illumOffset, which is optional
-	
-	
-	bool illumOffsetExists;
-	
-
-	vector<vector<Length > > illumOffset;
-
-	
-	
- 	
-
-	
-	// ===> Attribute illumOffsetError, which is optional
-	
-	
-	bool illumOffsetErrorExists;
-	
-
-	vector<vector<Length > > illumOffsetError;
-
-	
-	
- 	
-
-	
-	// ===> Attribute fitRMS, which is optional
-	
-	
-	bool fitRMSExists;
-	
-
-	vector<Length > fitRMS;
-
-	
-	
- 	
-
 	////////////////////////////////
 	// Extrinsic Table Attributes //
 	////////////////////////////////
@@ -2259,13 +1860,6 @@ void offIntensityWasFixedFromBin( EndianIStream& eis);
 void peakIntensityFromBin( EndianIStream& eis);
 void peakIntensityErrorFromBin( EndianIStream& eis);
 void peakIntensityWasFixedFromBin( EndianIStream& eis);
-void astigmPlusFromBin( EndianIStream& eis);
-void astigmPlusErrorFromBin( EndianIStream& eis);
-void astigmMultFromBin( EndianIStream& eis);
-void astigmMultErrorFromBin( EndianIStream& eis);
-void illumOffsetFromBin( EndianIStream& eis);
-void illumOffsetErrorFromBin( EndianIStream& eis);
-void fitRMSFromBin( EndianIStream& eis);
 
 */
 	
@@ -2360,27 +1954,6 @@ void peakIntensityErrorFromText (const string & s);
 	
 	
 void peakIntensityWasFixedFromText (const string & s);
-	
-	
-void astigmPlusFromText (const string & s);
-	
-	
-void astigmPlusErrorFromText (const string & s);
-	
-	
-void astigmMultFromText (const string & s);
-	
-	
-void astigmMultErrorFromText (const string & s);
-	
-	
-void illumOffsetFromText (const string & s);
-	
-	
-void illumOffsetErrorFromText (const string & s);
-	
-	
-void fitRMSFromText (const string & s);
 	
 	
 	

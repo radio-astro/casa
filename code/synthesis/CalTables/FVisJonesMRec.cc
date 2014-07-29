@@ -27,7 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/FVisJonesMRec.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -65,9 +65,12 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 		return True;
 	}
 
+	Bool allScratchColsPresent = False;
+
 	// Find all existing spws,
 	MSSpectralWindow spwtable = ms_p.spectralWindow();
 	Int origNumSPWs = spwtable.nrow();
+	Int newSPWId = origNumSPWs;
 
 	vector<Int> spwsToCombine;
 	Vector<Bool> includeIt(origNumSPWs, False);
@@ -705,7 +708,7 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 Bool MSTransformRegridder::calcChanFreqs(	LogIO& os,
 			    							Vector<Double>& newCHAN_FREQ,
 			    							Vector<Double>& newCHAN_WIDTH,
-			    							Double& weightScale,
+			    						    Double& weightScale,
 			    							const Vector<Double>& oldCHAN_FREQ,
 			    							const Vector<Double>& oldCHAN_WIDTH,
 			    							const MDirection  phaseCenter,

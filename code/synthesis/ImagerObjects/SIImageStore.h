@@ -40,48 +40,26 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/BasicSL/Constants.h>
-#include <synthesis/TransformMachines/StokesImageUtil.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  
-  template <class T>
-  void openImage(const String& imagenamefull,CountedPtr<ImageInterface<T> >* img);
-    
 
 class SIImageStore 
 {
  public:
-  enum IMAGE_IDS {MASK=0,PSF,MODEL,RESIDUAL,WEIGHT,IMAGE,SUMWT,FORWARDGRID,BACKWARDGRID, MAX_IMAGE_IDS};
   // Default constructor
 
   SIImageStore();
-
-  SIImageStore(String imagename,const Bool ignorefacets=False);
-
+  SIImageStore(String imagename);
   SIImageStore(String imagename, 
 	       CoordinateSystem &imcoordsys, 
-	       IPosition imshape, 
-	       //	       const Int nfacets=1, 
-	       const Bool overwrite=False,
-	       const Bool useweightimage=False);
-
-  SIImageStore(CountedPtr<ImageInterface<Float> > modelim, 
-	       CountedPtr<ImageInterface<Float> > residim,
-	       CountedPtr<ImageInterface<Float> > psfim, 
-	       CountedPtr<ImageInterface<Float> > weightim, 
-	       CountedPtr<ImageInterface<Float> > restoredim, 
-	       CountedPtr<ImageInterface<Float> > maskim,
-	       CountedPtr<ImageInterface<Float> > sumwtim,
-	       CoordinateSystem& csys, 
-	       IPosition imshape, 
-	       String imagename, 
-	       const Int facet=0, const Int nfacets=1,
-	       const Int chan=0, const Int nchanchunks=1,
-	       const Int pol=0, const Int npolchunks=1);
-
-  
+	       IPosition imshape, const Bool overwrite=False);
+  // Contructor by image objects necessary for facetted imaging (subimages 
+  //can be passed in as residual and model etc). The caller has to make sure the 
+  //images are similar.  the Pointers are taken over by CountedPtr...and will be deleted when reference 
+  //count goes to 0
+  SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
+	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, ImageInterface<Float>* restoredim);
     
-  virtual void init();
 
   virtual ~SIImageStore();
 
@@ -89,138 +67,60 @@ class SIImageStore
   IPosition getShape();
   String getName();
 
-  virtual String getType(){return "default";}
+  CountedPtr<ImageInterface<Float> > psf();
+  CountedPtr<ImageInterface<Float> > residual();
+  CountedPtr<ImageInterface<Float> > weight();
+  CountedPtr<ImageInterface<Float> > model();
+  CountedPtr<ImageInterface<Float> > image();
+  CountedPtr<ImageInterface<Complex> > forwardGrid();
+  CountedPtr<ImageInterface<Complex> > backwardGrid();
 
-  virtual CountedPtr<ImageInterface<Float> > psf(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > residual(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > weight(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > model(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > image(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > mask(uInt term=0);
-  virtual CountedPtr<ImageInterface<Complex> > forwardGrid(uInt term=0);
-  virtual CountedPtr<ImageInterface<Complex> > backwardGrid(uInt term=0);
-  virtual CountedPtr<ImageInterface<Float> > sumwt(uInt term=0);
+  void setModelImage( String modelname );
 
-  virtual CountedPtr<ImageInterface<Float> > alpha(){throw(AipsError("No Alpha for 1 term"));};
-  virtual CountedPtr<ImageInterface<Float> > beta(){throw(AipsError("No Beta for 1 term"));};
+  Bool hasWeight(){return itsWeightExists;};
 
-  virtual void setModelImage( String modelname );
-  virtual Bool doesImageExist(String imagename);
-  void setImageInfo(const Record miscinfo);
+  Bool doImagesExist();
+  Bool doesImageExist(String imagename);
 
-  virtual void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
-  virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
+  void allocateRestoredImage();
+
+  void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
+  void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  virtual void dividePSFByWeight();
-  virtual void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
-  virtual void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
-  virtual void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
+  void divideResidualByWeight(const Float weightlimit=C::minfloat);
+  void dividePSFByWeight(const Float weightlimit=C::minfloat);
+  void divideModelByWeight(const Float weightlimit=C::minfloat);
 
-  virtual Bool releaseLocks();
-  virtual Double getReferenceFrequency(){return 0.0;}
-  virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
-  GaussianBeam getPSFGaussian();
-  virtual GaussianBeam restorePlane();
-  virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
-  virtual void pbcorPlane();
+  Bool isValid(){return itsValidity;}
 
-  virtual void makeImageBeamSet();
-  ImageBeamSet getBeamSet();
-  virtual void printBeamSet();
-  GaussianBeam findGoodBeam(Bool replace=False);
-  void lineFit(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2);
-  Float calcMean(Vector<Float> &vect, Vector<Bool> &flag);
-  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit);
-  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mean);
+  Bool releaseLocks();
 
+  // Get a SIImageStore of a given facet..the caller has to delete it
   // The images internall will reference back to a given section of the main of this.
   //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
-  virtual CountedPtr<SIImageStore> getSubImageStore(const Int facet=0, const Int nfacets=1, 
-						    const Int chan=0, const Int nchanchunks=1, 
-						    const Int pol=0, const Int npolchunks=1);
-
-  Bool getUseWeightImage(ImageInterface<Float>& target);
-
-  virtual Bool hasSensitivity(){return !itsWeight.null();}
-  virtual Bool hasMask(){return !itsMask.null(); }
-  virtual Bool hasModel() {return !itsModel.null();}
-  virtual Bool hasPsf() {return !itsPsf.null();}
-  virtual Bool hasResidual() {return !itsResidual.null();}
-  virtual Bool hasSumWt() {return !itsSumWt.null();}
-
-  //
-  //---------------------------------------------------------------
-  //
-  void makePersistent(String& fileName);
-  void recreate(String& fileName);
-
-  void validate();
-
-
-  void setDataPolFrame(StokesImageUtil::PolRep datapolrep) {itsDataPolRep = datapolrep;};
-  virtual void calcSensitivity();
+  SIImageStore * getFacetImageStore(const Int facet, const Int nfacets);
 
 protected:
-  CountedPtr<ImageInterface<Float> > makeSubImage(const Int facet, const Int nfacets,
-						  const Int chan, const Int nchanchunks,
-						  const Int pol, const Int npolchunks,
-						  ImageInterface<Float>& image);
-
-  Double memoryBeforeLattice();
-  IPosition tileShape();
-
-  Matrix<Float> getSumWt(ImageInterface<Float>& target);
-  void setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt);
-  void setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage);
-
-  Bool divideImageByWeightVal( ImageInterface<Float>& target );
-
-  void accessImage( CountedPtr<ImageInterface<Float> > &ptr, 
-		    CountedPtr<ImageInterface<Float> > &parentptr, 
-		    const String label );
-
-  CountedPtr<ImageInterface<Float> > openImage(const String imagenamefull, 
-					       const Bool overwrite, 
-					       const Bool dosumwt=False,
-					       const Int nfacetsperside=1);
-
-  Double getPbMax();
-
-
+// Can make this a utility function elsewhere...
+//nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
+static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
+Double memoryBeforeLattice();
+IPosition tileShape();
   ///////////////////// Member Objects
 
-  IPosition itsImageShape, itsParentImageShape;
+  IPosition itsImageShape;
   String itsImageName;
-  CoordinateSystem itsCoordSys;
-
-  Bool itsUseWeight;
-  Record itsMiscInfo;
-  CountedPtr<ImageInterface<Float> > itsMask, itsParentMask; // mutliterm shares this...
-  Double itsPBScaleFactor;
-
-  Int itsNFacets, itsFacetId;
-  Int itsNChanChunks, itsChanId;
-  Int itsNPolChunks, itsPolId;
-
-  StokesImageUtil::PolRep itsDataPolRep;
-
-  ImageBeamSet itsPSFBeams;
-
-  //
-  //------------------------------------------
-  // Non-persistent internal variables
-  Vector<String> imageExts;
-
-private:
-
-  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage, itsSumWt;
+  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
   CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
+  Bool itsWeightExists;
 
-  CountedPtr<ImageInterface<Float> > itsParentPsf, itsParentModel, itsParentResidual, itsParentWeight, itsParentImage, itsParentSumWt;
+  Bool itsPsfNormed, itsResNormed;
 
+  Bool itsValidity;
 
 };
+
 
 } //# NAMESPACE CASA - END
 

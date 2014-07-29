@@ -137,14 +137,14 @@ while ( @ARGV ) {
 	die "no directory provided with '-cd'" unless scalar(@ARGV) > 0;
 	my $dir = shift(@ARGV);
 	die "specified '-cd' parameter ($dir) is not a directory" unless -d $dir;
-	chdir($dir) or die "Can't change to directory $dir ... ($!)\n";
+	chdir($dir);
     } elsif ( m|--eval=(\S+)| ) {
 	my $e = $1;
 	die "eval file ($e) does not exist.." unless -f $e;
 	open(F,"< $e") or die "cannot read $e";
 	my @x = <F>;
 	close(F);
-	eval(join('',@x)) or die "--eval failed: $!\n";
+	eval join('',@x);
     }
 }
 
@@ -160,7 +160,6 @@ create_authority( $display, $authority );
 $ENV{'DISPLAY'} = "localhost:$display.0";
 $ENV{'XAUTHORITY'} = $authority;
 
-print "(xvfb-casapy) current directory: ", getcwd, "\n";
 print "--------------------------------------------------------------------------------\n";
 
 unless ( $casa_pid = fork( ) ) {
@@ -192,8 +191,6 @@ unless ( $casa_pid = fork( ) ) {
     ### all casa processes started are children of this child
     setpgrp(0,0);
 
-    print "(xvfb-casapy) current directory <begin>: ", getcwd, "\n" if $debug;
-    print "(xvfb-casapy) starting casapy as: casapy ", join(' ',@args), "\n" if $debug;
     my @args = ( "--nologger", "--log2term", "--colors=NoColor" );
     $expect = new Expect( "casapy", @args );
 
@@ -221,7 +218,6 @@ unless ( $casa_pid = fork( ) ) {
 				[ eof =>			sub { $eof_occurred = 1; } ] );
 
 
-    print "(xvfb-casapy) current directory <end>: ", getcwd, "\n";
     print "[result:exit condition] died prematurely\n" if $eof_occurred;
     print "[result:exit condition] execution timedout after " . ($timeout / 60) . " minutes of no output\n" if $timeout_occurred;
     print "[result:exit condition] execution completed...\n";

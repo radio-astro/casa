@@ -129,20 +129,6 @@
 
 	
 
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
-	
-
 
 
 #include <ConversionException.h>
@@ -175,7 +161,7 @@ class CalFocusRow;
  * Result of focus calibration performed on-line by TelCal.
  * <BR>
  
- * Generated from model's revision "-1", branch ""
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFocus </CAPTION>
@@ -273,7 +259,7 @@ class CalFocusRow;
  * </TR>
 	
  * <TR>
- * <TD> numReceptor (\f$N_{Rece}\f$)</TD> 
+ * <TD> numReceptor </TD> 
  * <TD> int </TD>
  * <TD>  &nbsp;  </TD> 
  * <TD> &nbsp;the number of receptors. </TD>
@@ -333,122 +319,73 @@ class CalFocusRow;
  * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Optional) </TH></TR>
 	
  * <TR>
- * <TD> polarizationsAveraged</TD> 
+ * <TD> polarizationsAveraged </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
  * <TD>&nbsp; Polarizations were averaged. </TD>
  * </TR>
 	
  * <TR>
- * <TD> focusCurveWidth</TD> 
+ * <TD> focusCurveWidth </TD> 
  * <TD> vector<vector<Length > > </TD>
  * <TD>  numReceptor, 3  </TD>
  * <TD>&nbsp; half power width of fitted focus curve (one triple per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> focusCurveWidthError</TD> 
+ * <TD> focusCurveWidthError </TD> 
  * <TD> vector<vector<Length > > </TD>
  * <TD>  numReceptor, 3  </TD>
  * <TD>&nbsp; Uncertainty of the focus curve width. </TD>
  * </TR>
 	
  * <TR>
- * <TD> focusCurveWasFixed</TD> 
+ * <TD> focusCurveWasFixed </TD> 
  * <TD> vector<bool > </TD>
  * <TD>  3  </TD>
  * <TD>&nbsp; each coordinate of the focus curve width was set (true) or not set (false) to an assumed value. </TD>
  * </TR>
 	
  * <TR>
- * <TD> offIntensity</TD> 
+ * <TD> offIntensity </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numReceptor  </TD>
  * <TD>&nbsp; the off intensity levels (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> offIntensityError</TD> 
+ * <TD> offIntensityError </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numReceptor  </TD>
  * <TD>&nbsp; the uncertainties on the off intensity levels (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> offIntensityWasFixed</TD> 
+ * <TD> offIntensityWasFixed </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
  * <TD>&nbsp; the off intensity level was fixed (true) or not fixed (false). </TD>
  * </TR>
 	
  * <TR>
- * <TD> peakIntensity</TD> 
+ * <TD> peakIntensity </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numReceptor  </TD>
  * <TD>&nbsp; the maximum intensities (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> peakIntensityError</TD> 
+ * <TD> peakIntensityError </TD> 
  * <TD> vector<Temperature > </TD>
  * <TD>  numReceptor  </TD>
  * <TD>&nbsp; the uncertainties on the maximum intensities (one value per receptor). </TD>
  * </TR>
 	
  * <TR>
- * <TD> peakIntensityWasFixed</TD> 
+ * <TD> peakIntensityWasFixed </TD> 
  * <TD> bool </TD>
  * <TD>  &nbsp; </TD>
  * <TD>&nbsp; the maximum intensity was fixed (true) or not fixed (false). </TD>
- * </TR>
-	
- * <TR>
- * <TD> astigmPlus</TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
- * <TD>&nbsp; the astigmatism component with 0 degree symmetry axis. </TD>
- * </TR>
-	
- * <TR>
- * <TD> astigmPlusError</TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
- * <TD>&nbsp; the statistical error on astigmPlus </TD>
- * </TR>
-	
- * <TR>
- * <TD> astigmMult</TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
- * <TD>&nbsp; the astigmatism component with 45 degrees symmetry axis. </TD>
- * </TR>
-	
- * <TR>
- * <TD> astigmMultError</TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
- * <TD>&nbsp; the statistical error on astigmMult </TD>
- * </TR>
-	
- * <TR>
- * <TD> illumOffset</TD> 
- * <TD> vector<vector<Length > > </TD>
- * <TD>  numReceptor, 2  </TD>
- * <TD>&nbsp; the illumination offset of the primary reflector expressed as a pair of values. </TD>
- * </TR>
-	
- * <TR>
- * <TD> illumOffsetError</TD> 
- * <TD> vector<vector<Length > > </TD>
- * <TD>  numReceptor, 2  </TD>
- * <TD>&nbsp; the statistical error on illumOffset. </TD>
- * </TR>
-	
- * <TR>
- * <TD> fitRMS</TD> 
- * <TD> vector<Length > </TD>
- * <TD>  numReceptor  </TD>
- * <TD>&nbsp; The RMS of the half path length after removing the best fit parabola. </TD>
  * </TR>
 	
 
@@ -782,9 +719,6 @@ private:
 	std::string version ; 
 	
 	Entity entity;
-	
-
-	
 	
 
 

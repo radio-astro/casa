@@ -37,8 +37,6 @@ public:
 protected:
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	// jagonzal: With the new WEIGHT/SIGMA convention it is not longer
-	// necessary divide the clipping range between the number of channels
 	// void preProcessBuffer(const vi::VisBuffer2 &visBuffer);
 
 	// Compute flags afor a given mapped visibility point

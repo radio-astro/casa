@@ -27,7 +27,10 @@
 
 namespace casa {
 
-template<class T> Bool ImageMaskAttacher::makeMask(
+template<class T> ImageMaskAttacher<T>::ImageMaskAttacher() {}
+
+
+template<class T> Bool ImageMaskAttacher<T>::makeMask(
 	ImageInterface<T>& out, String& maskName,
 	Bool init, Bool makeDefault, LogIO& os, Bool list
 ) {
@@ -35,11 +38,11 @@ template<class T> Bool ImageMaskAttacher::makeMask(
 	if (out.canDefineRegion()) {
 
 		// Generate mask name if not given
-		if (maskName.empty()) {
+		if (maskName.empty())
 			maskName = out.makeUniqueRegionName(String("mask"), 0);
-		}
+
 		// Make the mask if it does not exist
-		if (! out.hasRegion(maskName, RegionHandler::Masks)) {
+		if (!out.hasRegion(maskName, RegionHandler::Masks)) {
 			out.makeMask(maskName, True, makeDefault, init, True);
 			if (list) {
 				if (init) {
@@ -52,14 +55,13 @@ template<class T> Bool ImageMaskAttacher::makeMask(
 			}
 		}
 		return True;
-	}
-	else {
+	} else {
 		os << LogIO::WARN
-			<< "Cannot make requested mask for this type of image"
-				<< LogIO::POST;
+				<< "Cannot make requested mask for this type of image" << endl;
 		return False;
 	}
 }
+
 
 } //# NAMESPACE CASA - END
 

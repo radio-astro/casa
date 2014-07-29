@@ -166,11 +166,10 @@ void TBDataItem::set(String value, bool text) {
 
 // Constructors/Destructors //
 
-TBDataTab::TBDataTab(TBTableTabs* tt) : QWidget(), goForward(true),ttabs(tt),
+TBDataTab::TBDataTab(TBTableTabs* tt) : QWidget(), ttabs(tt),
                     table(tt->getTable()), page(0),
                     loadRows(TBConstants::DEFAULT_SELECT_NUM), filter(NULL),
-                     defaultFormat(NULL),  arrayOpened(false),
-                    arrayPanel(NULL) {
+                    defaultFormat(NULL), arrayOpened(false), arrayPanel(NULL), goForward(true) {
     setupUi(this);
     
     // Connect widgets

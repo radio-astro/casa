@@ -26,7 +26,6 @@
 //# $Id$
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Logging.h>
@@ -41,10 +40,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <msvis/MSVis/SimpleSubMS.h>
-#include <msvis/MSVis/SubMS.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/SimpleSubMS.h>
+#include <synthesis/MSVis/SubMS.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 
@@ -103,10 +102,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 << msname << " does not exist  " 
 	 << LogIO::POST;
       return False;
-    }
-    if(intent != ""){
-       os << LogIO::WARN << "does not support INTENT selection here " 
-	 << LogIO::POST;
     }
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);

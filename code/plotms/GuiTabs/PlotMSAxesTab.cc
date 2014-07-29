@@ -199,8 +199,6 @@ void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
     //The cache must have exactly as many x-axes as y-axes so we duplicate
     //the x-axis properties here.
     int yAxisCount = itsYWidgets_.size();
-
-
     PMS::Axis xAxis = itsXWidget_->axis();
     c->resize( yAxisCount );
     a->resize( yAxisCount );

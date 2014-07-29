@@ -46,7 +46,7 @@ string CFocusMethod::revision () {
 }
 
 unsigned int CFocusMethod::size() {
-	return 3;
+	return 2;
 	}
 	
 	
@@ -54,16 +54,12 @@ const std::string& CFocusMethod::sTHREE_POINT = "THREE_POINT";
 	
 const std::string& CFocusMethod::sFIVE_POINT = "FIVE_POINT";
 	
-const std::string& CFocusMethod::sHOLOGRAPHY = "HOLOGRAPHY";
-	
 const std::vector<std::string> CFocusMethod::names() {
     std::vector<std::string> enumSet;
     
     enumSet.insert(enumSet.end(), CFocusMethod::sTHREE_POINT);
     
     enumSet.insert(enumSet.end(), CFocusMethod::sFIVE_POINT);
-    
-    enumSet.insert(enumSet.end(), CFocusMethod::sHOLOGRAPHY);
         
     return enumSet;
 }
@@ -76,9 +72,6 @@ std::string CFocusMethod::name(const FocusMethodMod::FocusMethod& f) {
     
     case FocusMethodMod::FIVE_POINT:
       return CFocusMethod::sFIVE_POINT;
-    
-    case FocusMethodMod::HOLOGRAPHY:
-      return CFocusMethod::sHOLOGRAPHY;
     	
     }
     // Impossible siutation but....who knows with C++ enums
@@ -94,10 +87,6 @@ FocusMethodMod::FocusMethod CFocusMethod::newFocusMethod(const std::string& name
     if (name == CFocusMethod::sFIVE_POINT) {
         return FocusMethodMod::FIVE_POINT;
     }
-    	
-    if (name == CFocusMethod::sHOLOGRAPHY) {
-        return FocusMethodMod::HOLOGRAPHY;
-    }
     
     throw badString(name);
 }
@@ -110,10 +99,6 @@ FocusMethodMod::FocusMethod CFocusMethod::literal(const std::string& name) {
     	
     if (name == CFocusMethod::sFIVE_POINT) {
         return FocusMethodMod::FIVE_POINT;
-    }
-    	
-    if (name == CFocusMethod::sHOLOGRAPHY) {
-        return FocusMethodMod::HOLOGRAPHY;
     }
     
     throw badString(name);

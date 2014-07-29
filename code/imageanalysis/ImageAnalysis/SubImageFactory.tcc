@@ -65,39 +65,43 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     				mymask += ">=0.5";
     				continue;
     			}
-    			ThrowCc("Input mask specification is incorrect: " + x.getMesg());
+    			LogIO *myos = os;
+    			std::auto_ptr<LogIO> localLogMgr(0);
+    			if (! myos) {
+    				myos = new LogIO();
+    				localLogMgr.reset(myos);
+    			}
+    			*myos << LogOrigin("SubImage", __FUNCTION__);
+    			*myos << "Input mask specification is incorrect: "
+    				<< x.getMesg() << LogIO::EXCEPTION;
     		}
     	}
     }
-    if (outMaskMgr.get() != 0) {
-    	const WCLELMask *myWMask = dynamic_cast<const WCLELMask *>(
-    		outMaskMgr->asWCRegionPtr()
-    	);
-    	if (myWMask) {
-    		const ImageExpr<Bool> *myExpression = myWMask->getImageExpr();
-    		if (
-    			myExpression
-    			&& ! myExpression->shape().isEqual(inImage.shape())
-    		) {
-    			ThrowIf(
-    				! extendMask,
-    				"The input image shape and mask shape are different and it was specified "
-    				"that the mask should not be extended, so the mask cannot be applied to the "
-    				"(sub)image. Specifying that the mask should be extended may resolve the issue"
-    			);
-    			try {
-    				const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
-    				const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
-    				const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
-    				ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
-    				outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
-    			}
-    			catch (const AipsError& x) {
-    				ThrowCc("Unable to extend mask: " + x.getMesg());
-    			}
-    		}
-    	}
-    }
+    if (
+		extendMask && outMaskMgr.get() != 0
+		&& outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
+		&& ! dynamic_cast<const WCLELMask *>(
+			outMaskMgr->asWCRegionPtr()
+		)->getImageExpr()->shape().isEqual(inImage.shape())
+	) {
+		try {
+			const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
+			const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
+			const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
+			ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
+			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
+		}
+		catch (const AipsError& x) {
+			LogIO *myos = os;
+			std::auto_ptr<LogIO> localLogMgr(0);
+			if (! myos) {
+				myos = new LogIO();
+				localLogMgr.reset(myos);
+			}
+			*myos << LogOrigin("SubImage", __FUNCTION__);
+			*myos << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
+		}
+	}
 	SubImage<T> subImage;
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
@@ -126,7 +130,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 		else {
             // on the first pass, we need to keep all axes, the second
             // SubImage construction after this one will properly account
-            // for the axes specifier
+            // for the axes specifer
             SubImage<T> subImage0(
 				inImage, *outMaskMgr, writableIfPossible,
 				AxesSpecifier(),
@@ -162,68 +166,56 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     return mySubim;
 }
 
-template<class T> SPIIT SubImageFactory<T>::createImage(
-	const ImageInterface<T>& image,
+template<class T> std::tr1::shared_ptr<ImageInterface<T> > SubImageFactory<T>::createImage(
+	ImageInterface<T>& image,
 	const String& outfile, const Record& region,
-	const String& mask, Bool dropDegenerateAxes,
-	Bool overwrite, Bool list, Bool extendMask
+	const String& mask, const Bool dropDegenerateAxes,
+	const Bool overwrite, const Bool list, const Bool extendMask
 ) {
 	LogIO log;
-	log << LogOrigin("SubImageFactory", __func__);
+	log << LogOrigin("SubImageFactory", __FUNCTION__);
 	// Copy a portion of the image
 	// Verify output file
 	if (!overwrite && !outfile.empty()) {
 		NewFile validfile;
 		String errmsg;
-		ThrowIf(
-			! validfile.valueOK(outfile, errmsg), errmsg
-		);
-	}
-	TempImage<T> newImage(
-		TiledShape(image.shape()), image.coordinates()
-	);
-	{
-		Array<Bool> mymask = image.getMask();
-		if (image.hasPixelMask()) {
-			mymask = mymask && image.pixelMask().get();
-		}
-		if (! allTrue(mymask)) {
-			newImage.attachMask(ArrayLattice<Bool>(mymask));
+		if (!validfile.valueOK(outfile, errmsg)) {
+			log << errmsg << LogIO::EXCEPTION;
 		}
 	}
-	ImageUtilities::copyMiscellaneous(newImage, image);
-	newImage.put(image.get());
 	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
-	SubImage<T> x = SubImageFactory<T>::createSubImage(
-		newImage, region, mask, list ? &log : 0,
-		True, axesSpecifier, extendMask
-	);
-	SPIIT outImage;
-	if (outfile.empty()) {
-		outImage.reset(
-			new TempImage<T>(x.shape(), x.coordinates())
-		);
-	}
-	else {
-		outImage.reset(
-			new PagedImage<T>(
-				x.shape(), x.coordinates(), outfile
+	std::tr1::shared_ptr<SubImage<Float> > subImage(
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				image,
+			//	*(ImageRegion::tweakedRegionRecord(&Region)),
+				region,
+				mask, list ? &log : 0, True, axesSpecifier, extendMask
 			)
-		);
-		if (list) {
-			log << LogIO::NORMAL << "Creating image '" << outfile
-				<< "' of shape " << outImage->shape() << LogIO::POST;
-		}
+		)
+	);
+	if (outfile.empty()) {
+		return subImage;
 	}
-	if (x.isMasked() || x.hasPixelMask()) {
+	// Make the output image
+	if (list) {
+		log << LogIO::NORMAL << "Creating image '" << outfile
+			<< "' of shape " << subImage->shape() << LogIO::POST;
+	}
+	PagedImage<Float> outImage(
+			subImage->shape(),
+			subImage->coordinates(), outfile
+	);
+	ImageUtilities::copyMiscellaneous(outImage, *subImage);
+	// Make output mask if required
+	if (subImage->isMasked()) {
 		String maskName("");
-		ImageMaskAttacher::makeMask(*outImage, maskName, False, True, log, list);
+		ImageMaskAttacher<T>::makeMask(outImage, maskName, False, True, log, list);
 	}
-	ImageUtilities::copyMiscellaneous(*outImage, x);
-	LatticeUtilities::copyDataAndMask(log, *outImage, x);
-    outImage->flush();
-    return outImage;
+	LatticeUtilities::copyDataAndMask(log, outImage, *subImage);
+	return std::tr1::shared_ptr<PagedImage<T> >(new PagedImage<T>(outImage));
 }
+
 
 } //# NAMESPACE CASA - END
 

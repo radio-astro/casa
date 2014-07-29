@@ -34,8 +34,8 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
-#include <msvis/MSVis/UtilJ.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       currentVBS_p=0;
     }
 
-    MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other) : VisibilityResamplerBase() {copy(other);};
+    MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other){copy(other);};
 
     // This version will make a clone with shared data buffers (the
     // complex grids and the sum-of-weights arrays).

@@ -18,6 +18,7 @@ SpectralComponents/SpectralElement.cc
 SpectralComponents/SpectralElement2.cc
 SpectralComponents/SpectralElementFactory.cc
 ComponentModels/GaussianShape.cc
+ComponentModels/GaussianBeam.cc
 ComponentModels/TwoSidedShape.cc
 ComponentModels/SpectralModel.cc
 ComponentModels/SpectralIndex.cc
@@ -44,9 +45,6 @@ ComponentModels/ComponentType2.cc
 )
 
 target_link_libraries (casa_components casa_coordinates ${GSL_LIBRARIES})
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_components PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 
 install (
 TARGETS casa_components
@@ -63,6 +61,7 @@ ComponentModels/ComponentList.h
 ComponentModels/ComponentShape.h
 ComponentModels/SkyComponent.h
 ComponentModels/GaussianShape.h
+ComponentModels/GaussianBeam.h
 ComponentModels/PointShape.h
 ComponentModels/DiskShape.h
 ComponentModels/LimbDarkenedDiskShape.h

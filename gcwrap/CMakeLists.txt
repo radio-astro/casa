@@ -27,8 +27,8 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
-set( CASA_MINOR_VERSION 3 )
-set( CASA_PATCH_VERSION 0 )
+set( CASA_MINOR_VERSION 2 )
+set( CASA_PATCH_VERSION 2 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
 ###
@@ -356,30 +356,23 @@ endif()
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )
 
-SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
-if( NOT NO_SOVERSION )
-    set( epochdelta 1385614800 )
-    if ( EXISTS ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt )
-        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^\#/ ) }" ${CMAKE_INSTALL_PREFIX}/${arch}/casa_sover.txt
-                         OUTPUT_VARIABLE __casa_soversion )
-    elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/casa_sover.txt )
-        execute_process( COMMAND perl -e "while (<>) { chomp and print if (! m/^#/ ) }" ${CMAKE_INSTALL_PREFIX}/casa_sover.txt
-                         OUTPUT_VARIABLE __casa_soversion )
-    else( )
-        execute_process( COMMAND perl -e "$t=time( )-${epochdelta};$z=$t & 0xff; $y=($t>>8)&0xff; $x=($t>>16)&0xffff; print \"$x.$y.$z\""
-                         OUTPUT_VARIABLE __casa_soversion )
-    endif( )
-    set(casa_soversion ${__casa_soversion} CACHE STRING "version for shared objects")
-    message( STATUS "Shared object version number ${casa_soversion}" )
-else( )
-    message( STATUS "User disabled shared library versioning" )
-endif( )
-
 set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 #
 # Targets for creating doxygen documentation
 #
+
+# Strip out TeX/LaTeX if detex if found...
+find_program( DETEX NAMES detex cat )
+message(STATUS "Found detex (or cat): " ${DETEX})
+
+# strip out TeX/LaTeX with dvi2tty...
+find_program( DVI2TTY NAMES dvi2tty )
+if ( DVI2TTY )
+    message( STATUS "Found dvi2tty: ${DVI2TTY}" )
+else( )
+    message( STATUS "Could not find dvi2tty, online embedded TeX documentation will be garbled" )
+endif( )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
@@ -635,7 +628,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.251
+           VERSION 1.0.226
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -700,7 +693,6 @@ else()
        stdcasa
        synthesis
        asdmstman
-       msvis
        )
 endif()
 
@@ -709,7 +701,7 @@ endif()
 #
 
 casa_find( CASACODE
-           VERSION 1.0.147
+           VERSION 1.0.145
            PREFIX_HINTS ${CASACODE_ROOT_DIR}
            INCLUDES stdcasa/version.h
            INCLUDES_SUFFIXES casacode
@@ -1006,6 +998,13 @@ set( QT4_FOUND TRUE CACHE BOOL "Was QT4 found?" )
 # Detecting QT4 takes a bit of time, but does not seem possible to skip.
 # If doing so, then "include( ${QT_USE_FILE} )" does not work (because QT_USE_FILE is not cached?).
 
+#
+# CAS-6021
+# Note: this must be done AFTER Qt is set up to prevent Qt options from overriding these options.
+# See http://stackoverflow.com/questions/10085945/cmake-cflags-cxxflags-modification
+if ( APPLE )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -U_GLIBCXX_DEBUG -U_GLIBCXX_DEBUG_PEDANTIC" )
+endif ( APPLE )
 
 # QWT (requires Qt)
 casa_find( QWT
@@ -1030,6 +1029,10 @@ casa_find( XERCES
   CPP_VERSION XERCES_FULLVERSIONDOT 
   RUN_VERSION "gXercesMajVersion << '.' << gXercesMinVersion << '.' << gXercesRevision" 
 )
+if( XERCES_VERSION VERSION_EQUAL   3.0 OR
+    XERCES_VERSION VERSION_GREATER 3.0 )
+  message( FATAL_ERROR "Xerces version (${XERCES_VERSION}) is too recent! Must be earlier than 3.0." )
+endif()
 
 #
 # Boost

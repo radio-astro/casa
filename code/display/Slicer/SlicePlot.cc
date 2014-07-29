@@ -29,7 +29,7 @@
 #include <display/Slicer/SliceAxisDraw.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <display/Display/DisplayCoordinateSystem.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <qwt_plot_curve.h>
 #include <QFile>
 #include <QDebug>

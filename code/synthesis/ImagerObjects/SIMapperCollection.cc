@@ -49,9 +49,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <synthesis/TransformMachines/VisModelData.h>
-#include <images/Regions/WCBox.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -94,29 +92,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  /*
   // Allocate Memory and open images.
   void SIMapperCollection::addMapper( String mappertype,  
 				      CountedPtr<SIImageStore> imagestore,
-				      CountedPtr<FTMachine> ftmachine,
-				      CountedPtr<FTMachine> iftmachine)
+				      CountedPtr<FTMachine> ftmachine)
   {
 
     LogIO os( LogOrigin("SIMapperCollection","addMapper",WHERE) );
 
-    CountedPtr<SIMapper> localMapper=NULL;
+    CountedPtr<SIMapperBase> localMapper=NULL;
     Int nMappers = itsMappers.nelements();
     // Check 'mappertype' for valid types....
-    if( mappertype == "default" )
+    if( mappertype == "basetype" )
       {
-	localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, nMappers );
+	localMapper = new SIMapperBase( imagestore, ftmachine, nMappers );
       }
-    
+    else if( mappertype == "default" )
+      {
+	CountedPtr<FTMachine> iftm=ftmachine->cloneFTM();
+	localMapper = new SIMapper( imagestore, ftmachine, iftm, nMappers );
+      }
+    /*
     else if( mappertype == "multiterm" )
       {
-	localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine,nMappers, ntaylorterms );
+	localMapper = new SIMapperMultiTerm( imagestore, ftmachine, nMappers );
       }
-    
+    */
     else
       {
 	throw ( AipsError("Internal Error : Unrecognized Mapper Type in MapperCollection.addMapper") );
@@ -127,18 +128,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMappers[nMappers] = localMapper;
 
   }
-  */
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::addMapper( CountedPtr<SIMapper> map){
+  void SIMapperCollection::addMapper( CountedPtr<SIMapperBase>& map){
     Int nMappers = itsMappers.nelements();
     itsMappers.resize(nMappers+1, True);
     itsMappers[nMappers]=map;
   } 
-
   Int SIMapperCollection::nMappers()
   {
     return itsMappers.nelements();
@@ -162,27 +161,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //////////////////////////
-  //////////////////////////
-  void SIMapperCollection::initializeGrid(vi::VisBuffer2& vb, const Bool dopsf)
+  void SIMapperCollection::initializeGrid(Int mapperid)
   {
-    cout << " initGrid : nMappers : " << itsMappers.nelements() << endl;
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->initializeGrid();
+  }
+
+  //////////////////////////
+  //////////////////////////
+  void SIMapperCollection::initializeGrid(const vi::VisBuffer2& vb)
+  {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
-	    (itsMappers[k])->initializeGrid(vb ,dopsf);
+		  (itsMappers[k])->initializeGrid(vb);
 
   	  }
   }
 
   ////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////OLD vi/vb //////////////////////////////////////////////
-  void SIMapperCollection::initializeGrid(VisBuffer& vb, Bool dopsf)
+  void SIMapperCollection::initializeGrid(const VisBuffer& vb)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
-	    (itsMappers[k])->initializeGrid(vb,dopsf,True);
+		  (itsMappers[k])->initializeGrid(vb);
 
   	  }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  void SIMapperCollection::grid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->grid();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
-  void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
+  void SIMapperCollection::grid(VisBuffer& vb, const Bool dopsf, FTMachine::Type col)
   {
 	  if(col==FTMachine::CORRECTED){
 		  if(vb.msColumns().correctedData().isNull()){
@@ -219,10 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  else{
 			  vb.correctedVisCube()-=vb.modelVisCube();
 		  }
-	  } 
-	  else if (col==FTMachine::OBSERVED) {
-			  vb.visCube()-=vb.modelVisCube();
-	    }
+	  }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 		  (itsMappers[k])->grid(vb, dopsf, col);
@@ -232,9 +242,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///////////////////////////////
   ////////////////////////////////
 
+
+  void SIMapperCollection::finalizeGrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->finalizeGrid();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(vi::VisBuffer2& vb, const Bool dopsf)
+    void SIMapperCollection::finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
@@ -244,7 +261,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////OLD VI/VB////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(VisBuffer& vb, Bool dopsf)
+    void SIMapperCollection::finalizeGrid(const VisBuffer& vb, const Bool dopsf)
         {
       	  for (uInt k=0; k < itsMappers.nelements(); ++k)
       	  {
@@ -254,9 +271,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
 
 
+   ///////////////
+   /////////////////
+  void SIMapperCollection::initializeDegrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->initializeDegrid();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(vi::VisBuffer2& vb)
+  void SIMapperCollection::initializeDegrid(const vi::VisBuffer2& vb)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
@@ -266,7 +291,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(VisBuffer& vb)
+  void SIMapperCollection::initializeDegrid(const VisBuffer& vb)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
     	  {
@@ -275,31 +300,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  }
     }
 
+  ///////////////////////////
+  /////////////////////////
+  void SIMapperCollection::degrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->degrid();
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod)
+  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool useScratch)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
 		  (itsMappers[k])->degrid(vb);
 
   	  }
-	  if(saveVirtualMod){
+	  if(!useScratch){
 		  if(vb.msId() != oldMsId_p){
 			  oldMsId_p=vb.msId();
-			  const vi::VisibilityIterator2 * viloc=vb.getVi();
-			  String modImage=viloc->ms().getPartNames()[0];
-			  if(!((viloc->ms()).source().isNull()))
-			    modImage=(viloc->ms()).source().tableName();
-			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  for (uInt k=0; k < itsMappers.nelements(); ++k){
 				  Record rec;
-				  String modImage=viloc->ms().getPartNames()[0];
-				  if(!((viloc->ms()).source().isNull()))
-				    modImage=(viloc->ms()).source().tableName();
-				  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 				  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-				  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
+				  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 					 if((vb.getVi())->isWritable()){
 
 						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
@@ -314,13 +338,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
 	  if(vb.msId() != oldMsId_p){
 		  oldMsId_p=vb.msId();
-		  const vi::VisibilityIterator2 * viloc=vb.getVi();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
-			  String modImage=viloc->ms().getPartNames()[0];
-			  if(!((viloc->ms()).source().isNull()))
-			    modImage=(viloc->ms()).source().tableName();
-			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 				  if((vb.getVi())->isWritable()){
@@ -333,13 +352,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
+  void SIMapperCollection::degrid(VisBuffer& vb, const Bool useScratch)
     {
 	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	    				(itsMappers[k])->degrid(vb);
 
-  		  if(saveVirtualMod){
-		    saveVirtualModel(vb);
+  		  if(!useScratch){
+  			  saveVirtualModel(vb);
   		  }
 
     }
@@ -368,14 +387,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     				fields.resize(nfields, True);
 		   */
-		  //Int msid = vb.msId();
-		  ROVisibilityIterator *viloc=vb.getVisibilityIterator();
+		  Int msid = vb.msId();
 		  for (uInt k=0; k < itsMappers.nelements(); ++k){
 			  Record rec;
-			  String modImage=viloc->ms().getPartNames()[0];
-			  if(!((viloc->ms()).source().isNull()))
-			    modImage=(viloc->ms()).source().tableName();
-			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
 			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
 			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
 
@@ -385,7 +399,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  VisibilityIterator * elvi=(dynamic_cast<VisibilityIterator* >(vb.getVisibilityIterator()));
 				  if(elvi)
 					  elvi->putModel(rec, iscomp, True);
-				  //				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
+				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
 			  }
 
 		  }
@@ -398,10 +412,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+  /////////////
+  ///////////////
+  void SIMapperCollection::finalizeDegrid(Int mapperid)
+  {
+    AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
+    itsMappers[mapperid]->finalizeDegrid();
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(const vi::VisBuffer2& /*vb*/)
+  void SIMapperCollection::finalizeDegrid(const vi::VisBuffer2& vb)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
@@ -411,7 +432,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/)
+  void SIMapperCollection::finalizeDegrid(const VisBuffer& vb)
     {
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
@@ -442,107 +463,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  void SIMapperCollection::checkOverlappingModels(String action)
-  {
-    // If nothing that overlaps, don't check.
-    if(nMappers()==1) return;
-
-    Int nmodels = nMappers();
-
-    // If there is no model image (i.e. first major cycle with no starting model), don't check.
-    Bool hasmodel=True;
-    for (Int model=0;model<(nmodels-1); ++model) 
-      { hasmodel = hasmodel && ((itsMappers[model])->imageStore())->hasModel();  }
-    if( hasmodel==False ) { 
-      //cout << "No model images to check overlap for." << endl; 
-      return; 
-    }
-
-    // Internal check
-    AlwaysAssert( action=="blank" || action=="restore" , AipsError );
-
-    for (Int model=0;model<(nmodels-1); ++model) 
-      {
-	// Connect to one image for aux info.
-	SubImage<Float> modelimage( *(((itsMappers[model])->imageStore())->model()), True );
-
-	uInt nTaylor0 = ((itsMappers[model])->imageStore())->getNTaylorTerms();
-
-	CoordinateSystem cs0=modelimage.coordinates();
-	IPosition iblc0(modelimage.shape().nelements(),0);
-	IPosition itrc0(modelimage.shape());
-	itrc0=itrc0-Int(1);
-	LCBox lbox0(iblc0, itrc0, modelimage.shape());
-	ImageRegion imagreg0(WCBox(lbox0, cs0));
-
-	for (Int nextmodel=model+1; nextmodel < nmodels; ++nextmodel)
-	  {
-	    SubImage<Float> nextmodelimage( *(((itsMappers[nextmodel])->imageStore())->model()) , True);
-
-	    uInt nTaylor1 = ((itsMappers[nextmodel])->imageStore())->getNTaylorTerms();
-	    
-	    CoordinateSystem cs=nextmodelimage.coordinates();
-	    IPosition iblc(nextmodelimage.shape().nelements(),0);
-	    IPosition itrc(nextmodelimage.shape());
-	    itrc=itrc-Int(1);
-	    LCBox lbox(iblc, itrc, nextmodelimage.shape());
-	    ImageRegion imagreg(WCBox(lbox, cs));
-	    
-	    try{
-
-	      if( action.matches("blank") )
-		{
-		  LatticeRegion latReg=imagreg.toLatticeRegion(modelimage.coordinates(), modelimage.shape());
-
-		  for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
-		    { // loop for taylor term
-		      SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
-		      SubImage<Float> partToMask(modelim, imagreg, True);
-		      ArrayLattice<Bool> pixmask(latReg.get());
-		      LatticeExpr<Float> myexpr(iif(pixmask, 0.0, partToMask) );
-		      partToMask.copyData(myexpr);
-		    }
-
-
-		}
-	      else // "restore"
-		{
-		LatticeRegion latReg0=imagreg0.toLatticeRegion(nextmodelimage.coordinates(), nextmodelimage.shape());
-		LatticeRegion latReg=imagreg.toLatticeRegion(modelimage.coordinates(), modelimage.shape());
-		ArrayLattice<Bool> pixmask(latReg.get());
-
-		
-		for(uInt taylor=0;taylor<min(nTaylor0,nTaylor1);taylor++)
-		  {// loop for taylor term
-		    SubImage<Float> modelim( *(((itsMappers[model])->imageStore())->model(taylor)), True );
-		    SubImage<Float> nextmodelim( *(((itsMappers[nextmodel])->imageStore())->model(taylor)), True );
-
-		    SubImage<Float> partToMerge(nextmodelim, imagreg0, True);
-		    SubImage<Float> partToUnmask(modelim, imagreg, True);
-		    LatticeExpr<Float> myexpr0(iif(pixmask,partToMerge,partToUnmask));
-		    partToUnmask.copyData(myexpr0);
-		  }
-		
-		}
-	    }
-	    catch(AipsError &x){
-	      //	      cout << "Hmm.... in here : "<< x.getMesg() << endl;
-	      //no overlap you think ?
-	      /*
-		os << LogIO::WARN
-		<< "no overlap or failure of copying the clean components"
-		<< x.getMesg()
-		<< LogIO::POST;
-	*/
-	      continue;
-	    }
-	  }
-      }
-  }
-
-
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } //# NAMESPACE CASA - END

@@ -36,6 +36,7 @@
 #include <QTemporaryFile>
 #include <QTimer>
 #include <QDebug>
+#include <QtCore/qmath.h>
 #include <assert.h>
 #include <iostream>
 using namespace std;
@@ -43,7 +44,6 @@ using namespace std;
 namespace casa {
 
 	const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
-	const QString SearchMoleculesWidget::SEARCH_DEFAULT_UNITS = "GHz";
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = -1;
 	const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = -1;
 
@@ -85,11 +85,8 @@ namespace casa {
 		for ( int i = 0; i < frequencyUnitList.size(); i++ ) {
 			ui.rangeUnitComboBox->addItem( frequencyUnitList[i]);
 		}
-		//ui.rangeUnitComboBox->setCurrentIndex(frequencyUnitList.indexOf(SPLATALOGUE_UNITS));
-		//this->unitStr = SPLATALOGUE_UNITS;
-		//According to CAS-6073 the default units should be GHz.
-		ui.rangeUnitComboBox->setCurrentIndex( frequencyUnitList.indexOf( SEARCH_DEFAULT_UNITS ) );
-		this->unitStr = SEARCH_DEFAULT_UNITS;
+		ui.rangeUnitComboBox->setCurrentIndex(frequencyUnitList.indexOf(SPLATALOGUE_UNITS));
+		this->unitStr = SPLATALOGUE_UNITS;
 		connect( ui.rangeUnitComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT( searchUnitsChanged(const QString&)));
 
 		//Astronomical Filters
@@ -106,7 +103,6 @@ namespace casa {
 		ui.rangeMaxLineEdit->setValidator( validator );
 		ui.dopplerLineEdit->setValidator( validator );
 		ui.dopplerLineEdit->setText( QString::number(0) );
-		connect( ui.dopplerLineEdit, SIGNAL(textChanged( const QString&)), this, SLOT(redshiftChanged( const QString&)));
 
 		radialVelocityTypeMap.insert("LSRK", MRadialVelocity::LSRK);
 		radialVelocityTypeMap.insert("LSRD", MRadialVelocity::LSRD);
@@ -157,8 +153,7 @@ namespace casa {
 //-------------------------------------------------------------------------------------
 
 
-	void SearchMoleculesWidget::setRange( double min, double max, QString units ) {
-
+	void SearchMoleculesWidget::setRange( double min, double max, QString units ){
 		double convertedMinValue = setRangeValue( min, units );
 		double convertedMaxValue = setRangeValue( max, units );
 		if ( convertedMinValue < convertedMaxValue ){
@@ -171,7 +166,7 @@ namespace casa {
 		}
 	}
 
-	double SearchMoleculesWidget::setRangeValue( double value, QString units) {
+	double SearchMoleculesWidget::setRangeValue( double value, QString units ) {
 		double convertedValue = value;
 		if ( unitStr != units ) {
 			Converter* converter = Converter::getConverter( units, unitStr );
@@ -214,7 +209,7 @@ namespace casa {
 				double val = editText.toDouble();
 				val = converter->convert( val, coord);
 				lineEdit->setText( QString::number( val ));
-			}
+			}		
 		}
 	}
 
@@ -229,14 +224,6 @@ namespace casa {
 			delete converter;
 		}
 		unitStr = newUnits;
-	}
-
-	void SearchMoleculesWidget::redshiftChanged( const QString& redshiftStr ){
-		bool validRedshift = false;
-		redshiftStr.toDouble( &validRedshift );
-		if ( validRedshift ){
-			emit redshiftChanged();
-		}
 	}
 
 	void SearchMoleculesWidget::dopplerShiftChanged() {

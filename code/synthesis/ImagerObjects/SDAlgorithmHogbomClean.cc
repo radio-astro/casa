@@ -55,7 +55,7 @@
 #include <casa/Logging/LogSink.h>
 
 #include <casa/System/Choice.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -101,32 +101,29 @@ void REFHogbomCleanImageSkyModelstopnow (Int *yes) {
 
 void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* px, Int* py,
 				    Float* fMaxVal) {
-  LogIO os(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
-   ostringstream o; 
-//  LogSink logSink(LogMessage::NORMAL2);
+  LogMessage message(LogOrigin("REFHogbomCleanImageSkyModel","solve"));
+  ostringstream o; 
+  LogSink logSink;
   
   if(*npol<0) {
     StokesVector maxVal(fMaxVal[0], fMaxVal[1], fMaxVal[2], fMaxVal[3]);
     if(*iter==0) {
       //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
     else if(*iter>-1) {
       //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
     else {
       //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
   }
   else {
@@ -134,23 +131,20 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     if(*iter==0) {
       //      o<<stokes<<": Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Before iteration, peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
     else if(*iter>-1) {
       //      o<<stokes<<": Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Iteration "<<*iter<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
     else {
       //      o<<stokes<<": Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
       o<<"Final iteration "<<abs(*iter)<<" peak is "<<maxVal<<" at "<<*px-1<<","<<*py-1;
-      os << LogIO::NORMAL1 << o.str() << LogIO::POST;
-      //      message.message(o);
-      //      logSink.post(message);
+      message.message(o);
+      logSink.post(message);
     }
   }
   
@@ -159,12 +153,12 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
 
   SDAlgorithmHogbomClean::SDAlgorithmHogbomClean():
-    SDAlgorithmBase()
-    //    itsMatResidual(), itsMatModel(), itsMatPsf(),
-    //    itsMaxPos( IPosition() ),
-    //    itsPeakResidual(0.0),
-    //    itsModelFlux(0.0),
-    //    itsMatMask()
+    SDAlgorithmBase(),
+    itsMatResidual(), itsMatModel(), itsMatPsf(),
+    itsMaxPos( IPosition() ),
+    itsPeakResidual(0.0),
+    itsModelFlux(0.0),
+    itsMatMask()
  {
    itsAlgorithmName=String("Hogbom");
  }
@@ -176,16 +170,13 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   void SDAlgorithmHogbomClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
   {
-    LogIO os( LogOrigin("SDAlgorithmHogbomClean","initializeDeconvolver",WHERE) );
 
-    itsImages->residual()->get( itsMatResidual, True );
-    itsImages->model()->get( itsMatModel, True );
-    itsImages->psf()->get( itsMatPsf, True );
+    itsResidual.get( itsMatResidual, True );
+    itsModel.get( itsMatModel, True );
+    itsPsf.get( itsMatPsf, True );
 
-    //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
-    //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
-    //	 << itsImages->psf()->shape() << " : " << itsMatPsf.shape() 
-    //	 << endl;
+    //    cout << "Residual image : " << itsMatResidual << endl;
+    //  cout << "PSF image : " << itsMatPsf << endl;
 
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModel );
@@ -193,27 +184,15 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
 
-    itsImages->mask()->get( itsMatMask, True );
-    //    cout << "Mask in SDAlHog : " << sum( itsMatMask ) << " pixels " << endl;
+    cout << "HOG: Set mask to 1" << endl;
+    itsMatMask.resize( itsMatPsf.shape() );
+    itsMatMask.set(1.0);
 
-    if( sum( itsMatMask )==0 ) 
-      {
-	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
-	itsMatMask = 1.0; 
-      }
-
-
-    //cout << "Image Shapes : " << itsMatResidual.shape() << endl;
+    cout << "Image Shapes : " << itsMatResidual.shape() << endl;
 
   }
 
-
-  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, 
-					    Int cycleNiter, 
-					    Float cycleThreshold, 
-					    Float &peakresidual, 
-					    Float &modelflux, 
-					    Int &iterdone)
+  void SDAlgorithmHogbomClean::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone)
   {
 
     Bool delete_iti, delete_its, delete_itp, delete_itm;
@@ -230,18 +209,10 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     Float thres = cycleThreshold;
 
     IPosition shp = itsMatPsf.shape();
-    /*
     Int xbeg = shp[0]/4;
     Int xend = 3*shp[0]/4;
     Int ybeg = shp[1]/4;
     Int yend = 3*shp[1]/4;
-    */
-    
-    Int xbeg = 0;
-    Int xend = shp[0]-1;
-    Int ybeg = 0;
-    Int yend = shp[1]-1;
-    
 
     Int newNx = shp[0];
     Int newNy = shp[1];
@@ -249,9 +220,9 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
 
     Int fxbeg=xbeg+1;
-    Int fxend=xend+1;
+    Int fxend=xend;
     Int fybeg=ybeg+1;
-    Int fyend=yend+1;
+    Int fyend=yend;
     
     Int domaskI = 1;
     
@@ -277,7 +248,7 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     
     
     /////////////////
-    findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
+    findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     peakresidual = itsPeakResidual;
 
     modelflux = sum( itsMatModel ); // Performance hog ?
@@ -285,9 +256,30 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
 
   void SDAlgorithmHogbomClean::finalizeDeconvolver()
   {
-    (itsImages->residual())->put( itsMatResidual );
-    (itsImages->model())->put( itsMatModel );
+    itsResidual.put( itsMatResidual );
+    itsModel.put( itsMatModel );
   }
+
+
+    void SDAlgorithmHogbomClean::restore(CountedPtr<SIImageStore> imagestore )
+  {
+
+    LogIO os( LogOrigin("SDAlgorithmHogbomClean","restore",WHERE) );
+    
+    os << "Smooth model and add residuals for " << imagestore->getName() 
+       << ". Optionally, PB-correct too." << LogIO::POST;
+
+  }
+
+  // Use this decide how to partition
+  // the image for separate calls to 'deconvolve'.
+  void SDAlgorithmHogbomClean::queryDesiredShape(Bool &onechan, Bool &onepol) // , nImageFacets.
+  {  
+    onechan = True;
+    onepol = True;
+  }
+
+
 
 
 } //# NAMESPACE CASA - END

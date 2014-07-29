@@ -28,11 +28,10 @@
 #ifndef IMAGES_IMAGEMETADATARW_H
 #define IMAGES_IMAGEMETADATARW_H
 
-#include <imageanalysis/ImageAnalysis/ImageMetaDataBase.h>
-
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <casa/aips.h>
 
-#include <tr1/memory>
+class casac::variant;
 
 namespace casa {
 
@@ -75,12 +74,11 @@ namespace casa {
 // classes with these methods.
 // </motivation>
 
-class ImageMetaDataRW : public ImageMetaDataBase {
+template <class T> class ImageMetaDataRW: public ImageMetaData<T> {
 
 public:
 
-	ImageMetaDataRW(SPIIF image);
-	ImageMetaDataRW(SPIIC image);
+	ImageMetaDataRW(ImageInterface<Float> *const &image);
 
 	// remove, if possible, the specified parameter. Returns True if removal
 	// was successful.
@@ -91,23 +89,24 @@ public:
 	// mask does not exist.
 	Bool removeMask(const String& maskName);
 
-	Record toRecord(Bool verbose) const;
+	virtual Record toRecord(Bool verbose) const;
 
 	// add a key-value pair
-	Bool add(const String& key, const ValueHolder& value);
+	Bool add(const String& key, const casac::variant& value);
 
 	// set (update) the value associated with the key.
-	Bool set(const String& key, const ValueHolder& value);
+	Bool set(const String& key, const casac::variant& value);
+
 
 protected:
 
-	SPCIIF _getFloatImage() const {return _floatImage;}
+	const ImageInterface<T> * const _getImage() const {return _image;}
 
-	SPCIIC _getComplexImage() const {return _complexImage;}
+	ImageInterface<T> * const _getImage() {return _image;}
 
-	const ImageInfo& _getInfo() const;
+	const ImageInfo& _getInfo() const { return _image->imageInfo(); }
 
-	const CoordinateSystem& _getCoords() const;
+	const CoordinateSystem& _getCoords() const { return _image->coordinates(); }
 
 	Vector<String> _getAxisNames() const;
 
@@ -143,13 +142,9 @@ protected:
 
 	String _getTelescope() const;
 
-	Record _getStatistics() const;
-
-	Vector<String> _getStokes() const;
-
 private:
-	SPIIF _floatImage;
-	SPIIC _complexImage;
+
+	ImageInterface<Float> * const _image;
 
 	// These are mutable because they are only to be set once and
 	// then cached. If this contract is broken, and they are set elsewhere
@@ -158,36 +153,29 @@ private:
 		_reffreqtype, _telescope;
 	mutable MEpoch _obsdate;
 	mutable Quantity _restFreq;
-	mutable Vector<String> _masks, _stokes;
+	mutable Vector<String> _masks;
 	mutable GaussianBeam _beam;
 	mutable Vector<String> _axisNames, _axisUnits;
 	mutable Vector<Double> _refPixel;
 	mutable vector<Quantity> _refVal, _increment;
-	mutable Record _header, _stats;
+	mutable Record _header;
 
-	ImageMetaDataRW() {}
+	ImageMetaDataRW() : _image(0) {}
 
-	void _setCoordinateValue(const String& key, const ValueHolder& value);
+	void _setCoordinateValue(const String& key, const casac::variant& value);
 
-	String  _getString(const String& key, const ValueHolder& value) const;
+	void  _checkString(const String& key, const casac::variant& v) const;
 
-	void _setUserDefined(const String& key, const ValueHolder& v);
+	void _setUserDefined(const String& key, const casac::variant& v);
 
-	Bool _setUnit(const String& unit);
-
-	Bool _setCsys(const CoordinateSystem& csys);
-
-	Bool _setImageInfo(const ImageInfo& info);
-
-	const TableRecord _miscInfo() const;
-
-	void _setMiscInfo(const TableRecord& rec);
-
-	Bool _hasRegion(const String& maskName) const;
-
-	static Quantity _getQuantity(const ValueHolder& v);
 };
 
+
+
 } //# NAMESPACE CASA - END
+
+#ifndef AIPS_NO_TEMPLATE_SRC
+#include <imageanalysis/ImageAnalysis/ImageMetaDataRW.tcc>
+#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif

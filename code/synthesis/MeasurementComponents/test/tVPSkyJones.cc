@@ -54,8 +54,8 @@
 #include <components/ComponentModels/SkyComponent.h>
 
 #include <ms/MeasurementSets/MSSummary.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <casa/BasicSL/String.h>

@@ -1299,10 +1299,6 @@ the ms definition itself. -->
         <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
         <value>50</value>
      </param>
-     <param type="bool" direction="in" name="overwrite">
-        <description>If True, tacitly overwrite listfile if it exists.</description>
-        <value>false</value>
-     </param>
   </input>
   <returns type="record">
      <description>Header information (PARAMETER IGNORED..its an output)</description>

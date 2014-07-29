@@ -33,13 +33,12 @@
 #include <tools/ms/msmetadata_forward.h>
 
 #include <casa/Containers/Record.h>
-#include <casa/Containers/ContainerIO.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/QLogical.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMetaData.h>
+#include <ms/MeasurementSets/MSMetaDataOnDemand.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/regex.hpp>
@@ -123,8 +122,8 @@ vector<int> msmetadata::almaspws(
 	return vector<int>();
 }
 
-vector<String> msmetadata::_vectorStdStringToVectorString(
-	const vector<string>& inset
+vector<casa::String> msmetadata::_vectorStdStringToVectorString(
+	const vector<std::string>& inset
 ) {
 	vector<String> outset;
 	foreach_(string el, inset) {
@@ -227,7 +226,10 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 		}
 		else if (type == variant::INT) {
 			Int id = antennaids.toInt();
-			ThrowIf(id < 0, "Antenna ID must be nonnegative");
+			if (id < 0) {
+				*_log << "Antenna ID must be nonnegative."
+					<< LogIO::EXCEPTION;
+			}
 			myIDs.push_back(id);
 		}
 		else if (type == variant::INTVEC) {
@@ -237,15 +239,17 @@ vector<string> msmetadata::antennanames(const variant& antennaids) {
 				vector<Int>::const_iterator iter=tmp.begin();
 				iter!=tmp.end(); iter++
 			) {
-				ThrowIf(*iter < 0, "Antenna ID must be nonnegative");
+				if (*iter < 0) {
+					*_log << "Antenna ID must be nonnegative."
+						<< LogIO::EXCEPTION;
+				}
 				myIDs.push_back(*iter);
 			}
 		}
 		else {
-			ThrowCc(
-				"Unsupported type for parameter antennaids. "
-				"Must be either an integer or integer array"
-			);
+			*_log << "Unsupported type for parameter antennaids. "
+				<< "Must be either an integer or integer array."
+				<< LogIO::EXCEPTION;
 		}
 		std::map<String COMMA uInt> namesToIDsMap;
 		return _vectorStringToStdVectorString(
@@ -266,10 +270,8 @@ record* msmetadata::antennaoffset(const variant& which) {
 			out = _msmd->getAntennaOffset(which.toString());
 		}
 		else {
-			ThrowCc(
-				"Unsupported type for input parameter which. "
-				"Supported types are int and string"
-			);
+			*_log << "Unsupported type for input parameter which. Supported types are int and string"
+				<< LogIO::EXCEPTION;
 		}
 		Vector<Double> v = out.getValue();
 		String u = out.getUnit();
@@ -524,26 +526,7 @@ record* msmetadata::effexposuretime() {
 record* msmetadata::exposuretime(int scan, int spwid, int polid) {
 	_FUNC(
 		_checkSpwId(spwid, True);
-		if (polid >= 0) {
-			_checkPolId(polid, True);
-		}
-		else {
-			std::set<uInt> polids = _msmd->getPolarizationIDs(scan, spwid);
-			ThrowIf(
-				polids.empty(),
-				"This dataset has no records for the specified scan and spwid"
-			);
-			if (polids.size() == 1) {
-				polid = *(polids.begin());
-			}
-			else {
-				*_log << LogIO::WARN	<< "This scan and spwID has multiple "
-					<< " polarization IDs which are " << polids
-					<< ". You must specify one of those."
-					<< LogIO::POST;
-				return 0;
-			}
-		}
+		_checkPolId(polid, True);
 		std::map<std::pair<uInt COMMA uInt> COMMA Int> ddidMap = _msmd->getSpwIDPolIDToDataDescIDMap();
 		std::pair<uInt COMMA uInt> mykey;
 		mykey.first = spwid;
@@ -612,9 +595,6 @@ variant* msmetadata::fieldsforintent(
 
 vector<int> msmetadata::fieldsforname(const string& name) {
 	_FUNC(
-		if (name.empty()) {
-			return _setIntToVectorInt(_msmd->getUniqueFiedIDs());
-		}
 		return _setIntToVectorInt(_msmd->getFieldIDsForField(name));
 	)
 	return vector<int>();
@@ -640,17 +620,14 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 
 variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames) {
 	_FUNC(
-		ThrowIf(
-			scans.empty(), "Scans array cannot be empty"
-		);
 		std::set<Int> uscans;
 		for (
 			vector<int>::const_iterator scan=scans.begin();
 			scan!=scans.end(); scan++
 		) {
-			ThrowIf(
-				*scan < 0, "All scan numbers must be nonnegative."
-			);
+			if (*scan < 0) {
+				throw AipsError("All scan numbers must be nonnegative.");
+			}
 			uscans.insert(*scan);
 		}
 		std::set<Int> ids = _msmd->getFieldsForScans(uscans);
@@ -661,34 +638,6 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 			return new variant(
 				_setIntToVectorInt(ids)
 			);
-		}
-	)
-	return 0;
-}
-
-variant* msmetadata::fieldsforsource(const int sourceID, const bool asnames) {
-	_FUNC(
-		if (asnames) {
-			std::map<Int COMMA std::set<String> > res = _msmd->getFieldNamesForSourceMap();
-			if (res.find(sourceID) == res.end()) {
-				return new variant(vector<string>());
-			}
-			else {
-				return new variant(
-					_setStringToVectorString(res[sourceID])
-				);
-			}
-		}
-		else {
-			std::map<Int COMMA std::set<Int> > res = _msmd->getFieldsForSourceMap();
-			if (res.find(sourceID) == res.end()) {
-				return new variant(vector<int>());
-			}
-			else {
-				return new variant(
-					_setIntToVectorInt(res[sourceID])
-				);
-			}
 		}
 	)
 	return 0;
@@ -803,48 +752,6 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	return vector<string>();
 }
 
-
-vector<string> msmetadata::namesforspws(const variant& spwids) {
-	_FUNC(
-		variant::TYPE myType = spwids.type();
-		vector<uInt> spwIDs;
-		if (myType == variant::INT) {
-			Int id = spwids.toInt();
-			ThrowIf(id < 0, "Field ID must be nonnegative.");
-			spwIDs.push_back(id);
-		}
-		else if (myType == variant::INTVEC) {
-			vector<Int> kk = spwids.toIntVec();
-			ThrowIf(
-				min(Vector<Int>(kk)) < 0,
-				"All field IDs must be nonnegative."
-			);
-			spwIDs = _vectorIntToVectorUInt(kk);
-		}
-		else if (
-			(myType == variant::STRING && spwids.toString().empty())
-			|| myType == variant::BOOLVEC
-		) {
-			return _vectorStringToStdVectorString(
-				_msmd->getSpwNames()
-			);
-		}
-		else if (spwids.size() != 0) {
-			ThrowCc(
-				"Unsupported type for spwids. It must be a "
-				"nonnegative integer or nonnegative integer array"
-			);
-		}
-		vector<String> allNames = _msmd->getSpwNames();
-		vector<String> names;
-		foreach_(uInt i, spwIDs) {
-			names.push_back(allNames[i]);
-		}
-		return _vectorStringToStdVectorString(names);
-	)
-	return vector<string>();
-}
-
 int msmetadata::nantennas() {
 	_FUNC(
 		return _msmd->nAntennas();
@@ -940,7 +847,7 @@ record* msmetadata::observatoryposition(const int which) {
 }
 
 void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
-    _msmd.reset(new MSMetaData(ms, cachesize));
+    _msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
 }
 
 

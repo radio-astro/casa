@@ -27,7 +27,7 @@
 
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/TransformMachines/SimpCompGridMachine.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/TempImage.h>
@@ -132,7 +132,7 @@ GridBoth& GridBoth::operator=(const GridBoth& other)
 };
 
 //----------------------------------------------------------------------
-  GridBoth::GridBoth(const GridBoth& other):FTMachine()
+GridBoth::GridBoth(const GridBoth& other)
 {
   operator=(other);
 }
@@ -310,16 +310,10 @@ void GridBoth::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>&
 
 // Both these need filling out!
 Bool GridBoth::toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage, const String diskimage ) {
+			Bool withImage) {
   ok();
-  String im1=""; 
-  String im2="";
-  if(diskimage != ""){
-    im1=diskimage+"_synImage";
-    im2=diskimage+"_sdImage";
-  }
-  return synMachine_p->toRecord(error, outRec, withImage, im1) && 
-    sdMachine_p->toRecord(error, outRec, withImage, im2);
+  return synMachine_p->toRecord(error, outRec, withImage) && 
+    sdMachine_p->toRecord(error, outRec, withImage);
 }
 
 Bool GridBoth::fromRecord(String& error, const RecordInterface& inRec)

@@ -34,7 +34,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Containers/Block.h>
 #include <synthesis/TransformMachines/CFTerms.h>
 #include <synthesis/TransformMachines/CFStore.h>
@@ -62,14 +62,6 @@ namespace casa{
     virtual ~NoOpATerm () {};
 
     virtual String name() {return String("NoOpATerm");}
-
-    virtual void makeFullJones(ImageInterface<Complex>&,// pbImage,
-			       const VisBuffer&,// vb,
-			       Bool,// doSquint, 
-			       Int&,// bandID, 
-			       Double// freqVal
-			       ) 
-    {};
 
     virtual void applySky(ImageInterface<Float>& ,//outputImages,
 			  const VisBuffer& ,//vb, 

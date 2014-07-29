@@ -6,7 +6,6 @@
 % STM 2009-11-23  Release 3.0.0 version
 % JO  2011-10-03  Release 3.3 edits
 % JM  2012-05-24  Release 3.4 edits
-% JO 2014-02-01 Release 4.2 edits
 
 %\chapter{Writing Tasks in CASA}
 \chapter[Appendix: Writing Tasks in CASA]{Writing Tasks}
@@ -37,24 +36,20 @@ the steps you need to execute (again for an example task named ``yourtask''):
 \item Execute buildmytasks from the casapy prompt: {\tt !buildmytasks}
 \item Initialize your new task inside casapy: {\tt execfile 'mytasks.py'}
 \end{itemize}
-After this, you should see the help and inputs inside casapy, e.g.\
+After this, you should see the help and inputs inside casapy, e.g.\ 
 {\tt inp yourtask} should work.  Note that for the final step you
 invoke the file called {\tt mytasks.py}, regardless of what you named
-the actual task. You now have a shiny new task {\tt yourtask} that you
-can run and use in the same way as all other CASA tasks.
+the actual task. You now have a shiny new task {\tt yourtask} that you can run and use
+in the same way as all other CASA tasks. 
 
 
 Note that if multiple custom tasks are stored in the same directory,
-they will all be built by {\tt !buildmytasks} and will all be
-initialized by executing mytasks.py.  To build and initialize only a
-single task, instead use {\tt `!buildmytasks taskname}; you are then
-free to rename mytasks.py (e.g. load\_taskname.py) and repeat this
-procedure for your other tasks.  Our recommendation, for those of you
-who are managing multiple custom tasks, is to have each task live in
-its own directory.  The {\tt mytasks.py} file need not be in the
-current working directory to initialize your task, since you can
-provide the full path upon initialization (e.g. {\tt execfile
-  '/full\_path\_to\_my\_task/mytasks.py'}.
+they will all be built by {\tt !buildmytasks} and will all be initialized by executing mytasks.py.
+To build and initialize only a single task, instead use {\tt `!buildmytasks taskname}; you are then free 
+to rename mytasks.py (e.g. load\_taskname.py) and repeat this proceedure for your other tasks.  
+Our recommendation, for those of you who are managing multiple custom tasks, is to have each task live in its own directory.
+The {\tt mytasks.py} file need not be in the current working directory to initialize your task, since you can procide the
+full path upon initialization (e.g. {\tt execfile '/full\_path\_to\_my\_task/mytasks.py'}.
 
 %To get all paths at the right place, it is easiest to execute the {\tt
 %  buildmytask} from within CASA, in the directory where the {\tt
@@ -180,7 +175,7 @@ Value returned by the task
 \begin{description}
 \item \textbf{Attributes}
 \begin{description}
-\item [type] optional; as specified in $<$param$>$
+\item [type] optional; as specfied in $<$param$>$
 \end{description}
 \item \textbf{Subelements}
 \begin{description}
@@ -236,7 +231,7 @@ Block of allowed values
 \begin{description}
 \item \textbf{Attributes}
 \begin{description}
-\item [enum], required; maybe enum or range. If specified as enum only specific values are allowed
+\item [enum], required; maybe enum or range. If specfied as enum only specific values are allowed
 If specified as range then the value tags may have min and max attributes.
 \end{description}
 \item \textbf{Subelements}
@@ -724,12 +719,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <equals value="velocity">
                         <default param="nchan"><value>1</value></default>
                         <default param="start"><value type="string">0.0km/s</value>
-                            <description>Velocity of first image channel: e.g. \'0.0km/s\'
+                            <description>Velocity of first image channel: e.g \'0.0km/s\'
                             </description>
                     </default>
                     <default param="width"><value type="string">1km/s</value>
                             <description>image channel width in velocity units: 
-                               e.g. \'-1.0km/s\'</description>
+                               e.g \'-1.0km/s\'</description>
                     </default>
                 </equals>
                 <equals value="frequency">
@@ -740,7 +735,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                     <default param="width"><value type="string">10kHz</value>
                             <description>Image channel width in frequency units:
-                                e.g. \'1.0kHz\'</description>
+                                e.g \'1.0kHz\'</description>
                     </default>
                 </equals>
             </when>
@@ -954,7 +949,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                'hogbom' full-width of image (slower, better for poor 
                uv-coverage)
                Note:  psfmode will be used to clean is imagermode = ''
-       imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean
+       imagermode -- Advanced imaging e.g mosaic or Cotton-Schwab clean
                default: imagermode='': Options: '', 'csclean', 'mosaic'
                default ''  =&gt; psfmode cleaning algorithm used
   &gt;&gt;&gt; imagermode='mosaic' expandable parameter(s):
@@ -984,7 +979,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                               not "flux correct". Division of SAULT
                               &lt;imagename&gt;.image by the &lt;imagename&gt;.flux image
                               will produce a "flux correct image", can also
-                              be achieved by setting pbcor=True.
+                              be acheived by setting pbcor=True.
                        'PBCOR' uses the SAULT scaling scheme for
                               deconvolution, but if interactive=True shows the
                               primary beam corrected image; the final PBCOR
@@ -1053,8 +1048,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                example: interactive=True
                interactive clean allows the user to build the cleaning
                     mask interactively using the viewer.  The viewer will
-                    appear every npercycle iteration, but modify as needed
-                    The final interactive mask is saved in the file
+                    appear every npercycle interation, but modify as needed
+                    The final interactive maks is saved in the file
                     imagename_interactive.mask.  The initial masks use the
                     union of mask and cleanbox (see below)
   &gt;&gt;&gt; interactive=True expandable parameter npercycle -- this is the
@@ -1067,7 +1062,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            interactive session can be used for a new execution. NOTE:
            the initial clean mask actually used is the union of what
            is specified in mask and &lt;imagename&gt;.mask default: [] (no
-           masking); Possible specification types: (a) Explicit
+           masking); Possible pecification types: (a) Explicit
            cleanbox pixel ranges example: mask=[110,110,150,145] clean
            region with blc=110,100; trc=150,145 (pixel values) (b)
            Filename with cleanbox pixel values with ascii format:
@@ -1145,7 +1140,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                minpb=0.01 Note: this minpb is always in effect
                (regardless of pbcor=True/False) 
               async -- Run asynchronously 
-                    default = False; do not run asynchronously
+                    default = False; do not run asychronously
 
 
 

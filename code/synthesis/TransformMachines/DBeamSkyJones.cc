@@ -40,7 +40,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/ComponentShape.h>
 
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>

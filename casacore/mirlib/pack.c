@@ -1,5 +1,5 @@
 /*  pack								*/
-/* & pjt								*/
+/* & mjs								*/
 /* : low-level-i/o							*/
 /* +									*/
 /*									*/
@@ -26,21 +26,18 @@
 /*    pjt  25jan95   linux kludge to include packALPHA.c                */
 /*    pjt  14jun01   packALPHA.c now included in this source code       */
 /*                   and using the standard WORDS_BIGENDIAN macro       */
-/*    pjt  21jun02   MIR4 prototyping                                   */
 /************************************************************************/
 
-#if defined(HAVE_CONFIG_H) && HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "sysdep.h"
-#include "miriad.h"
 
 #if defined(WORDS_BIGENDIAN)
 
-static int words_bigendian = 1; /* never used actually, but handy symbol to find via nm(1) */
+static int words_bigendian = 1;
 
-void	pack16_c(register int *from,char *to,int n)
+void	pack16_c(from,to,n)
+	char		*to;
+	register int	*from;
+	int		n;
 {
 	register short int	*tto;
 	register int		i;
@@ -48,7 +45,10 @@ void	pack16_c(register int *from,char *to,int n)
 	tto = (short int *)to;
 	for (i=0; i < n; i++)	*tto++ = *from++;
 }
-void	unpack16_c(char *from,register int *to,int n)
+void	unpack16_c(from,to,n)
+	char		*from;
+	register int	*to;
+	int		n;
 {
 	register short int	*ffrom;
 	register int		i;
@@ -56,30 +56,12 @@ void	unpack16_c(char *from,register int *to,int n)
 	ffrom = (short int *)from;
 	for (i=0; i < n; i++)	*to++ = *ffrom++;
 }
-
-void	pack64_c(register int *from,char *to,int n)
-{
-	register short int	*tto;
-	register int		i;
-
-	tto = (short int *)to;
-	for (i=0; i < n; i++)	*tto++ = *from++;
-}
-void	unpack64_c(char *from,register int *to,int n)
-{
-	register short int	*ffrom;
-	register int		i;
-
-	ffrom = (short int *)from;
-	for (i=0; i < n; i++)	*to++ = *ffrom++;
-}
-
 #endif
 
 
 #ifndef WORDS_BIGENDIAN 
 #ifndef unicos
-static int words_littleendian = 1; /* never used actually, but handy symbol to find via nm(1) */
+static int words_littleendian = 1;
 /************************************************************************/
 /*									*/
 /*  The pack routines -- these convert between the host format and	*/
@@ -94,7 +76,9 @@ static int words_littleendian = 1; /* never used actually, but handy symbol to f
 /*  History:								*/
 /*    rjs  21nov94 Original version.					*/
 /************************************************************************/
-void pack16_c(int *in,char *out,int n)
+void pack16_c(in,out,n)
+char *out;
+int *in,n;
 /*
   Pack an integer array into 16 bit integers.
 ------------------------------------------------------------------------*/
@@ -110,7 +94,9 @@ void pack16_c(int *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpack16_c(char *in,int *out,int n)
+void unpack16_c(in,out,n)
+int *out,n;
+char *in;
 /*
   Unpack an array of 16 bit integers into integers.
 ------------------------------------------------------------------------*/
@@ -133,7 +119,9 @@ void unpack16_c(char *in,int *out,int n)
   }
 }
 /************************************************************************/
-void pack32_c(int *in,char *out,int n)
+void pack32_c(in,out,n)
+int *in,n;
+char *out;
 /*
   Pack an array of integers into 32 bit integers.
 ------------------------------------------------------------------------*/
@@ -151,7 +139,9 @@ void pack32_c(int *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpack32_c(char *in,int *out,int n)
+void unpack32_c(in,out,n)
+int *out,n;
+char *in;
 /*
   Unpack an array of 32 bit integers into integers.
 ------------------------------------------------------------------------*/
@@ -169,51 +159,10 @@ void unpack32_c(char *in,int *out,int n)
   }
 }
 /************************************************************************/
-void pack64_c(int8 *in,char *out,int n)
-/*
-  Pack an integer array into 64 bit integers.
-------------------------------------------------------------------------*/
-{
-  int i;
-  char *s;
-
-  s = (char *)in;
-  for(i=0; i < n; i++){
-    *out++ = *(s+7);
-    *out++ = *(s+6);
-    *out++ = *(s+5);
-    *out++ = *(s+4);
-    *out++ = *(s+3);
-    *out++ = *(s+2);
-    *out++ = *(s+1);
-    *out++ = *s;
-    s += 8;
-  }
-}
-/************************************************************************/
-void unpack64_c(char *in,int8 *out,int n)
-/*
-  Unpack an array of 64 bit integers into integers.
-------------------------------------------------------------------------*/
-{
-  int i;
-  char *s;
-
-  s = (char *)out;
-  for(i=0; i < n; i++){
-    *s++ = *(in+7);
-    *s++ = *(in+6);
-    *s++ = *(in+5);
-    *s++ = *(in+4);
-    *s++ = *(in+3);
-    *s++ = *(in+2);
-    *s++ = *(in+1);
-    *s++ = *in;
-    in += 8;
-  }
-}
-/************************************************************************/
-void packr_c(float *in,char *out,int n)
+void packr_c(in,out,n)
+int n;
+float *in;
+char *out;
 /*
   Pack an array of reals into IEEE reals -- just do byte reversal.
 ------------------------------------------------------------------------*/
@@ -231,7 +180,10 @@ void packr_c(float *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpackr_c(char *in,float *out,int n)
+void unpackr_c(in,out,n)
+char *in;
+float *out;
+int n;
 /*
   Unpack an array of IEEE reals into reals -- just do byte reversal.
 ------------------------------------------------------------------------*/
@@ -249,7 +201,10 @@ void unpackr_c(char *in,float *out,int n)
   }
 }
 /************************************************************************/
-void packd_c(double *in,char *out,int n)
+void packd_c(in,out,n)
+double *in;
+char *out;
+int n;
 /*
   Pack an array of doubles -- this involves simply performing byte
   reversal.
@@ -272,7 +227,10 @@ void packd_c(double *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpackd_c(char *in,double *out,int n)
+void unpackd_c(in,out,n)
+char *in;
+double *out;
+int n;
 /*
   Unpack an array of doubles -- this involves simply performing byte
   reversal.
@@ -336,7 +294,9 @@ static int words_unicos = 1;
 #define CHAR_OFFSET 0xE000000000000000
 
 /************************************************************************/
-void pack16_c(int *in,char *out,int n)
+void pack16_c(in,out,n)
+char *out;
+int *in,n;
 /*
   Pack an integer array into 16 bit integers for unicos
 ------------------------------------------------------------------------*/
@@ -383,7 +343,9 @@ void pack16_c(int *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpack16_c(char *in,int *out,int n)
+void unpack16_c(in,out,n)
+int *out,n;
+char *in;
 /*
   Unpack an array of 16 bit integers into integers for unicos
 ------------------------------------------------------------------------*/
@@ -439,7 +401,9 @@ void unpack16_c(char *in,int *out,int n)
   }
 }
 /************************************************************************/
-void pack32_c(int *in,char *out,int n)
+void pack32_c(in,out,n)
+int *in,n;
+char *out;
 /*
   Pack an array of integers into 32 bit integers for unicos
 ------------------------------------------------------------------------*/
@@ -473,7 +437,9 @@ void pack32_c(int *in,char *out,int n)
   if(n==1)*outd =  (*outd & ~HILONG) | ((*in++ << 32) & HILONG);
 }
 /************************************************************************/
-void unpack32_c(char *in,int *out,int n)
+void unpack32_c(in,out,n)
+int *out,n;
+char *in;
 /*
   Unpack an array of 32 bit integers into integers for unicos
 ------------------------------------------------------------------------*/
@@ -511,7 +477,10 @@ void unpack32_c(char *in,int *out,int n)
   }
 }
 /************************************************************************/
-void packr_c(float *in,char *out,int n)
+void packr_c(in,out,n)
+int n;
+float *in;
+char *out;
 /*
   Pack an array of Cray reals into IEEE reals.
 ------------------------------------------------------------------------*/
@@ -559,7 +528,10 @@ void packr_c(float *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpackr_c(char *in,float *out,int n)
+void unpackr_c(in,out,n)
+char *in;
+float *out;
+int n;
 /*
   Unpack an array of IEEE reals into Cray reals.
 ------------------------------------------------------------------------*/
@@ -602,7 +574,10 @@ void unpackr_c(char *in,float *out,int n)
   }
 }
 /************************************************************************/
-void packd_c(double *in,char *out,int n)
+void packd_c(in,out,n)
+double *in;
+char *out;
+int n;
 /*
   Pack an array of Cray reals into IEEE double precision. This assumes
   that a "double" and a "float" are identical.
@@ -621,7 +596,10 @@ void packd_c(double *in,char *out,int n)
   }
 }
 /************************************************************************/
-void unpackd_c(char *in,double *out,int n)
+void unpackd_c(in,out,n)
+char *in;
+double *out;
+int n;
 /*
   Unpack an array of IEEE double precision numbers into Cray reals. This
   assumes that a "double" and a "float" are identical.

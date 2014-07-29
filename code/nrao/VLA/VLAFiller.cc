@@ -2053,7 +2053,7 @@ uInt VLAFiller::addDoppler( const VLAEnum::CDA cda ) {
 uInt VLAFiller::addSpectralWindow(const VLAEnum::CDA cda,
 				  const MFrequency& refFreq,
 				  const uInt nChan,
-				  const Double /*bandwidth*/,
+				  const Double bandwidth,
 				  const uInt ifChain) {
   MSSpWindowColumns& spw = spectralWindow();
   const uInt newRow = spw.nrow();

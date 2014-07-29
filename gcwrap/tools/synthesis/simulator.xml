@@ -1480,7 +1480,7 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      </param>
 
      <param type="any" name="simplenoise" >
-     <description>Level of noise (if mode=simplenoise)</description>
+     <description>Level of noise if simplenoise</description>
      <any type="variant" />
      <value>0.0Jy</value>
      </param>
@@ -1539,25 +1539,6 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
    opacity (mode=tsys-atm) or Brown's equation, manually specifying the zenith
    opacity (constant across the band) and atmospheric temperature 
    (mode=tsys-manual)</shortdescription>
-
-<description>
-Set various system parameters from which the thermal (ie, random additive) noise level 
-will be calculated.  
-
-For mode=simplenoise, one specifies the standard deviation for the noise to be
-added to real and imaginary parts of the visibility.
-
-For mode=tsys-atm or tsys-atm, the noise will vary with dish diameter, antenna efficiency,
-system temperature, opacity, sky temperature, etc.  The noise will increase with
-the airmass if tau is greater than zero.  The noise is calculated according to
-the Brown Equation (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct95):
-dS = 4 sqrt(2) [ T\_rx e\^{tau A} + T\_atm ( e\^{tau A} - epsilon\_l) + T\_cmb] / 
-               [ epsilon\_q epsilon\_a pi D\^2 sqrt{Delta nu Delta t} ]
-
-For mode=tsys-atm, the sky brightness temperature is calculated using an atmospheric model created for the user-input PWV.
-For mode=tsys-manual, the user specifies the sky brightness temperature 
-manually.
-</description>
    
 <input>
 

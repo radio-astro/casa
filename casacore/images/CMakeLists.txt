@@ -58,10 +58,6 @@ ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_images PROPERTIES SOVERSION ${casa_soversion} )
-endif()
-
 target_link_libraries (
 casa_images
 casa_mirlib
@@ -125,6 +121,7 @@ Images/SubImage.h
 Images/SubImage.tcc
 Images/TempImage.h
 Images/TempImage.tcc
+Images/WCBox.h
 DESTINATION include/casacore/images/Images
 )
 

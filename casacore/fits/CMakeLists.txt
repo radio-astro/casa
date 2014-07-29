@@ -24,9 +24,6 @@ FITS/blockio.cc
 FITS/FITSReader.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_fits PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_fits casa_measures ${CFITSIO_LIBRARIES})
 
 add_subdirectory (apps)

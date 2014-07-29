@@ -146,10 +146,6 @@ public:
     template <class U>
     Vector(const std::set<U>& other);
 
-    // implicit promotion/demotion of type
-    template <class U, class V>
-        Vector(const vector<U, V> &other);
-
     // Define a destructor, otherwise the compiler makes a static one.
     virtual ~Vector();
 

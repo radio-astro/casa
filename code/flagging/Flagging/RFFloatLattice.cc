@@ -232,8 +232,8 @@ RFFloatLattice::init(uInt nchan,
                      uInt ntime,
                      uInt ncorr,
                      uInt nAgent,
-                     Int /*maxmem*/,
-                     Int /*tile_mb*/)
+                     Int maxmem,
+                     Int tile_mb)
 {
   n_bit = ncorr + nAgent;
   
@@ -319,7 +319,7 @@ void RFFloatLattice::cleanup ()
   lat_shape.resize(0);
 }
 
-Matrix<Float> * RFFloatLattice::reset ( Bool /*r*/,Bool /*w*/ )
+Matrix<Float> * RFFloatLattice::reset ( Bool r,Bool w )
 {
   return iter.reset();
 }

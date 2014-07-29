@@ -54,8 +54,8 @@
 
 #include <casa/Arrays/ArrayMath.h>
 
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/VisCalGlobals.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
@@ -1187,7 +1187,7 @@ Bool Simulator::setnoise(const String& mode,
 
       if (pwv.getValue("mm")>0.) {
 	if (pwv.getValue("mm")>100.) 
-	  throw(AipsError(" you input PWV="+String::toString(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
+	  throw(AipsError(" you input PWV="+String(pwv.getValue("mm"))+"mm. The most common reason for this error is forgetting to set units, which default to meters"));
  
 	simpar.define ("mean_pwv", pwv.getValue("mm"));
       } else {
@@ -2260,7 +2260,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    // FTMachine only works in Hz and LSRK
 	    CoordinateSystem cs = images_p[model]->coordinates();
 	    String errorMsg;
-	    cs.setSpectralConversion(errorMsg,MFrequency::showType(MFrequency::LSRK));
+	    CoordinateUtil::setSpectralConversion(errorMsg,cs,MFrequency::showType(MFrequency::LSRK));
 	    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
 	    AlwaysAssert(spectralIndex>=0, AipsError);
 	    SpectralCoordinate spectralCoord=cs.spectralCoordinate(spectralIndex);

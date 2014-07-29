@@ -28,7 +28,7 @@
 
 #include <synthesis/CalTables/CalIter.h>
 #include <casa/Containers/Block.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

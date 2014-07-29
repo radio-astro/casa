@@ -32,7 +32,7 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -120,7 +120,7 @@ public:
   void getWeightImage(ImageInterface<Float>&, Matrix<Float>&);
 
   // Save and restore the MultiTermFT to and from a record
-  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False, const String diskimage="");
+  virtual Bool toRecord(String& error, RecordInterface& outRec, Bool withImage=False);
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   // Various small inline functions

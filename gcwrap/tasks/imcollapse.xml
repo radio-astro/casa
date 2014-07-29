@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>imagenam='ngc5921.im'</example>
     </param>
     <param type="string" name="function">
-        <description>Aggregate function to apply. This can be set one of flux, max, mean, median, min, rms, stdev, sum, variance. Must be specified.</description>
+        <description>Function used to compute aggregation of pixel values.</description>
         <value/>
         <example>function="max"</example>
         <example>function="rms</example>
@@ -100,7 +100,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 PARAMETER SUMMARY
 imagename        Name of the input (CASA, FITS, MIRIAD) image
 function         Function used to compute aggregation of pixel values along the collapsed
-                 axis. Supported functions are flux, max, mean, median, min, rms, stdev,
+                 axis. Supported functions are max, mean, median, min, rms, stdev,
                  sum, variance. Minimum match is supported for the function parameter (eg,
                  function="r" will compute the rms of the pixel values).
 axis             Zero-based axis number(s) or minimal match strings to compress.
@@ -122,22 +122,12 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
                  See help par.stretch.
 
 This task collapses an image along a specified axis or set of axes of N pixels to a single pixel on each
-specified axis. Both float valued and complex valued images are supported. It computes the specified
-aggregate function for pixel values along the specified axes
+specified axis. It computes the specified aggregate function for pixel values along the specified axes
 and places those values in the single remaining plane of those axes in the output image. It returns
 an image analysis tool containing the newly created collapsed image if wantreturn=True. Choices of
-aggregate functions are: flux (see below for constraints), max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is
+aggregate functions are: max, mean, median, min, rms, stdev, sum, variance. Minimal unique match is
 supported for the function parameter (eg, function="r" will compute the rms of the pixel values, "med"
 will compute the median).
-
-If one specifies function='flux', the following constraints must be true:
-
-1. The image must have a direction coordinate,
-2. The image must have at least one beam,
-3. The specified axes must be exactly the direction coordinate axes,
-4. Only one of the non-directional axes may be non-degenerate,
-5. The iamge brightness unit must be conformant with x*yJy/beam, where x is an optional unit (such as km/s for moments images)
-   and y is an optional SI prefix.
         
 Axes can be specified as a single integer or array of integers indicating the zero-based axes along
 which to collapse the image. Axes may also be specified as a single or array of strings which minimally

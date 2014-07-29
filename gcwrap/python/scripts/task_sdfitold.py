@@ -5,6 +5,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdfitold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdfit_worker, locals()) as worker:
         worker.initialize()

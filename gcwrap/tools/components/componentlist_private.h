@@ -12,6 +12,6 @@ casa::Vector<casa::Int> checkIndices(const vector<int>& which,
                                      const casa::String& function,
                                      const casa::String& message) const;
 
-void _checkIndex(int which) const;
+int checkIndex(int which, const casa::String& function) const;
 
 int checkFluxPol(const casa::String &polString);

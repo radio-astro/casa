@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
@@ -39,10 +39,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/TransformMachines/rGridFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -1213,7 +1213,7 @@ void rGridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& 
 }
 
 Bool rGridFT::toRecord(String& error,
-		       RecordInterface& outRec, Bool withImage, const String diskimage)
+		      RecordInterface& outRec, Bool withImage)
 {
 
   
@@ -1222,7 +1222,7 @@ Bool rGridFT::toRecord(String& error,
   Bool retval = True;
 
   //save the base class variables
-  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
+  if(!FTMachine::toRecord(error, outRec, withImage))
     return False;
 
   //a call to init  will redo imagecache and gridder
@@ -1277,7 +1277,26 @@ Bool rGridFT::fromRecord(String& error,
   machineName_p="rGridFT";
   ///setup some of the parameters
   init();
- 
+  if(inRec.isDefined("image")){
+    //FTMachine::fromRecord would have recovered the image
+    // Might be changing the shape of sumWeight
+
+    if(isTiled) {
+      lattice=CountedPtr<Lattice<Complex> >(image, False);
+    }
+    else {
+      // Make the grid the correct shape and turn it into an array lattice
+      // Check the section from the image BEFORE converting to a lattice 
+      if(!toVis_p){
+	IPosition gridShape(4, nx, ny, npol, nchan);
+	griddedData.resize(gridShape);
+	griddedData=Complex(0.0);
+      }
+      else{
+	prepGridForDegrid();
+      }
+    }
+  };
   return retval;
 }
 

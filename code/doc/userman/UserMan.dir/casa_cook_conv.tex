@@ -5,7 +5,6 @@
 % JO  2010-10-12 doc created for CASA 3.1.0
 % JO  2012-05-06 Release 3.4 edits
 % JO  2012-11-08 Release 4.0 edits
-% JO  2013-12-16 Release 4.2. edits
 
 \chapter[Appendix: Models, Conventions and Reference Frames]
          {Appendix: Models, Conventions, and Reference Frames}
@@ -62,20 +61,19 @@ names below. E.g. 'PKS 1934-638' will be recognized
 \begin{tabular}{|ccccc|} \hline
  {\bf 3C Name}  & {\bf B1950 Name}& {\bf J2000 Name} & {\bf Alt. J2000
    Name} & {\bf Standards}\\
-3C48  &  0134+329 &  0137+331 &  J0137+3309 & 1,3,4,5,6, 7  \\
+3C48  &  0134+329 &  0137+331 &  J0137+3309 & 1,3,4,5,6  \\
 3C123 &  0433+295 &  0437+296 &  J0437+2940 &      2 \\
 3C138 &  0518+165 &  0521+166 &  J0521+1638 &      1,3,4,5,6\\
-3C147 &  0538+498 &  0542+498 &  J0542+4951 &      1,3,4,5,6, 7\\
-3C196 &  0809+483 &  0813+482 &  J0813+4813 &      1,2,7 \\
-3C286 &  1328+307 &  1331+305 &  J1331+3030 &      1,2,3,4,5,6, 7\\
-3C295 &  1409+524 &  1411+522 &  J1411+5212 &      1,2,3,4,5,6, 7\\
+3C147 &  0538+498 &  0542+498 &  J0542+4951 &      1,3,4,5,6\\
+3C196 &  0809+483 &  0813+482 &  J0813+4813 &      1,2 \\
+3C286 &  1328+307 &  1331+305 &  J1331+3030 &      1,2,3,4,5,6\\
+3C295 &  1409+524 &  1411+522 &  J1411+5212 &      1,2,3,4,5,6\\
  --   &  1934-638 &    --     &  J1939-6342 &      1,3,4,5,6\\
-3C380&   1828+487&   1829+487 &  J1829+4845&       7\\
 \hline
 \end{tabular}
 \end{center}
 Standards are: (1) Perley-Butler 2010, (2) Perley-Butler 2013, (3) Perley-Taylor 99, (4)
-Perley-Taylor 95, (5) Perley 90, (6) Baars, (7) Scaife-Heald 2012
+Perley-Taylor 95, (5) Perley 90, (6) Baars
 \end{table}
 
 
@@ -131,16 +129,12 @@ variability, see Perley, R. A., \& Butler, B. J. 2012, ApJS, submitted
 \label{section:conventions.longwavelength.perleybutler13}
 
 Flux scale for the constant flux sources 3C123, 3C196, 3C286,
-and 3C295. The models are time-dependent.\\
+and 3C295.
 
-Reference: Perley, R. A., \& Butler, B. J. 2013, ApJS, 206, 16
+Reference: Perley, R. A., \& Butler, B. J. 2012, ApJS, submitted\\
+\url{http://arxiv.org/abs/1211.1300}
 
-\subsubsection{Scaife-Heald 2012}
-\label{section:conventions.longwavelength.scaifeheald}
-Low frequency, 30-300MHz, calibrators 3C48, 3C147, 3C196, 3C286,
-3C295, and 3C380. \\
 
-Reference: Scaife, A. M., \& Heald, G. H. \ 2012, MNRAS, 423, 30
 
 \subsection{Short wavelength calibration}
 %\label{sec-1.2}
@@ -428,7 +422,7 @@ Name & Description\\
 \end{table}
 
 Note that TOPO refers to a time stamp at a given observation date. If
-more than one observation is concatenated this may lead to vastly
+more than one obervation is concatenated this may lead to vastly
 erroneous values. Any conversion from TOPO to other frames such as
 BARY and LSRK should be performed for each individual observation,
 prior to concatenation or simultaneous imaging.

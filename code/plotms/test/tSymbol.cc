@@ -32,7 +32,7 @@
 #include <display/QtViewer/QtApp.h>
 
 #include <iostream>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <casa/namespace.h>
 #include <QApplication>
 #include <QDebug>

@@ -28,7 +28,6 @@
 #
 # <author>
 # Shannon Jaeger (University of Calgary)
-# dmehring
 # </author>
 #
 # <summary>
@@ -56,6 +55,8 @@
 #   ????
 #
 # In the immath task ????
+#
+#
 #
 # </synopsis> 
 #
@@ -167,19 +168,6 @@ def _exceptionInfo( maxLevel=5 ):
         excArgs = "<no args>"
     excTb = traceback.format_tb(trbk, maxLevel)
     return(excName, excArgs, excTb)
-
-def make_data(imshape):
-    data = ia.makearray(0, imshape)
-    for i in range(imshape[0]):
-        data[i] = list(data[i])
-        for j in range(imshape[1]):
-            data[i][j] = list(data[i][j])
-            for k in range(imshape[2]):
-                data[i][j][k] = (k+1) + (j+1)*imshape[0] + (i+1)
-            data[i][j] = tuple(data[i][j])
-        data[i] = tuple(data[i])
-    return data
-
 
 
 ################      THE TESTS         ###################
@@ -1510,90 +1498,6 @@ class immath_test3(unittest.TestCase):
         # Note that im.4 has been moved into im.1.
         ok = global_iet_im1.done()
       
-    def test_complex(self):
-        """Test creating and manipulating complex images"""
-        myia = iatool()
-        floatim = "float.im"
-        myia.fromshape(floatim, [2,2], type='f')
-        self.assertTrue(type(myia.getchunk()[0,0]) == numpy.float64)
-        myia.done()
-        complexim = "complex.im"
-        zz = myia.imagecalc(complexim, "complex(" + floatim + ")")
-        self.assertTrue(type(zz.getchunk()[0,0]) == numpy.complex128)
-        complexim2 = "complex2.im"
-        yy = zz.subimage(complexim2)
-        zz.done()
-        yy.done()
-        zz = myia.imagecalc("", complexim + "+" + complexim2)
-        self.assertTrue(type(zz.getchunk()[0,0]) == numpy.complex128)
-        zz.done()
-        
-    def test_8(self):
-        """Tests moved from imagetest regression, some are probably useless"""
-        myia = iatool()
-        imname = 'ia.fromarray1.image'
-        imname2 = 'ia.fromshape2.image'
-        imname3 = 'imagecalc.image'
-        imshape = [10,20,5]
-        data = make_data(imshape)
-        
-        self.assertRaises(
-            Exception, myia.imagecalc, outfile=imname3,
-            pixels='i_like_doggies'
-        )
-       
-        myim = myia.newimagefromarray(outfile=imname, pixels=data)
-        
-        stats = myim.statistics(force=True, list=False)
-        myim.done()
-        #
-        myim = myia.newimagefromshape(
-            outfile=imname2,
-            shape=[2*imshape[0], 2*imshape[1],
-            2*imshape[2]]
-        )
-        myim.done()
-        ex = imname + '+' + imname2
-        self.assertRaises(
-            Exception, myia.imagecalc, outfile=imname3, pixels=ex
-        )
-        
-        # Need the double quotes because of / in expression
-        ex = '"'+imname+'"'+'+'+'"'+imname+'"'
-        myim = myia.imagecalc(outfile=imname3, pixels=ex)
-        self.assertTrue(myim)
-        stats2 = myim.statistics(force=True, list=False)
-        self.assertTrue(
-            stats2['max'] == 2*stats['max']
-        )
-        self.assertTrue(
-            stats2['min'] == 2*stats['min']
-        )
-        myia.close()  # needed to remove table lock preventing myim.done
-        myim.remove(done=True)
-        
-    def test_complex_calc(self):
-        """Test ia.calc on complex images"""
-        myia = iatool()
-        shape = [4, 4]
-        im1 = 'complex_calc1.im'
-        im2 = 'complex_calc2.im'
-        im3 = 'complex_calc3.im'
-        im4 = 'float_calc4.im'
-
-        myia.fromshape(im1, shape, type='c')
-        myia.fromshape(im2, shape, type='c')
-        myia.fromshape(im3, shape, type='c')
-
-        myia.calc(im1 + '+' + im2)
-        data = myia.getchunk()
-        myia.done()
-        self.assertTrue(type(data[0,0]) == numpy.complex128)
-
-        myia.fromshape(im4, shape, type='f')
-        self.assertRaises(Exception, myia.calc, im1 + '+' + im2)
-        
-
 
 
 

@@ -38,7 +38,7 @@
 
 namespace casa {
 
-class ImagePrimaryBeamCorrector : public ImageTask<Float> {
+class ImagePrimaryBeamCorrector : public ImageTask {
 	// <summary>
 	// Top level interface for primary beam correction.
 	// </summary>
@@ -78,8 +78,8 @@ public:
 	// <group>
 
 	ImagePrimaryBeamCorrector(
-			const SPCIIF image,
-			const SPCIIF pbImage,
+			const ImageTask::shCImFloat image,
+			const ImageTask::shCImFloat pbImage,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
 		const String& chanInp, const String& stokes,
@@ -89,7 +89,7 @@ public:
 	);
 
 	ImagePrimaryBeamCorrector(
-			const SPCIIF image,
+			const ImageTask::shCImFloat image,
 		const Array<Float>& pbArray,
 		const Record * const &regionPtr,
 		const String& region, const String& box,
@@ -105,8 +105,10 @@ public:
 	~ImagePrimaryBeamCorrector();
 
 	// perform the correction. If <src>wantReturn</src> is True, return a pointer to the
-	// collapsed image.
-	SPIIF correct(const Bool wantReturn) const;
+	// collapsed image. The returned pointer is created via new(); it is the caller's
+	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
+	// a NULL pointer is returned and pointer deletion is performed internally.
+	ImageInterface<Float>* correct(const Bool wantReturn) const;
 
 	String getClass() const;
 

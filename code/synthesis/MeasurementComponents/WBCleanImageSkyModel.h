@@ -180,7 +180,7 @@ private:
   void blankOverlappingModels();
   void restoreOverlappingModels();
 
-  void saveCurrentModels();
+  Float saveCurrentModels();
   
   Timer tmr1,tmr2;
   Int adbg;

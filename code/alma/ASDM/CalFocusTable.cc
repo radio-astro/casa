@@ -134,20 +134,6 @@ namespace asdm {
 			, "peakIntensityError"
 		
 			, "peakIntensityWasFixed"
-		
-			, "astigmPlus"
-		
-			, "astigmPlusError"
-		
-			, "astigmMult"
-		
-			, "astigmMultError"
-		
-			, "illumOffset"
-		
-			, "illumOffsetError"
-		
-			, "fitRMS"
 				
 	};
 	
@@ -163,7 +149,7 @@ namespace asdm {
     
     	 "antennaName" , "receiverBand" , "calDataId" , "calReductionId" , "startValidTime" , "endValidTime" , "ambientTemperature" , "atmPhaseCorrection" , "focusMethod" , "frequencyRange" , "pointingDirection" , "numReceptor" , "polarizationTypes" , "wereFixed" , "offset" , "offsetError" , "offsetWasTied" , "reducedChiSquared" , "position" 
     	,
-    	 "polarizationsAveraged" , "focusCurveWidth" , "focusCurveWidthError" , "focusCurveWasFixed" , "offIntensity" , "offIntensityError" , "offIntensityWasFixed" , "peakIntensity" , "peakIntensityError" , "peakIntensityWasFixed" , "astigmPlus" , "astigmPlusError" , "astigmMult" , "astigmMultError" , "illumOffset" , "illumOffsetError" , "fitRMS" 
+    	 "polarizationsAveraged" , "focusCurveWidth" , "focusCurveWidthError" , "focusCurveWasFixed" , "offIntensity" , "offIntensityError" , "offIntensityWasFixed" , "peakIntensity" , "peakIntensityError" , "peakIntensityWasFixed" 
     
 	};
 	        			
@@ -653,7 +639,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		string buf;
 
 		buf.append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> ");
-		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n");
+		buf.append("<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n");
 	
 		buf.append(entity.toXML());
 		string s = container.getEntity().toXML();
@@ -775,7 +761,7 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		ostringstream oss;
 		oss << "<?xml version='1.0'  encoding='ISO-8859-1'?>";
 		oss << "\n";
-		oss << "<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"-1\">\n";
+		oss << "<CalFocusTable xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:clfcs=\"http://Alma/XASDM/CalFocusTable\" xsi:schemaLocation=\"http://Alma/XASDM/CalFocusTable http://almaobservatory.org/XML/XASDM/3/CalFocusTable.xsd\" schemaVersion=\"3\" schemaRevision=\"1.64\">\n";
 		oss<< "<Entity entityId='"<<UID<<"' entityIdEncrypted='na' entityTypeName='CalFocusTable' schemaVersion='1' documentVersion='1'/>\n";
 		oss<< "<ContainerEntity entityId='"<<containerUID<<"' entityIdEncrypted='na' entityTypeName='ASDM' schemaVersion='1' documentVersion='1'/>\n";
 		oss << "<BulkStoreRef file_id='"<<withoutUID<<"' byteOrder='"<<byteOrder->toString()<<"' />\n";
@@ -811,13 +797,6 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		oss << "<peakIntensity/>\n"; 
 		oss << "<peakIntensityError/>\n"; 
 		oss << "<peakIntensityWasFixed/>\n"; 
-		oss << "<astigmPlus/>\n"; 
-		oss << "<astigmPlusError/>\n"; 
-		oss << "<astigmMult/>\n"; 
-		oss << "<astigmMultError/>\n"; 
-		oss << "<illumOffset/>\n"; 
-		oss << "<illumOffsetError/>\n"; 
-		oss << "<fitRMS/>\n"; 
 		oss << "</Attributes>\n";		
 		oss << "</CalFocusTable>\n";
 
@@ -991,20 +970,6 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
     attributesSeq.push_back("peakIntensityError") ; 
     	 
     attributesSeq.push_back("peakIntensityWasFixed") ; 
-    	 
-    attributesSeq.push_back("astigmPlus") ; 
-    	 
-    attributesSeq.push_back("astigmPlusError") ; 
-    	 
-    attributesSeq.push_back("astigmMult") ; 
-    	 
-    attributesSeq.push_back("astigmMultError") ; 
-    	 
-    attributesSeq.push_back("illumOffset") ; 
-    	 
-    attributesSeq.push_back("illumOffsetError") ; 
-    	 
-    attributesSeq.push_back("fitRMS") ; 
     	
      
     

@@ -42,7 +42,7 @@ namespace casa {
 
 class ProfileFitResults;
 
-class ImageProfileFitter : public ImageTask<Float> {
+class ImageProfileFitter : public ImageTask {
 	// <summary>
 	// Top level interface for one-dimensional profile fits.
 	// </summary>
@@ -91,7 +91,7 @@ public:
 	// or a non-empty <src>spectralList</src> can be specified.
 
 	ImageProfileFitter(
-			const SPCIIF image, const String& region,
+			const ImageTask::shCImFloat image, const String& region,
 		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const uInt ngauss, const String& estimatesFilename,
@@ -201,8 +201,6 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
-
 private:
 	String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
@@ -273,7 +271,7 @@ private:
 
     void _setFitterElements(
     	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
-    	const PtrHolder<const PolynomialSpectralElement>& polyEl,
+    	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
     	const vector<IPosition>& goodPos,
     	const IPosition& fitterShape, const IPosition& curPos,
     	uInt nOrigComps

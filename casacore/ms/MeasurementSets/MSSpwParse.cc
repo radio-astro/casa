@@ -110,7 +110,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for(Int i=0;i<nDDIDRows;i++)
 	  {
 	    //	    cerr << "DDID->SPWID: " << i << " " <<  mapDDID2SpwID(i) << endl;
-	    //cerr << n << " " << i << " " << SpwIds(n) << " " << mapDDID2SpwID(i) << endl;
 	  if ((SpwIds(n) == mapDDID2SpwID(i)) && 
 	      (!msDataDescSubTable.flagRow()(i)) && 
 	      (!msSpwSubTable.flagRow()(SpwIds(n)))
@@ -235,7 +234,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       nSpw = spwIds.nelements(),
       loc=n,k=0;
     
-    //cerr << spwIds << " " << chanIDList << endl;
     for (Int i=0;i<nSpw;i++)
       {
 	if ((chanIDList[k] != -1) && (chanIDList[k+1] != -1))
@@ -253,7 +251,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	else k+=3;
       }
 
-    //    cerr << spwIds << " " << chanIDList << endl;
     // nSpw=chanList.shape()[0];
     // spwIds.resize(nSpw);
     // for (Int i=0;i<nSpw;i++)

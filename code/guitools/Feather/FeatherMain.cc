@@ -96,7 +96,6 @@ FeatherMain::FeatherMain(QWidget *parent)
 	connect(ui.actionPreferencesColor, SIGNAL(triggered()), this, SLOT(openPreferencesColor()));
 	connect(ui.actionRectangleZoom, SIGNAL(triggered()), plotHolder, SLOT(setRectangleZoomMode()));
 	connect(ui.actionDiameterSelector, SIGNAL(triggered()), plotHolder, SLOT(setDiameterSelectorMode()));
-	connect(ui.actionHelp, SIGNAL(triggered()), this, SLOT(openAboutDialog()));
 
 	connect( &fileLoader, SIGNAL(imageFilesChanged()), this, SLOT(imageFilesChanged()));
 	connect( &preferencesColor,SIGNAL(colorsChanged()), this, SLOT(functionColorsChanged()));
@@ -343,10 +342,6 @@ void FeatherMain::openPreferencesColor(){
 	//We call show rather than exec here so that users can keep this one up
 	//and turn on/off curves
 	preferencesColor.show();
-}
-
-void FeatherMain::openAboutDialog(){
-	aboutDialog.show();
 }
 
 void FeatherMain::clearPlots(){

@@ -33,7 +33,7 @@
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
@@ -240,6 +240,7 @@ private:
   IPosition centerLoc, offsetLoc;
 
   // Array for non-tiled gridding
+  Array<Complex> griddedData;
   Array<Float> wGriddedData;
 
 

@@ -72,7 +72,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
-import numpy
+
 
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imsubimage/'
 
@@ -190,13 +190,7 @@ class ia_subimage_test(unittest.TestCase):
         beams = myia.restoringbeam()
         self.assertTrue(len(beams['beams']) == 12)
         
-    def test_complex(self):
-        """Test complex valued image support"""
-        myia = self.myia
-        myia.fromshape("",[2,2], type='c')
-        subim = myia.subimage()
-        myia.done()
-        self.assertTrue(type(subim.getchunk()[0,0]) == numpy.complex128)
+
 
 def suite():
     return [ia_subimage_test]

@@ -16,13 +16,13 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
 #include <flagging/Flagging/AgentFlagger.h>
+#include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
 #include <casa/sstream.h>
 #include <unistd.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/Table.h>
-#include <measures/Measures/MeasIERS.h>
 
 
 using namespace std;
@@ -56,7 +56,6 @@ agentflagger::~agentflagger()
 		RETHROW(x);
 	}
     Table::relinquishAutoLocks(True);
-    MeasIERS::closeTables();
 
 }
 

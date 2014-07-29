@@ -55,46 +55,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SIMinorCycleController::~SIMinorCycleController(){}
 
 
-  Int SIMinorCycleController::majorCycleRequired(Float currentPeakResidual)
-  {
-    LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
-
-    /*
+  bool SIMinorCycleController::majorCycleRequired(Float currentPeakResidual){
     if (itsCycleIterDone >= itsCycleNiter ||
-        fabs(currentPeakResidual) <= itsCycleThreshold ||
-	itsIterDiff==0 )
+        fabs(currentPeakResidual) <= itsCycleThreshold)
       return true;
+
+    /* Otherwise */
     return false;
-    */
-
-    /*
-    Bool doStop=False;
-
-    if (itsCycleIterDone >= itsCycleNiter ) 
-      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
-    if( fabs(currentPeakResidual) <= itsCycleThreshold )
-      { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
-    if( itsIterDiff==0 )
-      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
-    
-    if( doStop == True ) {os << LogIO::NORMAL1 << " Triggering major cycle." << LogIO::POST;}
-
-    //cout << "MajorCycleRequired : " << currentPeakResidual << " : " << itsCycleIterDone << "  stop : " << doStop << endl;
-    
-    return doStop;
-    */
-
-    Int stopCode=0;
-
-    if (itsCycleIterDone >= itsCycleNiter ) {stopCode=1;}
-    //      { doStop = True; os << LogIO::NORMAL << "Reached cycleniter." ;  }
-    if( fabs(currentPeakResidual) <= itsCycleThreshold ) { stopCode=2; }
-      //  { doStop = True; os << LogIO::NORMAL << "Reached cyclethreshold." ; }
-    if( itsIterDiff==0 ) {stopCode=3;}
-    //      { doStop = True; os << LogIO::NORMAL << "Minor cycle algorithm decided to stop early.";  }
-
-    return stopCode;
-
   }
 
 
@@ -111,13 +78,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMinorCycleController::incrementMinorCycleCount(Int itersDonePerStep)
   {
-    if( itersDonePerStep <= 0 )
-      {
-	LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
-	os << LogIO::WARN << "Zero iterations done after " << itsCycleIterDone << LogIO::POST;
-      }
-
-    itsIterDiff = itersDonePerStep;
     itsIterDone += itersDonePerStep;
     itsTotalIterDone += itersDonePerStep;
     itsCycleIterDone += itersDonePerStep;
@@ -200,7 +160,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     /* Reset Counters and summary for the current set of minorcycle iterations */
     itsIterDone = 0;
-    itsIterDiff = -1;
     itsSummaryMinor.resize( IPosition( 2, itsNSummaryFields, 0) , True );
 
     return returnRecord;

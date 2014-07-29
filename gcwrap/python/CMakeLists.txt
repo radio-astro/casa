@@ -103,7 +103,6 @@ scripts/task_ft.py
 scripts/task_gaincal.py
 scripts/task_gencal.py
 scripts/task_hanningsmooth.py
-scripts/task_hanningsmooth2.py
 scripts/task_help.py
 scripts/task_imcollapse.py
 scripts/task_imcontsub.py
@@ -117,11 +116,9 @@ scripts/task_importevla.py
 scripts/task_importfits.py
 scripts/task_importfitsidi.py
 scripts/task_importgmrt.py
-scripts/task_importmiriad.py
 scripts/task_importuvfits.py
 scripts/task_importvla.py
 scripts/task_impv.py
-scripts/task_imrebin.py
 scripts/task_imreframe.py
 scripts/task_imregrid.py
 scripts/task_imsmooth.py
@@ -148,7 +145,7 @@ scripts/task_plotcal.py
 scripts/task_plotms.py
 scripts/task_plotuv.py
 scripts/task_plotweather.py
-#scripts/task_plotxy.py
+scripts/task_plotxy.py
 scripts/task_partition.py
 scripts/task_polcal.py
 scripts/task_predictcomp.py
@@ -195,10 +192,8 @@ scripts/task_simanalyze.py
 scripts/task_slsearch.py
 scripts/task_smoothcal.py
 scripts/task_specfit.py
-scripts/task_specsmooth.py
 scripts/task_splattotable.py
 scripts/task_split.py
-scripts/task_split2.py
 scripts/task_spxfit.py
 scripts/task_statwt.py
 scripts/task_tclean.py
@@ -232,4 +227,3 @@ add_subdirectory( scripts/usecases )
 add_subdirectory( scripts/demos )
 add_subdirectory( scripts/recipes )
 add_subdirectory( scripts/parallel )
-add_subdirectory( scripts/mpi4casa )

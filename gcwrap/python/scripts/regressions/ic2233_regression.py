@@ -142,10 +142,8 @@ def stats():
         # Get the image statistics
         #
         ia.open(THISHOME+IMAGE+".image");
-#        ibox=ia.setboxregion(blc=[0,0,0,0],trc=[2048,2048,0,0]);
-#        vbox=ia.setboxregion(blc=[0,0,1,0],trc=[2048,2048,1,0]);
-        ibox = rg.box(blc=[0,0,0,0],trc=[2048,2048,0,0]);
-        vbox = rg.box(blc=[0,0,1,0],trc=[2048,2048,1,0]);
+        ibox=ia.setboxregion(blc=[0,0,0,0],trc=[2048,2048,0,0]);
+        vbox=ia.setboxregion(blc=[0,0,1,0],trc=[2048,2048,1,0]);
     
         istats=ia.statistics(region=ibox, list=True, verbose=True);
         vstats=ia.statistics(region=vbox, list=True, verbose=True);

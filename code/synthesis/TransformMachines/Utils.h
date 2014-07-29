@@ -27,7 +27,7 @@
 //# $Id$
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Quanta/Quantum.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSRange.h>
@@ -109,9 +109,6 @@ namespace casa
 
     Double nearestValue(const Vector<Double>& list, const Double& val, Int& index);
 
-    template <class T>
-    T stdNearestValue(const vector<T>& list, const T& val, Int& index);
-
     CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
 				  IPosition& shape);
 
@@ -120,11 +117,6 @@ namespace casa
     void calcIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2],
 			  Float blc[2], Float trc[2]);
     Bool checkIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]);
-
-    String mjdToString(Time& mjd);
-
-    template<class Iterator>
-    Iterator Unique(Iterator first, Iterator last);
 			  
   }
 

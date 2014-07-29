@@ -2810,7 +2810,7 @@ Bool BasePlot::saveData(const String& filename) {
 
     RegularFile dataFile(filename);
     if (dataFile.exists()) {
-        dataFile.setPermissions(0666);
+        dataFile.setPermissions(0644);
         //if (dataFile.isRegular()) {
         //   cout << filename << " exists and is a regular file" << endl;
         //}

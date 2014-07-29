@@ -1389,10 +1389,11 @@ E.g.:
 </method>
 
    <method type="function" name="calc">
-   <shortdescription> TaQL expression with calc to calculate an expression on a table</shortdescription>
+   <shortdescription>!!!NOT IMPLEMENTED!!! Calculate an expression on a table</shortdescription>
    
 <description>
 
+!!!NOT IMPLEMENTED!!!
 
 Get the result from the calculation of an expression on a table
 <!-- using a CALC command given to the <link anchor="table:tablecommand">tablecommand</link>
@@ -1407,21 +1408,17 @@ or a record containing arrays. See the examples below.
      <param type="string" name="expr">
      <description>Expression string</description>
      </param>
-     <param type="string" name="prefix">
-     <description>TaQL prefix  for style and ordering etc ...check TaQL note 199 for usage</description>
-     <value>using style base0, endincl, fortranorder</value>
-     </param>
-
 </input>
 <returns type="any">
 <any type="variant"/>
 </returns>
 <example>
 
+!!!NOT IMPLEMENTED!!!
 
-tb.calc('[select from ngc5921.ms  giving [mean(abs(DATA))]]')
 
-find the mean of the abs of each row of the  DATA column of the MeasurementSet ngc5921.ms 
+  tb.open("3C273XC1.MS")
+  tb.calc ('DATA+1')
 
 returns a (potentially enormous) record where a field contains the
 value of the expression for the row with that number. Note that it
@@ -1429,29 +1426,23 @@ returns a record because for each row the expression results in an array.
 It should be clear that this example is useless. However, something
 like this could be useful for a column with (very) small arrays.
 
-tb.calc('[select from ngc5921.ms.contsub giving  [ntrue(FLAG)]]')
- 
+  tb.open("3C273XC1.MS")
+  tb.calc ('ntrue(FLAG)')
 
 returns for each row the number of flags set. The result is a vector,
 because for each row the expression results in a scalar.
 
-
-tb.calc('sum([select from ngc5921.ms.contsub giving  [ntrue(FLAG)]])')
+  tb.open("3C273XC1.MS")
+  tb.calc ('sum([select from $1 giving [ntrue(FLAG)]])')
 
 returns the total number of flags set in the table (in a single
 scalar).
+It is the same as
 
-using subrow array 
-tb.calc('median([select from ngc5921.ms where ANTENNA1==3 &amp;&amp; ANTENNA2==5 giving [abs(DATA[0,31])]])')
+  sum(tb.calc ('ntrue(FLAG)'))
 
-The above will find the median channel 31 and 0th pol of the requested  baseline formed with antennas 3 and 5.
-Note that the that the default casa order of arrays is fortran order ...pol axis is before channel axis
-
-tb.calc('median([select from ngc5921.ms where ANTENNA1==3 &amp;&amp; ANTENNA2==5 giving [abs(DATA[31, 0])]])', prefix='using style python')
-
-Now the same is as the above but using the python style of axis ordering access
-
-
+The latter is easier to write, but sends (much) more data over the
+casapy bus.
 </example>
 
 <!-- <seealso>

@@ -87,13 +87,13 @@ String TBActionList::lastUndoneActionName() {
 }
 
 TBAction* TBActionList::at(unsigned int i) {
-    if(i < actions.size()) {
+    if(0 <= i && i < actions.size()) {
         return actions.at(i);
     } else return NULL;
 }
 
 TBAction* TBActionList::undoneAt(unsigned int i) {
-    if(i < undone.size()) {
+    if(0 <= i && i < undone.size()) {
         return undone.at(i);
     } else return NULL;
 }

@@ -145,15 +145,14 @@ See the cookbook for details of its capability.
     </param>
 
     <param type="string" name="kernel">
-      <shortdescription>type of spectral smoothing [\'hanning\',\'gaussian\', or \'boxcar\'] (\'\'=no smoothing)</shortdescription>
+      <shortdescription>type of spectral smoothing [\'hanning\',\'gaussian\', or \'boxcar\']</shortdescription>
       <description>type of spectral smoothing</description>
-      <value></value>
+      <value>none</value>
       <allowed kind="enum">
-        <value></value>
+        <value>none</value>
         <value>hanning</value>
         <value>gaussian</value>
         <value>boxcar</value>
-        <value>none</value>
       </allowed>
     </param>
 
@@ -314,7 +313,7 @@ See the cookbook for details of its capability.
         <equals value="Hz"/>
       </when>
       <when param="kernel">
-        <equals value=""/>
+        <equals value="none"/>
         <equals value="hanning"/>
         <equals value="gaussian">
           <default param="kwidth"><value>5</value></default>
@@ -322,7 +321,6 @@ See the cookbook for details of its capability.
         <equals value="boxcar">
           <default param="kwidth"><value>5</value></default>
         </equals>
-        <equals value="none"/>
       </when>
       <when param="plottype">
         <equals value="spectra">
@@ -497,7 +495,7 @@ polaverage -- average spectra over polarizations
                 default: 'tsys'
 kernel -- type of spectral smoothing
         options: 'hanning','gaussian','boxcar', 'none'
-        default: '' (= no smoothing)
+        default: 'none'
     &gt;&gt;&gt;kernel expandable parameter
         kwidth -- width of spectral smoothing kernel
                 options: (int) in channels

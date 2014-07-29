@@ -90,7 +90,7 @@ private:
 
 	static void _addLogTransformedPolynomial(
 		SpectralList& spectralList,
-		vector<double>& myltpest,
+		LogIO& log,	vector<double>& myltpest,
 		vector<bool>& myltpfix
 	);
 

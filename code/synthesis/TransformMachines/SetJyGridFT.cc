@@ -29,7 +29,7 @@
  *  Created on: Jun 11, 2012
  *      Author: kgolap
  */
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
@@ -43,10 +43,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/TransformMachines/SetJyGridFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -176,9 +176,9 @@ void SetJyGridFT::initializeToVis(ImageInterface<Complex>& image,
 }
 
 Bool SetJyGridFT::toRecord(String& error,
-			   RecordInterface& outRec, Bool withImage, const String diskimage)
+		      RecordInterface& outRec, Bool withImage)
 {
-  if(!GridFT::toRecord(error, outRec, withImage, diskimage))
+  if(!GridFT::toRecord(error, outRec, withImage))
     return False;
   outRec.define("freqscale", freqscale_p);
   outRec.define("scaleamp", scale_p);

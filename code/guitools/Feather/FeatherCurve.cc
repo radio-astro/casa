@@ -26,7 +26,7 @@
 #include "FeatherCurve.h"
 #include <guitools/Feather/FeatherPlot.h>
 #include <guitools/Feather/LegendCurve.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
 #include <qwt_plot_curve.h>

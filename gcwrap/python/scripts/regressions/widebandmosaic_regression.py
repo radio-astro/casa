@@ -72,7 +72,7 @@ def locclean( vis='', imagename='', field='', spw='', phasecenter='', nterms=1, 
 			  cellx=cell,celly=cell,
 			  nchan=1, 
                           phasecenter = [phasecenter],
-                          stokes='IV',mode='mfs')
+                          stokes='I',mode='mfs')
       im.make(models[0]);
       algo = 'hogbom'
    im.weight(type='natural');
@@ -153,61 +153,26 @@ else:
    # 11 Apr 2011 (UR). Changed the simulated MS, with both pointings off-source.
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   #correct_cs_intensity = 0.692243
-   #correct_cs_avgpb = 0.705166
+   correct_cs_intensity = 0.692243
+   correct_cs_avgpb = 0.705166
    # Test 2
-   #correct_mtmfs_intensity = 0.908868
-   #correct_mtmfs_alpha = -0.0037804
-   #correct_mtmfs_coeffpb_0 = 0.999975
-   #correct_mtmfs_coeffpb_1 = 0.705602
+   correct_mtmfs_intensity = 0.908868
+   correct_mtmfs_alpha = -0.0037804
+   correct_mtmfs_coeffpb_0 = 0.999975
+   correct_mtmfs_coeffpb_1 = 0.705602
 
    # 10 Sept 2013 (UR). 
    ## Removed CF rotation (changed from 5.0 to 360.0), and using PB=sqrt(sum_pbsq)
    ## Removed test for coeffPB_1, since this is no longer correct 
    # These are pixel values at the center of the source, pixel 256, 315
    # Test 1
-   #correct_cs_intensity = 0.67087
-   #correct_cs_avgpb = 0.695073
+   correct_cs_intensity = 0.67087
+   correct_cs_avgpb = 0.695073
    # Test 2
-   #correct_mtmfs_intensity = 0.679821
-   #correct_mtmfs_alpha = 0.036
-   #correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
+   correct_mtmfs_intensity = 0.679821
+   correct_mtmfs_alpha = 0.036
+   correct_mtmfs_avgPB_tt0 = 0.695073  # avgPB_tt0
 ##   correct_mtmfs_coeffpb_1 = 0.705602   ## Make this avgPB_tt1
-
-   # 24 Oct 2013 (UR). -- This is with an oversampling of 50.
-   ## Switched to using PBSQ. Search for 'PBSQWeight' in the code. (0.69*0.69 = 0.476)
-   # These are pixel values at the center of the source, pixel 256, 315
-   # Test 1
-   #correct_cs_intensity = 0.66764
-   #correct_cs_avgpb = 0.48338
-   # Test 2
-   #correct_mtmfs_intensity = 0.68578
-   #correct_mtmfs_alpha = 0.002019
-   #correct_mtmfs_avgPB_tt0 = 0.48338  # avgPB_tt0
-
-   # 25 Oct 2013 (UR). -- This is with DEFAULT oversampling (20)
-   # These are pixel values at the center of the source, pixel 256, 315
-   # Test 1
-   #correct_cs_intensity = 0.671525
-   #correct_cs_avgpb = 0.4836
-   # Test 2
-   #correct_mtmfs_intensity = 0.6818
-   #correct_mtmfs_alpha = 0.0188
-   #correct_mtmfs_avgPB_tt0 = 0.4836
-
-   # 28 Oct 2013 (UR). After fixing more PBSQ and sqrt errors.
-   # These are pixel values at the center of the source, pixel 256, 315
-
-   # 29 Jan 2014 (SB): Added Stokes-V testing 
-   # Test 1
-   correct_cs_intensity = 0.6710
-   #correct_cs_intensity_v = -0.0007073
-   correct_cs_intensity_v = -0.002090328
-   correct_cs_avgpb = 0.4830
-   # Test 2
-   correct_mtmfs_intensity = 0.6803
-   correct_mtmfs_alpha = 0.0360
-   correct_mtmfs_avgPB_tt0 = 0.4830
 
 
 ###################################################
@@ -222,25 +187,15 @@ else:
    if(os.path.exists(imname1+'.image')):
       ia.open(imname1+'.image');
       midpix = ia.pixelvalue([npix/2,npix/2])
-      midpix = ia.pixelvalue([256,315,0,0])
-      midpix_v = ia.pixelvalue([256,315,1,0])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_cs_intensity = abs( midpix['value']['value'] - correct_cs_intensity )/ abs(correct_cs_intensity);
       if(diff_cs_intensity<0.02): 
-         print >>logfile,'* Passed Test 1 : peak cs_intensity_I test ';
+         print >>logfile,'* Passed Test 1 : peak cs_intensity test ';
       else: 
-         print >>logfile,'* FAILED Test 1 : peak cs_intensity_I test at the 2-percent level '
+         print >>logfile,'* FAILED Test 1 : peak cs_intensity test at the 2-percent level '
 	 regstate = False;
-
-      diff_cs_intensity_v = abs( midpix_v['value']['value'] - correct_cs_intensity_v )/ abs(correct_cs_intensity_v);
-      if(diff_cs_intensity_v<0.02): 
-         print >>logfile,'* Passed Test 1 : peak cs_intensity_V test ';
-      else: 
-         print >>logfile,'* FAILED Test 1 : peak cs_intensity_V test at the 2-percent level '
-	 regstate = False;
-
-      print >>logfile,'-- Test 1 : peak cs_intensity_I : ' + str(midpix['value']['value']) + ' (' + str(correct_cs_intensity) + ')';
-      print >>logfile,'-- Test 1 : peak cs_intensity_V : ' + str(midpix_v['value']['value']) + ' (' + str(correct_cs_intensity_v) + ')';
+      print >>logfile,'-- Test 1 : peak cs_intensity : ' + str(midpix['value']['value']) + ' (' + str(correct_cs_intensity) + ')';
    else:
       print >>logfile,'-- FAILED Test 1 : No cs_intensity map generated';
       regstate = False;

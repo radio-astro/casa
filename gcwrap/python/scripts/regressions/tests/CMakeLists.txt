@@ -54,7 +54,7 @@ casa_add_python( tools tools_regressions_tests_python python/${PYTHONV}/regressi
   ori_hc3n.py
   ori_sio.py
   orionmosaic.py
-#  plotxy_test.py
+  plotxy_test.py
   pointing_test.py
   polcal_20080224_cband.py
   pylabmem.py

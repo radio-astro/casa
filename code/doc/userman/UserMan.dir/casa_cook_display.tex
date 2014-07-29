@@ -16,13 +16,12 @@
 % JO 2012-10-24  Release 4.0 edits
 % AKL 2013-05-26 Release 4.1 edits
 % JO  2013-05-28 more edits
-%  JO 2013-12-15 Release 4.2 edits
 
 \chapter{Visualization With The CASA Viewer}
 \label{chapter:display}
 
 This chapter describes using the CASA Viewer to display data.
-The Viewer can be started as a stand-alone executable or by the
+The Viewer can be started as a stand alone executable or by the
 {\tt viewer} task inside a CASA shell. It can display both images and Measurement Sets. 
 We are in the process of splitting the task-level access to the Viewer into 
 two tasks: {\tt imview} for images and {\tt msview} for measurement 
@@ -230,7 +229,7 @@ This top row of icons offers fast access to these menu items:
    \item  {\bf histogram}({\tt Tools:Histogram}) --- Open the Histogram inspection window, which allows you to graphically examine the distribution of pixel values in a data cube (\S \ref{section:display.image.histogram})
    \item  {\bf fitting}({\tt Tools:Fit}) -- Open the two-d fitting window, which can be used to fit Gaussians to two dimensional intensity distributions (\S \ref{section:display.image.twodfit}).
   % \item {\bf region save} ({\tt Tools:Region Manager}) --- save/control   
-   \item {\bf print} ({\tt Display Panel:Print}) --- print the current display
+   \item {\bf print} ({\tt Display Panel:Print}) --- print the curent display
    \item {\bf magnifier box} --- zoom out all the way
    \item {\bf magnifier plus} --- zoom in (by a factor of 2)
    \item {\bf magnifier minus} --- zoom out (by a factor of 2)
@@ -400,13 +399,13 @@ of the scroll bar. The scroll bar can also be dragged or the user can jump the d
 entered plane by entering the plane into the text bock.
 
 When you have multiple images loaded, the {\bf Images} tape deck cycles through 
-which is image is being displayed. In the movie mode, it allows you continuously click
+which is image is being displayed. In the movie mode, it allows you continuously blick
 between images. Functionally, the image tape deck works similarly to the channels tape deck,
 with the ability to step, jump, or continuously scroll through images.
 
 NOTE: The check boxes next to the channel and images tabs enable or disable those panels. This doesn't
 have much effect when the display has only a single panel, but with multiple panels (i.e., several 
-maps at once in the main window) it changes the nature of the display. If the "Images" box is  
+maps at once in the main window) it changes the nature of the display. If the "Images" box is is 
 checked then interleaved maps from different cubes are display. Otherwise a series of maps from a 
 single cube are shown.
 
@@ -559,7 +558,7 @@ An {\em open} dataset has been prepared in memory from disk.  All open datasets 
 have a tab in the {\tt Data Display Options} window, whether currently registered or not.  
 
 When a data set is {\em registered} to a Display Panel its coordinates are aligned to
-the master coordinate image in the panel and it is ready for drawing. If multiple Display Panels are open
+the other displays in the panel and it is ready for drawing. If multiple Display Panels are open
 then a data set may be registered on one {\tt Display Panel} and not on another. Only those
 data sets registered on a particular Display Panel show up in its {\bf Position Tracking}
 panel.
@@ -570,62 +569,19 @@ panel if you are displaying a contour image over a raster image
 (see {\bf Animator} in \S~\ref{section:display.viewerGUI.displaypanel}), or to compare images
 using the position tracking panel.
 
-{\em Unregistering Images:} A data set can be registered or
-unregistered using the {\bf Image Manager}
-in the {\bf  Data} drop down menu or the {\bf Image Manager} icon
-(third from left). It will open The Image Manager window and the
-checkboxes can be used to register or unregister an image. 
+{\em Unregistering Images:} A data set can be registered or unregistered using the {\bf Register}
+item in the {\bf Data} drop down menu or the {\bf Register} icon (third from left). Click the name of the image to
+toggle its registration state in that Display Panel. Failing to unregister or close data sets that are 
+no longer in use (or not compatible with other data in the Display Panel) may cause problems with 
+the viewer. 
 
 {\em Closing vs. Unregistering:} You can close a data set that is no longer needed using the {\bf Close}
-option in the {\bf Data} drop-down menu, the "Close" icon (fourth from
-left), or right mouse button ``Close'' selection in the Image Manager (\S~\ref{section:display.viewerGUI.imanager}). 
+option in the {\bf Data} drop-down menu or the "Close" icon (fourth from left). 
 
 If you close a dataset, you must reload it from disk (or recreate it if it's an LEL expression, regridded image, 
 moment or something similar) to see it again.  If you unregister a dataset, it will draw immediately if you 
 re-register it, with its options as you have 
 previously set them.  In general, close unneeded datasets but unregister those that you intend to use again.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Image Manager}
-\label{section:display.viewerGUI.imanager}
-
-The {\tt Image Manager} is used to define the master coordinate image,
-the sequence of images (e.g. for blinking), to register and unregister
-images, close images, change between raster, contour, vector, and
-marker displays, and to modify the properties of images. The panel
-can be invoked from the ``Manage Images'' tool, the third icon from
-the left (two overlapping squares).
-
-An example is shown in Fig.\,\ref{fig:viewer_imanager}. In this case,
-four images are loaded into the {\tt viewer}. The sequence of images
-can be changed by dragging and dropping the images to new positions in
-the stack. The letter to the left indicates whether the image is a
-{\bf R}aster, {\bf C}ontour, {\bf V}ector, or {\bf M}marker
-image. {\bf MC} marks the coordinate master, in this case the second
-image. The checkboxes are to change the registration statuses. The
-Coordinate Master image can be defined by a right mouse click, and
-selection the corresponding option. The right mouse menu button also
-offers options for quick changes between contour and raster images and
-to close an image.
-
-The {\bf Options} button will open a drop down box (as shown in
-Fig.\,\ref{fig:viewer_imanager} for the first image), in which one
-can again change between image type, change to a different rest
-frequency, or open the ``Display Options'' panel for that specific
-image with all the adjustment options explained in (\S
-\ref{section:display.image.raster} or \S
-\ref{section:display.image.contour}).
-
-
-\begin{figure}[h!]
-\begin{center}
-\pngname{viewer_imanager}{4}
-\caption{\label{fig:viewer_imanager} The Image Manager.}
-\hrulefill
-\end{center}
-\end{figure}
-
-
 
 \subsection{Saving Data or Regions}
 \label{section:display.viewerGUI.save}
@@ -1057,7 +1013,7 @@ panel.}
 \end{center}
 \end{figure}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{Regions and the Region Manager}
 \label{section:display.image.region}
@@ -1098,7 +1054,7 @@ Histogram tools.
 \subsubsection{Region Creation, Selection, and Deletion}
 \label{section:display.image.region.create}
 
-Within the display area, you can draw regions or select positions using the mouse. 
+Within the display area, you you can draw regions or select positions using the mouse. 
 Regions can be created with the buttons marked as 'R' in the mouse
 tool bar (\S~\ref{section:display.viewerGUI.displaypanel},
 \S~\ref{section:display.viewerGUI.displaypanel.region.pos}).  The viewer
@@ -1338,10 +1294,9 @@ indicating your selection.
 
 \begin{figure}[h!]
 \begin{center}
-\pngname{viewer_specproftool_42}{4}
+\pngname{viewer_specproftool_41}{4}
 \caption{\label{fig:viewer_spectoolbar} The toolbar for the Spectral Profile tool allows the user to
-save the spectrum, print or save the tool as an image, edit
-preferences (general, tool, legend), spectral smoothing,
+save the spectrum, print or save the tool as an image, edit preferences (general, tool, legend),
 pan or zoom around the spectrum, select a range of interest, jump to a channel, or add a label.}
 \hrulefill
 \end{center}
@@ -1357,10 +1312,9 @@ window. From left to right, the icons allow the user to:
 \item (gear) set plot preferences
 \item (color wheel) set color preferences for the plot
 \item (signpost) set legend preferences
-\item (triangle) set the spectral smoothing method and kernel width
 \item (arrows) pan the spectrum in the indicated direction
 {\bf NOTE:} The arrow keys also allow one to pan using the keyboard.
-\item (magnifying glass) zoom to the default zoom, in, and out
+\item (magnitfying glass) zoom to the default zoom, in, and out
 {\bf NOTE:} the +/- keys allow one to zoom with the keyboard
 \item (parallel lines+arrows) drag out a range of interest in the spectrum, for use with fitting or line overlays.
 \item (double-ended arrow) jump to a channel in the main viewer (single click) or define a range over which to play
@@ -1375,14 +1329,11 @@ in the main Spectral Profile window.
 \begin{figure}[h!]
 \begin{center}
 \hrulefill \\
-\pngname{viewer_prefs_1}{0.5}
-\pngname{viewer_prefs_2}{2.0}
-\pngname{viewer_prefs_3}{2.0}
-\pngname{viewer_prefs_4}{1.0}
+\pngname{viewer_prefs_1}{1.0}
+\pngname{viewer_prefs_2}{2.5}
+\pngname{viewer_prefs_3}{2.5}
 \caption{\label{fig:viewer_prefs} Preferences options in the Spectral Profile Tool. From the toolbar, one
-can access dialogs to set overall viewer preferences, colors for
-plotting, how the plot legend is displayed, and spectral smoothing
-method and kernel width.}
+can access dialogs to set overall viewer preferences, colors for plotting, and how the plot legend is displayed.}
 \hrulefill
 \end{center}
 \end{figure}
@@ -1423,10 +1374,6 @@ dialog, the legend can be placed in the top left corner of the plot, to the righ
 Toggling the color bar causes the color of the curve to be indicated either via a short bar or using
 the color of the text itself. Double click the names of the files or curves to edit the text shown for that curve 
 by hand.
-
-The spectral smoothing option has two methods, {\it Boxcar} and {\it
-  Hanning} with the selection of odd numbers for the smoothing kernel
-width in channels.
 
 \subsubsection{Main Spectral Profile Window}
 \label{section:display.image.specprof.mainwindow}
@@ -1532,7 +1479,7 @@ to a high number to finely sample the fit when plotting.
 
 {\bf NOTE:} Currently the tool works well for specifying a single Gaussian. Fitting multiple components can become unstable and
 polynomial and multiple line-of-sight fitting are still under development. This is an area of active development and future releases 
-will offer improved capabilities.
+will offer improved capabilties.
 
 \subsubsection{Line Overlays}
 \label{section:display.image.specprof.lineoverlay}
@@ -1646,7 +1593,7 @@ a root file name that you can specify using {\tt Select Root Output File.}
 \item When you are satisfied with you chosen options, press {\tt Collapse.}
 \end{enumerate}
 
-{\bf NOTE:} Even if you don't save the results of the collapse to a file, you can still save the map later using the {\tt Save as...} entry in the 
+{\bf NOTE:} Even if you don't save the results of the collapse to a file, you can still save the map lated using the {\tt Save as...} entry in the 
 Data pull down menu from the main Viewer Display Panel.
 
 {\bf NOTE:} This area remains under active development and may still exhibit some stability issues in CASA 4.1.
@@ -1979,7 +1926,7 @@ viewing an MS.
 
 This roll-up is very similar to that for images: it allows the user to
 choose which axes (from Time, Baseline, Polarization, Channel, and
-Spectral Window) are on the display and the animator.  There are
+Spectral Window) are are on the display and the animator.  There are
 also sliders here for choosing positions on the remaining axes.  (It's 
 useful to note that the data {\it is} actually stored internally in
 memory as an array with these five axes).
@@ -2124,15 +2071,15 @@ extent boxes for the edits as well.  Unselected spectral windows, e.g.,
 will {\it not} be edited unless the edit also has "Flag/Unflag All
 Spectral Windows" checked.  
 
-Warning: Beware of checking ``All Spectral Windows'' unless you have also 
-checked "All Channels" or turned ``Entire MS'' off; channel edits appropriate 
+Warning: Beware of checking "All Spectral Windows" unless you have also 
+checked "All Channels" or turned "Entire MS" off; channel edits appropriate 
 to the selected spectral windows may not be appropriate to unselected
-ones.  Set "Use Entire MS" to ``No'' if your edits need to apply only to the
+ones.  Set "Use Entire MS" to"No" if your edits need to apply only to the
 portion of the MS you have selected for viewing.  {\it Edits can often be
 saved significantly faster this way as well}.
 
 Also note that checkboxes apply to individual edits, and must be checked
-before making the edit with the mouse.  ``Use Entire MS'', on the other hand,
+before making the edit with the mouse.  "Use Entire MS", on the other hand,
 applies to all the edits saved at one time, and must be set as desired
 before pressing "Save Edits".
 
@@ -2140,7 +2087,7 @@ before pressing "Save Edits".
 
 MS editing works like a text editor in that
 you see all of your edits immediately, but nothing is committed to disk
-until you press ``Save Edits''.  Feel free to experiment with all the other
+until you press 'Save Edits'.  Feel free to experiment with all the other
 controls; nothing but 'Save Edits' will alter your MS on disk. 
 As mentioned previously, however, there is no way to undo your edits once
 they are saved, except by manually entering the reverse edits (or restoring
@@ -2250,7 +2197,7 @@ greatly speed up retrieval.
 \caption{\label{fig:viewer_print} Printing the display to a hardcopy
 of a file. From the {\bf Viewer Print Manager}, located in top right here and
 accessed by the print icon or from the Data drop down menu, 
-you can use the {\bf Save} button to save an image or {\bf Print}
+you can use the {\bf Save} button to save save an image or {\bf Print}
 directly to a printer. To achieve the best results, it is often helpful to
 adjust the settings in the {\bf Data Display Options} and {\bf Viewer Canvas Manager},
 shown at right.} 
@@ -2423,7 +2370,7 @@ zoom    -- (int)    integral zoom level
            (dict)   blc (numeric*2)   => bottom left corner
                     trc (numeric*2)   => top right corner
                     coord (string)    => pixel or world
-                    channel (int)     => channel to display
+                    channel (int)     => chanel to display
            (dict)   <region record>   => record loaded
                                          e.g. rg.fromfiletorecord( )
 axes    -- (string*3) dimension to display on the x, y, and z axes

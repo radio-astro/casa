@@ -46,12 +46,12 @@
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 
 namespace casa {
-SpectralCollapser::SpectralCollapser(const SPCIIF image):
+SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image):
 		_image(image), _log(new LogIO()), _storePath(""){
 	_setUp();
 }
 
-SpectralCollapser::SpectralCollapser(const SPCIIF image, const String storePath):
+SpectralCollapser::SpectralCollapser(const ImageTask::shCImFloat image, const String storePath):
 		_image(image), _log(new LogIO()), _storePath(storePath){
 	_setUp();
 }
@@ -443,7 +443,7 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 	return True;
 }
 
-Bool SpectralCollapser::_getQualitySubImgs(SPCIIF image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
+Bool SpectralCollapser::_getQualitySubImgs(ImageTask::shCImFloat image, std::tr1::shared_ptr<SubImage<Float> >&  subData, std::tr1::shared_ptr<SubImage<Float> >&  subError) const{
 
 	// check whether the image origin is FITS
 	const FITSQualityImage  * const qImg = dynamic_cast<const FITSQualityImage*const>(image.get());
@@ -532,28 +532,23 @@ Bool SpectralCollapser::_getOutputName(const String &wcsInp, String &outImg, Str
 	return True;
 }
 
-Bool SpectralCollapser::_collapse(const SPCIIF image, const String &aggString,
+Bool SpectralCollapser::_collapse(const ImageTask::shCImFloat image, const String &aggString,
 		const String& chanInp, const String& outname) const {
-	CasacRegionManager rm(image->coordinates());
-	String diagnostics;
-	uInt nSelectedChannels;
-	String stokes = _all;
-	Record myreg = rm.fromBCS(
-		diagnostics, nSelectedChannels, stokes, 0, "", chanInp,
-		CasacRegionManager::USE_ALL_STOKES, "", image->shape(), "", False
-	);
 	// create and execute the imcollapse-class
-	ImageCollapser<Float> collapser(
+	ImageCollapser collapser(
 			aggString,                  // String aggString
 			image,                      // const ImageInterface<Float> *const image
-			&myreg,                          // const Record *const regionRec
+			"",                         // const String& region
+			0,                          // const Record *const regionRec
+			"",                         // const String& box
+			chanInp,                    // const String& chanInp
+			_all,                       // const String& stokes
 			"",                         // const String& maskInp
 			_specAxis,                  // const IPosition& axes
-			False,                      // do not invert axes selection
 			outname,                    // String& outname
 			True                        // const Bool overwrite
 		);
-		collapser.collapse();
+		collapser.collapse(False);
 		return True;
 }
 

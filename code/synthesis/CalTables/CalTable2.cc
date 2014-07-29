@@ -33,7 +33,7 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

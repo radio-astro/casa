@@ -93,14 +93,7 @@ void MFrequency::assure(const Measure &in) {
 
 MFrequency::Types MFrequency::castType(uInt tp) {
   MFrequency::checkMyTypes();
-
-  if ((tp & MFrequency::EXTRA) == 0) {
-    AlwaysAssert(tp < MFrequency::N_Types, AipsError);
-  } else {
-    AlwaysAssert((tp & ~MFrequency::EXTRA) < 
-		 (MFrequency::N_Other - MFrequency::EXTRA), AipsError);
-  }
-
+  AlwaysAssert(tp < MFrequency::N_Types, AipsError);
   return static_cast<MFrequency::Types>(tp);
 }
 
@@ -114,16 +107,10 @@ const String &MFrequency::showType(MFrequency::Types tp) {
     "TOPO",
     "GALACTO",
     "LGROUP",
-    "CMB"
-  }; 
-  static const String ename[MFrequency::N_Other - MFrequency::EXTRA] = {
-    "Undefined" 
-  };
-  
-  MFrequency::checkMyTypes();
-  if ((tp & MFrequency::EXTRA) == 0) return tname[tp];
-  return ename[tp & ~MFrequency::EXTRA];
+    "CMB" }; 
 
+  MFrequency::checkMyTypes();
+  return tname[tp];
 }
 
 const String &MFrequency::showType(uInt tp) {
@@ -132,8 +119,8 @@ const String &MFrequency::showType(uInt tp) {
 
 const String* MFrequency::allMyTypes(Int &nall, Int &nextra,
                                      const uInt *&typ) {
-  static const Int N_name  = 10;
-  static const Int N_extra = 1;
+  static const Int N_name  = 9;
+  static const Int N_extra = 0;
   static const String tname[N_name] = {
     "REST",
     "LSRK",
@@ -143,9 +130,7 @@ const String* MFrequency::allMyTypes(Int &nall, Int &nextra,
     "TOPO",
     "GALACTO",
     "LGROUP",
-    "CMB",
-    "Undefined"
-  }; 
+    "CMB" }; 
   
   static const uInt oname[N_name] = {
     MFrequency::REST,
@@ -156,9 +141,7 @@ const String* MFrequency::allMyTypes(Int &nall, Int &nextra,
     MFrequency::TOPO,
     MFrequency::GALACTO,
     MFrequency::LGROUP,
-    MFrequency::CMB,
-    MFrequency::Undefined
- };
+    MFrequency::CMB };
 
   MFrequency::checkMyTypes();
   nall   = N_name;

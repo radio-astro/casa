@@ -31,9 +31,9 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/BasicSL/Constants.h>
 #include <synthesis/TransformMachines/SkyJones.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
@@ -161,8 +161,7 @@ SynDataSampling& SynDataSampling::operator=(const SynDataSampling& other)
 };
 
 //----------------------------------------------------------------------
-SynDataSampling::SynDataSampling(const SynDataSampling& other):
-    DataSampling(other)
+SynDataSampling::SynDataSampling(const SynDataSampling& other)
 {
   operator=(other);
 }

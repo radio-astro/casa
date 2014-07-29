@@ -493,12 +493,11 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     itsStrengthOptimum = 0.0;
     optimumScale = 0;
 
-#pragma omp parallel default(shared) private(scale) num_threads(nth)
+    #pragma omp parallel default(shared) private(scale) num_threads(nth)
     {
-#pragma omp  for 
+      #pragma omp  for 
       for (scale=0; scale<nScalesToClean; ++scale) {
 	// Find absolute maximum for the dirty image
-	//	cout << "in omp loop for scale : " << scale << " : " << blcDirty << " : " << trcDirty << " :: " << itsDirtyConvScales.nelements() << endl;
 	Matrix<Float> dirtySub=(itsDirtyConvScales[scale])(blcDirty,trcDirty);
 	maxima(scale)=0;
 	posMaximum[scale]=IPosition(model.shape().nelements(), 0);

@@ -457,8 +457,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         oshp=ia.shape() 
                         outfreqlist = translatefreqrange(outfreqs,ocsys)
                         rtn=ocsys.findcoordinate('spectral')
-                        px=rtn['pixel'][0]
-                        wc=rtn['world'][0]
+                        px=rtn[1][0]
+                        wc=rtn[2][0]
                         world=ocsys.referencevalue()
                         # assume chanrange are in freqs
                         world['numeric'][wc]=qa.convert(qa.quantity(outfreqlist[0]),'Hz')['value']
@@ -844,7 +844,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     axes=tmp_axes
     if type(chanrange)==list and len(chanrange)==2:
         incsys=ia.coordsys()
-        spaxis=incsys.findcoordinate('spectral')['world']
+        spaxis=incsys.findcoordinate('spectral')[2]
         # create subimage based on the inpfreqs range
         inblc=chanrange[0]
         intrc=chanrange[1]

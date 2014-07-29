@@ -125,7 +125,7 @@ class CalFocusModelRow;
  * Result of focus model calibration performed by TelCal.
  * <BR>
  
- * Generated from model's revision "-1", branch ""
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of CalFocusModel </CAPTION>

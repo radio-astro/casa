@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <casa/Arrays/Matrix.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/CalTables/CalInterpolation.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

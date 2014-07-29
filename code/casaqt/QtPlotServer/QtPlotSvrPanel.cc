@@ -84,7 +84,7 @@ namespace casa {
 	window_->base( )->releaseMainPanel( );
     }
 
-    QtPlotSvrPanel::QtPlotSvrPanel( QWidget *parent ) : QObject(parent),slider(0), plot(0)  {
+    QtPlotSvrPanel::QtPlotSvrPanel( QWidget *parent ) : slider(0), plot(0)  {
 
 	load_colormaps( );
 
@@ -111,7 +111,7 @@ namespace casa {
 
     QtPlotSvrPanel::QtPlotSvrPanel( const QString &label, const QString &xlabel, const QString &ylabel, const QString &window_title,
 				    const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
-				    bool new_row, QWidget *parent ) : QObject(parent), slider(0), plot(0) {
+				    bool new_row, QWidget *parent ) : slider(0), plot(0) {
 
 	load_colormaps( );
 
@@ -390,7 +390,7 @@ namespace casa {
 	}
 
 	for ( int x = 0; x < srcValues.size( ); ++x ) {
-	    int bucket = (int) ((srcValues[x]-minimumValue) / bucketWidth);
+	    int bucket = (int) (srcValues[x] / bucketWidth);
 
 	    if ( bucket < 0 ) { bucket = 0; }
 	    if ( bucket >= numBins ) { bucket = numBins-1; }

@@ -34,10 +34,10 @@
 #include <synthesis/TransformMachines/ConvolutionFunction.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/VBStore.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
-#include <msvis/MSVis/AsynchronousTools.h>
+#include <synthesis/MSVis/AsynchronousTools.h>
 
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -49,11 +49,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     VisibilityResamplerBase(): 
-      runTimeG_p(0.0), runTimeDG_p(0.0),runTimeG1_p(0.0), runTimeG2_p(0.0), runTimeG3_p(0.0), runTimeG4_p(0.0), runTimeG5_p(0.0), runTimeG6_p(0.0), runTimeG7_p(0.0),
-      timer_p(),
       uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), spwChanFreq_p(), spwChanConjFreq_p (), convFuncStore_p(), inc_p(),
-      cfMap_p(), conjCFMap_p() 
-
+      cfMap_p(), conjCFMap_p(), runTimeG_p(0.0), runTimeDG_p(0.0),runTimeG1_p(0.0), runTimeG2_p(0.0), runTimeG3_p(0.0), runTimeG4_p(0.0), runTimeG5_p(0.0), runTimeG6_p(0.0), runTimeG7_p(0.0),
+      timer_p()
     {};
     // VisibilityResamplerBase(const CFStore& cfs): 
     //   uvwScale_p(), offset_p(), chanMap_p(), polMap_p(), convFuncStore_p(), inc_p(),

@@ -66,7 +66,7 @@ void SerialHelper::checkFuncType(const String& ftype) const
 }
 
 template <> void getArrayVal<Bool>(Bool& val,     Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -88,7 +88,7 @@ template <> void getArrayVal<Bool>(Bool& val,     Int, const Record& gr,
     }
 }
 template <> void getArrayVal<Short>(Short& val,    Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -110,7 +110,7 @@ template <> void getArrayVal<Short>(Short& val,    Int, const Record& gr,
     }
 }
 template <> void getArrayVal<Int>(Int& val,      Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -132,7 +132,7 @@ template <> void getArrayVal<Int>(Int& val,      Int, const Record& gr,
     }
 }
 template <> void getArrayVal<Float>(Float& val,    Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -154,7 +154,7 @@ template <> void getArrayVal<Float>(Float& val,    Int, const Record& gr,
     }
 }
 template <> void getArrayVal<Double>(Double& val,   Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -176,7 +176,7 @@ template <> void getArrayVal<Double>(Double& val,   Int, const Record& gr,
     }
 }
 template <> void getArrayVal<Complex>(Complex& val,  Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -198,7 +198,7 @@ template <> void getArrayVal<Complex>(Complex& val,  Int, const Record& gr,
     }
 }
 template <> void getArrayVal<DComplex>(DComplex& val, Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -220,7 +220,7 @@ template <> void getArrayVal<DComplex>(DComplex& val, Int, const Record& gr,
     }
 }
 template <> void getArrayVal<String>(String& val,   Int, const Record& gr, 
-			                  const String& name, uInt index)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                  const String& name, uInt index) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -243,7 +243,7 @@ template <> void getArrayVal<String>(String& val,   Int, const Record& gr,
 }
 
 template <> void getArray<Bool>(Array<Bool>& val,     Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -254,7 +254,7 @@ template <> void getArray<Bool>(Array<Bool>& val,     Int, const Record& gr,
     val = gr.asArrayBool(RecordFieldId(name));
 }
 template <> void getArray<Short>(Array<Short>& val,    Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -265,7 +265,7 @@ template <> void getArray<Short>(Array<Short>& val,    Int, const Record& gr,
     val = gr.asArrayShort(RecordFieldId(name));
 }
 template <> void getArray<Int>(Array<Int>& val,      Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -276,7 +276,7 @@ template <> void getArray<Int>(Array<Int>& val,      Int, const Record& gr,
     val = gr.asArrayInt(RecordFieldId(name));
 }
 template <> void getArray<Float>(Array<Float>& val,    Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -287,7 +287,7 @@ template <> void getArray<Float>(Array<Float>& val,    Int, const Record& gr,
     val = gr.asArrayFloat(RecordFieldId(name));
 }
 template <> void getArray<Double>(Array<Double>& val,   Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -298,7 +298,7 @@ template <> void getArray<Double>(Array<Double>& val,   Int, const Record& gr,
     val = gr.asArrayDouble(RecordFieldId(name));
 }
 template <> void getArray<Complex>(Array<Complex>& val,  Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -309,7 +309,7 @@ template <> void getArray<Complex>(Array<Complex>& val,  Int, const Record& gr,
     val = gr.asArrayComplex(RecordFieldId(name));
 }
 template <> void getArray<DComplex>(Array<DComplex>& val, Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;
@@ -320,7 +320,7 @@ template <> void getArray<DComplex>(Array<DComplex>& val, Int, const Record& gr,
     val = gr.asArrayDComplex(RecordFieldId(name));
 }
 template <> void getArray<String>(Array<String>& val,   Int, const Record& gr, 
-			                      const String& name)WHATEVER_SUN_EXCEPTSPEC(InvalidSerializationError)
+			                      const String& name) throw (InvalidSerializationError)
 {
     if (! gr.isDefined(name)) throw FieldNotFoundError(name);
     //std::cerr << name << " "<< gr.dataType(RecordFieldId(name)) << endl;

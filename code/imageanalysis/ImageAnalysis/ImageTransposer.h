@@ -34,7 +34,7 @@
 #include <tr1/memory>
 
 namespace casa {
-class ImageTransposer : public ImageTask<Float> {
+class ImageTransposer : public ImageTask {
     // <summary>
       // Top level interface for transposing image axes
       // </summary>
@@ -63,26 +63,26 @@ public:
 	// This constructor only allows transposing of axes, it does
 	// not allow inverting.
 	ImageTransposer(
-			const SPCIIF image,
+			const ImageTask::shCImFloat image,
 		uInt order, const String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
-			const SPCIIF image,
+			const ImageTask::shCImFloat image,
 		const String& order, const String& outputImage
 	);
 
 	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
-			const SPCIIF image,
+			const ImageTask::shCImFloat image,
 		const Vector<String> order, const String& outputImage
 	);
 	// destructor
 	~ImageTransposer();
 
 	// transpose the axes and write the output image. Returns the associated PagedImage object.
-	SPIIF transpose() const;
+	ImageInterface<Float>* transpose() const;
 
 	inline String getClass() const {
 		return _class;

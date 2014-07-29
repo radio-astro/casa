@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import numpy
 from __main__ import default
 from tasks import *
 from taskinit import *
@@ -56,20 +55,9 @@ class sdplot_unittest_base:
         sd.rcParams['plotter.gui'] = usegui
         sd.plotter.__init__()
 
-    def _check_file( self, filename, fail=True ):
-        """
-        Check if filename exists.
-        The test fails if fail=True. Otherwise the method returns
-        a bool which indicates if exists or not.
-        """
-        exists = os.path.exists(filename)
-        if fail:
-            self.assertTrue(exists,"'%s' does not exists." % filename)
-        return exists
-
     # compare two figures
     def _checkOutFile( self, filename, compare=False ):
-        self._check_file(filename)
+        self.assertTrue(os.path.exists(filename),"'%s' does not exists." % filename)
         self.assertTrue(os.path.isfile(filename),\
                         "Not a regular file. (A directory?): %s" % filename)
         self.assertTrue(os.path.getsize(filename) > self.minsize,\
@@ -77,7 +65,7 @@ class sdplot_unittest_base:
                         (int(self.minsize/1000), filename))
         prevfig = self.prevdir+'/'+filename
         currfig = self.currdir+'/'+filename
-        if compare and self._check_file(prevfig, False):
+        if compare and os.path.exists(prevfig):
             # The unit test framework doesn't allow saving previous results
             # This test is not run.
             msg = "Compareing with previous plot:\n"
@@ -87,7 +75,7 @@ class sdplot_unittest_base:
         shutil.move(filename,currfig)
 
         # Save the figure for future comparison if possible.
-        if self._check_file(self.prevdir, False) and self.saveref:
+        if os.path.exists(self.prevdir) and self.saveref:
             try:
                 casalog.post("copying %s to %s" % (currfig,prevfig),'INFO')
                 shutil.copyfile(currfig, prevfig)
@@ -2053,255 +2041,7 @@ class sdplot_selectionTest(selection_syntax.SelectionSyntaxTest,sdplot_unittest_
         refinfo = self._set_selection_plot_info([11,13])
         self._compareDictVal(outinfo, refinfo)
 
-
-class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
-    """
-    Test flag handling in sdplot
-    
-    The dataset used for this test is testgrid4chan.1point.asap
-    | ROW | SCAN | POL | SPECTRA (all IF=2, 4chans)
-    |  0  |   0  |  0  | [10,10,10,10]
-    |  1  |   0  |  1  | [15,15,15,15]
-    |  2  |   1  |  0  | [1, 1, 1, 1]
-    |  3  |   1  |  1  | [7, 7, 7, 7]
-    """
-    # Input and output names
-    infile = 'testgrid4chan.1point.asap'
-    panel = 'r'
-    stack = 'p'
-    spec= [[10,10,10,10], [15,15,15,15], [1, 1, 1, 1], [7, 7, 7, 7]]
-    masked_spec = None
-    to_deg = 180./numpy.pi  #Az-El and pointing plots are in deg.
-
-    def setUp( self ):
-        # switch on/off GUI
-        self._switchPlotterGUI(self.usegui)
-        # Fresh copy of input data
-        if os.path.exists(self.infile):
-            shutil.rmtree(self.infile)
-        shutil.copytree(self.datapath+self.infile, self.infile)
-        # create base reference data
-        self.masked_spec = []
-        for sp in self.spec:
-            self.masked_spec.append(numpy.ma.masked_array(sp, False))
-        
-        default(sdplot)
-
-    def tearDown( self ):
-        # restore GUI setting
-        self._switchPlotterGUI(self.oldgui)
-        if (os.path.exists(self.infile)):
-            shutil.rmtree(self.infile)
-
-    def test_spectraRflag(self):
-        """test row flag in plottype='spectra'"""
-        self._flag_table(row=[0,3])
-        self.run_test(self.masked_spec, 'spectra')
-        
-    def test_spectraCflag(self):
-        """test channel flag in plottype='spectra'"""
-        self._flag_table(row=[1,2], chan=[[1,2]])
-        self.run_test(self.masked_spec, 'spectra')
-        
-    def test_gridRflag(self):
-        """test row flag in plottype='grid'"""
-        self._flag_table(row=[0])
-        refdata = [ self.masked_spec[2] ]
-        self.run_test(refdata, 'grid', subplot=11)
-        
-    def test_gridCflag(self):
-        """test channel flag in plottype='grid'"""
-        self._flag_table(row=[0], chan=[[1,2]])
-        self._flag_table(row=[2], chan=[[2,3]])
-        refdata = [ numpy.ma.masked_array([5.5,1,0,10], [0,0,1,0]) ]
-        self.run_test(refdata, 'grid', subplot=11)
-        
-    def test_azelRflag(self):
-        """test row flag in plottype='azel'"""
-        self._flag_table(row=[0])
-        tb.open(self.infile)
-        try:
-            az = tb.getcol('AZIMUTH')
-            el = tb.getcol('ELEVATION')
-        except: raise
-        finally: tb.close()
-        mask = [ sp.mask.all() for sp in self.masked_spec ]
-        refdata = [ numpy.ma.masked_array(el*self.to_deg, mask),
-                    numpy.ma.masked_array(az*self.to_deg, mask) ]
-        self.run_test(refdata, 'azel')
-        
-    def test_azelCflag(self):
-        """test channel flag in plottype='azel'"""
-        self._flag_table(row=[0], chan=[[0,3]]) # flag all channels
-        self._flag_table(row=[2], chan=[[2,3]])
-        tb.open(self.infile)
-        try:
-            az = tb.getcol('AZIMUTH')
-            el = tb.getcol('ELEVATION')
-        except: raise
-        finally: tb.close()
-        mask = [ 1, 0, 0, 0 ]
-        refdata = [ numpy.ma.masked_array(el*self.to_deg, mask),
-                    numpy.ma.masked_array(az*self.to_deg, mask) ]
-        self.run_test(refdata, 'azel')
-        
-    def test_pointingRflag(self):
-        """test row flag in plottype='pointing'"""
-        self._flag_table(row=[0]) # flag all chans
-        tb.open(self.infile)
-        try: dec = tb.getcol('DIRECTION')[1]
-        except: raise
-        finally: tb.close()
-        dec *= self.to_deg
-        # stack='r' is not supported (pol=0 is in rows = 0, 2)
-        refdata = [ numpy.ma.masked_array([dec[i] for i in [0,2]], [1, 0]) ]
-        self.run_test(refdata, 'pointing', pol='0')
-        
-    def test_pointingCflag(self):
-        """test channel flag in plottype='pointing'"""
-        self._flag_table(row=[0], chan=[[1,2]])
-        self._flag_table(row=[2], chan=[[0,3]])
-        tb.open(self.infile)
-        try: dec = tb.getcol('DIRECTION')[1]
-        except: raise
-        finally: tb.close()
-        dec *= self.to_deg
-        # stack='r' is not supported (pol=0 is in rows = 0, 2)
-        refdata = [ numpy.ma.masked_array([dec[i] for i in [0,2]], [0, 1]) ]
-        self.run_test(refdata, 'pointing', pol='0')
-
-    def test_totalpowerRflag(self):
-        """test row flag in plottype='totalpower'"""
-        self._flag_table(row=[1])
-        data = [ sp.mean() for sp in self.masked_spec ]
-        mask = [ 0, 1, 0, 0 ]
-        refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower')
-        
-    def test_totalpowerCflag(self):
-        """test channel flag in plottype='totalpower'"""
-        self._flag_table(row=[0], chan=[[1,2]])
-        self._flag_table(row=[2], chan=[[0,3]])
-        tb.open(self.infile, nomodify=False)
-        # make sure mean is calculated only from valid channels
-        try:
-            tb.putcell('SPECTRA', 0, [10, 0, 0, 10])
-        except: raise
-        finally: tb.close()
-        data = [ sp.mean() for sp in self.masked_spec ]
-        mask = [ 0, 0, 1, 0 ]
-        refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower')
-
-    ####################
-    # Helper functions
-    ####################
-    def _flag_table(self, row=[], chan=[]):
-        """
-        flag self.infile and update reference data corresponding to flag.
-        row: a list of row ids to flag
-        chan : a list of [start, end] channels to flag
-        when chan=[], FLAGROW is set. Otherwise, channel flag is set
-        for the row list.
-        """
-        if len(row) == 0: return
-        flagrow = (len(chan)==0)
-        self._check_file(self.infile)
-        tb.open(self.infile, nomodify=False)
-        try:
-            self.assertEqual(tb.nrows(), len(self.masked_spec),
-                             "number of table rows differs from reference data")
-            if flagrow:
-                fl = tb.getcol('FLAGROW')
-                for idx in row:
-                    fl[idx] = 1
-                    self.masked_spec[idx] = numpy.ma.masked_array(self.masked_spec[idx].data, fl[idx])
-                tb.putcol('FLAGROW', fl)
-            else:
-                if type(chan[0]) in [int, float]:
-                    chan = [chan]
-                fl = tb.getcol('FLAGTRA').transpose()
-                for irow in row:
-                    for (schan, echan) in chan:
-                        fl[irow][schan:echan+1] = 1
-                    self.masked_spec[irow] = numpy.ma.masked_array(self.masked_spec[irow].data, fl[irow])
-                tb.putcol('FLAGTRA', fl.transpose())
-        except:
-            raise
-        finally:
-            tb.flush()
-            tb.close()
-
-    def run_test(self, refdata, plottype, **kwargs):
-        verbose = False
-        # construct task parameters
-        self.assertFalse(kwargs.has_key('plottype'), "Internal error. plot type should be defined as argument")
-        params = kwargs
-        params['plottype'] = plottype
-        predefs = ['infile', 'panel', 'stack']
-        for par in predefs:
-            if not params.has_key(par) and hasattr(self, par):
-                params[par] = getattr(self, par)
-        # save flag for comparison
-        tbname = params['infile']
-        self._check_file(tbname)
-        tb.open(tbname)
-        flagtra_pre = tb.getcol('FLAGTRA')
-        flagrow_pre = tb.getcol('FLAGROW')
-        tb.close()
-        # invoke task
-        sdplot(**params)
-        # check number of pannels and lines, and data plotted
-        fig = pl.gcf()
-        panels =  fig.axes
-        npanel = len(panels)
-        if verbose: print("number of pannels: %d (expected: %d)." % (npanel, len(refdata)))
-        self.assertEqual(npanel, len(refdata),
-                         "Number of panels differs: %d (expected: %d)." % \
-                         (npanel, len(refdata)))
-        for i in range(npanel):
-            lines = panels[i].get_lines()
-            nline = len(lines)
-            spref = refdata[i]
-            nref = 0 if spref.mask.all() else 1
-            if verbose: print("number of lines in panel %d = %d (expected: %d)" % (i, nline, nref))
-            self.assertEqual(nline, nref, "number of lines in panel %d differs: %d (expected: %d)" % (i, nline, nref))
-            for il in range(nline):
-                spec = lines[il].get_ydata()
-                if verbose: print("spectra=%s (expected: %s)" % (str(spec), str(spref)))
-                self.assertTrue(self._compare_mased_array(spec, spref),
-                                "spectral data differs (panel=%d line=%d)" % (i, il))
-        # make sure FLAGTRA and FLAGROW are not changed
-        tb.open(tbname)
-        flagtra_post = tb.getcol('FLAGTRA')
-        flagrow_post = tb.getcol('FLAGROW')
-        tb.close()
-        self.assertTrue((flagrow_post==flagrow_pre).all(),
-                        "FLAGROW has been changed by task operation")
-        self.assertTrue((flagtra_post==flagtra_pre).all(),
-                        "FLAGTRA has been changed by task operation")
-
-
-    def _compare_mased_array( self, testval, refval, reltol=1.0e-5 ):
-        """
-        Check if a masked array of test values is within permissive relative
-        difference from refval.
-        Returns a boolean.
-        testval & refval : two masked arrays to compare
-        reltol           : allowed relative difference to consider the two
-                           values to be equal. (default 1.e-5)
-        """
-        maskok = (testval.mask == refval.mask).all()
-        if not maskok: return False
-        for i in range(len(refval)):
-            if refval.mask[i]: continue
-            if not self._isInAllowedRange(refval[i], testval[i], reltol):
-                return False
-        return True
-
-
-
 def suite():
     return [sdplot_basicTest, sdplot_storageTest,
             sdplot_gridTest, sdplot_errorTest,
-            sdplot_selectionTest, sdplot_flagTest]
+            sdplot_selectionTest]

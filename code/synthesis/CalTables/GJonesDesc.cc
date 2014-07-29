@@ -29,7 +29,7 @@
 #include <synthesis/CalTables/GJonesDesc.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

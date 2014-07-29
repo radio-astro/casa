@@ -32,7 +32,7 @@
 #include <casa/BasicSL/Complex.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Cube.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 

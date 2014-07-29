@@ -865,8 +865,6 @@ Bool PlotCal::doPlot(){
   getAxisTaQL(yAxis_p,plotTaQL_p(1),label_p(2));
 
   titleMain_p = (calType_p + String(" table: ") + tabName_p);
-  if (titleMain_p.length()>100)
-    titleMain_p = (calType_p + String(" table: ") + Path(tabName_p).baseName());
   label_p[0]=titleMain_p;
 
   // ---------------------------------------------

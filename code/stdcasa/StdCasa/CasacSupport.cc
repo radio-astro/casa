@@ -1437,19 +1437,5 @@ vector<bool> toVectorBool(const ::casac::variant& v, const String& varName) {
 		throw AipsError(os.str());
 	}
 }
-Vector<String> toCasaVectorString(const vector<string>& vs) {
-	Vector<String> res(vs.size());
-	vector<string>::const_iterator vsiter = vs.begin();
-	Vector<String>::iterator resiter = res.begin();
-	vector<string>::const_iterator end = vs.end();
-	while (vsiter != end) {
-		*resiter = *vsiter;
-		resiter++;
-		vsiter++;
-	}
-	return res;
-}
-
-
 
 }  // End namespace casa

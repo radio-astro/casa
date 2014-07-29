@@ -58,12 +58,12 @@ def imregrid(
                     for i in range(image_ncoords):
                         ctype = image_csys.coordinatetype(i)[0]
                         template_coord = template_csys.findcoordinate(ctype)
-                        if ctype != 'Stokes' and template_coord["return"]:
+                        if ctype != 'Stokes' and template_coord[0]:
                             # only regrid if not Stokes axis and coordinate exists in template
-                            for template_pix_axis in template_coord['pixel']:
+                            for template_pix_axis in template_coord[1]:
                                 if tempshape[template_pix_axis] > 1:
                                     # only regrid if template axis is not degenerate
-                                    world_axes = image_csys.findcoordinate(ctype)['pixel']
+                                    world_axes = image_csys.findcoordinate(ctype)[1]
                                     for world_pix_axis in world_axes:
                                         if imshape[world_pix_axis] > 1:
                                             # only regrid if the world axis is not degenerate
@@ -90,22 +90,18 @@ def imregrid(
 
         # The actual regridding.
         _myia.open(imagename)
-        # put this in its own try/catch so, if exception, the message is not
-        # logged twice
-        try:
-            _tmp = _myia.regrid(
-                outfile=output, shape=shape, csys=csys.torecord(),
-                axes=axes, asvelocity=asvelocity,
-                method=interpolation, decimate=decimate,
-                replicate=replicate, overwrite=overwrite
-            )
-            return True
-        except Exception, instance:
-            # The error message has already been logged by ia.regrid()
-            return False
+        _tmp = _myia.regrid(
+            outfile=output, shape=shape, csys=csys.torecord(),
+            axes=axes, asvelocity=asvelocity,
+            method=interpolation, decimate=decimate,
+            replicate=replicate, overwrite=overwrite
+        )
+        _myia.done()
+        _tmp.done()
+        return True
         
     except Exception, instance:
-        casalog.post("Error: " + str(instance), "SEVERE")
+        casalog.post(str(instance), "SEVERE")
         raise instance
     finally:
         if _myia:
@@ -132,7 +128,7 @@ def _imregrid_to_new_ref_frame(
             "WARN"
         )
     dirinfo = csys.findcoordinate("direction")
-    if not dirinfo['return']:
+    if not dirinfo[0]:
         raise (Exception, "Image does not have a direction coordinate.")
     newrefcode = template.upper()
     oldrefcode = csys.referencecode("direction")[0]
@@ -148,7 +144,7 @@ def _imregrid_to_new_ref_frame(
         "Changing coordinate system from " + oldrefcode
         + " to " + newrefcode, 'INFO'
     )
-    diraxes = dirinfo['pixel']
+    diraxes = dirinfo[1]
     if len(diraxes) != 2:
         raise Exception("Unsupported number of direction axes. There must be exactly 2.")
     dirrefpix = csys.referencepixel("direction")["numeric"]
@@ -223,9 +219,8 @@ def _imregrid_handle_default_shape(
     shape = imshape
     targetaxesnames = image_csys.names()
     template_spectral_info = template_csys.findcoordinate("Spectral")
-    template_has_spectral = template_spectral_info['return']
-    if template_has_spectral:
-        template_spectral_axis = template_spectral_info['pixel'][0]
+    template_has_spectral = template_spectral_info[0]
+    template_spectral_axis = template_spectral_info[1][0]
     atr = axestoregrid[:]
     for i in range(len(imshape)):
         atr_count = 0
@@ -256,8 +251,8 @@ def _imregrid_handle_default_shape(
                 break
             atr_count += 1;
     if (
-        template_csys.findcoordinate("stokes")['return']
-        and image_csys.findcoordinate("stokes")['return']
+        template_csys.findcoordinate("stokes")[0]
+        and image_csys.findcoordinate("stokes")[0]
         and len(template_csys.stokes()) > 1
         and len(image_csys.stokes()) > 1
     ):

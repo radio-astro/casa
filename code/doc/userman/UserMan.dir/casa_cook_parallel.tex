@@ -189,21 +189,15 @@ antares, 0.6, /home/jdoe/test/myclusterhome3, 0, 2048
 Will set up a cluster comprised of three nodes, deploying the engines per node as follows:
 
 \begin{itemize}
-\item At host ``orion'' up to 10 engines will be deployed with working
-  directory\\ /home/jdoe/test/myclusterhome1 and using as much free RAM
-  available as possible (up to 90\% by default), taking into account
-  that each engine can use up to 512~MB (the default and minimum)
+\item  At host ``orion'' up to 10 engines will be deployed with working directory /home/jdoe/test/myclusterhome1 
+and using as much free RAM available as possible (up to 90\% by default), taking into account that each engine can use up to 512~MB (the default and minimum)
 
-\item At host ``m42'': It will deploy up to 4 engines, with working
-  directory\\ /home/jdoe/test/myclusterhome2, and using at the most 60\%
-  of the free RAM available, taking into account that each engine can
-  use up to 1024~MB.
+\item  At host ``m42'': It will deploy up to 4 engines, with working directory /home/jdoe/test/myclusterhome2, 
+and using at the most 60\% of the free RAM available, taking into account that each engine can use up to 1024~MB.
 
-\item At host ``antares'': It will deploy as many engines as possible,
-  with working directory\\ /home/jdoe/test/myclusterhome3, using up to
-  60\% of the idle CPU capacity / cores, and as much free RAM
-  available as possible (up to 90\% by default), taking into account
-  that each engine can use up to 2048~MB.
+\item At host ``antares'': It will deploy as many engines as possible, with working directory /home/jdoe/test/myclusterhome3, 
+using up to 60\% of the idle CPU capacity / cores, and as much free RAM available as possible (up to 90\% by default), taking 
+into account that each engine can use up to 2048~MB.
 \end{itemize}
 
 Using such a configuration file named, say, ``cluster-config.txt'', the cluster can then

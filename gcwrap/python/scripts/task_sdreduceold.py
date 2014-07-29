@@ -1,6 +1,7 @@
 from taskinit import casalog
 
 import asap as sd
+from asap.scantable import is_scantable
 import sdutil
 
 import task_sdcalold
@@ -8,6 +9,7 @@ import task_sdsmoothold
 import task_sdbaselineold
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdreduceold(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, chanwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, bloutput, blformat, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdreduce_worker, locals()) as worker:
         worker.initialize()
@@ -22,20 +24,26 @@ class sdreduce_worker(sdutil.sdtask_template):
 
     def initialize_scan(self):
         # instantiate scantable
-        self.scan = sd.scantable(self.infile, average=False, antenna=self.antenna)
+        sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
         
         # restorer
-        self.restorer = sdutil.scantable_restore_factory(self.scan,
-                                                         self.infile,
-                                                         self.fluxunit,
-                                                         self.specunit,
-                                                         self.frame,
-                                                         self.doppler,
-                                                         self.restfreq)
+#         self.restorer = sdutil.scantable_restore_factory(self.scan,
+#                                                          self.infile,
+#                                                          self.fluxunit,
+#                                                          self.specunit,
+#                                                          self.frame,
+#                                                          self.doppler,
+#                                                          self.restfreq)
         
         # Apply selection
-        #self.scan.set_selection(self.get_selector())
-        self.scan.set_selection(self.get_selector_by_list())
+        sorg.set_selection(self.get_selector_by_list())
+        # Copy scantable when usign disk storage not to modify
+        # the original table.
+        if is_scantable(self.infile) and self.is_disk_storage:
+            self.scan = sorg.copy()
+        else:
+            self.scan = sorg
+        del sorg
 
     def execute(self):
         # calibration stage
@@ -108,7 +116,7 @@ class sdreduce_worker(sdutil.sdtask_template):
         # write result on disk
         sdutil.save(self.scan, self.project, self.outform, self.overwrite)
 
-    def cleanup(self):
-        # restore
-        if hasattr(self,'restorer') and self.restorer:
-            self.restorer.restore()
+#     def cleanup(self):
+#         # restore
+#         if hasattr(self,'restorer') and self.restorer:
+#             self.restorer.restore()

@@ -42,7 +42,7 @@
 #include <casa/Logging/LogIO.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
-#include <imageanalysis/Utilities/SpectralImageUtil.h>
+#include <synthesis/Utilities/SpectralImageUtil.h>
 #include <lattices/Lattices/LatticeConcat.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>

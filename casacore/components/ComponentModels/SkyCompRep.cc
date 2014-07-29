@@ -29,7 +29,7 @@
 #include <components/ComponentModels/ComponentType.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
 #include <components/ComponentModels/PointShape.h>
-#include <scimath/Mathematics/GaussianBeam.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/DiskShape.h>
 #include <components/ComponentModels/LimbDarkenedDiskShape.h>
@@ -209,13 +209,8 @@ Flux<Double> SkyCompRep::sample(const MDirection& direction,
 				const MVAngle& pixelLongSize,
 				const MFrequency& centerFrequency) const {
   Double scale = itsShapePtr->sample(direction, pixelLatSize, pixelLongSize);
-  //scale *= itsSpectrumPtr->sample(centerFrequency);
+  scale *= itsSpectrumPtr->sample(centerFrequency);
   Flux<Double> flux = itsFlux.copy();
-  Vector<Double> iquv(4);
-  flux.value(iquv);
-  itsSpectrumPtr->sampleStokes(centerFrequency, iquv);
-  flux.setValue(iquv);
-  flux.convertPol(itsFlux.pol());
   flux.scaleValue(scale, scale, scale, scale);
   return flux;
 }
@@ -233,29 +228,28 @@ void SkyCompRep::sample(Cube<Double>& samples, const Unit& reqUnit,
   f.convertUnit(reqUnit);
   Vector<Double> fluxVal(4);
   f.value(fluxVal);
-  /*const Double i = fluxVal(0);
+  const Double i = fluxVal(0);
   const Double q = fluxVal(1);
   const Double u = fluxVal(2);
   const Double v = fluxVal(3);
-  */
-
+  
   Vector<Double> dirScales(nDirSamples);
   itsShapePtr->sample(dirScales, directions, dirRef,
  		      pixelLatSize, pixelLongSize);
 
-  Vector<Vector<Double> > freqIQUV(nFreqSamples);
-  freqIQUV.set(fluxVal);
+  Vector<Double> freqScales(nFreqSamples);
 
-  //itsSpectrumPtr->sample(freqScales, frequencies, freqRef);
-  itsSpectrumPtr->sampleStokes(freqIQUV, frequencies, freqRef); 
+  itsSpectrumPtr->sample(freqScales, frequencies, freqRef);
   for (uInt d = 0; d < nDirSamples; d++) {
 	  const Double thisDirScale = dirScales(d);
 	  if (thisDirScale != 0) {
 		  for (uInt f = 0; f < nFreqSamples; f++) {
-		    //const Double thisScale = thisDirScale* freqScales(f);
-		    for (uInt stok=0; stok <4; ++stok){
-		      samples(stok, d, f) += thisDirScale * freqIQUV(f)(stok);
-		    }
+			  const Double thisScale = thisDirScale* freqScales(f);
+
+			  samples(0, d, f) += thisScale * i;
+			  samples(1, d, f) += thisScale * q;
+			  samples(2, d, f) += thisScale * u;
+			  samples(3, d, f) += thisScale * v;
 		  }
 	  }
   }
@@ -266,12 +260,7 @@ Flux<Double> SkyCompRep::visibility(const Vector<Double>& uvw,
   Flux<Double> flux = itsFlux.copy();
   Double scale = itsShapePtr->visibility(uvw, frequency).real();
   MFrequency freq(Quantity(frequency, "Hz"));
-  //scale *= itsSpectrumPtr->sample(freq);
-  Vector<Double> iquv(4);
-  flux.value(iquv);
-  itsSpectrumPtr->sampleStokes(freq, iquv);
-  flux.setValue(iquv);
-  flux.convertPol(itsFlux.pol());
+  scale *= itsSpectrumPtr->sample(freq);
   flux.scaleValue(scale, scale, scale, scale);
   return flux;
 }
@@ -283,17 +272,12 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   const uInt nVis = uvws.ncolumn();
 
   Vector<Double> uvw(3);
-  //Block<DComplex> flux(4);
-  Vector<Double> iquv(4);
-  Flux<Double> flux=itsFlux.copy();
-  flux.value(iquv);
-    /*for (uInt p = 0; p < 4; p++) {
+  Block<DComplex> flux(4);
+  for (uInt p = 0; p < 4; p++) {
     flux[p] = itsFlux.value(p);
   }
-    */
 
-  Vector<Vector<Double> >fIQUV(frequencies.nelements());
-  fIQUV.set(iquv);
+  Vector<Double> fscale(frequencies.nelements());
   Vector<MVFrequency> mvFreq(frequencies.nelements());
   for (uInt f = 0; f < nFreq; f++) {
     mvFreq(f)=MVFrequency(frequencies(f));
@@ -308,16 +292,12 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   //At least for now making it that the frequency is expected to be in the frame of 
   // the component
   MeasRef<MFrequency> measRef(itsSpectrumPtr->refFrequency().getRef()); 
-  //itsSpectrumPtr->sample(fscale, mvFreq, measRef);
-  itsSpectrumPtr->sampleStokes(fIQUV, mvFreq, measRef);
-  Vector<Flux<Double> > stokesFlux(nFreq);
-  for (uInt f=0; f < nFreq; ++f){
-    stokesFlux(f)=Flux<Double>(fIQUV(f));
-    stokesFlux(f).convertPol(itsFlux.pol());
-  }
+  itsSpectrumPtr->sample(fscale, mvFreq, measRef);
+ 
+
   Matrix<DComplex> scales(nVis, nFreq);
   itsShapePtr->visibility(scales, uvws, frequencies);
-  /*Matrix<DComplex> scales2(nFreq, nVis);
+  Matrix<DComplex> scales2(nFreq, nVis);
   for(uInt k=0; k < nFreq; ++k ){
     for (uInt j=0; j < nVis; ++j){
       scales2(k,j)=scales(j,k)*fscale(k);
@@ -326,16 +306,6 @@ void SkyCompRep::visibility(Cube<DComplex>& visibilities,
   for (uInt p = 0; p < 4;  ++p) {
     visibilities.yzPlane(p) = flux[p]*scales2;
   }
-  */
-  for (uInt v = 0; v < nVis; ++v) {
-    for (uInt f=0; f < nFreq; ++f ){
-      for (uInt p = 0; p < 4;  ++p) {
-	visibilities(p, f, v)=scales(v, f)*stokesFlux[f].value(p);
-      }
-    }
-  }
-
-
  /*
   for (uInt v = 0; v < nVis; v++) {
     uvw=uvws.column(v);
@@ -561,11 +531,12 @@ void SkyCompRep::fromPixel (
 //
    LogIO os(LogOrigin("SkyCompRep", "fromPixel()"));
       
-   ThrowIf(
-		   ! cSys.hasDirectionCoordinate(),
-		   "CoordinateSystem does not contain a DirectionCoordinate"
-   );
-   const DirectionCoordinate& dirCoord = cSys.directionCoordinate();
+// Find DirectionCoordinate
+   Int dirCoordinate = cSys.findCoordinate(Coordinate::DIRECTION);
+   if (dirCoordinate==-1) {
+      os << "CoordinateSystem does not contain a DirectionCoordinate" << LogIO::EXCEPTION;
+   }
+   const DirectionCoordinate& dirCoord = cSys.directionCoordinate(dirCoordinate);
 //
 // We need to find the ratio that converts the input peak brightness
 // from whatevers/per whatever to Jy per whatever.  E.g. mJy/beam to Jy/beam.  
@@ -576,10 +547,10 @@ void SkyCompRep::fromPixel (
 
 // Now proceed with type dependent conversions
    if (componentShape==ComponentType::POINT) {
-      ThrowIf(
-    		  parameters.nelements() != 3,
-    	  "Wrong number of parameters for Point shape"
-       );
+      if (parameters.nelements()!=3) {
+         os << "Wrong number of parameters for Point shape" << LogIO::EXCEPTION;
+      }
+//
       Vector<Double> pars(2);
       pars(0) = parameters(1);
       pars(1) = parameters(2);
@@ -591,16 +562,14 @@ void SkyCompRep::fromPixel (
       itsFlux.setUnit(Unit("Jy"));
       itsFlux.setValue (value, stokes);
    } else if (componentShape==ComponentType::GAUSSIAN || componentShape==ComponentType::DISK) {
-      ThrowIf(
-         parameters.nelements() != 6,
-         "Wrong number of parameters for Gaussian or Point shape"
-     );
+      if (parameters.nelements()!=6) {
+         os << "Wrong number of parameters for Gaussian or Point shape" << LogIO::EXCEPTION;
+      }
 
 // Do x,y,major,minor,pa
       Vector<Double> pars(5);
-      for (uInt i=0; i<5; i++) {
-    	  pars(i) = parameters(i+1);
-      }
+      for (uInt i=0; i<5; i++) pars(i) = parameters(i+1);
+//
       Quantum<Double> majorAxis, minorAxis, pa;
       if (componentShape==ComponentType::GAUSSIAN) {
          GaussianShape shp;
@@ -621,6 +590,7 @@ void SkyCompRep::fromPixel (
       Quantum<Double> integralFlux = 
            SkyCompRep::peakToIntegralFlux (dirCoord, componentShape, peakFlux,
                                            majorAxis, minorAxis, restoringBeam);
+// Set flux
       itsFlux.setUnit(integralFlux.getFullUnit());   
       itsFlux.setValue (integralFlux, stokes);
    }
@@ -628,16 +598,30 @@ void SkyCompRep::fromPixel (
 
 // Spectrum; assumed constant !
    ConstantSpectrum constSpec;
-   if (cSys.hasSpectralAxis()) {
-         SpectralCoordinate specCoord = cSys.spectralCoordinate();
+   Int specCoordinate = cSys.findCoordinate(Coordinate::SPECTRAL);
+   if (specCoordinate!=-1) {
+      Vector<Int> specAxes = cSys.pixelAxes(specCoordinate);
+      if (specAxes.nelements() > 1) {
+         os << LogIO::WARN
+            << "This image has a SpectralCoordinate with > 1 axes.  I cannot handle that"
+            << endl;
+         os << "The image will be treated as if it had no SpectralCorodinate" << LogIO::POST;
+      } else {
+   
+// If the subImage has a SpectralCoordinate, there is only one Spectral pixel (with
+// pixel coordinate 0.0) in that subImage (because region is 2D in DirectionCoordinate).
+// Find its frequency.
+      
+         SpectralCoordinate specCoord = cSys.spectralCoordinate(specCoordinate);
          MFrequency mFreq;
-         ThrowIf(
-            ! specCoord.toWorld(mFreq, 0.0),
-            "SpectralCoordinate conversion failed because "
-               + specCoord.errorMessage()
-            );
+         if (!specCoord.toWorld(mFreq, 0.0)) {
+            os << "SpectralCoordinate conversion failed because "
+               << specCoord.errorMessage() << LogIO::EXCEPTION;
+         } else {
             constSpec.setRefFrequency(mFreq);
+         }
       }
+   }
    setSpectrum(constSpec);
 }
 

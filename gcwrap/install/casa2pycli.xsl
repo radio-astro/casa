@@ -22,7 +22,7 @@
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
-# Copyright 2014, Associated Universities Inc., Washington DC
+# Copyright 2013, Associated Universities Inc., Washington DC
 #
 import sys
 import os

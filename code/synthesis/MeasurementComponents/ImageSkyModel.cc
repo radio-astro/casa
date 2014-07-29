@@ -189,7 +189,7 @@ Bool ImageSkyModel::addResidual(Int thismodel, ImageInterface<Float>& residual)
   return True;
 }
   
-  ImageSkyModel::ImageSkyModel(const ImageSkyModel& other) : SkyModel() {
+ImageSkyModel::ImageSkyModel(const ImageSkyModel& other) {
   operator=(other);
 };
 

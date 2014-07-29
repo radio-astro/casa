@@ -86,14 +86,14 @@ static Bool splitKW2D(String &name, Int &nrow, Int &ncol, String &fullName)
     name = "";
 
     if(fullName.contains("_")){ // assume new matrix syntax  ii_jj
-      uInt where = 0;// Where the frst number starts
+      Int where = 0;// Where the frst number starts
       while (where++ < fullName.length() && !isdigit(fullName[where])) {
 	; // Nothing
       }
       name = fullName(0, where);
       // found first non-digit
-      String::size_type where2 = fullName.find('_');
-      if (where2 == String::npos || where2 == fullName.length()-1){
+      Int where2 = fullName.find('_');
+      if(where2==String::npos || where2==fullName.length()-1){
 	return False;
       }
       String snum1 = fullName(where, where2-where);

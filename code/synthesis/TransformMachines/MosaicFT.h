@@ -33,7 +33,7 @@
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
@@ -202,7 +202,7 @@ public:
 
   // Save and restore the MosaicFT to and from a record
   Bool toRecord(String& error, RecordInterface& outRec, 
-		Bool withImage=False, const String diskimage="");
+		Bool withImage=False);
   Bool fromRecord(String& error, const RecordInterface& inRec);
   
   // Can this FTMachine be represented by Fourier convolutions?
@@ -281,7 +281,9 @@ protected:
   Vector<Double> uvScale, uvOffset;
 
   // Array for non-tiled gridding
+  Array<Complex> griddedData;
   Array<Complex> griddedWeight;
+  Array<DComplex> griddedData2;
   Array<DComplex> griddedWeight2;
   // Pointing columns
   MSPointingColumns* mspc;

@@ -192,7 +192,7 @@ private:
 
     String _pcfToString(
     	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double>& world, const IPosition& imPos, const Bool showTypeString=True,
+    	const Vector<Double> world, const IPosition imPos, const Bool showTypeString=True,
     	const String& indent=""
     ) const;
 

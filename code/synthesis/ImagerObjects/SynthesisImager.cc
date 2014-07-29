@@ -38,7 +38,6 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
-#include <casa/System/ProgressMeter.h>
 
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
@@ -57,28 +56,13 @@
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
-#include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
-//#include <synthesis/ImagerObjects/SIMapperSingle.h>
-//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
-#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
-#include <synthesis/ImagerObjects/SIImageStore.h>
-#include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
-
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisImagingWeight.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
-#include <synthesis/TransformMachines/VisModelData.h>
 
-#include <synthesis/TransformMachines/AWProjectFT.h>
-#include <synthesis/TransformMachines/MultiTermFTNew.h>
-//#include <synthesis/TransformMachines/ProtoVR.h>
-#include <synthesis/TransformMachines/AWProjectWBFTNew.h>
-#include <synthesis/TransformMachines/AWConvFunc.h>
-#include <synthesis/TransformMachines/AWConvFuncEPJones.h>
-#include <synthesis/TransformMachines/NoOpATerm.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -95,19 +79,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
+				       itsCurrentFTMachine(NULL), 
+				       itsCurrentImages(NULL),
 				       mss_p(0),vi_p(0), writeAccess_p(True), mss4vi_p(0)
   {
 
+
+     facetsStore_p=-1;
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
      useScratch_p=False;
-     readOnly_p=True;
      wvi_p=0;
      rvi_p=0;
 
-     facetsStore_p=-1;
-     unFacettedImStore_p=NULL;
-
+     ftmParams_p.define("ftmachine","GridFT");
+     ftmParams_p.define("wprojplanes", Int(1));
+     ftmParams_p.define("padding", Float(1.0));
+     ftmParams_p.define("useautocorr", False);
+     ftmParams_p.define("usedoubleprec", True);
+     ftmParams_p.define("gridfunc", String("SF"));
 
   }
   
@@ -117,14 +107,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::~SynthesisImager() 
   {
     LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
-    os << LogIO::DEBUG1 << "SynthesisImager destroyed" << LogIO::POST;
+    os << LogIO::DEBUGGING << "SynthesisImager destroyed" << LogIO::POST;
     for (uInt k=0; k < mss_p.nelements(); ++k){
       delete mss_p[k];
     }
     if(rvi_p) delete rvi_p;
-    rvi_p=NULL;
-
-    //    cerr << "IN DESTR"<< endl;
+    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
   }
 
@@ -146,116 +134,82 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& taql,
 				   const Bool usescratch, 
 				   const Bool readonly, 
-				   const Bool incrModel)
-  {
-    SynthesisParamsSelect pars;
-    pars.msname=msname;
-    pars.spw=spw;
-    pars.freqbeg=freqBeg;
-    pars.freqend=freqEnd;
-    pars.freqframe=freqframe;
-    pars.field=field;
-    pars.antenna=antenna;
-    pars.timestr=timestr;
-    pars.scan=scan;
-    pars.obs=obs;
-    pars.state=state;
-    pars.uvdist=uvdist;
-    pars.taql=taql;
-    pars.usescratch=usescratch;
-    pars.readonly=readonly;
-    pars.incrmodel=incrModel;
-
-    String err = pars.verify();
-
-    if( err.length()>0 ) throw(AipsError("Invalid Selection parameters : " + err));
-
-    selectData( pars );
-
-    return True;
-  }
-  
-  Bool SynthesisImager::selectData(const SynthesisParamsSelect& selpars)
-  {
+				   const Bool incrModel){
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
 
     try
       {
 
     //Respect the readonly flag...necessary for multi-process access
-    MeasurementSet thisms(selpars.msname, TableLock(TableLock::AutoNoReadLocking),
-				selpars.readonly ? Table::Old : Table::Update);
+    MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking),
+				readonly ? Table::Old : Table::Update);
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
-    useScratch_p=selpars.usescratch;
-    readOnly_p = selpars.readonly;
-    //    cout << "**************** usescr : " << useScratch_p << "     readonly : " << readOnly_p << endl;
+    useScratch_p=usescratch;
     //if you want to use scratch col...make sure they are there
-    if(selpars.usescratch && !selpars.readonly){
+    if(usescratch && !readonly){
       VisSetUtil::addScrCols(thisms, True, False, True, False);
       VisModelData::clearModel(thisms);
     }
-    if(!selpars.incrmodel && !selpars.usescratch && !selpars.readonly)
-    	VisModelData::clearModel(thisms, selpars.field, selpars.spw);
+    if(!incrModel && !usescratch && !readonly)
+    	VisModelData::clearModel(thisms, field, spw);
 
-    os << "MS : " << selpars.msname << " | ";
+    os << "MS : " << msname << " | ";
 
     //Some MSSelection 
     //If everything is empty (which is valid) it will throw an exception..below
     //So make sure the main defaults are not empy i.e field and spw
     MSSelection thisSelection;
-    if(selpars.field != ""){
-      thisSelection.setFieldExpr(selpars.field);
-      os << "Selecting on fields : " << selpars.field << " | " ;//LogIO::POST;
+    if(field != ""){
+      thisSelection.setFieldExpr(field);
+      os << "Selecting on fields : " << field << " | " ;//LogIO::POST;
     }else
       thisSelection.setFieldExpr("*");
-    if(selpars.spw != ""){
-	thisSelection.setSpwExpr(selpars.spw);
-	os << "Selecting on spw :"<< selpars.spw  << " | " ;//LogIO::POST;
+    if(spw != ""){
+	thisSelection.setSpwExpr(spw);
+	os << "Selecting on spectral windows expression :"<< spw  << " | " ;//LogIO::POST;
     }else
       thisSelection.setSpwExpr("*");
     
-    if(selpars.antenna != ""){
-      Vector<String> antNames(1, selpars.antenna);
+    if(antenna != ""){
+      Vector<String> antNames(1, antenna);
       // thisSelection.setAntennaExpr(MSSelection::nameExprStr( antNames));
-      thisSelection.setAntennaExpr(selpars.antenna);
-      os << "Selecting on antenna names : " << selpars.antenna << " | " ;//LogIO::POST;
+      thisSelection.setAntennaExpr(antenna);
+      os << "Selecting on antenna names : " << antenna << " | " ;//LogIO::POST;
 	
     }            
-    if(selpars.timestr != ""){
-	thisSelection.setTimeExpr(selpars.timestr);
-	os << "Selecting on time range : " << selpars.timestr << " | " ;//LogIO::POST;	
+    if(timestr != ""){
+	thisSelection.setTimeExpr(timestr);
+	os << "Selecting on time range : " << timestr << " | " ;//LogIO::POST;	
       }
-    if(selpars.uvdist != ""){
-      thisSelection.setUvDistExpr(selpars.uvdist);
-      os << "Selecting on uvdist : " << selpars.uvdist << " | " ;//LogIO::POST;	
+    if(uvdist != ""){
+      thisSelection.setUvDistExpr(uvdist);
+      os << "Selecting on uvdist : " << uvdist << " | " ;//LogIO::POST;	
     }
-    if(selpars.scan != ""){
-      thisSelection.setScanExpr(selpars.scan);
-      os << "Selecting on scan : " << selpars.scan << " | " ;//LogIO::POST;	
+    if(scan != ""){
+      thisSelection.setScanExpr(scan);
+      os << "Selecting on scan : " << scan << " | " ;//LogIO::POST;	
     }
-    if(selpars.obs != ""){
-      thisSelection.setObservationExpr(selpars.obs);
-      os << "Selecting on Observation Expr : " << selpars.obs << " | " ;//LogIO::POST;	
+    if(obs != ""){
+      thisSelection.setObservationExpr(obs);
+      os << "Selecting on Observation Expr : " << obs << " | " ;//LogIO::POST;	
     }
-    if(selpars.state != ""){
-      thisSelection.setStateExpr(selpars.state);
-      os << "Selecting on Scan Intent/State : " << selpars.state << " | " ;//LogIO::POST;	
+    if(state != ""){
+      thisSelection.setStateExpr(state);
+      os << "Selecting on Scan Intent/State : " << state << " | " ;//LogIO::POST;	
     }
-    if(selpars.taql != ""){
-	thisSelection.setTaQLExpr(selpars.taql);
-	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
+    if(taql != ""){
+	thisSelection.setTaQLExpr(taql);
+	os << "Selecting via TaQL : " << taql << " | " ;//LogIO::POST;	
     }
-    os << "[Opened " << (readOnly_p?"in readonly mode":(useScratch_p?"with scratch model column":"with virtual model column"))  << "]" << LogIO::POST;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
       mss_p.resize(mss_p.nelements()+1, False, True);
       mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
       mss_p[mss_p.nelements()-1]=new const  MeasurementSet(thisms(exprNode));
       mss4vi_p[mss_p.nelements()-1]=MeasurementSet(thisms(exprNode));
-      os << "  NRows selected : " << (mss_p[mss_p.nelements()-1])->nrow() << LogIO::POST;
     }
     else{
-      throw(AipsError("Selection for given MS "+selpars.msname+" is invalid"));
+      throw(AipsError("Selection for given MS "+msname+" is invalid"));
     }
     //We should do the select channel here for  the VI construction later
     //Need a cross check between channel selection and ms
@@ -281,10 +235,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockSpw_p[msin].resize(nSelections);
       ///////////////////////
 
-      if(selpars.freqbeg==""){
+      if(freqBeg==""){
     	  vi::FrequencySelectionUsingChannels channelSelector;
     	  //////////This is not implemented
-    	  //channelSelector.add(thisSelection);
+    	  channelSelector.add(thisSelection);
     	  /////So this gymnastic is needed
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
@@ -308,11 +262,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  fselections_p.add(channelSelector);
       }
       else{
-    	  vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
+    	  vi::FrequencySelectionUsingFrame channelSelector(freqframe);
     	  Quantity freq;
-    	  Quantity::read(freq, selpars.freqbeg);
+    	  Quantity::read(freq, freqBeg);
     	  Double lowfreq=freq.getValue("Hz");
-    	  Quantity::read(freq, selpars.freqend);
+    	  Quantity::read(freq, freqEnd);
     	  Double topfreq=freq.getValue("Hz");
     	  for(uInt k=0; k < nSelections; ++k)
     		  channelSelector.add(chanlist(k,0), lowfreq, topfreq);
@@ -322,7 +276,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  Vector<Vector<Int> >elspw, elstart, elnchan;
     	  Vector<Int>fields=thisSelection.getFieldList(mss_p[mss_p.nelements()-1]);
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
-    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
+    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, freqframe, elspw, elstart, elnchan, msname, fieldid, False);
     	  blockNChan_p[msin].resize(elspw[0].nelements());
     	  blockStart_p[msin].resize(elspw[0].nelements());
     	  blockStep_p[msin].resize(elspw[0].nelements());
@@ -336,21 +290,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     }
-    writeAccess_p=writeAccess_p && !selpars.readonly;
+    writeAccess_p=writeAccess_p && !readonly;
     createVisSet(writeAccess_p);
 
-    /////// Remove this when the new vi/vb is able to get the full freq range.
-    mssFreqSel_p.resize();
-    mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
-
-
-    //// Set the data column on which to operate
-    //    cout << "Using col : " << selpars.datacolumn << endl;
-    if( selpars.datacolumn.contains("data") || selpars.datacolumn.contains("obs") ) 
-      {datacol_p = FTMachine::OBSERVED; }
-    else if( selpars.datacolumn.contains("corr") )
-      {datacol_p = FTMachine::CORRECTED; }
-    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = FTMachine::CORRECTED; }
 
       }
     catch(AipsError &x)
@@ -384,154 +326,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Bool trackSource, 
 				    const MDirection& trackDir, 
 				    const Bool overwrite,
-				    const Float padding, 
-				    const Bool useAutocorr, 
-				    const Bool useDoublePrec, 
-				    const Int wprojplanes, 
-				    const String convFunc, 
-				    const String startmodel,
-				    // The extra params for WB-AWP
-				    const Bool aTermOn,//    = True,
-				    const Bool psTermOn,//   = True,
-				    const Bool mTermOn,//    = False,
-				    const Bool wbAWP,//      = True,
-				    const String cfCache,//  = "",
-				    const Bool doPointing,// = False,
-				    const Bool doPBCorr,//   = True,
-				    const Bool conjBeams,//  = True,
-				    const Float computePAStep,         //=360.0
-				    const Float rotatePAStep          //=5.0
-				    )
+				     const Float padding, 
+				     const Bool useAutocorr, 
+				     const Bool useDoublePrec, 
+				     const Int wprojplanes, 
+				     const String convFunc, 
+				    const String startmodel)
 {
-  String err("");
-
-  SynthesisParamsImage impars;
-  impars.imageName=imagename;
-  Vector<Int> ims(2);ims[0]=nx; ims[1]=ny;
-  impars.imsize=ims;
-  Vector<Quantity> cells(2); cells[0]=cellx, cells[1]=celly;
-  impars.cellsize=cells;
-  impars.stokes=stokes;
-  impars.phaseCenter=phaseCenter;
-  impars.nchan=nchan;
-  impars.freqStart=freqStart;
-  impars.freqStep=freqStep;
-  impars.restFreq=restFreq;
-  impars.nTaylorTerms=nTaylorTerms;
-  impars.refFreq=refFreq;
-  impars.projection=projection;
-  impars.freqFrame=freqFrame;
-  impars.overwrite=overwrite;
-  impars.startModel=startmodel;
-
-  err += impars.verify();
-
-  SynthesisParamsGrid gridpars;
-  gridpars.ftmachine=ftmachine;
-  gridpars.distance=distance;
-  gridpars.trackSource=trackSource;
-  gridpars.trackDir=trackDir;
-  gridpars.padding=padding;
-  gridpars.facets=facets;
-  gridpars.useAutoCorr=useAutocorr;
-  gridpars.useDoublePrec=useDoublePrec;
-  gridpars.wprojplanes=wprojplanes;
-  gridpars.convFunc=convFunc;
-  gridpars.aTermOn=aTermOn;
-  gridpars.psTermOn=psTermOn;
-  gridpars.mTermOn=mTermOn;
-  gridpars.wbAWP=wbAWP;
-  gridpars.cfCache=cfCache;
-  gridpars.doPointing=doPointing;
-  gridpars.doPBCorr=doPBCorr;
-  gridpars.conjBeams=conjBeams;
-  gridpars.computePAStep=computePAStep;
-  gridpars.rotatePAStep=rotatePAStep;
-
-  err += gridpars.verify();
-
-  if( err.length()>0 ) throw(AipsError("Invalid Image/Gridding parameters : " + err));
-
-  defineImage( impars, gridpars );
-
-  return True;
-}
-
-  Bool SynthesisImager::defineImage(SynthesisParamsImage& impars, 
-			   const SynthesisParamsGrid& gridpars)
-  {
-
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
     if(mss_p.nelements() ==0)
-      os << "SelectData has to be run before defineImage" << LogIO::EXCEPTION;
+      throw(AipsError("SelectData has to be run before defineImage"));
 
     CoordinateSystem csys;
-    CountedPtr<FTMachine> ftm, iftm;
 
     try
       {
 
-	os << "Define image [" << impars.imageName << "]" << LogIO::POST;
+	os << "Adding " << imagename << " (nchan : " << nchan << ", freqstart:" << freqStart.getValue() << freqStart.getUnit() <<  ", nx:" << nx << ",ny:" << ny << ", cellx:" << cellx.getValue() << cellx.getUnit() << ", celly:" << celly.getValue() << celly.getUnit() << " ) to imager list " << LogIO::POST;
 
-	//MeasurementSet tms(*mss_p[0]);
-	//csys = impars.buildCoordinateSystem( tms );
-	csys = impars.buildCoordinateSystem( rvi_p );
-	IPosition imshape = impars.shp();
-	//        freqFrameValid_p = impars.freqFrameValid;
-
-	if( (itsMappers.nMappers()==0) || 
-	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
-	  {
-	    itsMaxShape=imshape;
-	    itsMaxCoordSys=csys;
-	  }
-
-	/*
-	os << "Define image  [" << impars.imageName << "] : nchan : " << impars.nchan 
-	   //<< ", freqstart:" << impars.freqStart.getValue() << impars.freqStart.getUnit() 
-	   << ", start:" << impars.start
-	   <<  ", imsize:" << impars.imsize 
-	   << ", cellsize: [" << impars.cellsize[0].getValue() << impars.cellsize[0].getUnit() 
-	   << " , " << impars.cellsize[1].getValue() << impars.cellsize[1].getUnit() 
-	   << LogIO::POST;
-	*/
-      }
-    catch(AipsError &x)
-      {
-	os << "Error in building Coordinate System and Image Shape : " << x.getMesg() << LogIO::EXCEPTION;
-      }
-
+	csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,freqStart, freqStep, restFreq, freqFrame);
 	
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in building Coordinate System() : "+x.getMesg()) );
+      }
+
+
     try
       {
-	createFTMachine(ftm, iftm, gridpars.ftmachine, impars.nTaylorTerms, gridpars.mType, 
-			gridpars.facets, gridpars.wprojplanes,
-			gridpars.padding,gridpars.useAutoCorr,gridpars.useDoublePrec,
-			gridpars.convFunc,
-			gridpars.aTermOn,gridpars.psTermOn, gridpars.mTermOn,
-			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
-			gridpars.doPBCorr,gridpars.conjBeams,
-			gridpars.computePAStep,gridpars.rotatePAStep,
-			gridpars.interpolation, impars.freqFrameValid);
+
+    /// Accumulate FTM parameters, to get used in createFTMachine..... 
+    ftmParams_p.define("ftmachine",ftmachine);
+    ftmParams_p.define("wprojplanes", wprojplanes);
+    ftmParams_p.define("padding", padding );
+    ftmParams_p.define("useautocorr", useAutocorr);
+    ftmParams_p.define("usedoubleprec", useDoublePrec);
+    ftmParams_p.define("gridfunc", convFunc);
+
+    // NOTE to Kumar : If possible, can 'createFTMachine()' be called directly from here, 
+    //                      with a full list of parameters, instead of passing them through appendToMapperList ? 
+    // The other defineimage() already does this...... and can be augmented with the full FTM parameter list too.
 
       }
     catch(AipsError &x)
       {
-	os << "Error in setting up FTMachine() : " << x.getMesg() << LogIO::EXCEPTION;
+	throw( AipsError("Error in setting up FTMachine() : "+x.getMesg()) );
       }
 
     try
       {
-	appendToMapperList(impars.imageName,  csys,  impars.shp(),
-			   ftm, iftm,
-			   gridpars.distance, gridpars.facets, impars.overwrite,
-			   gridpars.mType, impars.nTaylorTerms);
+
+	appendToMapperList(imagename,  csys,  ftmParams_p.asString("ftmachine"), distance, facets, overwrite);
 	imageDefined_p=True;
+	
       }
     catch(AipsError &x)
       {
-	os << "Error in adding Mapper : "+x.getMesg() << LogIO::EXCEPTION;
+	throw( AipsError("Error in adding Mapper : "+x.getMesg()) );
       }
+
 
     // Set the model image for prediction -- Call an SIImageStore function that does the REGRIDDING.
     /*
@@ -541,35 +395,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsCurrentImages->setModelImage( startmodel );
       }
     */
+ 
+
+    
     return True;
   }
  
-  Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, 
-				    const String& ftmachine)
-  {
-    CountedPtr<FTMachine> ftm, iftm;
+  Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine){
 
-    // The following call to createFTMachine() uses the
-    // following defaults
-    //
-    // facets=1, wprojplane=1, padding=1.0, useAutocorr=False, 
-    // useDoublePrec=True, gridFunction=String("SF")
-    //
-    createFTMachine(ftm, iftm, ftmachine);
-    
-    Int id=itsMappers.nMappers();
-    CoordinateSystem csys =imstor->residual()->coordinates();
-    IPosition imshape=imstor->residual()->shape();
-    Int nx=imshape[0], ny=imshape[1];
-    if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
-      {
-	itsMaxShape=imshape;
-	itsMaxCoordSys=csys;
-      }
 
-    itsMappers.addMapper(  createSIMapper( "default", imstor, ftm, iftm, id ) );
-    
-    return True;
+	  CountedPtr<FTMachine> ftm;
+	  CountedPtr<FTMachine> iftm;
+	  createFTMachine(ftm, iftm, ftmachine);
+	  Int id=itsMappers.nMappers();
+	  itsCurrentCoordSys=imstor->residual()->coordinates();
+	  itsCurrentShape=imstor->residual()->shape();
+	  Int nx=itsCurrentShape[0]; Int ny=itsCurrentShape[1];
+	  if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
+	  {
+		  itsMaxShape=itsCurrentShape;
+		  itsMaxCoordSys=itsCurrentCoordSys;
+	  }
+
+	  CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+	  itsMappers.addMapper(thismap);
+
+	 return True;
   }
 
    ///////////////////////////////////////////////////////////////////////////////////////////
@@ -578,9 +429,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  String cft="SimpleComponentFTMachine";
 	  if(sdgrid)
 		  cft="SimpCompGridFTMachine";
-	  CountedPtr<SIMapper> sm=new SIMapper(cl, cft);
+	  Int mapperid=itsMappers.nMappers();
+	  CountedPtr<SIMapperBase> sm=new SIMapper(cl, cft, mapperid);
 	  itsMappers.addMapper(sm);
-	  ////itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, id) );
 
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -597,44 +448,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 /////////////////////////////////////////////
   CountedPtr<SIImageStore> SynthesisImager::imageStore(const Int id)
   {
-    if(facetsStore_p >1)
-      {
-	if(id==0)
+	  if(facetsStore_p >1)
 	  {
-	    return unFacettedImStore_p;
+		  if(id==0)
+			  return unFacettedImStore_p;
+		  else
+		  {
+			  return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
+		  }
 	  }
-	else
-	  {
-	    return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
-	  }
-      }
-    return itsMappers.imageStore(id);
+	  return itsMappers.imageStore(id);
   }
 
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void SynthesisImager::executeMajorCycle(Record& controlRecord, const Bool useViVb2)
+  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/, const Bool useViVb2)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+    os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
-    Bool lastcycle=False;
-    if( controlRecord.isDefined("lastcycle") )
-      {
-	controlRecord.get( "lastcycle" , lastcycle );
-	//cout << "lastcycle : " << lastcycle << endl;
-      }
-    //else {cout << "No lastcycle" << endl;}
-
-    os << "----------------------------------------------------------- Run ";
-    if (lastcycle) os << "(Last) " ;
-    os << "Major Cycle -------------------------------------" << LogIO::POST;
-    
     try
       {    
-	runMajorCycle(False, useViVb2, lastcycle);
+	runMajorCycle(False, useViVb2);
 
 	itsMappers.releaseImageLocks();
 
@@ -644,7 +482,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in running Major Cycle : "+x.getMesg()) );
       }    
 
-  }// end of executeMajorCycle
+  }// end of runMajorCycle
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
@@ -652,16 +490,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       LogIO os( LogOrigin("SynthesisImager","makePSF",WHERE) );
 
-      os << "----------------------------------------------------------- Make PSF ---------------------------------------------" << LogIO::POST;
+      os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
     
       try
       {
-	runMajorCycle(True, useViVb2,False);
-
-    	  if(facetsStore_p >1)
-	    {
-	      setPsfFromOneFacet();
-	    }
+    	  runMajorCycle(True, useViVb2);
+    	  if(facetsStore_p >1){
+    		  //Facetted image should
+    		  IPosition shape=(unFacettedImStore_p->psf())->shape();
+    		  IPosition blc(4, 0, 0, 0, 0);
+    		  IPosition trc=shape-1;
+    		  TempImage<Float> onepsf((itsMappers.imageStore(0)->psf())->shape(), (itsMappers.imageStore(0)->psf())->coordinates());
+    		  onepsf.copyData(*(itsMappers.imageStore(0)->psf()));
+    		  //now set the original to 0 as we have a copy of one facet psf
+    		  (unFacettedImStore_p->psf())->set(0.0);
+    		  blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
+    		  trc[0]=onepsf.shape()[0]+blc[0]-1;
+    		  blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
+    		  trc[1]=onepsf.shape()[1]+blc[1]-1;
+    		  Slicer sl(blc, trc, Slicer::endIsLast);
+    		  SubImage<Float> sub(*(unFacettedImStore_p->psf()), sl, True);
+    		  sub.copyData(onepsf);
+    	  }
 
     	  itsMappers.releaseImageLocks();
 
@@ -672,15 +522,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     }
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::predictCalModel(const Bool useViVb2){
-    LogIO os( LogOrigin("SynthesisImager","predictCalibratorModel ",WHERE) );
-    predictModel( useViVb2 );
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////
+  //////////////////
   void SynthesisImager::predictModel(const Bool useViVb2){
-	  LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+	  LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
 	      if(useViVb2){
 	      	vi_p->originChunks();
@@ -694,7 +539,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      		{
 
 	      			vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-	      			itsMappers.degrid(*vb, !useScratch_p);
+	      			itsMappers.degrid(*vb, useScratch_p);
 	      			if(vi_p->isWritable() && useScratch_p)
 	      				vi_p->writeVisModel(vb->visCubeModel());
 	      		}
@@ -724,34 +569,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      	itsMappers.finalizeDegrid(*vb);
 	      }
 
-  }// end of predictModel
+  }
 
-   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////
+  ////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
-			       const Quantity& noise, const Double robust,
-			       const Quantity& fieldofview,
-			       const Int npixels, const Bool multiField,
-			       const String& filtertype, const Quantity& filterbmaj,
-			       const Quantity& filterbmin, const Quantity& filterbpa   )
+                   const Quantity& noise, const Double robust,
+                   const Quantity& fieldofview,
+  		    const Int npixels, const Bool multiField)
   {
     LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
 
        try {
     	//Int nx=itsMaxShape[0];
     	//Int ny=itsMaxShape[1];
-	 Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
-	 Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
-	 os << LogIO::NORMAL // Loglevel INFO
-	    << "Set imaging weights : " ; //<< LogIO::POST;
-	 
-	 if (type=="natural") {
-	   os << LogIO::NORMAL // Loglevel INFO
-	      << "Natural weighting" << LogIO::POST;
-	   imwgt_p=VisImagingWeight("natural");
-	 }
+    	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
+    	Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Imaging weights : " ; //<< LogIO::POST;
+
+      if (type=="natural") {
+        os << LogIO::NORMAL // Loglevel INFO
+           << "Natural weighting" << LogIO::POST;
+        imwgt_p=VisImagingWeight("natural");
+      }
       else if (type=="radial") {
-	os << "Radial weighting" << LogIO::POST;
+    	  os << "Radial weighting" << LogIO::POST;
     	  imwgt_p=VisImagingWeight("radial");
       }
       else{
@@ -820,22 +663,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				  << LogIO::POST;
     		  Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
 
-		  //		  cerr << "rmode " << rmode << " noise " << noise << " robust " << robust << " npixels " << actualNPixels << " cellsize " << actualCellSize << " multifield " << multiField << endl;
-		  //		  Timer timer;
-		  //timer.mark();
-		  //Construct imwgt_p with old vi for now if old vi is in use as constructing with vi2 is slower 
-		  if(rvi_p !=NULL){
-		    imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust,
+    		  imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
                                  actualNPixels, actualNPixels, actualCellSize,
                                  actualCellSize, 0, 0, multiField);
-		  }
-		  else{
-		    ////This is slower by orders of magnitude as of 2014/06/25
-		    imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
-                                 actualNPixels, actualNPixels, actualCellSize,
-                                 actualCellSize, 0, 0, multiField);
-		  }
-		    //timer.show("After making visweight ");
 
     	  }
     	  else {
@@ -845,31 +675,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  return False;
     	  }
       }
-	 
-	 //// UV-Tapering
-	 //cout << "Taper type : " << filtertype << " : " << (filtertype=="gaussian") <<  endl;
-	 if( filtertype == "gaussian" ) {
-	   //	   os << "Setting uv-taper" << LogIO::POST;
-	   imwgt_p.setFilter( filtertype,  filterbmaj, filterbmin, filterbpa );
-	 }
-	 
-	 
-	 vi_p->useImagingWeight(imwgt_p);
-	 ///////////////revert to vi/vb
-	 rvi_p->useImagingWeight(imwgt_p);
+
+      vi_p->useImagingWeight(imwgt_p);
+      ///////////////revert to vi/vb
+      rvi_p->useImagingWeight(imwgt_p);
       ///////////////////////////////
-	 
-	 
-	 return True;
-	 
-       }
-       catch(AipsError &x)
-	 {
-	   throw( AipsError("Error in Weighting : "+x.getMesg()) );
-	 }
-       
-       
-       return True;
+
+
+      return True;
+ 
+      }
+    catch(AipsError &x)
+      {
+	throw( AipsError("Error in Weighting : "+x.getMesg()) );
+      }
+
+
+   return True;
   }
   
   
@@ -878,301 +700,212 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
-  CountedPtr<SIImageStore> SynthesisImager::createIMStore(String imageName, 
-							  CoordinateSystem& cSys,
-							  IPosition imShape, 
-							  const Bool overwrite,
-							  String mappertype,
-							  uInt ntaylorterms,
-							  Quantity distance,
-							  uInt facets,
-							  Bool useweightimage)
-  {
-    LogIO os( LogOrigin("SynthesisImager","createIMStore",WHERE) );
+    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,
+    		Quantity distance, Int facets, const Bool overwrite)
+    {
+    	if(facets > 1 && itsMappers.nMappers() > 0)
+    		throw(AipsError("Facetted image has to be first of multifields"));
+    	if(facets <1)
+    		facets=1;
+    	Int nIm=facets*facets;
 
     CountedPtr<SIImageStore> imstor;
-
-    try
-      {
-	
-	if( mappertype=="default" || mappertype=="imagemosaic" )
-	  {
-	    imstor=new SIImageStore(imageName, cSys, imShape, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
-	    //	    imstor=new SIImageStore(imageName, cSys, imShape, facets, overwrite, (useweightimage || (mappertype=="imagemosaic") ));
-	  }
-	else if (mappertype == "multiterm" )  // Currently does not support imagemosaic.
-	  {
-	    //cout << "Making multiterm IS with nterms : " << ntaylorterms << endl;
-	    imstor=new SIImageStoreMultiTerm(imageName, cSys, imShape, facets, overwrite, ntaylorterms, useweightimage);
-	  }
-	else
-	  {
-	    throw(AipsError("Internal Error : Invalid mapper type in SynthesisImager::createIMStore"));
-	  }
-	
-	// Fill in miscellaneous information needed by FITS
-	ROMSColumns msc(*mss_p[0]);
-	Record info;
-	String objectName=msc.field().name()(msc.fieldId()(0));
-	String telescop=msc.observation().telescopeName()(0);
-	info.define("OBJECT", objectName);
-	info.define("TELESCOP", telescop);
-	info.define("INSTRUME", telescop);
-	info.define("distance", distance.get("m").getValue());
-	////////////// Send misc info into ImageStore. 
-	imstor->setImageInfo( info );
-
-	// Get polRep from 'msc' here, and send to imstore. 
-	StokesImageUtil::PolRep polRep(StokesImageUtil::CIRCULAR);
-	Vector<String> polType=msc.feed().polarizationType()(0);
-	if (polType(0)!="X" && polType(0)!="Y" &&  polType(0)!="R" && polType(0)!="L") {
-	  os << LogIO::WARN << "Unknown stokes types in feed table: ["
-	     << polType(0) << ", " << polType(1) << "]" << endl
-	     << "Results open to question!" << LogIO::POST;
-	}
-	
-	if (polType(0)=="X" || polType(0)=="Y") {
-	  polRep=StokesImageUtil::LINEAR;
-	  os << LogIO::DEBUG1 << "Preferred polarization representation is linear" << LogIO::POST;
-	}
-	else {
-	  polRep=StokesImageUtil::CIRCULAR;
-	  os << LogIO::DEBUG1 << "Preferred polarization representation is circular" << LogIO::POST;
-	}
-	/// end of reading polRep info
-	
-	///////// Send this info into ImageStore.
-	imstor->setDataPolFrame(polRep);
-
-      }
-    catch(AipsError &x)
-      {
-	throw(AipsError("Error in createImStore : " + x.getMesg() ) );
-      }
     
-    
-    return imstor;
-  }
-  
-  CountedPtr<SIMapper> SynthesisImager::createSIMapper(String mappertype,  
-							   CountedPtr<SIImageStore> imagestore,
-							   CountedPtr<FTMachine> ftmachine,
-							   CountedPtr<FTMachine> iftmachine,
-						       uInt /*ntaylorterms*/)
-  {
-    LogIO os( LogOrigin("SynthesisImager","createSIMapper",WHERE) );
-    
-    CountedPtr<SIMapper> localMapper=NULL;
 
-    try
-      {
-	/*
-	CountedPtr<VPSkyJones> vp = NULL;
-	if( mappertype == "imagemosaic" || mappertype == "mtimagemosaic" )
-	  {
-	    ROMSColumns msc(*mss_p[0]);
-	    Quantity parang(0.0,"deg");
-	    Quantity skyposthreshold(0.0,"deg");
-	    vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
-	  }
-	*/
-	// Check 'mappertype' for valid types....
-
-	/*
-	if( mappertype == "default" || mappertype == "imagemosaic"){
-	  localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, vp );
-	  }
-	else if( mappertype == "multiterm" || mappertype == "mtimagemosaic" ){
-	  localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine, vp, ntaylorterms );
-	  }
-	else if( mappertype == "new" ) {
-	  localMapper = new SIMapper( imagestore, ftmachine, iftmachine, vp );
-	}
-	
-	else{
-	    throw ( AipsError("Internal Error : Unrecognized Mapper Type in SynthesisImager::createSIMapper") );
-	  }
-	*/
-	
-	if( mappertype == "default" || mappertype == "multiterm" )
-	  {
-	    localMapper = new SIMapper( imagestore, ftmachine, iftmachine );
-	  }
-	else if( mappertype == "imagemosaic") // || mappertype == "mtimagemosaic" )
-	  {
-	    localMapper = new SIMapperImageMosaic( imagestore, ftmachine, iftmachine );
-	  }
-	else
-	  {
-	    throw(AipsError("Unknown mapper type : " + mappertype));
-	  }
-
-      }
-    catch(AipsError &x) {
-	throw(AipsError("Error in createSIMapper : " + x.getMesg() ) );
-      }
-    return localMapper;
-  }
-  
-
-  Block<CountedPtr<SIImageStore> > SynthesisImager::createFacetImageStoreList(
-									      CountedPtr<SIImageStore> imagestore,
-									      Int facets)
-  {
-    Block<CountedPtr<SIImageStore> > facetList( facets*facets );
-
-    if( facets==1 ) { facetList[0] = imagestore;  return facetList; }
-
-    // Remember, only the FIRST field in each run can have facets. So, check for this.
-    if( ! unFacettedImStore_p.null() ) {
-	throw( AipsError("A facetted image has already been set. Facets are supported only for the main (first) field. Please submit a feature-request if you need multiple facets for outlier fields as well. ") );
-      }
-    
-    unFacettedImStore_p = imagestore;
-    facetsStore_p = facets;
-    
-    // Note : facets : Number of facets on a side.
-    // Note : facet : index from range(0, facets*facets)
-    for (Int facet=0; facet< facets*facets; ++facet){
-	facetList[facet] = unFacettedImStore_p->getSubImageStore(facet, facets);
-      }
-    
-    return facetList;
-  }
-
-  void SynthesisImager::setPsfFromOneFacet()
-  {
-
-    if( unFacettedImStore_p.null() ){
-	throw(AipsError("Internal Error in SynthesisImager : Setting PSF on Null unfacettedimage"));
-      }
-
-    // Copy the PSF from one facet to the center of the full image, to use for the minor cycle
-    //
-    // This code segment will work for single and multi-term 
-    // - for single term, the index will always be 0, and SIImageStore's access functions know this.
-    // - for multi-term, the index will be the taylor index and SIImageStoreMultiTerm knows this.
-      {
-	IPosition shape=(unFacettedImStore_p->psf(0))->shape();
-	IPosition blc(4, 0, 0, 0, 0);
-	IPosition trc=shape-1;
-	for(uInt tix=0; tix<2 * unFacettedImStore_p->getNTaylorTerms() - 1; tix++)
-	  {
-	    TempImage<Float> onepsf((itsMappers.imageStore(0)->psf(tix))->shape(), 
-				    (itsMappers.imageStore(0)->psf(tix))->coordinates());
-	    onepsf.copyData(*(itsMappers.imageStore(0)->psf(tix)));
-	    //now set the original to 0 as we have a copy of one facet psf
-	    (unFacettedImStore_p->psf(tix))->set(0.0);
-	    blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
-	    trc[0]=onepsf.shape()[0]+blc[0]-1;
-	    blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
-	    trc[1]=onepsf.shape()[1]+blc[1]-1;
-	    Slicer sl(blc, trc, Slicer::endIsLast);
-	    SubImage<Float> sub(*(unFacettedImStore_p->psf(tix)), sl, True);
-	    sub.copyData(onepsf);
-	  }
-      }
-
-      //cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
-
-  }
-  
-  
-  void SynthesisImager::appendToMapperList(String imagename,  
-					   CoordinateSystem& csys, 
-					   IPosition imshape,
-					   CountedPtr<FTMachine>& ftm,
-					   CountedPtr<FTMachine>& iftm,
-					   Quantity distance, 
-					   Int facets, 
-					   const Bool overwrite,
-					   String mappertype,
-					   uInt ntaylorterms  )
-    {
-      LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
-      //---------------------------------------------
-      // Some checks..
-      if(facets > 1 && itsMappers.nMappers() > 0)
-	log_l << "Facetted image has to be first of multifields" << LogIO::EXCEPTION;
-      
-      AlwaysAssert( ( ( ! (ftm->name()=="MosaicFT" && mappertype=="imagemosaic") )  && 
-      		      ( ! (ftm->name()=="AWProjectWBFTNew" && mappertype=="imagemosaic") )) ,
-		    AipsError );
-      //---------------------------------------------
-
-      // Create the ImageStore object
-      CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage() );
-
-      // Create the Mappers
-      if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
-	{
-	  itsMappers.addMapper(  createSIMapper( mappertype, imstor, ftm, iftm, ntaylorterms) );
-	}
-      else // This field is facetted. Make a list of reference imstores, and add all to the mapper list.
-	{
-	  // First, make sure that full images have been allocated before trying to make references.....
-	  //	  if( ! imstor->checkValidity(True/*psf*/, True/*res*/,True/*wgt*/,True/*model*/,False/*image*/,False/*mask*/,True/*sumwt*/ ) ) 
-	  //	    { throw(AipsError("Internal Error : Invalid ImageStore for " + imstor->getName())); }
-
-	  // Make and connect the list.
-	  Block<CountedPtr<SIImageStore> > imstorList = createFacetImageStoreList( imstor, facets );
-	  for( uInt facet=0; facet<imstorList.nelements(); facet++)
-	    {
-	      CountedPtr<FTMachine> new_ftm, new_iftm;
-	      if(facet==0){ new_ftm = ftm;  new_iftm = iftm; }
-	      else{ new_ftm=ftm->cloneFTM();  new_iftm=iftm->cloneFTM(); }
-	      itsMappers.addMapper(createSIMapper( mappertype, imstorList[facet], new_ftm, new_iftm, ntaylorterms));
-	    }
-	}
-
+    if (nIm < 2){
+      imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+    }
+    else{
+      if(!unFacettedImStore_p.null())
+    	  throw(AipsError("A facetted Image has already been set"));
+      unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
+      facetsStore_p=facets;
     }
 
-  /////////////////////////
-  /*
-  Bool SynthesisImager::toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype)
-  {
-    if( (ftm->name() == "GridFT" || ftm->name() == "WProjectFT")&&(mappertype!="imagemosaic") )  
-      { return False; }
-    else
-      { return True; }
+     for (Int facet=0; facet< nIm; ++facet){
+       if(nIm > 1)
+    	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
+       CountedPtr<FTMachine> ftm, iftm;
+
+       createFTMachine(ftm, iftm, ftmachine, facets);
+       Int id=itsMappers.nMappers();
+       // Fill in miscellaneous information needed by FITS
+         ROMSColumns msc(*mss_p[0]);
+         Record info;
+         String objectName=msc.field().name()(msc.fieldId()(0));
+         ImageInfo iinfo=(imstor->model())->imageInfo();
+         iinfo.setObjectName(objectName);
+         (imstor->model())->setImageInfo(iinfo);
+         String telescop=msc.observation().telescopeName()(0);
+         info.define("OBJECT", objectName);
+         info.define("TELESCOP", telescop);
+         info.define("INSTRUME", telescop);
+         info.define("distance", distance.get("m").getValue());
+         (imstor->model())->setMiscInfo(info);
+         //((imstor->model())->table()).tableInfo().setSubType("GENERIC");
+         (imstor->model())->setUnits(Unit("Jy/pixel"));
+         (imstor->image())->setUnits(Unit("Jy/beam"));
+       CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+       itsMappers.addMapper(thismap);
+     }
+
+   
+    
   }
-  */
+
+  /////////////////////////
+  ////////////////////////
+  CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx,
+		  const Quantity& celly, const Int nx, const Int ny,
+		  const String& stokes, const Projection& projection, const Int nchan,
+		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame)
+  {
+    LogIO os( LogOrigin("SynthesisImager","build",WHERE) );
+
+    // At this stage one ms at least should have been assigned
+    ROMSColumns msc(*mss_p[0]);
+    phaseCenter_p=phasecenter;
+    MVDirection mvPhaseCenter(phasecenter.getAngle());
+    // Normalize correctly
+    MVAngle ra=mvPhaseCenter.get()(0);
+    ra(0.0);
+    itsCurrentShape=IPosition(4, nx, ny, 0, nchan);
+
+    MVAngle dec=mvPhaseCenter.get()(1);
+    Vector<Double> refCoord(2);
+    refCoord(0)=ra.get().getValue();    
+    refCoord(1)=dec;
+    Vector<Double> refPixel(2); 
+    refPixel(0) = Double(nx / 2);
+    refPixel(1) = Double(ny/ 2);
+    //defining observatory...needed for position on earth
+    String telescop = msc.observation().telescopeName()(0);
+    MEpoch obsEpoch = msc.timeMeas()(0);
+    MPosition obsPosition;
+    Bool freqFrameValid=False;
+    if(!(MeasTable::Observatory(obsPosition, telescop))){
+      os << LogIO::WARN << "Did not get the position of " << telescop 
+	 << " from data repository" << LogIO::POST;
+      os << LogIO::WARN 
+	 << "Please contact CASA to add it to the repository."
+	 << LogIO::POST;
+      os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+
+    }
+    else{
+    	mLocation_p=obsPosition;
+    	freqFrameValid = True;
+    }
+     //Make sure frame conversion is switched off for REST frame data.
+    freqFrameValid=freqFrameValid && (freqFrame != MFrequency::REST);
+    Vector<Double> deltas(2);
+    deltas(0)=-cellx.get("rad").getValue();
+    deltas(1)=celly.get("rad").getValue();
+    Matrix<Double> xform(2,2);
+    xform=0.0;xform.diagonal()=1.0;
+    DirectionCoordinate
+      myRaDec(MDirection::Types(phasecenter.getRefPtr()->getType()),
+	      projection,
+	      refCoord(0), refCoord(1),
+	      deltas(0), deltas(1),
+	      xform,
+	      refPixel(0), refPixel(1));
+
+    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, freqStart, freqStep, 0, restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
+    for (uInt k=1 ; k < restFreq.nelements(); ++k)
+      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+    
+    Vector<Int> whichStokes = decideNPolPlanes(stokes);
+    if(whichStokes.nelements()==0)
+      throw(AipsError("Stokes selection of " +stokes+ " is invalid"));
+    Int nstokes=whichStokes.nelements();
+    itsCurrentShape(2)=nstokes;
+    StokesCoordinate myStokes(whichStokes);
+    //Set Observatory info
+    ObsInfo myobsinfo;
+    myobsinfo.setTelescope(telescop);
+    myobsinfo.setPointingCenter(mvPhaseCenter);
+    myobsinfo.setObsDate(obsEpoch);
+    myobsinfo.setObserver(msc.observation().observer()(0));
+
+    CoordinateSystem csys;
+    csys.addCoordinate(myRaDec);
+    csys.addCoordinate(myStokes);
+    csys.addCoordinate(mySpectral);
+    csys.setObsInfo(myobsinfo);
+    itsCurrentCoordSys=csys;
+    if( (itsMappers.nMappers()==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
+    {
+    	itsMaxShape=itsCurrentShape;
+    	itsMaxCoordSys=itsCurrentCoordSys;
+    }
+
+    return csys;
+  }
+
+  //////////////////////
+  ////////////////////Function to get the pol string to stokes vector
+  Vector<Int> SynthesisImager::decideNPolPlanes(const String& stokes){
+    Vector<Int> whichStokes(0);
+    if(stokes=="I" || stokes=="Q" || stokes=="U" || stokes=="V" || 
+       stokes=="RR" ||stokes=="LL" || 
+       stokes=="XX" || stokes=="YY" ) {
+      whichStokes.resize(1);
+      whichStokes(0)=Stokes::type(stokes);
+    }
+    else if(stokes=="IV" || stokes=="IQ" || 
+              stokes=="RRLL" || stokes=="XXYY" ||
+	    stokes=="QU" || stokes=="UV"){
+      whichStokes.resize(2);
+      
+      if(stokes=="IV"){ whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::V;}
+      else if(stokes=="IQ"){whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q;}
+      else if(stokes=="RRLL"){whichStokes[0]=Stokes::RR; whichStokes[1]=Stokes::LL;}
+      else if(stokes=="XXYY"){whichStokes[0]=Stokes::XX; whichStokes[1]=Stokes::YY; }
+      else if(stokes=="QU"){whichStokes[0]=Stokes::Q; whichStokes[1]=Stokes::U; }
+      else if(stokes=="UV"){ whichStokes[0]=Stokes::U; whichStokes[1]=Stokes::V; }
+	
+    }
+  
+    else if(stokes=="IQU" || stokes=="IUV") {
+      whichStokes.resize(3);
+      if(stokes=="IUV")
+	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::U; whichStokes[2]=Stokes::V;}
+      else
+	{whichStokes[0]=Stokes::I; whichStokes[1]=Stokes::Q; whichStokes[2]=Stokes::U;}
+    }
+    else if(stokes=="IQUV"){
+      whichStokes.resize(4);
+      whichStokes(0)=Stokes::I; whichStokes(1)=Stokes::Q;
+      whichStokes(2)=Stokes::U; whichStokes(3)=Stokes::V;
+    }
+      
+    return whichStokes;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
   // Make the FT-Machine and related objects (cfcache, etc.)
-  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, 
-					CountedPtr<FTMachine>& theIFT, 
-					const String& ftname,
-					const uInt nTaylorTerms,
-					const String mType,
-					const Int facets,            //=1
-					//------------------------------
-					const Int wprojplane,        //=1,
-					const Float padding,         //=1.0,
-					const Bool useAutocorr,      //=False,
-					const Bool useDoublePrec,    //=True,
-					const String gridFunction,   //=String("SF"),
-					//------------------------------
-					const Bool aTermOn,          //= True,
-					const Bool psTermOn,         //= True,
-					const Bool mTermOn,          //= False,
-					const Bool wbAWP,            //= True,
-					const String cfCache,        //= "",
-					const Bool doPointing,       //= False,
-					const Bool doPBCorr,         //= True,
-					const Bool conjBeams,        //= True,
-					const Float computePAStep,         //=360.0
-					const Float rotatePAStep,          //=5.0
-					const String interpolation,  //="linear"
-					const Bool freqFrameValid, //=True
-					const Int cache,             //=1000000000,
-					const Int tile               //=16
-					)
-
+  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
+		  const Int facets)
   {
-    LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
 
-    if(ftname=="gridft"){
+
+
+	Int cache=1000000000;
+	Int tile=16;
+    LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
+    ////////////these has to be defined by setupImaging it seems and passed here
+
+    Int wprojplane=ftmParams_p.asInt("wprojplanes");
+    Float padding=ftmParams_p.asFloat("padding");
+    Bool useAutocorr=ftmParams_p.asBool("useautocorr");
+    Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
+    String gridFunction=ftmParams_p.asString("gridfunc");
+           //////////////////////////////////////////////
+    if(ftname=="GridFT"){
       if(facets >1){
     	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
     	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
@@ -1183,7 +916,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, padding, useAutocorr, useDoublePrec);
       }
     }
-    else if(ftname== "wprojectft"){
+    else if(ftname== "WProjectFT"){
       theFT=new WProjectFT(wprojplane,  mLocation_p,
 			   cache/2, tile, useAutocorr, padding, useDoublePrec);
       theIFT=new WProjectFT(wprojplane,  mLocation_p,
@@ -1191,204 +924,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
+      
     }
-    else if ((ftname == "awprojectft") || (ftname== "mawprojectft") || (ftname == "protoft")) {
-      createAWPFTMachine(theFT, theIFT, ftname, facets, wprojplane, 
-			 padding, useAutocorr, useDoublePrec, gridFunction,
-			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, 
-			 doPointing, doPBCorr, conjBeams, computePAStep,
-			 rotatePAStep, cache,tile);
-    }
-    else
-      {
-	throw( AipsError( "Invalid FTMachine name : " + ftname ) );
-      }
     /* else if(ftname== "MosaicFT"){
 
        }*/
     
-
-    ///////// Now, clone and pack the chosen FT into a MultiTermFT if needed.
-    if( mType=="multiterm" )
-      {
-	AlwaysAssert( nTaylorTerms>=1 , AipsError );
-
-	CountedPtr<FTMachine> theMTFT = new MultiTermFTNew( theFT , nTaylorTerms, True/*forward*/ );
-	CountedPtr<FTMachine> theMTIFT = new MultiTermFTNew( theIFT , nTaylorTerms, False/*forward*/ );
-
-	theFT = theMTFT;
-	theIFT = theMTIFT;
-      }
-
-    ////// Now, set the SkyJones if needed, and if not internally generated.
-    if( mType=="imagemosaic" && 
-	(ftname != "awprojectft" && ftname != "mawprojectft" && ftname != "proroft") )
-      {
-	CountedPtr<SkyJones> vp = NULL;
-	ROMSColumns msc(*mss_p[0]);
-	Quantity parang(0.0,"deg");
-	Quantity skyposthreshold(0.0,"deg");
-	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
-
-	Vector<CountedPtr<SkyJones> > skyJonesList(1);
-	skyJonesList(0) = vp;
-	theFT->setSkyJones(  skyJonesList );
-	theIFT->setSkyJones(  skyJonesList );
-
-      }
-
-    //// For mode=cubedata, set the freq frame to invalid..
-    // get this info from buildCoordSystem
-    Vector<Int> tspws(0);
-    //theFT->setSpw( tspws, False );
-    //theIFT->setSpw( tspws, False );
-    theFT->setSpw( tspws, freqFrameValid );
-    theIFT->setSpw( tspws, freqFrameValid );
-
-    //// Set interpolation mode
-    theFT->setFreqInterpolation( interpolation );
-    theIFT->setFreqInterpolation( interpolation );
-
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  void SynthesisImager::createAWPFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, 
-					   const String& ftmName,
-					   const Int,// facets,            //=1
-					   //------------------------------
-					   const Int wprojPlane,        //=1,
-					   const Float,// padding,         //=1.0,
-					   const Bool,// useAutocorr,      //=False,
-					   const Bool useDoublePrec,    //=True,
-					   const String,// gridFunction,   //=String("SF"),
-					   //------------------------------
-					   const Bool aTermOn,          //= True,
-					   const Bool psTermOn,         //= True,
-					   const Bool mTermOn,          //= False,
-					   const Bool wbAWP,            //= True,
-					   const String cfCache,        //= "",
-					   const Bool doPointing,       //= False,
-					   const Bool doPBCorr,         //= True,
-					   const Bool conjBeams,        //= True,
-					   const Float computePAStep,   //=360.0
-					   const Float rotatePAStep,    //=5.0
-					   const Int cache,             //=1000000000,
-					   const Int tile               //=16
-					)
-
-  {
-    LogIO os( LogOrigin("SynthesisImager","createAWPFTMachine",WHERE));
-
-    if (wprojPlane<=1)
-      {
-	os << LogIO::NORMAL
-	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-    if((wprojPlane>1)&&(wprojPlane<64)) 
-      {
-	os << LogIO::WARN
-	   << "No. of w-planes set too low for W projection - recommend at least 128"
-	   << LogIO::POST;
-	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
-      }
-
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
-    CountedPtr<PSTerm> psTerm = new PSTerm();
-    CountedPtr<WTerm> wTerm = new WTerm();
-    
-    //
-    // Selectively switch off CFTerms.
-    //
-    if (aTermOn == False) {apertureFunction->setOpCode(CFTerms::NOOP);}
-    if (psTermOn == False) psTerm->setOpCode(CFTerms::NOOP);
-
-    //
-    // Construct the CF object with appropriate CFTerms.
-    //
-    CountedPtr<ConvolutionFunction> awConvFunc;
-    //    awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm, !wbAWP);
-    if ((ftmName=="mawprojectft") || (mTermOn))
-      awConvFunc = new AWConvFuncEPJones(apertureFunction,psTerm,wTerm,wbAWP);
-    else
-      awConvFunc = new AWConvFunc(apertureFunction,psTerm,wTerm,wbAWP);
-
-    //
-    // Construct the appropriate re-sampler.
-    //
-    CountedPtr<VisibilityResamplerBase> visResampler;
-    //    if (ftmName=="protoft") visResampler = new ProtoVR();
-    //elsef
-      visResampler = new AWVisResampler();
-    //    CountedPtr<VisibilityResamplerBase> visResampler = new VisibilityResampler();
-
-    //
-    // Construct and initialize the CF cache object.
-    //
-    CountedPtr<CFCache> cfCacheObj = new CFCache();
-    cfCacheObj->setCacheDir(cfCache.data());
-    cfCacheObj->initCache2();
-
-    //
-    // Finally construct the FTMachine with the CFCache, ConvFunc and
-    // Re-sampler objects.  
-    //
-    Float pbLimit_l=1e-3;
-    theFT = new AWProjectWBFTNew(wprojPlane, cache/2, 
-			      cfCacheObj, awConvFunc, 
-			      visResampler,
-			      /*True */doPointing, doPBCorr, 
-			      tile, computePAStep, pbLimit_l, True,conjBeams,
-			      useDoublePrec);
-
-    Quantity rotateOTF(rotatePAStep,"deg");
-    static_cast<AWProjectWBFTNew &>(*theFT).setObservatoryLocation(mLocation_p);
-    static_cast<AWProjectWBFTNew &>(*theFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
-
-    // theIFT = new AWProjectWBFT(wprojPlane, cache/2, 
-    // 			       cfCacheObj, awConvFunc, 
-    // 			       visResampler,
-    // 			       /*True */doPointing, doPBCorr, 
-    // 			       tile, computePAStep, pbLimit_l, True,conjBeams,
-    // 			       useDoublePrec);
-
-    // static_cast<AWProjectWBFT &>(*theIFT).setObservatoryLocation(mLocation_p);
-    // static_cast<AWProjectWBFT &>(*theIFT).setPAIncrement(Quantity(computePAStep,"deg"),rotateOTF);
-
-    theIFT = new AWProjectWBFTNew(static_cast<AWProjectWBFTNew &>(*theFT));
-
-    //// Send in Freq info.
-    os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
-    theFT->setSpwFreqSelection( mssFreqSel_p );
-    theIFT->setSpwFreqSelection( mssFreqSel_p );
-    //    vi_p->getFreqInSpwRange(
-
-  }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  ATerm* SynthesisImager::createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn)
-  {
-    LogIO os(LogOrigin("SynthesisImager", "createTelescopeATerm",WHERE));
-    
-    if (!isATermOn) return new NoOpATerm();
-    
-    ROMSObservationColumns msoc(ms.observation());
-    String ObsName=msoc.telescopeName()(0);
-    if ((ObsName == "EVLA") || (ObsName == "VLA"))
-      return new EVLAAperture();
-    else
-      {
-	os << "Telescope name ('"+
-	  ObsName+"') in the MS not recognized to create the telescope specific ATerm" 
-	   << LogIO::WARN;
-      }
-    
-    return NULL;
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1428,7 +969,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=0; k < msblock.nelements(); ++k){
     	blockGroup[k].resize(blockSpw_p[k].nelements());
     	blockGroup[k].set(1);
-	//    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
+    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
     }
 
     rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p,
@@ -1442,39 +983,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  void SynthesisImager::runMajorCycle(const Bool dopsf, 
-				      const Bool useViVb2,
-				      const Bool savemodel)
+  void SynthesisImager::runMajorCycle(const Bool dopsf, const Bool useViVb2)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
-
-    //    cout << "Savemodel : " << savemodel << "   readonly : " << readOnly_p << "   usescratch : " << useScratch_p << endl;
-
-    Bool savemodelcolumn = savemodel && !readOnly_p && useScratch_p;
-    Bool savevirtualmodel = savemodel && !readOnly_p && !useScratch_p;
-
-    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
-    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
-
-    itsMappers.checkOverlappingModels("blank");
 
     if(useViVb2){
     	vi_p->originChunks();
     	vi_p->origin();
     	vi::VisBuffer2* vb=vi_p->getVisBuffer();
     	if(!dopsf) itsMappers.initializeDegrid(*vb);
-    	itsMappers.initializeGrid(*vb,dopsf);
+    	itsMappers.initializeGrid(*vb);
     	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
     	{
+
     		for (vi_p->origin(); vi_p->more();vi_p->next())
     		{
     			if(!dopsf){
     				vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-    				itsMappers.degrid(*vb, savevirtualmodel );
-    				if( savemodelcolumn && vi_p->isWritable())
+    				itsMappers.degrid(*vb, useScratch_p);
+    				if(vi_p->isWritable() && useScratch_p)
     					vi_p->writeVisModel(vb->visCubeModel());
     			}
-    			itsMappers.grid(*vb, dopsf, datacol_p);
+    			itsMappers.grid(*vb, dopsf);
     		}
     	}
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
@@ -1485,14 +1015,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
     	rvi_p->origin();
-
-	ProgressMeter pm(1.0, Double(vb->numberCoh()), 
-			 dopsf?"Gridding Weights and PSF":"Major Cycle", "","","",True);
-	Int cohDone=0;
-
-
     	if(!dopsf)itsMappers.initializeDegrid(*vb);
-    	itsMappers.initializeGrid(*vb,dopsf);
+    	itsMappers.initializeGrid(*vb);
     	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
     	{
 
@@ -1501,25 +1025,66 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //		  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
     			if(!dopsf) {
     				vb->setModelVisCube(Complex(0.0, 0.0));
-    				itsMappers.degrid(*vb, savevirtualmodel );
-    				if(savemodelcolumn && writeAccess_p )
+    				itsMappers.degrid(*vb, useScratch_p);
+    				if(writeAccess_p && useScratch_p)
     					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
     			}
-    			itsMappers.grid(*vb, dopsf, datacol_p);
-			cohDone += vb->nRow();
-			pm.update(Double(cohDone));
+    			itsMappers.grid(*vb, dopsf);
     		}
     	}
-    	//cerr << "IN SYNTHE_IMA" << endl;
-    	//VisModelData::listModel(rvi_p->getMeasurementSet());
+    	cerr << "IN SYNTHE_IMA" << endl;
+    	VisModelData::listModel(rvi_p->getMeasurementSet());
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
 
     }
+/*
+    Int nmappers = itsMappers.nMappers();
+    
+    os << "Run major cycle for " << nmappers << " image(s) : " 
+       << itsMappers.getImageNames() << LogIO::POST;
 
-    itsMappers.checkOverlappingModels("restore");
+    ///////// (1) Initialize all the FTMs.
+    for(Int mp=0;mp<nmappers;mp++)
+      {
+	// vb.selectChannel(....)
+	itsMappers.initializeDegrid(mp);
+	itsMappers.initializeGrid(mp);
+      }
 
-  }// end runMajorCycle
+    ////////// (2) Iterate through visbuffers, degrid, subtract, grid
+
+    //for ( vi.originChunks(); vi.moreChunks(); vi.nextChunk() )
+      {
+	//for( vi.origin(); vi.more(); vi++ )
+	  {
+//	    for(Int mp=0;mp<nmappers;mp++)
+//	      {
+		// itsMappers.degrid(mp /* ,vb );
+		// resultvb.modelVisCube += vb.modelVisCube()
+//	      }
+	    
+	    // resultvb.visCube -= resultvb.modelvisCube()
+	    
+	    // save model either in the column, or in the record. 
+	    // Access the FTM record as    rec=mappers[mp]->getFTMRecord();
+	    
+//	    for(Int mp=0;mp<nmappers;mp++)
+//	      {
+//		itsMappers.grid(mp /* ,vb );
+//	      }
+//	  }// end of for vb.
+ //     }// end of vi.chunk iterations
+      
+
+      /////////// (3) Finalize Mappers.
+//      for(Int mp=0;mp<nmappers;mp++)
+//	{
+//	  itsMappers.finalizeDegrid(mp);
+//	  itsMappers.finalizeGrid(mp);
+//	}
+*/
+  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

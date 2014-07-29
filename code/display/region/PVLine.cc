@@ -879,10 +879,7 @@ namespace casa {
 			} catch(...) {
 				return result;
 			}
-			pvgen.setEndpoints(
-                make_pair(startx, starty),
-                make_pair(endx, endy)
-            );
+			pvgen.setEndpoints( startx, starty, endx, endy );
 			pvgen.setWidth(width);
 			dock_->panel( )->status( "generating temporary image: " + output_file );
 			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
@@ -890,11 +887,8 @@ namespace casa {
 			                          startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
 			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 			try {
-				result = pvgen.generate( );
-                if (! need_result) {
-                    result.reset();
-                }
-            } catch( AipsError err ) {
+				result = pvgen.generate( need_result );
+			} catch( AipsError err ) {
 				dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
 				// fallback to P/V failure, create dummy image...
 				// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );

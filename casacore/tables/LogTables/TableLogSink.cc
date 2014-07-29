@@ -35,7 +35,7 @@
 #include <tables/Tables/ScaColDesc.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/Constants.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -198,7 +198,7 @@ Bool TableLogSink::postLocally (const LogMessage& message)
     if (filter().pass(message)) {
 	String tmp;
 	message.origin().objectID().toString(tmp);
-        writeLocally (message.messageTime().modifiedJulianDay()*C::day,
+        writeLocally (message.messageTime().modifiedJulianDay()*24.0*3600.0,
                       message.message(),
                       LogMessage::toString(message.priority()),
                       message.origin().location(),

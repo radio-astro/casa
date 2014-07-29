@@ -7,7 +7,6 @@ foreach (file ${datafiles})
 endforeach (file)
 
 set (tests
-tImageRegion
 tRegionHandler
 tWCBox
 tWCEllipsoid

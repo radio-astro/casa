@@ -35,7 +35,7 @@
 
 namespace casa {
 
-template <class T>  class ImageCropper : public ImageTask<T> {
+template <class T>  class ImageCropper : public ImageTask {
 	// <summary>
 	// Top level interface for cropping masked edges of an image
 	// </summary>
@@ -72,7 +72,7 @@ public:
 	// and <src>box</src>="", <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// of the input image.
 	ImageCropper(
-		const std::tr1::shared_ptr<const ImageInterface<T> > image,
+		const ImageTask::shCImFloat image,
 		const Record *const &regionRec, const String& box, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite

@@ -4,8 +4,6 @@
 #include <xercesc/framework/LocalFileInputSource.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/framework/Wrapper4InputSource.hpp>
-#define DEFINE_CASA_XERCES_STATICS
-#include <stdcasa/xerces.h>
 #include <iostream>
 #include <fstream>
 #include <stdcasa/record.h>
@@ -21,7 +19,6 @@ namespace casac {
 
 using namespace std;
 XERCES_CPP_NAMESPACE_USE;
-using namespace casa::xerces;
 
 stdcasaXMLUtil::stdcasaXMLUtil() :
     rangeRec(0),
@@ -234,19 +231,19 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
     XMLCh tempStr[100];
     XMLString::transcode("LS", tempStr, 99);
     DOMImplementation *impl = DOMImplementationRegistry::getDOMImplementation(tempStr);
-    Parser* parser = create_parser(impl);
+    DOMBuilder* parser = ((DOMImplementationLS*)impl)->createDOMBuilder(DOMImplementationLS::MODE_SYNCHRONOUS, 0);
     // optionally you can set some features on this builder
-    if(can_set_parameter(parser,fgDOMValidate, true))
-        set_parameter(parser, fgDOMValidate, true);
-    if(can_set_parameter(parser,XMLUni::fgDOMNamespaces, true))
-        set_parameter(parser, XMLUni::fgDOMNamespaces, true);
-    if(can_set_parameter(parser,XMLUni::fgDOMDatatypeNormalization, true))
-        set_parameter(parser, XMLUni::fgDOMDatatypeNormalization, true);
+    if(parser->canSetFeature(XMLUni::fgDOMValidation, true))
+        parser->setFeature(XMLUni::fgDOMValidation, true);
+    if(parser->canSetFeature(XMLUni::fgDOMNamespaces, true))
+        parser->setFeature(XMLUni::fgDOMNamespaces, true);
+    if(parser->canSetFeature(XMLUni::fgDOMDatatypeNormalization, true))
+        parser->setFeature(XMLUni::fgDOMDatatypeNormalization, true);
 
     DOMDocument *doc = 0;
     vector<string> paramOrder;
     try {
-        doc = dom_parse(parser,xmlSource);
+        doc = parser->parse(xmlSource);
         if(doc){
             DOMElement *theMethod = doc->getDocumentElement();
             XMLCh *theTask = XMLString::transcode("task");
@@ -624,7 +621,7 @@ bool stdcasaXMLUtil::readXML(record &itsRecord,  const Wrapper4InputSource &xmlS
     catch (...) {
         cout << "Unexpected Exception \n" ;
     }
-    parser->release( );
+    delete parser;
     return rstat;
 }
 

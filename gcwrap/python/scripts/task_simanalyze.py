@@ -508,7 +508,7 @@ def simanalyze(
                         ia.open(temp_out)
                         newcsys = ia.coordsys()
                         ia.close()
-                        dir_idx = newcsys.findcoordinate("direction")['world']
+                        dir_idx = newcsys.findcoordinate("direction")[2]
                         newcsys.setreferencepixel([imsize[0]/2., imsize[1]/2.],
                                                   type="direction")
                         incr = newcsys.increment(type='direction')['numeric']
@@ -945,7 +945,7 @@ def simanalyze(
                             im.done()
                     ia.open(psfim)
                     beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'][0],beamcs.findcoordinate("stokes")['pixel'][0]],dropdeg=True)
+                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")[1][0],beamcs.findcoordinate("stokes")[1][0]],dropdeg=True)
                     nn = beam_array.shape
                     xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]

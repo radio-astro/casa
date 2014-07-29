@@ -39,7 +39,7 @@
 
 namespace casa {
 
-class ImageStatsCalculator: public ImageTask<Float> {
+class ImageStatsCalculator: public ImageTask {
     // <summary>
     // Top level class used for statistics calculations
     // </summary>
@@ -61,7 +61,7 @@ class ImageStatsCalculator: public ImageTask<Float> {
 public:
 
    	ImageStatsCalculator(
-   		const SPCIIF image,
+   		const ImageTask::shCImFloat image,
     	const Record *const &regionPtr,
     	const String& maskInp, Bool beVerboseDuringConstruction
     );
@@ -107,8 +107,8 @@ public:
     inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
 
     // moved from ImageAnalysis
-    // if messageStore != 0, log messages, stripped of time stampe and priority, will also
-    // be placed in this parameter and returned to caller for eg logging to file.
+    // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
+    // retur	ned to caller for eg logging to file.
     Record statistics(
     	 vector<String> *const &messageStore=0
     );
@@ -127,7 +127,7 @@ protected:
     	return vector<Coordinate::Type>(0);
     }
 
-    inline Bool _supportsMultipleRegions() const {return True;}
+    inline Bool _supportsMultipleRegions() {return True;}
 
 private:
     std::auto_ptr<ImageStatistics<Float> > _statistics;

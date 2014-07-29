@@ -6,6 +6,7 @@ from asap.scantable import is_scantable
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator("sdaverage for averaging and sdcal for calibration")
 def sdcalold(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, fraction, noff, width, elongated, markonly, plotpointings, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdcal_worker, locals()) as worker:
         worker.initialize()

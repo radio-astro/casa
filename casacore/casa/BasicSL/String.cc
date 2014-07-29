@@ -110,7 +110,7 @@ Int String::toInt(const String& string) {
     // Initialize in case the string is empty or non-numeric.
     instr >> var;
     if (instr.fail()) {
-      var = 0;
+      var = 0.0;
     }
     return var;
 }

@@ -44,6 +44,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
@@ -62,8 +63,6 @@
 #include <casadbus/plotserver/PlotServerProxy.h>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
-
-#include <components/ComponentModels/GaussianDeconvolver.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -164,7 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try {
       //cerr << "highBeam " << hBeam_p.getMajor() << " " << hBeam_p.getMinor() << " " << hBeam_p.getPA() << endl; 
       retval=
-      GaussianDeconvolver::deconvolve(toBeUsed, newHighBeam, hBeam_p);
+      hBeam_p.deconvolve(toBeUsed, newHighBeam);
       //cerr << "beam to be used " << toBeUsed.getMajor() << " " << toBeUsed.getMinor() << "  " << toBeUsed.getPA() << endl;
     }
     catch (const AipsError& x) {
@@ -244,7 +243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     GaussianBeam newBeam(halfpb, halfpb, Quantity(0.0, "deg"));
     GaussianBeam toBeUsed;
     try {
-        GaussianDeconvolver::deconvolve(toBeUsed, newBeam, lBeam_p);
+      lBeam_p.deconvolve(toBeUsed, newBeam);
     }
     catch (const AipsError& x) {
       throw(AipsError("Beam due to new effective diameter may be smaller than the beam of original dish image"));
@@ -320,7 +319,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       getCutXY(ux, xamp, uy, yamp, *cwImage_p);
     }
   }
-  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial, Bool normalize){
+  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
     calcCWeightImage();
     Vector<Float> xampInt, yampInt;
     if(radial){
@@ -333,15 +332,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else{
       getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
       yamp.resize();
-      yamp=(Float(1.0) - yampInt);
-      if(!normalize) 
-	yamp=yamp*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
+      yamp=(Float(1.0) - yampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
     }
 
       xamp.resize();
-      xamp=(Float(1.0) - xampInt);
-      if(!normalize)
-	xamp=xamp*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
+      xamp=(Float(1.0) - xampInt)*Float(sdScale_p*hBeam_p.getArea("arcsec2")/lBeam_p.getArea("arcsec2"));
       
 
   }
@@ -758,7 +753,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       GaussianBeam toBeUsed;
       //cerr << "beam " << beam.toVector() << endl;
       //cerr << "newBeam " << newBeam.toVector() << endl;
-      GaussianDeconvolver::deconvolve(toBeUsed, newBeam, beam);
+      beam.deconvolve(toBeUsed, newBeam);
       extraconv.resize(3);
       // use the Major difference
       extraconv(0) = toBeUsed.getMajor();

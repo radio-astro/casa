@@ -9,11 +9,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
      <shortdescription>Task to produce multi-MSs using parallelism</shortdescription>
 
 <description>
-    Partition is a task to create a multi-MS out of an MS. General selection
+	Partition is a task to create a multi-MS out of an MS. General selection
     parameters are included, and one or all of the various data columns
     (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
     CORRECTED_DATA) can be selected. It can also be used to create a normal
-    MS, split based on the given data selection parameters.
+	MS, split based on the given data selection parameters.
 
     The partition task creates a multi-MS using the parallelization framework.
     If a cluster is not present, it will create a default cluster based on the
@@ -44,15 +44,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     Inside casapy, one can use the task listpartition to list the information
     from a multi-MS.
-    
-    When partition processes an MMS in parallel, each sub-MS is processed independently in an engine.
-    The log messages of the engines are not showed in the logger; they are written in
-    the local disk in files called engine-0.log, engine-1.log, etc.Depending on the way the MMS is partitioned, 
-    some sub-MSs may not contain the data selection parameters specified by the task and they will
-    issue a NULL MS selection exception. These exceptions are not cause for concern, unless
-    the master engine exits with a failure too. The NULL MS selection exceptions are not showed
-    in the controller terminal. They will only appear in the engines logs. Watch for the end of the 
-    processing to make sure there were no errors in the processing.
   
 </description>
 
@@ -71,10 +62,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>True</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw, auto)</description>
-            <value>auto</value>
+            <description>Axis to do parallelization across(scan,spw,both)</description>
+            <value>both</value>
             <allowed kind="enum" ignorecase="true">
-                <value>auto</value>
+                <value>both</value>
                 <value>scan</value>
                 <value>spw</value>
             </allowed>
@@ -83,14 +74,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>The number of SubMSs to create</description>
             <value>64</value>
         </param>
+        <param type="bool" name="parallel" subparam="true">
+            <description>Create a multi-MS in parallel using simple_cluster.</description>
+            <value>True</value>
+        </param>        
         <param type="bool" name="flagbackup" subparam="true">
             <description>Create a backup of the FLAG column in the MMS.</description>
             <value>True</value>
         </param>
-        <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
-            <description>Create a multi-MS in parallel using simple_cluster.</description>
-            <value>False</value>
-        </param>        
         <param type="int" name="ddistart" subparam="true" visibility="hidden">
             <description>Do not change this parameter. For internal use only.</description>
             <value>-1</value>
@@ -182,8 +173,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <constraints>
       <when param="createmms">
         <equals type="bool" value="True">
-          <default param="separationaxis"><value type="string">auto</value></default>
+          <default param="separationaxis"><value type="string">both</value></default>
           <default param="numsubms"><value type="int">64</value></default>
+          <default param="parallel"><value type="bool">True</value></default>
           <default param="flagbackup"><value type="bool">True</value></default>
         </equals>
         <equals type="bool" value="False"/>
@@ -212,13 +204,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         will not be created.
 
         separationaxis -- Axis to do parallelization across. 
-            default: 'auto'
-            Options: 'scan', 'spw', 'auto'
-            The 'auto' option will try to partition in both scan and spw axes.
+            default: 'both'
+            Options: 'scan', 'spw', 'both'
+            The 'both' option will try to partition in both scan and spw axes.
 
         numsubms -- The number of sub-MSs to create.
             default: 64
 				
+        parallel -- Create a multi-MS in parallel, using the simple_cluster
+                    infrastructure. It will run the tool several times in parallel,
+                    one instance for each subMS. Note that for small MSs, we
+                    recommend to set this parameter to False as the overhead of creating
+                    a cluster may be larger than the gain to run in parallel. (bool)
+            default: True
+
         flagbackup -- Make a backup of the FLAG column of the output MMS. When the
                       MMS is created, the .flagversions of the input MS are not transferred,
                       therefore it is necessary to re-create it for the new MMS. Note
@@ -315,16 +314,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 1) Create a Multi-MS of some spws, partitioned per spw. The MS contains 16 spws.
     partition('uid001.ms', outpuvis='source.mms', spw='1,3~10', separationaxis='spw')
 
-2) Create a Multi-MS but select only the first channels of all spws. Do not back up the FLAG
-column.
-    partition('uid0001.ms', outputvis='fechans.mms', spw='*:1~10', flagbackup=False)
+2) Create a Multi-MS but select only the first channels of all spws. Do not back the FLAG
+column and run in sequential.
+    partition('uid0001.ms', outputvis='fechans.mms', spw='*:1~10', flagbackup=False,
+               parallel=False)
 
 3) Create a normal MS, split the calibrater field.
     partition('uid0001.ms', outputvis='mycal.ms', field='TITAN', datacolumn='corrected',
               createmms=False)
 
 4) Create a Multi-MS using both separation axes.
-    partition('uid0001.ms', outputvis='myuid.mms', createmms=True, separationaxis='auto')
+    partition('uid0001.ms', outputvis='myuid.mms', createmms=True, separationaxis='both')
 
 
 </example> 

@@ -45,7 +45,7 @@ GBTMultiACSTable::GBTMultiACSTable(const Vector<String> &fileNames,
 				   Int vvsize, Bool useDCBias,
 				   Double dcbias, Int minbiasfactor,
 				   Bool fixlags, String fixlagslog,
-				   Double /*sigmaFactor*/, Int spikeStart)
+				   Double sigmaFactor, Int spikeStart)
 
     : itsValid(False), itsVVCorr(vanVleckCorr), itsSmoothing(smoothing),
       itsVVSize(vvsize), itsMinbiasfactor(minbiasfactor), 

@@ -56,7 +56,7 @@ namespace ReceiverSidebandMod
   //! ReceiverSideband.
   //!  [ASDM.SpectralWindow] The type of receiver output a spectral window is fed with
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum ReceiverSideband

@@ -25,8 +25,8 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -331,10 +331,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (doWideBandPBCorrection_p)
 	  for(uInt taylor=0;taylor<nterms_p;taylor++)
 	    {
-	      // Divide by PB  ////// PBWeight
-	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
-	      // Divide by sqrt(PB)  ////// PBSQWeight
-	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
+	      // Divide by PB
+	      normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)1);// normtype 1 divides by weightImageVec and ignores wegithsVec
+	      // Divide by sqrt(PB)
+	      //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)4);
 	    }
       }
     else 
@@ -385,10 +385,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for(uInt taylor=0;taylor<nterms_p;taylor++)
 	  {
-	    //Mulitply by PB  ///// PBWeight
-	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
-	    //Mulitply by sqrt(PB) //// PBSQWeight
-	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
+	    //Mulitply by PB
+	    normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)3); // normtype 3 multiplies the model image with the pb
+	    //Mulitply by sqrt(PB)
+	    //normalizeImage( *(modelImageVec[taylor]) , weightsVec[0], *(weightImageVec[0]) , False, (Float)pblimit_p, (Int)5); 
 	    
 	  }
       }
@@ -674,7 +674,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------------------------------------------
   //------------------------ To / From Records ---------------------------------------------------------
   //---------------------------------------------------------------------------------------------------
-  Bool NewMultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage, const String diskimage) 
+  Bool NewMultiTermFT::toRecord(String& error, RecordInterface& outRec, Bool withImage) 
   {
     if(dbg_p) cout << "MTFT :: toRecord for " << nterms_p << endl;
     Bool retval = True;
@@ -682,11 +682,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=0;tix<nterms_p;tix++)
       {
 	Record subFTContainer;
-	String elimage="";
-	if(diskimage != ""){
-	  elimage=diskimage+String("_term_")+String::toString(tix);
-	}
-	subftms_p[tix]->toRecord(error, subFTContainer,withImage, elimage);
+	subftms_p[tix]->toRecord(error, subFTContainer,withImage);
 	outRec.defineRecord("subftm_"+String::toString(tix),subFTContainer);
       }
     

@@ -31,7 +31,7 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <components/ComponentModels/ComponentType.h>
-#include <scimath/Mathematics/GaussianBeam.h>
+#include <components/ComponentModels/GaussianBeam.h>
 
 #include <casa/namespace.h>
 
@@ -39,7 +39,7 @@
 
 namespace casa {
 
-class PeakIntensityFluxDensityConverter : public ImageTask<Float> {
+class PeakIntensityFluxDensityConverter : public ImageTask {
 	// <summary>
 	// Class for converting between peak intensity and flux density of a source
 	// of specified shape.
@@ -64,10 +64,10 @@ class PeakIntensityFluxDensityConverter : public ImageTask<Float> {
 	// </example>
 
 public:
-    typedef GaussianBeam Angular2DGaussian;
+
 	// Specify image to get beam and coordinate info from
 	PeakIntensityFluxDensityConverter(
-		const SPCIIF image
+		const ImageTask::shCImFloat image
 	);
 
 	// destructor

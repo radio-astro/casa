@@ -65,9 +65,9 @@ TwoSidedShape& TwoSidedShape::operator=(const TwoSidedShape& other) {
   return *this;
 }
 
-void TwoSidedShape::setWidth(const Quantity& majorAxis,
-			     const Quantity& minorAxis,
-			     const Quantity& positionAngle) {
+void TwoSidedShape::setWidth(const Quantum<Double>& majorAxis,
+			     const Quantum<Double>& minorAxis, 
+			     const Quantum<Double>& positionAngle) {
   itsMajUnit = majorAxis.getFullUnit();
   itsMinUnit = minorAxis.getFullUnit();
   itsPaUnit = positionAngle.getFullUnit();
@@ -541,6 +541,7 @@ Vector<Double> TwoSidedShape::toPixel (const DirectionCoordinate& dirCoord)  con
    return parameters;
 }
  
+
 Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
                                const DirectionCoordinate& dirCoord)
 //
@@ -551,12 +552,15 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
 // pars(4) = pa radians; pos +x (long) -> +y (lat)
 //
 {
+   LogIO os(LogOrigin("TwoSidedShape", "fromPixel"));
+
 // Direction first
 
    Vector<Double> pixelCen(2);
    pixelCen(0) = parameters(0);
    pixelCen(1) = parameters(1);
    ComponentShape::fromPixel (pixelCen, dirCoord);
+
 // Shape.  First put x/y p.a. into +y -> -x system
 
    Double pa0 = parameters(4) - C::pi_2; 
@@ -566,6 +570,7 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
    MDirection tipMinor = directionFromCartesian (parameters(3), pa0, dirCoord, pixelCen);
 
 // Find tip directions
+
    const MDirection& directionRef = refDirection();       
    MVDirection mvdRef = directionRef.getValue();
    MVDirection mvdMajor = tipMajor.getValue();
@@ -575,17 +580,22 @@ Bool TwoSidedShape::fromPixel (const Vector<Double>& parameters,
 
    Double tmp1 = 2 * mvdRef.separation(mvdMajor) * 3600 * 180.0 / C::pi;
    Double tmp2 = 2 * mvdRef.separation(mvdMinor) * 3600 * 180.0 / C::pi;
-
-   Quantity majorAxis(max(tmp1,tmp2), Unit("arcsec"));
-   Quantity minorAxis(min(tmp1,tmp2), Unit("arcsec"));
+//
+   Quantum<Double> majorAxis(max(tmp1,tmp2), Unit("arcsec"));
+   Quantum<Double> minorAxis(min(tmp1,tmp2), Unit("arcsec"));
    Bool flipped = tmp2 > tmp1;
-   Quantity pa;
+//
+   Quantum<Double> pa;
    if (!flipped) {
       pa = mvdRef.positionAngle(mvdMajor, Unit("deg"));
    } else {
       pa = mvdRef.positionAngle(mvdMinor, Unit("deg"));
    }
+
+// Set them      
+      
    setWidth (majorAxis, minorAxis, pa);
+//
    return flipped;
 }
 
@@ -629,15 +639,17 @@ MDirection TwoSidedShape::directionFromCartesian (Double width, Double pa,
    Double z = width / 2.0;
    Double x = -z * sin(pa);
    Double y =  z * cos(pa);
+//
    MDirection dir;
    Vector<Double> pixelTip(2);
    pixelTip(0) = pixelCen(0) + x;
    pixelTip(1) = pixelCen(1) + y;
-   ThrowIf(
-		   ! dirCoord.toWorld(dir, pixelTip),
-      "DirectionCoordinate conversion failed because "
-	 + dirCoord.errorMessage()
-   );
+   if (!dirCoord.toWorld(dir, pixelTip)) {
+      LogIO os(LogOrigin("TwoSidedShape", "directionFromCartesian"));
+      os << "DirectionCoordinate conversion failed because "
+         << dirCoord.errorMessage() << LogIO::EXCEPTION;
+   }
+//
    return dir;
 }
 

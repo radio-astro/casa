@@ -114,9 +114,21 @@ template<class T> class Block;
 
 template<class T> ostream &operator << (ostream &, const Array<T> &);
 
+ostream &operator << (ostream &, const std::map<Int, uInt> &);
+
+template<class T, class U> ostream &operator << (ostream &, const std::map<T, U> &);
+
+template<class T> ostream &operator << (ostream &, const std::set<T> &);
+template<class T> ostream &operator << (ostream &, const std::vector<T> &);
+
 // Write a formatted copy of the array to the LogIO output object. Merely calls
 // the ostream operator<< in turn.
 template<class T> LogIO &operator<<(LogIO &os, const Array<T> &a);
+
+template<class T, class U> LogIO &operator<<(LogIO &os, const std::map<T,U> &a);
+template<class T> LogIO &operator<<(LogIO &os, const std::set<T> &a);
+template<class T> LogIO &operator<<(LogIO &os, const std::vector<T> &a);
+
 
 // Read an ascii representation of an array. All types with an <src><<</src>
 // operator can be handled. The basic format of the input should be:

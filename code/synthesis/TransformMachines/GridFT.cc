@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <measures/Measures/Stokes.h>
@@ -39,10 +39,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -341,6 +341,7 @@ void GridFT::prepGridForDegrid(){
   //the size is the same as old data it is not changed.
   //if(!usePut2_p) griddedData.set(0);
   griddedData.set(Complex(0.0));
+
 
   IPosition stride(4, 1);
   IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2, (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
@@ -1296,7 +1297,7 @@ void GridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& w
 }
 
 Bool GridFT::toRecord(String& error,
-		      RecordInterface& outRec, Bool withImage, const String diskimage)
+		      RecordInterface& outRec, Bool withImage)
 {
 
   
@@ -1305,7 +1306,7 @@ Bool GridFT::toRecord(String& error,
   Bool retval = True;
 
   //save the base class variables
-  if(!FTMachine::toRecord(error, outRec, withImage, diskimage))
+  if(!FTMachine::toRecord(error, outRec, withImage))
     return False;
 
   //a call to init  will redo imagecache and gridder
@@ -1365,7 +1366,7 @@ Bool GridFT::fromRecord(String& error,
   machineName_p="GridFT";
   ///setup some of the parameters
   init();
-  /*if(!cmplxImage_p.null()){
+  if(inRec.isDefined("image")){
     //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
 
@@ -1384,7 +1385,7 @@ Bool GridFT::fromRecord(String& error,
 	prepGridForDegrid();
       }
     }
-    };*/
+  };
   return retval;
 }
 

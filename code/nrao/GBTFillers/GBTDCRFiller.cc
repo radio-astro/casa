@@ -130,7 +130,7 @@ Bool GBTDCRFiller::fill(const String &backendFile,
 			const Block<String> &rxCalInfoFiles,
 			const GBTGOFile &GOFile,
 			const String &antennaFile,
-			const GBTStateTable &/*masterState*/,
+			const GBTStateTable &masterState,
 			const GBTLO1File &LO1A,
 			const GBTLO1File &LO1B,
 			const GBTMSFillOptions &fillOptions)

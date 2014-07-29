@@ -47,10 +47,10 @@
 #include <synthesis/CalTables/CLPatchPanel.h>
 #include <synthesis/MeasurementComponents/VisCalSolver.h>
 #include <synthesis/MeasurementComponents/UVMod.h>
-#include <msvis/MSVis/VisSetUtil.h>
-#include <msvis/MSVis/VisBuffAccumulator.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisBuffer2.h>
+#include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisBuffAccumulator.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -60,7 +60,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <vector>
 using std::vector;
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 
 using namespace casa::utilj;
 
@@ -1165,7 +1165,7 @@ Calibrater::configureForCorrection ()
     // utilize async i/o.  This is in addition to the global setting which
     // must also be enabled to use async i/o (see VisibilityIterator.{cc,h}).
 
-    Bool isEnabled=False; // Initializing to False to get rid of Warning.  Jim, please check if this is what you intended. It was earlier " Bool isEnabled; ". 
+    Bool isEnabled;
     //UNUSED: Bool foundSetting = AipsrcValue<Bool>::find (isEnabled, "Calibrater.asyncio", False);
 
     // isEnabled = ! foundSetting || isEnabled; // let global flag call shots if setting not present
@@ -1313,9 +1313,56 @@ Bool Calibrater::corrupt() {
 }
 
 
+Bool Calibrater::changeWeightConvention()
+{
+
+	logSink() << LogOrigin("Calibrater", "changeWeightConvention") << LogIO::NORMAL;
+	Bool retval = False;
+
+	try {
+
+		if (!ok()) throw(AipsError("Calibrater not prepared for changeWeightConvention!"));
+
+		Block<Int> columns;
+		columns.resize(5);
+		columns[0] = MS::ARRAY_ID;
+		columns[1] = MS::SCAN_NUMBER;
+		columns[2] = MS::FIELD_ID;
+		columns[3] = MS::DATA_DESC_ID;
+		columns[4] = MS::TIME;
+
+		vi::SortColumns sc(columns);
+		vi::VisibilityIterator2 vi2(*ms_p, sc, True);
+		vi::VisBuffer2 *vb = vi2.getVisBuffer();
+
+		for (vi2.originChunks(); vi2.moreChunks(); vi2.nextChunk())
+		{
+			for (vi2.origin(); vi2.more(); vi2.next())
+			{
+				Int nChan = vb->nChannels();
+				vb->setWeight(vb->weight() / nChan);
+				vb->writeChangesBack();
+			}
+		}
+
+		retval = True;
+	}
+	catch (AipsError x)
+	{
+		logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
+		logSink() << "Resetting all calibration application settings." << LogIO::POST;
+
+		unsetapply();
+
+		throw(AipsError("Error in Calibrater::changeWeightConvention."));
+	}
+
+	return retval;
+}
+
 Bool Calibrater::initWeights() {
 
-  logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","changeWeightConvention") << LogIO::NORMAL;
   Bool retval = true;
 
   try {
@@ -1836,16 +1883,11 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const String& tranFields,
 			   const Bool& append,
-                           const Float& inGainThres,
-                           const String& antSel,
-                           const String& timerangeSel,
-                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   Vector<Int>& tranidx,
 			   const String& oListFile,
                            const Bool& incremental,
-                           const Int& fitorder,
-                           const Bool& display) {
+                           const Int& fitorder) {
 
   // TBD:  Permit more flexible matching on specified field names
   //  (Currently, exact matches are required.)
@@ -1864,8 +1906,8 @@ void Calibrater::fluxscale(const String& infile,
     tranidx=getFieldIdx(tranFields);
 
   // Call Vector<Int> version:
-  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,inGainThres,antSel,timerangeSel,
-      scanSel,oFluxScaleFactor,oListFile,incremental,fitorder,display);
+  fluxscale(infile,outfile,refidx,refSpwMap,tranidx,append,oFluxScaleFactor,
+    oListFile,incremental,fitorder);
 
 }
 
@@ -1875,15 +1917,10 @@ void Calibrater::fluxscale(const String& infile,
 			   const Vector<Int>& refSpwMap, 
 			   const Vector<Int>& tranField,
 			   const Bool& append,
-                           const Float& inGainThres,
-                           const String& antSel,
-                           const String& timerangeSel,
-                           const String& scanSel,
 			   SolvableVisCal::fluxScaleStruct& oFluxScaleFactor,
 			   const String& oListFile,
                            const Bool& incremental,
-                           const Int& fitorder,
-                           const Bool& display) {
+                           const Int& fitorder) {
 
   //  throw(AipsError("Method 'fluxscale' is temporarily disabled."));
 
@@ -1951,8 +1988,8 @@ void Calibrater::fluxscale(const String& infile,
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
       //fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
-      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,inGainThres,antSel,
-        timerangeSel,scanSel,oFluxScaleFactor, oListFile,incremental,fitorder,display);
+      fsvj_->fluxscale(outfile,refField,tranField,refSpwMap,fldnames,oFluxScaleFactor,
+        oListFile,incremental,fitorder);
 //        oListFile);
      
       // If no outfile specified, use infile (overwrite!)
@@ -2233,8 +2270,6 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("TOPAC",*vs_p);
     else if (utype.contains("GC") || utype.contains("EFF"))
       cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
-    else if (utype.contains("ZTEC"))
-      cal_ = createSolvableVisCal("ZTEC",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 

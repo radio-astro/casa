@@ -116,7 +116,7 @@ public:
   
   // Save and restore the GridFT to and from a record
   virtual Bool toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage=False, const String diskimage="");
+			Bool withImage=False);
   virtual Bool fromRecord(String& error, const RecordInterface& inRec);
 
   virtual void setScale(const Vector<Double>& freq, const Vector<Double>& scale);

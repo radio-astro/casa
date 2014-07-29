@@ -27,7 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/CalTableDesc2.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/SetupNewTab.h>

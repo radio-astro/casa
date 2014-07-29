@@ -58,7 +58,6 @@ namespace casa {
 		void eraseLines();
 		void saveIdentifiedLines();
 		void findRedshift( double center, double peak );
-		void redshiftChanged();
 
 	private:
 		void addLineToPixelCanvas( float center, float peak,

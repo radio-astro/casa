@@ -31,6 +31,7 @@ ChannelRangeWidget::ChannelRangeWidget(QWidget *parent)
     : QWidget(parent){
 	ui.setupUi(this);
 	setDefaultBackground();
+
 	ui.minSpinBox->setMinimum( 0 );
 	ui.minSpinBox->setMaximum( 0 );
 	ui.maxSpinBox->setMinimum( 0 );

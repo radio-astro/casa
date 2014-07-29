@@ -8,6 +8,7 @@ import asap as sd
 import sdutil
 
 @sdutil.sdtask_decorator
+@sdutil.SDDeprecationDecorator()
 def sdimagingold(infiles, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, minweight, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()

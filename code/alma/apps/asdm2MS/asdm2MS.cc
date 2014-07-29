@@ -3038,8 +3038,14 @@ void fillMain(int		rowNum,
       }
     }
   }
+
+  // The first question to consider is "do we have corrected data for this subscan" ???
+  Tag configDescriptionId = r_p -> getConfigDescriptionId();
+  ConfigDescriptionTable & cfgDescT = r_p -> getTable() . getContainer() . getConfigDescription();
+  ConfigDescriptionRow * cfgDescR_p = cfgDescT.getRowByKey(configDescriptionId);
+  
 	    
-  // Have we asked to write an MS with corrected data + radiometric data ?
+  // Do we have to fill an MS with corrected data + radiometric data ( again considered as uncorrected data) ?
   if (msFillers.find(AP_CORRECTED) != msFillers.end() ) {
 
     // Are we with radiometric data ? Then we assume that the data are labelled AP_UNCORRECTED.
@@ -3067,67 +3073,61 @@ void fillMain(int		rowNum,
       }
     }
     
-    else {  // We assume that we are in front of CORRELATOR data, but do we have uncorrected data on that specific subscan ?
-      Tag configDescriptionId = r_p -> getConfigDescriptionId();
-      ConfigDescriptionTable & cfgDescT = r_p -> getTable() . getContainer() . getConfigDescription();
-      ConfigDescriptionRow * cfgDescR_p = cfgDescT.getRowByKey(configDescriptionId);
-      const vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >& apc_v = cfgDescR_p->getAtmPhaseCorrection();
-      bool subscanHasCorrectedData = std::find(apc_v.begin(), apc_v.end(), AtmPhaseCorrectionMod::AP_CORRECTED)!=apc_v.end();
-      if (subscanHasCorrectedData) {
-	// Then we know that we have  AP_CORRECTED data.
-	for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
-	  if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
-	    /*
-	    ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
-	    ** corrected data.
-	    */
-	    correctedTime.push_back(vmsData_p->v_time.at(iData));
-	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	    correctedFilteredDD.push_back(filteredDD.at(iData));
-	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	    correctedUvw.push_back(vv_uvw.at(iData)(0));
-	    correctedUvw.push_back(vv_uvw.at(iData)(1));
-	    correctedUvw.push_back(vv_uvw.at(iData)(2));
-	    correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
-	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
-	  }
-	  else {
-	    /*
-	    ** And now finally the correlation corrected data.
-	    */
-	    correctedTime.push_back(vmsData_p->v_time.at(iData));
-	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	    correctedFilteredDD.push_back(filteredDD.at(iData));
-	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	    correctedUvw.push_back(vv_uvw.at(iData)(0));
-	    correctedUvw.push_back(vv_uvw.at(iData)(1));
-	    correctedUvw.push_back(vv_uvw.at(iData)(2));
-	    iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
-	    float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					vmsData_p->vv_dataShape.at(iData).at(1),
-					iter->second);
-	    correctedData.push_back(theData);
-	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));
-	  }
+    else {
+
+      // we are in front of non radiometric data , but data supposedly with AP_CORRECTED data.
+      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
+	if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
+	  /*
+	  ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
+	  ** corrected data.
+	  */
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
+	}
+	else {
+	  /*
+	  ** And now finally the correlation corrected data.
+	  */
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
+	  float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+				      vmsData_p->vv_dataShape.at(iData).at(1),
+				      iter->second);
+	  correctedData.push_back(theData);
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
 	}
       }
     }
   }
 	  
   if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
-    if (! mute) { // Here we make the assumption that we have always uncorrected data. This realistic even if not totally rigorous.
+    if (! mute) {
       msFillers[AP_UNCORRECTED]->addData(complexData,
 					 (vector<double>&) vmsData_p->v_time, // this is already time midpoint
 					 (vector<int>&) vmsData_p->v_antennaId1,
@@ -6002,21 +6002,41 @@ int main(int argc, char *argv[]) {
 	    continue;
 	  }
 	  vmsDataPtr = sdmBinData.getDataCols();
-	   
-	  fillMain(i,
-		   v[i],
-		   sdmBinData,
-		   vmsDataPtr,
-		   uvwCoords,
-		   effectiveBwPerDD_m,
-		   complexData,
-		   mute);
-          
+
+          if (doparallel) {
+            // //vector< casa::Vector<casa::Double> > vv_uvw;
+            // casa::Matrix<casa::Double> mat_uvw; // put in matrix
+            // int ispw = 0;
+            // int nspw = SwIds.size();
+            // calcUVW(v[i], sdmBinData, vmsDataPtr, uvwCoords, mat_uvw);
+            // Bool deleteit;
+            // casa::Double* puvw = mat_uvw.getStorage(deleteit); 
+            
+            // @pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw)
+            // //@pragma omp parallel default(none) private(ispw) firstprivate(i, vmsDataPtr, v, complexData, mute, nspw, puvw) copyin(msFiller)
+            // {
+            // @pragma omp for ordered
+	    //   for (ispw = 0; ispw < nspw; ispw++) { 
+	    // 	//fillMain_mt(i, v[i], sdmBinData, vmsDataPtr, vv_uvw, complexData, ispw, mute);
+	    // 	fillMain_mt(v[i], vmsDataPtr, puvw, complexData, ispw, mute);
+	    //   }
+            // }
+          }//end of doparallel
+          else {
+	    fillMain(i,
+		     v[i],
+		     sdmBinData,
+		     vmsDataPtr,
+		     uvwCoords,
+		     effectiveBwPerDD_m,
+		     complexData,
+		     mute);
+          }
 	  infostream.str("");
 	  infostream << "ASDM Main row #" << mainRowIndex[i] << " produced a total of " << vmsDataPtr->v_antennaId1.size() << " MS Main rows." << endl;
 	  info(infostream.str());
 	}
-	else { // Assume we are in front of a Correlator.
+	else {
 	  // Open its associate BDF.
 
 	  sdmBinData.openMainRow(v[i]);
@@ -6030,7 +6050,7 @@ int main(int argc, char *argv[]) {
 	  
 	  // For each slice of the BDF with a size approx equal to the required size
 	  for (unsigned int j = 0; j < actualSizeInMemory.size(); j++) {
-	    numberOfIntegrations = min(actualSizeInMemory[j] / (bdfSize / N), N); // The min to prevent a possible excess when there are very few bytes in the BDF. 
+	    numberOfIntegrations = actualSizeInMemory[j] / (bdfSize / N);
 	    infostream.str("");
 	    infostream << "ASDM Main row #" << mainRowIndex[i] << " - " << numberOfReadIntegrations  << " integrations done so far - the next " << numberOfIntegrations << " integrations produced " ;
 	    vmsDataPtr = sdmBinData.getNextMSMainCols(numberOfIntegrations);

@@ -41,7 +41,7 @@
 #include <synthesis/TransformMachines/Utils.h>
 
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
@@ -442,7 +442,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Image Scaling and offset
     Vector<Double> uvScale, uvOffset;
     
-   
+    // Array for non-tiled gridding
+    Array<Complex> griddedData;
+    Array<DComplex> griddedData2;
+    
     //    DirectionCoordinate directionCoord;
     MDirection::Convert* pointingToImage;
     

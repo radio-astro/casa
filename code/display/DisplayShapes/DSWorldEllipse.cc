@@ -106,7 +106,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		static IPosition pixelAxes(2, 0, 1);
 
-		SkyComponentFactory::worldWidthsToPixel(pixelParams,
+		ImageUtilities::worldWidthsToPixel(itsLogger, pixelParams,
 		                                   itsWorldParameters,
 		                                   itsWC->coordinateSystem(),
 		                                   pixelAxes);
@@ -293,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		static IPosition pixelAxes(2, 0, 1);
 
-		SkyComponentFactory::pixelWidthsToWorld(mamipa, pixelParams,
+		ImageUtilities::pixelWidthsToWorld(itsLogger, mamipa, pixelParams,
 		                                   itsWC->coordinateSystem(),
 		                                   pixelAxes);
 

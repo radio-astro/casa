@@ -173,9 +173,6 @@ public:
   void setMask(const Lattice<Float> & mask);
 
   void setResidual( Lattice<Float> & residual);
-  virtual const Lattice<Float> & getResidual() const { return *itsResidualPtr; }
-
-  Int getNumberIterations(){ return numberIterations(); }
 
   Float getMaxResidual() { return itsMaxRes;};
   // Using a Clark clean deconvolution proceedure solve for an improved

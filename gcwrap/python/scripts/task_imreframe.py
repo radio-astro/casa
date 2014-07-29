@@ -20,10 +20,7 @@ def imreframe(imagename=None, output=None, outframe=None, epoch=None, restfreq=N
         me.doframe(c.referencevalue('m', 'direction')['measure']['direction'])
         me.doframe(c.epoch())
         reffreq=c.referencevalue('m', 'spectral')['measure']['spectral']['frequency']
-        myret = c.findcoordinate('spectral')
-        hasspec = myret['return']
-        pixax = myret['pixel']
-        worldax = myret['world']
+        hasspec,pixax,worldax=c.findcoordinate('spectral')
         if(not hasspec):
             raise Exception, 'Could not find spectral axis'
         if(outframe != ''):

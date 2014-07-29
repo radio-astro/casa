@@ -4,15 +4,7 @@ if os.environ.has_key('LD_PRELOAD'):
 import sys
 import time
 import signal
-import traceback # To pretty-print tracebacks
 
-
-# jagonzal: MPIServer initialization before wathdog fork
-from mpi4casa.MPIEnvironment import MPIEnvironment
-if MPIEnvironment.is_mpi_enabled and not MPIEnvironment.is_mpi_client:
-    import mpi4casa.mpi4casapy as mpi4casapy
-    mpi4casapy.run()
-    exit()
 
 ##
 ## tweak path... where necessary...
@@ -65,15 +57,10 @@ if os.fork( ) == 0 :
         except:
             break
         time.sleep(3)
-    # jagonzal: Don't be gentle in a MPI environment in order not to block the mpirun command
-    if MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1:
-        os.killpg(ppid, signal.SIGTERM)
-        sys.exit(1)
-    else:
-        os.killpg(ppid, signal.SIGTERM)
-        time.sleep(120)
-        os.killpg(ppid, signal.SIGKILL)
-        sys.exit(1)
+    os.killpg(ppid, signal.SIGTERM)
+    time.sleep(6)
+    os.killpg(ppid, signal.SIGKILL)
+    sys.exit(1)
 
 ##
 ## ensure that we're the process group leader
@@ -139,10 +126,7 @@ casa = { 'build': {
          'files': { 
              'logfile': os.getcwd( ) + '/casapy-'+time.strftime("%Y%m%d-%H%M%S", time.gmtime())+'.log'
          },
-         'state' : {
-             'startup': True,
-             'unwritable': set( )
-         }
+         'state' : { 'startup': True }
        }
 
 
@@ -228,7 +212,13 @@ a.reverse( )
 ##
 ## A session configuration 'casa.conf' now included in casa tree...
 ##
-dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
+# print("DEBUG: __casapath__ = %s" % (__casapath__))
+if os.path.isfile(__casapath__ + "/Resources/dbus-1/casa.conf"):
+    dbus_conf = __casapath__ + "/Resources/dbus-1/casa.conf"
+else:
+    dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
+# print("DEBUG: dbus_conf = %s" % (dbus_conf))
+		      
 __ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
@@ -1043,26 +1033,8 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
         ##make sure unfolded parameters get their default values
         myf['update_params'](func=myf['taskname'], printtext=False, ipython_globals=myf)
         ###
-        do_save_inputs = False
-        outpathdir = os.path.realpath(os.path.dirname(outfile))
-        outpathfile = outpathdir + os.path.sep + os.path.basename(outfile)
-        if outpathfile not in casa['state']['unwritable'] and outpathdir not in casa['state']['unwritable']:
-            try:
-                taskparameterfile=open(outfile,'w')
-                print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)
-                do_save_inputs = True
-            except:
-                print "********************************************************************************"
-                print "Warning: no write permission for %s, cannot save task" % outfile
-                if os.path.isfile(outfile):
-                    print "         inputs in %s..." % outpathfile
-                    casa['state']['unwritable'].add(outpathfile)
-                elif not os.path.isdir(outfile):
-                    print "         inputs in dir %s..." % outpathdir
-                    casa['state']['unwritable'].add(outpathdir)
-                else:
-                    print "         inputs because given file (%s) is a dir..." % outpathfile
-                print "********************************************************************************"
+        taskparameterfile=open(outfile,'w')
+        print >>taskparameterfile, '%-15s    = "%s"'%('taskname', taskname)
         f=zip(myf[taskname].__call__.func_code.co_varnames,myf[taskname].__call__.func_defaults)
         scriptstring='#'+str(taskname)+'('
 	if myparams == None :
@@ -1076,19 +1048,16 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
                 if ( myparams[k].count( '"' ) < 1 ):
                     # if the string doesn't contain double quotes then
                     # use double quotes around it in the parameter file.
-                    if do_save_inputs:
-                        print >>taskparameterfile, '%-15s    =  "%s"'%(k, myparams[k])
+                    print >>taskparameterfile, '%-15s    =  "%s"'%(k, myparams[k])
                     scriptstring=scriptstring+k+'="'+myparams[k]+'",'
                 else:
                     # use single quotes.
-                    if do_save_inputs:
-                        print >>taskparameterfile, "%-15s    =  '%s'"%(k, myparams[k])
+                    print >>taskparameterfile, "%-15s    =  '%s'"%(k, myparams[k])
                     scriptstring=scriptstring+k+"='"+myparams[k]+"',"
             else :
                 if ( j != 0 or k != "self" or
                      str(type(myf[taskname])) != "<type 'instance'>" ) :
-                    if do_save_inputs:
-                        print >>taskparameterfile, '%-15s    =  %s'%(k, myparams[k])
+                    print >>taskparameterfile, '%-15s    =  %s'%(k, myparams[k])
                     scriptstring=scriptstring+k+'='+str(myparams[k])+','
 
             ###Now delete varianle from global user space because
@@ -1107,9 +1076,8 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
         scriptstr.append(scriptstring)
         scriptstring=scriptstring.replace('        ', '')
         scriptstring=scriptstring.replace('\n', '')
-        if do_save_inputs:
-            print >>taskparameterfile,scriptstring
-            taskparameterfile.close()
+        print >>taskparameterfile,scriptstring
+        taskparameterfile.close()
     except TypeError, e:
         print "saveinputs --error: ", e
 
@@ -1356,16 +1324,6 @@ except Exception, instance:
 ## warn when available memory is < 512M (clean throws and exception)
 if cu.hostinfo( )['memory']['available'] < 524288:
     casalog.post( 'available memory less than 512MB (with casarc settings)\n...some things will not run correctly', 'SEVERE' )
-    
-# jagonzal: MPIClient initialization after watchdog fork
-if MPIEnvironment.is_mpi_enabled:
-    # Instantiate MPICommunicator singleton in order not to block the clients
-    from mpi4casa.MPICommunicator import MPICommunicator
-    mpi_comunicator = MPICommunicator()    
-    # Post MPI related info
-    casalog.post(MPIEnvironment.mpi_info_msg,"INFO","casapy" )
-elif MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1 and not MPIEnvironment.is_mpi_thread_safe:
-    casalog.post(MPIEnvironment.mpi_thread_safe_info_msg,"WARN","casapy" )
 
 casa['state']['startup'] = False
 

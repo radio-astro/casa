@@ -100,15 +100,13 @@ C
       NF = 0
       J = 0
  101  J = J+1
-C      IF (J-4) 102,102,103
-      IF (J-4 .GT. 0) GOTO 103
+      IF (J-4) 102,102,103
  102  NTRY = NTRYH(J)
       GO TO 104
  103  NTRY = NTRY+2
  104  NQ = NL/NTRY
       NR = NL-NTRY*NQ
-C      IF (NR) 101,105,101
-      IF (NR .NE. 0) GOTO 101
+      IF (NR) 101,105,101
  105  NF = NF+1
       IFAC(NF+2) = NTRY
       NL = NQ
@@ -286,10 +284,7 @@ C
          CH(1,1,K) = CC(1,K,1)+CC(1,K,2)
          CH(IDO,2,K) = CC(1,K,1)-CC(1,K,2)
  101  CONTINUE
-C      IF (IDO-2) 107,105,102
-      IF (IDO-2 .LT. 0) GOTO 107
-      IF (IDO-2 .EQ. 0) GOTO 105
-
+      IF (IDO-2) 107,105,102
  102  IDP2 = IDO+2
       DO 104 K=1,L1
          DO 103 I=3,IDO,2
@@ -358,9 +353,7 @@ C
          CH(IDO,2,K) = CC(1,K,1)-CC(1,K,3)
          CH(1,3,K) = CC(1,K,4)-CC(1,K,2)
  101  CONTINUE
-C      IF (IDO-2) 107,105,102
-      IF (IDO-2 .LT. 0) GOTO 107
-      IF (IDO-2 .EQ. 0) GOTO 105
+      IF (IDO-2) 107,105,102
  102  IDP2 = IDO+2
       DO 104 K=1,L1
          DO 103 I=3,IDO,2
@@ -760,9 +753,7 @@ C
          CH(1,K,1) = CC(1,1,K)+CC(IDO,2,K)
          CH(1,K,2) = CC(1,1,K)-CC(IDO,2,K)
  101  CONTINUE
-C      IF (IDO-2) 107,105,102
-      IF (IDO-2 .LT. 0) GOTO 107
-      IF (IDO-2 .EQ. 0) GOTO 105
+      IF (IDO-2) 107,105,102
  102  IDP2 = IDO+2
       DO 104 K=1,L1
          DO 103 I=3,IDO,2
@@ -835,9 +826,7 @@ C
          CH(1,K,3) = TR2-TR3
          CH(1,K,4) = TR1+TR4
  101  CONTINUE
-C      IF (IDO-2) 107,105,102
-      IF (IDO-2 .LT. 0) GOTO 107
-      IF (IDO-2 .EQ. 0) GOTO 105
+      IF (IDO-2) 107,105,102
  102  IDP2 = IDO+2
       DO 104 K=1,L1
          DO 103 I=3,IDO,2
@@ -1143,15 +1132,13 @@ C
       NF = 0
       J = 0
  101  J = J+1
-C      IF (J-4) 102,102,103
-      IF (J-4 .GT. 0) GOTO 103
+      IF (J-4) 102,102,103
  102  NTRY = NTRYH(J)
       GO TO 104
  103  NTRY = NTRY+2
  104  NQ = NL/NTRY
       NR = NL-NTRY*NQ
-C      IF (NR) 101,105,101
-      IF (NR .NE. 0) GOTO 101
+      IF (NR) 101,105,101
  105  NF = NF+1
       IFAC(NF+2) = NTRY
       NL = NQ
@@ -1254,9 +1241,7 @@ C
 C                       VERSION 3  JUNE 1979
 C
       DIMENSION       R(*)       ,A(*)       ,B(*)       ,WSAVE(*)
-C      IF (N-2) 101,102,103
-      IF (N-2 .EQ. 0) GOTO 102
-      IF (N-2 .GT. 0) GOTO 103
+      IF (N-2) 101,102,103
  101  AZERO = R(1)
       RETURN
  102  AZERO = .5*(R(1)+R(2))
@@ -1365,9 +1350,7 @@ C              sin(beta(k))=-b(k)/alpha(k)
 C
       SUBROUTINE EZFFTB (N,R,AZERO,A,B,WSAVE)
       DIMENSION       R(*)       ,A(*)       ,B(*)       ,WSAVE(*)
-C      IF (N-2) 101,102,103
-      IF (N-2 .EQ. 0) GOTO 102
-      IF (N-2 .GT. 0) GOTO 103
+      IF (N-2) 101,102,103
  101  R(1) = AZERO
       RETURN
  102  R(1) = AZERO+A(1)
@@ -1487,9 +1470,7 @@ C
          XH(I) = WAR(I)
          WAR(I) = X(I)
  100  CONTINUE
-C      IF (N-2) 101,102,103
-      IF (N-2 .EQ. 0) GOTO 102
-      IF (N-2 .GT. 0) GOTO 103
+      IF (N-2) 101,102,103
  101  XH(1) = XH(1)+XH(1)
       GO TO 106
  102  XHOLD = SQRT3*(XH(1)+XH(2))
@@ -1621,9 +1602,7 @@ C
       NM1 = N-1
       NP1 = N+1
       NS2 = N/2
-C      IF (N-2) 106,101,102
-      IF (N-2 .LT. 0) GOTO 106
-      IF (N-2 .GT. 0) GOTO 102
+      IF (N-2) 106,101,102
  101  X1H = X(1)+X(2)
       X(2) = X(1)-X(2)
       X(1) = X1H
@@ -1919,9 +1898,7 @@ C
       SUBROUTINE COSQF (N,X,WSAVE)
       DIMENSION       X(*)       ,WSAVE(*)
       DATA SQRT2 /1.4142135623731/
-C      IF (N-2) 102,101,103
-      IF (N-2 .LT. 0) GOTO 102
-      IF (N-2 .GT. 0) GOTO 103
+      IF (N-2) 102,101,103
  101  TSQX = SQRT2*X(2)
       X(2) = X(1)-TSQX
       X(1) = X(1)+TSQX
@@ -2009,9 +1986,7 @@ C
       SUBROUTINE COSQB (N,X,WSAVE)
       DIMENSION       X(*)       ,WSAVE(*)
       DATA TSQRT2 /2.82842712474619/
-C      IF (N-2) 101,102,103
-      IF (N-2 .EQ. 0) GOTO 102
-      IF (N-2 .GT. 0) GOTO 103
+      IF (N-2) 101,102,103
  101  X(1) = 4.*X(1)
       RETURN
  102  X1 = 4.*(X(1)+X(2))
@@ -2089,15 +2064,13 @@ C
       NF = 0
       J = 0
  101  J = J+1
-C      IF (J-4) 102,102,103
-      IF (J-4 .GT. 0) GOTO 103
+      IF (J-4) 102,102,103
  102  NTRY = NTRYH(J)
       GO TO 104
  103  NTRY = NTRY+2
  104  NQ = NL/NTRY
       NR = NL-NTRY*NQ
-C      IF (NR) 101,105,101
-      IF (NR .NE. 0) GOTO 101
+      IF (NR) 101,105,101
  105  NF = NF+1
       IFAC(NF+2) = NTRY
       NL = NQ

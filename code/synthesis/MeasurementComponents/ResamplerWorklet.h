@@ -32,8 +32,8 @@
 #include <synthesis/TransformMachines/VisibilityResamplerBase.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
-#include <msvis/MSVis/AsynchronousTools.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/AsynchronousTools.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Array.h>
 

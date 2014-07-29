@@ -41,8 +41,6 @@
 #include <casa/iosfwd.h>
 #include <imageanalysis/ImageAnalysis/MomentsBase.h>
 
-#include <tr1/memory>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -346,7 +344,7 @@ public:
 
 private:
 
-   std::tr1::shared_ptr<ImageInterface<T> > _image;
+   std::auto_ptr<ImageInterface<T> > _image;
 
 // Smooth an image   
    Bool smoothImage (PtrHolder<ImageInterface<T> >& pSmoothedImage,

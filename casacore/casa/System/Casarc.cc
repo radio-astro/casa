@@ -26,7 +26,6 @@
 
 #include <casa/System/Casarc.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -35,6 +34,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <cstdio>
+#include <unistd.h>
 
 #define USE_FLOCK 0
 #define CASARC_DEBUG 0

@@ -55,7 +55,7 @@ private:
 	bool isAllChannels() const;
 	bool isAutomatic() const;
 
-	//Added because custom widgets as menu items were appearing transparent
+	//Added to fix the problem that custom menu items are transparent
 	//on the MAC.
 	void setDefaultBackground();
 

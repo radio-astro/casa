@@ -67,8 +67,8 @@ GBTAntennaFile::GBTAntennaFile(const String &antennaFile)
 }
 
 GBTAntennaFile::GBTAntennaFile(const GBTAntennaFile &other)
-  : GBTFITSBase(other), itsTable(0), itsBeamOffTable(0), 
-    itsSecondsPerDay(C::day/C::second), itsRowFromFeed(-1)
+    : itsTable(0), itsBeamOffTable(0), itsSecondsPerDay(C::day/C::second),
+      itsRowFromFeed(-1)
 {
     attach(other.file());
 }

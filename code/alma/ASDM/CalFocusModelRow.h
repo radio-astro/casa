@@ -110,7 +110,7 @@
 //#include <TableStreamReader.h>
 
 /*\file CalFocusModel.h
-    \brief Generated from model's revision "-1", branch ""
+    \brief Generated from model's revision "1.64", branch "HEAD"
 */
 
 namespace asdm {
@@ -132,7 +132,7 @@ typedef void (CalFocusModelRow::*CalFocusModelAttributeFromText) (const string& 
 /**
  * The CalFocusModelRow class is a row of a CalFocusModelTable.
  * 
- * Generated from model's revision "-1", branch ""
+ * Generated from model's revision "1.64", branch "HEAD"
  *
  */
 class CalFocusModelRow {

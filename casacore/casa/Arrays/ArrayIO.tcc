@@ -141,6 +141,65 @@ LogIO &operator<<(LogIO &os, const Array<T> &a)
     return os;
 }
 
+template<class T>
+ostream &operator<<(ostream &s, const std::set<T> &a) {
+	ostringstream oss;
+	std::ostream_iterator<T> out_it (oss,", ");
+	copy ( a.begin(), a.end(), out_it );
+	String sout = oss.str();
+	sout.trim();
+	sout.rtrim(',');
+	s << "[" << sout << "]";
+	return s;
+}
+
+template<class T>
+LogIO &operator<<(LogIO &os, const std::set<T> &a)
+{
+    os.output() << a;
+    return os;
+}
+
+
+template<class T>
+ostream &operator<<(ostream &s, const std::vector<T> &a) {
+	ostringstream oss;
+	std::ostream_iterator<T> out_it (oss,", ");
+	copy ( a.begin(), a.end(), out_it );
+	String sout = oss.str();
+	sout.trim();
+	sout.rtrim(',');
+	s << "[" << sout << "]";
+	return s;
+}
+
+template<class T>
+LogIO &operator<<(LogIO &os, const std::vector<T> &a)
+{
+    os.output() << a;
+    return os;
+}
+
+
+template<class T, class U>
+ostream &operator<<(ostream &s, const std::map<T, U> &a) {
+	ostringstream oss;
+	std::ostream_iterator<T> out_it (oss,", ");
+	std::copy ( a.begin(), a.end(), out_it );
+	String sout = oss.str();
+	sout.trim();
+	sout.rtrim(',');
+	s << "{" << sout << "}";
+	return s;
+}
+
+template<class T, class U>
+LogIO &operator<<(LogIO &os, const std::map<T, U> &a)
+{
+    os.output() << a;
+    return os;
+}
+
 
 template<class T>
 AipsIO &operator<<(AipsIO &ios, const Array<T> &a)
@@ -219,6 +278,9 @@ AipsIO &operator>>(AipsIO &ios, Array<T> &a)
     ios.getend();
     return ios;
 }
+
+
+
 
 // These functions allow the user to read /write raw binary data files
 // created with the Array class to / from disk, so that they can be

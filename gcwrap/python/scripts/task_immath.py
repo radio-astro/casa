@@ -212,13 +212,9 @@ def immath(
                       +" resultant image will be\nsaved on disk in file, " \
                       + outfile, 'WARN' )
     if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        casalog.post(
-            'Output file '+outfile+
-            ' exists. immath can not proceed, please '+
-              'remove it or change the output file name.',
-            'SEVERE'
-        )
-        return False
+        raise Exception, 'Output file, '+outfile+\
+              ' exists. immath can not proceed, please\n'+\
+              'remove it or change the output file name.'
     
     # Find the list of filenames in the expression
     # also do a quick check to see if all of the files
@@ -227,9 +223,11 @@ def immath(
     # TODO add a size check to make sure all images are the
     # same size.  Is this
     tmpfilenames=''
-    filenames=imagename
     if mode=='evalexpr':
         tmpfilenames=_immath_parse( expr )
+        filenames=imagename
+    else:
+        filenames=imagename
     if ( isinstance( filenames, str ) ):
         filenames= [ filenames ]
     casalog.post( 'List of input files is: '+str(filenames), 'DEBUG1' )
@@ -245,6 +243,7 @@ def immath(
         if ( len(name0 ) > 0 ):
             varnames.append( name0 )
     nfile=max(len(filenames),len(tmpfilenames))
+    #for i in range( len(varnames), len(filenames) ):
     for i in range( len(varnames), nfile ):
         varnames.append( 'IM'+str(i) )
     casalog.post( 'Variable name list is: '+str(varnames), 'DEBUG1' )
@@ -265,6 +264,10 @@ def immath(
         if len(tmpfilenames)==count:
             ignoreimagename=True
             filenames=tmpfilenames
+        #if(tmpfilenames==['']): 
+        #    for i in range(len(varnames)):
+        #       if(expr.count(varnames[i])==0):
+        #           casalog.post('Variable name '+varnames[i]+' not found in the expression.','WARN')
     if not ignoreimagename:
         for i in range( len(filenames) ):
             if ( not os.path.exists(filenames[i]) ):
@@ -283,6 +286,7 @@ def immath(
         # calculate a spectral index distribution image
         if len(filenames) != 2:
             raise Exception, 'Requires two images at different frequencies'
+        #expr = 'spectralindex("%s","%s")' % (filenames[0],filenames[1])
 
         expr = 'spectralindex('+varnames[0]+', '+varnames[1]+')'
     elif mode=='pola':
@@ -404,6 +408,8 @@ def immath(
             casalog.post( 'Unable to apply region to file: '\
                   + image\
                   +'.\nUsed region: '+str(reg), 'DEBUG2' )
+            #raise Exception, 'Unable to apply region to file: '\
+            #      +filenames[i]
             casalog.post( 'Unable to apply region to file: '\
                           + image, 'SEVERE' )
             raise
@@ -548,7 +554,7 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
         if (type(stkslist) != list):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do pola calculation"
         _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
+        spixels = _myia.coordsys().findcoordinate('stokes')[1]
         if (len(spixels) != 1):
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"
         stokesPixel = spixels[0]
@@ -617,7 +623,7 @@ def _doPolI(filenames, varnames, tmpFilePrefix, createSubims, tpol):
             raise Exception, filenames[0] + " is the only image specified but it is not multi-stokes so cannot do poli calculation"
         _myia = iatool()
         _myia.open(filenames[0])
-        spixels = _myia.coordsys().findcoordinate('stokes')['pixel']
+        spixels = _myia.coordsys().findcoordinate('stokes')[1]
         if (len(spixels) != 1):
             _myia.close()
             raise Exception, filenames[i] + "does not have exactly one stokes axis, cannot do pola calculation"

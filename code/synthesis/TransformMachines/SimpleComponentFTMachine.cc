@@ -33,7 +33,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/SpectralModel.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -144,7 +144,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
 {
 
 #pragma omp for
-  for (Int k=0; k < Int(npart); ++k){
+  for (uInt k=0; k < npart; ++k){
     //Cube<DComplex> dVis(4, nChan, nRow);
     compp[k].visibility(dVisp[k], uvwp[k], frequency);
   }
@@ -160,7 +160,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
 #pragma omp parallel default(none)  firstprivate(npart, npol, nChan, modData, corrType, nRowp, dphase, invLambda) shared(startrow,  dVisp) num_threads(npart)
   {
 #pragma omp for
-    for (Int k = 0; k < Int(npart); ++k) {
+    for (Int k = 0; k < npart; ++k) {
     
 
     
@@ -323,7 +323,7 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, const ComponentList& compList,
   {
 #pragma omp for
 
-    for (Int k=0; k < Int(npart); ++k){
+  for (uInt k=0; k < npart; ++k){
 
     predictVis(modData, invLambda, frequency, compp[k],  poltype, corrType, 
 	       startrow[k], nRowp[k], nChan, npol, uvwcomps[k], dphasecomps[k]);

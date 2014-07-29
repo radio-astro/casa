@@ -46,7 +46,6 @@ namespace casa {
 		connect( &searchResults, SIGNAL(showPreviousSearchResults()), searchWidget, SLOT(prevResults()));
 		connect( &searchResults, SIGNAL(showNextSearchResults()), searchWidget, SLOT(nextResults()));
 		connect( searchWidget, SIGNAL(searchCompleted()), this, SLOT(searchCompleted()));
-		connect( searchWidget, SIGNAL(redshiftChanged()), this, SLOT(redshiftChanged()));
 		connect( ui.clearLinesButton, SIGNAL(clicked()), this, SLOT(eraseLines()));
 		connect( ui.saveLinesButton, SIGNAL(clicked()), this, SLOT(saveIdentifiedLines()));
 	}
@@ -55,26 +54,6 @@ namespace casa {
 		pixelCanvas = canvas;
 		connect( pixelCanvas, SIGNAL(findRedshiftAt(double,double)), this, SLOT(findRedshift(double,double)));
 		searchWidget->setCanvas( pixelCanvas );
-	}
-
-	void LineOverlaysTab::redshiftChanged( ){
-		QList<MolecularLine* >  lines = pixelCanvas->getMolecularLines();
-		int lineCount = lines.size();
-		if ( lineCount > 0 ) {
-			int lineCount = lines.size();
-			for ( int i = 0; i < lineCount; i++ ){
-				float lineCenter = lines[i]->getOriginalFrequency();
-				QString originalUnits = lines[i]->getOriginalUnits();
-				QString graphUnits = pixelCanvas->getUnits();
-				Converter* converter = NULL;
-				if ( originalUnits != graphUnits ){
-					converter = Converter::getConverter( originalUnits,graphUnits );
-				}
-				float shiftedCenter = getShiftedCenter( lineCenter, converter );
-				lines[i]->setCenter( shiftedCenter );
-			}
-			pixelCanvas->refreshPixmap();
-		}
 	}
 
 	void LineOverlaysTab::searchCompleted() {

@@ -37,8 +37,8 @@
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
-#include <msvis/MSVis/VisBuffGroupAcc.h>
-#include <msvis/MSVis/CalVisBuffer.h>
+#include <synthesis/MSVis/VisBuffGroupAcc.h>
+#include <synthesis/MSVis/CalVisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

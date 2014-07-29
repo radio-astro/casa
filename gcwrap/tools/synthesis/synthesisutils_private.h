@@ -1,3 +1,0 @@
-
-casa::SynthesisUtilMethods *itsUtils;
-

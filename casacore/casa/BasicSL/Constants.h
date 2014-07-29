@@ -574,8 +574,6 @@ namespace C {
   extern const Double hour;
   // day
   extern const Double day;
-  // Difference between Julian Day and Modified Julian Day
-  extern const Double MJD0;
   // </group>
   
   //#----------------------------

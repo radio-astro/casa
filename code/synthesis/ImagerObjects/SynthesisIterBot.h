@@ -71,7 +71,7 @@ class SynthesisIterBot
   Record getIterationDetails();
   Record getIterationSummary();
 
-  int cleanComplete();
+  bool cleanComplete();
 
   Record getSubIterBot();
 

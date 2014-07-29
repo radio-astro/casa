@@ -48,7 +48,8 @@ namespace casa {
 		                    "#A52A2A" << "#808080" << "#FF6347" << "#FFFF00";
 		ui.accumulatedColorList->setSelectionBehavior(QAbstractItemView::SelectRows);
 		ui.accumulatedColorList->setSelectionMode( QAbstractItemView::SingleSelection );
-		ui.accumulatedColorList->setItemDelegate( new ColorSummaryDelegate( this ));
+		ui.accumulatedColorList->setItemDelegate( new ColorSummaryDelegate( this ) );
+
 
 		polylineUnit = true;
 		colorUnits << POLYGONAL_CHAIN << LINE_SEGMENT;

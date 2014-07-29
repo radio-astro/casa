@@ -1,4 +1,4 @@
-/* -*-C++-*-
+/*
     MSTimeGram.y: Parser for time expressions
     Copyright (C) 2004
     Associated Universities, Inc. Washington DC, USA.
@@ -59,8 +59,6 @@ using namespace casa;
 %token DOT
 %token PERCENT
 %token STAR
-%token LSQBRACKET
-%token RSQBRACKET
 
 %token UNKNOWN
 
@@ -68,7 +66,6 @@ using namespace casa;
 %type <node> timeexpr
 %type <node> singletimeexpr
 %type <node> rangetimeexpr
-%type <node> brangetimeexpr
 %type <node> upboundtimeexpr
 %type <node> lowboundtimeexpr
 %type <timeFields> yeartimeexpr
@@ -91,8 +88,6 @@ using namespace casa;
 %{
 #include <ms/MeasurementSets/MSSelectionError.h>
   //  extern MSTimeParse *thisMSTParser;
-  Bool MSTimeEdgeInclusiveRange=False;
-  Float edgeWidth=-1.0;
   int MSTimeGramlex (YYSTYPE*);
   inline void MSTGgarbageCollector(const MEpoch* tval){if (tval) delete tval;}
   void splitSec(const Double& fsec, Int &sec, Int &milliSec) 
@@ -124,7 +119,7 @@ timestatement: timeexpr {$$ = $1;}
              ;
 
 timeexpr: singletimeexpr
-        | brangetimeexpr
+        | rangetimeexpr
         | lowboundtimeexpr
         | upboundtimeexpr
         ;
@@ -146,26 +141,17 @@ singletimeexpr: yeartimeexpr
 		  }
               ;
 
-brangetimeexpr: 
-              /* Rule for [T0~T1] range.  The width of the edge is determined from the integration time in the MS */
-              LSQBRACKET {MSTimeEdgeInclusiveRange=True;edgeWidth=-1.0;}  rangetimeexpr RSQBRACKET 
-                       {$$=$3;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
-              /* Rule for FNUMBER[T0~T1] range.  The width of the edge is determined from FNUMBER */
-              | FNUMBER LSQBRACKET {MSTimeEdgeInclusiveRange=True; edgeWidth=$1;} rangetimeexpr RSQBRACKET  
-                       {$$=$4;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
-              /* Rule for (T0~T1) range.  The width of the edge is determined from the integration time in the MS */
-              | rangetimeexpr
-                       {$$=$1;MSTimeEdgeInclusiveRange=False;edgeWidth=-1.0;}
-              ;
 rangetimeexpr: yeartimeexpr DASH yeartimeexpr 
-                {
+                 {
 		   MSTimeParse::thisMSTParser->setDefaults($1);
 		   MSTimeParse::thisMSTParser->copyDefaults($3,$1);
+/* 		   const MEpoch *t0=MSTimeParse::yearTimeConvert($1); */
+/* 		   const MEpoch *t1=MSTimeParse::yearTimeConvert($3); */
 		   const MEpoch *t0=MSTimeParse::thisMSTParser->yearTimeConvert($1);
 		   const MEpoch *t1=MSTimeParse::thisMSTParser->yearTimeConvert($3);
-		   //		   cerr << "#### " << MSTimeEdgeInclusiveRange << " " << edgeWidth << endl;
 
-		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange,edgeWidth);
+		   //		   $$ = MSTimeParse().selectTimeRange(t0,t1,false);
+		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,false);
 		   MSTGgarbageCollector(t0);
 		   MSTGgarbageCollector(t1);
 		 }
@@ -183,10 +169,12 @@ rangetimeexpr: yeartimeexpr DASH yeartimeexpr
 		   Double mjd=time1.modifiedJulianDay()*86400.0;
 
 		   time1 = time0 + mjd;
+		   //		   cout << time0 << " " << time1 << endl;
 		   const MEpoch *t0=new MEpoch(MVEpoch(time0.modifiedJulianDay()));
 		   const MEpoch *t1=new MEpoch(MVEpoch(time1.modifiedJulianDay()));
 
-		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,MSTimeEdgeInclusiveRange,edgeWidth);
+		   //		   $$ = MSTimeParse().selectTimeRange(t0,t1,true);
+		   $$ = MSTimeParse::thisMSTParser->selectTimeRange(t0,t1,true);
 		   MSTGgarbageCollector(t0);
 		   MSTGgarbageCollector(t1);
 		 }

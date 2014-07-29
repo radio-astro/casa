@@ -2,27 +2,24 @@
 #include <coordsys_cmpt.h>
 #undef NO_INITIALIZE_STATICS
 #include <stdcasa/StdCasa/CasacSupport.h>
-#include <imageanalysis/ImageTypedefs.h>
-#include <imageanalysis/ImageAnalysis/ImageDecimatorData.h>
+#include <images/Images/ImageInterface.h>
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <memory>
 #include <tr1/memory>
 
-namespace casa {
-	class GaussianBeam;
-	class ImageAnalysis;
-	class ImageRegion;
-	class ImageStatsCalculator;
+namespace casa 
+{
 	class LogIO;
-
-	template<class T> class ImageHistograms;
-	template<class T> class ImageRegridderBase;
+	class ImageAnalysis;
+	class ImageStatsCalculator;
 	template<class T> class ImageStatistics;
-	template<class T> class PtrHolder;
+	template<class T> class ImageHistograms;
 	template<class T> class SubImage;
+	class ImageRegion;
 	class LatticeExprNode;
-    class String;
+	template<class T> class PtrHolder;
+        class String;
 	class SkyComponent;
 	class DirectionCoordinate;
 }

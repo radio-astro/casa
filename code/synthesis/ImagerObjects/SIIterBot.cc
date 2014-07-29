@@ -93,8 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     
 	SIIterBot_state::~SIIterBot_state() {
-	  //		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%p)\n", this );
-	  //		fflush( stderr );
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%x)\n", this );
+		fflush( stderr );
 	}
 
 	bool SIIterBot_state::interactiveInputRequired( ) {
@@ -133,37 +133,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	int SIIterBot_state::cleanComplete(){
+	bool SIIterBot_state::cleanComplete(){
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
-
-		//		printOut("FromcleanComplete ", False);
-
-		if ( itsMajorDone==0 && itsIterDone==0 ) return false;
-
-		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
-
-		int stopCode=0;
-
 		if ( itsIterDone >= itsNiter || 
-		     itsPeakResidual <= itsThreshold ||
-		     itsStopFlag )
-		  {
-		    //		    os << "Reached global stopping criteria : ";
+			 itsPeakResidual <= itsThreshold ||
+			 itsStopFlag )
+			return true;
 
-		    if( itsIterDone >= itsNiter ) { stopCode=1; }
-		      //  os << "Numer of iterations. "; // (" << itsIterDone << ") >= limit (" << itsNiter << ")" ;
-		    if( itsPeakResidual <= itsThreshold ) {stopCode=2; }
-		      //os << "Peak residual (" << itsPeakResidual << ") <= threshold(" << itsThreshold << ")";
-		    if( itsStopFlag ) {stopCode=3;}
-		      //os << "Forced stop. ";
-		    //		    os << LogIO::POST;
-
-		    //return true;
-		  }
-		
-		//		os << "Peak residual : " << itsPeakResidual << " and " << itsIterDone << " iterations."<< LogIO::POST;
-		//		return false;
-		return stopCode;
+		return false;
 	}
 
 
@@ -224,8 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 		itsUpdatedModelFlag |=execRecord.asBool( RecordFieldId("updatedmodelflag") );
 
-		os << "Completed " << itsIterDone << " iterations." << LogIO::POST;
-		//with peak residual "<< itsPeakResidual << LogIO::POST;
+		os << "Completed " << itsIterDone << " iterations so far" << LogIO::POST;
 	}
 
 	void SIIterBot_state::mergeMinorCycleSummary( const Array<Double>& summary ){
@@ -576,7 +552,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			cout << prefix << " : " 
 				 << " ItsNiter=" << itsNiter
-				 << " itsCycleNiter=" << itsCycleNiter
+				 << "  itsCycleNiter=" << itsCycleNiter
 				 << " itsThreshold=" << itsThreshold
 				 << " itsCycleThreshold=" << itsCycleThreshold
 				 << " itsStopFlag=" << itsStopFlag
@@ -599,7 +575,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	SIIterBot_adaptor::~SIIterBot_adaptor() {
-		fprintf( stderr, ">>>>>>\t\tSIIterBot_adaptor::~SIIterBot_adaptor(0x%p)\n", this );
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_adaptor::~SIIterBot_adaptor(0x%x)\n", this );
 		fflush( stderr );
 #ifdef INTERACTIVE_ITERATION
 		state->denyCallbacks(this);

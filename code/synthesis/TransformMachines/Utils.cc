@@ -25,7 +25,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <measures/Measures/MEpoch.h>
@@ -162,9 +162,10 @@ namespace casa{
     // 	  {pa += antPA(i); n++;break;}
     //   }
     // //    pa = sum(antPA)/(antPA.nelements()-1);
+    // pa /= n;
     // if (n==0) 
     //   throw(AipsError("No unflagged antenna found in getPA()."));
-    // return pa/n;
+    // return pa;
   }
   //
   //---------------------------------------------------------------------
@@ -928,7 +929,7 @@ namespace casa{
     Double minVal=1e20; 
     Int i=0;
 
-    for (index=0;index<(Int)diff.nelements();index++)
+    for (index=0;index<diff.nelements();index++)
       if (diff[index] < minVal) {minVal=diff[index];i=index;}
     index=i;
     return list(index);
@@ -950,22 +951,6 @@ namespace casa{
     //
     // Int ndx=min(freqValues_p.nelements()-1,max(0,SynthesisUtils::nint((freqVal-freqValues_p[0])/freqValIncr_p)));
     // return ndx;
-  }
-
-  template <class T>
-  T SynthesisUtils::stdNearestValue(const vector<T>& list, const T& val, Int& index)
-  {
-    vector<T> diff=list;
-    for (uInt i=0;i<list.size();i++)
-      diff[i] = fabs(list[i] - val);
-    
-    T minVal=std::numeric_limits<T>::max();//1e20; 
-    Int i=0;
-
-    for (index=0;index<(Int)diff.size();index++)
-      if (diff[index] < minVal) {minVal=diff[index];i=index;}
-    index=i;
-    return list[index];
   }
 
   CoordinateSystem SynthesisUtils::makeUVCoords(CoordinateSystem& imageCoordSys,
@@ -1069,62 +1054,5 @@ namespace casa{
 //     else : 
 //         return True
   }
-
-  // template<class Iterator>
-  // Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
-  // {
-  //   while (first != last)
-  //     {
-  //       Iterator next(first);
-  //       last = std::remove(++next, last, *first);
-  //       first = next;
-  //     }
-    
-  //   return last;
-  // }
-
-  String SynthesisUtils::mjdToString(Time& time)
-  {
-    String tStr;
-    tStr = String::toString(time.year()) + "/" +
-      String::toString(time.month()) + "/" +
-      String::toString(time.dayOfMonth()) + "/" +
-      String::toString(time.hours()) + ":" +
-      String::toString(time.minutes()) + ":";
-    ostringstream fsec;
-    fsec << setprecision(2) << time.dseconds();
-    tStr = tStr + String(fsec.str());
-    //      String::toString(time.dseconds());
-    return tStr;
-  }
-
-  template <class Iterator>
-  Iterator SynthesisUtils::Unique(Iterator first, Iterator last)
-  {
-    while (first != last)
-      {
-	Iterator next(first);
-        last = std::remove(++next, last, *first);
-        first = next;
-      }
-    
-    return last;
-  }
-
-
-  template
-  std::vector<Double>::iterator SynthesisUtils::Unique(std::vector<Double>::iterator first, std::vector<Double>::iterator last);
-  template
-  std::vector<Float>::iterator SynthesisUtils::Unique(std::vector<Float>::iterator first, std::vector<Float>::iterator last);
-  template
-  std::vector<Int>::iterator SynthesisUtils::Unique(std::vector<Int>::iterator first, std::vector<Int>::iterator last);
-
-  template 
-  Double SynthesisUtils::stdNearestValue(const vector<Double>& list, const Double& val, Int& index);
-  template 
-  Float SynthesisUtils::stdNearestValue(const vector<Float>& list, const Float& val, Int& index);
-  template 
-  Int SynthesisUtils::stdNearestValue(const vector<Int>& list, const Int& val, Int& index);
-
 
 } // namespace casa

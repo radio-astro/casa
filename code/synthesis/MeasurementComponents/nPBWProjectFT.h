@@ -32,7 +32,7 @@
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <casa/Arrays/Matrix.h>
 #include <scimath/Mathematics/FFTServer.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <images/Images/ImageInterface.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Array.h>
@@ -262,7 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Save and restore the nPBWProjectFT to and from a record
     Bool toRecord(String& error, RecordInterface& outRec, 
-		  Bool withImage=False, const String diskimage="");
+		  Bool withImage=False);
     Bool fromRecord(String& error, const RecordInterface& inRec);
     
     // Can this FTMachine be represented by Fourier convolutions?

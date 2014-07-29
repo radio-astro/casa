@@ -138,19 +138,11 @@ void AnnEllipse::_init(
 		"When pixels are not square and units are expressed in "
 		"pixels, position angle must be zero"
 	);
-	const CoordinateSystem csys = getCsys();
-	uInt x = csys.isDirectionAbscissaLongitude() ? 0 : 1;
+	uInt x = getCsys().isDirectionAbscissaLongitude() ? 0 : 1;
 	uInt y = x == 0 ? 1 : 0;
 	_convertedSemiMajorAxis = _lengthToAngle(_inputSemiMajorAxis, _getDirectionAxes()[y]);
 	_convertedSemiMinorAxis = _lengthToAngle(_inputSemiMinorAxis, _getDirectionAxes()[x]);
 	_convertedPositionAngle = _inputPositionAngle;
-	if (
-		csys.directionCoordinate().directionType() != _getDirectionRefFrame()
-	) {
-		Quantity angle;
-		csys.directionCoordinate().convert(angle, _getDirectionRefFrame());
-		_convertedPositionAngle -= angle;
-	}
 	if (_convertedSemiMajorAxis < _convertedSemiMinorAxis) {
 		std::swap(_convertedSemiMajorAxis, _convertedSemiMinorAxis);
 		_convertedPositionAngle = Quantity(
@@ -164,7 +156,7 @@ void AnnEllipse::_init(
 	_inputCenter[0].first = xcenter;
 	_inputCenter[0].second = ycenter;
 
-	_checkAndConvertDirections(String(__func__), _inputCenter);
+	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
 	Vector<Double> coords = getConvertedDirections()[0].getAngle("rad").getValue();
 

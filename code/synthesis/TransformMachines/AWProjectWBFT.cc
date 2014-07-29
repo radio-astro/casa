@@ -35,7 +35,7 @@
 #include <lattices/Lattices/LatticeFFT.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Bool conjBeams,
 			       Bool doublePrecGrid)
     : AWProjectFT(nWPlanes,icachesize,cfcache,cf,visResampler,applyPointingOffset,doPBCorr, itilesize,pbLimit,usezero,conjBeams,doublePrecGrid),
-      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p(),oneTimeMessage_p(False)
+      avgPBReady_p(False),resetPBs_p(True),wtImageFTDone_p(False),fieldIds_p(0),rotatedCFWts_p(),visResamplerWt_p()
   {
     (void)paSteps;
     //
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   AWProjectWBFT::AWProjectWBFT(const RecordInterface& stateRec)
-    : AWProjectFT(stateRec), oneTimeMessage_p(False)
+    : AWProjectFT(stateRec)
   {
     LogIO log_l(LogOrigin("AWProjectWBFT", "AWProjectWBFT[R&D]"));
     // Construct from the input state record
@@ -142,7 +142,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	wtImageFTDone_p =   other.wtImageFTDone_p;
 	rotatedCFWts_p  =   other.rotatedCFWts_p;
 	visResamplerWt_p=other.visResamplerWt_p; // Copy the counted pointer
-	oneTimeMessage_p = other.oneTimeMessage_p;
 	//	*visResamplerWt_p = *other.visResamplerWt_p; // Call the appropriate operator=()
 
 	//	visResampler_p=other.visResampler_p->clone();
@@ -285,17 +284,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   const ImageInterface<Complex>& /*imageTemplate*/,
 					   ImageInterface<Float>& /*sensitivityImage*/)
   {
-    if (oneTimeMessage_p == False)
-      {
-	LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage[R&D]"));
-	log_l << "Setting up for weights accumulation ";
-	if (sensitivityPatternQualifierStr_p != "") log_l << "for term " << sensitivityPatternQualifier_p << " ";
-	log_l << "during gridding to compute sensitivity pattern." 
-	      << endl
-	      << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
-	      << LogIO::WARN;
-	oneTimeMessage_p=True;
-      }
+    LogIO log_l(LogOrigin("AWProjectWBFT", "makeSensitivityImage[R&D]"));
+    log_l << "Setting up for weights accumulation ";
+    if (sensitivityPatternQualifierStr_p != "") log_l << "for term " << sensitivityPatternQualifier_p << " ";
+    log_l << "during gridding to compute sensitivity pattern." 
+	  << endl
+	  << "Consequently, the first gridding cycle will be slower than the subsequent ones." 
+	  << LogIO::WARN;
   }
   //
   //---------------------------------------------------------------
@@ -379,7 +374,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       /sumwt_l
 			       );
 
-	////////////////////	wtImIter.rwCursor() = sqrt( fabs(wtImIter.rwCursor()) );
+	wtImIter.rwCursor() = sqrt( fabs(wtImIter.rwCursor()) );
 
 	//	Double maxval = fabs( max( wtImIter.rwCursor() ) );
 	//	sumwt_l = getSumOfCFWeights()(pol_l,chan_l);
@@ -1407,7 +1402,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     visResamplerWt_p->copy(*visResampler_p);
     
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
-    //cerr << "AWPWB: " << pointingOffset << endl;
     visResamplerWt_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
 				      paChangeDetector.getParAngleTolerance(),
 				      chanMap,polMap,pointingOffset);

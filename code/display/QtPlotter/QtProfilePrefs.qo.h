@@ -46,7 +46,7 @@
 #include <measures/Measures/Stokes.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 
 
 #include <graphics/X11/X_enter.h>

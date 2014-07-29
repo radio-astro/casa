@@ -48,10 +48,10 @@ namespace casa{
 				       CFStore& cfwts)
   {
     LogIO log_l(LogOrigin("WOnlyConvFunc", "makeConvFunction"));
-    Int convSize=0, convSampling=4;
+    Int convSize, convSampling=4;
     Double wScale=1;
     Array<Complex> convFunc_l;
-    Double cfRefFreq=-1.0;
+    Double cfRefFreq;
     
     Int nx=image.shape()(0);
     

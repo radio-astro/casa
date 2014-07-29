@@ -56,7 +56,7 @@ namespace AssociatedFieldNatureMod
   //! AssociatedFieldNature.
   //!  [ASDM.Field] Nature of the associated field
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum AssociatedFieldNature

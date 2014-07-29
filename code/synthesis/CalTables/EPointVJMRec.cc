@@ -25,7 +25,7 @@
 //#
 //# $Id$
 //----------------------------------------------------------------------------
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 #include <synthesis/CalTables/SolvableVJMRec.h>
 #include <synthesis/CalTables/EPointVJMRec.h>
 

@@ -1,3 +1,0 @@
-
-casa::SynthesisNormalizer *itsNormalizer;
-

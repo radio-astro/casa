@@ -134,6 +134,7 @@ MeasurementSets/MSFieldGram.cc
 MeasurementSets/MSStateGram.cc
 MeasurementSets/MSTable.cc
 MeasurementSets/MSMetaData.cc
+MeasurementSets/MSMetaDataOnDemand.cc
 ${BISON_MSAntennaGram_OUTPUTS}
 ${FLEX_MSAntennaGram_OUTPUTS}
 ${BISON_MSArrayGram_OUTPUTS}
@@ -155,10 +156,6 @@ ${FLEX_MSUvDistGram_OUTPUTS}
 ${BISON_MSStateGram_OUTPUTS}
 ${FLEX_MSStateGram_OUTPUTS}
 )
-
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_ms PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 
 target_link_libraries (
 casa_ms casa_measures
@@ -225,6 +222,7 @@ MeasurementSets/MSLister.h
 MeasurementSets/MSMainColumns.h
 MeasurementSets/MSMainEnums.h
 MeasurementSets/MSMetaData.h
+MeasurementSets/MSMetaDataOnDemand.h
 MeasurementSets/MSObsColumns.h
 MeasurementSets/MSObsEnums.h
 MeasurementSets/MSObsIndex.h

@@ -6,91 +6,62 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>74</height>
+    <width>167</width>
+    <height>39</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>BinCountWidget</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>2</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>&lt;font color='black'&gt;Bin Count:&lt;/font&gt;</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="binCountLineEdit">
-       <property name="text">
-        <string>25</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>2</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QSlider" name="binCountSlider">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-     <property name="minimumSize">
+     <property name="sizeHint" stdset="0">
       <size>
-       <width>300</width>
-       <height>0</height>
+       <width>2</width>
+       <height>20</height>
       </size>
      </property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>&lt;font color='black'&gt;Bin Count:&lt;/font&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSpinBox" name="binCountSpinBox">
      <property name="minimum">
       <number>1</number>
      </property>
      <property name="maximum">
-      <number>1000</number>
-     </property>
-     <property name="singleStep">
-      <number>5</number>
+      <number>100</number>
      </property>
      <property name="value">
       <number>25</number>
      </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-    </widget>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>2</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

@@ -92,7 +92,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   /* NOT USING cycleNiter and cycleThreshold */
-  void SDAlgorithmTest::takeOneStep( Float loopgain, Int /*cycleNiter*/, Float /*cycleThreshold*/, Float &peakresidual, Float &modelflux, Int &iterdone )
+  void SDAlgorithmTest::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone )
   {
     /*
     findNextComponent();
@@ -157,18 +157,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   */
 
-  /*
-  void SDAlgorithmTest::restorePlane( )
+  void SDAlgorithmTest::restore(CountedPtr<SIImageStore> imagestore )
   {
 
     LogIO os( LogOrigin("SDAlgorithmTest","restore",WHERE) );
     
-    os << "Smooth model and add residuals "
+    os << "Smooth model and add residuals for " << imagestore->getName() 
        << ". Optionally, PB-correct too." << LogIO::POST;
 
-
   }
-  */
 
   // Use this decide how to partition
   // the image for separate calls to 'deconvolve'.

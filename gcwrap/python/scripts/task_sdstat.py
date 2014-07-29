@@ -139,15 +139,9 @@ class sdstat_worker(sdutil.sdtask_template):
             self.__stats_list_to_val()
         # reshape statsdict for return
         for k in ['min','max']:
-            retsts = {}
-            retsts['value'] = self.returnstats.pop('%s_abc'%(k))
-            retsts['unit'] = self.xunit
-            self.returnstats['%s_abscissa'%(k)] = retsts
+            self.returnstats['%s_abscissa'%(k)] = qa.quantity(self.returnstats.pop('%s_abc'%(k)),self.xunit)
         for (k,u) in [('eqw',self.xunit),('totint',self.intunit)]:
-            retsts = {}
-            retsts['value'] = self.returnstats[k]
-            retsts['unit'] = u
-            self.returnstats[k] = retsts
+            self.returnstats[k] = qa.quantity(self.returnstats[k],u)
 
     def save(self):
         if ( len(self.outfile) > 0 ):
@@ -190,14 +184,14 @@ class sdstat_worker(sdutil.sdtask_template):
                      'sum', 'mean', 'median', 'rms',
                      'stddev']
         for name in statsname:
-            v = self.scan.stats(name,self.msk,self.format_string, None, True)
+            v = self.scan.stats(name,self.msk,self.format_string)
             self.result[name] = list(v) # if len(v) > 1 else v[0]
             if sd.rcParams['verbose']:
                 self.savestats += get_text_from_file(tmpfile)
 
         # calculate additional statistics (eqw and integrated intensity)
         self.__calc_eqw_and_integf()
-        
+
         if sd.rcParams['verbose']:
             # Print equivalent width
             out = self.__get_statstext('eqw', self.abclbl, 'eqw')
@@ -222,7 +216,6 @@ class sdstat_worker(sdutil.sdtask_template):
                 #Get bin width
                 abcissa, lbl = self.scan.get_abcissa(rowno=i)
                 dabc=abs(abcissa[-1] - abcissa[0])/float(len(abcissa)-1)
-
                 # Construct equivalent width (=sum/max)
                 eqw = eqw + [get_eqw(self.result['max'][i],
                                      self.result['min'][i],
@@ -230,7 +223,6 @@ class sdstat_worker(sdutil.sdtask_template):
                                      dabc)]
                 # Construct integrated flux
                 integratef = integratef + [get_integf(self.result['sum'][i], dabc)]
-
         else:
             # Single scantable only
             abcissa, lbl = self.scan.get_abcissa(rowno=0)
@@ -256,6 +248,7 @@ class sdstat_worker(sdutil.sdtask_template):
                 self.returnstats[key] += list(val)
             else:
                 self.returnstats[key] = list(val)
+        
 
     def __set_mask(self):
         self.msk = None
@@ -309,18 +302,16 @@ class sdstat_worker(sdutil.sdtask_template):
 
     def __get_statstext(self, title, label, key):
         sep = "--------------------------------------------------"
-        head = string.join([sep,string.join([" %s ["%(title),label,"]"]," "),sep],'\n')
+        head = string.join([sep,string.join([" ","%s ["%(title),label,"]"]," "),sep],'\n')
         tail = ''
         out = head + '\n'
         val = self.result[key]
         if isinstance(val,list):
             ns = len(val)
             for i in xrange(ns):
-                if val[i] is not None:
-                    out += self.__get_statstr(i, val[i], sep)
+                out += self.__get_statstr(i, val[i], sep)
         else:
-            if val is not None:
-                out += self.__get_statstr(0, val, sep)
+            out += self.__get_statstr(0, val, sep)
         out += '\n%s'%(tail)
         return out
 
@@ -332,7 +323,7 @@ class sdstat_worker(sdutil.sdtask_template):
         if self.scan.nif(-1) > 1: out +=  ' IF[%d] ' % (self.scan.getif(irow))
         if self.scan.npol(-1) > 1: out +=  ' Pol[%d] ' % (self.scan.getpol(irow))
         out += ('= %'+self.format_string) % (val) + '\n'
-        out +=  "%s\n"%(separator)
+        out +=  "%s\n "%(separator)
         return out 
 
 def check_unit(unit_in,valid_unit=None,default_unit=None):
@@ -347,9 +338,7 @@ def check_unit(unit_in,valid_unit=None,default_unit=None):
 
 def get_eqw(maxl, minl, suml, dabc):
     eqw = 0.0
-    if ( maxl is None or minl is None or suml is None or dabc is None):
-        eqw = None
-    elif ( maxl != 0.0 or minl != 0.0 ):
+    if ( maxl != 0.0 or minl != 0.0 ):
         if ( abs(maxl) >= abs(minl) ):
             eqw = suml/maxl*dabc
         else:
@@ -357,10 +346,7 @@ def get_eqw(maxl, minl, suml, dabc):
     return eqw
     
 def get_integf(suml, dabc):
-    if suml is None or dabc is None:
-        return None
-    else:
-        return suml * dabc
+    return suml * dabc
 
 def get_text_from_file(filename):
     text = ''
@@ -368,3 +354,4 @@ def get_text_from_file(filename):
         for line in f:
             text += line
     return text
+

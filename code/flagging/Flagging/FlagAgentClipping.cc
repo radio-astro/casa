@@ -199,8 +199,6 @@ FlagAgentClipping::setAgentParameters(Record config)
 	return;
 }
 
-// jagonzal: With the new WEIGHT/SIGMA convention it is not longer
-// necessary divide the clipping range between the number of channels
 /*
 void
 FlagAgentClipping::preProcessBuffer(const vi::VisBuffer2 &visBuffer)

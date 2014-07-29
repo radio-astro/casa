@@ -24,7 +24,7 @@
 #define MSTransformIteratorFactory_H_
 
 // Where ViFactory interface is defined
-#include <msvis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 // Class containing the actual transformation logic
 #include <mstransform/MSTransform/MSTransformManager.h>

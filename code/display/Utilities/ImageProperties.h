@@ -30,14 +30,12 @@
 #include <string>
 #include <casa/Arrays/Vector.h>
 #include <display/Display/DisplayCoordinateSystem.h>
+#include <components/ComponentModels/GaussianBeam.h>
 #include <images/Images/ImageInterface.h>
 
 #include <tr1/memory>
 
 namespace casa {
-
-    class GaussianBeam;
-
 	namespace viewer {
 
 		// This class provides a priori image information derived from the image itself. It was

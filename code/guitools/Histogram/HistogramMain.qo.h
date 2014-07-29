@@ -32,6 +32,7 @@
 #include <guitools/Histogram/ImageLoader.qo.h>
 #include <guitools/Histogram/SaveHistogramWidget.qo.h>
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <tr1/memory>
 
 class QCloseEvent;
@@ -63,7 +64,7 @@ public:
      */
     HistogramMain(bool showFileLoader, bool fitControls, bool rangeControls,
     		bool plotModeControls, QWidget *parent);
-    bool setImage(std::tr1::shared_ptr<const ImageInterface<Float> > img );
+    bool setImage( const ImageTask::shCImFloat img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     std::pair<double,double> getRange() const;
     void deleteImageRegion( int id );
@@ -94,7 +95,7 @@ private slots:
 private:
 	HistogramMain( const HistogramMain& histMain );
 	HistogramMain& operator=( const HistogramMain& histMain );
-	bool generateImage( const QString& imagePath, std::tr1::shared_ptr<const ImageInterface<Float> > image );
+	bool generateImage( const QString& imagePath, ImageTask::shCImFloat image );
 
     ImageLoader fileLoader;
     SaveHistogramWidget histogramSaver;

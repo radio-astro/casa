@@ -439,7 +439,6 @@ int main()
     	  AlwaysAssert(! dc.hasSquarePixels(), AipsError);
 
       }
-
   } catch (const AipsError& x) {
       cerr << "aipserror: error " << x.getMesg() << endl;
       return (1);
@@ -682,10 +681,7 @@ void doit3 (DirectionCoordinate& lc)
    if (!allNear(dirV.get(), world, 1e-6)) {
          throw(AipsError("Coordinate conversion values (MVDirection) are wrong"));
    }
-   Vector<Double> pix2;
-   pix2 = lc.toPixel(dirV);
-   AlwaysAssert(allNear(pix2, pixel, 1e-6), AipsError);
-
+//
    axisUnits.set("deg");
    if (!lc.setWorldAxisUnits(axisUnits)) {
       throw(AipsError(String("failed to set world axis units to degrees because ") + lc.errorMessage())); 
@@ -718,14 +714,7 @@ void doit3 (DirectionCoordinate& lc)
    if (!allNear(pixel3, pixel, 1e-6)) {
          throw(AipsError("Coordinate conversion reflection 2 failed"));
    }
-   MDirection converted = MDirection::Convert(dir, MDirection::SUPERGAL)();
-   Vector<Double> pixel4;
-   if (!lc.toPixel(pixel4, converted)) {
-	   throw(AipsError(String("toPixel conversion (3) after conversion failed because ") + lc.errorMessage()));
-   }
-   if (!allNear(pixel4, pixel, 1e-5)) {
-	   throw(AipsError("Coordinate conversion reflection 3 failed"));
-   }
+
 // relative/absolute world
 
    {

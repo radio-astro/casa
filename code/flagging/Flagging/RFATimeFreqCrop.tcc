@@ -144,7 +144,7 @@ Bool RFATimeFreqCrop :: newChunk (Int &i)
 
         corrmask = RFDataMapper::corrMask(chunk.visIter());
         Vector<Int> corrlist(num(POLZN));
-        for(uInt corr=0; corr<num(POLZN); corr++)
+        for(Int corr=0; corr<num(POLZN); corr++)
 	  corrlist[corr] = (Int) ( (corrmask >> corr) & 1 );
 	
         /* Check that the above makes sense */
@@ -257,7 +257,7 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
     if(ant2.shape() != (vb.antenna2()).shape())
 	ant2.resize((vb.antenna2()).shape());
     ant2 = vb.antenna2();
-    //const Vector<Int> &ifrs( chunk.ifrNums() );
+    const Vector<Int> &ifrs( chunk.ifrNums() );
     
     uInt nBaselinesInData = ant1.nelements();
     //    cout << "ant1 nelements  : " << nBaselinesInData << " timecnt : " << timecnt << " itertimecnt : " << iterTimecnt << endl;
@@ -265,7 +265,7 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
       /* Polarizations/correlations */
       corrmask = RFDataMapper::corrMask(chunk.visIter());
       Vector<Int> corrlist(num(POLZN));
-      for(uInt corr=0; corr<num(POLZN); corr++)
+      for(Int corr=0; corr<num(POLZN); corr++)
 	corrlist[corr] = (Int) ( (corrmask >> corr) & 1 );
 
       //      if(nBaselinesInData != num(IFR)) cout << "nbaselines is not consistent !" << endl; 
@@ -280,7 +280,7 @@ RFA::IterMode RFATimeFreqCrop :: iterTime (uInt itime)
 	  {
             Int countflags=0, countpnts=0;
             uInt baselinecnt = BaselineIndex(bs,ant1[bs],ant2[bs]);
-            AlwaysAssert( baselinecnt<NumB, AipsError );
+            AlwaysAssert( (baselinecnt>=0 && baselinecnt<NumB), AipsError );
 	    // Read in rowflag
             rowflags( (timecnt*NumB)+baselinecnt ) = flag.getRowFlag( chunk.ifrNum(bs), itime);
 	    for(uInt ch=0;ch<NumC;ch++)
@@ -365,7 +365,7 @@ RFA::IterMode RFATimeFreqCrop :: iterRow  (uInt irow )
 void RFATimeFreqCrop :: FlagZeros()
 {
   Float temp=0;
-  //Bool flg=False;
+  Bool flg=False;
   baselineflags=False;
   
   /* Check if the data in all channels are filled with zeros.
@@ -374,7 +374,7 @@ void RFATimeFreqCrop :: FlagZeros()
   /* Also, if all chans and times are flagged for a baseline, set the baselineflag
      baselineflag is used internally to skip unnecessary baselines */
   
-  for(uInt pl=0;pl<NumP;pl++)
+  for(int pl=0;pl<NumP;pl++)
     {
       for(uInt bs=0;bs<NumB;bs++)
 	{
@@ -384,14 +384,14 @@ void RFATimeFreqCrop :: FlagZeros()
               // If rowflag is set, flag all chans in it
               if(rowflags(tm*NumB+bs))
 		{
-                  for(uInt ch=0;ch<NumC;ch++)
+                  for(int ch=0;ch<NumC;ch++)
 		    flagc(pl,ch,tm*NumB+bs) = True;
 		}
 	      
               // Count flags across channels, and also count the data.
 	      temp=0;
 	      //flg=True;
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(int ch=0;ch<NumC;ch++)
 		{
 		  temp += visc(pl,ch,tm*NumB+bs);
 		  //flg &= flagc(pl,ch,tm*NumB+bs);
@@ -401,13 +401,13 @@ void RFATimeFreqCrop :: FlagZeros()
 	      if(temp==0) 
 		{
 		  rowflags(tm*NumB+bs)=True;
-		  for(uInt ch=0;ch<NumC;ch++)
+		  for(int ch=0;ch<NumC;ch++)
 		    flagc(pl,ch,tm*NumB+bs)=True;
 		}
 	      
 	      // Count flags across channels and time,,,,,
               // If any flag is false, bflag will become false
-              for(uInt ch=0; ch<NumC; ch++)
+              for(int ch=0; ch<NumC; ch++)
                 bflag &= flagc(pl,ch,tm*NumB+bs);
 	      
 	    }// for tm
@@ -463,17 +463,16 @@ void RFATimeFreqCrop :: RunTFCrop()
 /* Grow flags by one timestep, check for complete flagged baselines. */
 void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 {
-  //Float mn=0;
-  Float sd=0,temp=0,flagcnt=0,tol=0;
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
-  //Bool flg=False;
+  Bool flg=False;
   /* For each Channel - fit lines to 1-D data in time - flag according 
    * to them and build up the mean bandpass */
   
   Float rmean=0;
   Ants(bs,&a1,&a2);
 	  //			cout << " Antennas : " << a1 << " & " << a2 << endl;
-	  for(uInt ch=0;ch<NumC;ch++)
+	  for(int ch=0;ch<NumC;ch++)
 	    {
 	      tempTS=0;flagTS=False;
 	      for(uInt tm=0;tm<NumT;tm++)
@@ -531,7 +530,7 @@ void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 		  else tol=BASELN_TOL;
 		  if(fabs(rmean/float(NumC)) < tol)
 		    {
-		      for(uInt ch=0;ch<NumC;ch++)
+		      for(int ch=0;ch<NumC;ch++)
 			for(uInt tm=0;tm<NumT;tm++)
 			  flagc(pl,ch,((tm*NumB)+bs))=True;
 		      if(CorrChoice==0) 
@@ -551,14 +550,14 @@ void RFATimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs)
 
 void RFATimeFreqCrop :: FitCleanBandPass(uInt pl, uInt bs)
 {    
-  //Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
   Bool flg=False;
   
 	  Ants(bs,&a1,&a2);
 	  /* Fit a smooth bandpass */
 	  flg=True;
-	  for(uInt ch=0;ch<NumC;ch++)	
+	  for(int ch=0;ch<NumC;ch++)	
 	    {
 	      tempBP[ch] = meanBP(pl,bs,ch);
 	      if(tempBP[ch] != 0) flg=False;
@@ -598,7 +597,7 @@ void RFATimeFreqCrop :: FitCleanBandPass(uInt pl, uInt bs)
 		  // 	         cout << "meanBP is filled with zeros : baseline : " << a1 << "-" << a2 << endl;
 		  }
 	  */
-	  for(uInt ch=0;ch<NumC;ch++)
+	  for(int ch=0;ch<NumC;ch++)
 	    {
 	      if(flg==False) cleanBP(pl,bs,ch)= fitBP[ch];
 	      else cleanBP(pl,bs,ch)=0;
@@ -609,9 +608,9 @@ void RFATimeFreqCrop :: FitCleanBandPass(uInt pl, uInt bs)
 /* FLAGGING IN FREQUENCY */
 void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 {
-  Float mn=0,sd=0,temp=0,flagcnt=0;
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
-  //Bool flg=False;
+  Bool flg=False;
   
 
 	  Ants(bs,&a1,&a2);
@@ -620,7 +619,7 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 	    {
 	      /* Divide (or subtract) out the clean bandpass */
 	      tempBP=0,flagBP=0;
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(int ch=0;ch<NumC;ch++)
 		{
 		  flagBP[ch] = flagc(pl,ch,((tm*NumB)+bs));
 		  if(flagBP[ch]==False)
@@ -634,7 +633,7 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 		  mn=1;
 		  sd = UStd(tempBP,flagBP,mn);
 		  
-		  for(uInt ch=0;ch<NumC;ch++)
+		  for(Int ch=0;ch<NumC;ch++)
 		    {
 		      if(flagBP[ch]==False && fabs(tempBP[ch]-mn) > F_TOL*sd)
 			{
@@ -648,7 +647,7 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 	      /* If sum of power in two adjacent channels is more than thresh, flag both side chans */
 	      if(FlagLevel>0)
 		{
-	      for(uInt ch=1;ch<NumC-1;ch++)
+	      for(int ch=1;ch<NumC-1;ch++)
 		{
 		  if(flagBP[ch])
 		    {
@@ -659,7 +658,7 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 		}
 
 	      /* Fill the flags into the visbuffer array */
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(Int ch=0;ch<NumC;ch++)
 		flagc(pl,ch,((tm*NumB)+bs))=flagBP[ch];
 	      
 	      
@@ -670,14 +669,15 @@ void RFATimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
 /* APPLY FLAG HEURISTICS ON THE FLAGS FOR ALL AUTOCORRELATIONS */
 void RFATimeFreqCrop :: GrowFlags(uInt pl, uInt bs)
 {
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
-  //Bool flg=False;
+  Bool flg=False;
   
   if(FlagLevel > 0)
     {
 	      Ants(bs,&a1,&a2);
 	      
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(int ch=0;ch<NumC;ch++)
 		{ 
 		  // uInt fsum=0;
 		  for(uInt tm=0;tm<NumT;tm++)
@@ -745,7 +745,7 @@ void RFATimeFreqCrop :: GrowFlags(uInt pl, uInt bs)
 		{
 		  /* If more than 4 surrounding points are flagged, flag it */
 		  uInt fsum2=0;
-		  for(uInt ch=1;ch<NumC-1;ch++)
+		  for(int ch=1;ch<NumC-1;ch++)
 		    {
 		      for(uInt tm=1;tm<NumT-1;tm++)
 			{
@@ -762,7 +762,7 @@ void RFATimeFreqCrop :: GrowFlags(uInt pl, uInt bs)
 		{
 		  uInt fsum2=0;
 		  /* Grow flags in time */
-		  for(uInt ch=0;ch<NumC;ch++)
+		  for(int ch=0;ch<NumC;ch++)
 		    { 
 		      fsum2=0;
 		      /* count unflagged points for this channel (all times) */
@@ -811,7 +811,9 @@ void RFATimeFreqCrop :: GrowFlags(uInt pl, uInt bs)
 /* GRAY SCALE DISPLAYS ON ds9 */
 RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 {    
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
+  Bool flg=False;
   if(ShowPlots)
     {
       
@@ -835,7 +837,7 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
       char choice = 'a';
       
       Float runningsum=0, runningflag=0, oldrunningflag=0;
-      for(uInt pl=0;pl<NumP;pl++)
+      for(int pl=0;pl<NumP;pl++)
 	{
 	  if(choice == 's') continue;
 	  for(uInt bs=0;bs<NumB;bs++)
@@ -852,13 +854,13 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 	      else
 		{if(a1==a2) continue;} // choose cross correlations
 	      
-	      for(uInt ch=0;ch<NumC;ch++)	
+	      for(int ch=0;ch<NumC;ch++)	
 		{
 		  tempBP[ch] = meanBP(pl,bs,ch);
 		  fitBP[ch] = cleanBP(pl,bs,ch);
 		}
 	      
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(int ch=0;ch<NumC;ch++)
 		{ 
 		  for(uInt tm=0;tm<NumT;tm++)
 		    {       
@@ -934,20 +936,22 @@ RFA::IterMode RFATimeFreqCrop :: ShowFlagPlots()
 */
 void RFATimeFreqCrop :: ExtendFlags()
 {    
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
   uInt a1,a2;
+  Bool flg=False;
   
   /* FLAG BASELINES FROM THE SELF FLAGS */
   if(CorrChoice ==0)
     {	
       cout << " Flagging Cross correlations from self correlation flags " << endl;
-      for(uInt pl=0;pl<NumP;pl++)
+      for(int pl=0;pl<NumP;pl++)
 	{
 	  for(uInt bs=0;bs<NumB;bs++)
 	    {
 	      if(baselineflags(bs)) continue;
 	      Ants(bs,&a1,&a2);
 	      if(a1 == a2) continue; // choose cross correlations
-	      for(uInt ch=0;ch<NumC;ch++)
+	      for(int ch=0;ch<NumC;ch++)
 		{
 		  for(uInt tm=0;tm<NumT;tm++)
 		    {
@@ -962,15 +966,18 @@ void RFATimeFreqCrop :: ExtendFlags()
 
 void RFATimeFreqCrop :: FillChunkFlags()
 {
+  Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
+  uInt a1,a2;
+  Bool flg=False;
   //cout << " Diagnostics on flag cube " << endl;
   
-  for(uInt pl=0;pl<NumP;pl++)
+  for(int pl=0;pl<NumP;pl++)
     {
       for(uInt bs=0;bs<NumB;bs++)
 	{
 	  //if(RowFlags(pl,(tm*NumB)+bs)==True)
 	  //	continue;
-	  for(uInt ch=0;ch<NumC;ch++)
+	  for(int ch=0;ch<NumC;ch++)
 	    {
 	      for(uInt tm=0;tm<NumT;tm++)
 		{
@@ -1102,7 +1109,7 @@ void RFATimeFreqCrop :: endChunk ()
     {
       Float runningcount=0, runningflag=0;
       
-      //const Vector<Int> &ifrs( chunk.ifrNums() );
+      const Vector<Int> &ifrs( chunk.ifrNums() );
       if(ant1.shape() != (vb.antenna1()).shape())
 	ant1.resize((vb.antenna1()).shape());
       ant1 = vb.antenna1();
@@ -1131,7 +1138,7 @@ void RFATimeFreqCrop :: endChunk ()
       /* Polarizations/correlations */
       corrmask = RFDataMapper::corrMask(chunk.visIter());
       Vector<Int> corrlist(num(POLZN));
-      for(uInt corr=0; corr<num(POLZN); corr++)
+      for(Int corr=0; corr<num(POLZN); corr++)
 	corrlist[corr] = (Int) ( (corrmask >> corr) & 1 );
       
       //      cout << "--> Flagged " << 100 * runningflag/runningcount << " % on " << Expr << ". Applying to correlations : " << corrlist << endl;
@@ -1209,7 +1216,7 @@ Float RFATimeFreqCrop :: UStd(Vector<Float> vect, Vector<Bool> flag, Float mean)
 void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 {
   //    Int step=0,ind=0;
-  Int deg=0; //start=0;
+  Int deg=0,start=0;
   Int left=0,right=0;
   //  Int le=0,ri=0;
   Float sd,TOL=3;
@@ -1308,7 +1315,7 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
       
       /* Now, smooth the fit - make this nicer later */
       
-      int winstart=0, winend=0;
+      int winstart=0,winend=0;
       float winsum=0.0;
       int offset=2;
       for(uInt i=offset;i<tdata.nelements()-offset;i++)
@@ -1316,10 +1323,10 @@ void RFATimeFreqCrop :: CleanBand(Vector<Float> data,Vector<Float> fit)
 	  winstart = i-offset;
 	  winend = i+offset;
 	  if(winstart<0)winstart=0;
-	  if(static_cast<uInt>(winend)>=tdata.nelements()) winend=tdata.nelements()-1;
+	  if(winend>=tdata.nelements())winend=tdata.nelements()-1;
 	  if(winend <= winstart) break;
 	  winsum=0.0;
-	  for(uInt wi=winstart;wi<=static_cast<uInt>(winend);++wi)
+	  for(uInt wi=winstart;wi<=winend;++wi)
 	    winsum += fit[wi];
 	  fit[i] = winsum/(winend-winstart+1);
 	}
@@ -1452,7 +1459,7 @@ void RFATimeFreqCrop :: Ants(uInt bs, uInt *a1, uInt *a2)
 }
 
 /* Return baseline index from a pair of antenna numbers - upper triangle storage */
-uInt RFATimeFreqCrop :: BaselineIndex(uInt /*row*/, uInt a1, uInt a2)
+uInt RFATimeFreqCrop :: BaselineIndex(uInt row, uInt a1, uInt a2)
 {
   return ( (NumAnt)*((NumAnt)+1)/2 - ((NumAnt)-a1)*((NumAnt)-a1+1)/2 + (a2 - a1) );
 }
@@ -1466,7 +1473,7 @@ void RFATimeFreqCrop :: Display_ds9(Int xdim, Int ydim, Matrix<Float> &data, Int
   FILE *SAOout = NULL;
   char tmp[100];
   char server[100] = "ds9";	
-  int bitpix = -32;
+  int bitpix = -32, i;
   char xpa[100] = "";
   
   strcpy (xpa, "xpaset");
@@ -1511,11 +1518,10 @@ void RFATimeFreqCrop :: Display_ds9(Int xdim, Int ydim, Matrix<Float> &data, Int
 void RFATimeFreqCrop :: Plot_ds9(Int dim, Vector<Float> data1, Vector<Float> data2)
 {
   
-  //  FILE *SAOout = NULL;
-  //char tmp[100];
-  //char server[100] = "ds9";	
-  //int bitpix = -32;
-  int i;
+  FILE *SAOout = NULL;
+  char tmp[100];
+  char server[100] = "ds9";	
+  int bitpix = -32, i;
   char xpa[100] = "";
   
   //static Bool firstentry=True;

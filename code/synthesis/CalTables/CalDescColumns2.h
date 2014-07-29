@@ -39,7 +39,7 @@
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/TableMeasures/ArrayQuantColumn.h>
 #include <synthesis/CalTables/CalTable2.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <synthesis/MSVis/MSCalEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

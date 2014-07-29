@@ -77,13 +77,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     </default>
                 </notequals>
             </when>
-            <when param="outfile">
-                <notequals type="string" value="">
-                    <default param="overwrite">
-                        <value>False</value>
-                    </default>
-                </notequals>
-            </when>
         </constraints>
     </input>
     <returns type="image"/>
@@ -111,7 +104,6 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 OVERVIEW
 
 This task copies all or part of the image to a new image specified by outfile.
-Both float and complex valued images are supported.
 
 Sometimes it is useful to drop axes of length one (degenerate axes).
 Set {\stfaf dropdeg} equal to True if you want to do this.

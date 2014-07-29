@@ -26,7 +26,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
@@ -42,10 +42,10 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <scimath/Mathematics/RigidVector.h>
-#include <msvis/MSVis/StokesVector.h>
+#include <synthesis/MSVis/StokesVector.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisSet.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/PagedImage.h>
@@ -978,7 +978,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Vector<Int> inStokes, outStokes(1);
       index = coords.findCoordinate(Coordinate::STOKES);
       inStokes = coords.stokesCoordinate(index).stokes();
-      for (uInt i=0; i<inStokes.nelements(); i++)
+      for (Int i=0; i<inStokes.nelements(); i++)
 	{
 	  outStokes(0)=inStokes(i);
 	  // Make a temp. image with a single Stokes along Pol. axis.
@@ -1635,7 +1635,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  Vector<Int> inStokes, outStokes(1);
 	  index = coords.findCoordinate(Coordinate::STOKES);
 	  inStokes = coords.stokesCoordinate(index).stokes();
-	  for (uInt i=0; i<inStokes.nelements(); i++)
+	  for (Int i=0; i<inStokes.nelements(); i++)
 	    {
 	      outStokes(0)=inStokes(i);
 	      // Make a temp. image with a single Stokes along Pol. axis.
@@ -3803,8 +3803,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LatticeIterator<Float> liy(avgPB,lsx);
     for(lix.reset();!lix.atEnd();lix++) 
       {
-	// UNUSED  Int pol=lix.position()(2);
-	// UNUSED  Int chan=lix.position()(3);
+	Int pol=lix.position()(2);
+	Int chan=lix.position()(3);
 	//	lix.rwCursor()=weights(pol,chan);
 	lix.rwCursor()=liy.rwCursor();
       }
@@ -3813,7 +3813,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
 Bool nPBWProjectFT::toRecord(String&, //error,
-			     RecordInterface& outRec, Bool withImage, const String diskimage) 
+			     RecordInterface& outRec, Bool withImage) 
 {    
     // Save the current nPBWProjectFT object to an output state record
     Bool retval = True;
@@ -3847,25 +3847,17 @@ Bool nPBWProjectFT::toRecord(String&, //error,
     outRec.define("centerloc", center_loc);
     outRec.define("offsetloc", offset_loc);
     outRec.define("sumofweights", sumWeight);
-    if(withImage && image ){
-      if(diskimage==""){ 
+    if(withImage && image)
+      { 
 	ImageInterface<Complex>& tempimage(*image);
 	Record imageContainer;
 	String error;
 	retval = (retval || tempimage.toRecord(error, imageContainer));
 	outRec.defineRecord("image", imageContainer);
       }
-      else{
-	PagedImage<Complex> tempImage(image->shape(), image->coordinates(), diskimage);
-	tempImage.copyData(*image);
-	outRec.define("diskimage", diskimage);
-      }
-    }
-    
     return retval;
-    
+  }
   //
-}
   //---------------------------------------------------------------
   //
 Bool nPBWProjectFT::fromRecord(String&, //error,
@@ -3910,7 +3902,7 @@ Bool nPBWProjectFT::fromRecord(String&, //error,
     offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 			offset_loc(3));
     inRec.get("sumofweights", sumWeight);
-    if(inRec.isDefined("image"))
+    if(inRec.nfields() > 12 )
       {
 	Record imageAsRec=inRec.asRecord("image");
 	if(!image) image= new TempImage<Complex>(); 
@@ -3945,14 +3937,7 @@ Bool nPBWProjectFT::fromRecord(String&, //error,
 	  }
 	
 	AlwaysAssert(image, AipsError);
-      }
-    else if(inRec.isDefined("diskimage")){
-	String diskim;
-	inRec.get("diskimage", diskim);
-	image=new PagedImage<Complex>(diskim);
-    }
-    
-    
+      };
     return retval;
   }
   //

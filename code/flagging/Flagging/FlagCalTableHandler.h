@@ -45,156 +45,155 @@ public:
 	DummyBufferImpl() {}
 	~DummyBufferImpl() {}
 
-	virtual void copy (const VisBuffer2 & /*other*/, Bool /*fetchIfNeeded*/) {}
-    virtual void copyComponents (const VisBuffer2 & /*other*/,
-				 const VisBufferComponents2 & /*components*/,
-				 Bool /*allowShapeChange*/ = False,
-				 Bool /*fetchIfNeeded*/ = True) {}
-    virtual void copyCoordinateInfo(const VisBuffer2 * /*other*/, Bool /*includeDirections*/,
-   				    Bool /*allowShapeChange*/ = False,
-                    Bool /*fetchIfNeeded*/ = True) {}
+	virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded) {}
+    virtual void copyComponents (const VisBuffer2 & other,
+				 const VisBufferComponents2 & components,
+				 Bool allowShapeChange = False,
+				 Bool fetchIfNeeded = True) {}
+    virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
+   				    Bool allowShapeChange = False,
+                                    Bool fetchIfNeeded = True) {}
 
-    virtual void setShape (Int /*nCorrelations*/, Int /*nChannels*/, Int /*nRows*/, Bool) {}
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool) {}
     virtual const vi::VisibilityIterator2 * getVi () const {return NULL;}
 
     virtual Bool isAttached () const {return True;}
     virtual Bool isFillable () const {return True;}
 
     virtual void writeChangesBack () {}
-    virtual void dirtyComponentsAdd (const VisBufferComponents2 & /*additionalDirtyComponents*/) {}
-    virtual void dirtyComponentsAdd (VisBufferComponent2 /*component*/) {}
+    virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) {}
+    virtual void dirtyComponentsAdd (VisBufferComponent2 component) {}
     virtual void dirtyComponentsClear () {}
     virtual VisBufferComponents2 dirtyComponentsGet () const { VisBufferComponents2 dummy; return dummy;}
-    virtual void dirtyComponentsSet (const VisBufferComponents2 & /*dirtyComponents*/) {}
-    virtual void dirtyComponentsSet (VisBufferComponent2 /*component*/) {}
+    virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents) {}
+    virtual void dirtyComponentsSet (VisBufferComponent2 component) {}
 
-    virtual const Matrix<Float> & imagingWeight() const {static Matrix<Float> dummy; return dummy;}
+    virtual const Matrix<Float> & imagingWeight() const {Matrix<Float> dummy; return dummy;}
 
-    virtual Double getFrequency (Int /*rowInBuffer*/, Int /*frequencyIndex*/,
-                                 Int /*frame*/ = FrameNotSpecified) const { static Double dummy; return dummy;}
-    virtual const Vector<Double> & getFrequencies (Int /*rowInBuffer*/,
-                                                 Int /*frame*/ = FrameNotSpecified) const {static Vector<Double> dummy; return dummy;}
-    virtual Int getChannelNumber (Int /*rowInBuffer*/, Int /*frequencyIndex*/) const {static Int dummy; return dummy;}
-    virtual const Vector<Int> & getChannelNumbers (Int /*rowInBuffer*/) const {static Vector<Int> dummy; return dummy;}
+    virtual Double getFrequency (Int rowInBuffer, Int frequencyIndex,
+                                 Int frame = FrameNotSpecified) const {Double dummy; return dummy;}
+    virtual const Vector<Double> & getFrequencies (Int rowInBuffer,
+                                                 Int frame = FrameNotSpecified) const {Vector<Double> dummy; return dummy;}
+    virtual Int getChannelNumber (Int rowInBuffer, Int frequencyIndex) const {Int dummy; return dummy;}
+    virtual const Vector<Int> & getChannelNumbers (Int rowInBuffer) const {Vector<Int> dummy; return dummy;}
 
     virtual void normalize() {}
 
     virtual void resetWeightsUsingSigma () {}
 
-    virtual Bool isNewArrayId () const {static Bool dummy; return dummy;}
-    virtual Bool isNewFieldId () const {static Bool dummy; return dummy;}
-    virtual Bool isNewMs() const {static Bool dummy; return dummy;}
-    virtual Bool isNewSpectralWindow () const {static Bool dummy; return dummy;}
-    virtual Bool isWritable () const {static Bool dummy; return dummy;}
-    virtual Int msId() const {static Int dummy; return dummy;}
-    virtual String msName (Bool /*stripPath*/ = False) const {String dummy; return dummy;}
+    virtual Bool isNewArrayId () const {Bool dummy; return dummy;}
+    virtual Bool isNewFieldId () const {Bool dummy; return dummy;}
+    virtual Bool isNewMs() const {Bool dummy; return dummy;}
+    virtual Bool isNewSpectralWindow () const {Bool dummy; return dummy;}
+    virtual Bool isWritable () const {Bool dummy; return dummy;}
+    virtual Int msId() const {Int dummy; return dummy;}
+    virtual String msName (Bool stripPath = False) const {String dummy; return dummy;}
     virtual vi::Subchunk getSubchunk () const {vi::Subchunk dummy; return dummy;}
 
-    virtual const Vector<Int> & antenna1 () const {static Vector<Int> dummy; return dummy;}
-    virtual void setAntenna1 (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int> & antenna2 () const {static Vector<Int> dummy; return dummy;}
-    virtual void setAntenna2 (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int>& arrayId () const {static Vector<Int> dummy; return dummy;}
+    virtual const Vector<Int> & antenna1 () const {Vector<Int> dummy; return dummy;}
+    virtual void setAntenna1 (const Vector<Int> & value) {}
+    virtual const Vector<Int> & antenna2 () const {Vector<Int> dummy; return dummy;}
+    virtual void setAntenna2 (const Vector<Int> & value) {}
+    virtual const Vector<Int>& arrayId () const {Vector<Int> dummy; return dummy;}
     virtual void setArrayId (const Vector<Int>&) {}
-    virtual Int dataDescriptionId () const {static Int dummy; return dummy;}
-    virtual void setDataDescriptionId (Int /*value*/) {}
+    virtual Int dataDescriptionId () const {Int dummy; return dummy;}
+    virtual void setDataDescriptionId (Int value) {}
     virtual void setDataDescriptionIds(const casa::Vector<int>&){}
-    virtual const Vector<MDirection> & direction1 () const {static Vector<MDirection> dummy; return dummy;}
-    virtual const Vector<MDirection> & direction2 () const {static Vector<MDirection> dummy; return dummy;}
-    virtual const Vector<Double> & exposure () const {static Vector<Double> dummy; return dummy;}
-    virtual void setExposure (const Vector<Double> & /*value*/) {}
-    virtual const Vector<Int> & feed1 () const {static Vector<Int> dummy; return dummy;}
-    virtual void setFeed1 (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int> & feed2 () const {static Vector<Int> dummy; return dummy;}
-    virtual void setFeed2 (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int>& fieldId () const {static Vector<Int> dummy; return dummy;}
+    virtual const Vector<MDirection> & direction1 () const {Vector<MDirection> dummy; return dummy;}
+    virtual const Vector<MDirection> & direction2 () const {Vector<MDirection> dummy; return dummy;}
+    virtual const Vector<Double> & exposure () const {Vector<Double> dummy; return dummy;}
+    virtual void setExposure (const Vector<Double> & value) {}
+    virtual const Vector<Int> & feed1 () const {Vector<Int> dummy; return dummy;}
+    virtual void setFeed1 (const Vector<Int> & value) {}
+    virtual const Vector<Int> & feed2 () const {Vector<Int> dummy; return dummy;}
+    virtual void setFeed2 (const Vector<Int> & value) {}
+    virtual const Vector<Int>& fieldId () const {Vector<Int> dummy; return dummy;}
     virtual void setFieldId (const Vector<Int>&) {}
-    virtual const Matrix<Bool> & flag () const {static Matrix<Bool> dummy; return dummy;}
-    virtual void setFlag (const Matrix<Bool>& /*value*/) {}
-    virtual const Array<Bool> & flagCategory () const {static Array<Bool> dummy; return dummy;}
-    virtual void setFlagCategory (const Array<Bool>& /*value*/) {}
-    virtual const Cube<Bool> & flagCube () const {static Cube<Bool> dummy; return dummy;}
-    virtual void setFlagCube (const Cube<Bool>& /*value*/) {}
-    virtual const Vector<Bool> & flagRow () const {static Vector<Bool> dummy; return dummy;}
-    virtual void setFlagRow (const Vector<Bool>& /*value*/) {}
-    virtual const Vector<Int> & observationId () const {static Vector<Int> dummy; return dummy;}
-    virtual void setObservationId (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int> & processorId () const {static Vector<Int> dummy; return dummy;}
-    virtual void setProcessorId (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Int> & scan () const {static Vector<Int> dummy; return dummy;}
-    virtual void setScan (const Vector<Int> & /*value*/) {}
-    virtual const Matrix<Float> & sigma () const {static Matrix<Float> dummy; return dummy;}
-    virtual void setSigma (const Matrix<Float> & /*value*/) {}
-    virtual const Matrix<Float> & sigmaMat () const {static Matrix<Float> dummy; return dummy;}
-    virtual const Vector<Int> & stateId () const {static Vector<Int> dummy; return dummy;}
-    virtual void setStateId (const Vector<Int> & /*value*/) {}
-    virtual const Vector<Double> & time () const {static Vector<Double> dummy; return dummy;}
-    virtual void setTime (const Vector<Double> & /*value*/) {}
-    virtual const Vector<Double> & timeCentroid () const {static Vector<Double> dummy; return dummy;}
-    virtual void setTimeCentroid (const Vector<Double> & /*value*/) {}
-    virtual const Vector<Double> & timeInterval () const {static Vector<Double> dummy; return dummy;}
-    virtual void setTimeInterval (const Vector<Double> & /*value*/) {}
-    virtual const Matrix<Double> & uvw () const {static Matrix<Double> dummy; return dummy;}
-    virtual void setUvw (const Matrix<Double> & /*value*/) {}
-    virtual const Matrix<Float> & weight () const {static Matrix<Float> dummy; return dummy;}
-    virtual void setWeight (const Matrix<Float>& /*value*/) {}
-    virtual const Matrix<Float> & weightMat () const {static Matrix<Float> dummy; return dummy;}
-    virtual void setWeightMat (const Matrix<Float>& /*value*/) {}
-    virtual const Cube<Float> & weightSpectrum () const {static Cube<Float> dummy; return dummy;}
-    virtual void setWeightSpectrum (const Cube<Float>& /*value*/) {}
+    virtual const Matrix<Bool> & flag () const {Matrix<Bool> dummy; return dummy;}
+    virtual void setFlag (const Matrix<Bool>& value) {}
+    virtual const Array<Bool> & flagCategory () const {Array<Bool> dummy; return dummy;}
+    virtual void setFlagCategory (const Array<Bool>& value) {}
+    virtual const Cube<Bool> & flagCube () const {Cube<Bool> dummy; return dummy;}
+    virtual void setFlagCube (const Cube<Bool>& value) {}
+    virtual const Vector<Bool> & flagRow () const {Vector<Bool> dummy; return dummy;}
+    virtual void setFlagRow (const Vector<Bool>& value) {}
+    virtual const Vector<Int> & observationId () const {Vector<Int> dummy; return dummy;}
+    virtual void setObservationId (const Vector<Int> & value) {}
+    virtual const Vector<Int> & processorId () const {Vector<Int> dummy; return dummy;}
+    virtual void setProcessorId (const Vector<Int> & value) {}
+    virtual const Vector<Int> & scan () const {Vector<Int> dummy; return dummy;}
+    virtual void setScan (const Vector<Int> & value) {}
+    virtual const Matrix<Float> & sigma () const {Matrix<Float> dummy; return dummy;}
+    virtual void setSigma (const Matrix<Float> & value) {}
+    virtual const Matrix<Float> & sigmaMat () const {Matrix<Float> dummy; return dummy;}
+    virtual const Vector<Int> & stateId () const {Vector<Int> dummy; return dummy;}
+    virtual void setStateId (const Vector<Int> & value) {}
+    virtual const Vector<Double> & time () const {Vector<Double> dummy; return dummy;}
+    virtual void setTime (const Vector<Double> & value) {}
+    virtual const Vector<Double> & timeCentroid () const {Vector<Double> dummy; return dummy;}
+    virtual void setTimeCentroid (const Vector<Double> & value) {}
+    virtual const Vector<Double> & timeInterval () const {Vector<Double> dummy; return dummy;}
+    virtual void setTimeInterval (const Vector<Double> & value) {}
+    virtual const Matrix<Double> & uvw () const {Matrix<Double> dummy; return dummy;}
+    virtual void setUvw (const Matrix<Double> & value) {}
+    virtual const Matrix<Float> & weight () const {Matrix<Float> dummy; return dummy;}
+    virtual void setWeight (const Matrix<Float>& value) {}
+    virtual const Matrix<Float> & weightMat () const {Matrix<Float> dummy; return dummy;}
+    virtual void setWeightMat (const Matrix<Float>& value) {}
+    virtual const Cube<Float> & weightSpectrum () const {Cube<Float> dummy; return dummy;}
+    virtual void setWeightSpectrum (const Cube<Float>& value) {}
     virtual const Cube<float>& sigmaSpectrum() const {Cube<Float> dummy; return dummy;}
     virtual void setSigmaSpectrum(const Cube<float>&) {}
-
-    virtual const Cube<Complex> & visCube () const {static Cube<Complex> dummy; return dummy;}
-    virtual void setVisCube(const Complex & /*c*/) {}
+    virtual const Cube<Complex> & visCube () const {Cube<Complex> dummy; return dummy;}
+    virtual void setVisCube(const Complex & c) {}
     virtual void setVisCube (const Cube<Complex> &){}
-    virtual const Matrix<CStokesVector> & vis () const {static Matrix<CStokesVector> dummy; return dummy;}
+    virtual const Matrix<CStokesVector> & vis () const {Matrix<CStokesVector> dummy; return dummy;}
     virtual void setVis (Matrix<CStokesVector> &) {}
-    virtual const Cube<Complex> & visCubeCorrected () const {static Cube<Complex> dummy; return dummy;}
+    virtual const Cube<Complex> & visCubeCorrected () const {Cube<Complex> dummy; return dummy;}
     virtual void setVisCubeCorrected (const Cube<Complex> &) {}
-    virtual const Matrix<CStokesVector> & visCorrected () const {static Matrix<CStokesVector> dummy; return dummy;}
+    virtual const Matrix<CStokesVector> & visCorrected () const {Matrix<CStokesVector> dummy; return dummy;}
     virtual void setVisCorrected (const Matrix<CStokesVector> &) {}
-    virtual const Cube<Float> & visCubeFloat () const {static Cube<Float> dummy; return dummy;}
+    virtual const Cube<Float> & visCubeFloat () const {Cube<Float> dummy; return dummy;}
     virtual void setVisCubeFloat (const Cube<Float> &) {}
-    virtual const Cube<Complex> & visCubeModel () const {static Cube<Complex> dummy; return dummy;}
-    virtual void setVisCubeModel(const Complex & /*c*/) {}
-    virtual void setVisCubeModel(const Cube<Complex>& /*vis*/) {}
-    virtual void setVisCubeModel(const Vector<Float>& /*stokes*/) {}
-    virtual const Matrix<CStokesVector> & visModel () const {static Matrix<CStokesVector> dummy; return dummy;}
+    virtual const Cube<Complex> & visCubeModel () const {Cube<Complex> dummy; return dummy;}
+    virtual void setVisCubeModel(const Complex & c) {}
+    virtual void setVisCubeModel(const Cube<Complex>& vis) {}
+    virtual void setVisCubeModel(const Vector<Float>& stokes) {}
+    virtual const Matrix<CStokesVector> & visModel () const {Matrix<CStokesVector> dummy; return dummy;}
     virtual void setVisModel (Matrix<CStokesVector> &) {}
 
-	virtual MDirection azel0 (Double /*time*/) const {static MDirection dummy; return dummy;}
-	virtual Vector<MDirection> & azel(Double /*time*/) const {static Vector<MDirection> dummy; return dummy;}
-	virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const {static Vector<SquareMatrix<Complex, 2> > dummy; return dummy;}
-	virtual const Vector<Int> & correlationTypes () const {static Vector<Int> dummy; return dummy;}
-	virtual Vector<Float> & feedPa(Double /*time*/) const {static Vector<Float> dummy; return dummy;}
-	virtual const Vector<Float> & feedPa1 () const {static Vector<Float> dummy; return dummy;}
-	virtual const Vector<Float> & feedPa2 () const {static Vector<Float> dummy; return dummy;}
-	virtual Double hourang(Double /*time*/) const {static Double dummy; return dummy;}
-	virtual Int nAntennas () const {static Int dummy; return dummy;}
-	virtual Int nChannels () const {static Int dummy; return dummy;}
-	virtual Int nCorrelations () const {static Int dummy; return dummy;}
-	virtual Int nRows () const {static Int dummy; return dummy;}
-	virtual Float parang0(Double /*time*/) const {static Float dummy; return dummy;}
-	virtual Vector<Float> & parang(Double /*time*/) const {static Vector<Float> dummy; return dummy;}
-	virtual const MDirection& phaseCenter () const {static MDirection dummy; return dummy;}
-	virtual Int polarizationFrame () const {static Int dummy; return dummy;}
-	virtual Int polarizationId () const {static Int dummy; return dummy;}
-	virtual const Vector<uInt> & rowIds () const {static Vector<uInt> dummy; return dummy;}
-	virtual Int spectralWindow () const {static Int dummy; return dummy;}
-	virtual const Vector<Int> & spectralWindows () const {static Vector<Int> dummy; return dummy;}
+	virtual MDirection azel0 (Double time) const {MDirection dummy; return dummy;}
+	virtual Vector<MDirection> & azel(Double time) const {Vector<MDirection> dummy; return dummy;}
+	virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const {Vector<SquareMatrix<Complex, 2> > dummy; return dummy;}
+	virtual const Vector<Int> & correlationTypes () const {Vector<Int> dummy; return dummy;}
+	virtual Vector<Float> & feedPa(Double time) const {Vector<Float> dummy; return dummy;}
+	virtual const Vector<Float> & feedPa1 () const {Vector<Float> dummy; return dummy;}
+	virtual const Vector<Float> & feedPa2 () const {Vector<Float> dummy; return dummy;}
+	virtual Double hourang(Double time) const {Double dummy; return dummy;}
+	virtual Int nAntennas () const {Int dummy; return dummy;}
+	virtual Int nChannels () const {Int dummy; return dummy;}
+	virtual Int nCorrelations () const {Int dummy; return dummy;}
+	virtual Int nRows () const {Int dummy; return dummy;}
+	virtual Float parang0(Double time) const {Float dummy; return dummy;}
+	virtual Vector<Float> & parang(Double time) const {Vector<Float> dummy; return dummy;}
+	virtual const MDirection& phaseCenter () const {MDirection dummy; return dummy;}
+	virtual Int polarizationFrame () const {Int dummy; return dummy;}
+	virtual Int polarizationId () const {Int dummy; return dummy;}
+	virtual const Vector<uInt> & rowIds () const {Vector<uInt> dummy; return dummy;}
+	virtual Int spectralWindow () const {Int dummy; return dummy;}
+	virtual const Vector<Int> & spectralWindows () const {Vector<Int> dummy; return dummy;}
         virtual void setSpectralWindows (const Vector<Int> & /*spectralWindows*/) {}
         virtual Bool modelDataIsVirtual () const { return false;}
 
 
-    virtual void setFillable (Bool /*isFillable*/) {}
-    virtual const Vector<Int> & dataDescriptionIds () const {static Vector<Int> dummy; return dummy;}
-    virtual Vector<Int> getCorrelationTypes () const {static Vector<Int> dummy; return dummy;}
+    virtual void setFillable (Bool isFillable) {}
+    virtual const Vector<Int> & dataDescriptionIds () const {Vector<Int> dummy; return dummy;}
+    virtual Vector<Int> getCorrelationTypes () const {Vector<Int> dummy; return dummy;}
     virtual void validateShapes () const {}
 
-    virtual Float getWeightScaled (Int /*row*/) const { return 0;}
-    virtual Float getWeightScaled (Int /*correlation*/, Int /*row*/) const { return 0;}
-    virtual Float getWeightScaled (Int /*correlation*/, Int /*channel*/, Int /*row*/) const { return 0;}
+    virtual Float getWeightScaled (Int row) const { return 0;}
+    virtual Float getWeightScaled (Int correlation, Int row) const { return 0;}
+    virtual Float getWeightScaled (Int correlation, Int channel, Int row) const { return 0;}
     virtual Float getSigmaScaled (Int row) const { return 0;}
     virtual Float getSigmaScaled (Int correlation, Int row) const { return 0;}
     virtual Float getSigmaScaled (Int correlation, Int channel, Int row) const { return 0;}
@@ -203,15 +202,15 @@ public:
 
 protected:
 
-    virtual void configureNewSubchunk (Int /*msId*/, const String & /*msName*/, Bool /*isNewMs*/,
-                                       Bool /*isNewArrayId*/, Bool /*isNewFieldId*/,
-                                       Bool /*isNewSpectralWindow*/, const vi::Subchunk & /*subchunk*/,
-                                       Int /*nRows*/, Int /*nChannels*/, Int /*nCorrelations*/,
-                                       const Vector<Int> & /*correlations*/,
-                                       CountedPtr <vi::WeightScaling> /*weightScaling*/) {}
+    virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
+                                       Bool isNewArrayId, Bool isNewFieldId,
+                                       Bool isNewSpectralWindow, const vi::Subchunk & subchunk,
+                                       Int nRows, Int nChannels, Int nCorrelations,
+                                       const Vector<Int> & correlations,
+                                       CountedPtr <vi::WeightScaling> weightScaling) {}
     virtual void invalidate() {}
-    virtual Bool isRekeyable () const {static Bool dummy; return dummy;}
-    virtual void setRekeyable (Bool /*isRekeable*/) {}
+    virtual Bool isRekeyable () const {Bool dummy; return dummy;}
+    virtual void setRekeyable (Bool isRekeable) {}
 
 };
 
@@ -320,7 +319,7 @@ public:
 	const Vector<Int>& antenna2() const {return ctCache_p->antenna2();}
 	const Cube<Bool>& flagCube() const {return ctCache_p->flagCube();}
 	const Vector<Int>& getChannelNumbers(Int rowInBuffer) const {return ctCache_p->getChannelNumbers(rowInBuffer);}
-	const Vector<Double>& getFrequencies(Int rowInBuffer,Int /*frame*/ = vi::VisBuffer2::FrameNotSpecified) const {return ctCache_p->getFrequencies(rowInBuffer);}
+	const Vector<Double>& getFrequencies(Int rowInBuffer,Int frame = vi::VisBuffer2::FrameNotSpecified) const {return ctCache_p->getFrequencies(rowInBuffer);}
 	Int nRows() const {return ctCache_p->nRows();}
 	Int nChannels() const {return ctCache_p->nChannels();}
 	Int nCorrelations() const {return ctCache_p->nCorrelations();}

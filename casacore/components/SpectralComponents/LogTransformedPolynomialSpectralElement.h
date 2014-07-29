@@ -74,13 +74,13 @@ class LogTransformedPolynomialSpectralElement: public PolynomialSpectralElement 
 public:
 
 	// Constructor. The n coefficients c_i to be solved for are
-	// c_0 + c_1 * ln(x) + c_2 * ln(x)**2 + c_3 * ln(x)**3 + ... c_(n-1)*ln(x)**(n-1)
+	// ln(c_0) + c_1 * ln(x) + c_2 * ln(x)**2 + c_3 * ln(x)**3 + ... c_(n-1)*ln(x)**(n-1)
 	// where x = nu/nu0. <src> order</order> is the polynomial, so the actual
 	// function will have order+1 coefficients
 	explicit LogTransformedPolynomialSpectralElement(uInt order);
 
-	// Construct with the given parameters. See above constructor for
-	// order in which the parameters should be supplied.
+	// Construct with the given parameters. See above constructor for order in which the parameters should
+	// be supplied.
 	LogTransformedPolynomialSpectralElement(const Vector<Double> &param);
 
 	// Copy constructor (deep copy)

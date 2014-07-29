@@ -28,7 +28,7 @@
 #include <display/Slicer/SliceSegment.qo.h>
 #include <display/Slicer/ImageSliceColorBar.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <msvis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <QPen>
 #include <QDebug>
 #include <QtCore/qmath.h>

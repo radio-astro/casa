@@ -33,7 +33,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays.h>
 #include <casa/Containers/Block.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 
 namespace casa {

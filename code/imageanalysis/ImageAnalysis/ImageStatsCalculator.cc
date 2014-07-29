@@ -42,11 +42,11 @@ const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
 
 ImageStatsCalculator::ImageStatsCalculator(
-		const SPCIIF image,
+		const ImageTask::shCImFloat image,
 	const Record *const &regionPtr,
 	const String& maskInp,
 	Bool beVerboseDuringConstruction
-) : ImageTask<Float>(
+) : ImageTask(
 		image, "", regionPtr, "", "",
 		"", maskInp, "", False
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
@@ -77,17 +77,17 @@ Record ImageStatsCalculator::calculate() {
 				_writeLogfile("# " + *iter, False, False);
 			}
 		}
-		SPIIF clone(_getImage()->cloneII());
-		ImageCollapser<Float> collapsed(
+		std::tr1::shared_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
+		ImageCollapser collapsed(
 			clone,
 			_axes.nelements() == 0
 				? IPosition::makeAxisPath(clone->ndim()).asVector()
 				: _axes,
-			False, ImageCollapserData::ZERO, "", False
+			False, ImageCollapser::ZERO, "", False
 		);
-		SPIIF tempIm;
+		std::tr1::shared_ptr<ImageInterface<Float> > tempIm;
 		try {
-			tempIm = collapsed.collapse();
+			tempIm.reset(collapsed.collapse(True));
 		}
 		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Unable to collapse image "
@@ -262,7 +262,7 @@ Record ImageStatsCalculator::statistics(
 	vector<String> *const &messageStore
 ) {
 	String pgdevice("/NULL");
-	LogOrigin myOrigin(_class, __func__);
+	LogOrigin myOrigin(_class, __FUNCTION__);
 	*_getLog() << myOrigin;
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -270,13 +270,16 @@ Record ImageStatsCalculator::statistics(
 	if (mtmp == "false" || mtmp == "[]") {
 		mtmp = "";
 	}
-	SPIIF clone(_getImage()->cloneII());
+	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	Record regionRec = *_getRegion();
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *clone, regionRec, mtmp,
-		(_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
-		_getStretch()
+			pRegionRegion, pMaskRegion, *clone,
+			//*(ImageRegion::tweakedRegionRecord(&regionRec)),
+			regionRec,
+			mtmp,  (_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
+			_getStretch()
 	);
+	// Reset who is logging stuff.
 	*_getLog() << myOrigin;
 
 	// Find BLC of subimage in pixels and world coords, and output the
@@ -348,8 +351,8 @@ Record ImageStatsCalculator::statistics(
 	if (forceNewStorage) {
 		_statistics.reset(
 			_verbose
-			? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
-			: new ImageStatistics<Float> (subImage, False, _disk)
+			? new ImageStatistics<Float> (subImage, *_getLog(), True, _disk)
+			: new ImageStatistics<Float> (subImage, True, _disk)
 		);
 	}
 	else {
@@ -362,8 +365,6 @@ Record ImageStatsCalculator::statistics(
 				? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
 				: new ImageStatistics<Float> (subImage, False, _disk)
 			);
-			Array<Double> debugMax;
-			_statistics->getStatistic(debugMax, LatticeStatsBase::MAX);
 		}
 		else {
 			// We already have a statistics object.  We only have to set
@@ -379,7 +380,6 @@ Record ImageStatsCalculator::statistics(
 					? new ImageStatistics<Float> (subImage, *_getLog(), True, _disk)
 					: new ImageStatistics<Float> (subImage, True, _disk)
 				);
-
 			}
 			else {
 				_statistics->resetError();
@@ -407,13 +407,16 @@ Record ImageStatsCalculator::statistics(
 	_oldStatsMask.reset(pMaskRegion);
 	_oldStatsStorageForce = _disk;
 	// Set cursor axes
-	*_getLog() << LogOrigin(_class, __func__);
-	ThrowIf(! _statistics->setAxes(_axes), _statistics->errorMessage());
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	if (! _statistics->setAxes(_axes)) {
+		*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
+	}
 
-	ThrowIf(
-		!_statistics->setInExCludeRange(_includepix, _excludepix, False),
-		_statistics->errorMessage()
-	);
+	// Set pixel include/exclude ranges
+	//std::cerr << "include/exclude" << includepix.size() << " " << excludepix.size() << std::endl;
+	if (!_statistics->setInExCludeRange(_includepix, _excludepix, False)) {
+		*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
+	}
 
 	// Tell what to list
 	if (!_statistics->setList(_list)) {
@@ -457,62 +460,65 @@ Record ImageStatsCalculator::statistics(
 	}
 	if (trobust) {
 		ok = _statistics->getStatistic(med, LatticeStatsBase::MEDIAN)
-			&& _statistics->getStatistic(
-				medAbsDevMed, LatticeStatsBase::MEDABSDEVMED
-			)
-			&& _statistics->getStatistic(
-				quartile, LatticeStatsBase::QUARTILE
-			);
+							&& _statistics->getStatistic(
+									medAbsDevMed, LatticeStatsBase::MEDABSDEVMED
+							)
+							&& _statistics->getStatistic(
+									quartile, LatticeStatsBase::QUARTILE
+							);
 	}
 	if (ok) {
 		ok = _statistics->getStatistic(npts, LatticeStatsBase::NPTS)
-			&& _statistics->getStatistic(sum, LatticeStatsBase::SUM)
-			&& _statistics->getStatistic(sumsquared, LatticeStatsBase::SUMSQ)
-			&& _statistics->getStatistic(min, LatticeStatsBase::MIN)
-			&& _statistics->getStatistic(max, LatticeStatsBase::MAX)
-			&& _statistics->getStatistic(mean, LatticeStatsBase::MEAN)
-			&& _statistics->getStatistic(sigma, LatticeStatsBase::SIGMA)
-			&& _statistics->getStatistic(rms, LatticeStatsBase::RMS);
+								&& _statistics->getStatistic(sum, LatticeStatsBase::SUM)
+								&& _statistics->getStatistic(sumsquared,
+										LatticeStatsBase::SUMSQ)
+										&& _statistics->getStatistic(min, LatticeStatsBase::MIN)
+										&& _statistics->getStatistic(max, LatticeStatsBase::MAX)
+										&& _statistics->getStatistic(mean, LatticeStatsBase::MEAN)
+										&& _statistics->getStatistic(sigma, LatticeStatsBase::SIGMA)
+										&& _statistics->getStatistic(rms, LatticeStatsBase::RMS);
 	}
-	ThrowIf(! ok, _statistics->errorMessage());
+	if (!ok) {
+		*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
+	}
 	Record statsout;
-	statsout.define("npts", npts);
-	statsout.define("sum", sum);
-	statsout.define("sumsq", sumsquared);
-	statsout.define("min", min);
-	statsout.define("max", max);
-	statsout.define("mean", mean);
+	statsout.define(RecordFieldId("npts"), npts);
+	statsout.define(RecordFieldId("sum"), sum);
+	statsout.define(RecordFieldId("sumsq"), sumsquared);
+	statsout.define(RecordFieldId("min"), min);
+	statsout.define(RecordFieldId("max"), max);
+	statsout.define(RecordFieldId("mean"), mean);
 	if (trobust) {
-		statsout.define("median", med);
-		statsout.define("medabsdevmed", medAbsDevMed);
-		statsout.define("quartile", quartile);
+		statsout.define(RecordFieldId("median"), med);
+		statsout.define(RecordFieldId("medabsdevmed"), medAbsDevMed);
+		statsout.define(RecordFieldId("quartile"), quartile);
 	}
-	statsout.define("sigma", sigma);
-	statsout.define("rms", rms);
+	statsout.define(RecordFieldId("sigma"), sigma);
+	statsout.define(RecordFieldId("rms"), rms);
 	if (
 		doFlux
 		&& _statistics->getStatistic(
 			fluxDensity, LatticeStatsBase::FLUX
 		)
 	) {
-		statsout.define("flux", fluxDensity);
+		statsout.define(RecordFieldId("flux"), fluxDensity);
 	}
-	statsout.define("blc", blc.asVector());
-	statsout.define("blcf", blcf);
+	statsout.define(RecordFieldId("blc"), blc.asVector());
+	statsout.define(RecordFieldId("blcf"), blcf);
 
-	statsout.define("trc", trc.asVector());
-	statsout.define("trcf", trcf);
+	statsout.define(RecordFieldId("trc"), trc.asVector());
+	statsout.define(RecordFieldId("trcf"), trcf);
 
 	String tmp;
 	IPosition minPos, maxPos;
 	if (_statistics->getMinMaxPos(minPos, maxPos)) {
 		if (minPos.nelements() > 0 && maxPos.nelements() > 0) {
-			statsout.define("minpos", (blc + minPos).asVector());
+			statsout.define(RecordFieldId("minpos"), (blc + minPos).asVector());
 			tmp = CoordinateUtil::formatCoordinate(blc + minPos, cSys, precis);
-			statsout.define("minposf", tmp);
-			statsout.define("maxpos", (blc + maxPos).asVector());
+			statsout.define(RecordFieldId("minposf"), tmp);
+			statsout.define(RecordFieldId("maxpos"), (blc + maxPos).asVector());
 			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, cSys, precis);
-			statsout.define("maxposf", tmp);
+			statsout.define(RecordFieldId("maxposf"), tmp);
 		}
 	}
 

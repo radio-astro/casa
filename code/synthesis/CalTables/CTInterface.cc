@@ -98,25 +98,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //
   //----------------------------------------------------------------------------
-  // Return the type of the CalTable.  Possibilities are defined in
-  // the MSSelectableTable::MSSDataType enum.
-  //  o For MSSelectableTable::MSSDataType::PURE_ANTENNA_BASED, only 
-  //    ANTENN1 is matched and the "&" operators in selection expressions
-  //    are ignored.
-  //  o For MSSelectableTable::MSSDataType::REF_ANTENNA_BASED, ANTENN2
-  //    is interpreted as a reference antenna and matched against the
-  //    the ANT2 in a ANT2&ANT2 type expressions.
-  //
-  // This is the method called in the MSSelection module to determine
-  // the appropriate rule-resolution.  Any CalTable type based
-  // determination of the MSDataType should be done here.
-
-  MSSelectableTable::MSSDataType CTInterface::dataType()
-  {
-    return MSSelectableTable::PURE_ANTENNA_BASED;
-  }
-  //
-  //----------------------------------------------------------------------------
   // CalTables have no OBSERVATION sub-table.  So throw a tantrum if
   // it is asked for.
   //

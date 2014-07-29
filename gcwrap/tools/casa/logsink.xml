@@ -44,18 +44,6 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 	</input>
   <returns type="bool"/>
 </method>
-
-<method type="function" name="processor_origin">
-	<shortdescription>Set the CASA processor origin</shortdescription>
-	<description>Sets the CASA processor origin which is shown at the end of each log origin</description>
-	<input>
-		<param type="string" name="fromwhere" direction="in">
-			<description>Input CASA processor origin name</description>
-		</param>
-	</input>
-  <returns type="bool"/>
-</method>
-
 <method type="function" name="filter">
 	<shortdescription>Set the filter level</shortdescription>
 	<description>Set the filter level of logging messages to be displayed.

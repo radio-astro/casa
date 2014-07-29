@@ -8,10 +8,9 @@
 % new VI???
 The mstransform task has been designed to be a single place for many
 common operations used in the pre-imaging steps of interferometric
-data reduction. It does almost everything done by hanningsmooth,
-partition, split and cvel, and more. The task has the following capabilities,
-which can be done independently or combined. Except for split which is the default 
-state of the task, each transformation has a boolean parameter to switch it on
+data reduction. The task has the following capabilities, which can be done
+independently or combined. Except for split which is the default state of 
+the task, each transformation has a boolean parameter to switch it on
 or off.
 
 \begin{enumerate}
@@ -28,32 +27,6 @@ the nspw parameter is set to > 1.
 
 \end{enumerate}
 
-Mapping of parameters between split-mstransform and cvel-mstransform.
-
-\begin{verbatim}
-
-    split               mstransform                                      Comments
- -----------------------------------------------------------------------------------------------------
-    width               chanaverage=True, chanbin                        perform channel averaging
-    timebin             timeaverage=True, timebin                        perform time averaging
-    combine             timeaverage=True, timespan                       time averaging with time spanning
-    keepflags           keepflags                                        keep or drop flags in output
-    keepmms             createmms=True                                   create an output Multi-MS
-
-\end{verbatim}
-
-
-\begin{verbatim}
-
-
-    cvel                mstransform                                      Comments
- -----------------------------------------------------------------------------------------------------
-    hanning             hanning=True                                     Hanning smoothing
-    other parameters    combinespws=True, regridms=True, cvel parameter  regrid the MS
-    ---                 regridms=True, nspw                              does not exist in cvel
-
-\end{verbatim}
-
 
 Documentation for the task and tool can be found in:
 \htmladdnormallink{Task Documentation}{http://casa.nrao.edu/docs/TaskRef/TaskRef.html}
@@ -61,9 +34,8 @@ Documentation for the task and tool can be found in:
 
 \subsection{Splitting capabilities}
 Task mstransform behaves like split in all cases that concern sub-table re-indexing
-and selection. It does not support multiple channel selections (separated by a
-semi-colon) within one spw. If there is an spw selection, it will re-index the
-spws starting from 0.
+and selection. It does not support multiple channel selections, which are separated by
+a semi-colon. If there is an spw selection, it will re-index the spws starting from 0.
 
 The mstransform task is able to work with MSs that contain spectral windows with 
 different polarization shapes. Split cannot handle such MSs, but this was overcome 
@@ -82,24 +54,12 @@ not. If the input MS does not have a WEIGHT_SPECTRUM, by setting the parameter
 in the WEIGHT column, such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
 By default, {\it usewtspectrum} is set to False.
 
-The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical sense 
-correct for the simple cases of channel average, and time average, but not for the 
-general re-gridding case, in which the error propagation formulas applicable for 
-WEIGHT_SPECTRUM are yet to be defined. Currently, as in cvel, WEIGHT_SPECTRUM is 
-transformed in the same way as the other data columns, but this is not statistically 
-correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
-to define the applicable error propagation formulas.
-
-The parameter {\it keepflags} from split is also available in mstransform. By
-default, mstransform keeps the flagged data in the output, depending on the data
-selection parameters. Regardless of this parameter, flagged data is never used
-in channel averaging. When {\it keepflags} is set to False, only partially
-flagged rows will be used in time averaging. This behavior is different from
-split.
+The parameter {\it keepflags} from split is not available in mstransform. The
+behaviour in mstransform is to keep the flagged data  in the splitted output,
+which is the same default value of split.
 
 \begin{verbatim}
-    mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='0:21~120,3,5')
-  will select 100 channels from spw 0 and all of spw 3 and 5
+    mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='0,3,5')
 \end{verbatim}
 
 \subsection{Partition and Multi-MS support}
@@ -109,8 +69,8 @@ different separation axes. The default is to separate using both scan and spw ax
 It supports channel selections and re-indexing of sub-tables. 
 
 The user has the option to create an output MMS in parallel (using simple_cluster) or
-in sequence. Set the parameter {\it parallel} to True to use simple_cluster.
-Note that for small MSs, we recommend to create MMSs in sequential, as the overhead of creating
+in sequential. Set the parameter {\it parallel} to True to use simple_cluster. Note that
+for small MSs, we recommend to create MMSs in sequential, as the overhead of creating
 a cluster and managing the engines can become significant.
 
 The combination of some transformations and createmms=True is not possible in
@@ -124,8 +84,8 @@ spw                NO         NO         YES        YES           YES           
 scan               YES        YES        YES        YES           YES*          YES
 both               NO         NO         YES        YES           YES*          YES
 
-* --> it can partition per scan or scan,spw but cannot let timebins span changes
-in scan when timeaverage=True. The task will reset timespan to None in these cases.
+* --> we can partition per scan or scan,spw but cannot let timebins span changes in scan
+      when timeaverage=True. The task will reset timespan to None in these cases.
 
 \end{verbatim}
 
@@ -198,10 +158,8 @@ where:
 
 \subsection{Channel averaging}
 Similar to task split, mstransform can average the selected channels based on a
-channel bin parameter. The parameter {\it chanbin} can be either an integer or a list of
-integers that will apply to each spw in the selection. Note that the {\it chanbin}
-parameter is independent of the {\it width} parameter used in the reference frame
-transformation controlled by the {\it regridms} parameter. See the Examples Section.
+width parameter. The parameter {\it chanbin} can be either an integer or a list of
+integers that will apply to each spw in the selection.
 
 A parameter called {\it useweights} controls the type of weights to use in the
 averaging. The options are flags that will consider the FLAG column and spectrum
@@ -223,33 +181,17 @@ When using weights:
     mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='5', chanaverage=True, chanbin=2, useweights='flags')
 \end{verbatim}
 
-When the number of unflagged channels in an interval is fewer than {\it chanbin}, mstransform will consider only the flagged channels
-in that interval. If fewer  channels than {\it chanbin} are left at the end of the spw, these channels will be dropped.
-See the following example: input channels 0,1,2,3,4,5,-,-,8,9,10,11,12,13, where channels 6 and 7 are flagged;
-{\it chanbin=4}; first average will contain channels 0,1,2,3, second average will contain channels 4,5, third average will
-contain channels 8,9,10,11; the last two channels, 12,13 will be dropped.
-
-
 \subsection{Reference frame transformation}
 The parameter {\it regridms} in mstransform can do what task cvel does, such as
-regrid an MS to a new spectral window, channel structure or frame and it is
-much faster in all these transformations. The option {\it regridms} in
-mstransform differs from task cvel in a few cases. Task cvel has a parameter {\it passall} 
-to copy or not the non-selected spws into the output MS. In mstransform we only consider 
-the {\it passall=False}, meaning that we only consider the
+regrid an MS to a new spectral window, channel structure or frame. The option {\it regridms}
+in mstransform differs from task cvel in a few cases. Task cvel has a
+parameter {\it passall} to copy or not the non-selected spws into the output MS. In 
+mstransform we only consider the {\it passall=False}, meaning that we only consider the
 selected spws of the MS. Task cvel always combines spws when changing the reference
 frame, while mstransform can do both cases. The combination of spectral windows in mstransform
 is controlled by the independent parameter {\it combinespws}.
 
-Mstransform will only shift spws with channel widths of the same sign in a
-single operation. If you are regridding spws with mixed positive and negative channel widths, 
-you should run this task separated for each group of spws. You can verify the channel widths 
-for your MS using listobs for example, by looking at the SPW table, column
-ChanWid. Whenever the {\it width} parameter is > 2, a pre-averaging is done. 
-
-Gaps between spectral windows are padded with interpolated data, therefore it is
-not advisable to combine upper and lower sidebands with a large gap as this will
-bloat the data set. 
+Whenever the {\it width} parameter is > 2, a pre-averaging is done. 
 
 \begin{verbatim}
     mstransform('uid.ms', outputvis='myout.ms', spw='1~3', regridms=True, nchan=10, outframe='LSRK')
@@ -258,29 +200,23 @@ bloat the data set.
 \subsection{Separation of spectral windows}
 This transformation is done as part of the {\it regridms} transformation
 although it can be done without any frame transformation. The mstransform
-task can separate the spectral windows into a regular grid of channels specified
-by the user using the parameter {\it nspw}. This is a new feature in CASA
+task can separate the spectral windows into a regular grid specified by the
+user using the parameter {\it nspw}. This is a new feature in CASA
 4.1.0+ and can be applied in many use-cases. %(Expand and list some use-cases)
 
 If {\it nspw} is greater than 1, the input spws will be separated into the given
-number. Note that internally, the framework will first combine the input
-spws to take gaps and overlaps into account. It will divide the total number of
-channels in the combined spw by {\it nspw} to create the separated spws. If the
-total number of channels is not divisible by {\it nspw}, it will set the
-remainder channels to 0 in the last spw. See the following example:
+number. If {\it nchan} is set, it will refer to the number of channels to have in each
+separated spw. Note that internally, the framework will first combine the input
+spws to take gaps and overlaps into account, before separating them in the desired
+number.
 
 \begin{verbatim}
-    mstransform('uid.ms', outputvis='myout.ms', spw='0:0~49', regridms=True, nspw=3)
-  
-  It will create 3 output spws, each with 17 channels. The last channel in the last spw will be set to 0.
+    mstransform('uid.ms', outputvis='myout.ms', spw='1', regridms=True, nspw=3, nchan=10)
 \end{verbatim}
 
-If {\it nchan} is set, it will refer to the number of channels to have in each
-separated spw. 
-
 \subsection{Hanning smoothing}
-Set the parameter {\it hanning} to True to Hanning smooth the MS. Contrary to
-theUnsaved Document 1 hanningsmooth task, mstransform creates a new output MS and writes the smoothed transformation
+Set the parameter {\it hanning} to True to Hanning smooth the MS. Contrary to the
+hanningsmooth task, mstransform creates a new output MS and writes the smoothed transformation
 to the DATA column of the output MS, not to the CORRECTED_DATA column.
 
 Another difference with respect to the hanningsmooth task is that the transformation will be 
@@ -295,22 +231,7 @@ requested column does not exist, it will exit with an error.
 % Add stuff in here
 Similar to split, this task can average the MS in time, based on a width given by the
 {\it timebin} parameter and the optional {\it timespan, maxuvwdistance}
-parameters. State is equivalent to sub-scans. One scan may have several
-state ids. For ALMA MSs, the sub-scans are limited to about 30s duration each.
-In these cases, the task will automatically add state to the {\it timespan} 
-parameter. To see the number of states in an MS, use the msmd tool. See help
-msmd. The {\it maxuvdistance} parameter provide a maximum separation of
-start-to-end baselines that can be included in the average. This value should be
-given in meters.
-
-Time averaging will always include flagged data in the calculation. It will
-write the average value of flagged rows in the output and set the flag to
-True.
-If the {\it keepflags} parameter is set to False, then only partially flagged
-rows will be used in the average calculation. 
-
-Time averaging was motivated by this paper:
-ftp://ftp.cv.nrao.edu/NRAO-staff/bcotton/Obit/BLAverage.pdf
+parameters.
 
 %timespan
 %minbaselines
@@ -335,27 +256,25 @@ mstransform(vis='inp.ms', outputvis='out.ms', hanning=True, datacolumn='data')
 \end{verbatim}
 \item Create a multi-MS parted per spw, in paralell, based on the input channel selection.
 \begin{verbatim}
-mstransform(vis='inp.ms', outputvis='out.mms', spw='0~4,5:1~10', createmms=True, separationaxis='spw', parallel=True)
+mstransform(vis='inp.ms', outputvis='out.mms', spw='0~4,5:1~10', createmms=True,
+            separationaxis='spw', parallel=True)
 \end{verbatim}
 \item Average channels in CORRECTED column using a bin of 3 channels in XX.
 \begin{verbatim}
-mstransform(vis='inp.ms', outputvis='out.ms', spw='0:5~16', correlation='XX', chanaverage=True, chanbin=3)
+mstransform(vis='inp.ms', outputvis='out.ms', spw='0:5~16', correlation='XX', 
+            chanaverage=True, chanbin=3)
 \end{verbatim}
-\item Average channels in CORRECTED column using a a list of bins. It will
-average spw='1' with a bin of 2 channels, and spw='2' with a bin of 4 channels.
-\begin{verbatim}
-mstransform(vis='inp.ms', outputvis='out.ms', spw='1~2', chanaverage=True, chanbin=[2,4])
-\end{verbatim}
-
 \item Combine spws and regrid MS to new channel structure. Average width is 2 channels.
 \begin{verbatim}
-mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', field='11', combinespws=True, regridms=True, nchan=1, width=2)
+mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', field='11',
+            combinespws=True, regridms=True, nchan=1, width=2)
 \end{verbatim}
-\item Regrid MS to a new channel structure, change reference frame to BARY and
-set new phasecenter to that of field 1. Use mode frequency for the parameters.
+\item Regrid MS to new channel structure, change reference frame to BARY and set
+new phasecenter to that of field 1. Use mode frequency for the parameters.
 \begin{verbatim}
-mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', spw='0', regridms=True, nchan=2, mode='frequency', width='3MHz',
-            start='115GHz', outframe='BARY', phasecenter=1)
+mstransform(vis='inp.ms', outputvis='out.ms', datacolumn='DATA', spw='0', field='1', 
+            regridms=True, nchan=2, mode='frequency', width='3MHz', start='115GHz', 
+            outframe='BARY', phasecenter=1)
 \end{verbatim}
 \item Set a custom tile shape for the output MS using the parameter tileshape. This will
 set the tileshape to 4 correlations, 64 channels and 1024 rows.

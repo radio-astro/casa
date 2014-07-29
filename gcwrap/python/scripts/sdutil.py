@@ -1252,3 +1252,51 @@ def select_by_timerange(data, timerange):
     casalog.post('taql for timerange: \'%s\''%(taql), priority='DEBUG')
 
     return taql
+
+############################################################
+# Deprecation warning
+############################################################
+class DeprecationDecoratorBase:
+    def __init__(self, info):
+        self.info = info
+        self.needToIssueWarning = True
+
+    def __call__(self, func):
+        self.func = func
+        return lambda *args, **kwargs: self.doCall(*args, **kwargs)
+
+    def get_info(self):
+        return self.info
+
+    def doCall(self, *args, **kwargs):
+        # set origin
+        casalog.origin(self.func.func_name)
+
+        if self.needToIssueWarning:
+            casalog.post("### DEPRECATION WARNING: Task {0} is deprecated. {1}".format(self.func.func_name, self.get_info()), priority="WARN")
+            self.needToIssueWarning = False
+
+        return self.func(*args, **kwargs)
+
+class SDDeprecationDecorator(DeprecationDecoratorBase):
+    def __init__(self, newtask=None):
+        self.newtask = newtask
+        # initialize info with empty string
+        DeprecationDecoratorBase.__init__(self, "")
+
+    def get_newname(self, taskname):
+        if type(self.newtask)==str and len(self.newtask)>0:
+            return self.newtask
+        # Need to get new name from task name
+        if type(taskname) != str or \
+               not taskname.endswith('old'):
+            raise ValueError, "Auto resolution of new task name works only with task name ends with 'old'."
+        if type(self.newtask)!=str or len(self.newtask)==0:
+            return taskname[:-3]
+        raise Exception, "Failed to generate new task name form currnt one."
+
+    def get_info(self):
+        new_task_name = self.get_newname(self.func.func_name)
+        warning = "You are executing an OLD single dish task, %s. This task will be removed in a future release. As soon as it is practical, use the replacement task %s, instead." % (self.func.func_name, new_task_name)
+        self.info = warning
+        return warning

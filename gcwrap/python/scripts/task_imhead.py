@@ -128,7 +128,7 @@ def imhead(
                 return myimd.set(hdkey, hdvalue)
         except Exception, instance:
             casalog.post(str('*** Error *** ') + str(instance), 'SEVERE')
-            return False
+            raise
         finally:
             myimd.done()
             

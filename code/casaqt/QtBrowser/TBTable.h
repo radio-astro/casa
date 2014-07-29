@@ -66,7 +66,7 @@ class TBFilterRuleSequence;
 class DriverParams {
 public:
     // Default Constructor.
-    DriverParams(tb::Driver t = tb::DIRECT, tb::Parser p = tb::XERCES_SAX) : type(t),
+    DriverParams(Driver t = DIRECT, Parser p = XERCES_SAX) : type(t),
                                                              parser(p) { }
 
     // Copy Constructor.
@@ -74,10 +74,10 @@ public:
 
     
     // Driver type.
-    tb::Driver type;
+    Driver type;
 
     // Parser type (for XML driver).
-    tb::Parser parser;
+    Parser parser;
 };
 
 // <summary>

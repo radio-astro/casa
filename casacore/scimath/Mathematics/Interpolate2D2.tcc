@@ -116,10 +116,6 @@ Bool Interpolate2D::interpLinear2(T &resultI, T &resultJ,
   // big positive plus 1 may become 0 and then we will spuriously
   // pass the shape test
 
-  // FIXME Really? This was purposefully coded to implicitly rely on uInt underflow
-  // rather than writing conditionals based on explicit value checking to make the
-  // code easier to understand and maintain?
-
   uInt i = Int(where[0]);               // Assuming Int does (1.2 -> 1)
   uInt j = Int(where[1]);
   uInt si = uInt(shape[0]-1);

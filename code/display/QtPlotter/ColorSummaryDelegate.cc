@@ -32,13 +32,13 @@
  */
 #include "ColorSummaryDelegate.h"
 #include <QPen>
+#include <QDebug>
 #include <QPainter>
 
 namespace casa {
 
 	ColorSummaryDelegate::ColorSummaryDelegate( QObject* parent ) :
 		QStyledItemDelegate( parent ) {
-
 	}
 
 	void ColorSummaryDelegate::paint( QPainter * painter, const QStyleOptionViewItem &option,
@@ -48,7 +48,9 @@ namespace casa {
 		QStyleOptionViewItemV4 optionV4 = *qstyleoption_cast<const QStyleOptionViewItemV4 *>(&option);
 		int selected = optionV4.state & QStyle::State_Selected;
 		optionV4.state &= ~QStyle::State_Selected;
+
 		QStyledItemDelegate::paint(painter, optionV4, index);
+
 		if ( selected != 0 ) {
 			QRect viewport = painter->viewport();
 			QPen pen = painter->pen();
@@ -59,11 +61,11 @@ namespace casa {
 			pen.setColor( Qt::black );
 			painter->setPen( pen );
 
-			QRect drawRect = option.rect;
+			QRect drawRect =option.rect;
 			int startY = drawRect.y();
 			int drawHeight = drawRect.height();
 
-			painter->drawRect( PEN_WIDTH/2, startY, viewport.width(), drawHeight-PEN_WIDTH/2);
+			painter->drawRect(PEN_WIDTH/2,startY,viewport.width(), drawHeight-PEN_WIDTH/2);
 			pen.setWidth( oldWidth );
 			pen.setColor( oldColor );
 			painter->setPen( pen );

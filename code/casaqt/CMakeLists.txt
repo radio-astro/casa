@@ -21,10 +21,10 @@
 include( ${QT_USE_FILE} )
 set( QT4_LIBRARIES ${QT_LIBRARIES} )
 
-casa_qt4_add_dbus_proxy( outfiles_qdbus_qoh outfiles_qdbus_cc QtDBus/dVO.h dVO.interface.xml )
+#casa_qt4_add_dbus_proxy( outfiles_qdbus_qoh outfiles_qdbus_cc QtDBus/dVO.h dVO.interface.xml )
 
 qt4_wrap_cpp( outfiles_qoh
-  ${outfiles_qdbus_qoh}
+  #${outfiles_qdbus_qoh}
   QtBrowser/QCloseableWidget.qo.h
   QtBrowser/QProgressPanel.qo.h
   QtBrowser/TBBrowser.qo.h
@@ -124,7 +124,7 @@ casa_qt4_add_resources( outfiles_qrc QtFileCatalog/filecatalog.qrc OPTIONS -name
 casa_qt4_add_resources( outfiles_qrc QtLogger/logviewer.qrc OPTIONS -name QtLogger )
 
 casa_add_library( casaqt
-  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc} ${outfiles_qdbus_cc}
+  ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   PlotterImplementations/PlotterImplementations.cc
   QtBrowser/QCloseableWidget.cc
   QtBrowser/QProgressPanel.cc
@@ -178,7 +178,6 @@ casa_add_library( casaqt
   QtPlotServer/QtRasterData.cc
   QtProgressMeter/progress.cc
   QtProgressMeter/progresstimer.cc
-  QtUtilities/QtDBusMeta.cc
   QtUtilities/QtActionGroup.cc
   QtUtilities/QtButtonGroup.cc
   QtUtilities/QtComboCheckBox.cc

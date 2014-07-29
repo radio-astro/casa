@@ -69,7 +69,7 @@ namespace casa {
 	    }
  
 	    int ArrPos(const int x, const int y) const {
-		int result = static_cast<int>(y + m_DataSize.y * x);
+		int result = y + m_DataSize.y * x;
 		/* if ( output_limit < 20 ) fprintf( stderr, "\t\t\t\t (%f,%f) (%d, %d) => %d\n", m_DataSize.x, m_DataSize.y, x, y, result); */
 		return result > length_ ? 0 : result;
 	    }

@@ -56,7 +56,7 @@ namespace PrimaryBeamDescriptionMod
   //! PrimaryBeamDescription.
   //! Nature of the quantity tabulated to describe the primary beam.
   
-  const char *const revision = "-1";
+  const char *const revision = "1.10";
   const int version = 1;
   
   enum PrimaryBeamDescription

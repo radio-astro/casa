@@ -522,6 +522,7 @@ class test_setjy_mms(test_simplecluster):
                 tblocal.close()
             tblocal.close()
             
+            
 class test_applycal_mms(test_simplecluster):
 
     def setUp(self):
@@ -581,7 +582,7 @@ class test_applycal_mms(test_simplecluster):
         
         # Compare files
         compare = testhelper.compTables(self.ref_sorted,self.vis_sorted,['FLAG_CATEGORY'])
-        self.assertTrue(compare)          
+        self.assertTrue(compare)               
         
         
 class test_uvcont_mms(test_simplecluster):
@@ -611,9 +612,9 @@ class test_uvcont_mms(test_simplecluster):
 
         uvcontsub(vis=self.vis,field = 'N5921*',fitspw='0:4~6;50~59',spw = '0',solint = 'int',fitorder = 0,want_cont = True) 
         
-        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        compare_cont = testhelper.compTables(self.ref[0],self.vis+".cont",['FLAG_CATEGORY'])
         self.assertTrue(compare_cont)
-        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
+        compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY'])
         self.assertTrue(compare_contsub)             
 
 class testJobData(unittest.TestCase):

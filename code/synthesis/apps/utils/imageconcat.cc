@@ -83,10 +83,6 @@ int main(int argc, char **argv)
       //out2.table().markForDelete();
       //out2.tempClose();
       out2.copyData(ic);
-      if(ic.isMasked()){
-	out2.makeMask ("mask0", True, True, False, True);
-	out2.pixelMask().put(ic.getMask());
-      }
      }
     //tim.show("Time taken to concatenate via image: ");
     /* for(Int k=0; k < nimages; ++k){

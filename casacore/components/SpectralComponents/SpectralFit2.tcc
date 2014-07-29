@@ -28,7 +28,6 @@
 //# Includes
 #include <components/SpectralComponents/SpectralFit.h>
 
-#include <casa/Utilities/PtrHolder.h>
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/LogTransformedPolynomialSpectralElement.h>
@@ -67,38 +66,38 @@ Bool SpectralFit::fit(
 	// The functions to fit
 	CompoundFunction<AutoDiff<MT> > func;
 	uInt ncomps = slist_p.nelements();
-	PtrHolder<Function<AutoDiff<MT> > > autodiff;
+	std::auto_ptr<Function<AutoDiff<MT> > > autodiff;
 	for (uInt i=0; i<ncomps; i++) {
 		SpectralElement *elem = slist_p[i];
 		uInt nparms = elem->getOrder();
 		SpectralElement::Types type = slist_p[i]->getType();
 		switch(type) {
 		case SpectralElement::GAUSSIAN: {
-			autodiff.set(new Gaussian1D<AutoDiff<MT> >());
+			autodiff.reset(new Gaussian1D<AutoDiff<MT> >());
 		}
 		break;
 		case SpectralElement::POLYNOMIAL: {
 			PolynomialSpectralElement *x = dynamic_cast<PolynomialSpectralElement *>(elem);
-			autodiff.set(new Polynomial<AutoDiff<MT> >(x->getDegree()));
+			autodiff.reset(new Polynomial<AutoDiff<MT> >(x->getDegree()));
 		}
 		break;
 		case SpectralElement::COMPILED:
 			// Allow fall through; these use the same code
 		case SpectralElement::GMULTIPLET: {
 			CompiledSpectralElement *x = dynamic_cast<CompiledSpectralElement *>(elem);
-			autodiff.set(new CompiledFunction<AutoDiff<MT> >());
+			autodiff.reset(new CompiledFunction<AutoDiff<MT> >());
 			dynamic_cast<CompiledFunction<AutoDiff<MT> > *>(
-				autodiff.ptr()
+				autodiff.get()
 			)->setFunction(x->getFunction());
 		}
 		break;
 		case SpectralElement::LORENTZIAN: {
-			autodiff.set(new Lorentzian1D<AutoDiff<MT> >());
+			autodiff.reset(new Lorentzian1D<AutoDiff<MT> >());
 		}
 		break;
 		case SpectralElement::POWERLOGPOLY: {
 			Vector<Double> parms = elem->get();
-			autodiff.set(new PowerLogarithmicPolynomial<AutoDiff<MT> > (nparms));
+			autodiff.reset(new PowerLogarithmicPolynomial<AutoDiff<MT> > (nparms));
 		}
 		break;
 		case SpectralElement::LOGTRANSPOLY: {
@@ -107,7 +106,7 @@ Bool SpectralFit::fit(
 			>(elem);
 			// treated as a polynomial for fitting purposes. The caller is responsible for passing the ln's of
 			// the ordinate and obscissa values to the fitter.
-			autodiff.set(new Polynomial<AutoDiff<MT> > (x->getDegree()));
+			autodiff.reset(new Polynomial<AutoDiff<MT> > (x->getDegree()));
 		}
 		break;
 		default:

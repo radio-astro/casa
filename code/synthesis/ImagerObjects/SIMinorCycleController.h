@@ -38,6 +38,8 @@
 // Include files for the DBus Service
 //#include <casadbus/interfaces/SynthImager.adaptor.h>
 
+/* Future Decl */
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   class Record;
@@ -53,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          - exceeded number maxcycleniter
          - exceeded cycle threshold
     */
-    virtual Int majorCycleRequired(Float currentPeakResidual);
+    virtual bool majorCycleRequired(Float currentPeakResidual);
 
     /* This method sets the following controls for the Minor Cycle Controller:
        - niter
@@ -122,7 +124,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* Status Reporting Variables */
     Int   itsIterDone; // Iterations done during this set of cycles
     Int   itsCycleIterDone; // Iterations done on this subimage
-   Int   itsIterDiff; // Difference between latest and previous count, to catch zero increments.
+
 
     /* Useful only for reporting */
     Int   itsTotalIterDone; // Total iterations done by deconvolver
@@ -130,6 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* This variable keeps track of the maximum number of iterations done
        during a major cycle */
     Int   itsMaxCycleIterDone;
+    
 
    Float itsPeakResidual;
    Float itsIntegratedFlux;

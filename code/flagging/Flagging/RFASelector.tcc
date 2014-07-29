@@ -33,8 +33,8 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Logging/LogIO.h>
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 #include <flagging/Flagging/RFASelector.h>
 #include <casa/stdio.h>
 

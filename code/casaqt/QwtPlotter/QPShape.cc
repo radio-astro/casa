@@ -307,8 +307,8 @@ void QPRectangle::setRectCoordinates(const PlotCoordinate& ul,
 
 
 void QPRectangle::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
@@ -414,8 +414,8 @@ void QPEllipse::setCenter(const PlotCoordinate& center) {
 
 
 void QPEllipse::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid()) {
@@ -515,7 +515,7 @@ void QPPolygon::setCoordinates(const vector<PlotCoordinate>& c) {
 
 
 void QPPolygon::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     if(isValid() && m_canvas != NULL) {
@@ -618,7 +618,7 @@ PlotAxis QPLineShape::axis() const { return m_axis; }
 
 void QPLineShape::draw_(QPainter* painter, const QwtScaleMap& xMap,
         const QwtScaleMap& yMap, const QRect& canvasRect,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     const_cast<QwtPlotMarker&>(m_marker).setLinePen(m_line.asQPen());
     m_marker.draw(painter, xMap, yMap, canvasRect);
@@ -724,8 +724,8 @@ void QPArrow::setArrowSize(double size) {
 
 
 void QPArrow::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     QRectF rect = boundingRect();
     if(rect.isValid() || m_from.x() == m_to.x() || m_from.y() == m_to.y()) {        
@@ -850,7 +850,7 @@ void QPPath::setCoordinates(const vector<PlotCoordinate>& coords) {
 
 
 void QPPath::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
+        const QwtScaleMap& yMap, const QRect& canvasRect,
         unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     unsigned int n = m_coords.size();
@@ -1014,8 +1014,8 @@ void QPArc::setOrientation(int o) {
 
 
 void QPArc::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     if(m_canvas != NULL) {
         painter->save();
@@ -1159,8 +1159,8 @@ void QPPoint::setSymbol(const PlotSymbol& s) {
 }
 
 void QPPoint::draw_(QPainter* painter, const QwtScaleMap& xMap,
-        const QwtScaleMap& yMap, const QRect& /*canvasRect*/,
-        unsigned int /*drawIndex*/, unsigned int /*drawCount*/) const {
+        const QwtScaleMap& yMap, const QRect& canvasRect,
+        unsigned int drawIndex, unsigned int drawCount) const {
     logMethod("draw_", true);
     painter->save();
     

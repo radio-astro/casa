@@ -121,49 +121,7 @@ class coordsys_test(unittest.TestCase):
         self.assertTrue(orig[1] == new[2])
         self.assertTrue(orig[2] == new[1])
         self.assertTrue(orig[3] == new[0])
-        
-    def test_findaxis(self):
-        """Test the findaxis() method"""
-        myia = iatool()
-        myia.fromshape("", [20, 20, 4, 20])
-        csys = myia.coordsys()
-        self.assertRaises(Exception, csys.findaxis, True, -1)
-        self.assertRaises(Exception, csys.findaxis, True, 4)
-        got = csys.findaxis(True, 0)
-        self.assertTrue(got == {'axisincoordinate': 0, 'coordinate': 0})
-        got = csys.findaxis(True, 1)
-        self.assertTrue(got == {'axisincoordinate': 1, 'coordinate': 0})
-        got = csys.findaxis(True, 2)
-        self.assertTrue(got == {'axisincoordinate': 0, 'coordinate': 1})
-        got = csys.findaxis(True, 3)
-        self.assertTrue(got == {'axisincoordinate': 0, 'coordinate': 2})
-        myia.done()
-        
-    def test_findcoordinate(self):
-        """Test the findcoordinate() method"""
-        myia = iatool()
-        myia.fromshape("", [20, 20, 4, 20])
-        csys = myia.coordsys()
-        myia.done()
-        self.assertFalse(csys.findcoordinate('linear')['return'])
-        self.assertFalse(
-            csys.findcoordinate('direction', 2)['return']
-        )
-        got = csys.findcoordinate("direction")
-        self.assertTrue(
-            got['return'] and (got['pixel'] == [0,1]).all()
-            and (got['world'] == [0,1]).all()
-        )
-        got = csys.findcoordinate("spectral")
-        self.assertTrue(
-            got['return'] and (got['pixel'] == [3]).all()
-            and (got['world'] == [3]).all()
-        )
-        got = csys.findcoordinate("stokes")
-        self.assertTrue(
-            got['return'] and (got['pixel'] == [2]).all()
-            and (got['world'] == [2]).all()
-        )
-        
+                
+
 def suite():
     return [coordsys_test]

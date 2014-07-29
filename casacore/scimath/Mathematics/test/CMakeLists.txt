@@ -7,7 +7,6 @@ tConvolver
 tInterpolateArray1D
 tFFTServer
 tFFTServer2
-tGaussianBeam
 tGeometry
 tHistAcc
 tMathFunc

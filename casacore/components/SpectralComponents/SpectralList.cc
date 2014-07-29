@@ -32,7 +32,6 @@
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
-#include <casa/Utilities/PtrHolder.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
 #include <casa/iostream.h>
@@ -179,7 +178,7 @@ Bool SpectralList::fromRecord (String& errMsg, const RecordInterface& container)
    for (uInt i=0; i<container.nfields(); i++) {
       if (container.dataType(i)==TpRecord) {
          const RecordInterface& rec = container.asRecord(i);
-         PtrHolder<SpectralElement> specEl(SpectralElementFactory::fromRecord(rec));
+         std::auto_ptr<SpectralElement> specEl = SpectralElementFactory::fromRecord(rec);
          add(*specEl);
       } else {
          errMsg = String("Illegal record structure");

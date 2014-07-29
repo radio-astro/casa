@@ -72,7 +72,7 @@ Bool CleanImageSkyModel::addMask(Int thismodel, ImageInterface<Float>& mask)
   return True;
 }
   
-  CleanImageSkyModel::CleanImageSkyModel(const CleanImageSkyModel& other) : ImageSkyModel() {
+CleanImageSkyModel::CleanImageSkyModel(const CleanImageSkyModel& other) {
   operator=(other);
 };
 

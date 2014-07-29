@@ -47,7 +47,6 @@
 
 #include<synthesis/ImagerObjects/SDMaskHandler.h>
 #include<synthesis/ImagerObjects/SIImageStore.h>
-#include<synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -62,56 +61,39 @@ public:
   SDAlgorithmBase();
  virtual  ~SDAlgorithmBase();
 
-  // Non virtual. Wrapper function implemented only in the base class. 
+  // In the base class. Non virtual.
   void deconvolve( SIMinorCycleController& loopController,  
 		   CountedPtr<SIImageStore> &imagestore,
 		   Int deconvolverid);
 
-  void setRestoringBeam( GaussianBeam restbeam, String usebeam );
 
-  // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
-  virtual void pbcor( CountedPtr<SIImageStore> imagestore );
-
-  virtual String getAlgorithmName(){return itsAlgorithmName;};
-
-  virtual uInt getNTaylorTerms(){return 1;};
 
 protected:
 
-  // Pure virtual functions to be implemented by various algorithm deconvolvers.
-  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
-			    Float &peakresidual, Float &modelflux, Int& iterdone )=0;
+  // Local functions to be overloaded by various algorithm deconvolvers.
+  virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int& iterdone )=0;
   virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
   virtual void finalizeDeconvolver()=0;
-
-  // Base Class implements the option of single-plane images for the minor cycle.
-  virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
-  //  virtual void restorePlane();
+  virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
 
   // Non virtual. Implemented only in the base class.
-  Int checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
-  Bool findMaxAbs(const Array<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
-  Bool findMaxAbsMask(const Array<Float>& lattice,const Array<Float>& mask,
-		      Float& maxAbs,IPosition& posMaxAbs);
+  Bool checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
+  void partitionImages();
+  void initializeSubImages(uInt subim);
+  Bool findMaxAbs(const Matrix<Float>& lattice,Float& maxAbs,IPosition& posMaxAbs);
 
   // Algorithm name
   String itsAlgorithmName;
 
-  CountedPtr<SIImageStore> itsImages; //sOriginalImages;
+  // For debugging.
+  IPosition tmpPos_p;
 
-  //    Vector<Slicer> itsDecSlices;
-  //   SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-  
-  IPosition itsMaxPos;
-  Float itsPeakResidual;
-  Float itsModelFlux;
-
-  SDMaskHandler itsMaskHandler;
-  //  Array<Float> itsMatMask;
-
-  GaussianBeam itsRestoringBeam;
-  String itsUseBeam;
+  // Image Store
+  CountedPtr<SIImageStore> itsImages;
+  Vector<Slicer> itsDecSlices;
+  SubImage<Float> itsResidual, itsPsf, itsModel;
+  Float itsComp;
 
 };
 

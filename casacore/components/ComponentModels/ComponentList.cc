@@ -1146,7 +1146,7 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
     {
       freqCol.get(i, compFreq);
       SpectralModel& compSpectrum = currentComp.spectrum();
-      
+      compSpectrum.setRefFrequency(compFreq);
       if (!specRecord.isNull()) {
 	if(specRecord.isDefined(i)){
 	  TableRecord rec;
@@ -1155,7 +1155,6 @@ void ComponentList::readTable(const Path& fileName, const Bool readOnly) {
 	  compSpectrum.fromRecord(err, rec);
 	}
       }
-      compSpectrum.setRefFrequency(compFreq);
       if (!freqErrCol.isNull()) {
 	freqErrCol.get(i, newFreqErr);
 	compSpectrum.setRefFrequencyError(newFreqErr);

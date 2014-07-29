@@ -47,10 +47,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_getchunk.py
   test_gencal.py
   test_hanningsmooth.py
-  test_hanningsmooth2.py
   test_ia_adddegaxes.py
-  test_ia_boxcar.py
-  test_ia_calcmask.py
   test_ia_continuumsub.py
   test_ia_constructors.py
   test_ia_commonbeam.py
@@ -58,13 +55,10 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_convolve.py
   test_ia_convolve2d.py
   test_ia_crop.py
-  test_ia_decimate.py
   test_ia_decompose.py
   test_ia_deconvolvecomponentlist.py
   test_ia_deconvolvefrombeam.py
   test_ia_fft.py
-  test_ia_fromarray.py
-  test_ia_fromshape.py
   test_ia_getregion.py
   test_ia_hanning.py
   test_ia_histograms.py
@@ -72,7 +66,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_insert.py
   test_ia_isconform.py
   test_ia_pad.py
-  test_ia_putchunk.py
   test_ia_pv.py
   test_ia_modify.py
   test_ia_rebin.py
@@ -107,12 +100,10 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_listpartition.py
   test_listvis.py
   test_makemask.py
-  test_me_shift.py
   test_measures.py
   test_msmoments.py
   test_msmd.py
   test_mstransform.py
-  test_mstransform_mms.py
   test_mst_cvel.py
   test_mst_cvelB.py
   test_mst_split.py
@@ -183,7 +174,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_specfit.py
   test_splattotable.py
   test_split.py
-  test_split2.py
   test_spxfit.py
   test_statwt.py
   test_testconcat.py
@@ -196,6 +186,5 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_vpmanager.py
   test_wvrgcal.py
   selection_syntax.py
-  ../mpi4casa/test_mpi4casa.py
   unittests_list.txt
 )

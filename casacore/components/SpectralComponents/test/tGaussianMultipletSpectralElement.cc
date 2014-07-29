@@ -27,7 +27,6 @@
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Containers/Record.h>
-#include <casa/Utilities/PtrHolder.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 
 #include <components/SpectralComponents/GaussianSpectralElement.h>
@@ -212,13 +211,10 @@ int main() {
 		cout << "doublet real " << doublet << endl;
 		doublet.toRecord(myRec);
 		cout << "myrec " << myRec << endl;
-        cout << __FILE__ << " " << __LINE__ << endl;
-		PtrHolder<SpectralElement> ptr(SpectralElementFactory::fromRecord(myRec));
-        cout << __FILE__ << " " << __LINE__ << endl;
+		std::auto_ptr<SpectralElement> ptr = SpectralElementFactory::fromRecord(myRec);
 		GaussianMultipletSpectralElement out = *dynamic_cast<GaussianMultipletSpectralElement*>(
-			ptr.ptr()
+			ptr.get()
 		);
-        cout << __FILE__ << " " << __LINE__ << endl;
 		cout << "out " << out << endl;
 		cout << "doublet " << doublet << endl;
 		AlwaysAssert(out == doublet, AipsError);

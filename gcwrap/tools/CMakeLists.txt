@@ -75,7 +75,8 @@ casa_add_library( tools
  casa/quanta_cmpt.cc
  casa/TSLogSink.cc
  components/componentlist_cmpt.cc
- #flagging/flagger_cmpt.cc
+ flagging/flagger_cmpt.cc
+ flagging/lightflagger_cmpt.cc
  flagging/agentflagger_cmpt.cc
  images/coordsys_cmpt.cc
  images/image_cmpt.cc
@@ -103,10 +104,9 @@ casa_add_library( tools
  synthesis/simulator_cmpt.cc
  synthesis/synthesisimager_cmpt.cc
  synthesis/synthesisdeconvolver_cmpt.cc
- synthesis/synthesisnormalizer_cmpt.cc
+ synthesis/synthesisparsync_cmpt.cc
  synthesis/synthesisimstore_cmpt.cc
  synthesis/synthesisiterbot_cmpt.cc
- synthesis/synthesisutils_cmpt.cc
  synthesis/vpmanager_cmpt.cc
  tables/table_cmpt.cc
  tables/tableindex_cmpt.cc
@@ -141,7 +141,8 @@ casa_add_tools( tools_swig tools_sources tools_py
  casa/logsink.xml
  casa/quanta.xml
  components/componentlist.xml
- #flagging/flagger.xml
+ flagging/flagger.xml
+ flagging/lightflagger.xml
  flagging/agentflagger.xml
  images/coordsys.xml
  images/image.xml
@@ -165,10 +166,9 @@ casa_add_tools( tools_swig tools_sources tools_py
  synthesis/simulator.xml
  synthesis/synthesisimager.xml
  synthesis/synthesisdeconvolver.xml
- synthesis/synthesisnormalizer.xml
+ synthesis/synthesisparsync.xml
  synthesis/synthesisimstore.xml
  synthesis/synthesisiterbot.xml
- synthesis/synthesisutils.xml
  synthesis/vpmanager.xml
  tables/tableindex.xml
  tables/tableiterator.xml

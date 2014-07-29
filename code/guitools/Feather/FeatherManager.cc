@@ -30,7 +30,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/SubImage.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <imageanalysis/Utilities/SpectralImageUtil.h>
+#include <synthesis/Utilities/SpectralImageUtil.h>
 
 #include <QDebug>
 

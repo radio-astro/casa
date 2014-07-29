@@ -501,25 +501,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		{
 		  if(antennaExpr_p != "")
 		    {
+		      TableExprNode col1AsTEN = msLike->col(msLike->columnName(MS::ANTENNA1)),
+			col2AsTEN = msLike->col(msLike->columnName(MS::ANTENNA2));
+
 		      antenna1IDs_p.resize(0);
 		      antenna2IDs_p.resize(0);
 		      baselineIDs_p.resize(0,2);
-		      node = msAntennaGramParseCommand(*msLike, antennaExpr_p, 
-						       antenna1IDs_p, antenna2IDs_p, 
-						       baselineIDs_p);
+		      node = msAntennaGramParseCommand(msLike->antenna(), 
+						       col1AsTEN, col2AsTEN, antennaExpr_p, 
+						       antenna1IDs_p, antenna2IDs_p, baselineIDs_p);
 		    }
-		  // if(antennaExpr_p != "")
-		  //   {
-		  //     TableExprNode col1AsTEN = msLike->col(msLike->columnName(MS::ANTENNA1)),
-		  // 	col2AsTEN = msLike->col(msLike->columnName(MS::ANTENNA2));
-
-		  //     antenna1IDs_p.resize(0);
-		  //     antenna2IDs_p.resize(0);
-		  //     baselineIDs_p.resize(0,2);
-		  //     node = msAntennaGramParseCommand(msLike->antenna(), 
-		  // 				       col1AsTEN, col2AsTEN, antennaExpr_p, 
-		  // 				       antenna1IDs_p, antenna2IDs_p, baselineIDs_p);
-		  //   }
+		  // if(antennaExpr_p != "") 
+		  //   node = msAntennaGramParseCommand(ms, antennaExpr_p, 
+		  // 				     antenna1IDs_p, 
+		  // 				     antenna2IDs_p,
+		  // 				     baselineIDs_p);
 		  break;
 		}
 	      case FIELD_EXPR:
@@ -527,9 +523,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  if(fieldExpr_p != "")
 		    {
 		      fieldIDs_p.resize(0);
+		      // TableExprNode colTEN = msLike->col(String("FIELD_ID"));
+		      // TableExprNode colTEN = ms->col(MS::columnName(MS::FIELD_ID));
 
 		      TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::FIELD_ID));
 		      node = msFieldGramParseCommand(msLike->field(), colAsTEN, fieldExpr_p,fieldIDs_p);
+		      // colTEN.unlink();
 		    }
 		  break;
 		}
@@ -539,6 +538,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    {
 		      TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::DATA_DESC_ID));
 		      spwIDs_p.resize(0);
+		      // if (spwExpr_p != "" &&
+		      //     msSpwGramParseCommand(ms, spwExpr_p,spwIDs_p, chanIDs_p) == 0)
 		      if (msSpwGramParseCommand(msLike->spectralWindow(), 
 						msLike->dataDescription(),
 						colAsTEN, spwExpr_p,
@@ -553,6 +554,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  scanIDs_p.resize(0);
 		  if(scanExpr_p != "")
 		    node = msScanGramParseCommand(ms, colAsTEN, scanExpr_p, scanIDs_p, maxScans_p);
+		    //node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
+		  //		node = *(msScanGramParseNode());
 		  break;
 		}
 	      case OBSERVATION_EXPR:
@@ -573,6 +576,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    node = msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p);
 		  break;
 		}
+		/*
+		  case TIME_EXPR:
+		  if(timeExpr_p != "" &&
+		  msTimeGramParseCommand(ms, timeExpr_p) == 0)
+		  node = *(msTimeGramParseNode());
+		  break;
+		*/
 	      case UVDIST_EXPR:
 		{
 		  selectedUVRange_p.resize(2,0);
@@ -588,6 +598,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		{
 		  if(taqlExpr_p != "")
 		    {
+		      //	      taql = tableCommand(taqlExpr_p).node();
 		      node = RecordGram::parse(*msLike->table(),taqlExpr_p);
 		    }
 		  break;

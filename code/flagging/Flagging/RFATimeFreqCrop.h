@@ -39,8 +39,8 @@
 #include <scimath/Fitting/LinearFit.h>
 #include <scimath/Fitting/GenericL2Fit.h>
 #include <scimath/Mathematics/MedianSlider.h> 
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisibilityIterator.h>
+#include <synthesis/MSVis/VisBuffer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

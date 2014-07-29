@@ -28,7 +28,8 @@
 
 #include <QtGui/QWidget>
 #include <guitools/Histogram/RangeControlsWidget.ui.h>
-#include <casa/typeinfo.h>
+
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <tr1/memory>
 
 using namespace std;
@@ -45,7 +46,7 @@ template <class T> class ImageInterface;
  */
 class PercentageCalculator {
 public:
-	PercentageCalculator( float minValue, float maxValue, const std::tr1::shared_ptr<const ImageInterface<Float> > image );
+	PercentageCalculator( float minValue, float maxValue, const ImageTask::shCImFloat image );
 	void work();
 	float getRangeMin() const;
 	float getRangeMax() const;
@@ -56,7 +57,7 @@ private:
 	float maxValue;
 	float rangeMin;
 	float rangeMax;
-    std::tr1::shared_ptr<const ImageInterface<Float> > image;
+	ImageTask::shCImFloat image;
 };
 
 
@@ -70,7 +71,7 @@ class RangeControlsWidget : public QWidget {
 
 public:
     RangeControlsWidget(QWidget *parent = 0);
-    void setImage(const std::tr1::shared_ptr<const ImageInterface<Float > > image );
+    void setImage(const ImageTask::shCImFloat image );
     void hideMaximum();
     void setRange( double min, double max, bool signal=true );
     void setDataLimits( double min, double max );
@@ -100,7 +101,7 @@ private:
     QDoubleValidator* minMaxValidator;
     PercentageCalculator* percentCalculator;
     Ui::RangeControlsWidgetClass ui;
-    std::tr1::shared_ptr<const ImageInterface<Float > > image;
+    ImageTask::shCImFloat image;
     QString percentage;
     double rangeMin;
     double rangeMax;

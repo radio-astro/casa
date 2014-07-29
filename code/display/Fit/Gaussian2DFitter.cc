@@ -65,7 +65,7 @@ namespace casa {
 		logFile = write;
 	}
 
-	void Gaussian2DFitter::setFitParameters( std::tr1::shared_ptr<const ImageInterface<Float> > image, const String& box,
+	void Gaussian2DFitter::setFitParameters( ImageTask::shCImFloat image, const String& box,
 	        int channelNum, const String& estimatesFileName, const String& residualImage,
 	        const Vector<Float>& include, const Vector<Float>& exclude ) {
 		this->image = image;
@@ -74,28 +74,17 @@ namespace casa {
 		estimateFile = estimatesFileName;
 		residualImageFile = residualImage;
 		int includeCount = include.size();
-		if (includeCount == 1) {
-			includePixs.reset(new std::pair<Float, Float>(include[0], include[0]));
-		}
-		else if (includeCount == 2) {
-			includePixs.reset(new std::pair<Float, Float>(include[0], include[1]));
-		}
-		else {
-			includePixs.reset();
+		includePixs.resize( includeCount );
+		for ( int i = 0; i < includeCount; i++ ) {
+			includePixs[i] = include[i];
 		}
 		int excludeCount = exclude.size();
-		if (excludeCount == 1) {
-			excludePixs.reset(new std::pair<Float, Float>(exclude[0], exclude[0]));
-		}
-		else if (excludeCount == 2) {
-			excludePixs.reset(new std::pair<Float, Float>(exclude[0], exclude[1]));
-		}
-		else {
-			excludePixs.reset();
+		for ( int i = 0; i < excludeCount; i++ ) {
+			excludePixs[i] = exclude[i];
 		}
 	}
 
-	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(const std::tr1::shared_ptr<const ImageInterface<Float> > image, const QString& colorName) const {
+	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(const ImageTask::shCImFloat image, const QString& colorName) const {
 		return fitResultList.toDrawingDisplay( image.get(), colorName );
 	}
 
@@ -103,22 +92,15 @@ namespace casa {
 		successfulFit = true;
 		String channelStr = String::toString(channelNumber);
 
-		ImageFitter fitter(
-			image, "", NULL, pixelBox, channelStr, "", "",
-			residualImageFile, "", estimateFile
-		);
+		ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
+		                   excludePixs, residualImageFile, "", estimateFile);
 		String logFile = getLogFilePath().toStdString();
 		fitter.setLogfile( logFile );
-		if (includePixs) {
-			fitter.setIncludePixelRange(*includePixs);
-		}
-		if (excludePixs) {
-			fitter.setExcludePixelRange(*excludePixs);
-		}
+
 		// do the fit
 		try {
-            std::pair<ComponentList, ComponentList> componentLists = fitter.fit();
-			fitResultList.fromComponentList( componentLists.first );
+			ComponentList componentList = fitter.fit();
+			fitResultList.fromComponentList( componentList );
 
 			//If the fit did not converge record an error.
 			if (!fitter.converged(0)) {
