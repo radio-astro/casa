@@ -19,6 +19,12 @@
 #
 
 casa_add_library( synthesis
+  TransformMachines2/BeamSkyJones.cc
+  TransformMachines2/GridFT.cc	
+  TransformMachines2/FTMachine.cc
+  TransformMachines2/SkyJones.cc
+  TransformMachines2/WPConvFunc.cc
+  TransformMachines2/WProjectFT.cc
   TransformMachines/BeamSkyJones.cc
   TransformMachines/BeamSquint.cc
   TransformMachines/CFCache.cc
@@ -396,7 +402,6 @@ install (FILES
 	MeasurementComponents/ACoh.h
 	MeasurementComponents/AMueller.h
 	MeasurementComponents/BPoly.h
-	TransformMachines/BeamCalc.h
 	MeasurementComponents/CEMemImageSkyModel.h
 	MeasurementComponents/CExp.h
 	MeasurementComponents/CExp.new3.h
@@ -534,7 +539,17 @@ install (FILES
 	Parallel/PabloIO.h
 	DESTINATION include/casacode/synthesis/Parallel
 	)
+install (FILES 
+	TransformMachines2/BeamSkyJones.h
+	TransformMachines2/GridFT.h
+	TransformMachines2/FTMachine.h
+	TransformMachines2/SkyJones.h
+	TransformMachines2/WPConvFunc.h
+	TransformMachines2/WProjectFT.h
+	DESTINATION include/casacode/synthesis/TransformMachines2
+       )
 install (FILES
+	TransformMachines/BeamCalc.h
 	TransformMachines/BeamSkyJones.h
 	TransformMachines/BeamSquint.h
 	TransformMachines/CFCache.h
