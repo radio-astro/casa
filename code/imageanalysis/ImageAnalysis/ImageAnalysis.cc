@@ -451,12 +451,13 @@ Bool ImageAnalysis::imagefromfits(
 		//
 		ImageInterface<Float>* pOut = 0;
 		String error;
-		ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
-						whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
-						zeroBlanks);
+		Bool rval;
+		rval = ImageFITSConverter::FITSToImage(pOut, error, outfile, fitsfile,
+						       whichrep, whichhdu, HostInfo::memoryFree() / 1024, overwrite,
+						       zeroBlanks);
 		//
-		if (pOut == 0) {
-			*_log << error << LogIO::EXCEPTION;
+		if (!rval || pOut == 0) {
+		        *_log << error << LogIO::EXCEPTION;
 		}
 		_imageFloat.reset(pOut);
 		rstat = True;
