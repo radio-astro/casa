@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdbaseline -->
+
+<task type="function" name="sdbaseline" startup="false" category="single dish">
+
+  <shortdescription>Fit/subtract a spectral baseline </shortdescription>
+
+  <description>
+Task sdbaseline performs baseline fitting/removal for single-dish spectra.
+The fit parameters, terms and rms of base-line are saved to an ascii 
+file, '&lt;outfile&gt;_blparam.txt'. 
+  </description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+        <description>name of input SD dataset</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+        <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+        <any type="variant" limittype="string int"/>
+        <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="fluxunit">
+        <shortdescription>units of the flux [\'K\' or \'Jy\'] (\'\'=current)</shortdescription>
+        <description>units of the flux (\'\'=current)</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="telescopeparam" subparam='true'>
+        <description>parameters of telescope for flux conversion (see examples in help)</description>
+        <any type='variant' limittype='string doubleArray'/>
+        <value type='string'></value>
+    </param>
+
+    <param type="string" name="field">
+        <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw">
+        <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+        <description>the rest frequency, e.g. \'1.41GHz\' (default unit: Hz) (see examples in help)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+        <shortdescription>frequency reference frame [\'LSRK\', \'TOPO\', \'LSRD\', \'BARY\', \'GALACTO\', \'LGROUP\', or \'CMB\'] (\'\'=current)</shortdescription>
+        <description>frequency reference frame (\'\'=current)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+        <shortdescription>doppler convention [\'RADIO\', \'OPTICAL\', \'Z\', \'BETA\', or \'GAMMA\'] (\'\'=current)</shortdescription>
+        <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit.</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="timerange">
+        <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="scan">
+        <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="pol">
+        <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="double" name="tau">
+        <description>the zenith atmospheric optical depth for correction</description>
+        <value>0.0</value>
+    </param>
+
+    <param type="string" name="maskmode">
+        <shortdescription>mode of setting additional channel masks [\'auto\', \'list\', or \'interact\']</shortdescription>
+        <description>mode of setting additional channel masks</description>
+        <allowed kind="enum">
+            <value>auto</value>
+            <value>list</value>
+            <value>interact</value>
+        </allowed>
+    </param>
+
+    <param type="double" name="thresh" subparam="true">
+        <description>S/N threshold for linefinder</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam="true">
+        <description>channel averaging for broad lines</description>
+        <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam="true">
+        <description>channels to drop at beginning and end of spectrum</description>
+        <value type="vector"><value>0</value></value>
+    </param>
+
+    <param type="string" name="blfunc">
+        <shortdescription>baseline model function [\'poly\', \'chebyshev\', \'cspline\', or \'sinusoid\'</shortdescription>
+        <description>baseline model function</description>
+        <value>poly</value>
+        <allowed kind="enum">
+            <value>poly</value>
+            <value>chebyshev</value>
+            <value>cspline</value>
+            <value>sinusoid</value>
+        </allowed>
+    </param>
+
+    <param type="int" name="order" subparam="true">
+        <description>order of baseline model function</description>
+        <value>5</value>
+    </param>
+
+    <param type="int" name="npiece" subparam="true">
+        <description>number of element polynomials for cubic spline curve</description>
+        <value>2</value>
+    </param>
+
+    <param type="bool" name="applyfft" subparam="true">
+        <description>automatically set wave numbers of sinusoids</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="fftmethod" subparam="true" ignorecase="true">
+        <shortdescription>method for automatically set wave numbers of sinusoids [\'fft\']</shortdescription>
+        <description>method for automatically set wave numbers of sinusoids</description>
+        <value>fft</value>
+        <allowed kind="enum">
+            <value>fft</value>
+        </allowed>
+    </param>
+
+    <param type="any" name="fftthresh" subparam="true">
+        <description>threshold to select wave numbers of sinusoids</description>
+        <value type="double">3.0</value>
+    </param>
+
+    <param type="any" name="addwn" subparam="true">
+        <description>additional wave numbers to use</description>
+        <value type="vector"><value>0</value></value>
+    </param>
+
+    <param type="any" name="rejwn" subparam="true">
+        <description>wave numbers NOT to use</description>
+        <value type="vector"><value></value></value>
+    </param>
+
+    <param type="double" name="clipthresh" subparam="true">
+        <description>clipping threshold for iterative fitting</description>
+        <value>3.0</value>
+    </param>
+
+    <param type="int" name="clipniter" subparam="true">
+        <description>maximum iteration number for iterative fitting</description>
+        <value>0</value>
+    </param>
+
+    <param type="bool" name="verify">
+        <shortdescription>interactively verify the results of operation for each spectrum [True, False] (see description in help)</shortdescription>
+        <description>interactively verify the results of operation for each spectrum (see description in help)</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="verbose">
+        <shortdescription>output fitting results to logger [True, False]</shortdescription>
+        <description>output fitting results to logger</description>
+        <value>True</value>
+    </param>
+
+    <param type="bool" name="bloutput">
+        <shortdescription>output fitting results to a text file [True, False]</shortdescription>
+        <description>output fitting results to a text file</description>
+        <value>True</value>
+    </param>
+
+    <param type="string" name="blformat" ignorecase="true">
+        <shortdescription>format of the text file specified with bloutput [\'\' or \'csv\']</shortdescription>
+        <description>format of the text file specified with bloutput</description>
+        <value></value>
+        <allowed kind="enum">
+            <value></value>
+            <value>csv</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="showprogress">
+        <shortdescription>show progress status for large data [True, False]</shortdescription>
+        <description>show progress status for large data</description>
+        <value>True</value>
+    </param>
+
+    <param type="int" name="minnrow" subparam="true">
+        <description>minimum number of input spectra to show progress status</description>
+        <value>1000</value>
+    </param>
+
+    <param type="string" name="outfile">
+        <description>name of output file (See a WARNING in help)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="outform">
+        <shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\']</shortdescription>
+        <description>output file format (See a WARNING in help)</description>
+        <value>ASAP</value>
+        <allowed kind="enum">
+            <value>ASCII</value>
+            <value>ascii</value>
+            <value>MS</value>
+            <value>ms</value>
+            <value>MS2</value>
+            <value>ms2</value>
+            <value>SDFITS</value>
+            <value>sdfits</value>
+            <value>ASAP</value>
+            <value>asap</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+        <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
+        <description>overwrite the output file if already exists</description>
+        <value>False</value>
+    </param>
+
+
+    <param type="int" name="plotlevel">
+            <description>control for plotting of results (see examples in help)</description>
+            <value>0</value>
+    </param>
+
+    <constraints>
+            <when param="fluxunit">
+                <equals value=""/>
+                <equals value="K">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="k">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="Jy">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+                <equals value="jy">
+                        <default param="telescopeparam"><value type='string'></value></default>
+                </equals>
+            </when>
+            <when param="spw">
+                <notequals value="">
+                    <default param="restfreq"><value type="string"></value></default>
+                    <default param="frame"><value type="string"></value></default>
+                    <default param="doppler"><value type="string"></value></default>
+                </notequals>
+            </when>
+            <when param="maskmode">
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
+            </when>
+            <when param="blfunc">
+                <equals value="poly">
+                        <default param="order"><value>5</value></default>
+                        <default param="clipthresh"><value>3.0</value></default>
+                        <default param="clipniter"><value>0</value></default>
+                </equals>
+                <equals value="chebyshev">
+                        <default param="order"><value>5</value></default>
+                        <default param="clipthresh"><value>3.0</value></default>
+                        <default param="clipniter"><value>0</value></default>
+                </equals>
+                <equals value="cspline">
+                        <default param="npiece"><value>2</value></default>
+                        <default param="clipthresh"><value>3.0</value></default>
+                        <default param="clipniter"><value>0</value></default>
+                </equals>
+                <equals value="sinusoid">
+                        <default param="applyfft"><value>True</value></default>
+                        <default param="fftmethod"><value type="string">fft</value></default>
+                        <default param="fftthresh"><value type="double">3.0</value></default>
+                        <default param="addwn"><value type="vector"><value>0</value></value></default>
+                        <default param="rejwn"><value type="vector"><value></value></value></default>
+                        <default param="clipthresh"><value>3.0</value></default>
+                        <default param="clipniter"><value>0</value></default>
+                </equals>
+            </when>
+            <when param="showprogress">
+                <equals type="bool" value="True">
+                        <default param="minnrow"><value>1000</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+-----------------
+Keyword arguments
+-----------------
+infile -- name of input SD dataset
+antenna -- select an antenna name or ID
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+fluxunit -- units for line flux
+        options: 'K','Jy',''
+        default: '' (keep current fluxunit in data)
+        WARNING: For GBT data, see description below.
+    &gt;&gt;&gt; fluxunit expandable parameter
+        telescopeparam -- parameters of telescope for flux conversion
+                options: (str) name or (list) list of gain info
+                default: '' (none set)
+                example: if telescopeparam='', it tries to get the telescope
+                         name from the data.
+                         Full antenna parameters (diameter,ap.eff.) known
+                         to ASAP are
+                         'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
+                         'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
+                         to 'K' first then convert to a new fluxunit.
+                         telescopeparam=[104.9,0.43] diameter(m), ap.eff.
+                         telescopeparam=[0.743] gain in Jy/K
+                         telescopeparam='FIX' to change default fluxunit
+                         see description below
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)/channels
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
+                 spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
+                 spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
+                 spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
+                 spw='1~4;6:15~48' (for channels 15 through 48 for IF IDs 1,2,3,4 and 6)
+        this selection is in addition to the other selections to data
+    &gt;&gt;&gt; spw expandable parameter
+        restfreq -- the rest frequency
+                    available type includes float, int, string, list of float, 
+                    list of int, list of string, and list of dictionary. the 
+                    default unit of restfreq in case of float, int, or string 
+                    without unit is Hz. string input can be a value only 
+                    (treated as Hz) or a value followed by unit for which 'GHz',
+                    'MHz','kHz',and 'Hz' are available. 
+                    a list can be used to set different rest frequencies for 
+                    each IF. the length of list input must be number of IFs. 
+                    dictionary input should be a pair of line name and 
+                    frequency with keys of 'name' and 'value', respectively. 
+                    values in the dictionary input follows the same manner as 
+                    as for single float or string input. 
+                example: 345.796
+                         '1420MHz'
+                         [345.8, 347.0, 356.7]
+                         ['345.8MHz', '347.0MHz', '356.7MHz']
+                         [{'name':'CO','value':345}]
+        frame -- frequency reference frame
+                options: 'LSRK', 'TOPO', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB'
+                default: '' (keep current frame in data)
+        doppler -- doppler convention (effective only when spw is in
+                   velocity unit)
+                options: 'RADIO', 'OPTICAL', 'Z', 'BETA', or 'GAMMA'
+                default: '' (keep current doppler setting in data)
+timerange -- select data by time range
+        default: '' (use all)
+        example: timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                 Note: YYYY/MM/DD can be dropped as needed:
+                 timerange='09:14:00~09:54:00' # this time range
+                 timerange='09:44:00' # data within one integration of time
+                 timerange='&gt;10:24:00' # data after this time
+                 timerange='09:44:00+00:13:00' #data 13 minutes after time
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+tau -- the zenith atmospheric optical depth for correction 
+        default: 0.0 (no correction)
+maskmode -- mode of setting additional channel masks
+        options: 'auto', 'list', or 'interact'
+        default: 'auto'
+        example: maskmode='auto' runs linefinder to detect line regions 
+                 to be excluded from fitting. this mode requires three 
+                 expandable parameters: thresh, avg_limit, and edge.
+                 USE WITH CARE! May need to tweak the expandable parameters.
+                 maskmode='list' uses the given masklist only: no additional 
+                 masks applied.
+                 maskmode='interact' allows users to manually modify the 
+                 mask regions by dragging mouse on the spectrum plotter GUI.
+                 use LEFT or RIGHT button to add or delete regions, 
+                 respectively.
+       
+    &gt;&gt;&gt; maskmode expandable parameters
+        thresh -- S/N threshold for linefinder. a single channel S/N ratio
+                  above which the channel is considered to be a detection. 
+                default: 5
+        avg_limit -- channel averaging for broad lines. a number of
+                     consecutive channels not greater than this parameter
+                     can be averaged to search for broad lines.
+                default: 4
+        edge -- channels to drop at beginning and end of spectrum
+                default: 0
+                example: edge=[1000] drops 1000 channels at beginning AND end.
+                         edge=[1000,500] drops 1000 from beginning and 500
+                         from end.
+        Note: For bad baselines threshold should be increased,
+        and avg_limit decreased (or even switched off completely by
+        setting this parameter to 1) to avoid detecting baseline
+        undulations instead of real lines.
+blfunc -- baseline model function
+        options: 'poly', 'chebyshev', 'cspline', or 'sinusoid'
+        default: 'poly'
+        example: blfunc='poly' uses a single polynomial line of 
+                 any order which should be given as an expandable 
+                 parameter 'order' to fit baseline. 
+                 blfunc='chebyshev' uses Chebyshev polynomials. 
+                 blfunc='cspline' uses a cubic spline function, a piecewise 
+                 cubic polynomial having C2-continuity (i.e., the second 
+                 derivative is continuous at the joining points). 
+                 blfunc='sinusoid' uses a combination of sinusoidal curves. 
+    &gt;&gt;&gt; blfunc expandable parameters
+        order -- order of baseline model function
+                options: (int) (&lt;0 turns off baseline fitting)
+                default: 5
+                example: typically in range 2-9 (higher values
+                         seem to be needed for GBT)
+        npiece -- number of the element polynomials of cubic spline curve
+                options: (int) (&lt;0 turns off baseline fitting)
+                default: 2
+        applyfft -- automatically set wave numbers of sinusoidal functions 
+                    for fitting by applying some method like FFT.
+                options: (bool) True, False
+                default: True
+        fftmethod -- method to be used when applyfft=True. Now only 
+                     'fft' is available and it is the default.
+        fftthresh -- threshold to select wave numbers to be used for 
+                     sinusoidal fitting. both (float) and (str) accepted.
+                     given a float value, the unit is set to sigma.
+                     for string values, allowed formats include:
+                     'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
+                     'topx' (= the x strongest ones, e.g. 'top5').
+                default is 3.0 (unit: sigma).
+        addwn -- additional wave number(s) of sinusoids to be used 
+                 for fitting. 
+                 (list) and (int) are accepted to specify every
+                 wave numbers. also (str) can be used in case
+                 you need to specify wave numbers in a certain range.
+                 default: [0] (i.e., constant is subtracted at least)
+                 example: 0
+                          [0,1,2]
+                          'a-b' (= a, a+1, a+2, ..., b-1, b),
+                          '&lt;a'  (= 0,1,...,a-2,a-1),
+                          '&gt;=a' (= a, a+1, ... up to the maximum wave
+                                   number corresponding to the Nyquist
+                                   frequency for the case of FFT).
+        rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
+                 can be set just as addwn but has higher priority:
+                 wave numbers which are specified both in addwn
+                 and rejwn will NOT be used. 
+                 default: []
+        clipthresh -- clipping threshold for iterative fitting
+                 default: 3
+        clipniter -- maximum iteration number for iterative fitting
+                 default: 0 (no iteration, i.e., no clipping)
+verify -- interactively verify the results of operation for each spectrum.
+          When verify = True, for each input spectrum, spectra
+          before and after the operation are displayed in a plot
+          window. At the prompt there are four choices of action:
+          'Y' (accept the operation and continue to the next input
+          spectrum), 'N' (reject the operation and continue to the 
+          next input spectrum), 'A' (accept the current operation
+          and continue non-interactively), and 'R' (reject the
+          current operation and exit from operation).
+          Note that when the operation is rejected by 'N' or 'R',
+          no operation is done to the spectrum/spectra.
+        options: (bool) True,False
+        default: False
+        NOTE: Currently available only when blfunc='poly'
+verbose -- output fitting results to logger. if False, the fitting results
+           including coefficients, residual rms, etc., are not output to
+           the CASA logger, while the processing speed gets faster.
+        options: (bool) True, False
+        default: True
+bloutput -- output fitting results to a text file. if False, the fitting
+            results including coefficients, residual rms, etc., are not
+            output to a text file (&lt;outfile&gt;_blparam.txt), while
+            the processing speed gets faster.
+        options: (bool) True, False
+        default: True
+blformat -- format of the logger output and text file specified with bloutput
+        options: '', 'csv'
+        default: '' (same as in the past, easy to read but huge)
+showprogress -- show progress status for large data
+        options: (bool) True, False
+        default: True
+    &gt;&gt;&gt; showprogress expandable parameter
+        minnrow -- minimum number of input spectra to show progress status
+                 default: 1000
+outfile -- name of output file
+        default: '' (&lt;infile&gt;_bs)
+outform -- output file format
+        options: 'ASAP','MS2', 'ASCII','SDFITS'
+        default: 'ASAP'
+        NOTE the ASAP format is easiest for further sd
+        processing; use MS2 for CASA imaging.
+        If ASCII, then will append some stuff to
+        the outfile name
+overwrite -- overwrite the output file if already exists
+        options: (bool) True, False
+        default: False
+        NOTE this parameter is ignored when outform='ASCII'
+plotlevel -- control for plotting of results.
+        options: 0, 1, 2, or &lt;0
+        default: 0 (no plotting)
+        example: 0 (no plotting)
+                 1 (some)
+                 2 (more)
+                 &lt;0 (hardcopy) as abs(plotlevel), e.g.
+                 -1 => hardcopy of final plot (will be named
+                &lt;outfile&gt;_bspec.eps)
+
+
+-----------
+DESCRIPTION
+-----------
+
+Task sdbaseline performs baseline fitting/removal for single-dish spectra.
+The fit parameters, terms and rms of baseline are saved to an ascii 
+file, '&lt;outfile&gt;_blparam.txt' if bloutput is True.
+
+-----------------------
+BASELINE MODEL FUNCTION
+-----------------------
+The list of available model functions are shown above (see Keyword arguments
+section). In general 'cspline' or 'chebyshev' are recommended since they are
+more stable than others. 'poly' will work for lower order but will be unstable
+for higher order fitting. 'sinusoid' is kind of special mode that will be
+useful for the data that clearly shows standing wave in the spectral baseline.
+
+----------------------------------
+SIGMA CLIPPING (ITERATIVE FITTING)
+----------------------------------
+In general least square fitting is strongly affected by an extreme data
+so that the resulting fit makes worse. Sigma clipping is an iterative
+baseline fitting with data clipping based on a certain threshold. Threshold
+is set as a certain factor times rms of the resulting (baseline subtracted)
+spectra. If sigma clipping is on, baseline fit/removal is performed several
+times. After each baseline subtraction, the data whose absolute value is
+above threshold are detected and those data are excluded from the next round
+of fitting. By using sigma clipping, extreme data are excluded from the
+fit so that resulting fit is more robust.
+
+The user is able to control a multiplication factor using parameter
+clipthresh for clipping threshold based on rms. Actual threshold for sigma
+clipping will be (clipthresh) x (rms of spectra). Also, the user can specify
+number of maximum iteration to the parameter clipniter.
+
+In general, sigma clipping will lower the performance since it increases
+number of fits per spectra. However, it is strongly recommended to turn
+on sigma clipping unless you are sure that the data is free from any kind
+of extreme values that may affect the fit.
+
+--------------------
+FLUX UNIT CONVERSION
+--------------------
+The task is able to convert flux unit between K and Jy. To do that,
+fluxunit and its subparameter telescopeparam must be properly set.
+The fluxunit should be 'Jy' or 'K' depending on what unit input data
+is and what unit you want to convert. If given fluxunit is different
+from the unit of input data, unit conversion is performed.
+The telescopeparam is used to specify conversion factor. There are three
+ways to specify telescopeparam: 1) set Jy/K conversion factor, 2) set
+telescope diameter, D, and aperture efficiency, eta, separately, and
+3) 'FIX' mode (only change the unit without converting spectral data).
+If you give telescopeparam as a list, then if the list has a single float
+it is assumed to be the gain in Jy/K (case 1), if two or more elements
+they are assumed to be telescope diameter (m) and aperture efficiency
+respectively (case 2).
+See the above parameter description as well as note on 'FIX' mode below
+for details.
+  
+There are two special cases that don't need telescopeparam for unit
+conversion. Telescope name is obtained from the data.
+1) ASAP (sd tool) recognizes the conversion factor (actually D and
+   eta) for the "AT" telescopes, namely ATNF MOPRA telescope, until
+   2004.
+2) The task does know D and eta for GBT telescope.
+If you wish to change the fluxunit, by leaving the sub-parameter
+telescopeparam unset (telescopeparam=''), it will use internal telescope
+parameters for flux conversion for the data from AT telescopes and it
+will use an approximate aperture efficiency conversion for the GBT data.
+
+Note that sdbaseline assumes that the fluxunit is set correctly in
+the data already.  If not, then set telescopeparam='FIX' and it
+will set the default units to fluxunit without conversion.
+Note also that, if the data in infile is an ms from GBT and the default
+flux unit is missing, this task automatically fixes the default fluxunit
+to 'K' before the conversion.
+
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the data
+filler is available. However, the functionality is not well tested yet,
+so that there may be unknown bugs. 
+  </example>
+
+</task>
+
+</casaxml>

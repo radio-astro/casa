@@ -1,0 +1,225 @@
+//==============================================================================
+// %(Identifier)s - python object definition
+//==============================================================================
+#ifndef __Component__%(PreprocIdentifier)s__PYTHON__H__
+#define __Component__%(PreprocIdentifier)s__PYTHON__H__
+
+#include <Python.h>
+#include <WX/Utils/smartptr.h>
+%(IncludeLocalComponent)s
+%(IncludeLocalInterface)s
+%(CodaTypeInclude)s
+%(CodaResultInclude)s
+
+%(MProvidesDefEqInterfaceLocalCtorIncl)s
+%(MProvidesDefEqInterfaceLocalCtorUsing)s
+
+%(OpenNamespace)s
+
+PyTypeObject *%(Identifier)s_init( );
+int is_%(Identifier)s( PyObject * );
+PyObject *%(Identifier)s_component_to_pyobj( WX::Utils::SmartPtr< ::%(LocalNamespace)s%(Identifier)s> & );
+%(MProvidesDefEqInterfaceLocalCtorDecl)s
+
+%(CloseNamespace)s
+
+#endif
+
+<<<<<<<SPLIT>>>>>>>
+//==============================================================================
+// %(Identifier)s : component adapter class wrapper - <MComponentDef>
+//==============================================================================
+
+#include <CCM_Python/BasicTypes.h>
+#include "%(Identifier)s_python.h"
+%(IncludeLocalComponent)s
+%(IncludeHome)s
+%(CodaConvertInclude)s
+
+%(MProvidesDefEqInterfaceInclude)s
+%(MSupportsOperationDefInclude)s
+
+%(MProvidesDefEqInterfaceInitDecl)s
+
+%(UsingLocalNamespace)s
+
+%(OpenNamespace)s
+
+static PyTypeObject *py_%(Identifier)s_type( );
+static PyObject *Py%(Identifier)s_exception = 0;
+
+// ---------- casac.aipserror ----------
+extern PyObject *casac_aipserror( );
+// ---------- casac.indexerror ----------
+extern PyObject *casac_indexerror( );
+
+//
+//  ------  component object struct  ------
+//
+typedef struct {
+  PyObject_HEAD
+  WX::Utils::SmartPtr<%(Identifier)s> *component;
+} Py%(Identifier)s_object;
+
+//
+//  ------  provides interfaces  ------
+//
+%(MProvidesDefEqInterfaceLocalCtorImpl)s
+%(MProvidesDefEqInterfaceImpl)s
+
+//
+//  ------  supports interfaces  ------
+//
+%(MSupportsOperationDefWrapper)s
+
+
+//
+//  ------  string representation  ------
+//
+static PyObject *
+Py%(Identifier)s_str( Py%(Identifier)s_object *self ) {
+    const char *string = "%(Identifier)s : component\\n"
+%(MProvidesDefEqInterfaceString)s;
+
+    return PyString_FromString( string );
+}
+
+//
+//  ------  component destructor  ------
+//
+static void
+Py%(Identifier)s_dealloc( Py%(Identifier)s_object *self ) {
+
+    if ( self->component )
+	delete self->component;
+
+    self->ob_type->tp_free( (PyObject*) self );
+}
+
+//
+// ------  component constructor  ------
+//
+static PyObject *
+Py%(Identifier)s_new( PyTypeObject *type, PyObject *args, PyObject *keywds ) {
+
+    Py%(Identifier)s_object *self = (Py%(Identifier)s_object*) type->tp_alloc(type,0);
+    self->component = 0;
+    return (PyObject*) self;
+}
+
+//
+// ------  component initialization  ------
+//
+static int
+Py%(Identifier)s_init( Py%(Identifier)s_object *self, PyObject *args, PyObject *keywds ) {
+
+    if ( ! args || ! is_%(Identifier)sHome(args)) {
+        PyErr_SetString( Py%(Identifier)s_exception, "use %(Identifier)sHome.create( ) instead" );
+	return -1;
+    }
+
+    if ( self->component )
+	delete self->component;
+
+    self->component = new WX::Utils::SmartPtr<%(Identifier)s>(create_local_%(Identifier)s(args));
+    return 0;
+}
+
+//
+// ------  component method table  ------
+//
+static PyMethodDef Py%(Identifier)s_methods[] = {
+%(MProvidesDefEqInterfaceMethod)s
+%(MSupportsOperationDefMethod)s
+    {NULL}  /* Sentinel */
+};
+
+//
+//  ------  component object table ------
+//
+static PyTypeObject Py%(Identifier)s_type = {
+    PyObject_HEAD_INIT ( NULL )
+    0,									/* ob_size */
+    "%(Module)s.%(Identifier)s",					/* tp_name */
+    sizeof ( Py%(Identifier)s_object ),					/* tp_basicsize */
+    0,	   			   					/* tp_itemsize */
+
+    /* methods */
+    (destructor) Py%(Identifier)s_dealloc,				/* tp_dealloc */
+    0,									/* tp_print */
+    0,									/* tp_getattr */
+    0,									/* tp_setattr */
+    0,									/* tp_compare */
+    0,									/* tp_repr */
+    0,									/* tp_as_number */
+    0,									/* tp_as_sequence */
+    0,									/* tp_as_mapping */
+    0,									/* tp_hash */
+    0,									/* tp_call */
+    (reprfunc) Py%(Identifier)s_str,					/* tp_str */
+    0,									/* tp_getattro */
+    0,									/* tp_setattro */
+    0,									/* tp_as_buffer */
+
+    Py_TPFLAGS_DEFAULT,							/* tp_flags */
+
+    "%(Identifier)s object",						/* tp doc */
+
+    0,		  							/* tp_traverse */
+    0,									/* tp_clear */
+    0,									/* tp_richcompare */
+    0,									/* tp_weaklistoffset */
+    0,									/* tp_iter */
+    0,									/* tp_iternext */
+
+    Py%(Identifier)s_methods,						/* tp_methods */
+    NULL,								/* tp_members */
+
+    0,									/* tp_getset */
+    0,									/* tp_base */
+    0,									/* tp_dict */
+    0,									/* tp_descr_get */
+    0,									/* tp_descr_set */
+    0,									/* tp_dictoffset */
+    (initproc) Py%(Identifier)s_init,					/* tp_init */
+    0,									/* tp_alloc */
+    Py%(Identifier)s_new,						/* tp_new */
+};
+
+
+int is_%(Identifier)s( PyObject *o ) {
+    return PyObject_TypeCheck( o, &Py%(Identifier)s_type ) ? 1 : 0;
+}
+
+PyTypeObject *py_%(Identifier)s_type( ) {
+    return &Py%(Identifier)s_type;
+}
+
+//
+//  ------  external component initialization hook ------
+//
+PyTypeObject *
+%(Identifier)s_init( ) {
+
+    if ( PyType_Ready( &Py%(Identifier)s_type ) < 0 ) {
+        return NULL;
+    }
+
+    if ( ! Py%(Identifier)s_exception )
+	Py%(Identifier)s_exception = PyErr_NewException("%(Identifier)s.error", NULL, NULL);
+
+%(MProvidesDefEqInterfaceInit)s
+
+    Py_INCREF( &Py%(Identifier)s_type );
+    return &Py%(Identifier)s_type;
+}
+
+PyObject *%(Identifier)s_component_to_pyobj( WX::Utils::SmartPtr< ::%(LocalNamespace)s%(Identifier)s> &result_ ) {
+    Py%(Identifier)s_object *result_if_ = (Py%(Identifier)s_object*) py_%(Identifier)s_type()->tp_new( py_%(Identifier)s_type(), NULL, NULL );
+    result_if_->component = new WX::Utils::SmartPtr<%(Identifier)s>( result_ );
+    return (PyObject*) result_if_;
+}
+
+%(CloseNamespace)s
+
+

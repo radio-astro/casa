@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdcoadd -->
+
+<task type="function" name="sdcoadd" startup="false" category="single dish">
+
+  <shortdescription>Coadd multiple scantables into one</shortdescription>
+
+  <description>
+Task sdcoadd performs co-add multiple single dish spectral data given
+by a list of spectral data file names in any of the following formats,
+ASAP, MS2,SDFITS, and ASCII.
+The units of line flux, the units of spectral axis, frame, and doppler
+are assumed to be those of the first one in the infiles.
+
+The task tries to combine spws according to a tolerance value specified
+by the parameter freqtol. Default tolerance is '0Hz', which means spws
+are combined only when spectral setup are the same. Note that, except
+for first data in the infiles, spw is ignored if there are no corresponding
+spectral data in the main table.
+<!--
+   Note that it only works if the data structures are the same (nif, npol,
+nchan...)
+-->
+  </description>
+
+  <input>
+
+    <param type="stringArray" name="infiles"  mustexist="True">
+    <description>list of names of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+            <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+            <any type="variant" limittype="string int"/>
+            <value type="int">0</value>
+    </param> 
+
+    <param type="any" name="freqtol" >
+        <description>Frequency shift tolerance for considering data as the same spwid</description>
+        <any type="variant" limittype="string double"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="string" name="outfile">
+	    <description>name of output file (See a WARNING in help)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="outform">
+	    <shortdescription>output file format [\'ASAP\', \'MS2\', \'ASCII\', or \'SDFITS\'] (See a WARNING in help)</shortdescription>
+            <description>output file format (See a WARNING in help)</description>
+	    <value>ASAP</value>
+	    <allowed kind="enum">
+	    <value>ASCII</value>
+	    <value>ascii</value>
+	    <value>MS</value>
+	    <value>ms</value>
+	    <value>MS2</value>
+	    <value>ms2</value>
+	    <value>SDFITS</value>
+	    <value>sdfits</value>
+	    <value>ASAP</value>
+	    <value>asap</value>
+	    </allowed>
+    </param>
+
+    <param type="bool" name="overwrite">
+            <shortdescription>overwrite the output file if already exists [True, False] (See a WARNING in help)</shortdescription>
+            <description>overwrite the output file if already exists (See a WARNING in help)</description>
+            <value>False</value>
+    </param>
+
+
+    <constraints>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+------------------
+Keyword arguments
+------------------
+infiles -- list of names of input SD dataset
+antenna -- select an antenna name or ID
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+freqtol -- Frequency shift tolerance for considering data to be in the same
+           spwid.  The number of channels must also be the same.
+        default: '' == 0 Hz (combine spwid only when frequencies are the same)
+        example: freqtol='10MHz' will not combine spwid unless they are
+           within 10 MHz.
+        Note: This option is useful to combine spectral windows with very slight
+           frequency differences caused by Doppler tracking, for example.
+outfile -- name of output file
+        default: '' (&lt;infile&gt;_coadd)
+outform -- format of output file
+        options: 'ASCII','SDFITS','MS','ASAP'
+        default: 'ASAP'
+        example: the ASAP format is easiest for further sd
+                 processing; use MS for CASA imaging.
+                 If ASCII, then will append some stuff to
+                 the outfile name
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+        NOTE this parameter is ignored when outform='ASCII'
+
+-------
+WARNING
+-------
+For the GBT raw SDFITS format data as input:
+SDtasks are able to handle GBT raw SDFITS format data since the 
+data filler is available. However, the functionality is not well 
+tested yet, so that there may be unknown bugs.  
+  </example>
+
+</task>
+
+</casaxml>

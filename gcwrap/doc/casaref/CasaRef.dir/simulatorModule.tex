@@ -1,0 +1,84 @@
+%% Copyright (C) 1999,2000,2001,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+
+\begin{ahmodule}{simulator}{Module for simulation of telescope data}
+
+\ahcategory{aips}
+
+\bigskip
+\noindent{\bf Description} 
+
+simulator provides a unified interface for simulation of telescope
+processing. It can create a MeasurementSet from scratch or read in
+an existing MeasurementSet. It can predict synthesis data onto the
+(u,v) coordinates or single dish data onto (ra,dec) points, and it 
+can corrupt this data through Gaussian errors or through specified
+errors reading in (anti-) calibration tables.
+
+In the observing phase, simulator tries to act like a (simple)
+telescope. You first open the name of the MeasurementSet that
+you wish to construct. Next you use the various set* methods
+to setup the observing (sources, spectral windows, etc). Each
+such setup should be given a unique name that will be used in
+the next step. Then you call the observe method for each observing scan 
+you wish to make. Here you specify the source name, spectral window 
+name, and observing times. After this, you have a MeasurementSet that is
+complete but empty. In the next phase, you fill the
+MeasurementSet with data from a model and then corrupt the measurements
+(if desired). To fill it in with a model, use the predict method.
+Finally, to apply errors, first set up the various effects using the 
+relevant set* methods and then call corrupt.
+
+Some important points:
+\begin{itemize}
+\item One call to {\it observe} generates one scan (all rows have the same SCAN\_NUMBER).
+\item The start and stop times specified to {\it observe} need not be contiguous and so
+one can siulate antenna drive times.
+\item Currently there is no facility for patterns of observing, such as mosaicing, since it is easy to
+do this via sequences of calls of observe.
+\end{itemize}
+
+The following columns of the MeasurementSet are particularly important:
+\begin{itemize}
+\item {\bf DATA} The original observed visibilities are in a column called DATA. These are normally not altered by any processing in CASA. {\bf simulator} does write this column when it creates observations.
+\item {\bf CORRECTED\_DATA} During a calibration process, the visibilities may be corrected for calibration effects. These corrected visibilities are stored in CORRECTED\_DATA which is created upon demand.
+\item {\bf MODEL\_DATA} During various phases of processing, the visibilities as predicted from some model are required. These model visibilities are stored in the column MODEL\_DATA. The 'ft' task can be used to calculate the model visibilitiy for a model image.
+\end{itemize}
+
+\noindent The available tool in this module is:
+
+\begin{itemize}
+
+\item \ahlink{Simulator}{simulator:simulator} - tool for simulation
+\end{itemize}
+
+
+\ahobjs{}
+\ahfuncs{}
+
+\input{simulator.htex}
+
+\end{ahmodule}

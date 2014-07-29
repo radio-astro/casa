@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="pclean" category="utilities" async="never" visibility="experimental">
+	<shortdescription>Invert and deconvolve images with parallel engines</shortdescription>
+	<description>Form images from visibilities. Handles continuum and spectral line cubes using module.</description>
+
+	<input>
+		<param type="string" vis="true" name="vis" mustexist="true">
+			<description>Name of input visibility file</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="imagename">
+			<description>Pre-name of output images</description>
+			<value></value>
+		</param>
+
+	        <param type="intArray" name="imsize">
+		    <description>Image size in pixels (nx,ny), symmetric for single value</description>
+		    <value type="vector">
+	            <value>256</value><value>256</value>
+		    </value>
+	        </param>
+
+	        <param type="doubleArray" name="cell" units="arcsec">
+	             <description>The image cell size in arcseconds. </description>
+	             <value type="vector"><value>1.0</value><value>1.0</value></value>
+	        </param>
+
+                <param type="any" name="phasecenter">
+                     <description>Image center: direction or field index</description>
+                     <any type="variant"/>
+                     <value type="string"></value>
+                </param>
+
+		<param type="string" name="stokes">
+		  <description>Stokes params to image (eg I,IV,IQ,IQUV)</description>
+		  <value>I</value>
+		  <allowed kind="enum">
+		    <value>I</value>
+		    <value>Q</value>
+		    <value>U</value>
+		    <value>V</value>
+		    <value>IV</value>
+		    <value>IQ</value>
+		    <value>QU</value>
+		    <value>UV</value>
+		    <value>IQU</value>
+		    <value>IUV</value>
+		    <value>IQUV</value>
+		    <value>RR</value>
+		    <value>LL</value>
+		    <value>RRLL</value>
+		    <value>XX</value>
+		    <value>YY</value>
+		    <value>XXYY</value>
+		  </allowed>
+		</param>
+
+                <param type="string" name="mask"> 
+                     <description>mask image</description>
+                     <value></value>
+                </param>
+
+                <param type="string" name="field">
+                        <description>Field Name or id</description>
+                        <value type="string"></value>
+                </param>
+
+		<param type="any" name="spw">
+	          	<description>Spectral windows e.g. \'0~3\', \'\' is all</description>
+	        	<any type="variant" limittypes="string stringArray int intArray"/>
+	        	<value type="string"></value>
+		</param>
+
+
+		<!--param type="stringArray" name="restoringbeam">
+			<description>Output Gaussian restoring beam for CLEAN image</description>
+	                <value></value>
+		</param-->
+
+                <param type="string" name="ftmachine">
+                        <description>Fourier Transform Engine (\'ft\', \'sd\', \'mosaic\' or \'wproject\')</description>
+                        <value type="string">ft</value>
+                        <allowed kind="enum">
+                             <value>ft</value>
+                             <value>mosaic</value>
+                             <value>wproject</value>
+                             <value>sd</value>
+                        </allowed>
+                </param>
+
+                <param type="string" name="alg">
+                        <description>Deconvolution algorithm (\'clark\', \'hogbom\', \'multiscale\')</description>
+                        <value type="string">multiscale</value>
+                        <allowed kind="enum">
+                            <value>multiscale</value>
+                            <value>hogbom</value>
+                            <value>clark</value>
+                        </allowed>
+                </param>
+
+			<param type="intArray" name="scales" subparam="true">
+			<description>Scales to use in deconvolution</description>
+			<value>0</value>
+		</param>
+
+		
+		<param type="double" name="cyclefactor" >
+			<description>Control number of major cycle, threshold of cycle=residualPeak*psfSidelobe*cyclefactor </description>
+			<value>1.5</value>
+		</param>
+		<param type="int" name="majorcycles" subparam="true">
+			<description>Number of major cycles</description>
+			<value>1</value>
+		</param>
+
+		<param type="int" name="niter">
+			<description>Maximum number of iterations</description>
+			<value>500</value>
+		</param>
+		<param type="double" name="gain">
+			<description>Gain to use in deconvolution</description>
+			<value>0.1</value>
+		</param>
+		<param type="string" name="threshold">
+			<description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
+			<value>0.0Jy</value>
+		</param>
+
+		<param type="string" name="weighting">
+			<description>Type of weighting</description>
+			<value>natural</value>
+	              <allowed kind="enum">
+		      <value>natural</value>
+		      <value>uniform</value>
+		      <value>briggs</value>
+		      <value>briggsabs</value>
+		      <value>radial</value>
+		      <value>superuniform</value>
+		    </allowed>
+		</param>
+
+		<param type="double" name="robust" subparam="true">
+		  <description>Briggs robustness parameter</description>
+		  <value>0.0</value>
+		  <allowed kind="range">
+		    <value range="min">-2.0</value>
+		    <value range="max">2.0</value>
+		  </allowed>
+		</param>
+
+		<param type="int" name="npixels" subparam="true">
+		  <description>number of pixels for superuniform or briggs weighting</description>
+	    <value>0</value>
+		</param>
+		
+		<param type="string" name="mode">
+			<description>Clean mode (\'continuum\', \'cube\')</description>
+			<!--description>Clean mode (continuum, channel, frequency, velocity, mfs)</description-->
+			<value>continuum</value>
+	              <allowed kind="enum">
+		      <value>continuum</value>
+		      <value>cube</value>
+		      <value>channel</value>
+		      <value>frequency</value>
+		      <value>velocity</value>
+		      <value>mfs</value>
+		    </allowed>
+		</param>
+		<param type="int" name="nterms" subparam="true">
+			<description>number of terms for multifrequency synthesis</description>
+			<value>1</value>
+		</param>
+
+		
+		<param type="any" name="start" subparam="true">
+			<description>Begin the output cube at the frequency of this channel in the MS in channel number or frequency or velocity</description>
+                        <any type="variant"/>
+			<value type="int">0</value>
+		</param>
+
+		<param type="int" name="nchan" subparam="true">
+			<description>Number of channels (planes) in output image</description>
+			<value>1</value>
+		</param>
+
+		<param type="any" name="width" subparam="true">
+			<description>width of output channel </description>
+                        <any type="variant"/>
+			<value type="int">1</value>
+		</param>
+		<param type="string" name="restfreq" subparam="true">
+			<description>rest frequency to assign to image cube for velocity translattion</description>
+			<value></value>
+		</param>
+		<param type="boolean" name="interactive">
+			<description>Interactive clean</description>
+			<value>False</value>
+		</param>
+		<param type="int" name="npercycle" subparam="true">
+		  <description>niter per cycle of interactive clean</description>
+		  <value>100</value>
+		</param>
+
+		<param type="int" name="wprojplanes" subparam="true">
+			<description>Number of w-projection planes for convolution</description>
+			<value>128</value>
+		</param>
+
+		<param type="int" name="facets" subparam="true">
+			<description>Number of facats along each axis</description>
+			<value>1</value>
+		</param>
+
+
+
+		<param type="boolean" name="overwrite">
+			<description>Overwrite an existing model image</description>
+			<value>True</value>
+		</param>
+
+		<param type="bool" name="uvtaper">
+		  <description>Apply additional uv tapering of visibilities</description>
+		  <value>False</value>
+		</param>
+		<param type="stringArray" name="outertaper" subparam="true">
+		  <description>uv-taper on outer baselines in uv-plane</description>
+		  <value type="vector">
+		    <value></value>
+		  </value>
+		</param>
+<!--
+		<param type="bool" name="selectdata">
+		  <description>Other data selection parameters</description>
+		  <value>True</value>
+		</param>
+-->
+		<param type="any" name="timerange">
+		  <description>Range of time to select from data</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+		
+    
+		<param type="any" name="uvrange">
+		  <description>Select data within uvrange </description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+		
+    
+		<param type="any" name="antenna">
+		  <description>Select data based on antenna/baseline</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+
+    
+		<param type="any" name="scan">
+		  <description>Scan number range</description>
+		  <any type="variant" limittypes="string stringArray"/>
+		  <value type="string"></value>
+		</param>
+    
+		<param type="any" name="observation">
+		  <description>Observation ID range</description>
+		  <any type="variant" limittypes="string int"/>
+		  <value type="string"></value>
+		</param>
+		<param type="boolean" name="pbcor">
+			<description>Correct for the primary beam post deconvolution</description>
+			<value>False</value>
+		</param>
+		<param type="double" name="minpb">
+			<description>Fractional of peak of pb coverage where to stop the  pb correction</description>
+			<value>0.2</value>
+		</param>
+		<param type="string" name="clusterdef">
+			<description>File that contains cluster definition</description>
+			<value></value>
+		</param>
+		<constraints>
+		  <when param="mode">
+		    <equals type="string" value="continuum">
+		      <default param="nterms"><value>1</value></default>
+		    </equals>
+		    <equals type="string" value="mfs">
+		      <default param="nterms"><value>1</value></default>
+		    </equals>
+		    <equals type="string" value="cube">
+		      <default param="start"><value type="int">0</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="int">1</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="channel">
+		      <default param="start"><value type="int">0</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="int">1</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="frequency">
+		      <default param="start"><value type="string">0GHz</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="string">1Hz</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+		     <equals type="string" value="velocity">
+		      <default param="start"><value type="string">0km/s</value></default>
+		      <default param="nchan"><value>2</value></default>
+		      <default param="width"><value type="string">1m/s</value></default>
+		      <default param="restfreq"><value type="string"></value></default>
+                     </equals>
+                 </when>
+
+		 <when param="cyclefactor">
+		   <equals type="double" value="1.5"></equals>
+		   <equals type="double" value="0.0">
+		     <default param="majorcycles"><value type="int">1</value></default>
+		   </equals>
+		 </when>
+		   
+                 <when param="ftmachine">
+                     <equals value="ft"/>
+                     <equals value="wproject">
+                      <default param="wprojplanes"><value>128</value></default>
+                      <default param="facets"><value>1</value></default>
+                     </equals>
+                     <equals value="mosaic"/>
+		     <equals value="sd"/>                     
+                 </when>
+<!--
+		 <when param="selectdata">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="timerange"><value type="string"></value>
+		     </default>
+		     <default param="uvrange"><value type="string"></value>
+		     </default>
+		     <default param="antenna"><value type="string"></value>
+		     </default>
+		     <default param="scan"><value type="string"></value>
+		     </default>
+		     <default param="observation"><value type="string"></value>
+		     </default>
+		   </equals>
+		 </when>
+-->
+		 <when param="alg">
+		   <equals type="string" value="multiscale">
+		     <default param="scales"><value type="intArray"><value>0</value></value></default>
+		   </equals>
+		   <equals type="string" value="clark"/>
+		   <equals type="string" value="hogbom"/>
+		 </when>
+		 <when param="weighting">
+		   <equals type="string" value="natural"/>
+		   <equals type="string" value="radial"/>
+		   <equals type="string" value="uniform"/>
+		   <equals type="string" value="briggs">
+		     <default param="robust"><value type="double">0.0</value></default>
+		     <default param="npixels"><value type="int">0</value></default>
+		   </equals>
+		   <equals type="string" value="briggsabs">
+		     <default param="npixels"><value type="int">0</value></default>
+		     <default param="robust"><value type="double">0.0</value></default>
+		   </equals>
+		   <equals type="string" value="radial" />
+
+		   <equals type="string" value="superuniform">
+		     <default param="npixels"><value type="int">0</value></default>
+		   </equals>
+		 </when>
+		 <when param="uvtaper">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="outertaper"><value type="vector"></value></default>
+		   </equals>
+		 </when>
+		 <when param="interactive">
+		   <equals type="bool" value="False"/>
+		   <equals type="bool" value="True">
+		     <default param="npercycle"><value type="int">100</value></default>
+		   </equals>
+		 </when>
+		</constraints>
+	      </input>
+
+
+<example>
+
+	Keyword arguments:
+        Invert and deconvolve images with parallel engines
+        Form images from visibilities. Handles continuum and spectral line 
+        cubes using module pcont and pcube respectively.
+ 
+        vis -- Name of input visibility file
+               default: none; example: vis='ngc5921.ms'    
+    
+	imagename -- Pre-name of output CASA image. (only the prefix)
+               default: none; 
+               example: imagename='m2', output images are:
+                 m2.image; cleaned and restored image
+                           With or without primary beam correction
+                 m2.psf; point-spread function (dirty beam)
+                 m2.model; image of clean components
+                 m2.mask; image containing clean regions, when interative=True
+
+        imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
+               default: [256,256]; 
+               example: imsize=[350,350]
+               imsize=500 is equivalent to imsize=[500, 500]
+               Avoid odd-numbered imsize.
+    
+        cell -- Cell size (x,y)
+               default: '1.0arcsec';
+               example: cell=['0.5arcsec', '0.5arcsec'] or
+                        cell=['1arcmin', '1arcmin']
+               cell='1arcsec' is equivalent to cell=['1arcsec', '1arcsec']
+               NOTE:cell=2.0 => cell=['2arcsec', '2arcsec']
+
+        phasecenter -- direction measure  or fieldid for the mosaic center
+               default: '' => first field selected; 
+               example: phasecenter=6
+                     or phasecenter='J2000 19h30m00 -40d00m00'
+        
+        mask -- mask image to be used for CLEANing. As long as the image has
+               the same shape (size), mask images from a previous
+               interactive session can be used for a new execution.
+	       Only an image mask is allowed at this stage. Text formats not allowed yet.
+
+        field -- Select fields in MS.  Use field id(s) or field name(s).
+                    ['go listobs' to obtain the list id's or names]
+               default: ''= all fields
+               If field string is a non-negative integer, it is assumed to
+               be a field index otherwise, it is assumed to be a field name
+               examples:
+                 field='0~2'; field ids 0,1,2
+                 field='0,4,5~7'; field ids 0,4,5,6,7
+                 field='3C286,3C295'; field named 3C286 and 3C295
+                 field = '3,4C*'; field id 3, all names starting with 4C
+    
+        spw --Select spectral window/channels
+               NOTE: This selects the data passed as the INPUT to mode
+               default: ''=all spectral windows and channels
+               examples:
+                 spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+                 spw='0:5~61'; spw 0, channels 5 to 61
+                 spw='&lt; 2';   spectral windows less than 2 (i.e. 0,1)
+                 spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, 
+                                     channels 3 to 45.
+                 spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+                 spw='0:0~10;15~60'; spectral window 0 with channels 
+                                      0-10,15-60
+                 spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+
+        ftmachine -- Fourier Transform Engine (Gridding method)
+               Options: 
+                 'ft' (standard interferometric gridding), 
+                 'sd' (standard single dish),
+                 'mosaic' (grid using PB as convolution function).
+                 'wproject' (wprojection gridder to correct for widefield 'w' term errors)
+               default: 'ft'
+ 
+        alg -- Deconvolution algorithm
+               Options: 'clark', 'hogbom', 'multiscale'
+               default: 'multiscale'
+                Note : For multi-term wideband imaging (nterms>1), please use alg='multiscale'
+
+	 cyclefactor -- Controls the threshhold at which the
+                   deconvolution cycle will pause to degrid and subtract the
+                   model from the visibilities (Cotton-Schwab (CS) major cycle).
+                   With poor PSFs, reconcile often (cyclefactor=4 or 5) for
+                   reliability. 
+                   With good PSFs, use cyclefactor = 1.5 to 2.0 for speed. 
+                   Note: threshold = cyclefactor * max sidelobe * max residual
+ 		   default: 1.5; example: cyclefactor=4
+		   cyclefactor=0 allows the user to control number of CS major cycle 
+         &gt;&gt;&gt;  majorcycles -- integer number of CS major cycles to do 
+               default: 1; 
+               example: majorcycles=10
+    
+        niter -- Maximum number iterations,
+               if niter=0, then no CLEANing is done ("invert" only)
+               default: 500; 
+               example: niter=5000
+
+        threshold -- Flux level (residual peak) at which to stop CLEANing
+               default: '0.0mJy';
+               example: 
+                 threshold='2.3mJy'  (always include units)
+                 threshold='0.0023Jy'
+                 threshold='0.0023Jy/beam' (okay also)
+    
+        weighting -- Weighting to apply to visibilities:
+               Options: 'natural','uniform','briggs', 
+                        'superuniform','radial'
+               default: 'natural'; 
+               example: weighting='uniform';
+
+        scales -- list of scales in pixel for multiscale clean 
+               default: [0]
+               example: scales=[0, 3, 10]
+
+        mode -- type of image to be generated 
+               Options: 'continuum', 'cube'
+               default: 'continuum'
+               example:
+                 mode='cube'; Use with nchan, start, step to specify
+                        output image cube.
+               NOTE: mode='velocity' or 'channel' or 'frequency'
+               are aliased to mode='cube' for backward compatibility 
+	       and comfort.
+
+  &gt;&gt;&gt; mode='continuum' expandable parameters
+           nterms -- Number of terms in the spectral Taylor polynomial fit.
+              default: 1  ( standard multi-frequency-synthesis )
+              Note : for nterms>1, please use alg='multiscale'
+
+  &gt;&gt;&gt; mode='cube' expandable parameters
+           nchan -- Total number of channels in the output image.
+              Example: nchan=100.
+              Default: -1; Automatically selects enough channels to cover
+              data selected by 'spw' and consistent with 'start' and 'step'
+              It is often easiest to leave nchan at the default value.
+           start -- First channel, velocity, or frequency.
+	      if start is an integer pclean will assume it is the a channel index
+	      if start is in units of velocity or frequency it will take it as such
+              
+	      If the user use the the ms channel as starting pclean will assign 
+	      the first channel of the image to the data channel frequency in LSRK 
+              of the first 
+	      spw selected at the first time seen in the data and the direction of the 
+	      source selected. 
+	      If the data is not in the LSRK frame the user should be aware that the 
+	      data channel indicated may not fall on the first image channel as time goes.
+
+              example:start=5
+             start can be in units of frequency or velocity too
+	     When velocity units is used it is obvious then that it is referring to the line
+	     whose restfrequency is provided by the user or is default one for the source 
+	     in the MS/SOURCE table.
+	     examples: start='5.0km/s', or start='22.3GHz'.
+           width -- Output channel width
+              should be in the same units as start 
+              default=1; &gt;1 indicates channel averaging
+              if start is an integer, width has to be an integer defining the image channel 
+              width by the number of channels of first spectral window selected
+              example: width=4.
+              when start is in frequency or velocity units then the width has to be in the same units.  default=''; 
+             
+              examples: width='1.0km/s', or width='24.2kHz'.
+
+           
+	interactive -- Create a mask interactively or not.
+              interactive clean allows the user to build the cleaning
+              mask interactively using the viewer.  
+
+              default: False; 
+              example: interactive=True
+                The viewer will open with the image displayed. Select the
+        	region for the mask and double click in the middle of it.
+
+	 &gt;&gt;&gt; npercycle -- Number of iteration in between viewer interactions.
+	       default=100
+
+	pbcor -- Output primary beam-corrected image
+                If pbcor=False, the final output image is NOT corrected for
+                the PB pattern (particularly important for mosaics), and
+                therefore is not "flux correct". Correction can also be
+                done after the  fact using immath to divide
+                &lt;imagename&gt;.image by the &lt;imagename&gt;.flux image. 
+ 	       default: pbcor=False; output un-corrected image 
+ 	       example: pbcor=True; output pb-corrected image (masked outside
+                        minpb) 
+
+       &gt;&gt;&gt; minpb -- Minimum PB level to use for pb-correction and pb-based masking.
+                    default=0.2;
+                    example: minpb=0.01 
+               When ftmachine is *not* 'mosaic' :
+                  minpb is applied to the flux image (sensitivity-weighted pb).
+               When ftmachine='mosaic' :
+	          minpb is applied to the flux.pbcoverage image 
+ 
+        overwrite -- If False use existing model image of same name to continue clean 
+               if True the imagename.model and other associated images are overwitten 
+               if they exist
+               default: True
+
+
+         timerange  -- Select data based on time range:
+	         default: '' (all); examples,
+		 timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+		   Note: if YYYY/MM/DD is missing date defaults to first 
+		   day in data set
+		   timerange='09:14:0~09:54:0' picks 40 min on first day
+		   timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 
+		   30min on NEXT day
+		   timerange='09:44:00' pick data within one integration 
+		   of time
+		   timerange='&gt;10:24:00' data after this time
+		   For multiple MS input, a list of timerange strings can be
+		 used:
+          uvrange -- Select data within uvrange (default units meters)
+                   default: '' (all); example:
+                   uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+                   uvrange='&gt;4klambda';uvranges greater than 4 kilo lambda
+          antenna -- Select data based on antenna/baseline
+                   default: '' (all)
+                   If antenna string is a non-negative integer, it is 
+ 		   assumed to be an antenna index, otherwise, it is
+ 		   considered an antenna name.
+                   antenna='5&amp;6'; baseline between antenna index 5 and 
+ 				 index 6.
+                   antenna='VA05&amp;VA06'; baseline between VLA antenna 5 
+ 				       and 6.
+                   antenna='5&amp;6;7&amp;8'; baselines 5-6 and 7-8
+                   antenna='5'; all baselines with antenna index 5
+                   antenna='05'; all baselines with antenna number 05 
+ 				(VLA old name)
+                   antenna='5,6,9'; all baselines with antennas 5,6,9 
+ 				   index number
+               scan -- Scan number range.
+                   default: '' (all)
+                   example: scan='1~5
+               observation -- Observation ID range.
+                   default: '' (all)
+                   example: observation='1~5'
+
+
+	clusterdef -- Name of a file that contains the cluster definition.
+	              NOTE: there is a chapter in the cookbook on how to 
+		      define this file
+                       If clusterdef='' (the default) then all the cores, if possible, 
+		       of the machine on 
+                       which casapy is run will be used.
+<!--
+		       The cluster definition file has lines with 3 comma seperated fields:
+                       computername, number of cores to use and working directory
+		       e.g of a cluster definition file:
+		       ############################
+		       hal9000, 10,   /home/ptest
+		       sal9000, 12,   /home/ptest
+		       nearstar, 6,    /home/ptest
+		       ############################
+		       IMPORTANT: the user have to have passwordless ssh access
+		       to all the computers used in a cluster definition file and the working 
+		       directories has to be crossmounted  by all the computers under the 
+		       same names         
+-->                  
+          Example of a cube imaging run:
+	  
+	  pclean(vis="ngc5921.ms.contsub",imagename="loulou",imsize=[2500, 2500],
+	  cell=['15.0arcsec', '15.0arcsec'],phasecenter="",stokes="I",field="0",spw="*",
+	  ftmachine="ft",alg="hogbom",majorcycles=2, niter=6000,gain=0.1,
+	  threshold="8mJy",weighting="briggs",robust=0.5,npixels=0,mode="cube",
+	  start=5,nchan=46,width=1,interactive=True,overwrite=True,uvtaper=False,
+	  outertaper=[''],pbcor=True)              
+		       
+	  Example of a continuum run:
+
+	  pclean(vis='sim100g_4chan15kRows.ms',
+          imagename='hundredG_cont', imsize=[1500, 1500],
+          cell=['0.135arcsec', '0.135arcsec'], mode='continuum', phasecenter='0',
+          field='0', spw='*', ftmachine='wproject', wprojplanes=128,
+          threshold='0.1mJy', 
+          majorcycles=4, niter=10000, alg='clark',
+          weighting='natural',
+          overwrite=True)
+
+ </example>
+ </task>
+ </casaxml>

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="importevla" category="import/export" visibility="experimental">
+
+  <shortdescription>Convert an Science Data Model observation into a CASA Measurement Set</shortdescription>
+
+  <input>
+
+    <param type="string" name="asdm" kind="asdm" mustexist="true">
+          <description>Name of input asdm directory (on disk)</description>
+          <value></value>
+    </param>
+
+    <param type="string" name="vis" kind="ms">
+          <description>Root name of the ms to be created. Note the .ms is NOT added </description>
+          <value></value>
+    </param>
+
+    <param type="string" name="ocorr_mode" >
+	    <description>Fill correlation mode AUTO_ONLY (ao), CROSS_ONLY (co) or CROSS_AND_AUTO (ca)</description>
+	    <value>co</value>
+	    <allowed kind="enum">
+	       <value>co</value>
+	       <value>ao</value>
+	       <value>ca</value>
+	    </allowed>
+    </param>
+    <param type="bool" name="compression">
+	    <description>Flag for turning on data compression</description>
+	    <value>False</value>
+    </param>
+
+    <param type="string" name="asis">
+	    <description>Create verbatim copies of these SDM tables in the MS.</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="scans">
+            <description>List of scans to fill (default is all scans).</description>
+	    <value></value>
+    </param>
+
+    <param type="bool" name="verbose">
+	    <description>Output lots of information while the filler is working</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+	    <description>Over write an existing MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="online">
+	    <description>Create online flags</description>
+	    <value>True</value>
+    </param>
+
+    <param type="double" name="tbuff" subparam="true">
+            <description>Time padding buffer (in seconds)</description>
+            <value>0.0</value>
+    </param> 
+
+    <param type="bool" name="flagzero">
+	    <description>Create flag commands for zero points</description>
+	    <value>True</value>
+    </param>
+
+    <param type="bool" name="flagpol" subparam="true">
+            <description>Create flag commands for cross-hand correlations</description>
+            <value>True</value>
+    </param> 
+
+    <param type="bool" name="shadow">
+	    <description>Create flag commands for shadowed data</description>
+	    <value>True</value>
+    </param>
+
+    <param type="double" name="tolerance" subparam="true">
+                <description>Amount of shadow allowed (in meters)</description>
+                <value>0.0</value>
+    </param>
+    <param type="any" name="addantenna" subparam="true">
+                <description>File name or dictionary with additional antenna names, positions and diameters</description>
+                <any type='variant' limittype='string record'/>
+                <value type="string"></value>
+    </param>
+
+    <param type="bool" name="applyflags">
+	    <description>Apply flag commands to MS</description>
+	    <value>False</value>
+    </param>
+
+    <param type="bool" name="savecmds">
+        <description>Save flag commands to an ASCII file</description>
+        <value>False</value>
+    </param>
+
+    <param type="string" name="outfile" subparam="true">
+        <description>Name of ASCII file to save flag commands</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="flagbackup">
+	    <description>Back up flag column before applying flags</description>
+	    <value>True</value>
+    </param>
+
+    <constraints>
+            <when param="online">
+                <equals type="bool" value="True">
+                    <default param="tbuff"><value type="double">0.0</value></default>
+                </equals>
+                <equals type="bool" value="False"/>
+            </when>
+
+            <when param="flagzero">
+                <equals type="bool" value="True">
+                    <default param="flagpol"><value type="bool">True</value></default>
+                </equals>
+                <equals type="bool" value="False"/>
+            </when>
+
+            <when param="shadow">
+                <equals type="bool" value="True">
+                        <default param="tolerance"><value type="double">0.0</value></default>
+                        <default param="addantenna"><value type="string"></value></default>
+                </equals>
+                <equals type="bool" value="False"/>
+            </when>
+
+            <when param="savecmds">
+                <equals type="bool" value="False"/>
+                            <equals type="bool" value="True">
+                    <default param="outfile"><value type="string"></value></default>
+                </equals>
+            </when>
+
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+Convert a Science Data Model (SDM) dataset into a CASA Measurement Set (MS).  
+Will place online flags and specified clip/shadow flags into FLAG_CMD table 
+and optionally apply to MS.
+
+Warning: This version is under development and is geared to handling EVLA 
+specific flag and system files, and is otherwise identical to importasdm.
+				          
+        HISTORY: Task created v1.0 S.T. Myers 2010-03-11 (3.0.1)
+                 Last updated v9.0 S.M. Castro 2012-03-13 (3.4) code+doc
+
+Keyword arguments:
+asdm         -- Name of input SDM file (directory)
+                default: none; 
+                    Example: asdm='ExecBlock3'
+
+vis          -- Root ms or scantable name, note a .ms is NOT appended to name
+                default: none
+
+ocorr_mode   -- output data for correlation mode AUTO_ONLY 
+                (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		default: co (for EVLA)
+
+compression  -- produces comrpressed columns in the resulting measurement set.
+                default: False
+
+asis         -- creates verbatim copies of the ASDM tables in 
+                the output measurement set. The value given to
+		this option must be a list of table names separated
+		by space characters; the wildcard character '*' is 
+                allowed in table names.
+
+scans        -- processes the scans requested in this parameter (default is
+                all scans).  For simplest use provide a comma-separated list of 
+		scan ranges, e.g. scans='1~3,5,10~20'.
+                default: '' = all scans
+
+                NOTE: A scan specification tecnically consists of an ExecBlock 
+                index followed by the character ':' followed by a comma
+                separated list of scan indexes or scan index ranges. The EVLA
+                does not currently include more than one ExecBlock in a SDM
+                so this specification prefix is not needed.
+
+                By default all the scans are considered. 
+
+overwrite    -- Over write an existing MS
+
+verbose      -- produce log output as asdm2MS is being run
+
+EVLA-specific parameters:
+-------------------------
+
+online       -- create flagging commands for online flags. The commands will be saved to the FLAG_CMD 
+                sub-table of the MS. Optionally, it can also be saved to an ASCII file when savecmds is set
+                to True.
+                default: True
+ 
+            &gt;&gt;&gt; online expandable parameters
+                 tbuff -- (float) time padding buffer (in seconds)
+                 default: 0.0
+
+                 NOTE: this time is in seconds. You should currently
+                 set the value of tbuff to be 1.5x the correlator
+                 integration time if greater than 1 second.  For
+                 example, if the SDM has integrations of 3 seconds,
+                 set tbuff=4.5.  Likewise, set tbuff=15.0 for 10-sec
+                 integrations.
+                                  
+ 
+flagzero     -- create flags to clip out visibilities with zero values. The command will be saved to the FLAG_CMD 
+                sub-table of the MS. Optionally, it can also be saved to an ASCII file when savecmds is set
+                to True.
+                default: True
+ 
+            &gt;&gt;&gt; flagzero expandable parameter(s) 
+                 flagpol -- (boolean) also zero-clip on cross-hands (default=False)
+ 
+shadow       -- create flags for antennas that are shadowed. The command will be saved to the FLAG_CMD 
+                sub-table of the MS. Optionally, it can also be saved to an ASCII file when savecmds is set
+                to True.
+                default: True
+ 
+            &gt;&gt;&gt; shadow expandable parameter
+                 tolerance -- Amount of shadowing allowed in meters.
+                   default: 0.0
+
+                 addantenna -- It can be either a file name with additional antenna names, positions 
+                               and diameters, or a Python dictionary with the same information. 
+                               You can use the flaghelper functions to create the dictionary from a file.  
+                   default: ''
+                   
+                   To create a dictionary inside casapy.
+                   > import flaghelper as fh
+                   > antdic = fh.readAntennaList(antfile)
+                   
+                   Where antfile is a text file in disk that contains information such as:
+                    name=VLA01
+                    diameter=25.0
+                    position=[-1601144.96146691, -5041998.01971858, 3554864.76811967]
+                    name=VLA02
+                    diameter=25.0
+                    position=[-1601105.7664601889, -5042022.3917835914, 3554847.245159178]
+                   
+ 
+applyflags   -- apply the online and specified flags to the MS
+                default: False
+
+
+savecmds   -- Save the flag commands to an ASCII file given by the parameter outfile. It will save the
+              flag commands from online, flagzero and/or shadow if they are set to True. 
+                default: False
+                    
+            &gt;&gt;&gt; savecmds expandable parameter
+                outfile      -- Filename where to save the flag commands.
+                default: ' ' --> by default it will save on a filename composed from the MS name.
+                    Example: vis='evla.ms', the outfile will be 'evla_cmd.txt'. 
+                    
+                    NOTE: The file is open to save in append mode.
+
+
+flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions 
+                default: True
+
+       Examples:
+
+
+        1)  Produces MS CLowTest_000.ms with autocorrelations.
+            You will find the online, zero, and shadow flags in the FLAG_CMD table
+            for later application.  Does not apply any flags.
+                
+             importevla(asdm='CLowTest_000',ocorr_mode='ca')
+                
+
+        2)  Produces MS CLowTest_000.ms without autocorrelations.  
+               
+             importevla(asdm='CLowTest_000')
+                
+
+        3)  Will apply online flags and uses a more conservative 2sec buffer
+                before the start and after the end timeranges.
+                
+             importevla(asdm='CLowTest_000',online=True,tbuff=2.0,applyflags=True)
+                
+
+        4)  This will create the FLAG_CMD sub-table using online flags only,
+            but will not apply them to the MS.
+
+            importevla(asdm='CLowTest_000',online=True,flagzero=False,shadow=False)
+
+
+        5)  This will write the online flags to the FLAG_CMD table. It will also save commands
+            to clip zeros and to flag shadowed antennas to the table. The commands will be further 
+            applied to the data and the APPLIED column of the FLAG_CMD will be updated to True.
+
+            importevla(asdm='CLowTest_000',online=True,flagzero=True,shadow=True,applyflags=True)
+
+
+        6)  Import only scans 1, 2, 3, 5, 7, 9, save the online, shadow and clip commands to an ASCII file and
+            do not apply the flags. The commands will be saved to CLowTest_000_cmd.txt.
+
+            importevla(asdm='CLowTest_000',scans='1~3,5,7,9',online=True,flagzero=True,shadow=True,
+                                applyflags=False, savecmds=True)
+                
+                You can use either flagdata or flagcmd to apply the flags later with the following commands:
+                
+                Apply all the flags in the file using flagdata
+                flagdata('CLowTest_000.ms', mode='list', inpfile='CLowTest_000_cmd.txt')
+
+                Select by reason on the file
+                flagdata('CLowTest_000.ms',mode='list', inpfile='CLowTest_000_cmd.txt', 
+                           reason=['ANTENNA_NOT_POINTING','CORRELATOR_DATA_INVALID'])
+                
+                Apply all the flags in the file using flagcmd
+                flagcmd('CLowTest_000.ms',inpmode='list',inpfile='CLTest_000_cmd.txt',action='apply')
+                                
+
+HISTORY: Task last updated v9.0 S.M. Castro 2012-03-8 (3.4.0)
+         Docs last updated v9.0 S.M. Castro 2012-03-13 (3.4.0)
+
+  </example>
+
+</task>
+
+</casaxml>

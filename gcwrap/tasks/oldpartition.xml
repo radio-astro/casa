@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="oldpartition" category="manipulation" visibility="hidden">
+     <shortdescription>Experimental task to produce multi-MSs using parallelism</shortdescription>
+
+<description>
+
+<!-- THIS DOES NOT GET READ, PUT IT IN example! -->
+	Partition is a task to create a multi-MS out of an MS. General selection
+    parameters are included, and one or all of the various data columns
+    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+    CORRECTED_DATA) can be selected. It can also be used to create a normal
+	MS, split based on the given data selection parameters.
+</description>
+
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Name of input measurement set</description>
+		<value></value>
+	</param>
+
+	<param type="string" name="outputvis">
+		<description>Name of output measurement set</description>
+		<value></value>
+	</param>
+        <param type="bool" name="createmms">
+            <description>Should this create a multi-MS output</description>
+            <value>True</value>
+        </param>
+        <param type="string" name="separationaxis" ignorecase="true" subparam="true">
+            <description>Axis to do parallelization across(scan,spw,both)</description>
+            <value>scan</value>
+            <allowed kind="enum" ignorecase="true">
+                <value>scan</value>
+                <value>spw</value>
+                <value>both</value>
+            </allowed>
+        </param>
+        <param type="int" name="numsubms" subparam="true">
+            <description>The number of SubMSs to create</description>
+            <value>64</value>
+        </param>
+
+	<param type="string" name="datacolumn" ignorecase="True">
+		<description>Which data column(s) to split out</description>
+		<value>data</value>
+		<allowed kind="enum" ignorecase="True">
+			<value>data</value>
+			<value>corrected</value>
+			<value>model</value>
+<!--                    <value>data,corrected</value>
+                        <value>data,model</value>
+                        <value>model,corrected</value> -->
+                        <value>data,model,corrected</value>
+			<value>float_data</value>
+			<value>lag_data</value>
+			<value>float_data,data</value>
+			<value>lag_data,data</value>
+            <value>all</value>
+		</allowed>
+	</param>
+
+    <param type="string" name="calmsselection">
+         <description>Cal Data Selection (\'none\', \'auto\', \'manual\')</description>
+        <value>none</value>
+        <allowed kind="enum" ignorecase="true">
+          <value>none</value>
+          <value>auto</value>
+          <value>manual</value>
+        </allowed>
+    </param>
+        <param type="string" name="calmsname" subparam="true">
+			<description>Name of output measurement set</description>
+			<value></value>
+	    </param>
+
+		<param type="any" name="calfield" subparam="true">
+			<description>Field Selection for calibration ms</description>
+			<value type="string"></value>
+		</param>
+
+		<param type="string" name="calscan" subparam="true">>
+			<description>Select data by scan numbers</description>
+			<value></value>
+		</param>
+	
+		<param type="string" name="calintent" subparam="true">>
+			<description>Select data by scan intent</description>
+			<value></value>
+		</param>
+
+
+    <param type="any" name="field">
+    	<description>Select field using ID(s) or name(s)</description>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+	<param type="any" name="spw">
+		<description>Select spectral window/channels</description>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+		<value type="string"></value>
+	</param>
+
+	<param type="any" name="antenna">
+		<description>Select data based on antenna/baseline</description>
+		<any type="variant" limittypes="string stringArray int intArray"/>
+		<value type="string"></value>
+	</param>
+
+	<param type="string" name="timebin">
+		<description>Bin width for time averaging</description>		
+		<value type="string">0s</value>
+	</param>
+	
+		<param type="any" name="combine" subparam="true">
+			<description>Let time bins span changes in scan and/or state</description>
+			<any type="variant" limittypes="string stringArray"/>
+			<value type="string"></value>
+		</param>
+
+	<param type="string" name="timerange" >
+		<description>Select data by time range</description>
+		<value></value>
+	</param>
+	<param type="string" name="scan" >
+		<description>Select data by scan numbers</description>
+		<value></value>
+	</param>
+	<param type="string" name="scanintent" >
+		<description>Select data by scan intent</description>
+		<value></value>
+	</param>
+    <param type="string" name="array">
+        <description>Select (sub)array(s) by array ID number</description>
+        <value></value>
+    </param>
+	<param type="string" name="uvrange" >
+		<description>Select data by baseline length</description>
+		<value></value>
+	</param>
+    <param type="any" name="observation">
+	    <description>Select by observation ID(s)</description>
+		<any type="variant" limittypes="string int"/>
+		<value type="string"></value>
+    </param>
+    
+    <constraints>
+	  <when param="timebin">
+		<notequals type="string" value="0s">
+          <default param="combine"><value type="string"></value></default>
+        </notequals>
+      </when>
+      <when param="createmms">
+        <equals type="bool" value="True">
+          <default param="separationaxis"><value type="string">scan</value></default>
+          <default param="numsubms"><value type="int">64</value></default>
+        </equals>
+        <equals type="bool" value="False"/>
+	  </when>
+      <when param="calmsselection">
+        <equals value="none"/>
+        <equals value="auto">
+          <default param="calmsname"><value type="string"></value></default>
+        </equals>
+        <equals value="manual">
+           <default param="calmsname"><value type="string"></value></default>
+           <default param="calfield"><value type="string"></value></default>
+           <default param="calscan"><value type="string"></value></default>
+           <default param="calintent"><value type="string"></value></default>
+        </equals>
+      </when>
+    </constraints>
+
+</input>
+<example>
+    Experimental version for use with parallelization framework.  
+    Do not use this for standard analysis... yet.
+
+    Partition is a task to create a multi-MS out of an MS. General selection
+    parameters are included, and one or all of the various data columns
+    (DATA, LAG_DATA and/or FLOAT_DATA, and possibly MODEL_DATA and/or
+    CORRECTED_DATA) can be selected. It can also be used to create a normal
+    MS, split based on the given data selection parameters.
+
+    The partition task creates a multi-MS using the parallelization framework.
+    If a cluster is not present, it will create a default cluster based on the
+    resources of the system. One can create a simple_cluster prior to running
+    partition by doing the following.
+
+    from simple_cluster import *
+    sc = simple_cluster()
+    sc.init_cluster('cluster-config.txt', 'test')
+
+    The file 'cluster-config.txt' contains information on the machine that will
+    be used for the cluster. Please see the help of simple_cluster for more information.	
+
+    A multi-MS is structured to have a reference MS on the top directory and a
+    sub-directory called SUBMSS, which contain each partitioned sub-MS. The
+    reference MS contains links to the sub-tables of the first sub-MS. The other
+    sub-MSs contain a copy of the sub-tables each. A multi-MS looks like this in disk.
+
+    ls ngc5921.mms
+    ANTENNA           FLAG_CMD     POLARIZATION  SPECTRAL_WINDOW  table.dat
+    DATA_DESCRIPTION  HISTORY      PROCESSOR     STATE            table.info
+    FEED              OBSERVATION  SORTED_TABLE  SUBMSS           WEATHER
+    FIELD             POINTING     SOURCE        SYSCAL
+
+    ls ngc5921.mms/SUBMSS/
+    ngc5921.0000.ms/  ngc5921t.0002.ms/  ngc5921.0004.ms/  ngc5921.0006.ms/
+    ngc5921.0001.ms/  ngc5921.0003.ms/  ngc5921.0005.ms/
+
+    Inside casapy, one can use the task listpartition to list the information
+    from a multi-MS.
+  
+
+    Keyword arguments:
+    vis -- Name of input visibility file
+        default: none; example: vis='ngc5921.ms'
+
+    outputvis -- Name of output visibility file
+        default: none; example: outputvis='ngc5921.mms'
+
+    createmms -- Create a multi-MS as the output.
+        default: True
+        If False, it will work like the split task and create a
+        normal MS, split according to the given data selection parameters.
+        Note that, when this parameter is set to False, a simple_cluster
+        will not be created.
+
+        separationaxis -- Axis to do parallelization across. 
+            default: 'scan'
+            Options: 'scan', 'spw', 'both'
+            The 'both' option will try to partition in both scan and spw axes.
+
+        numsubms -- The number of sub-MSs to create.
+            default: 64
+				
+
+    datacolumn -- Which data column to use when partitioning.
+        default='data'; example: datacolumn='data'
+        Options: 'data', 'model', 'corrected', 'all',
+                'float_data', 'lag_data', 'float_data,data', and
+                'lag_data,data'.
+            N.B.: 'all' = whichever of the above that are present.
+            Otherwise the selected column will go to DATA (or
+            FLOAT_DATA) in the output.
+
+    calmsselection -- Method by which the calibration scans will be identified
+                    when creating a separate calibration MS.
+        default:'none'
+        Options: 'none', 'auto', 'manual'.
+
+        'auto' -- 
+            calmsname -- Name of output measurement set.
+                default = ' '
+
+        'manual'
+            calmsname -- Name of output measurement set.
+                default: ''
+            calfield -- Field selection for calibration MS.
+                default: ''
+            calscans -- Scan selection for calibration MS.
+                default: ''
+            calintent -- Scan intent selection for calibration MS.
+                default: ''
+
+--- Data selection parameters (see help par.selectdata for more detailed
+    information)
+
+    field -- Select field using field id(s) or field name(s).
+             [run listobs to obtain the list iof d's or names]
+        default: ''=all fields If field string is a non-negative
+           integer, it is assumed to be a field index
+           otherwise, it is assumed to be a field name
+           field='0~2'; field ids 0,1,2
+           field='0,4,5~7'; field ids 0,4,5,6,7
+           field='3C286,3C295'; fields named 3C286 and 3C295
+           field = '3,4C*'; field id 3, all names starting with 4C
+
+    spw -- Select spectral window/channels
+        default: ''=all spectral windows and channels
+           spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+           spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+           spw='0:5~61'; spw 0, channels 5 to 61
+           spw='0,10,3:3~45'; spw 0,10 all channels, spw 3 - chans 3 to 45.
+           spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+           spw = '*:3~64'  channels 3 through 64 for all sp id's
+                   spw = ' :3~64' will NOT work.
+           spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
+                  ';' needed to separate different channel ranges in one spw
+           spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+           spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
+                    spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
+
+    antenna -- Select data based on antenna/baseline
+        default: '' (all)
+            Non-negative integers are assumed to be antenna indices, and
+            anything else is taken as an antenna name.
+
+            Examples:
+            antenna='5&amp;6': baseline between antenna index 5 and index 6.
+            antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
+            antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
+            antenna='5': all baselines with antenna 5
+            antenna='5,6,10': all baselines including antennas 5, 6, or 10
+            antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or
+                                   10.  (cross-correlations only.  Use &amp;&amp;
+                                   to include autocorrelations, and &amp;&amp;&amp;
+                                   to get only autocorrelations.)
+            antenna='!ea03,ea12,ea17': all baselines except those that
+                                       include EVLA antennas ea03, ea12, or
+                                       ea17.
+
+    timebin -- Interval width for time averaging.
+        default: '0s' or '-1s' (no averaging)
+        Example: timebin='30s'
+                 '10' means '10s'
+
+        combine -- Let time bins span changes in scan and/or state.
+            default = '' (separate time bins by both of the above)
+               combine = 'scan': Can be useful when the scan number
+                                 goes up with each integration,
+                                 as in many WSRT MSes.
+               combine = ['scan', 'state']: disregard scan and state
+                                            numbers when time averaging.
+               combine = 'state,scan': Same as above.
+
+    timerange -- Select data based on time range:
+        default = '' (all); examples,
+           timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+           Note: if YYYY/MM/DD is missing date, timerange defaults to the
+           first day in the dataset
+           timerange='09:14:0~09:54:0' picks 40 min on first day
+           timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min
+           on next day
+           timerange='09:44:00' data within one integration of time
+           timerange='&gt;10:24:00' data after this time
+
+    array -- (Sub)array number range
+        default: ''=all
+
+    uvrange -- Select data within uvrange (default units meters)
+        default: ''=all; example:
+            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
+            uvrange='0~1000km'; uvrange in kilometers
+
+    scan -- Scan number range
+        default: ''=all
+
+    observation -- Select by observation ID(s)
+        default: ''=all
+
+
+</example> 
+</task>
+</casaxml>
