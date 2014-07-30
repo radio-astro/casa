@@ -30,7 +30,6 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapserData.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/TempImage.h>
-#include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
 
 void writeTestString(const String& test) {
@@ -41,38 +40,47 @@ void writeTestString(const String& test) {
 int main() {
 	Bool ok = True;
 	try {
-	  std::tr1::shared_ptr<ImageInterface<Float> > im( new FITSImage("/home/uniblab/casa/trunk/test/Orion.methanol.cbc.contsub.image.fits"));
-	  CoordinateSystem cSys = im->coordinates();
-	  const String radUnits( "rad" );
-	  const String absStr( "abs");
-	  Record regionRecord;
-	  Int directionIndex = cSys.findCoordinate( Coordinate::DIRECTION );
-	  Vector<Int> dirPixelAxis = cSys.pixelAxes( directionIndex );
-	  RegionManager regMan;
-	  Vector<Quantity> blc(2);
-	  Vector<Quantity> trc(2);
-	  blc(0) = Quantity( 1.46277,radUnits);
-	  blc(1) = Quantity( -0.0938656, radUnits);
-	  trc(0) = Quantity( 1.46272,radUnits);
-	  trc(1) = Quantity( -0.0938005, radUnits);
-	  Vector<Int> pixax( 2);
-	  pixax(0) = 0;
-	  pixax(1) = 1;
-	  Record* imageregRecord = regMan.wbox( blc, trc, pixax, cSys, absStr, radUnits);
+		CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
+		ObsInfo obsInfo = csys.obsInfo();
+		obsInfo.setTelescope("VLA");
+		obsInfo.setObsDate(MEpoch(Quantity(1406663443, "s")));
+		csys.setObsInfo(obsInfo);
+		TiledShape shape(IPosition(3, 20));
+		SPIIF image(new TempImage<Float>(shape, csys));
+		image->set(0);
+		PixelValueManipulator<Float> pvm(image, NULL, "");
+		Record ret = pvm.getProfile(
+			2, ImageCollapserData::MEAN, "Hz", PixelValueManipulatorData::DEFAULT, NULL, "LSRK"
+		);
+		Double got = ret.asArrayDouble("coords")(IPosition(1, 0));
+		AlwaysAssert(got == 1.415e9, AipsError);
+		ret = pvm.getProfile(
+			2,ImageCollapserData::MEAN,"GHz", PixelValueManipulatorData::DEFAULT, NULL, "LSRK"
+		);
+		AlwaysAssert(ret.asArrayDouble("coords")(IPosition(1, 0)) == 1.415, AipsError);
+		ret = pvm.getProfile(
+			2,ImageCollapserData::MEAN,"km/s", PixelValueManipulatorData::DEFAULT, NULL, "LSRK"
+		);
+		got = ret.asArrayDouble("coords")(IPosition(1, 0));
+		AlwaysAssert(near(got, 1143.115213, 1e-9), AipsError);
 
+		ret = pvm.getProfile(
+			2,ImageCollapserData::MEAN,"Hz", PixelValueManipulatorData::DEFAULT, NULL, "CMB"
+		);
+		got = ret.asArrayDouble("coords")(IPosition(1, 0));
+		AlwaysAssert(near(got, 1.41669717e+09, 1e-8), AipsError);
 
-	
-        PixelValueManipulator<Float> pvm(im, imageregRecord, "");
-        Record ret = pvm.getProfile(
-				    //	2, "mean", "Hz", PixelValueManipulatorData::DEFAULT, NULL, ""
-				    2, ImageCollapserData::MEAN, "Hz", PixelValueManipulatorData::DEFAULT, NULL, "LSRK"
-        );
-        cout << ret << endl;
-        ret = pvm.getProfile(
-			     //2, "mean", "GHz", PixelValueManipulatorData::DEFAULT, NULL, ""
-			     2,ImageCollapserData::MEAN,"GHz", PixelValueManipulatorData::DEFAULT, NULL, "LSRK"
-        );
-        cout << ret << endl;
+		ret = pvm.getProfile(
+			2,ImageCollapserData::MEAN,"GHz", PixelValueManipulatorData::DEFAULT, NULL, "CMB"
+		);
+		got = ret.asArrayDouble("coords")(IPosition(1, 0));
+		AlwaysAssert(near(got, 1.41669717, 1e-8), AipsError);
+
+		ret = pvm.getProfile(
+			2,ImageCollapserData::MEAN,"km/s", PixelValueManipulatorData::DEFAULT, NULL, "CMB"
+		);
+		got = ret.asArrayDouble("coords")(IPosition(1, 0));
+		AlwaysAssert(near(got, 783.759793, 1e-8), AipsError);
         cout << "ok" << endl;
 	}
     catch (const AipsError& x) {

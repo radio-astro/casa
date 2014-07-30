@@ -131,7 +131,7 @@ private:
 	) const;
 
 	void _doNoncomformantUnit(
-		Vector<Double> coords, const CoordinateSystem& csys,
+		Vector<Double>& coords, const CoordinateSystem& csys,
 		const String& unit, PixelValueManipulatorData::SpectralType specType,
 		const Quantity *const restFreq, const String& axisUnit
 	) const;

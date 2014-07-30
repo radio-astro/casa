@@ -158,6 +158,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 	const Quantity *const restFreq, const String& frame,
 	uInt axis
 ) const {
+	// drop degenerate axes
 	SPIIT tmp = SubImageFactory<T>::createImage(
 		*collapsed, "", Record(), "", True, False, False, False
 	);
@@ -173,37 +174,44 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 	Matrix<Double> world;
 	Vector<Bool> failures;
 	if (
-		! frame.empty() && (unit.empty() || t.isConform(axisUnit))
-		&& csys.hasSpectralAxis()
+		! frame.empty() && csys.hasSpectralAxis()
+		&& MFrequency::typeFromString(frame)
+		!= csys.spectralCoordinate().frequencySystem(True)
 	) {
-		SPCIIT subimage = SubImageFactory<T>::createImage(
-			*this->_getImage(), "", *this->_getRegion(), this->_getMask(),
-			False, False, False, this->_getStretch()
-		);
-		CoordinateSystem mycsys = subimage->coordinates();
+		// We need to use the original coordinate system because we need
+		// the direction coordinate to be able to set the spectral
+		// conversion frame
+		CoordinateSystem mycsys(this->_getImage()->coordinates());
 		pixel.resize(IPosition(2, mycsys.nPixelAxes(), length));
 		pixel.set(0);
 		pixel.row(axis) = indgen(length, 0.0, 1.0);
+		SpectralCoordinate spCoord = mycsys.spectralCoordinate();
 		mycsys.setSpectralConversion(frame);
-		mycsys.toWorldMany(world, pixel, failures);
+		ThrowIf (!
+			mycsys.toWorldMany(world, pixel, failures),
+			"Unable to convert spectral coordinates to " + frame
+		);
 		coords = world.row(axis);
 	}
 	else {
 		pixel.resize(IPosition(2, 1, length));
 		pixel.set(0);
 		pixel.row(0) = indgen(length, 0.0, 1.0);
-		csys.toWorldMany(world, pixel, failures);
+		ThrowIf(
+			! csys.toWorldMany(world, pixel, failures),
+			"Unable to convert to world coordinates"
+		);
 		coords = world.row(0);
-		if (! unit.empty()) {
-			if (t.isConform(axisUnit)) {
-				Quantum<Vector<Double> > q(coords, axisUnit);
-				coords = q.getValue(unit);
-			}
-			else {
-				_doNoncomformantUnit(
-					coords, csys, unit, specType, restFreq, axisUnit
-				);
-			}
+	}
+	if (! unit.empty()) {
+		if (t.isConform(axisUnit)) {
+			Quantum<Vector<Double> > q(coords, axisUnit);
+			coords = q.getValue(unit);
+		}
+		else {
+			_doNoncomformantUnit(
+				coords, csys, unit, specType, restFreq, axisUnit
+			);
 		}
 	}
 	Record ret;
@@ -213,7 +221,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 }
 
 template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
-	Vector<Double> coords, const CoordinateSystem& csys,
+	Vector<Double>& coords, const CoordinateSystem& csys,
 	const String& unit, PixelValueManipulatorData::SpectralType specType,
 	const Quantity *const restFreq, const String& axisUnit
 ) const {
