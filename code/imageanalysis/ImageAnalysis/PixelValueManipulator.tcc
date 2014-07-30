@@ -203,7 +203,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 		);
 		coords = world.row(0);
 	}
-	if (! unit.empty()) {
+	if (! unit.empty() && unit != axisUnit) {
 		if (t.isConform(axisUnit)) {
 			Quantum<Vector<Double> > q(coords, axisUnit);
 			coords = q.getValue(unit);
