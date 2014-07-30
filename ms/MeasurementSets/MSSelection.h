@@ -173,8 +173,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Helper method for converting name vectors to expression strings
     static String nameExprStr(Vector<String> name);
     
-    // Expression accessors.  The following set*Expr() methods only
-    // set the expressions.  Parsing is done with a call to
+    // Expression setters.  The following set*Expr() methods only set
+    // the expressions.  Parsing is done with a call to
     // toTableExprNode().
     Bool setAntennaExpr(const String& antennaExpr);
     Bool setFieldExpr(const String& fieldExpr);
@@ -387,6 +387,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void resetMS(const MeasurementSet& ms) {resetTEN(); ms_p=&ms;};
     void resetTEN() {fullTEN_p=TableExprNode();};
     
+    
+    // The MSSelection object is designed to be re-usable object.  The
+    // following reset() methods set the internal state of the object
+    // to same state as with the equivalent constructor.
+    //
+    // mode can be one of the MSSModes.  MSSMode::PARSE_NOW will parse
+    // the given expressions and internally hold the final TEN
+    // (i.e. will also internally call toTableExprNode()).  The
+    // internal TEN can be accessed via the getTEN() method.
+    // MSSMode::PARSE_LATER will only set the expression strings.
+    // Parsing will be done later with a call to toTableExprNode().
+    //
+    // This version, here for backward compatibility reasons,
+    // internally constructs a <li> <linkto
+    // class="MSSelectableTable">MSSelectableTable</linkto> object and
+    // calls the reset() method below that works with
+    // MSSelectableTable.
     void reset(const MeasurementSet& ms,
 	       const MSSMode& mode           = PARSE_NOW,
 	       const String& timeExpr        = "",
@@ -400,6 +417,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const String& arrayExpr       = "",
 	       const String& stateExpr       = "",
 	       const String& observationExpr = "");
+
+    // This version of reset() works with generic MSSeletableTable
+    // object.  Accessing the services of the MSSelection module via
+    // this interface is recommended over the version of reset() that
+    // uses MeasurementSet.
     void reset(MSSelectableTable& msLike,
 	       const MSSMode& mode           = PARSE_NOW,
 	       const String& timeExpr        = "",
