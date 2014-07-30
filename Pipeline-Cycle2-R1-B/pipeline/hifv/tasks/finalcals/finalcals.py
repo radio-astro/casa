@@ -610,7 +610,7 @@ class Finalcals(basetask.StandardTaskTemplate):
                                  'fluxdensity'    : [ result[2], 0, 0, 0 ],
                                  'spix'           : result[3],
                                  'reffreq'        : str(result[4])+'GHz',
-                                 'standard'       : 'Perley-Butler 2010',
+                                 'standard'       : 'manual',
                                  'usescratch'     : False,
                                  'async'          : False}
         
