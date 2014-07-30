@@ -252,6 +252,11 @@ class MFrequency : public MeasBase<MVFrequency, MeasRef<MFrequency> > {
   // Translate string to reference code
   // <group>
   static Bool getType(MFrequency::Types &tp, const String &in);
+
+  // Throws an exception if the type string is not recognized
+  static MFrequency::Types typeFromString(const String& in);
+
+
   Bool giveMe(MFrequency::Ref &mr, const String &in);
   // </group>
   // Set the offset in the reference (False if non-matching Measure)
