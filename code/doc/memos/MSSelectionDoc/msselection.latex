@@ -71,13 +71,13 @@
   exceptions generated from each individual expression parser are
   further specializations of the {\tt MSSeletionError} class.
   Application layer code therefore can have a finer level control on
-  error handling.  The module now also support externally plug-able
+  error handling.  The module also support externally plug-able
   error handlers of type \MSSelectionErrorHandler. This allows
   application layer code to have control on the resolution mechanism
   of the exceptional states that may be reached during the parsing
   cycle.
 
-  The \MSS\ module now can also be used for other tables
+  The \MSS\ module can also be used for other tables
   that follow the general data base design of the {\tt
     MeasurementSet}.  The CASA \CalTables\ is an example which also
   uses the \MSS\ module for data selection.
