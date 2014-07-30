@@ -25,24 +25,25 @@
 //#
 //#
 //# $Id$
-#ifndef VISMODELDATA_H
-#define VISMODELDATA_H
+#ifndef TRANSFORM2_VISMODELDATA_H
+#define TRANSFORM2_VISMODELDATA_H
 #include <casa/aips.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Cube.h>
-#include <synthesis/TransformMachines/ComponentFTMachine.h>
+#include <synthesis/TransformMachines2/ComponentFTMachine.h>
 #include <msvis/MSVis/VisModelDataI.h>
+#include <msvis/MSVis/VisBuffer.h> //here only for the pure virtual function that uses this
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
-  class VisBuffer;
-  namespace vi{ class VisBuffer2;}
+  namespace vi{class VisBuffer2;}
   class ComponentList;  
-  class FTMachine;
   class MeasurementSet;
   template <class T> class Vector;
   template <class T> class CountedPtr;
+ namespace refim{ //namespace refim
+ 	class FTMachine;
 // <summary>
 // Object to provide MODEL_DATA visibilities on demand
 // </summary>
@@ -158,14 +159,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    const Vector<Int>& msIds);
 
   //add componentlists or ftmachines 
-  void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb);
   void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const vi::VisBuffer2& vb);
+  void addModel(const RecordInterface& /*rec*/,  const Vector<Int>& /*msids*/, const VisBuffer& /*vb*/){throw(AipsError("Called the wrong version of VisModelData"));};
+
+
   VisModelDataI * clone ();
 
   //put the model data for this VisBuffer in the modelVisCube
-  Bool getModelVis(VisBuffer& vb);
   Bool getModelVis(vi::VisBuffer2& vb);
-
+  Bool getModelVis(VisBuffer& /*vb*/){throw(AipsError("called the wrong version of VisModelData"));};
   //this is a helper function that writes the model record to the ms 
   void putModelI(const MeasurementSet& thems, const RecordInterface& rec,
 		 const Vector<Int>& validfields, const Vector<Int>& spws,
@@ -234,5 +236,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   static Bool initialize;
 };
 
+}// end namespace refim
 }//end namespace
+
 #endif // VISMODELDATA_H

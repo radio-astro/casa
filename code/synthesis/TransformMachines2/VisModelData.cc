@@ -41,34 +41,36 @@
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <ms/MeasurementSets/MSSourceColumns.h>
 
-#include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/VisBuffer2Adapter.h>
-#include <synthesis/TransformMachines/VisModelData.h>
-#include <synthesis/TransformMachines/FTMachine.h>
-#include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
-#include <synthesis/TransformMachines/GridFT.h>
-#include <synthesis/TransformMachines/rGridFT.h>
-#include <synthesis/TransformMachines/MosaicFT.h>
-#include <synthesis/TransformMachines/WProjectFT.h>
-#include <synthesis/TransformMachines/MultiTermFT.h>
-#include <synthesis/TransformMachines/MultiTermFTNew.h>
-#include <synthesis/TransformMachines/SetJyGridFT.h>
+#include <synthesis/TransformMachines2/VisModelData.h>
+#include <synthesis/TransformMachines2/FTMachine.h>
+#include <synthesis/TransformMachines2/SimpleComponentFTMachine.h>
+#include <synthesis/TransformMachines2/GridFT.h>
+//#include <synthesis/TransformMachines/rGridFT.h>
+//#include <synthesis/TransformMachines/MosaicFT.h>
+#include <synthesis/TransformMachines2/WProjectFT.h>
+//#include <synthesis/TransformMachines/MultiTermFT.h>
+#include <synthesis/TransformMachines2/MultiTermFTNew.h>
+//#include <synthesis/TransformMachines/SetJyGridFT.h>
 
 namespace {
 
-  casa::VisModelDataI * createVisModelData (){
-    return new casa::VisModelData ();
+  casa::VisModelDataI * createRefImVisModelData (){
+    return new casa::refim::VisModelData ();
   }
 
-  bool initializeVisModelDataFactory = casa::VisModelDataI::setFactory (createVisModelData);
+  bool initializeVisModelDataFactory = casa::VisModelDataI::setFactory (createRefImVisModelData);
 
 }
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+namespace refim {//namespace for refactor
 
+using namespace casa;
+using namespace casa::refim;
+using namespace casa::vi;
 VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
   
   cft_p=new SimpleComponentFTMachine();
@@ -742,17 +744,10 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
 }
 
 
-void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*msids*/, const vi::VisBuffer2& vb)
-{
-
-	Vector<Int> dum;
-	addModel(rec, dum, vi::VisBuffer2Adapter(&vb));
 
 
-}
 
-
-  void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*msids*/, const VisBuffer& vb){
+  void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*msids*/, const VisBuffer2& vb){
     
 
 
@@ -766,7 +761,7 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 	  Vector<Int> spws;
 	  ftrec.get("fields", fields);
 	  ftrec.get("spws", spws);
-	  if(anyEQ(spws, vb.spectralWindow())){
+	  if(anyEQ(spws, vb.spectralWindows()(0))){
 	    indexft=ftholder_p.nelements();
 	    ftholder_p.resize(indexft+1, False, True);
 	    ftholder_p[indexft].resize(1);
@@ -797,8 +792,8 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 	    }
 	  }
 	  else{
-	    if(hasModel(vb.msId(), vb.fieldId(), vb.spectralWindow()) < 0)
-	      ftindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
+	    if(hasModel(vb.msId(), vb.fieldId()(0), vb.spectralWindows()(0)) < 0)
+	      ftindex_p(vb.spectralWindows()(0), vb.fieldId()(0), vb.msId())=-2;
 	  }
 
 	  
@@ -815,7 +810,7 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 	  Record clrec(rec.asRecord("cl_"+String::toString(clk)));
 	  clrec.get("fields", fields);
 	  clrec.get("spws", spws);
-	  if(anyEQ(spws, vb.spectralWindow())){
+	  if(anyEQ(spws, vb.spectralWindows()(0))){
 	    indexcl=clholder_p.nelements();
 	    clholder_p.resize(indexcl+1, False, True);
 	    clholder_p[indexcl].resize(1);
@@ -846,8 +841,8 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 	    }
 	  }
 	  else{
-	    if(hasModel(vb.msId(), vb.fieldId(), vb.spectralWindow()) < 0)
-	      clindex_p(vb.spectralWindow(), vb.fieldId(), vb.msId())=-2;
+	    if(hasModel(vb.msId(), vb.fieldId()(0), vb.spectralWindows()(0)) < 0)
+	      clindex_p(vb.spectralWindows()(0), vb.fieldId()(0), vb.msId())=-2;
 	  }
 
 	}
@@ -861,16 +856,16 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
     String name=ftrec.asString("name");
     if(name=="GridFT")
       return new GridFT(ftrec);
-    if(name=="rGridFT")
-      return new rGridFT(ftrec);
+    //if(name=="rGridFT")
+    //  return new rGridFT(ftrec);
     if(name=="WProjectFT")
       return new WProjectFT(ftrec);
-    if(name=="MultiTermFT")
-      return new MultiTermFT(ftrec);
-    if(name=="MosaicFT")
-      return new MosaicFT(ftrec);
-    if(name=="SetJyGridFT")
-      return new SetJyGridFT(ftrec);
+    //if(name=="MultiTermFT")
+    //  return new MultiTermFT(ftrec);
+    //if(name=="MosaicFT")
+    //  return new MosaicFT(ftrec);
+    //if(name=="SetJyGridFT")
+    //  return new SetJyGridFT(ftrec);
     if(name=="MultiTermFTNew")
       return new MultiTermFTNew(ftrec);
     //When the following have constructors from Record they should be uncommented
@@ -909,21 +904,15 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
     
 
   }
+  Bool VisModelData::getModelVis(VisBuffer2& vb){
 
-  Bool VisModelData::getModelVis(vi::VisBuffer2& vb){
-	  vi::VisBuffer2Adapter vba(&vb);
-	   return getModelVis(vba);
-
-  }
-  Bool VisModelData::getModelVis(VisBuffer& vb){
-
-    Vector<CountedPtr<ComponentList> >cl=getCL(vb.msId(), vb.fieldId(), vb.spectralWindow());
-    Vector<CountedPtr<FTMachine> > ft=getFT(vb.msId(), vb.fieldId(), vb.spectralWindow());
+    Vector<CountedPtr<ComponentList> >cl=getCL(vb.msId(), vb.fieldId()(0), vb.spectralWindows()(0));
+    Vector<CountedPtr<FTMachine> > ft=getFT(vb.msId(), vb.fieldId()(0), vb.spectralWindows()(0));
     //Fill the buffer with 0.0; also prevents reading from disk if MODEL_DATA exists
     ///Oh boy this is really dangerous...
     //nCorr etc are public..who know who changed these values before reaching here.
-    Cube<Complex> mod(vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0));
-    vb.setModelVisCube(mod);
+    Cube<Complex> mod(vb.nCorrelations(), vb.nChannels(), vb.nRows(), Complex(0.0));
+    vb.setVisCubeModel(mod);
     Bool incremental=False;
     if( cl.nelements()>0){
       // cerr << "In cft " << cl.nelements() << endl;
@@ -937,15 +926,15 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
     if(ft.nelements()>0){
       Cube<Complex> tmpModel;
       if(incremental || ft.nelements() >1)
-	tmpModel.assign(vb.modelVisCube());
+	tmpModel.assign(vb.visCubeModel());
       Bool allnull=True;
       for (uInt k=0; k < ft.nelements(); ++k){
 	if(!ft[k].null()){
-	  if(k >0) vb.setModelVisCube(Cube<Complex> (vb.nCorr(), vb.nChannel(), vb.nRow(), Complex(0.0)));
+	  if(k >0) vb.setVisCubeModel(Cube<Complex> (vb.nCorrelations(), vb.nChannels(), vb.nRows(), Complex(0.0)));
     
 	  ft[k]->get(vb, -1);
 	  if(ft.nelements()>1 || incremental){
-	    tmpModel+=vb.modelVisCube();
+	    tmpModel+=vb.visCubeModel();
 	  }
 	  allnull=False;
 	}
@@ -953,7 +942,7 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
       //cerr << "min max after ft " << min(vb.modelVisCube()) << max(vb.modelVisCube()) << endl;
       if(!allnull){
 	if(ft.nelements()>1 || incremental)
-	  vb.modelVisCube()=tmpModel;
+	  vb.setVisCubeModel(tmpModel);
 	incremental=True;
       }      
     }
@@ -961,13 +950,14 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
       //No model was set so....
       ///Set the Model to 1.0 for parallel hand and 0.0 for x-hand
       
-      vb.modelVisCube().set(Complex(1.0));
-      Vector<Int> corrType=vb.corrType();
+      vb.setVisCubeModel(Complex(1.0));
+      Cube<Complex> modelCube(vb.visCubeModel());
+      Vector<Int> corrType=vb.correlationTypes();
       uInt nCorr = corrType.nelements();
       for (uInt i=0; i<nCorr; i++) {
 	  if(corrType[i]==Stokes::RL || corrType[i]==Stokes::LR ||
 	     corrType[i]==Stokes::XY || corrType[i]==Stokes::YX){
-	    vb.modelVisCube().yzPlane(i)=0.0;
+		  modelCube.yzPlane(i)=0.0;
 	  }
       }
     }
@@ -1002,6 +992,6 @@ void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*ms
 
 
 
-
+}// end namespace refim
 }//# NAMESPACE CASA - END
 

@@ -10,6 +10,7 @@ namespace casa {
   class String;
   class TableRecord;
   class VisBuffer;
+  namespace vi{class VisBuffer2;}
 
   class VisModelDataI;
 
@@ -43,14 +44,14 @@ class VisModelDataI {
 
   // //add componentlists or ftmachines 
   virtual void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb) = 0;
-
+  virtual void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const vi::VisBuffer2& vb) = 0;
   virtual VisModelDataI * clone () = 0;
 
   static VisModelDataI * create ();
 
   // //put the model data for this VisBuffer in the modelVisCube
   virtual Bool getModelVis(VisBuffer& vb) = 0;
-
+  virtual Bool getModelVis(vi::VisBuffer2& vb) = 0;
   // //this is a helper function that writes the model record to the ms 
 
   virtual void putModelI (const MeasurementSet& thems, const RecordInterface& rec,
