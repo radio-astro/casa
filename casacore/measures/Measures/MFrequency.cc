@@ -184,6 +184,16 @@ Bool MFrequency::getType(MFrequency::Types &tp, const String &in) {
   return True;
 }
 
+MFrequency::Types MFrequency::typeFromString(const String& in) {
+	MFrequency::Types tp;
+	ThrowIf(
+		! getType(tp, in),
+		in + " is not a recognized type identifier"
+	);
+	return tp;
+}
+
+
 void MFrequency::checkTypes() const {
   MFrequency::checkMyTypes();
 }

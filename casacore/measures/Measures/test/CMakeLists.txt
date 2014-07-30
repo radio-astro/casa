@@ -6,6 +6,7 @@ tEarthMagneticMachine
 tMBaseline
 tMDirection
 tMEarthMagnetic
+tMFrequency
 tMeasComet
 tMeasJPL
 tMeasMath
