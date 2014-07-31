@@ -210,6 +210,11 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
                       'restfreq': restfreq,
                       'stokes': stokes}
         with temporary_filename(temporary_name) as name:
+            # weight image must be removed before imaging
+            weight_image = name.rstrip('/') + '.weight'
+            if os.path.exists(weight_image):
+                os.system('rm -rf %s'%(weight_image))
+                
             # imaging
             infile_list = []
             spwsel_list = []
@@ -235,6 +240,10 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
                     
             # execute job
             self._executor.execute(image_job)
+            
+            # remove weight image
+            if os.path.exists(weight_image):
+                os.system('rm -rf %s'%(weight_image))
             
             # post imaging process
             # cut margin area
