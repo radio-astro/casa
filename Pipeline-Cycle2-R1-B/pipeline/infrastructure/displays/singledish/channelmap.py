@@ -133,10 +133,6 @@ class SDChannelMapDisplay(SDImageDisplay):
     #NhPanel = 4
     #NvPanel = 3
     
-    @property
-    def num_valid_spectrum(self):
-        return self.inputs.num_valid_spectrum
-
     def plot(self):
 
         self.init()
@@ -218,7 +214,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                                              RArotation, DECrotation,
                                              TickSize, colormap,
                                              self.NhPanel, self.NvPanel,
-                                             self.inputs.brightnessunit)
+                                             self.brightnessunit)
         axes_integmap = axes_manager.axes_integmap
         integmap_colorbar = None
         beam_circle = None
@@ -231,8 +227,8 @@ class SDChannelMapDisplay(SDImageDisplay):
         ValidCluster = 0
         for line_window in line_list:
             # shift channel according to the edge parameter
-            ChanC = int(line_window[0] + 0.5 - self.inputs.edge[0])
-            if float(ChanC) == line_window[0] - self.inputs.edge[0]:
+            ChanC = int(line_window[0] + 0.5 - self.edge[0])
+            if float(ChanC) == line_window[0] - self.edge[0]:
                 VelC = self.velocity[ChanC]
             else:
                 VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
@@ -316,7 +312,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                             for t in integmap_colorbar.ax.get_yticklabels():
                                 newfontsize = t.get_fontsize()*0.5
                                 t.set_fontsize(newfontsize)
-                            integmap_colorbar.ax.set_title('[%s km/s]'%(self.inputs.brightnessunit))
+                            integmap_colorbar.ax.set_title('[%s km/s]'%(self.brightnessunit))
                             lab = integmap_colorbar.ax.title
                             lab.set_fontsize(newfontsize)
                         else:
@@ -398,7 +394,7 @@ class SDChannelMapDisplay(SDImageDisplay):
                                 for t in cb.ax.get_yticklabels():
                                     newfontsize = t.get_fontsize()*0.5
                                     t.set_fontsize(newfontsize)
-                                cb.ax.set_title('[%s km/s]'%(self.inputs.brightnessunit))
+                                cb.ax.set_title('[%s km/s]'%(self.brightnessunit))
                                 lab=cb.ax.title
                                 lab.set_fontsize(newfontsize)
                                 chmap_colorbar[y] = cb

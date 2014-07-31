@@ -11,6 +11,7 @@ from . import spectralmap
 from . import sparsemap
 from . import channelmap
 from . import rmsmap
+from . import tpimage
 from .common import SDImageDisplay, ShowPlot
 
 LOG = infrastructure.get_logger(__name__)
@@ -40,10 +41,13 @@ class SDSpectralImageDisplay(SDImageDisplay):
         worker = rmsmap.SDRmsMapDisplay(self.inputs)
         plot_list.extend(worker.plot())
         t4 = time.time()
+        worker = tpimage.SDIntegratedImageDisplay(self.inputs)
+        plot_list.extend(worker.plot())
+        t5 = time.time()
         LOG.debug('sparse_map: elapsed time %s sec'%(t1-t0))
         LOG.debug('channel_map: elapsed time %s sec'%(t2-t1))
         LOG.debug('spectral_map: elapsed time %s sec'%(t3-t2))
         LOG.debug('rms_map: elapsed time %s sec'%(t4-t3))
-
+        LOG.debug('integrated_map: elapsed time %s sec'%(t5-t4))
         return plot_list
 

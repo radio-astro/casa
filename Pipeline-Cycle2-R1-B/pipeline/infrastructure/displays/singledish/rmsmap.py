@@ -32,14 +32,6 @@ class RmsMapAxesManager(tpimage.ChannelAveragedAxesManager):
 class SDRmsMapDisplay(SDImageDisplay):
     #MATPLOTLIB_FIGURE_ID = 8910
 
-    @property
-    def rms(self):
-        return self.inputs.rms
-
-    @property
-    def num_valid_spectrum(self):
-        return self.inputs.num_valid_spectrum
-
     def plot(self):
         qa = casatools.quanta
 

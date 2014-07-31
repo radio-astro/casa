@@ -5546,7 +5546,9 @@ class T2_4MDetailsSingleDishImagingRenderer(T2_4MDetailsDefaultRenderer):
                      'channelmap': {'type': 'channel_map',
                                     'plot_title': 'Channel Map'},
                      'rmsmap': {'type': 'rms_map',
-                                'plot_title': 'Baseline RMS Map'}}
+                                'plot_title': 'Baseline RMS Map'},
+                     'integratedmap': {'type': 'sd_integrated_map',
+                                       'plot_title': 'Integrated Intensity Map'}}
         for (key, value) in map_types.items():
             plot_list = self._plots_per_field_with_type(plots, value['type'])
             summary = self._summary_plots(plot_list)

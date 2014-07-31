@@ -142,7 +142,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         #LOG.debug('LabelDEC=%s'%(LabelDEC))
         #LOG.debug('LabelRA=%s'%(LabelRA))
 
-        axes_manager = SparseMapAxesManager(NH, NV, self.inputs.brightnessunit, TickSize)
+        axes_manager = SparseMapAxesManager(NH, NV, self.brightnessunit, TickSize)
         axes_manager.setup_labels(LabelRA, LabelDEC)
         axes_integsp = axes_manager.axes_integsp
         axes_spmap = axes_manager.axes_spmap
