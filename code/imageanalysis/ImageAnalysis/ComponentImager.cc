@@ -55,7 +55,6 @@
 #include <components/ComponentModels/Flux.h>
 #include <coordinates/Coordinates/Coordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <images/Images/ImageInterface.h>
@@ -81,17 +80,18 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	//   each of these coordinates can exist.
 	// * If there is a Stokes axis it can only contain Stokes::I,Q,U,V pols.
 	// * No other coordinate types, like LinearCoordinate, are used.
+	ThrowIf(
+		! coords.hasDirectionCoordinate(), "Image does not have a direction coordinate"
+	);
+	// FIXME: the variable definitions are reveresed; the first axis is the longitude axis,
+	// the second axis is the latitude axis.
 	uInt latAxis, longAxis;
 	{
-		const Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(coords);
-		DebugAssert(dirAxes.nelements() == 2, AipsError);
+		const Vector<Int> dirAxes = coords.directionAxesNumbers();
 		latAxis = dirAxes(0);
 		longAxis = dirAxes(1);
 	}
-	DirectionCoordinate dirCoord =
-			coords.directionCoordinate(coords.findCoordinate(Coordinate::DIRECTION));
-	DebugAssert(dirCoord.nPixelAxes() == 2, AipsError);
-	DebugAssert(dirCoord.nWorldAxes() == 2, AipsError);
+	DirectionCoordinate dirCoord = coords.directionCoordinate();
 	dirCoord.setWorldAxisUnits(Vector<String>(2, "rad"));
 
 	// Make sure get conversion frame, not just the native one
@@ -109,21 +109,19 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 
 	// Check if there is a Stokes Axes and if so which polarizations. Otherwise
 	// only grid the I polarisation.
-	uInt nStokes;
-	Vector<Stokes::StokesTypes> stokes;
-	// Vector stating which polarisations are on each plane
-	// Find which axis is the stokes pixel axis
-	const Int polAxis = CoordinateUtil::findStokesAxis(stokes, coords);
-	if (polAxis >= 0) {
-		nStokes = stokes.nelements();
-		DebugAssert(static_cast<uInt>(imageShape(polAxis)) == nStokes, AipsError);
+	uInt nStokes = 0;
+	if (coords.hasPolarizationCoordinate()) {
+		StokesCoordinate stCoord = coords.stokesCoordinate();
+		Vector<Int> types = stCoord.stokes();
+		nStokes = types.nelements();
 		for (uInt p = 0; p < nStokes; p++) {
-			DebugAssert(stokes(p) == Stokes::I || stokes(p) == Stokes::Q ||
-					stokes(p) == Stokes::U || stokes(p) == Stokes::V,
-					AipsError);
+			Stokes::StokesTypes type = Stokes::type(types[p]);
+			ThrowIf(
+				type != Stokes::I && type != Stokes::Q
+				&& type != Stokes::U && type != Stokes::V,
+				"Unsupported stokes type " + Stokes::name(type)
+			);
 		}
-	} else {
-		nStokes = stokes.nelements();
 	}
 
 	// Check if there is a frequency axis and if so get the all the frequencies
@@ -132,13 +130,13 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 
 	MeasRef<MFrequency> freqRef;
 	uInt nFreqs = 1;
+	Int freqAxis = -1;
 	Vector<MVFrequency> freqValues(nFreqs);
-	const Int freqAxis = CoordinateUtil::findSpectralAxis(coords);
-	if (freqAxis >= 0) {
-		nFreqs = static_cast<uInt>(imageShape(freqAxis));
+	if (coords.hasSpectralAxis()) {
+		freqAxis = coords.spectralAxisNumber(False);
+		nFreqs = (uInt)imageShape[freqAxis];
 		freqValues.resize(nFreqs);
-		SpectralCoordinate specCoord =
-				coords.spectralCoordinate(coords.findCoordinate(Coordinate::SPECTRAL));
+		SpectralCoordinate specCoord = coords.spectralCoordinate();
 		specCoord.setWorldAxisUnits(Vector<String>(1, "Hz"));
 
 		// Create Frequency MeasFrame; this will enable conversions between
@@ -151,18 +149,18 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		MDirection dirConv;
 		specCoord.getReferenceConversion(specConv,  epochConv, posConv, dirConv);
 		MeasFrame measFrame(epochConv, posConv, dirConv);
-		//
 		freqRef = MeasRef<MFrequency>(specConv, measFrame);
-		//
 		Double thisFreq;
 		for (uInt f = 0; f < nFreqs; f++) {
-			if (!specCoord.toWorld(thisFreq, static_cast<Double>(f))) {   // Includes any frame conversion
-				throw(AipsError("ComponentImager::project(...) - "
-						"cannot convert a frequency value"));
-			}
+			// Includes any frame conversion
+			ThrowIf (
+				!specCoord.toWorld(thisFreq, f),
+				"cannot convert a frequency value"
+			);
 			freqValues(f) = MVFrequency(thisFreq);
 		}
-	} else {
+	}
+	else {
 		const MFrequency& defaultFreq =
 				list.component(0).spectrum().refFrequency();
 		freqRef = defaultFreq.getRef();
@@ -181,8 +179,10 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	{
 		Unit imageUnit = image.units();
 		const String& imageUnitName = imageUnit.getName();
-		UnitMap::putUser("pixel", UnitVal(pixelLatSize.radian() *
-				pixelLongSize.radian(), "rad.rad"));
+		UnitMap::putUser(
+			"pixel", UnitVal(pixelLatSize.radian() *
+			pixelLongSize.radian(), "rad.rad")
+		);
 		// redefine is required to reset Unit Cache
 		const Unit pixel("pixel");
 		if (imageUnitName.contains("pixel")) {
@@ -191,22 +191,29 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			imageUnit = image.units();
 			fluxUnits.setValue(imageUnit.getValue() * pixel.getValue());
 			fluxUnits.setName(imageUnitName + String(".") + pixel.getName());
-		} else if (imageUnitName.contains("beam")) {
+		}
+		else if (imageUnitName.contains("beam")) {
 			const ImageInfo imageInfo = image.imageInfo();
+			// FIXME this needs to support multiple beams
 			const GaussianBeam beam = imageInfo.restoringBeam();
 			if (beam.isNull()) {
 				os << LogIO::WARN
-						<< "No beam defined even though the image units contain a beam"
-						<< endl << "Assuming the beam is one pixel" << LogIO::POST;
+					<< "No beam defined even though the image units contain a beam"
+					<< endl << "Assuming the beam is one pixel" << LogIO::POST;
 				UnitMap::putUser("beam", pixel.getValue());
-			} else {
+			}
+			else {
 				const Quantum<Double> beamArea = beam.getArea("sr");
-				UnitMap::putUser("beam", UnitVal(beamArea.getValue(),
-						beamArea.getFullUnit().getName()));
+				UnitMap::putUser(
+					"beam", UnitVal(beamArea.getValue(),
+					beamArea.getFullUnit().getName()))
+				;
 			}
 			const Unit beamUnit("beam");
-			const UnitVal fudgeFactor(pixel.getValue().getFac()/
-					beamUnit.getValue().getFac());
+			const UnitVal fudgeFactor(
+				pixel.getValue().getFac()/
+				beamUnit.getValue().getFac()
+			);
 
 			// Get the new definition of the imageUnit which uses the new
 			// definition of the beam unit.  The re-use of the Unit constructor
@@ -233,7 +240,7 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		}
 	}
 	// Setup an iterator to step through the image in chunks that can fit into
-	// memory. Go to a bit of effort to make the chunck size as large as
+	// memory. Go to a bit of effort to make the chunk size as large as
 	// possible but still minimize the number of tiles in the cache.
 	IPosition chunkShape = imageShape;
 	{
@@ -270,8 +277,8 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 	}
 	Lattice<Bool>* pixelMaskPtr = 0;
 	if (doMask) pixelMaskPtr = &image.pixelMask();
-	Array<Bool>* maskPtr = 0;
-	//
+	PtrHolder<Array<Bool> > maskPtr;
+	Int polAxis = coords.polarizationAxisNumber(False);
 	for (chunkIter.reset(); !chunkIter.atEnd(); chunkIter++) {
 
 		// Iterate through sky plane of cursor and do coordinate conversions
@@ -305,11 +312,13 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 		// Get input mask values if available
 
 		if (doMask) {
-			maskPtr = new Array<Bool>
-			(image.getMaskSlice(chunkIter.position(),
-					chunkIter.cursorShape(), False));
+			maskPtr.set(
+				new Array<Bool>(
+					image.getMaskSlice(chunkIter.position(),
+					chunkIter.cursorShape(), False)
+				)
+			);
 		}
-
 		d = 0;
 		pixelPosition(longAxis) = 0;
 		coordIsGood = True;
@@ -321,20 +330,14 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 						if (freqAxis >= 0) pixelPosition(freqAxis) = f;
 						for (uInt s = 0; s < nStokes; s++) {
 							if (polAxis >= 0) pixelPosition(polAxis) = s;
-							//
-							if (doMask) {
-								if ((*maskPtr)(pixelPosition)) {
-									imageChunk(pixelPosition) +=
-											static_cast<Float>(pixelVals(s, d, f));
-								}
-							} else {
-								imageChunk(pixelPosition) +=
-										static_cast<Float>(pixelVals(s, d, f));
+							if (! doMask || (doMask && (*maskPtr)(pixelPosition))) {
+								imageChunk(pixelPosition) += pixelVals(s, d, f);
 							}
 						}
 					}
-				} else {
-					if (doMask) (*maskPtr)(pixelPosition) = False;
+				}
+				else if (doMask) {
+					(*maskPtr)(pixelPosition) = False;
 				}
 				d++;
 				pixelPosition(latAxis)++;
@@ -342,18 +345,12 @@ void ComponentImager::project(ImageInterface<Float>& image, const ComponentList&
 			pixelPosition(longAxis)++;
 		}
 
-		// Update output mask in approprate fashion
+		// Update output mask in appropriate fashion
 
 		if (doMask) {
 			pixelMaskPtr->putSlice(*maskPtr, chunkIter.position());
-			if (maskPtr!=0) delete maskPtr;
 		}
 	}
 }
-
-// Local Variables: 
-// compile-command: "gmake ComponentImager"
-// End: 
-
 } //# NAMESPACE CASA - END
 
