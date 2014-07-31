@@ -231,10 +231,11 @@ class SDBaseline(common.SingleDishTaskTemplate):
                                     success=True,
                                     outcome=outcome)
                 
-        if self.inputs.context.subtask_counter is 0: 
-            results.stage_number = self.inputs.context.task_counter - 1
-        else:
-            results.stage_number = self.inputs.context.task_counter 
+#         #stage_number is taken care of by basetask.result_finaliser
+#         if self.inputs.context.subtask_counter is 0: 
+#             results.stage_number = self.inputs.context.task_counter - 1
+#         else:
+#             results.stage_number = self.inputs.context.task_counter 
                 
         return results
 

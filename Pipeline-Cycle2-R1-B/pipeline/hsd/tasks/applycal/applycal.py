@@ -231,10 +231,7 @@ class SDApplyCal(common.SingleDishTaskTemplate):
                                        outcome=calapplist)
         result.task = self.__class__
         
-        if inputs.context.subtask_counter is 0: 
-            result.stage_number = inputs.context.task_counter - 1
-        else:
-            result.stage_number = inputs.context.task_counter               
+        result.stage_number = inputs.context.task_counter               
 
         return result
 
