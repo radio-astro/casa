@@ -339,10 +339,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                               outcome=outcome)
                     result.task = self.__class__
 
-                    if self.inputs.context.subtask_counter is 0: 
-                        result.stage_number = self.inputs.context.task_counter - 1
-                    else:
-                        result.stage_number = self.inputs.context.task_counter 
+                    result.stage_number = self.inputs.context.task_counter 
                                                 
                     results.append(result)
 
@@ -437,10 +434,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                                           outcome=outcome)
                 result.task = self.__class__
 
-                if self.inputs.context.subtask_counter is 0: 
-                    result.stage_number = self.inputs.context.task_counter - 1
-                else:
-                    result.stage_number = self.inputs.context.task_counter 
+                result.stage_number = self.inputs.context.task_counter 
                     
                 results.append(result)
                     

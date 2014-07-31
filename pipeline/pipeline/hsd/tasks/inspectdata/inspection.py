@@ -106,10 +106,11 @@ class SDInspectData(common.SingleDishTaskTemplate):
                                       outcome=outcome)
         result.task = self.__class__
 
-        if inputs.context.subtask_counter is 0: 
-            result.stage_number = inputs.context.task_counter - 1
-        else:
-            result.stage_number = inputs.context.task_counter               
+#         #stage_number is taken care of by basetask.result_finaliser
+#         if inputs.context.subtask_counter is 0: 
+#             result.stage_number = inputs.context.task_counter - 1
+#         else:
+#             result.stage_number = inputs.context.task_counter               
 
         return result
 
