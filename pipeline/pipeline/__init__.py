@@ -92,10 +92,12 @@ def _get_revision():
 
         # get SVN branch using svn info
         args = ['svn info .']
+        myenv = os.environ.copy()
+        myenv['LC_MESSAGES'] = 'en_US.UTF_8'
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE, shell=True,
                 cwd=os.path.dirname(__file__),
-                env={'LC_MESSAGES': 'en_US.UTF-8'})
+                env=myenv)
         (stdout, _) = p.communicate()
 
         if p.returncode is not 0:
