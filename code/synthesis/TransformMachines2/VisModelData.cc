@@ -53,7 +53,7 @@
 #include <synthesis/TransformMachines2/MultiTermFTNew.h>
 //#include <synthesis/TransformMachines/SetJyGridFT.h>
 
-namespace {
+/*namespace {
 
   casa::VisModelDataI * createRefImVisModelData (){
     return new casa::refim::VisModelData ();
@@ -62,6 +62,7 @@ namespace {
   bool initializeVisModelDataFactory = casa::VisModelDataI::setFactory (createRefImVisModelData);
 
 }
+*/
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
