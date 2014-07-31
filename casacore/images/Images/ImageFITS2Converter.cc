@@ -266,7 +266,10 @@ Bool ImageFITSConverter::FITSToImage(
 	      success = False;
 	    }
 	  }
-	  if(!success){
+	  if(whichHDU>=0){
+	    break;
+	  }
+	  else if(!success){
 	    // skip to next useful HDU 
 	    while(theHDU<numHDU){
 	      os << LogIO::WARN << "This HDU (" << theHDU << ") did not contain a legible image." << LogIO::POST;  
@@ -276,7 +279,8 @@ Bool ImageFITSConverter::FITSToImage(
 		    infile.rectype() != FITS::HDURecord ||
 		    (infile.hdutype() != FITS::PrimaryArrayHDU &&
 		     infile.hdutype() != FITS::ImageExtensionHDU))) {
-		os << LogIO::WARN << "Next candidate image HDU is #" << theHDU << LogIO::POST;  
+		os << LogIO::WARN << "Next candidate image HDU is #" << theHDU 
+		   << " (use the whichhdu parameter to address HDUs directly)" << LogIO::POST;  
 		break;
 	      }
 	    }
@@ -287,9 +291,6 @@ Bool ImageFITSConverter::FITSToImage(
 	  ss << numHDU;
 	  error = "There are " + String(ss.str()) + " HDUs in FITS file " +fitsName + " . None of them is a legible image.";
 	  return False;
-	}
-	else if (whichHDU<0){
-	  os << LogIO::NORMAL << "Success." << endl;
 	}
 	return True;
 }
