@@ -193,16 +193,24 @@ class SimpleInterpolationHelper
 	}
 	else {
 	  // do interpolation
-
 	  double t0 = timeVec[idx[0]] ;
 	  double t1 = timeVec[idx[1]] ;
 	  Vector<Float> value0 = data.GetEntry(idx[0]);
 	  Vector<Float> value1 = data.GetEntry(idx[1]);
 	  double tfactor = (reftime - t0) / (t1 - t0) ;
+
+	  /*     // commented out by WK for CAS-6787 (2014/07/31)
 	  for ( unsigned int i = 0 ; i < value0.size() ; i++ ) {
 	    value1[i] = ( value1[i] - value0[i] ) * tfactor + value0[i] ;
 	  }
 	  return_value = value1;
+	  */
+	  // following 4 lines added by WK for CAS-6787 (2014/07/31)
+	  return_value.resize(value0.size());
+	  for ( unsigned int i = 0 ; i < value0.size() ; i++ ) {
+	    return_value[i] = ( value1[i] - value0[i] ) * tfactor + value0[i] ;
+	  }
+
 	}
       }
       else {
