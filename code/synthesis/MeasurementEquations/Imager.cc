@@ -4718,6 +4718,8 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
       mssel_p = new MeasurementSet((*ms_p)(exprNode), &(*ms_p));
       ROMSColumns tmpmsc(*mssel_p);
       Vector<Int> fldidv=tmpmsc.fieldId().getColumn();
+      if (fldidv.nelements()==0) 
+        throw(AipsError("No field ids were selected, please check input parameters"));
       std::set<Int> ufldids(fldidv.begin(),fldidv.end());
       std::vector<Int> tmpv(ufldids.begin(), ufldids.end());
       fldids.resize(tmpv.size());
@@ -5769,8 +5771,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
         }
         spixfunc.setCoefficients(coeffs);
 
-        //Double freq = spwcols.chanFreqMeas()(rawspwid)(whichChan).get(ghz).getValue();
-        Double freq = spwcols.chanFreqMeas()(rawspwids(0))(whichChan).get(ghz).getValue();
+        //Double freq = spwcols.chanFreqMeas()(rawspwids(0))(whichChan).get(ghz).getValue();
         //Double specfac = pow(freq / reffreqInGHz, spix);
         // TT mod-06/11/14
         // freqArray may or may not be exactly match with data chan frequencies

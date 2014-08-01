@@ -203,6 +203,7 @@ def setjy_core(vis=None, field=None, spw=None,
                                            scan, intent, usescratch)
 
                     if len(fieldidused):
+                    
                         retval={}
                         for selfld in fieldidused:
                             #selspix=fluxdict[selfld]["spidx"][1]  # setjy only support alpha for now
@@ -459,7 +460,8 @@ def parse_fluxdict(fluxdict, vis, field='', spw='', observation='', timerange=''
     try:
         myms.open(vis)
         myms.msselect(msselargs)
-        selindices = myms.msselectedindices()
+        #selindices = myms.msselectedindices()
+        msselfldids=myms.range(["FIELD_ID"])['field_id']
     except Exception, instance:
         casalog.post('parse_fluxdict exception: %s' % instance,'SEVERE')
         raise instance
@@ -490,11 +492,13 @@ def parse_fluxdict(fluxdict, vis, field='', spw='', observation='', timerange=''
         casalog.post('No field ids was found in the dictionary given for fluxdict. Please check the input.', 'SEVERE')
        
 
-    if len(selindices['field']):
+    #if len(selindices['field']):
+    if len(msselfldids):    
         # also check there is common field id, note field ids in selindices are in numpy.array
-        selfieldids = [fd for fd in fieldids if int(fd) in selindices['field'].tolist()]
+        #selfieldids = [fd for fd in fieldids if int(fd) in selindices['field'].tolist()]
+        selfieldids = [fd for fd in fieldids if int(fd) in msselfldids]
         if not len(selfieldids):
-            raise Exception, "No field was found in fluxdict for the given field selection"
+            raise Exception, "No field was found in fluxdict for the given data selection"
     else:
         selfieldids = fieldids   
 

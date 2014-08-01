@@ -215,7 +215,8 @@ class ss_setjy_helper:
           if scalebychan:
             maxnf=0
             for ispw in range(nspwused):
-              nf = len(inparams[src]['freqlist'][ispw])
+              #nf = len(inparams[src]['freqlist'][ispw])
+              nf = len(inparams[vfid]['freqlist'][ispw])
               maxnf = max(nf,maxnf)
             if maxnf >= 3840 and src.upper()!="MARS": # mars shoulde be ok
               self._casalog.post("Processing %s spw(s) and at least some of them are a few 1000 channels or more. This may take \
