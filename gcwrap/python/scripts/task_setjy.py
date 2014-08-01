@@ -450,8 +450,8 @@ def parse_fluxdict(fluxdict, vis, field='', spw='', observation='', timerange=''
     msselargs['scanintent']=intent
     # only applicable for usescratch=T
     if usescratch:
-        if obs:
-            msselargs['observation'] = obs
+        if observation:
+            msselargs['observation'] = observation
         if timerange:
            msselargs['time'] = timerange
         if scan:
