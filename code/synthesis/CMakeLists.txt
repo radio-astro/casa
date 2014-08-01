@@ -20,9 +20,13 @@
 
 casa_add_library( synthesis
   TransformMachines2/BeamSkyJones.cc
+  TransformMachines2/ComponentFTMachine.cc
   TransformMachines2/GridFT.cc	
   TransformMachines2/FTMachine.cc
+  TransformMachines2/MultiTermFTNew.cc
+  TransformMachines2/SimpleComponentFTMachine.cc
   TransformMachines2/SkyJones.cc
+  TransformMachines2/VisModelData.cc
   TransformMachines2/WPConvFunc.cc
   TransformMachines2/WProjectFT.cc
   TransformMachines/BeamSkyJones.cc
@@ -541,9 +545,13 @@ install (FILES
 	)
 install (FILES 
 	TransformMachines2/BeamSkyJones.h
+	TransformMachines2/ComponentFTMachine.h
 	TransformMachines2/GridFT.h
 	TransformMachines2/FTMachine.h
+        TransformMachines2/MultiTermFTNew.h
+	TransformMachines2/SimpleComponentFTMachine.h
 	TransformMachines2/SkyJones.h
+	TransformMachines2/VisModelData.h
 	TransformMachines2/WPConvFunc.h
 	TransformMachines2/WProjectFT.h
 	DESTINATION include/casacode/synthesis/TransformMachines2
@@ -627,6 +635,7 @@ casa_add_executable( synthesis casasplit apps/casasplit/casasplit.cc )
 casa_add_executable( synthesis imageconcat apps/utils/imageconcat.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSIIterBot.cc )
 casa_add_assay( synthesis ImagerObjects/test/tSynthesisImager.cc )
+casa_add_assay( synthesis TransformMachines2/test/tVisModelDataRefim.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
