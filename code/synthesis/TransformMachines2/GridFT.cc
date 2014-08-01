@@ -666,19 +666,19 @@ void GridFT::put(const vi::VisBuffer2& vb, Int row, Bool dopsf,
   //  peek->setVBPtr(&vb);
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.isNewMs())
-    matchAllSpwChans(vb);
+  //if(vb.isNewMs())
+  //  matchAllSpwChans(vb);
   
   //Here we redo the match or use previous match
   
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindows()[0]]){
-    matchChannel(vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindows()[0]];
-  }
+  //if(doConversion_p[vb.spectralWindows()[0]]){
+  matchChannel(vb);
+  //}
+  //else{
+  //  chanMap.resize();
+  //  chanMap=multiChanMap_p[vb.spectralWindows()[0]];
+  //}
 
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
@@ -1002,20 +1002,20 @@ void GridFT::get(vi::VisBuffer2& vb, Int row)
   
 
   //Check if ms has changed then cache new spw and chan selection
-  if(vb.isNewMs())
-    matchAllSpwChans(vb);
+  //if(vb.isNewMs())
+  //  matchAllSpwChans(vb);
 
 
   //Here we redo the match or use previous match
   
   //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindows()[0]]){
+  //if(doConversion_p[vb.spectralWindows()[0]]){
     matchChannel(vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap=multiChanMap_p[vb.spectralWindows()[0]];
-  }
+  //}
+  //else{
+  //  chanMap.resize();
+  //  chanMap=multiChanMap_p[vb.spectralWindows()[0]];
+  //}
 
   //cerr << "chanMap " << chanMap << endl;
   //No point in reading data if its not matching in frequency

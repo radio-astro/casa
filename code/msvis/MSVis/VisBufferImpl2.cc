@@ -1972,8 +1972,14 @@ VisBufferImpl2::fillCubeCorrected (Cube <Complex> & value) const
 Bool
 VisBufferImpl2::modelDataIsVirtual () const
 {
-    String modelkey=String("definedmodel_field_")+String::toString(fieldId());
-    Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+    //String modelkey=String("definedmodel_field_")+String::toString(fieldId());
+    //Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+	String elkey;
+	Int sourcerow;
+	if (state_p->visModelData_p == 0){
+		state_p->visModelData_p = VisModelDataI::create2();
+	}
+	Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), elkey, sourcerow);
 
     Bool isVirtual = hasmodkey || !(getViP()->ms().tableDesc().isColumn("MODEL_DATA"));
 
@@ -1985,22 +1991,30 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 {
     CheckVisIter ();
 
-    String modelkey = String("definedmodel_field_")+String::toString(fieldId());
-    Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+    //String modelkey = String("definedmodel_field_")+String::toString(fieldId());
+    //Bool hasmodkey=getViP()->ms().keywordSet().isDefined(modelkey);
+    String modelkey;
+    Int sourcerow;
+    if (state_p->visModelData_p == 0){
+                state_p->visModelData_p = VisModelDataI::create2();
+    }
+    Bool hasmodkey=state_p->visModelData_p->isModelDefinedI(fieldId()(0), getViP()->ms(), modelkey, sourcerow);
+
 
     if (modelDataIsVirtual ()){
 
-        if (state_p->visModelData_p == 0){
-            state_p->visModelData_p = VisModelDataI::create();
-        }
+
 
         if (state_p->visModelData_p->hasModel (msId(), fieldId()(0), spectralWindows()(0)) == -1){
 
             if(hasmodkey){
-
-                String whichrec=getViP()->ms().keywordSet().asString(modelkey);
-                Record modrec(getViP()->ms().keywordSet().asRecord(whichrec));
-                state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), VisBuffer2Adapter (this));
+            	TableRecord modrec;
+            	if(state_p->visModelData_p->getModelRecordI(modelkey, modrec, getViP()->ms())){
+            		state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), *this);
+            	}
+                //String whichrec=getViP()->ms().keywordSet().asString(modelkey);
+                //Record modrec(getViP()->ms().keywordSet().asRecord(whichrec));
+                //state_p->visModelData_p->addModel(modrec, Vector<Int>(1, msId()), VisBuffer2Adapter (this));
             }
         }
 
@@ -2017,8 +2031,9 @@ VisBufferImpl2::fillCubeModel (Cube <Complex> & value) const
 
             Bool wasWritable = state_p->isWritable_p;
             state_p->isWritable_p = True;
-            VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
-            state_p->visModelData_p->getModelVis (vb2a);
+            //VisBuffer2Adapter vb2a (const_cast <VisBufferImpl2 *> (this));
+            //state_p->visModelData_p->getModelVis (vb2a);
+        	state_p->visModelData_p->getModelVis (const_cast <VisBufferImpl2& > (*this));
             state_p->isWritable_p = wasWritable;
         }
     }

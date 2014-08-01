@@ -168,7 +168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  outstart.resize(nout+1);
 				  outspw[nout]=locspw[j];
 				  outstart[nout]=locstart[j];
-				  outnchan[nout]=outnchan[j];
+				  outnchan[nout]=locnchan[j];
 
 
 			  }

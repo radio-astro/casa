@@ -23,7 +23,7 @@ class VisModelDataI {
 
   typedef VisModelDataI * (* Factory) ();
 
-  static bool setFactory (Factory);
+  static bool setFactory (Factory, Int whichone=0);
 
   //empty constructor
   VisModelDataI() {}
@@ -48,7 +48,7 @@ class VisModelDataI {
   virtual VisModelDataI * clone () = 0;
 
   static VisModelDataI * create ();
-
+  static VisModelDataI * create2 ();
   // //put the model data for this VisBuffer in the modelVisCube
   virtual Bool getModelVis(VisBuffer& vb) = 0;
   virtual Bool getModelVis(vi::VisBuffer2& vb) = 0;
@@ -88,6 +88,7 @@ class VisModelDataI {
  private:
 
   static Factory factory_p;
+  static Factory factory2_p;
 
 };
 

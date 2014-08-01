@@ -386,8 +386,8 @@ using namespace casa::vi;
       Int stokesIndex=coords.findCoordinate(Coordinate::STOKES);
       AlwaysAssert(stokesIndex>-1, AipsError);
       StokesCoordinate stokesCoord=coords.stokesCoordinate(stokesIndex);
-
-      Vector<Int> visPolMap(vb.getCorrelationTypes());
+      //cerr << " corr Types " << vb.correlationTypes() << " get corr types  " << vb.getCorrelationTypes() << endl;
+      Vector<Int> visPolMap(vb.correlationTypes());
       nvispol=visPolMap.nelements();
       AlwaysAssert(nvispol>0, AipsError);
       polMap.resize(nvispol);
@@ -400,51 +400,54 @@ using namespace casa::vi;
       for (pol=0;pol<nvispol;pol++) {
         Int p=0;
         if(stokesCoord.toPixel(p, Stokes::type(visPolMap(pol)))) {
-  	AlwaysAssert(p<npol, AipsError);
-  	polMap(pol)=p;
-  	found=True;
+        	AlwaysAssert(p<npol, AipsError);
+        	polMap(pol)=p;
+        	found=True;
         }
       }
       // If this fails then perhaps we were looking to grid I
       // directly. If so then we need to check that the parallel
       // hands are present in the visibilities.
       if(!found) {
-        Int p=0;
-        if(stokesCoord.toPixel(p, Stokes::I)) {
-  	polMap=-1;
-  	if(vb.polarizationFrame()==MSIter::Linear) {
-  	  p=0;
-  	  for (pol=0;pol<nvispol;pol++) {
-  	    if(Stokes::type(visPolMap(pol))==Stokes::XX)
-  	      {polMap(pol)=0;p++;found=True;};
-  	    if(Stokes::type(visPolMap(pol))==Stokes::YY)
-  	      {polMap(pol)=0;p++;found=True;};
-  	  }
-  	}
-  	else {
-  	  p=0;
-  	  for (pol=0;pol<nvispol;pol++) {
-  	    if(Stokes::type(visPolMap(pol))==Stokes::LL)
-  	      {polMap(pol)=0;p++;found=True;};
-  	    if(Stokes::type(visPolMap(pol))==Stokes::RR)
-  	      {polMap(pol)=0;p++;found=True;};
-  	  }
-  	}
-  	if(!found) {
-  	  logIO() <<  "Cannot find polarization map: visibility polarizations = "
-  		  << visPolMap << LogIO::EXCEPTION;
-  	}
-  	else {
-  	  isIOnly=True;
-  	  //logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
-  	}
-        };
+    	  Int p=0;
+    	  if(stokesCoord.toPixel(p, Stokes::I)) {
+    		  polMap=-1;
+    		  if(vb.polarizationFrame()==MSIter::Linear) {
+    			  p=0;
+    			  for (pol=0;pol<nvispol;pol++) {
+    				  if(Stokes::type(visPolMap(pol))==Stokes::XX)
+    				  {polMap(pol)=0;p++;found=True;};
+    				  if(Stokes::type(visPolMap(pol))==Stokes::YY)
+    				  {polMap(pol)=0;p++;found=True;};
+    			  }
+        	}
+        	else {
+        		p=0;
+        		for (pol=0;pol<nvispol;pol++) {
+        			if(Stokes::type(visPolMap(pol))==Stokes::LL)
+        			{polMap(pol)=0;p++;found=True;};
+        			if(Stokes::type(visPolMap(pol))==Stokes::RR)
+        			{polMap(pol)=0;p++;found=True;};
+        		}
+        	}
+    		if(!found) {
+    			logIO() <<  "Cannot find polarization map: visibility polarizations = "
+    					<< visPolMap << LogIO::EXCEPTION;
+    		}
+    	else {
+    		isIOnly=True;
+    		//logIO() << LogIO::DEBUGGING << "Transforming I only" << LogIO::POST;
+    	}
+    	  };
       }
       //logIO() << LogIO::DEBUGGING << "Polarization map = "<< polMap
       //	    << LogIO::POST;
 
       initPolInfo(vb);
       pop_p->initCFMaps(visPolMap, polMap);
+
+      //cerr << "initmaps polmap "<< polMap << endl;
+
     }
 
   FTMachine::~FTMachine() 
@@ -1259,6 +1262,11 @@ using namespace casa::vi;
   
 
   Bool FTMachine::matchAllSpwChans(const vi::VisBuffer2& vb){
+
+	  //////I have no clue how to get all the channel and data selection from all
+	  ///spectral windows from Visbuffer2...
+	  /// so this function is quite useless
+
 	  Vector<Int>  elspw;
 	  Vector<Int>  elstart;
 	  Vector<Int>  elnchan;
@@ -1272,14 +1280,16 @@ using namespace casa::vi;
 	  }
 	  elfinc=(spectralCoord_p.increment()(0));
 
+	  //cerr << "elfstart " << elfstart << " elfend " << elfend << " elfinc "<< elfinc << endl;
 
 	  MSUtil::getSpwInFreqRangeAllFields(elspw, elstart,
 			  elnchan,vb.getVi()->ms(), elfstart,elfend,elfinc, MFrequency::LSRK);
 	  selectedSpw_p.resize();
-	  selectedSpw_p=elspw[vb.msId()];
+	  selectedSpw_p=elspw;
 	  nVisChan_p.resize();
-	  nVisChan_p=elnchan[vb.msId()];
+	  nVisChan_p=elnchan;
 
+	  //cerr << "elspw "<< elspw << " elnchan " << elnchan << endl;
 
       doConversion_p.resize(max(selectedSpw_p)+1);
       doConversion_p.set(True);
@@ -1311,20 +1321,21 @@ using namespace casa::vi;
   Bool FTMachine::matchChannel(const vi::VisBuffer2& vb){
 
 	  Int spw=vb.spectralWindows()[0];
-      if(nVisChan_p[spw] < 0)
-        logIO() << " Spectral window " << spw
-  	      << " does not seem to have been selected" << LogIO::EXCEPTION;
-      nvischan  = nVisChan_p[spw];
+      nvischan  = vb.nChannels();
       chanMap.resize(nvischan);
       chanMap.set(-1);
       Vector<Double> lsrFreq(0);
 
       //cerr << "doConve " << spw << "   " << doConversion_p[spw] << " freqframeval " << freqFrameValid_p << endl;
-
+//cerr <<"valid frame " << freqFrameValid_p << " polmap "<< polMap << endl;
      if(freqFrameValid_p)
     	 lsrFreq=vb.getFrequencies(0,MFrequency::LSRK);
      else
     	 lsrFreq=vb.getFrequencies(0);
+
+     //cerr << "lsrFreq " << lsrFreq.shape() << " nvischan " << nvischan << endl;
+     if(doConversion_p.nelements() < uInt(spw+1))
+    	 doConversion_p.resize(spw+1, True);
       doConversion_p[spw]=freqFrameValid_p;
 
       if(lsrFreq.nelements() ==0){
@@ -1364,6 +1375,8 @@ using namespace casa::vi;
         }
       }
 
+      if(multiChanMap_p.nelements() < uInt(spw+1))
+    	  multiChanMap_p.resize(spw+1);
       multiChanMap_p[spw].resize();
       multiChanMap_p[spw]=chanMap;
 
