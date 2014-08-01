@@ -88,6 +88,11 @@ svg {
 	width: auto;
 }
 
+div.tooltip-inner {
+    max-width: 1000px;
+	width: auto;
+}
+
 [class^="icon-"].icon-fixed-width, [class*=" icon-"].icon-fixed-width {
     text-align: center;
 }
