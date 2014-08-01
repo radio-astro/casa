@@ -189,6 +189,8 @@ class ImageDisplay(object):
         xunits = image.axes[0].units
         ytitle = image.axes[1].name
         ydata = image.axes[1].data
+#        if isinstance(ydata[0], types.StringType):
+#            ydata = np.arange(len(ydata))
         yunits = image.axes[1].units
         dataunits = image.units
         datatype = image.datatype
@@ -218,7 +220,6 @@ class ImageDisplay(object):
         flagrules = np.array(flagrules)
         flagind = np.indices(np.shape(flagrules))[0]
 
-#        for flagcmd in []:
         for flagcmd in flagcmds:
             # ignore if the flagcm.rulename says so
             if flagcmd.rulename == 'ignore':
@@ -423,12 +424,23 @@ class ImageDisplay(object):
 
         i2flag = []
         j2flag = []
+        # if flag colours are not plotted then it may be because of
+        # data position jitter. Uncommenting the following print
+        # statements may be useful to check.
+        #print 'flagx_index', tuple(flagx_index)
+        #print 'x_index', tuple(x_index)
+        #print 'flagy_index', tuple(flagy_index)
+        #print 'y_index', tuple(y_index)
         for k in range(len(flagx_index)):
             for kk in range(len(flagy_index)):
-                i2flag.append(i[np.abs(flagx_index[k] - x_index) < 0.1,
-                  np.abs(flagy_index[kk] - y_index) < 0.1])
-                j2flag.append(j[np.abs(flagx_index[k] - x_index) < 0.1,
-                  np.abs(flagy_index[kk] - y_index) < 0.1])
+                # tolerance set to 0.5 to handle jitter in positions
+                # between views - not sure why jitter occurs
+                i2flag.append(i[np.abs(flagx_index[k] - x_index) < 0.5,
+                  np.abs(flagy_index[kk] - y_index) < 0.5])
+                j2flag.append(j[np.abs(flagx_index[k] - x_index) < 0.5,
+                  np.abs(flagy_index[kk] - y_index) < 0.5])
+        #print 'i2flag', i2flag
+        #print 'j2flag', j2flag
 
         if len(i2flag) > 0:
             data[i2flag, j2flag] = sentinel_value
