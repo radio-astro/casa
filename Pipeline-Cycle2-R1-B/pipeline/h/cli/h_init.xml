@@ -48,7 +48,7 @@ imports data.
 
     <param type="string" name="plotlevel" subparam="true">
 		<description>Level for pipeline plots</description>
-		<value>all</value>
+		<value>default</value>
 		<allowed kind="enum">
 		    <value>all</value>
 		    <value>default</value>
