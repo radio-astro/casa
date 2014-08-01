@@ -115,7 +115,7 @@ class FluxcalFlagInputs(basetask.StandardInputs):
 
 class FluxcalFlagResults(basetask.Results):
     def __init__(self, vis, fluxcal_linelist=[], fluxcal_flagcmds=[],
-        refspwmap=[-1]):
+        refspwmap=[-1], summaries=[]):
         """
         Initialise the flux calibration flagging task results object.
         """
@@ -124,6 +124,7 @@ class FluxcalFlagResults(basetask.Results):
 	self._fluxcal_linelist = fluxcal_linelist
 	self._fluxcal_flagcmds = fluxcal_flagcmds
 	self._refspwmap = refspwmap
+	self._summaries=summaries
 
     def merge_with_context(self, context):
 
@@ -280,8 +281,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
         result = FluxcalFlagResults(inputs.vis,
 	    fluxcal_linelist=fluxcal_lines, fluxcal_flagcmds=flagcmds,
-	        refspwmap=refspwmap) 
-        result.summaries = summaries
+	        refspwmap=refspwmap, summaries=summaries) 
 
         return result
 

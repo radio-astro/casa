@@ -23,7 +23,7 @@ class FluxcalflagQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
-        scores = [qacalc.score_fraction_newly_flagged(ms.basename, result.summaries)]
+        scores = [qacalc.score_fraction_newly_flagged(ms.basename, result._summaries)]
         result.qa.pool[:] = scores
 
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % ms.basename
