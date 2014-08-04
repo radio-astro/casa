@@ -1380,8 +1380,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     newtab.bindColumn(MS::columnName(MS::FEED2), incrStMan3);
     IncrementalStMan incrStMan4("FIELD_ID",cache_val);
     newtab.bindColumn(MS::columnName(MS::FIELD_ID), incrStMan4);
-    IncrementalStMan incrStMan5("FLAG_ROW",cache_val/4);
-    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), incrStMan5);
+
+    // jagonzal (CAS-6746): Don't use IncrementalStMan with RW cols ///////////////////////////////////////////////////
+    //IncrementalStMan incrStMan5("FLAG_ROW",cache_val/4);
+    //newtab.bindColumn(MS::columnName(MS::FLAG_ROW), incrStMan5);
+    StandardStMan aipsStManFlagRow("FLAG_ROW", cache_val/4);
+    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), aipsStManFlagRow);
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     IncrementalStMan incrStMan6("INTERVAL",cache_val);
     newtab.bindColumn(MS::columnName(MS::INTERVAL), incrStMan6);
     IncrementalStMan incrStMan7("OBSERVATION_ID",cache_val);
