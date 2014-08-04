@@ -319,8 +319,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         mytb.close()        
+        selectedtb.close()
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
         myinput = "scan=4 mode=tfcrop correlation='ABS_RR' extendflags=False"
@@ -333,8 +334,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         mytb.close()           
+        selectedtb.close()
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Unapply only the tfcrop line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
@@ -344,8 +346,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), 0)
         mytb.close()      
+        selectedtb.close()
+        self.assertEqual(FLAG_ROW.sum(), 0)
         
     def test_unapply_rflag_and_unset_flagrow(self):
         '''flagcmd: Check that FLAG_ROW is unset after un-applying an rflag agent'''
@@ -362,8 +365,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
-        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         mytb.close()        
+        selectedtb.close()
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
         myinput = "scan=4 mode=rflag "
@@ -376,8 +380,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        mytb.close()        
+        selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
-        mytb.close()           
         
         # Unapply only the tfcrop line
         flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
@@ -387,8 +392,9 @@ class test_unapply(test_base):
         mytb.open(self.vis)
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        mytb.close()        
+        selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), 0)
-        mytb.close()         
         
     def test_unapply_clip_and_unset_flagrow(self):
         '''flagcmd: Check that FLAG_ROW is unset after un-applying a clip agent'''
@@ -406,6 +412,7 @@ class test_unapply(test_base):
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
         mytb.close()        
+        selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
@@ -420,6 +427,7 @@ class test_unapply(test_base):
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
         mytb.close()           
+        selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Unapply only the tfcrop line
@@ -431,6 +439,7 @@ class test_unapply(test_base):
         selectedtb = mytb.query('SCAN_NUMBER in [4]')
         FLAG_ROW = selectedtb.getcol('FLAG_ROW')
         mytb.close()        
+        selectedtb.close()
         self.assertEqual(FLAG_ROW.sum(), 0)
 
     def test_uquack(self):
