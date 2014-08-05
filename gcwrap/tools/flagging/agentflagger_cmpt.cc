@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <tables/Tables/Table.h>
+#include <measures/Measures/MeasIERS.h>
 
 
 using namespace std;
@@ -56,6 +57,7 @@ agentflagger::~agentflagger()
 		RETHROW(x);
 	}
     Table::relinquishAutoLocks(True);
+    MeasIERS::closeTables();
 
 }
 
