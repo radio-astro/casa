@@ -59,7 +59,9 @@ $(document).ready(function() {
         <tr>
             <th scope="col" rowspan="2">Measurement Set</th>
 			<th scope="col" colspan="5">Phase-up Solution Parameters</th>
+<%doc>
             <th scope="col" rowspan="2">% Flagged</th>
+</%doc>
 		</tr>
 		<tr>
 			<th>Type</th>
@@ -78,7 +80,9 @@ $(document).ready(function() {
 		  	<td>${application.minblperant}</td>
 		  	<td>${application.minsnr}</td>
 		  	<td>${application.phaseupbw}</td>
+<%doc>
 		  	<td>${application.flagged}</td>
+</%doc>
 		</tr>
 % endfor		
 	</tbody>
