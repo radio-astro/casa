@@ -15,6 +15,11 @@ try:
 except:
     import tests.selection_syntax as selection_syntax
 
+try:
+    import test_sdcal
+except:
+    import tests.test_sdcal as test_sdcal
+
 import asap as sd
 from sdreduce import sdreduce
 #from sdstat import sdstat
@@ -1648,6 +1653,204 @@ class sdreduce_test_baseline_flag( unittest.TestCase ):
             self.assertTrue(all(inchnf[i]==outchnf[i]))
         self.assertTrue(all(inrowf==outrowf))
 
+###
+# Test flag handling in ALMA position switch calibration
+###
+class sdreduce_test_cal_psalma_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+    """
+    This is a copy from sdcal unit test, test_sdcal.sdcal_testFlagPSALMA.
+    """
+    # Input and output names
+    raw1file='calpsALMA_flagtest.asap'
+    raw2file='calpsALMA_flagtest_rowflagged.asap'
+    ref1file='calpsALMA_flagtest.cal.asap'
+    ref2file='calpsALMA_flagtest_rowflagged.cal.asap'
+    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagPSALMA'
+    calmode='ps'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.raw1file)):
+            shutil.copytree(self.datapath+self.raw1file, self.raw1file)
+        if (not os.path.exists(self.raw2file)):
+            shutil.copytree(self.datapath+self.raw2file, self.raw2file)
+        if (not os.path.exists(self.ref1file)):
+            shutil.copytree(self.datapath+self.ref1file, self.ref1file)
+        if (not os.path.exists(self.ref2file)):
+            shutil.copytree(self.datapath+self.ref2file, self.ref2file)
+
+        default(sdreduce)
+
+    def tearDown(self):
+        if (os.path.exists(self.raw1file)):
+            shutil.rmtree(self.raw1file)
+        if (os.path.exists(self.raw2file)):
+            shutil.rmtree(self.raw2file)
+        if (os.path.exists(self.ref1file)):
+            shutil.rmtree(self.ref1file)
+        if (os.path.exists(self.ref2file)):
+            shutil.rmtree(self.ref2file)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _comparecal( self, name, reffile ):
+        self._checkfile(name)
+        sp=self._getspectra(name)
+        spref=self._getspectra(reffile)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(sp.shape[0]):
+            diff=self._diff(sp[irow],spref[irow])
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def testFlagPSALMA01(self):
+        """Test FlagPSALMA01: for non-row-flagged ON-data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdreduce(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref1file)
+
+    def testFlagPSALMA02(self):
+        """Test FlagPSALMA02: for row-flagged ON-data (ALMA position switch)"""
+        outname=self.prefix+self.postfix
+        self.res=sdreduce(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+        self._comparecal(outname, self.ref2file)
+
+
+###
+# Test flag handling in calibrating ALMA OTF data
+###
+class sdreduce_test_cal_otf_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+    """
+    This is a copy of sdcal unit test, test_sdcal.sdcal_testFlagOTF.
+    """
+    # Input and output names
+    rawfile='lissajous_flagtest.asap'
+    reffile='lissajous_flagtest.cal.asap'
+    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagOTF'
+    calmode='otf'
+    fraction='10%'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdreduce)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testFlagOTF01(self):
+        """Test FlagOTF01: for ALMA OTF data"""
+        outname=self.prefix+self.postfix
+        self.res=sdreduce(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+
+        tb.open(self.rawfile)
+        spec_rowflagged_input = tb.getcell('SPECTRA', 100)
+        tb.close()
+        tb.open(self.reffile)
+        spec_rowflagged_output = tb.getcell('SPECTRA', 52)
+        spec_output  = tb.getcol('SPECTRA')[0]
+        cflag_output = tb.getcol('FLAGTRA')[0]
+        rflag_output = tb.getcol('FLAGROW')
+        tb.close()
+
+        #check row-flagged ON spectrum is not calibrated
+        self.assertTrue(self._diff(spec_rowflagged_input, spec_rowflagged_output) < 1e-5)
+        #check other ON spectra is calibrated so have values less than ~0.3
+        spec_output[52] = 0.0
+        self.assertTrue(all(spec_output < 0.03))
+        #check channel flags not modified
+        self.assertEqual(cflag_output[53], 128)
+        cflag_output[53] = 0
+        self.assertTrue(all(cflag_output == 0))
+        #check row flags not modified
+        self.assertEqual(rflag_output[52], 1)
+        rflag_output[52] = 0
+        self.assertTrue(all(rflag_output == 0))
+
+###
+# Test flag handling in calibrating ALMA OTF raster data
+###
+class sdreduce_test_cal_otfraster_flag(test_sdcal.sdcal_caltest_base,unittest.TestCase):
+    """
+    This is a copy from sdcal unit test, test_sdcal.sdcal_testFlagOTFRASTER.
+    """
+    # Input and output names
+    rawfile='raster_flagtest.asap'
+    reffile='raster_flagtest.cal.asap'
+    prefix=test_sdcal.sdcal_unittest_base.taskname+'TestFlagOTFRASTER'
+    calmode='otfraster'
+    fraction='10%'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        if (not os.path.exists(self.reffile)):
+            shutil.copytree(self.datapath+self.reffile, self.reffile)
+
+        default(sdreduce)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        if (os.path.exists(self.reffile)):
+            shutil.rmtree(self.reffile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def testFlagOTF01(self):
+        """Test FlagOTF01: for ALMA OTF raster data"""
+        outname=self.prefix+self.postfix
+        self.res=sdreduce(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP',maskmode='list',blfunc='none',average=False,kernel='none')
+        self.assertEqual(self.res,None,
+                         msg='Any error occurred during calibration')
+
+        irow_rowflagged_input  = 50
+        irow_rowflagged_output = 44
+        irow_chanflagged_output = 45
+
+        tb.open(self.rawfile)
+        spec_rowflagged_input = tb.getcell('SPECTRA', irow_rowflagged_input)
+        tb.close()
+        tb.open(self.reffile)
+        spec_rowflagged_output = tb.getcell('SPECTRA', irow_rowflagged_output)
+        spec_output  = tb.getcol('SPECTRA')[0]
+        cflag_output = tb.getcol('FLAGTRA')[0]
+        rflag_output = tb.getcol('FLAGROW')
+        tb.close()
+
+        #check row-flagged ON spectrum is not calibrated
+        self.assertTrue(self._diff(spec_rowflagged_input, spec_rowflagged_output) < 1e-5)
+        #check other ON spectra is calibrated so have values less than ~0.3
+        spec_output[irow_rowflagged_output] = 0.0
+        self.assertTrue(all(spec_output < 0.01))
+        #check channel flags not modified
+        self.assertEqual(cflag_output[irow_chanflagged_output], 128)
+        cflag_output[irow_chanflagged_output] = 0
+        self.assertTrue(all(cflag_output == 0))
+        #check row flags not modified
+        self.assertEqual(rflag_output[irow_rowflagged_output], 1)
+        rflag_output[irow_rowflagged_output] = 0
+        self.assertTrue(all(rflag_output == 0))
+
 def suite():
     return [sdreduce_test, sdreduce_selection, sdreduce_test_average_flag,
-            sdreduce_test_baseline_flag]
+            sdreduce_test_baseline_flag, sdreduce_test_cal_psalma_flag,
+            sdreduce_test_cal_otf_flag, sdreduce_test_cal_otfraster_flag]
