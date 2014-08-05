@@ -402,7 +402,9 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${science_amp_vs_freq_plots}"
 				  url_fn="${lambda x: 'science_amp_vs_freq_%s.html' % sanitise(x)}"
-				  data_spw="${True}">
+				  data_spw="${True}"
+				  data_field="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
 		Science target: calibrated amplitude vs frequency
@@ -413,6 +415,10 @@ def space_comma(s):
 		science field in each measurement set. The science field displayed
 		here is the one with the brightest average amplitude over all spectral
 		windows.</p>
+
+		<p>Note: due to a technical problem with visstat, the science field
+		displayed here not the brightest field for the source but the first 
+		field for the source.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -435,8 +441,8 @@ def space_comma(s):
 		Baseband ${plot.parameters['baseband']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)">
-		Calibrated amplitude vs frequency for
+	<%def name="caption_text(plot, source_id)">
+		Calibrated amplitude vs frequency for Source #${source_id}
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
 		baseband ${plot.parameters['baseband']}.
 	</%def>
@@ -445,7 +451,9 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${science_phase_vs_freq_plots}"
 				  url_fn="${lambda x: 'science_phase_vs_freq_%s.html' % sanitise(x)}"
-				  data_baseband="${True}">
+				  data_baseband="${True}"
+				  data_field="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
 		Science target: calibrated phase vs frequency
@@ -455,6 +463,10 @@ def space_comma(s):
 		<p>Calibrated phase vs frequency plots for a representative science
 		field in each measurement set. The science field displayed here is the
 		one with the brightest average amplitude over all spectral windows.</p>
+
+		<p>Note: due to a technical problem with visstat, the science field
+		displayed here not the brightest field for the source but the first 
+		field for the source.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -477,8 +489,8 @@ def space_comma(s):
 		Baseband ${plot.parameters['baseband']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)">
-		Calibrated phase vs frequency for 
+	<%def name="caption_text(plot, source_id)">
+		Calibrated phase vs frequency for Source #${source_id}
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
 		baseband ${plot.parameters['baseband']}.
 	</%def>
@@ -487,10 +499,12 @@ def space_comma(s):
 
 <%self:plot_group plot_dict="${science_amp_vs_uv_plots}"
 				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % sanitise(x)}"
-				  data_baseband="${True}">
+				  data_baseband="${True}"
+				  data_field="${True}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
 
 	<%def name="title()">
-		Science target: calibrated amplitude vs UV distance
+		Science targets: calibrated amplitude vs UV distance
 	</%def>
 
 	<%def name="preamble()">
@@ -499,8 +513,9 @@ def space_comma(s):
 		here is the one with the brightest average amplitude over all spectral 
 		windows.</p>
 		
-		<p>Note: the science field displayed here is currently a random 
-		selection due to a technical problem with visstat.</p>
+		<p>Note: due to a technical problem with visstat, the science field
+		displayed here not the brightest field for the source but the first 
+		field for the source.</p>
 		
 		<p>Data are plotted for all antennas and correlations, with different
 		spectral windows shown in different colours.</p>
@@ -518,8 +533,8 @@ def space_comma(s):
 		Baseband ${plot.parameters['baseband']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)">
-		Calibrated amplitude vs UV distance for
+	<%def name="caption_text(plot, source_id)">
+		Calibrated amplitude vs UV distance for Source #${source_id}
 		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
 		baseband ${plot.parameters['baseband']}.
 	</%def>
