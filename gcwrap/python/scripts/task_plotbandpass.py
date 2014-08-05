@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.53 2014/08/02 01:24:50 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.54 2014/08/05 02:17:32 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.53 2014/08/02 01:24:50 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.54 2014/08/05 02:17:32 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -2687,6 +2687,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               
                 firstTimeMatch = -1
                 while (mytime < nUniqueTimes):
+                  finalTimerangeFlagged = False  # 04-Aug-2014
                   if (debug):
                       print "mytime = %d < %d, uniqueTimes[mytime] = %s" % (mytime,nUniqueTimes,str(uniqueTimes[mytime]))
                       print "timerangeList = %s" % (str(timerangeList))
@@ -3075,6 +3076,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                           )):
                               if (overlayAntennas == False or xant==antennasToPlot[-1]):  # 11-Mar-2014
                                   doneOverlayTime = True  # 08-Nov-2012
+                                  finalTimerangeFlagged =  True  # 04-Aug-2014
                               if (debug):
                                   print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
           
@@ -3150,7 +3152,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               if (not finalSpwWasFlagged): # add this test on Apr 22, 2014 to prevent crash on g25.27 dataset with antenna='4,5'
                                   continue # Try this 'continue' on Apr 2, 2012 to fix bug -- works.
                       if (overlayAntennas==False and subplot==11
-                          and not finalSpwWasFlagged): # inserted on 22-Apr-2014 for g25.27
+                          and not finalSpwWasFlagged      # inserted on 22-Apr-2014 for g25.27
+                          and not finalTimerangeFlagged): # inserted on 04-Aug-2014 for CAS-6812
                             # added the case (subplot==11) on April 22, 2012 to prevent crash on multi-antenna subplot=421
                             if (debug):
                                 print "#######  removing [%d,%d,%d,%d]" % (pages[len(pages)-1][PAGE_ANT],
