@@ -36,7 +36,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <div class="row-fluid">
 	<ul class="thumbnails">
-% for plot in plot_group.plots:
+% for plot in sorted(plot_group.plots, key=lambda plot: int(plot.parameters['spw'])):
 		<li class="span2" data-value="${plot.css_class}">
 			<div class="thumbnail">
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
