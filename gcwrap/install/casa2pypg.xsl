@@ -7,7 +7,6 @@
 <xsl:param name="needscomma"/>
 <xsl:param name="taskname"/>
 <xsl:param name="paramname"/>
-<xsl:param name="async"/>
 <xsl:param name="setme"/>
 <xsl:param name="taskdescription"/>
 <xsl:param name="unitsare"/>
@@ -18,7 +17,6 @@
 <xsl:template match="aps:task">
 <xsl:param name="taskname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
-<xsl:param name="async"><xsl:value-of select="@async"/></xsl:param>
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
@@ -222,16 +220,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults"/>
-<xsl:choose>
-   <xsl:when test="lower-case($async)='true'">
-   <xsl:text disable-output-escaping="yes">
-        a['async']=True</xsl:text>
-   </xsl:when>
-   <xsl:otherwise>
-   <xsl:text disable-output-escaping="yes">
-        a['async']=False</xsl:text>
-   </xsl:otherwise>
-</xsl:choose>
 
 <xsl:for-each select="aps:constraints">       
 <xsl:call-template name="setdefaults2"/>
@@ -296,7 +284,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 	<xsl:call-template name="oneliners"/><xsl:text disable-output-escaping="yes">
-               &apos;async&apos;: &apos;If true the taskname must be started using </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">(...)&apos;
               }
 </xsl:text>
 <xsl:for-each select="aps:constraints">
@@ -337,14 +324,14 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:choose>
 	<xsl:when test="count(aps:param) &gt; 1">
 	for arg in result :
-	   if not async and not result.has_key(arg) :
+	   if not result.has_key(arg) :
 	         throw('Missing output value '+arg)
 </xsl:when>
 </xsl:choose>
 </xsl:template>
 
 <xsl:template name="doargs">
-<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>async=None):
+<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None,</xsl:for-each>):
 </xsl:template>
 
 <xsl:template name="doargs2">

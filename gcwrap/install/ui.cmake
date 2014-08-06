@@ -153,7 +153,6 @@ macro( casa_add_tasks module _target )
     COMMAND echo >> ${_tasks}
     
     COMMAND echo "from tget import *" >> ${_tasks}
-    COMMAND echo "from taskmanager import tm" >> ${_tasks}
     DEPENDS ${_out_taskinfo}
     )
 

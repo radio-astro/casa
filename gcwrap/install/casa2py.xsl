@@ -7,7 +7,6 @@
 <xsl:param name="needscomma"/>
 <xsl:param name="taskname"/>
 <xsl:param name="paramname"/>
-<xsl:param name="async"/>
 <xsl:param name="setme"/>
 <xsl:param name="taskdescription"/>
 <xsl:param name="unitsare"/>
@@ -18,7 +17,6 @@
 <xsl:template match="aps:task">
 <xsl:param name="taskname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
-<xsl:param name="async"><xsl:value-of select="@async"/></xsl:param>
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
@@ -29,7 +27,6 @@ import os
 import string
 import inspect
 from odict import odict
-#from taskmanager import tm
 import task_</xsl:text><xsl:value-of select="$taskname"/>
 <xsl:text>
 def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-templates select="aps:input"/>
@@ -85,7 +82,7 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-te
 </xsl:when>
 </xsl:choose>
 </xsl:for-each>
-        async = myf['async']
+
 #
 #    The following is work around to avoid a bug with current python translation
 #
@@ -104,17 +101,14 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-te
 </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
-        mytmp[&apos;async&apos;] = async
+
 <xsl:text disable-output-escaping="yes">
 	pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH").split()[1]+'/xml/'
         trec = myf['cu'].torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 <xsl:text disable-output-escaping="yes">
 	if trec.has_key(&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;) and myf['cu'].verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;]) :
-          if async :
-            result = tm.execute(&apos;</xsl:text><xsl:value-of select="$taskname"/>&apos;, <xsl:call-template name="doargs2"/>)
-          else :
-            result = task_<xsl:value-of select="$taskname"/>.<xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
+          result = task_<xsl:value-of select="$taskname"/>.<xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
           saveinputs = myf['saveinputs']
@@ -137,20 +131,6 @@ def </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escapi
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults"/>
-<xsl:choose>
-   <xsl:when test="lower-case($async)='yes'">
-   <xsl:text disable-output-escaping="yes">
-        a['async']=True</xsl:text>
-   </xsl:when>
-   <xsl:when test="lower-case($async)='true'">
-   <xsl:text disable-output-escaping="yes">
-        a['async']=True</xsl:text>
-   </xsl:when>
-   <xsl:otherwise>
-   <xsl:text disable-output-escaping="yes">
-        a['async']=False</xsl:text>
-   </xsl:otherwise>
-</xsl:choose>
 
 <xsl:for-each select="aps:constraints">       
 <xsl:call-template name="setdefaults2"/>
@@ -212,7 +192,7 @@ def </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escapi
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
 
 <xsl:template name="doargs">
-<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>async=None):
+<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None</xsl:for-each>):
 </xsl:template>
 
 <xsl:template name="doargs2">

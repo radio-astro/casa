@@ -7,7 +7,6 @@
 <xsl:param name="needscomma"/>
 <xsl:param name="taskname"/>
 <xsl:param name="paramname"/>
-<xsl:param name="async"/>
 <xsl:param name="setme"/>
 <xsl:param name="taskdescription"/>
 <xsl:param name="unitsare"/>
@@ -18,7 +17,6 @@
 <xsl:template match="aps:task">
 <xsl:param name="taskname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
-<xsl:param name="async"><xsl:value-of select="@async"/></xsl:param>
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
@@ -96,7 +94,7 @@ def </xsl:text><xsl:value-of select="@name"/><xsl:text>(</xsl:text><xsl:apply-te
 <xsl:template match="aps:example"><xsl:value-of select="replace(., '\\.*\{verbatim\}', '')" disable-output-escaping="yes"/></xsl:template>
 
 <xsl:template name="doargs">
-<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None, </xsl:for-each>async=None):
+<xsl:for-each select="aps:param"><xsl:value-of select="@name"/>=None</xsl:for-each>):
 </xsl:template>
 
 <xsl:template name="doargs2">

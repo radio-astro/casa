@@ -7,7 +7,6 @@
 <xsl:param name="needscomma"/>
 <xsl:param name="taskname"/>
 <xsl:param name="paramname"/>
-<xsl:param name="async"/>
 <xsl:param name="setme"/>
 <xsl:param name="taskdescription"/>
 <xsl:param name="unitsare"/>
@@ -18,7 +17,6 @@
 <xsl:template match="aps:task">
 <xsl:param name="taskname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
-<xsl:param name="async"><xsl:value-of select="@async"/></xsl:param>
 <xsl:text disable-output-escaping="yes">#
 # This file was generated using xslt from its XML file
 #
@@ -34,13 +32,12 @@ import inspect
 import gc
 import numpy
 from odict import odict
-from taskmanager import tm
+from types import * 
 from task_</xsl:text><xsl:value-of select="$taskname"/> import <xsl:value-of select="$taskname"/>
 <xsl:text>
 class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:text>
     __name__ = "</xsl:text><xsl:value-of select="$taskname"/><xsl:text>"
-    __async__ = {}
     rkey = None
     i_am_a_casapy_task = None
     # The existence of the i_am_a_casapy_task attribute allows help()
@@ -50,23 +47,15 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
        self.__bases__ = (</xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_,)
        self.__doc__ = self.__call__.__doc__</xsl:text>
 
-       self.parameters=<xsl:text>{</xsl:text><xsl:apply-templates select="aps:input" mode="quotes"/> &apos;async&apos;:None}
+       self.parameters=<xsl:text>{</xsl:text><xsl:apply-templates select="aps:input" mode="quotes"/>}
 <xsl:text disable-output-escaping="yes">
 
     def result(self, key=None):
-	    #### here we will scan the task-ids in __async__
 	    #### and add any that have completed...
-	    if key is not None and self.__async__.has_key(key) and self.__async__[key] is not None:
-	       ret = tm.retrieve(self.__async__[key])
-	       if ret['state'] == "done" :
-	          self.__async__[key] = None
-	       elif ret['state'] == 'crashed' :
-		  self.__async__[key] = None
-	       return ret
 	    return None
 
 </xsl:text>
-    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input" mode="noquotes"/> async=None):
+    def __call__<xsl:text>(self, </xsl:text><xsl:apply-templates select="aps:input" mode="noquotes"/>):
 <xsl:text>
         """</xsl:text>
 <xsl:apply-templates select="aps:shortdescription"></xsl:apply-templates>
@@ -130,7 +119,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
         ###
         #Handle globals or user over-ride of arguments
         #
-	function_signature_defaults=dict(zip(self.__call__.func_code.co_varnames,self.__call__.func_defaults))
+        if type(self.__call__.func_defaults) is NoneType:
+            function_signature_defaults={}
+	else:
+	    function_signature_defaults=dict(zip(self.__call__.func_code.co_varnames[1:],self.__call__.func_defaults))
 	useLocalDefaults = False
 
         for item in function_signature_defaults.iteritems():
@@ -159,9 +151,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 		         exec('myparams[key] = ' + key + ' = keyVal[len(keyVal)-1][\'value\']')
 		      else :
 		         exec('myparams[key] = ' + key + ' = {}')
+	 
+        else :
+            print ''
 
-	else :
-            async = self.parameters['async']
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:apply-templates select="aps:param"/>
@@ -202,15 +195,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:otherwise>
 </xsl:choose>
 </xsl:for-each>
-<xsl:choose>
-<xsl:when test="lower-case($async)='never'">
-<xsl:text disable-output-escaping="yes">
-	#
-	# This task is never suppose to use the task manager to run async
-	#
-        async=False</xsl:text>
-</xsl:when>
-</xsl:choose>
 <xsl:text disable-output-escaping="yes">
 	pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/'
         trec = casac.casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
@@ -225,29 +209,21 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
           casac.casac.utils().verify(mytmp, trec[&apos;</xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">&apos;], True)
           scriptstr=['']
           saveinputs = self.__globals__['saveinputs']
-          saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__,scriptstr=scriptstr)
-          if async :
-	    count = 0
-	    keybase =  time.strftime("%y%m%d.%H%M%S")
-	    key = keybase + "_" + str(count)
-	    while self.__async__.has_key(key) :
-	       count += 1
-	       key = keybase + "_" + str(count)
-            result = tm.execute(&apos;</xsl:text><xsl:value-of select="$taskname"/>&apos;, <xsl:call-template name="doargs2"/>)
-	    print "Use: "
-	    print "      tm.retrieve(return_value) # to retrieve the status"
-	    print 
-	    self.rkey = key
-	    self.__async__[key] = result
+          if type(self.__call__.func_defaults) is NoneType:
+              saveinputs=''
+          else:
+              saveinputs(</xsl:text>&apos;<xsl:value-of select="$taskname"/>&apos;, &apos;<xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">.last&apos;, myparams, self.__globals__,scriptstr=scriptstr)</xsl:text>
+          tname = '<xsl:value-of select="$taskname"/>'
+          spaces = ' '*(18-len(tname))
+          casalog.post('\n##########################################'+
+                       '\n##### Begin Task: ' + tname + spaces + ' #####')
+          if type(self.__call__.func_defaults) is NoneType:
+              casalog.post(scriptstr[0]+'\n', 'INFO')
           else :
-              tname = '<xsl:value-of select="$taskname"/>'
-              spaces = ' '*(18-len(tname))
-              casalog.post('\n##########################################'+
-                           '\n##### Begin Task: ' + tname + spaces + ' #####')
               casalog.post(scriptstr[1][1:]+'\n', 'INFO')
-              result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
-              casalog.post('##### End Task: ' + tname + '  ' + spaces + ' #####'+
-                           '\n##########################################')
+          result = <xsl:value-of select="$taskname"/>(<xsl:call-template name="doargs2"/>)
+          casalog.post('##### End Task: ' + tname + '  ' + spaces + ' #####'+
+                       '\n##########################################')
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
 	except Exception, instance:
@@ -304,21 +280,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults"/>
-<xsl:choose>
-   <xsl:when test="lower-case($async)='yes'">
-   <xsl:text disable-output-escaping="yes">
-        a['async']=True</xsl:text>
-   </xsl:when>
-   <xsl:when test="lower-case($async)='true'">
-   <xsl:text disable-output-escaping="yes">
-        a['async']=True</xsl:text>
-   </xsl:when>
-   <xsl:otherwise>
-   <xsl:text disable-output-escaping="yes">
-        a['async']=False</xsl:text>
-   </xsl:otherwise>
-</xsl:choose>
-
 <xsl:for-each select="aps:constraints">       
 <xsl:call-template name="setdefaults2"/>
 </xsl:for-each>
@@ -395,7 +356,6 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:text>
 <xsl:for-each select="aps:input">
 	<xsl:call-template name="oneliners"/><xsl:text disable-output-escaping="yes">
-               &apos;async&apos;: &apos;If true the taskname must be started using </xsl:text><xsl:value-of select="$taskname"/><xsl:text disable-output-escaping="yes">(...)&apos;
               }
 </xsl:text>
 <xsl:for-each select="aps:constraints">
@@ -446,7 +406,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 <xsl:choose>
 	<xsl:when test="count(aps:param) &gt; 1">
 	for arg in result :
-	   if not async and not result.has_key(arg) :
+	   if not result.has_key(arg) :
 	         throw('Missing output value '+arg)
 </xsl:when>
 </xsl:choose>
