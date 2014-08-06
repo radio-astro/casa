@@ -107,6 +107,7 @@ Bool MSUVBin::selectData(const String& msname, const String& spw, const String& 
 	if(mshandler.setmsselect(spw, field, baseline, scan, uvrange,
 			taql, fakestep, subarray, correlation, intent, obs)){
 		mss_p.resize(mss_p.nelements()+1);
+		mshandler.makeSelection();
 		// have to make a copy here as the selected ms pointer of mshandler
 		// dies with mshandler
 		mss_p[mss_p.nelements()-1]=new MeasurementSet(*mshandler.getSelectedInputMS());
@@ -472,6 +473,11 @@ void MSUVBin::makeCoordsys(){
 	csys_p.addCoordinate(myRaDec);
 	csys_p.addCoordinate(myStokes);
 	csys_p.addCoordinate(mySpectral);
+	ObsInfo obsinf;
+	obsinf.setObsDate(msc.timeMeas()(0));
+	obsinf.setTelescope(msc.observation().telescopeName()(0));
+	obsinf.setPointingCenter(phaseCenter_p.getValue());
+	csys_p.setObsInfo(obsinf);
 }
 
 void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
@@ -487,6 +493,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
   Bool MSUVBin::datadescMap(const vi::VisBuffer2& vb, Double& fracbw){
 	polMap_p.resize(vb.nCorrelations());
 	polMap_p.set(-1);
+	//Should ultimately find the real polarization in case it is a  non common MS
 	if(npol_p==4){
 		if( polMap_p.nelements()==4)
 			indgen(polMap_p);
@@ -509,8 +516,13 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 		if(polMap_p.nelements()==1)
 			polMap_p(0)=0;
 	}
-	else if(npol_p==1)
+	else if(npol_p==1){
 		polMap_p(0)=0;
+		if(polMap_p.nelements()==2)
+		  polMap_p(1)=0;
+		if(polMap_p.nelements()==4)
+		  polMap_p(3)=0;
+	}
 	////Now to chanmap
 	fracbw=0.0;
 	Vector<Double> f(1);
@@ -532,6 +544,20 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 			}
 		}
 	}
+	///////////////////////
+	//cout << "spw" << vb.spectralWindows()(0) << "  rowid " << vb.rowIds()(0) << " max " << max(chanMap_p) << " sum "<< ntrue(chanMap_p > -1) << endl;
+	/*if( ntrue(chanMap_p > -1) > 0){
+	  for (uInt k=0; k < visFreq.nelements() ; ++k){
+	    if(chanMap_p(k) > -1){
+	      cerr << "  " <<k<< "  "<<  visFreq[k] << " =  "  << chanMap_p[k];
+	    }
+	  }
+	  cerr <<endl;
+	  cerr << "*************************************" << endl;
+
+	}
+	*/
+	////////////////////////////////////
 	//cerr << "spw " << vb.spectralWindows() << " fracbw " << fracbw << endl;
 	if(allLT(chanMap_p ,0)  ||  allLT(polMap_p , 0))
 	  return False;
