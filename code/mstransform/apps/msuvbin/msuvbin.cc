@@ -48,7 +48,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2014/06/18 by CM MLLN, HTST");
+  inp.version("2014/08/06 by CM MLLN, HTST");
   // Title of CM  i.e Code Monkey is
   //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
   inp.create("vis", "ngc5921.ms", "MS to be binned");
@@ -108,11 +108,13 @@ int main(int argc, char **argv) {
   String field=inp.getString("field");
   String spw=inp.getString("spw");
   
+  cerr << "field  " << field << " spw " << spw << endl;
+
   Bool forceDisk=inp.getBool("fdb");
   
   MSUVBin binner(phaseCenter, nx,
 		 ny, nchan, ncorr, cellx, celly, fstart, fstep);
-  binner.selectData(msname, field, spw);
+  binner.selectData(msname, spw, field);
   binner.setOutputMS(outMS);
   binner.fillOutputMS(forceDisk);
   
