@@ -847,6 +847,13 @@ vector<string> msmetadata::namesforspws(const variant& spwids) {
 	return vector<string>();
 }
 
+string msmetadata::name() {
+	_FUNC(
+		return _ms->tableName();
+	)
+	return "";
+}
+
 int msmetadata::nantennas() {
 	_FUNC(
 		return _msmd->nAntennas();

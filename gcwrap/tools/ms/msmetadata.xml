@@ -786,6 +786,20 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+
+        <method type="function" name="name">
+            <shortdescription>Get the name of the attached MS.</shortdescription>
+            <returns type="string"/>
+            <description>
+                Get the name of the attached MS.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get its name
+    myname = msmd.name()
+    msmd.done()
+            </example>
+        </method>
         
          <method type="function" name="nantennas">
             <shortdescription>Get the number of antennas associated with the MS.</shortdescription>

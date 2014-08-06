@@ -1059,7 +1059,12 @@ class msmd_test(unittest.TestCase):
         self.assertTrue(near(p1['m1']['value'], 0.8713643131745025, eps))
         self.assertTrue(near(p2['m0']['value'], -1.2315042783587336, eps))
         self.assertTrue(near(p2['m1']['value'], 0.8713175514123461, eps))
-        
+    
+    def test_name(self):
+        """Test name(), CAS-6817"""
+        md = self.md
+        name = md.name()
+        self.assertTrue(name == os.path.abspath(fixture))      
         
 def suite():
     return [msmd_test]
