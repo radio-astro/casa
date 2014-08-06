@@ -708,8 +708,8 @@ class test_ModImage(SetjyUnitTestBase):
                                            #modimage=self.modelim,
                                            scalebychan=False,
                                            standard='Perley-Taylor 99',
-                                           usescratch=True,
-                                           async=False)
+                                           usescratch=True
+                                           )
 
                 record['history'] = self.get_last_history_line(self.inpms,
                                                            origin='imager::setjy()',
@@ -723,8 +723,8 @@ class test_ModImage(SetjyUnitTestBase):
                                                scalebychan=False,
                                                standard='Perley-Butler 2010',
                                                spix=spix, reffreq=reffreq,
-                                               usescratch=True,
-                                               async=False)
+                                               usescratch=True
+                                               )
 
                     record['history'] = self.get_last_history_line(self.inpms,
                                                            origin='imager::setjy()',
@@ -737,8 +737,8 @@ class test_ModImage(SetjyUnitTestBase):
                                                standard='manual',
                                                fluxdensity=fluxdens,
                                                spix=spix, reffreq=reffreq,
-                                               usescratch=True,
-                                               async=False)
+                                               usescratch=True
+                                               )
 
                     if spix!=0.0:
                         record['history'] = self.get_last_history_line(self.inpms,
@@ -825,8 +825,8 @@ class test_conesearch(SetjyUnitTestBase):
                       scalebychan=False,
                       #standard='Perley-Taylor 99',
                       standard='Perley-Butler 2013',
-                      usescratch=True,
-                      async=False)
+                      usescratch=True
+                      )
         ret = True
         if type(sjran)!=dict:
             ret = False
@@ -874,8 +874,8 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
         sjran = setjy(vis=self.inpms,
                       standard='fluxscale',
                       fluxdict=fluxscaledict,
-                      usescratch=False,
-                      async=False)
+                      usescratch=False
+                      )
         ret = True
         if type(sjran)!=dict:
             ret = False

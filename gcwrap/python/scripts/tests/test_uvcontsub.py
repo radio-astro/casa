@@ -46,8 +46,8 @@ if os.environ.has_key('TEST_DATADIR'):
 #        try:
 #            print "\nRunning uvcontsub"
 #            uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
-#                               fitorder=corrsel, want_cont=True,
-#                               async=False)
+#                               fitorder=corrsel, want_cont=True
+#                               )
 #        except Exception, e:
 #            print "Error running uvcontsub"
 #            raise e
@@ -135,8 +135,8 @@ class zeroth(UVContsubUnitTestBase):
         try:
             print "\nRunning uvcontsub"
             uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=0, want_cont=True,
-                               async=False)
+                               fitorder=0, want_cont=True
+                               )
         except Exception, e:
             print "Error running uvcontsub"
             raise e
@@ -191,8 +191,8 @@ class fourth(UVContsubUnitTestBase):
         try:
             print "\nRunning uvcontsub"
             uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=infitorder, want_cont=True,
-                               async=False)
+                               fitorder=infitorder, want_cont=True
+                               )
         except Exception, e:
             print "Error running uvcontsub"
             raise e
@@ -283,8 +283,8 @@ class combspw(UVContsubUnitTestBase):
 		print "\nRunning uvcontsub"
 		uvran = uvcontsub(self.inpms, fitspw='1~10:5~122,15~22:5~122',
 				   spw='6~14', combine='spw',
-				   fitorder=infitorder, want_cont=False,
-				   async=False)
+				   fitorder=infitorder, want_cont=False
+				   )
 	    except Exception, e:
 		print "Error running uvcontsub"
 		raise e
@@ -324,7 +324,7 @@ class excludechans(UVContsubUnitTestBase):
            
             uvran = uvcontsub(self.inpms, fitspw='0:6~17', #'0:0~5;18~23'
                                excludechans=True, fitorder=0, 
-                               want_cont=True, async=False)
+                               want_cont=True)
         except Exception, e:
             print "Error running uvcontsub"
             raise e
@@ -383,7 +383,7 @@ class freqrangeselection(UVContsubUnitTestBase):
             uvran = uvcontsub(self.inpms, 
                                fitspw='*:1412665073.7687755~1412787144.0812755Hz;1413104526.8937755~1413226597.2062755Hz',
                                fitorder=0,
-                               want_cont=True, async=False)
+                               want_cont=True)
         except Exception, e:
             print "Error running uvcontsub"
             raise e

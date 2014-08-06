@@ -38,7 +38,7 @@ uvcdatadir = 'unittest/uvcontsub/'
 #        try:
 #            print "\nRunning uvcontsub3"
 #            uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
-#                               fitorder=corrsel, async=False)
+#                               fitorder=corrsel)
 #        except Exception, e:
 #            print "Error running uvcontsub3"
 #            raise e
@@ -119,7 +119,7 @@ class zeroth(UVContsub3UnitTestBase):
         try:
             print "\nRunning uvcontsub3"
             uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=infitorder, async=False)
+                               fitorder=infitorder)
         except Exception, e:
             print "Error running uvcontsub3"
             raise e
@@ -154,7 +154,7 @@ class fourth(UVContsub3UnitTestBase):
         try:
             print "\nRunning uvcontsub3"
             uvran = uvcontsub3(self.inpms, fitspw='0:0~5;18~23',
-                               fitorder=infitorder, async=False)
+                               fitorder=infitorder)
         except Exception, e:
             print "Error running uvcontsub3"
             raise e
@@ -210,7 +210,7 @@ class combspw(UVContsub3UnitTestBase):
                 print "\nRunning uvcontsub3"
                 uvran = uvcontsub3(self.inpms, fitspw='1~10:5~122,15~22:5~122',
                                    spw='6~14', combine='spw',
-                                   fitorder=infitorder, async=False)
+                                   fitorder=infitorder)
             except Exception, e:
                 print "Error running uvcontsub3"
                 raise e
@@ -248,7 +248,7 @@ class knowncombspw(UVContsub3UnitTestBase):
             print "\nRunning uvcontsub3"
             uvran = uvcontsub3(self.inpms, fitspw='0,1:0~15,3:23~31,4',
                                spw='1~3', combine='spw',
-                               fitorder=infitorder, async=False)
+                               fitorder=infitorder)
         except Exception, e:
             print "Error running uvcontsub3"
             raise e

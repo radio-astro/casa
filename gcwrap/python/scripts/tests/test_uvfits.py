@@ -67,7 +67,7 @@ class uvfitsio_test(unittest.TestCase):
             os.remove(self.fitsfile)
 
         try:
-            exportuvfits(self.origms, self.fitsfile, padwithflags=True, async=False)
+            exportuvfits(self.origms, self.fitsfile, padwithflags=True)
             self.records['exported'] = os.path.exists(self.fitsfile)
 
             if self.records['exported']:
