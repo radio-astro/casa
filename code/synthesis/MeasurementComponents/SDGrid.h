@@ -129,19 +129,26 @@ public:
   // that location iso the image center. userSupport is to allow 
   // larger support for the convolution if the user wants it ..-1 will 
   // use the default  i.e 1 for BOX and 3 for others
+  // USEIMAGINGWEIGHT
+  // The parameter useImagingWeight in the constructors is to explicitly  
+  // use vb.imagingweight while gridding,
+  // When doing just SD imaging then setting it to False is fine (in fact recommended as vb.imagingweight
+  // is set to zero if any pol is flagged this may change later .....today being 2014/08/06) 
+  // when using it in conjuction with interferometer gridding then set useImagingWeight to True
+  // this is to allow for proper non natural weighting scheme while imaging
   // <group>
   SDGrid(SkyJones& sj, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1);
+	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
   SDGrid(MPosition& ml, SkyJones& sj, Int cachesize,
 	 Int tilesize, String convType="BOX", Int userSupport=-1,
-	 Float minweight=0.);
+	 Float minweight=0., Bool useImagingWeight=False);
   SDGrid(Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1);
+	 String convType="BOX", Int userSupport=-1, Bool useImagingWeight=False);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
-	 String convType="BOX", Int userSupport=-1, Float minweight=0.);
+	 String convType="BOX", Int userSupport=-1, Float minweight=0., Bool useImagingWeight=False);
   SDGrid(MPosition& ml, Int cachesize, Int tilesize,
 	 String convType="TGAUSS", Float truncate=-1.0, 
-         Float gwidth=0.0, Float jwidth=0.0, Float minweight=0.);
+         Float gwidth=0.0, Float jwidth=0.0, Float minweight=0., Bool useImagingWeight=False);
   // </group>
 
   // Copy constructor
@@ -268,6 +275,7 @@ private:
   Float minWeight_p;
 
   Int lastIndex_p;
+  Bool useImagingWeight_p;
 
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval);
@@ -279,6 +287,8 @@ private:
   MDirection directionMeas(const ROMSPointingColumns& mspc, const Int& index, const Double& time);
   MDirection interpolateDirectionMeas(const ROMSPointingColumns& mspc, const Double& time,
                                   const Int& index, const Int& index1, const Int& index2);
+
+  void pickWeights(const VisBuffer&vb, Matrix<Float>& weight);
 
   //for debugging
   //FILE *pfile;

@@ -79,50 +79,50 @@
 namespace casa {
 
 SDGrid::SDGrid(SkyJones& sj, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport)
+	       String iconvType, Int userSupport, Bool useImagingWeight)
   : FTMachine(), sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.)
+    minWeight_p(0.), useImagingWeight_p(useImagingWeight)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition& mLocation, SkyJones& sj, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport, Float minweight)
+	       String iconvType, Int userSupport, Float minweight, Bool useImagingWeight)
   : FTMachine(),  sj_p(&sj), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0),  jwidth_p(0.0),
-    minWeight_p(minweight)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport)
+	       String iconvType, Int userSupport, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(0.)
+    minWeight_p(0.), useImagingWeight_p(useImagingWeight)
 {
   lastIndex_p=0;
 }
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
-	       String iconvType, Int userSupport, Float minweight)
+	       String iconvType, Int userSupport, Float minweight, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(userSupport),
     truncate_p(-1.0), gwidth_p(0.0), jwidth_p(0.0),
-    minWeight_p(minweight)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -130,13 +130,13 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 
 SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
 	       String iconvType, Float truncate, Float gwidth, Float jwidth,
-	       Float minweight)
+	       Float minweight, Bool useImagingWeight)
   : FTMachine(), sj_p(0), imageCache(0), wImageCache(0),
   cachesize(icachesize), tilesize(itilesize),
   isTiled(False), wImage(0), arrayLattice(0),  wArrayLattice(0), lattice(0), wLattice(0), convType(iconvType),
     pointingToImage(0), userSetSupport_p(-1),
     truncate_p(truncate), gwidth_p(gwidth), jwidth_p(jwidth),
-    minWeight_p(minweight)
+    minWeight_p(minweight), useImagingWeight_p(useImagingWeight)
 {
   mLocation_p=mLocation;
   lastIndex_p=0;
@@ -177,6 +177,7 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     convSupport=other.convSupport;
     userSetSupport_p=other.userSetSupport_p;
     lastIndex_p=0;
+    useImagingWeight_p=other.useImagingWeight_p;
   };
   return *this;
 };
@@ -788,8 +789,9 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   if(max(chanMap)==-1)
     return;
 
-  const Matrix<Float> *imagingweight;
-  imagingweight=&(vb.imagingWeight());
+  Matrix<Float> imagingweight;
+  //imagingweight=&(vb.imagingWeight());
+  pickWeights(vb, imagingweight);
 
   if(type==FTMachine::PSF || type==FTMachine::COVERAGE)
     dopsf=True;
@@ -799,7 +801,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   //Fortran gridder need the flag as ints 
   Cube<Int> flags;
   Matrix<Float> elWeight;
-  interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
+  interpolateFrequencyTogrid(vb, imagingweight,data, flags, elWeight, type);
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);
@@ -1433,5 +1435,45 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     //return mspc.directionMeas(index);
     return newDirMeas;
   }
+  void SDGrid::pickWeights(const VisBuffer& vb, Matrix<Float>& weight){
+    //break reference
+    weight.resize();
+    if(useImagingWeight_p){
+      weight.reference(vb.imagingWeight());
+    }
+    else{
+      const Cube<Float> weightspec(vb.weightSpectrum());
+      weight.resize(vb.nChannel(), vb.nRow());
+      
+      if(weightspec.nelements()==0){
+	
+	for (Int k=0; k < vb.nRow(); ++k){ 
+	  cerr << "nrow " << vb.nRow() << " " << weight.shape() << "  "  << weight.column(k).shape() << endl;
+	  weight.column(k).set(vb.weight()(k));
+	}
+      }
+      else{
+	Int npol=weightspec.shape()(0);
+	if(npol==1){
+	  for (Int k =0; k < vb.nRow(); ++k){
+	    for (int chan=0; chan < vb.nChannel(); ++chan){
+	      weight(chan, k)=weightspec(0, chan, k);
+	    }
+	  }
+	}
+	else{
+	   for (Int k =0; k < vb.nRow(); ++k){
+	    for (int chan=0; chan < vb.nChannel(); ++chan){
+	      weight(chan, k)=(weightspec(0, chan, k)+weightspec((npol-1), chan, k))/2.0f;
+	    }
+	   }
+	}
+      }
+    }
+
+
+
+  }
+
 
 } //#End casa namespace
