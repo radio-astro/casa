@@ -891,6 +891,261 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
         self.check_eq(sjran['1']['0']['fluxd'][0],2.48362403,0.0001)
         self.assertTrue(ret)
 
+class test_setpol(SetjyUnitTestBase):
+    """Test multi-term spix and polarization parameter setting"""
+
+    def setUp(self):
+        self.setUpMS('unittest/setjy/3c391calonly.ms')
+        self.result = {}
+
+    def tearDown(self):
+        self.resetMS()
+
+    def test1(self):
+        """ Test for multi-term spix (alpha and beta) """
+
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0.355789, 0.79909, 0],
+                      spix = [-0.62,-0.1], 
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran 
+        
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref) + (-0.1)*log10(f/fref)
+        # fmin at last chan (Freq=4662000000.0Hz)
+        fexpmin = 7.68502
+        ms.open(self.inpms)
+        retrec = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        ms.close()
+        self.check_eq(retrec['MODEL']['min'],fexpmin,0.0001)
+
+    def test2(self):
+        """ Test for constant polindex and polangle with I flux density  """
+
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0, 0, 0],
+                      spix = [-0.62],
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran
+
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref) + (-0.1)*log10(f/fref)
+        # fmin at last chan (Freq=4662000000.0Hz)
+        fexpmin = 7.68527
+        ms.open(self.inpms)
+        retrec = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        #retrec2 = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='phase')
+        ms.close()
+        self.check_eq(retrec['MODEL']['min'],fexpmin,0.0001)
+
+    def test3(self):
+        """ Test for frequency-dependent polindex (2 terms)   """
+        # the constant terms (polindex[0] and polangle[0] is ignored..
+        pang = 0.5*66.*numpy.pi/180
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0.355789, 0.79909, 0],
+                      spix = [-0.62],
+                      polindex=[0,-0.5],
+                      polangle=[pang],
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran
+
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        # I flux
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref) + (-0.1)*log10(f/fref)
+        # min fluxes  at last chan (Freq=4662000000.0Hz)
+        ifexpmin = 7.68527
+        ms.open(self.inpms)
+        retrecI = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        # Q flux
+        # polindex0 = 0.11190024, polindex = polindex0 - 0.5*(f-fref)/fref  (f-fref)/fref = 0.027778
+        # => poindex_min = 0.09801124, with ifexpmin + pang constant => Qmin = 0.306371465
+        # Umin = sqrt(I^2*polindex - Q^2)
+        qfexpmin = 0.306371 
+        ufexpmin = 0.688121784
+        retrecQ = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='real') 
+        retrecU = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='imaginary') 
+        #print "retrecQ=",retrecQ['MODEL']['min']
+        #print "retrecU=",retrecU['MODEL']['min']
+        ms.close()
+        self.check_eq(retrecI['MODEL']['min'],ifexpmin,0.0001)
+        self.check_eq(retrecQ['MODEL']['min'],qfexpmin,0.0001)
+        self.check_eq(retrecU['MODEL']['min'],ufexpmin,0.0001)
+
+    def test4(self):
+        """ Test for frequency-dependent polangle (2 terms)   """
+        # the constant terms (polindex[0] and polangle[0] is ignored..
+        pang = 0.5*66.*numpy.pi/180
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0.355789, 0.79909, 0],
+                      spix = [-0.62],
+                      polindex=[0],
+                      polangle=[pang,-0.5],
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran
+
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        # I flux
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref) + (-0.1)*log10(f/fref)
+        # min fluxes  at last chan (Freq=4662000000.0Hz)
+        ifexpmin = 7.68527
+        ms.open(self.inpms)
+        retrecI = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        # U flux
+        # polindex0 = 0.11190024, 
+        # polangle0 = 0.5759586531581288, polangle = polangle0 - 0.5*(f-fref)/fref  (f-fref)/fref = 0.027778
+        # => poangle_min = 0.562069653158, with ifexpmin + polindex constant => Qmax = 0.37147241999237574 
+        # Umin = sqrt(I^2*polindex^2 - Q^2)
+        qfexpmax = 0.371472 
+        ufexpmin = 0.775616 
+        retrecQ = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='real')
+        retrecU = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='imaginary')
+        #print "retrecQ=",retrecQ['MODEL']['min']
+        #print "retrecU=",retrecU['MODEL']['min']
+        ms.close()
+        self.check_eq(retrecI['MODEL']['min'],ifexpmin,0.0001)
+        self.check_eq(retrecQ['MODEL']['max'],qfexpmax,0.0001)
+        self.check_eq(retrecU['MODEL']['min'],ufexpmin,0.0001)
+
+    def testr5(self):
+        """ Test for rotation measure (with constant polindex and polangle) """
+        # the constant terms (polindex[0] and polangle[0] is ignored..
+        pang = 0.5*66.*numpy.pi/180
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0.355789, 0.79909, 0],
+                      spix = [-0.62],
+                      polindex=[0],
+                      polangle=[pang],
+                      rm=10.0,
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran
+
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        # I flux
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref)
+        # min fluxes  at last chan (Freq=4662000000.0Hz)
+        ifexpmin = 7.68527
+        ms.open(self.inpms)
+        retrecI = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        # U flux
+        # polindex = 0.11190024,
+        # polangle = 0.57595865
+        # rm = 10.0 => angle = 2*rm*c^2*(fref^2-f^2)/ (f^2*f0^2) 
+        qfexpend = 0.353443
+        ufexpend = 0.783996
+        retrecQ = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='real')
+        retrecU = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='imaginary')
+        #print "retrecQ=",retrecQ['MODEL']['min']
+        #print "retrecU=",retrecU['MODEL']['min']
+        ms.close()
+        self.check_eq(retrecI['MODEL']['min'],ifexpmin,0.0001)
+        self.check_eq(retrecQ['MODEL']['min'],qfexpend,0.0001)
+        self.check_eq(retrecU['MODEL']['min'],ufexpend,0.0001)
+
+    def testr6(self):
+        """ Test for spectral index with curvature and frequnecy-dependent polindex and polangle with rm """
+        # the constant terms (polindex[0] and polangle[0] is ignored..
+        pang = 0.5*66.*numpy.pi/180
+        sjran = setjy(vis=self.inpms,
+                      standard='manual',
+                      field = 'J1331+3030',
+                      fluxdensity = [7.81694, 0.355789, 0.79909, 0],
+                      spix = [-0.62, -0.1],
+                      polindex=[0, -0.5, 0.1],
+                      polangle=[pang, -0.5],
+                      rm=10.0,
+                      reffreq='4536.0MHz',
+                      usescratch=True)
+        ret = True
+        if type(sjran)!=dict:
+            ret = False
+        #else:
+        #    print sjran
+
+        self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
+        self.assertTrue(ret)
+
+        # expected flux
+        #fref = 4.536e9
+        # I flux
+        #logflx = log10(7.81694) + (-0.62)*log10(f/fref) + (-0.1)*log10(f/fref)^2
+        # min fluxes  at last chan (Freq=4662000000.0Hz)
+        ifexpmin = 7.6850217
+        ms.open(self.inpms)
+        retrecI = ms.statistics(field='0', baseline='1&2', correlation='rr', column='model', complex_value='amp')
+        # U flux - based on python script calculation
+        # polindex0 = 0.11190024, polindex= polindex0 +(-0.5)*(f-fref)/fref +(-0.1)*((f-fref)/fref)^2
+        # polindex(f=fmax) = 
+        # polangle0 = 0.57595865
+        # rm = 10.0 => angle = 2*rm*c^2*(fref^2-f^2)/ (f^2*f0^2)
+        qfexpmin = 0.328774
+        ufexpmin = 0.678335
+        anglemin = 1.119481
+        retrecQ = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='real')
+        retrecU = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='imaginary')
+        retrecAngle = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='phase')
+        #print "retrecQ=",retrecQ['MODEL']['min']
+        #print "retrecU=",retrecU['MODEL']['min']
+        ms.close()
+        self.check_eq(retrecI['MODEL']['min'],ifexpmin,0.0001)
+        self.check_eq(retrecQ['MODEL']['min'],qfexpmin,0.0001)
+        self.check_eq(retrecU['MODEL']['min'],ufexpmin,0.0001)
+        self.check_eq(retrecAngle['MODEL']['min'],anglemin,0.0001)
 
 def suite():
-    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard]
+    return [test_SingleObservation,test_MultipleObservations,test_ModImage, test_inputs, test_conesearch, test_fluxscaleStandard, test_setpol]
