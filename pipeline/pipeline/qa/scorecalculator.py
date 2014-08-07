@@ -9,6 +9,7 @@ import operator
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 
@@ -20,6 +21,7 @@ __all__ = ['score_polintents',                                # ALMA specific
 	   'score_derived_fluxes_snr',                        # ALMA specific
 	   'score_setjy_measurements',         
            'score_missing_intents',
+           'score_ephemeris_coordinates',
            'score_online_shadow_agents',
            'score_total_data_flagged',
            'score_ms_model_data_column_present',
@@ -373,6 +375,43 @@ def score_missing_intents(mses, array_type='ALMA_12m'):
         
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
+@log_qa
+def score_ephemeris_coordinates(mses):
+
+    """
+    Score a MeasurementSet object based on the presence of possible
+    ephemeris coordinates.
+    """
+
+    score = 1.0
+
+    num_mses = len(mses)
+    all_ok = True
+    complaints = []
+    zerodirection = casatools.measures.direction('j2000', '0.0deg', '0.0deg')
+
+    # analyse each MS
+    for ms in mses:
+
+        # Examine each source
+	for source in ms.sources:
+	    if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) or \
+	        source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
+		all_ok = False
+                score += (-1.0 / num_mses)
+		longmsg =  ('Suspicious source coordinates for  %s in %s'
+		    '' % (source.name, ms.basename))
+		complaints.append(longmsg)
+
+    if all_ok:
+        longmsg = ('All source coordinates OK in '
+                   '%s.' % utils.commafy([ms.basename for ms in mses], False))
+        shortmsg = 'All source coordinates OK'
+    else:
+        longmsg = '%s.' % utils.commafy(complaints, False)
+        shortmsg = 'Suspicious source coordinates'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_online_shadow_agents(ms, summaries):
