@@ -42,6 +42,7 @@ void STCalSkyOtfAlma::setupSelector(const STSelector &sel)
   // a list of rows to be marked. No marking is 
   // done here.
   marker.setdata(scantable_, True);  
+  marker.examine();
   marker.setoption(options_);
   marker.detect();
   Block<uInt> rows = marker.getDetectedRows();

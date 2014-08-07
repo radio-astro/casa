@@ -29,7 +29,8 @@ EdgeDetector::~EdgeDetector()
 void EdgeDetector::setDirection( const Matrix<Double> &dir ) 
 {
   //dir_.reference( dir ) ;
-  dir_ = dir.copy() ;
+  //dir_ = dir.copy() ;
+  dir_.reference(dir.copy());
   Vector<Double> ra( dir_.row(0) ) ;
   mathutil::rotateRA( ra ) ;
   resizeTempArea( dir.nrow() ) ;
