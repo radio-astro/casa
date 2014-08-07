@@ -1833,6 +1833,21 @@ Bool MSTransformDataHandler::fillDDTables()
 	Vector<Int> newPolId(nddid);
 	for (uInt k = 0; k < nddid; ++k)
 	{
+		// jagonzal (CAS-6733): I don't understand why we don't assign polID directly instead of the DDI row
+		if (spw2ddid_p[k] < polID_p.size())
+		{
+			newPolId[k] = polID_p[spw2ddid_p[k]];
+		}
+		else
+		{
+			os	<< LogIO::SEVERE
+				<< "No polarization ID found for output polarization setup " << k
+				<< LogIO::POST;
+			return false;
+		}
+
+
+		/*
 		Bool found = false;
 
 		for (uInt j = 0; j < nPol; ++j)
@@ -1841,6 +1856,14 @@ Bool MSTransformDataHandler::fillDDTables()
 			// from spw and polarization selections (spw2ddid_p)
 			if (selectedPolId[j] == polID_p[spw2ddid_p[k]])
 			{
+				os	<< LogIO::NORMAL
+					<< " k=" << k
+					<< " spw2ddid_p[k]=" << spw2ddid_p[k]
+					<< " polID_p[spw2ddid_p[k]]=" << polID_p[spw2ddid_p[k]]
+					<< " j=" << j
+					<< " selectedPolId[j]=" << selectedPolId[j]
+					<< LogIO::POST;
+
 				// These should go to the POLARIZATION_ID column of the output MS
 				newPolId[k] = j;
 				found = true;
@@ -1854,6 +1877,7 @@ Bool MSTransformDataHandler::fillDDTables()
 				<< LogIO::POST;
 			return false;
 		}
+		*/
 	}
 
 
