@@ -26,12 +26,14 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         LOG.todo('How long can MSes be separated and still be considered ' 
                  'contiguous?')
         score5 = self._check_contiguous(result.mses)
+
+	score6 = self._check_coordinates(result.mses)
     
         LOG.todo('ImportData QA: missing source.xml and calibrator unknown to ' 
                  'CASA')
         LOG.todo('ImportData QA: missing BDFs')
 
-        scores = [score1, score3, score4, score5]
+        scores = [score1, score3, score4, score5, score6]
         result.qa.pool.extend(scores)
     
     def _check_contiguous(self, mses):
@@ -132,6 +134,13 @@ class ImportDataQAHandler(pqa.QAResultHandler):
         TODO Should we terminate execution on missing intents?        
         '''
         return qacalc.score_missing_intents(mses)
+
+    def _check_coordinates(self, mses):
+        '''
+        Check each measurement set in the list for zero valued coordinates.
+        
+        '''
+        return qacalc.score_ephemeris_coordinates(mses)
 
 
 class ImportDataListQAHandler(pqa.QAResultHandler):
