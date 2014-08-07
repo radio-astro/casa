@@ -183,7 +183,7 @@ concat(vis=['ngc4826.tutorial.3c273.5.ms',
 	    'ngc4826.tutorial.ngc4826.ll.7.ms',
 	    'ngc4826.tutorial.ngc4826.ll.8.ms'],
        concatvis='ngc4826.tutorial.ms',
-       freqtol="",dirtol="1arcsec",async=False)
+       freqtol="",dirtol="1arcsec")
 
 if benchmarking:
     concat2time=time.time()
