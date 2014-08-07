@@ -57,7 +57,7 @@
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 
-//#include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/SubMS.h>
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 #include <msvis/MSVis/MSUtil.h>
 
@@ -1465,9 +1465,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-        //SubMS thems(msobj);
-        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
-        if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
+        SubMS thems(msobj);
+        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+	  //if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
