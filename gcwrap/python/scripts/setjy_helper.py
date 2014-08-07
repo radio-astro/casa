@@ -487,6 +487,8 @@ class ss_setjy_helper:
 
 	  msg="Using channel dependent " if scalebychan else "Using spw dependent "
        
+          if clrecs=={}:
+            raise Exception, "No componentlist is generated."
 	  self._casalog.post(msg+" flux densities")
 	  #self._reportoLog(clrecs,self._casalog)
 	  self._reportoLog2(clrecs,self._casalog)
