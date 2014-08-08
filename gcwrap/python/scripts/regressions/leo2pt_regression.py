@@ -436,7 +436,7 @@ prevTime = currTime
 print '---ExportUVFITS---'
 fitsfile = 'leo2pt_regression.all.uvfits'
 exportuvfits(vis='leo2pt_regression.all.ms',fitsfile='leo2pt_regression.all.uvfits',
-             datacolumn='data',multisource=True,async=False)
+             datacolumn='data',multisource=True)
 currTime=time.time()
 stagetime.append(currTime-prevTime)
 stagename.append('exportuvfits')

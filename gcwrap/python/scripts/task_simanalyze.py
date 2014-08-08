@@ -28,8 +28,8 @@ def simanalyze(
     verbose=None,
     overwrite=None,
     dryrun=False,
-    logfile=None,
-    async=False):
+    logfile=None
+    ):
 
 #def simanalyze(project='sim', image=True, imagename='default', skymodel='', vis='default', modelimage='', imsize=[128, 128], imdirection='', cell='', interactive=False, niter=0, threshold='0.1mJy', weighting='natural', mask=[], outertaper=[''], stokes='I', featherimage='', analyze=False, showuv=True, showpsf=True, showmodel=True, showconvolved=False, showclean=True, showresidual=False, showdifference=True, showfidelity=True, graphics='both', verbose=False, overwrite=True, dryrun=False):
 

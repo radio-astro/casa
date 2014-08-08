@@ -20,8 +20,7 @@ def flagcmd(
     rowlist=None,
     plotfile=None,
     savepars=None,
-    outfile=None,
-    async=None,
+    outfile=None
     ):
 
     #

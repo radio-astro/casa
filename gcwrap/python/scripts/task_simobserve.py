@@ -24,8 +24,8 @@ def simobserve(
     leakage=None,
     graphics=None,
     verbose=None, 
-    overwrite=None,
-    async=False):
+    overwrite=None
+    ):
 
     # Collect a list of parameter values to save inputs
     in_params =  locals()

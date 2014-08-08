@@ -277,7 +277,7 @@ def imagedemo():
         ok = ia.putchunk(pixels=slice, blc=[0,0,k], list=F)
         if not ok: fail('putchunk failed')
         note('Set plane ' + str(k) + ' to ' + str(k), origin='imagedemo()')
-    stats = ia.statistics(axes=[0,1],async=F)
+    stats = ia.statistics(axes=[0,1])
     #
     file = demodir + '/DEMOIMAGE.FITS'
     ok = ia.tofits(file)
