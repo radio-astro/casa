@@ -4938,9 +4938,9 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
         // do it in sjy_makeComponentList()
         // TODO: add polindex, polangle, rm handling
         // for now ignore circular polarization
-        Vector<Double> cppars(1,0.0);
+        //Vector<Double> cppars(1,0.0);
         sjy_makeComponentList(os, tempCLs, returnFluxes, fluxUsed[0], selToRawSpwIds, mfreqs, fieldName, fieldDir, 
-                            spix, pipars, papars, rotMeas, cppars, reffreq, aveEpoch, fldid);
+                            spix, pipars, papars, rotMeas, reffreq, aveEpoch, fldid);
       }
       /*** moved to sjy_makeComponentList()
       // make componentlist using flux densities from the user specfied fluxdensity(per-spw) 
@@ -5498,12 +5498,12 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
                               const Vector<Vector<MFrequency> >& mfreqs,
                               const String& fieldName,
                               const MDirection& fieldDir, 
-                              //const Double spix,
                               const Vector<Double>& spix,
                               const Vector<Double>& pipars,
                               const Vector<Double>& papars,
                               const Double& rotMeas,
-                              const Vector<Double>& cppars, // circular pol degree (m_c)
+                              // circ pol parameters
+                              //const Vector<Double>& cppars,
                               const MFrequency& reffreq,
                               const MEpoch& mtime,
                               const Int fldid)
@@ -5565,6 +5565,11 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       Vector<Double> qflux(nchn);
       Vector<Double> uflux(nchn);
       Vector<Double> vflux(nchn,0.0);
+      // circular polarization fraction
+      Double circpolFraction=0.0;
+      if ( fluxUsed[0] !=0.0 && fluxUsed[3] != 0.0 ) {
+        circpolFraction = fluxUsed[3]/fluxUsed[0]; 
+      }
 
       if (spix.nelements()==1) {
         //siModel.setIndex(spix[0]);
@@ -5625,6 +5630,7 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
           qflux[ichn] = 0.0; 
           uflux[ichn] = 0.0;
         } 
+        if ( circpolFraction != 0.0) vflux[ichn] = iflux[ichn]*circpolFraction;
         Flux<Double> iquvflux(iflux[ichn],qflux[ichn],uflux[ichn],vflux[ichn]);
         fluxvalvec[ichn] = iquvflux; 
       }
@@ -6089,7 +6095,7 @@ Bool Imager::sjy_calcquflux(const Vector<Double>& pipars, const Vector<Double>& 
       //debug
       //if (cfidx<10) cerr<<"sjy_calcquflux:: poli="<<ipi<<" pola="<<ipa<<" qflux="<<qfluxval<<" uflux="<<ufluxval<<endl;
       if (rotMeas!=0.0 ) {
-        Double rotangle = 2*rotMeas * C::c * C::c * (f0*f0-f*f)/ (f*f*f0*f0);
+        Double rotangle = 2*rotMeas * C::c * C::c * (f0*f0-f*f)/(f*f*f0*f0);
         //if (cfidx<10) cerr<<"rotangle="<<rotangle<<endl;
         qflux[cfidx] = qfluxval*cos(rotangle) - ufluxval*sin(rotangle);
         uflux[cfidx] = qfluxval*sin(rotangle) + ufluxval*cos(rotangle); 
