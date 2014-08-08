@@ -544,6 +544,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 			}
 		}
 	}
+
 	///////////////////////
 	//cout << "spw" << vb.spectralWindows()(0) << "  rowid " << vb.rowIds()(0) << " max " << max(chanMap_p) << " sum "<< ntrue(chanMap_p > -1) << endl;
 	/*if( ntrue(chanMap_p > -1) > 0){
@@ -1022,6 +1023,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
   //cerr << "fracbw " << fracbw << endl;
     SpectralCoordinate spec=csys_p.spectralCoordinate(2);
     DirectionCoordinate thedir=csys_p.directionCoordinate(0);
+    Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
     Vector<Float> scale(2);
     scale(0)=(nx_p*thedir.increment()(0))/C::c;
     scale(1)=(ny_p*thedir.increment()(1))/C::c;
@@ -1046,13 +1048,21 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 			}
 		  */
-			
-			for(Int chan=0; chan < vb.nChannels(); ++chan ){
+		  Int locu, locv;
+		  {
+		    locv=Int(ny_p/2+vb.uvw()(1,k)*refFreq*scale(1));
+		    locu=Int(nx_p/2+vb.uvw()(0,k)*refFreq*scale(0));
+
+		  }
+
+		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
 				if(chanMap_p(chan) >=0){
 				  //Double outChanFreq;
 				  //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
-				  Int locv=Int(ny_p/2+vb.uvw()(1,k)*visFreq(chan)*scale(1));
-				  Int locu=Int(nx_p/2+vb.uvw()(0,k)*visFreq(chan)*scale(0));
+				  if(fracbw > 0.05){
+				    locv=Int(ny_p/2+vb.uvw()(1,k)*visFreq(chan)*scale(1));
+				    locu=Int(nx_p/2+vb.uvw()(0,k)*visFreq(chan)*scale(0));
+				  }
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
 				    rowFlag(newrow)=False;
