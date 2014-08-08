@@ -586,7 +586,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 2 image-field, cube --- Real Imaging.");
           casalog.post("==================================");
           
-          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='0',\
+          paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='',\
                                        usescratch=True,readonly=True,\
                                        mode='cube',\
                                        imagename='mytest0', nchan=10,start='1.0GHz', step='40MHz',\
@@ -617,7 +617,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        ### offset
                                        #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
                                        phasecenter=0,
-                                       ftmachine='gridft', startmodel='', weighting='briggs',\
+                                       ftmachine='gridft', startmodel='', weighting='briggs',robust=0.5,\
                                        deconvolver='hogbom',\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\

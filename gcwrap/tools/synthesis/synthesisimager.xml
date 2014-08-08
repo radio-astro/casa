@@ -483,16 +483,6 @@ Define the image coordinate systems and shapes.
 </method>
 
 <!-- ===================================== -->
-   <method type="function" name="predictcalmodel">
-   <shortdescription>Predict model visibilities for calibration ( setjy ).</shortdescription>
-
-<description>
-</description>
-<input/>
-<returns type="bool"/>
-</method>
-
-<!-- ===================================== -->
 
 
    <method type="function" name="executemajorcycle">

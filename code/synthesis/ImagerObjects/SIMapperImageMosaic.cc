@@ -48,13 +48,11 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
-#include <msvis/MSVis/VisBuffer2.h>
-#include <msvis/MSVis/VisBuffer2Adapter.h>
 #include <synthesis/TransformMachines/BeamSkyJones.h>
 #include <synthesis/TransformMachines/SkyJones.h>
 #include <synthesis/TransformMachines/SimpleComponentFTMachine.h>
 #include <synthesis/TransformMachines/SimpCompGridMachine.h>
-//#include <synthesis/ImagerObjects/SIMapperImageMosaicBase.h>
+
 #include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
 
 
@@ -121,11 +119,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // #############################################
   // #############################################
 
-  void SIMapperImageMosaic::initializeGrid(const vi::VisBuffer2& /*vb*/, bool /*dopsf*/)
-    {
-      //// EMPTY
-    }
-
 
   void SIMapperImageMosaic::initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess)
   {
@@ -146,10 +139,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
   
-  void SIMapperImageMosaic::grid(const vi::VisBuffer2& /*vb*/, Bool /*dopsf*/, FTMachine::Type /*col*/)
-  {
-    //// EMPTY
-  }
 
   /////////////////OLD vi/vb version
   void SIMapperImageMosaic::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
@@ -204,13 +193,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      
    }
 
-  
-  //// The function that makes the PSF should check its validity, and fit the beam,
-  void SIMapperImageMosaic::finalizeGrid(const vi::VisBuffer2& /*vb*/, const Bool /*dopsf*/)
-  {
-    //// EMPTY
-  }
- 
 
   //////////////OLD VI/VB version
   void SIMapperImageMosaic::finalizeGrid(VisBuffer& vb, Bool dopsf)
@@ -222,13 +204,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       ift_p->finalizeToSkyNew( dopsf, vb, itsImages );
     }
-
-  
-  void SIMapperImageMosaic::initializeDegrid(const vi::VisBuffer2& /*vb*/, const Int /*row*/)
-  {
-    //// EMPTY
-  }
-
 
   //////////////////OLD vi/vb version
   void SIMapperImageMosaic::initializeDegrid(VisBuffer& vb, const Int /*row*/)
@@ -267,11 +242,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-
-  void SIMapperImageMosaic::degrid(vi::VisBuffer2& /*vb*/)
-  {
-    // EMPTY
-  }
 
   ////////////////////Old vi/Vb version
 
@@ -332,6 +302,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       vb.modelVisCube()+=origCube;
 
     }
+
 
   /*
   Bool SIMapperImageMosaic::changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid){

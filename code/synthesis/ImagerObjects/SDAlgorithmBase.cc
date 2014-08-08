@@ -98,7 +98,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        << ", Gain=" << loopcontrols.getLoopGain()
        << LogIO::POST;
 
-    Float maxResidualAcrossPlanes=0.0;
+    Float maxResidualAcrossPlanes=0.0; Int maxResChan=0,maxResPol=0;
+    Float totalFluxAcrossPlanes=0.0;
 
     for( Int chanid=0; chanid<nSubChans;chanid++)
       {
@@ -182,15 +183,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    
 	    loopcontrols.resetCycleIter(); 
 
-	    maxResidualAcrossPlanes = max ( maxResidualAcrossPlanes , peakresidual );
+	    //	    maxResidualAcrossPlanes = max ( maxResidualAcrossPlanes , peakresidual );
 
+	    if( peakresidual > maxResidualAcrossPlanes )
+	      {maxResidualAcrossPlanes=peakresidual; maxResChan=chanid; maxResPol=polid;}
+
+	    totalFluxAcrossPlanes += modelflux;
 	    
-	  }// end of SubImage Loop
+	  }// end of polid loop
 	
 	loopcontrols.setPeakResidual( maxResidualAcrossPlanes );
 
+      }// end of chanid loop
 
+    /// Print total flux over all planes (and max res over all planes). IFF there are more than one plane !!
+    if( nSubChans>1 || nSubPols>1 )
+      {
+	os << "[" << imagestore->getName() << "] ";
+	os << "Total model flux (over all planes) : " << totalFluxAcrossPlanes << LogIO::POST;
+	//<< "     Peak Residual (over all planes) : " << maxResidualAcrossPlanes << " in C"<<maxResChan << ":P"<<maxResPol << LogIO::POST;
       }
+
   }// end of deconvolve
   
   Int SDAlgorithmBase::checkStop( SIMinorCycleController &loopcontrols, 

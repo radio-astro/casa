@@ -34,8 +34,6 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
 
@@ -63,14 +61,6 @@ template<class T> class ImageInterface;
   virtual ~SIMapperImageMosaic();
 
   ///// Major Cycle Functions
-
-  /////////////////////// NEW VI/VB versions
-  void initializeGrid(const vi::VisBuffer2& vb, Bool dopsf);
-  void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
-  void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
-  void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
-  void degrid(vi::VisBuffer2& vb);
-  //  void finalizeDegrid();
 
   /////////////////////// OLD VI/VB versions
   void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);

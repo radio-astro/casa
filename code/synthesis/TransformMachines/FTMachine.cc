@@ -1743,7 +1743,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::setSkyJones(Vector<CountedPtr<SkyJones> >& sj){
     sj_p.resize();
     sj_p=sj;
-    cout << "FTM : Set Sky Jones of length " << sj_p.nelements() << " and types ";
+    //    cout << "FTM : Set Sky Jones of length " << sj_p.nelements() << " and types ";
     for( uInt i=0;i<sj_p.nelements();i++) cout << sj_p[i]->type() << " ";
     cout << endl;
   }

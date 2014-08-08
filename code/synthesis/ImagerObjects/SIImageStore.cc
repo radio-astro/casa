@@ -1836,6 +1836,83 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 
   }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////   Utility Functions to gather statistics on the imagestore.
+
+Float SIImageStore::getPeakResidual()
+{
+    LogIO os( LogOrigin("SIImageStore","getPeakResidual",WHERE) );
+
+    Float maxresidual = max( residual()->get() );
+
+    return maxresidual;
+  }
+
+  // Calculate the total model flux
+  Float SIImageStore::getModelFlux()
+  {
+    LogIO os( LogOrigin("SIImageStore","getModelFlux",WHERE) );
+
+    Float modelflux = sum( model()->get() );
+
+    return modelflux;
+  }
+
+  // Calculate the PSF sidelobe level...
+  Float SIImageStore::getPSFSidelobeLevel()
+  {
+    LogIO os( LogOrigin("SIImageStore","getPSFSidelobeLevel",WHERE) );
+
+    /// Calculate only once, store and return for all subsequent calls.
+
+    Float psfsidelobe = fabs(min( psf()->get() ));
+
+    if(psfsidelobe == 1.0)
+      {
+	//os << LogIO::WARN << "For testing only. Set psf sidelobe level to 0.01" << LogIO::POST;
+	psfsidelobe = 0.01;
+      }
+
+    return psfsidelobe;
+  }
+
+  void SIImageStore::findMinMax(const Array<Float>& lattice,
+					const Array<Float>& mask,
+					Float& minVal, Float& maxVal,
+					Float& minValMask, Float& maxValMask)
+  {
+    IPosition posmin(lattice.shape().nelements(), 0);
+    IPosition posmax(lattice.shape().nelements(), 0);
+
+    if( sum(mask) <1e-06 ) {minValMask=0.0; maxValMask=0.0;}
+    else { minMaxMasked(minValMask, maxValMask, posmin, posmax, lattice,mask); }
+
+    minMax( minVal, maxVal, posmin, posmax, lattice );
+  }
+
+  void SIImageStore::printImageStats()
+  {
+    LogIO os( LogOrigin("SIImageStore","getPeakResidual",WHERE) );
+    Float minresmask, maxresmask, minres, maxres;
+    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    os << "[" << itsImageName << "]:" ;
+    os << " Peak residual (max,min) " ;
+    if( minresmask!=0.0 || maxresmask!=0.0 )
+      { os << "within mask : (" << maxresmask << "," << minresmask << ") "; }
+    os << "over full image : (" << maxres << "," << minres << ")" << LogIO::POST;
+
+  }
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //
   //-------------------------------------------------------------

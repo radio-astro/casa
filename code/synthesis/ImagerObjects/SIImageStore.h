@@ -112,11 +112,13 @@ class SIImageStore
   virtual void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
+  ///// Normalizers
   virtual void dividePSFByWeight();
   virtual void divideResidualByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void divideModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
   virtual void multiplyModelByWeight(const Float pblimit=C::minfloat, const String normtype="flatnoise");
 
+  /// Other
   virtual Bool releaseLocks();
   virtual Double getReferenceFrequency(){return 0.0;}
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
@@ -125,6 +127,8 @@ class SIImageStore
   virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
   virtual void pbcorPlane();
 
+
+  ////////// Restoring Beams
   virtual void makeImageBeamSet();
   ImageBeamSet getBeamSet();
   virtual void printBeamSet();
@@ -148,6 +152,17 @@ class SIImageStore
   virtual Bool hasPsf() {return !itsPsf.null();}
   virtual Bool hasResidual() {return !itsResidual.null();}
   virtual Bool hasSumWt() {return !itsSumWt.null();}
+
+  // Image Statistics....
+  Float getPeakResidual();
+  Float getModelFlux();
+  Float getPSFSidelobeLevel();
+  void findMinMax(const Array<Float>& lattice,
+		  const Array<Float>& mask,
+		  Float& minVal, Float& maxVal,
+		  Float& minValMask, Float& maxValMask);
+  void printImageStats();
+
 
   //
   //---------------------------------------------------------------

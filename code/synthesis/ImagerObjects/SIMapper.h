@@ -34,10 +34,11 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
+
+
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
-//#include <synthesis/ImagerObjects/SIMapperBase.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -62,20 +63,14 @@ template<class T> class ImageInterface;
 
   ///// Major Cycle Functions
 
-  /////////////////////// NEW VI/VB versions
-  virtual void initializeGrid(const vi::VisBuffer2& vb, Bool dopsf);
-  virtual void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
-  virtual void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
-  virtual void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
-  virtual void degrid(vi::VisBuffer2& vb);
-  virtual void finalizeDegrid();
-
   /////////////////////// OLD VI/VB versions
   virtual void initializeGrid(VisBuffer& vb, Bool dopsf, Bool firstaccess=False);
   virtual void grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col);
   virtual void finalizeGrid(VisBuffer& vb, Bool dopsf);
   virtual void initializeDegrid(VisBuffer& vb, Int row=-1);
   virtual void degrid(VisBuffer& vb);
+
+  virtual void finalizeDegrid();
 
   //////////////the return value is False if no valid record is being returned
   Bool getCLRecord(Record& rec);

@@ -49,9 +49,10 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
+
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <images/Regions/WCBox.h>
+
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -160,19 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //////////////////////////
-  //////////////////////////
-  void SIMapperCollection::initializeGrid(vi::VisBuffer2& vb, const Bool dopsf)
-  {
-    cout << " initGrid : nMappers : " << itsMappers.nelements() << endl;
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-  	  {
-	    (itsMappers[k])->initializeGrid(vb ,dopsf);
-
-  	  }
-  }
+  ///////////////////  Start VB dependent code /////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////OLD vi/vb //////////////////////////////////////////////
@@ -185,27 +174,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   	  }
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::grid(vi::VisBuffer2& vb, const Bool dopsf, FTMachine::Type col)
-  {
-
-	  if(col==FTMachine::CORRECTED){
-		  if(ROMSColumns((vb.getVi())->ms()).correctedData().isNull()){
-			  col=FTMachine::OBSERVED;
-			  //			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.visCubeModel())<< endl;
-			  vb.setVisCube(vb.visCube()- vb.visCubeModel());
-		  }
-		  else{
-			  vb.setVisCubeCorrected(vb.visCubeCorrected()-vb.visCubeModel());
-		  }
-	  }
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-	  {
-		  (itsMappers[k])->grid(vb, dopsf, col);
-
-  	  }
-    }
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
   void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
@@ -232,16 +200,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///////////////////////////////
   ////////////////////////////////
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////
-    void SIMapperCollection::finalizeGrid(vi::VisBuffer2& vb, const Bool dopsf)
-    {
-  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-  	  {
-    		  (itsMappers[k])->finalizeGrid(vb, dopsf);
-
-  	  }
-    }
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////OLD VI/VB////////////////////////////////////////////////
     void SIMapperCollection::finalizeGrid(VisBuffer& vb, Bool dopsf)
@@ -254,16 +212,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
 
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::initializeDegrid(vi::VisBuffer2& vb)
-  {
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-  	  {
-  		  (itsMappers[k])->initializeDegrid(vb);
-
-  	  }
-  }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
   void SIMapperCollection::initializeDegrid(VisBuffer& vb)
@@ -275,62 +223,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  }
     }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod)
-  {
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-  	  {
-		  (itsMappers[k])->degrid(vb);
-
-  	  }
-	  if(saveVirtualMod){
-		  if(vb.msId() != oldMsId_p){
-			  oldMsId_p=vb.msId();
-			  const vi::VisibilityIterator2 * viloc=vb.getVi();
-			  String modImage=viloc->ms().getPartNames()[0];
-			  if(!((viloc->ms()).source().isNull()))
-			    modImage=(viloc->ms()).source().tableName();
-			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
-			  for (uInt k=0; k < itsMappers.nelements(); ++k){
-				  Record rec;
-				  String modImage=viloc->ms().getPartNames()[0];
-				  if(!((viloc->ms()).source().isNull()))
-				    modImage=(viloc->ms()).source().tableName();
-				  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
-				  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-				  if(iscomp || itsMappers[k]->getFTMRecord(rec, modImage)){
-					 if((vb.getVi())->isWritable()){
-
-						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
-					 }
-				  }
-			  }
-		  }
-	  }
-  }
-/////////////////
-///////////////////
-  void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
-	  if(vb.msId() != oldMsId_p){
-		  oldMsId_p=vb.msId();
-		  const vi::VisibilityIterator2 * viloc=vb.getVi();
-		  for (uInt k=0; k < itsMappers.nelements(); ++k){
-			  Record rec;
-			  String modImage=viloc->ms().getPartNames()[0];
-			  if(!((viloc->ms()).source().isNull()))
-			    modImage=(viloc->ms()).source().tableName();
-			  modImage=File::newUniqueName(modImage, "FT_MODEL").absoluteName();
-			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
-			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
-				  if((vb.getVi())->isWritable()){
-
-					  (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
-				  }
-			  }
-		  }
-	  }
-  }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
   void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
@@ -399,16 +291,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::finalizeDegrid(const vi::VisBuffer2& /*vb*/)
-  {
-	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-	  {
-		  (itsMappers[k])->finalizeDegrid();
-
-	  }
-  }
   /////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////
   void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/)
@@ -421,7 +303,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-  //////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////// End of VB dependent code.
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////
   CountedPtr<SIImageStore> SIMapperCollection::imageStore(Int id)
   {

@@ -355,23 +355,6 @@ bool synthesisimager::setweighting(const std::string& type,
     return rstat;
   }
 
-  bool synthesisimager::predictcalmodel()
-  {
-    Bool rstat(False);
-    
-    try {
-      
-      if( ! itsImager ) itsImager = new SynthesisImager();
-      
-      itsImager->predictCalModel();
-      
-    } catch  (AipsError x) {
-      RETHROW(x);
-    }
-    return rstat;
-  }
-
-
 bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
   Bool rstat(False);
@@ -381,7 +364,7 @@ bool synthesisimager::executemajorcycle(const casac::record& controls)
       if( ! itsImager ) itsImager = new SynthesisImager();
 
     casa::Record recpars = *toRecord( controls );
-    itsImager->executeMajorCycle( recpars, False/*usevb2*/ );
+    itsImager->executeMajorCycle( recpars );
 
   } catch  (AipsError x) {
     RETHROW(x);

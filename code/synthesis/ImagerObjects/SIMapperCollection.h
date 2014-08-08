@@ -36,8 +36,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include <synthesis/ImagerObjects/SIMapper.h>
-//#include <synthesis/ImagerObjects/SIMapperSingle.h>
-//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
+#include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -69,16 +68,6 @@ class SIMapperCollection
 		  const Bool overwrite );
   */
 
-  //The following will loop over the SIMappers internally
-  /////////// NEW VI/VB
-  void initializeGrid(vi::VisBuffer2& vb, const Bool dopsf=False);
-  void grid(vi::VisBuffer2& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
-  void finalizeGrid(vi::VisBuffer2& vb, const Bool dopsf=False);
-  void initializeDegrid(vi::VisBuffer2& vb);
-  void degrid(vi::VisBuffer2& vb, const Bool saveVirtualMod=False);
-  void saveVirtualModel(vi::VisBuffer2& vb);
-  void finalizeDegrid(const vi::VisBuffer2& vb);
-
   //////////// OLD VI/VB : Version that use old vi/vb can be removed the vi2/vb2 works
   void initializeGrid(VisBuffer& vb, Bool dopsf=False);
   void grid(VisBuffer& vb, Bool dopsf=False, FTMachine::Type col=FTMachine::CORRECTED);
@@ -88,7 +77,6 @@ class SIMapperCollection
   void saveVirtualModel(VisBuffer& vb);
   void finalizeDegrid(VisBuffer& vb);
   ////////////////////////////////////////////////////
-
   Record getFTMRecord(Int mapperid);
 
   CountedPtr<SIImageStore> imageStore(const Int id=0);

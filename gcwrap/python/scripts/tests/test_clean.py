@@ -754,7 +754,7 @@ class clean_multiterm_multifield_test(unittest.TestCase):
 
         msname = self.msfile
 
-        usescratch = False
+        usescratch = True  ##  Setting to False, has an error in casapy 4.2,4.3 for multi-term (in uvsub).
         testmschange = True  # Calculate models on one ms, subtract from another
 
         # State-checker...

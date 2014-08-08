@@ -43,6 +43,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <scimath/Mathematics/GaussianBeam.h>
+
 #include <msvis/MSVis/VisibilityIterator.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -159,7 +161,6 @@ public:
   Record toRecord();
 
   // Generate Coordinate System 
-  //CoordinateSystem buildCoordinateSystem(MeasurementSet& msobj) const;
   CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;

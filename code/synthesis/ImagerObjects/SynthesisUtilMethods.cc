@@ -1359,6 +1359,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////   To also be connected to a 'makeimage' method of the synthesisimager tool.
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi)
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
@@ -1413,7 +1414,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //defining observatory...needed for position on earth
     // get the first ms for multiple MSes
-    //    MeasurementSet msobj=rvi->getMeasurementSet();
     ROMSColumns msc(msobj);
     String telescop = msc.observation().telescopeName()(0);
     MEpoch obsEpoch = msc.timeMeas()(0);

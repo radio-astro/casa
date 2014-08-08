@@ -75,10 +75,11 @@ class SynthesisDeconvolver
   Record executeMinorCycle(Record& subIterBot);
 
   // Helpers
+  /*
   Float getPeakResidual();
   Float getModelFlux();
   Float getPSFSidelobeLevel();
-  
+  */
   // Restoration (and post-restoration PB-correction)
   void restore();
   void pbcor();// maybe add a way to take in arbitrary PBs here.
@@ -92,14 +93,14 @@ class SynthesisDeconvolver
 protected:
 
   CountedPtr<SIImageStore> makeImageStore( String imagename );
-
+  /*
   void findMinMax(const Array<Float>& lattice,
 					const Array<Float>& mask,
 					Float& minVal, Float& maxVal,
 					Float& minValMask, Float& maxValMask);
 
   void printImageStats();
-
+  */
 
   // Gather all part images to the 'full' one
   //void gatherImages();

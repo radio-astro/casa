@@ -56,10 +56,7 @@
 
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
-#include <synthesis/ImagerObjects/SIMapper.h>
-#include <synthesis/ImagerObjects/SIMapperImageMosaic.h>
-//#include <synthesis/ImagerObjects/SIMapperSingle.h>
-//#include <synthesis/ImagerObjects/SIMapperMultiTerm.h>
+
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
@@ -67,14 +64,13 @@
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
+
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/VisModelData.h>
-
 #include <synthesis/TransformMachines/AWProjectFT.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
-//#include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
 #include <synthesis/TransformMachines/AWConvFuncEPJones.h>
@@ -94,20 +90,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
-				       mss_p(0),vi_p(0), writeAccess_p(True), mss4vi_p(0)
+  SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), writeAccess_p(True)
   {
 
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
      useScratch_p=False;
      readOnly_p=True;
+
+#ifdef USEVI2VB2
+     mss_p=0;
+     vi_p=0;
+#else
+     mss4vi_p.resize(0);
      wvi_p=0;
      rvi_p=0;
+#endif
 
      facetsStore_p=-1;
      unFacettedImStore_p=NULL;
-
 
   }
   
@@ -118,12 +119,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
     os << LogIO::DEBUG1 << "SynthesisImager destroyed" << LogIO::POST;
+
+#ifdef USEVI2VB2
     for (uInt k=0; k < mss_p.nelements(); ++k){
       delete mss_p[k];
     }
+#else
     if(rvi_p) delete rvi_p;
     rvi_p=NULL;
-
+#endif
     //    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
   }
@@ -247,13 +251,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     os << "[Opened " << (readOnly_p?"in readonly mode":(useScratch_p?"with scratch model column":"with virtual model column"))  << "]" << LogIO::POST;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
-    if(!(exprNode.isNull())){
-      mss_p.resize(mss_p.nelements()+1, False, True);
-      mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
-      mss_p[mss_p.nelements()-1]=new const  MeasurementSet(thisms(exprNode));
-      mss4vi_p[mss_p.nelements()-1]=MeasurementSet(thisms(exprNode));
-      os << "  NRows selected : " << (mss_p[mss_p.nelements()-1])->nrow() << LogIO::POST;
-    }
+    if(!(exprNode.isNull()))
+      {
+	mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
+	mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+	os << "  NRows selected : " << (mss4vi_p[mss4vi_p.nelements()-1]).nrow() << LogIO::POST;
+      }
     else{
       throw(AipsError("Selection for given MS "+selpars.msname+" is invalid"));
     }
@@ -262,14 +265,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // replace below if/when viFrquencySelectionUsingChannels takes in a MSSelection
     // rather than the following gymnastics
     {
-      Matrix<Int> chanlist = thisSelection.getChanList(mss_p[mss_p.nelements()-1]);
+      Matrix<Int> chanlist = thisSelection.getChanList(  & mss4vi_p[mss4vi_p.nelements()-1] );
       
       IPosition shape = chanlist.shape();
       uInt nSelections = shape[0];
       Int spw,chanStart,chanEnd,chanStep,nchan;
 
       ///////////////Temporary revert to using Vi/vb
-      Int msin=mss_p.nelements();
+      Int msin=mss4vi_p.nelements();
       blockNChan_p.resize(msin, False, True);
       blockStart_p.resize(msin, False, True);
       blockStep_p.resize(msin, False, True);
@@ -282,9 +285,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       ///////////////////////
 
       if(selpars.freqbeg==""){
-    	  vi::FrequencySelectionUsingChannels channelSelector;
-    	  //////////This is not implemented
-    	  //channelSelector.add(thisSelection);
     	  /////So this gymnastic is needed
     	  for(uInt k=0; k < nSelections; ++k)
     	  {
@@ -305,22 +305,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  /////////////////////////////////////////
 
     	  }
-    	  fselections_p.add(channelSelector);
+
       }
       else{
-    	  vi::FrequencySelectionUsingFrame channelSelector(selpars.freqframe);
     	  Quantity freq;
     	  Quantity::read(freq, selpars.freqbeg);
     	  Double lowfreq=freq.getValue("Hz");
     	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
-    	  for(uInt k=0; k < nSelections; ++k)
-    		  channelSelector.add(chanlist(k,0), lowfreq, topfreq);
-    	  fselections_p.add(channelSelector);
     	  //////////OLD VI/VB
     	  ImagerMultiMS im;
     	  Vector<Vector<Int> >elspw, elstart, elnchan;
-    	  Vector<Int>fields=thisSelection.getFieldList(mss_p[mss_p.nelements()-1]);
+    	  Vector<Int>fields=thisSelection.getFieldList( & mss4vi_p[mss4vi_p.nelements()-1]);
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
     	  im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
     	  blockNChan_p[msin].resize(elspw[0].nelements());
@@ -342,7 +338,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /////// Remove this when the new vi/vb is able to get the full freq range.
     mssFreqSel_p.resize();
     mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
-
 
     //// Set the data column on which to operate
     //    cout << "Using col : " << selpars.datacolumn << endl;
@@ -462,7 +457,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
 
     LogIO os( LogOrigin("SynthesisImager","defineImage",WHERE) );
-    if(mss_p.nelements() ==0)
+    if(mss4vi_p.nelements() ==0)
       os << "SelectData has to be run before defineImage" << LogIO::EXCEPTION;
 
     CoordinateSystem csys;
@@ -473,11 +468,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	os << "Define image [" << impars.imageName << "]" << LogIO::POST;
 
-	//MeasurementSet tms(*mss_p[0]);
-	//csys = impars.buildCoordinateSystem( tms );
 	csys = impars.buildCoordinateSystem( rvi_p );
 	IPosition imshape = impars.shp();
-	//        freqFrameValid_p = impars.freqFrameValid;
 
 	if( (itsMappers.nMappers()==0) || 
 	    (impars.imsize[0]*impars.imsize[1] > itsMaxShape[0]*itsMaxShape[1]))
@@ -615,9 +607,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void SynthesisImager::executeMajorCycle(Record& controlRecord, const Bool useViVb2)
+  void SynthesisImager::executeMajorCycle(Record& controlRecord)
   {
-    LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+    LogIO os( LogOrigin("SynthesisImager","executeMajorCycle",WHERE) );
 
 
     Bool lastcycle=False;
@@ -634,7 +626,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     try
       {    
-	runMajorCycle(False, useViVb2, lastcycle);
+	runMajorCycle(False, lastcycle);
 
 	itsMappers.releaseImageLocks();
 
@@ -648,7 +640,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
-  void SynthesisImager::makePSF(const Bool useViVb2)
+  void SynthesisImager::makePSF()
     {
       LogIO os( LogOrigin("SynthesisImager","makePSF",WHERE) );
 
@@ -656,7 +648,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
       try
       {
-	runMajorCycle(True, useViVb2,False);
+	runMajorCycle(True, False);
 
     	  if(facetsStore_p >1)
 	    {
@@ -672,58 +664,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     }
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::predictCalModel(const Bool useViVb2){
-    LogIO os( LogOrigin("SynthesisImager","predictCalibratorModel ",WHERE) );
-    predictModel( useViVb2 );
-  }
+
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::predictModel(const Bool useViVb2){
-	  LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
-
-	      if(useViVb2){
-	      	vi_p->originChunks();
-	      	vi_p->origin();
-	      	vi::VisBuffer2* vb=vi_p->getVisBuffer();
-	      	itsMappers.initializeDegrid(*vb);
-	      	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
-	      	{
-
-	      		for (vi_p->origin(); vi_p->more();vi_p->next())
-	      		{
-
-	      			vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-	      			itsMappers.degrid(*vb, !useScratch_p);
-	      			if(vi_p->isWritable() && useScratch_p)
-	      				vi_p->writeVisModel(vb->visCubeModel());
-	      		}
-	      	}
-	      	itsMappers.finalizeDegrid(*vb);
-	      }
-
-	      else{
-	      	VisBufferAutoPtr vb(rvi_p);
-	      	rvi_p->originChunks();
-	      	rvi_p->origin();
-	      	itsMappers.initializeDegrid(*vb);
-	      	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
-	      	{
-
-	      		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
-	      		{
-			  //			  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
-	      			//if !usescratch ...just save
-	      			vb->setModelVisCube(Complex(0.0, 0.0));
-	      			itsMappers.degrid(*vb, useScratch_p);
-	      			if(writeAccess_p && useScratch_p)
-	      				wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
-
-	      		}
-	      	}
-	      	itsMappers.finalizeDegrid(*vb);
-	      }
-
+  void SynthesisImager::predictModel(){
+    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+    
+#ifdef USEVI2VB2
+    {
+      vi_p->originChunks();
+      vi_p->origin();
+      vi::VisBuffer2* vb=vi_p->getVisBuffer();
+      itsMappers.initializeDegrid(*vb);
+      for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
+	{
+	  
+	  for (vi_p->origin(); vi_p->more();vi_p->next())
+	    {
+	      
+	      vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
+	      itsMappers.degrid(*vb, !useScratch_p);
+	      if(vi_p->isWritable() && useScratch_p)
+		vi_p->writeVisModel(vb->visCubeModel());
+	    }
+	}
+      itsMappers.finalizeDegrid(*vb);
+    }
+#else
+    {
+      VisBufferAutoPtr vb(rvi_p);
+      rvi_p->originChunks();
+      rvi_p->origin();
+      itsMappers.initializeDegrid(*vb);
+      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	{
+	  
+	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	    {
+	      //			  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+	      //if !usescratch ...just save
+	      vb->setModelVisCube(Complex(0.0, 0.0));
+	      itsMappers.degrid(*vb, useScratch_p);
+	      if(writeAccess_p && useScratch_p)
+		wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	      
+	    }
+	}
+      itsMappers.finalizeDegrid(*vb);
+    }
+#endif
+    
   }// end of predictModel
 
    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -770,7 +760,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     				  << "SuperUniform weighting over a square cell spanning ["
     				  << -actualNpix
     				  << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
-    		  imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust, nx,
+    		  imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust, nx,
     				  ny, cellx, celly, actualNpix,
     				  actualNpix, multiField);
     	  }
@@ -824,6 +814,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  //		  Timer timer;
 		  //timer.mark();
 		  //Construct imwgt_p with old vi for now if old vi is in use as constructing with vi2 is slower 
+
+		    imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust,
+                                 actualNPixels, actualNPixels, actualCellSize,
+                                 actualCellSize, 0, 0, multiField);
+
+		  /*
 		  if(rvi_p !=NULL){
 		    imwgt_p=VisImagingWeight(*rvi_p, rmode, noise, robust,
                                  actualNPixels, actualNPixels, actualCellSize,
@@ -835,6 +831,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                                  actualNPixels, actualNPixels, actualCellSize,
                                  actualCellSize, 0, 0, multiField);
 		  }
+		  */
 		    //timer.show("After making visweight ");
 
     	  }
@@ -853,9 +850,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   imwgt_p.setFilter( filtertype,  filterbmaj, filterbmin, filterbpa );
 	 }
 	 
-	 
-	 vi_p->useImagingWeight(imwgt_p);
-	 ///////////////revert to vi/vb
 	 rvi_p->useImagingWeight(imwgt_p);
       ///////////////////////////////
 	 
@@ -911,7 +905,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	
 	// Fill in miscellaneous information needed by FITS
+#ifdef USEVI2VB2
 	ROMSColumns msc(*mss_p[0]);
+#else
+	ROMSColumns msc(mss4vi_p[0]);
+#endif
 	Record info;
 	String objectName=msc.field().name()(msc.fieldId()(0));
 	String telescop=msc.observation().telescopeName()(0);
@@ -966,33 +964,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {
-	/*
-	CountedPtr<VPSkyJones> vp = NULL;
-	if( mappertype == "imagemosaic" || mappertype == "mtimagemosaic" )
-	  {
-	    ROMSColumns msc(*mss_p[0]);
-	    Quantity parang(0.0,"deg");
-	    Quantity skyposthreshold(0.0,"deg");
-	    vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
-	  }
-	*/
-	// Check 'mappertype' for valid types....
-
-	/*
-	if( mappertype == "default" || mappertype == "imagemosaic"){
-	  localMapper = new SIMapperSingle( imagestore, ftmachine, iftmachine, vp );
-	  }
-	else if( mappertype == "multiterm" || mappertype == "mtimagemosaic" ){
-	  localMapper = new SIMapperMultiTerm( imagestore, ftmachine, iftmachine, vp, ntaylorterms );
-	  }
-	else if( mappertype == "new" ) {
-	  localMapper = new SIMapper( imagestore, ftmachine, iftmachine, vp );
-	}
-	
-	else{
-	    throw ( AipsError("Internal Error : Unrecognized Mapper Type in SynthesisImager::createSIMapper") );
-	  }
-	*/
 	
 	if( mappertype == "default" || mappertype == "multiterm" )
 	  {
@@ -1206,7 +1177,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     /* else if(ftname== "MosaicFT"){
 
        }*/
-    
+
+
 
     ///////// Now, clone and pack the chosen FT into a MultiTermFT if needed.
     if( mType=="multiterm" )
@@ -1220,12 +1192,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	theIFT = theMTIFT;
       }
 
+
+
+
     ////// Now, set the SkyJones if needed, and if not internally generated.
     if( mType=="imagemosaic" && 
 	(ftname != "awprojectft" && ftname != "mawprojectft" && ftname != "proroft") )
       {
 	CountedPtr<SkyJones> vp = NULL;
-	ROMSColumns msc(*mss_p[0]);
+	ROMSColumns msc(mss4vi_p[0]);
 	Quantity parang(0.0,"deg");
 	Quantity skyposthreshold(0.0,"deg");
 	vp = new VPSkyJones(msc, True,  parang, BeamSquint::NONE,skyposthreshold);
@@ -1296,7 +1271,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
+#ifdef USEVI2VB2
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
+#else
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
+#endif
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     
@@ -1364,7 +1343,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Sending frequency selection information " <<  mssFreqSel_p  <<  " to AWP FTM." << LogIO::POST;
     theFT->setSpwFreqSelection( mssFreqSel_p );
     theIFT->setSpwFreqSelection( mssFreqSel_p );
-    //    vi_p->getFreqInSpwRange(
 
   }
 
@@ -1400,6 +1378,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::createVisSet(const Bool writeAccess)
   {
     LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
+
+#ifdef USEVI2VB2
     if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
@@ -1407,9 +1387,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(fselections_p.size() !=0)
       vi_p->setFrequencySelection (fselections_p);
     //return *vi_p;
+#else
     ////////////Temporary revert to vi/vb
     Block<Int> sort(0);
-    Block<MeasurementSet> msblock(mss_p.nelements());
+    Block<MeasurementSet> msblock(mss4vi_p.nelements());
     //for (uInt k=0; k< msblock.nelements(); ++k){
     //	msblock[k]=*mss_p[k];
     //}
@@ -1435,7 +1416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			  blockStep_p, blockSpw_p);
     rvi_p->useImagingWeight(VisImagingWeight("natural"));
     ////////////////////end of revert vi/vb
-
+#endif
   }// end of createVisSet
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1443,7 +1424,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   void SynthesisImager::runMajorCycle(const Bool dopsf, 
-				      const Bool useViVb2,
 				      const Bool savemodel)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
@@ -1458,7 +1438,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMappers.checkOverlappingModels("blank");
 
-    if(useViVb2){
+#ifdef USEVI2VB2
+    {
     	vi_p->originChunks();
     	vi_p->origin();
     	vi::VisBuffer2* vb=vi_p->getVisBuffer();
@@ -1480,8 +1461,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
     }
-
-    else{
+#else
+    {
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
     	rvi_p->origin();
@@ -1516,6 +1497,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	itsMappers.finalizeGrid(*vb, dopsf);
 
     }
+#endif
 
     itsMappers.checkOverlappingModels("restore");
 

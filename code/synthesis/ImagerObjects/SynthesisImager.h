@@ -34,12 +34,13 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <msvis/MSVis/ViFrequencySelection.h>
-#include <msvis/MSVis/VisibilityIterator2.h>
-#include <msvis/MSVis/VisBuffer2.h>
-#include<synthesis/ImagerObjects/SIMapperCollection.h>
 #include<synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
+#include<synthesis/ImagerObjects/SIMapperCollection.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+
+
+#include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/TransformMachines/ATerm.h>
 
 #include <boost/scoped_ptr.hpp>
@@ -153,13 +154,12 @@ class SynthesisImager
   CountedPtr<SIImageStore> imageStore(const Int id=0);
 
   //Record getMajorCycleControls();
-  void executeMajorCycle(Record& controls, const Bool useViVB2=False);
+  void executeMajorCycle(Record& controls);
 
   // make the psf images  i.e grid weight rather than data
-  void makePSF(const Bool useViVB2=False);
+  void makePSF();
 
-  void predictModel(const Bool useViVb2=False);
-  void predictCalModel(const Bool useViVb2=False);
+  void predictModel();
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
@@ -212,15 +212,16 @@ protected:
   // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
   CountedPtr<SIMapper> createSIMapper(String mappertype,  
 					  CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
-					  CountedPtr<FTMachine> ftmachine,
-					  CountedPtr<FTMachine> iftmachine,
+				      CountedPtr<FTMachine> ftmachine,
+				      CountedPtr<FTMachine> iftmachine,
 					  uInt ntaylorterms=1);
 
   Block<CountedPtr<SIImageStore> > createFacetImageStoreList(
 							     CountedPtr<SIImageStore> imagestore,
 							     Int facets);
   void setPsfFromOneFacet();
-  Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
+
+		       Bool toUseWeightImage(CountedPtr<FTMachine>& ftm, String mappertype);
 
   void createVisSet(const Bool writeaccess=False);
   
@@ -248,7 +249,7 @@ protected:
 			  const Int tile);
   ATerm* createTelescopeATerm(const MeasurementSet& ms, const Bool& isATermOn);
 
-  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False, const Bool savemodel=False);
+  void runMajorCycle(const Bool dopsf=False, const Bool savemodel=False);
 
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -285,11 +286,6 @@ protected:
   // Imaging/Gridding
 
   // Other Options
-  Block<const MeasurementSet *> mss_p;
-  vi::FrequencySelections fselections_p;
-  Matrix<Double> mssFreqSel_p;
-  CountedPtr<vi::VisibilityIterator2>  vi_p;
-  Bool writeAccess_p;
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
   Block<MeasurementSet> mss4vi_p;
   VisibilityIterator* wvi_p;
@@ -298,7 +294,10 @@ protected:
   Block<Vector<Int> > blockStart_p;
   Block<Vector<Int> > blockStep_p;
   Block<Vector<Int> > blockSpw_p;
+  Matrix<Double> mssFreqSel_p;
+
   /////////////////////////////////////////////////////////////////////////////////
+  Bool writeAccess_p;
   MPosition mLocation_p;
   MDirection phaseCenter_p;
   Int facetsStore_p;
