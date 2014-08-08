@@ -127,7 +127,7 @@ def load_ngc4826(prefix,msname):
                 prefix+'ngc4826.tutorial.ngc4826.ll.7.ms',
                 prefix+'ngc4826.tutorial.ngc4826.ll.8.ms'],
            concatvis=msname,
-           freqtol="",dirtol="1arcsec",async=False)
+           freqtol="",dirtol="1arcsec")
 #=============================================================================
 
 #=============================================================================
@@ -217,7 +217,6 @@ average             =         ''        #  Averaging mode: ==>none (Not yet impl
 showflags           =      False        #  Show flagged data (Not yet implemented)
 pagerows            =         20        #  Rows per page
 listfile            = outputFilename   #  Output file
-async               =      False        #  If true the taskname must be started using listvis(...)
 go(listvis)
 
 comparefilename = prefix + 'compare_' + str(testNum)
@@ -312,7 +311,6 @@ average             =         ''               #  Averaging mode: ==>none (Not y
 showflags           =      False               #  Show flagged data (Not yet implemented)
 pagerows            =          5               #  Rows per page
 listfile            = outputFilename           #  Output file
-async               =      False               #  If true the taskname must be started using listvis(...)
 go(listvis)
 
 comparefilename = prefix + 'compare_' + str(testNum)
@@ -398,7 +396,6 @@ selectdata          =       True        #  Other data selection parameters
 showflags           =      False        #  Show flagged data (Not yet implemented)
 pagerows            =         20        #  Rows per page
 listfile            = outputFilename   #  Output file
-async               =      False        #  If true the taskname must be started using listvis(...)
 go(listvis)
 
 comparefilename = prefix + 'compare_' + str(testNum)

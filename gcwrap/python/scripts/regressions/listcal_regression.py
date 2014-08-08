@@ -115,7 +115,7 @@ def load_ngc4826(prefix,msname,caltable):
                 prefix+'ngc4826.tutorial.ngc4826.ll.7.ms',
                 prefix+'ngc4826.tutorial.ngc4826.ll.8.ms'],
            concatvis=msname,
-           freqtol="",dirtol="1arcsec",async=False)
+           freqtol="",dirtol="1arcsec")
     ##########################################################################
     # Fix up the MS (temporary, changes to importfits underway)
     print '--Fixing up spw rest frequencies in MS--'
@@ -791,7 +791,6 @@ spw                 =         ''        #  Spectral window and channel: ''==>all
                                         #   spw='5:0~10'
 listfile            = outputFilename    #  Disk file to write output: ''==>to terminal
 pagerows            =         50        #  Rows per page
-async               =      False        #  If true the taskname must be started using
 go(listcal)
 
 # Remove first line of listcal output (contains hard-coded path)
@@ -832,7 +831,6 @@ antenna             =   '3~5,10'        #  Antenna name or index; ''==>all; ante
 spw                 =        '0'        #  Spectral window and channel: ''==>all; spw='5:0~10'
 listfile            = outputFilename    #  Disk file to write output: ''==>to terminal
 pagerows            =          9        #  Rows per page
-async               =      False        #  If true the taskname must be started using
 go(listcal)
 
 # Remove first line of listcal output (contains hard-coded path)
