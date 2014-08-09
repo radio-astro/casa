@@ -820,8 +820,6 @@ protected:
                              const String& intentstr="", 
 			    const Vector<Double>& freqofscale=Vector<Double>(0),
 			     const Vector<Double>& scale=Vector<Double>(0) );
-			    //const Vector<Vector<Double> >& freqofscale=Vector<Vector<Double> >(0),
-			    // const Vector<Vector<Double> >& scale=Vector<Vector<Double> >(0) );
   // Concatenate multiple CLs 
   Bool sjy_concatComponentLists(LogIO& os, const Vector<String>& tempCLs, const String& outTempCL);
   // Returns whether it found a source.
@@ -845,12 +843,11 @@ protected:
                              const Vector<Vector<MFrequency> >& mfreqs,
                              const String& fieldName,
                              const MDirection& fieldDir,
-                             //const Double spix,
                              const Vector<Double>& spix,
                              const Vector<Double>& pipars,
                              const Vector<Double>& papars,
                              const Double& rotMeas,
-                             const Vector<Double>& cppars, // circular pol degree (m_c)
+                             //const Vector<Double>& cppars,
                              const MFrequency& reffreq,
                              const MEpoch& aveEpoch,
                              const Int fldId);
