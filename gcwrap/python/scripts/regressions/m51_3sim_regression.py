@@ -324,11 +324,11 @@ ia.close()
 #              'sigma': 0.01543498,
 #              'sum':  986.6099945}
 # 20130917: after scaling of TP image (r27397)
-refstats = {'max': 0.13675605,
-             'min': -0.0241348,
-             'rms': 0.01804382,
+refstats = {'max': 0.13657,
+             'min': -0.024388,
+             'rms': 0.018054,
              'sigma': 0.01559417,
-             'sum':  1084.98577601}
+             'sum':  1087.5}
 
 
 # # reference statistic values for diff image
@@ -382,11 +382,11 @@ diffstats = {'max':  0.03733807,
              'sum':  -213.66776456}
 
 # 20140613 
-diffstats = {'max':  0.031458,
-             'min': -0.065144,
-             'rms': 0.0086492,
-             'sigma': 0.0084582,
-             'sum':  -216.11}
+diffstats = {'max':  0.031451,
+             'min': -0.064994,
+             'rms': 0.0086476,
+             'sigma': 0.0084565,
+             'sum':  -216.12}
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
