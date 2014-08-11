@@ -58,6 +58,14 @@ public:
 								Vector<Double>& newCHAN_WIDTH,
 								Bool verbose = False);
 
+	// Make one spectral window from all SPWs given by the SPW Ids vector
+	static Bool combineSpwsCore(	LogIO& os,
+									MeasurementSet& ms_p,
+									const Vector<Int>& spwids, // Vector<Int>(1,-1) means: use all SPWs
+									Vector<Double>& newCHAN_FREQ, // Will return the grid of the resulting SPW
+									Vector<Double>& newCHAN_WIDTH,
+									Bool verbose = False);
+
 	// A wrapper for regridChanBounds() which takes the user interface type re-gridding parameters
 	// The ready-made grid is returned in newCHAN_FREQ and newCHAN_WIDTH
 	static Bool calcChanFreqs(	LogIO& os,

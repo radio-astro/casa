@@ -44,6 +44,7 @@ MSTransformRegridder::~MSTransformRegridder()
 	return;
 }
 
+
 // -----------------------------------------------------------------------
 // Make one spectral window from all SPWs given by the SPW Ids vector
 // -----------------------------------------------------------------------
@@ -54,9 +55,22 @@ Bool MSTransformRegridder::combineSpws(	LogIO& os,
 										Vector<Double>& newCHAN_WIDTH,
 										Bool verbose)
 {
-	// Open input MS
 	MeasurementSet ms_p(msName, Table::Old);
+	Bool result = False;
+	result = combineSpwsCore(os,ms_p,spwids,newCHAN_FREQ,newCHAN_WIDTH,verbose);
+	return result;
+}
 
+// -----------------------------------------------------------------------
+// Make one spectral window from all SPWs given by the SPW Ids vector
+// -----------------------------------------------------------------------
+Bool MSTransformRegridder::combineSpwsCore(	LogIO& os,
+											MeasurementSet& ms_p,
+											const Vector<Int>& spwids,
+											Vector<Double>& newCHAN_FREQ,
+											Vector<Double>& newCHAN_WIDTH,
+											Bool verbose)
+{
 	// Analyze SPW Ids
 	if (spwids.nelements() == 0)
 	{
