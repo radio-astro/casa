@@ -13,6 +13,7 @@ from taskinit import casalog, gentools, qatool
 import asap as sd
 from asap import _to_list
 from asap.scantable import is_scantable, is_ms, scantable
+import rasterutil
 
 @contextlib.contextmanager
 def toolmanager(vis, tooltype, *args, **kwargs):
@@ -313,6 +314,58 @@ class sdtask_template(sdtask_interface):
                 selector.set_query(taql_for_timerange)
             casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
 
+        return selector
+
+    def select_by_rasterrow(self, base_selector, scantb=None):
+        if not scantb:
+            if hasattr(self,'scan') and isinstance(self.scan, scantable):
+                scantb = self.scan
+            else:
+                raise Exception, "Internal Error. No valid scantable."
+    
+        if base_selector is None:
+            selector = sd.selector()
+        else:
+            selector = sd.selector(base_selector)
+
+        # CAS-6702 selection by raster row
+        if hasattr(self, 'rasterrow') and len(self.rasterrow) > 0:
+            if hasattr(self, 'infile'):
+                # nominal pair of science spw and existing polarization
+                sel_org = scantb.get_selection()
+                sel = sd.selector(types=[0]) # select pson data
+                scantb.set_selection(sel)
+                ifnos = scantb.getifnos()
+                nominal_spw = -1
+                for ifno in ifnos:
+                    # ignore channel-averaged spw and WVR
+                    if scantb.nchan(ifno) > 4:
+                        nominal_spw = ifno
+                        break
+                if nominal_spw > 0:
+                    sel.set_ifs(nominal_spw)
+                    scantb.set_selection(sel)
+                    nominal_pol = scantb.getpolnos()[0]
+
+                    # raster row utility
+                    casalog.post('nominal spw and pol = (%s,%s)'%(nominal_spw,nominal_pol))
+                    r = rasterutil.Raster(self.infile)
+                    r.detect(spw=nominal_spw, pol=nominal_pol)
+                    casalog.post('rasterrow=%s (type %s)'%(self.rasterrow,type(self.rasterrow)))
+                    raster_list = parse_idx_selection(self.rasterrow, 0, r.ngap-1)
+                    casalog.post('raster_list=%s'%(raster_list))
+                    if len(raster_list) > 0:
+                        query_list = (r.astaql(i) for i in raster_list if i >= 0 and i < r.ngap)
+                        in_parenthesis = lambda x: '('+x+')'
+                        taql_for_raster = ' || '.join(map(in_parenthesis, query_list))
+                        casalog.post('taql_for_raster=\'%s\''%(taql_for_raster))
+                        query_org = selector.get_query()
+                        if len(query_org) > 0:
+                            selector.set_query(' && '.join(in_parenthesis, [query_org, taql_for_raster]))
+                        else:
+                            selector.set_query(taql_for_raster)
+                        casalog.post('taql: \'%s\''%(selector.get_query()), priority='INFO')
+                    
         return selector
 
     def set_selection(self, scantb=None):
@@ -1252,3 +1305,28 @@ def select_by_timerange(data, timerange):
     casalog.post('taql for timerange: \'%s\''%(taql), priority='DEBUG')
 
     return taql
+
+def parse_idx_selection(s, id_min, id_max):
+    items = s.split(',')
+    l = []
+    for item in items:
+        if item.isdigit():
+            v = int(item)
+            if v >= id_min and v <= id_max:
+                l.append(v)
+        elif item.startswith('>'):
+            v = int(item[1:])
+            if v <= id_max:
+                l.extend(range(v,id_max+1))
+        elif item.startswith('<'):
+            v = int(item[1:])
+            if v >= id_min:
+                l.extend(range(id_min,v+1))
+        elif re.match('^[0-9]+~[0-9]+$', item):
+            v = map(int, item.split('~'))
+            id_from = max(id_min, v[0])
+            id_to = min(id_max, v[1])
+            if id_from <= id_to:
+                l.extend(range(id_from,id_to+1))
+    return l
+            

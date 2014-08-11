@@ -222,6 +222,7 @@ scripts/update_spw.py
 scripts/viewertool.py
 scripts/vishead_util.py
 scripts/simple_cluster.py
+scripts/rasterutil.py
 )
 
 add_subdirectory( scripts/tests )

@@ -188,6 +188,10 @@ data format of infile, the data is overwritten with the new data format
             <value></value>
     </param>
 
+    <param type="string" name="rasterrow" subparam="true">
+            <description>select data by raster rows (e.g., \'0,3,5\')</description>
+            <value></value>
+    </param>    
 
     <param type="string" name="outfile">
             <description>name of output file (See a WARNING in help)</description>
@@ -233,6 +237,7 @@ data format of infile, the data is overwritten with the new data format
                             <default param="scan"><value type="string"></value></default>
                             <default param="pol"><value type="string"></value></default>
                             <default param="beam"><value type="string"></value></default>
+			    <default param="rasterrow"><value type="string"></value></default>
                             <default param="unflag"><value type="bool">False</value></default>
                             <default param="restfreq"><value type="string"></value></default>
                             <default param="frame"><value type="string"></value></default>

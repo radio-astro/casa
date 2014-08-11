@@ -8,7 +8,7 @@ from asap.scantable import is_scantable, is_ms
 from asap.flagplotter import flagplotter
 import sdutil
 
-def sdflag(infile, antenna, mode, unflag, field, spw, timerange, scan, pol, beam, restfreq, frame, doppler, clipminmax, clipoutside, showflagged, row, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, mode, unflag, field, spw, timerange, scan, pol, beam, restfreq, frame, doppler, clipminmax, clipoutside, showflagged, row, rasterrow, outfile, outform, overwrite, plotlevel):
     with sdutil.sdtask_manager(sdflag_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -85,7 +85,11 @@ class sdflag_worker(sdutil.sdtask_template):
             self.scan = sorg
 
         # data selection
-        self.scan.set_selection(self.get_selector())
+        #self.scan.set_selection(self.get_selector())
+        selector = self.get_selector()
+        if len(self.rasterrow) > 0:
+            selector = self.select_by_rasterrow(selector)
+        self.scan.set_selection(selector)
         
     def execute(self):
         self.set_to_scan()
