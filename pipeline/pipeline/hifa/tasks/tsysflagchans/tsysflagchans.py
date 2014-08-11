@@ -41,9 +41,9 @@ class TsysflagchansInputs(basetask.StandardInputs):
             result = None
             for name in caltables:
                 # Get the tsys table name
-                tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
-                  name)
-                if tsystable.vis in self.vis:
+                tsystable_vis = \
+                  caltableaccess.CalibrationTableDataFiller._readvis(name)
+                if tsystable_vis in self.vis:
                     result = name
                     break
 
