@@ -1465,14 +1465,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-        SubMS thems(msobj);
-        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
-	  //if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
+        //SubMS thems(msobj);
+        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
       }
-    
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
     if( qrestfreq.getValue("Hz")==0 ) 
       {
