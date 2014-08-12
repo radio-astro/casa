@@ -1347,7 +1347,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
                 # check resulting spectral data
                 self._is_diff_lt_tol('data', result_data[ichan], expected_data[ichan], row=irow, channel=ichan)
 
-    def _verify_applycal(self, outfile, expected_sky, expected_tsys):
+    def _verify_applycal(self, outfile, expected_sky, expected_tsys, expected_flagrow):
         # file existence check
         self.assertTrue(os.path.exists(outfile), msg='Output file \'%s\' didn\'t created.'%(outfile))
 
@@ -1361,6 +1361,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
         with tbmanager(outfile) as tb:
             time_result = tb.getcol('TIME')
             flagtra_result = tb.getcol('FLAGTRA')
+            flagrow_result = tb.getcol('FLAGROW')
             spectra_result = tb.getcol('SPECTRA')
             tsys_result = tb.getcol('TSYS')
         nchan,nrow_result = flagtra_result.shape
@@ -1380,6 +1381,7 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             cal_flag = cal[0]
             cal_data = cal[1]
             cal_tsys = cal[2]
+            flagrow = flagrow_result[irow]
             flag = flagtra_result[:,irow]
             data = spectra_result[:,irow]
             tsys = tsys_result[:,irow]
@@ -1387,6 +1389,8 @@ class sdcal2_flag_base(sdcal2_caltest_base, unittest.TestCase):
             #print cal_data, data
             #print '---'
             #print cal_tsys, tsys
+            #print 'flagrow: result', flagrow, 'expected', expected_flagrow[irow]
+            self._is_equal('flagrow', flagrow, expected_flagrow[irow], row=irow)
             for ichan in xrange(nchan):
                 self._is_equal('flag', flag[ichan], cal_flag[ichan], row=irow, channel=ichan)
                 self._is_diff_lt_tol('Tsys', tsys[ichan], cal_tsys[ichan], row=irow, channel=ichan)
@@ -1537,15 +1541,23 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
+    def _expected_flagrow(self):
+        with tbmanager(self.rawfile) as tb:
+            tsel = tb.query('SRCTYPE==0', sortlist='TIME')
+            flagrow = tsel.getcol('FLAGROW')
+        return flagrow
+        
     def test_applycal_flag(self):
         outfile = self.prefix + '_cal'
         average = False
+        expected_flagrow = self._expected_flagrow()
 
         sdcal2(infile=self.rawfile, outfile=outfile, calmode='ps,tsys,apply',
                tsysspw='22', tsysavg=average, spwmap={22:[23]}, interp='linear')
 
         self._verify_applycal(outfile, self._expected_caltable(1, 'SPECTRA'),
-                              self._expected_caltable(10, 'TSYS', average))
+                              self._expected_caltable(10, 'TSYS', average),
+                              expected_flagrow)
     
 
 def suite():
