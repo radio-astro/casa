@@ -45,9 +45,9 @@ class BandpassflagchansInputs(basetask.StandardInputs):
             # return just the bandpass table that matches the vis being handled
             for name in caltables:
                 # Get the bandpass table name
-                bptable = caltableaccess.CalibrationTableDataFiller.getcal(
-                  name)
-                if bptable.vis in self.vis:
+                bptable_vis = \
+                  caltableaccess.CalibrationTableDataFiller._readvis(name)
+                if bptable_vis in self.vis:
                     value = name
                     break
 
