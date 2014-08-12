@@ -805,21 +805,30 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	return vector<string>();
 }
 
-
 vector<string> msmetadata::namesforspws(const variant& spwids) {
 	_FUNC(
 		variant::TYPE myType = spwids.type();
 		vector<uInt> spwIDs;
 		if (myType == variant::INT) {
 			Int id = spwids.toInt();
-			ThrowIf(id < 0, "Field ID must be nonnegative.");
+			ThrowIf(id < 0, "Spectral window ID must be nonnegative.");
+			ThrowIf(
+				id >= (Int)_msmd->nSpw(True),
+				"Spectral window ID must be less than total number of spws"
+			);
 			spwIDs.push_back(id);
 		}
 		else if (myType == variant::INTVEC) {
 			vector<Int> kk = spwids.toIntVec();
+			Vector<Int> xx(kk);
 			ThrowIf(
-				min(Vector<Int>(kk)) < 0,
-				"All field IDs must be nonnegative."
+				min(xx) < 0,
+				"All spectral window IDs must be nonnegative."
+			);
+			ThrowIf(
+				max(xx) >= (Int)_msmd->nSpw(True),
+				"All spectral window IDs must be less than "
+				"the total number of spws"
 			);
 			spwIDs = _vectorIntToVectorUInt(kk);
 		}

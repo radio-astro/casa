@@ -1009,7 +1009,7 @@ class msmd_test(unittest.TestCase):
         got = md.antennastations(['DV13', 'DA43'])
         self.assertTrue((got == expec).all())
         
-    def test_namesforspw(self):
+    def test_namesforspws(self):
         """Test namesforspws()"""
         md = self.md
         got = md.namesforspws()
@@ -1026,6 +1026,11 @@ class msmd_test(unittest.TestCase):
         got = md.namesforspws(3)
         self.assertTrue((got == numpy.array(["BB_1#SQLD"])).all())
         
+        self.assertRaises(Exception, md.namesforspws, -2)
+        self.assertRaises(Exception, md.namesforspws, [0,-2])
+        self.assertRaises(Exception, md.namesforspws, 85)
+        self.assertRaises(Exception, md.namesforspws, [0,85])
+
     def test_fieldsforsource(self):
         """Test fieldsforsource()"""
         md = self.md
