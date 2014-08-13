@@ -2643,9 +2643,12 @@ ia.close()
    <shortdescription>Image calculator</shortdescription>
    
 <input>
-  
      <param type="string"  name="pixels">
-     <description>LEL expression</description>
+        <description>LEL expression</description>
+     </param>
+     <param type="bool"  name="verbose">
+        <description>Emit possibly useful messages.</description>
+        <value>True</value>
      </param>
 </input>
 <returns type="bool"/>

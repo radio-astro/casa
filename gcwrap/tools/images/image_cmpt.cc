@@ -918,13 +918,13 @@ std::string image::brightnessunit() {
 	return rstat;
 }
 
-bool image::calc(const std::string& expr) {
+bool image::calc(const std::string& expr, bool verbose) {
 	try {
 		_log << _ORIGIN;
 		if (detached()) {
 			return False;
 		}
-		_image->calc(expr);
+		_image->calc(expr, verbose);
 		_stats.reset(0);
 		return True;
 	}
