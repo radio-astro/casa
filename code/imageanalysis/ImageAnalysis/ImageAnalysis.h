@@ -313,13 +313,13 @@ class ImageAnalysis
     Record toworld(const Vector<double>& value, const String& format = "n") const;
 
     Bool detached();
-
+/*
     Record setregion(const Vector<Int>& blc, const Vector<Int>& trc, 
                       const String& infile = "");
 
     Record setboxregion(const Vector<Double>& blc, const Vector<Double>& trc,
                         const Bool frac = False, const String& infile = "");
-
+*/
     //make test image...cube or 2d (default)
     bool maketestimage(const String& outfile="", const Bool overwrite=False, 
                        const String& imagetype="2d");

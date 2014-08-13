@@ -3257,7 +3257,7 @@ void ImageAnalysis::centreRefPix(CoordinateSystem& cSys, const IPosition& shape)
 	}
 	cSys.setReferencePixel(refPix);
 }
-
+/*
 Record ImageAnalysis::setregion(const Vector<Int>& blc, const Vector<Int>& trc,
 		const String& infile) {
 	_onlyFloat(__func__);
@@ -3339,7 +3339,7 @@ Record ImageAnalysis::setboxregion(const Vector<Double>& blc, const Vector<
 
 	return rec;
 }
-
+*/
 bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
 	bool rstat(false);
