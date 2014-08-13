@@ -8,12 +8,12 @@ import pipeline.infrastructure.basetask as basetask
 LOG = infrastructure.get_logger(__name__)
 
 
-class FlagchansResults(basetask.Results):
+class RawflagchansResults(basetask.Results):
     def __init__(self):
         """
-        Construct and return a new FlagchansResults.
+        Construct and return a new RawflagchansResults.
         """
-        super(FlagchansResults, self).__init__()
+        super(RawflagchansResults, self).__init__()
         # views and associated results
         self.flagging = []
         # following are used instead of standard dictionaries so that
@@ -23,6 +23,7 @@ class FlagchansResults(basetask.Results):
     def merge_with_context(self, context):
         # do nothing, the tsys cal files should already be in the context
         # and we don't want to insert them twice.
+        print 'MERGE'
         pass
 
     def addview(self, description, viewresult):
@@ -47,5 +48,5 @@ class FlagchansResults(basetask.Results):
         return copy.deepcopy(self.view[description][-1])
 
     def __repr__(self):
-        s = 'FlagchansResults'
+        s = 'RawflagchansResults'
         return s
