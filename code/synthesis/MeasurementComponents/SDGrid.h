@@ -276,6 +276,8 @@ private:
 
   Int lastIndex_p;
   Bool useImagingWeight_p;
+  Int lastAntID_p;
+
 
   Int getIndex(const ROMSPointingColumns& mspc, const Double& time,
 	       const Double& interval);
