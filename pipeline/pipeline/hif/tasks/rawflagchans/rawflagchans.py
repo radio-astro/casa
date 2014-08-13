@@ -10,6 +10,7 @@ import casa
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
@@ -389,6 +390,7 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
         # tidy up
         os.system('rm -fr %s' % plotfile)
 
+
     def calculate_combined_view(self, spwids, intent):
         """
         spwids -- views will be calculated using data for each spw id
@@ -407,36 +409,7 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             # EARLY RETURN
             return
 
-        # plotms uses field and not intent
-        fieldids = [field.id for field in self.ms.get_fields(intent=intent)]
-        if not fieldids:
-            LOG.error('no data for intent: %s' % intent)
-            raise Exception, 'no data for intent: %s' % intent
-
-        fieldids = ','.join([str(fieldid) for fieldid in fieldids])
-        spwstring = ','.join([str(spwid) for spwid in spwids])
-        plotfile='%s_temp.txt' % os.path.basename(self.inputs.vis)
-        print 'plotfile', plotfile
-
-        # plotms export seems unreliable except for small bits of dataset
-        # so this is inefficient but might work better in future
-        self._plotdata = {}
         ants = np.array(self.antenna_ids)
-        for spwid in spwids:
-            first = True
-            for ant in ants:
-                print 'plotting', ant
-                if first:
-                    casa.plotms(vis=self.inputs.vis, xaxis='channel',
-                      yaxis='amp', field=fieldids, spw=str(spwid),
-                      antenna=str(ant),
-                      averagedata=True, avgtime='3600',
-                      plotfile=plotfile, expformat='txt', overwrite=True,
-                      showgui=False)
-#                    first = False
-
-                print 'reading'
-                self._readfile(plotfile)
 
         # now construct the views
         for spwid in spwids:
@@ -456,7 +429,16 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
               commonresultobjects.ResultAxis(name='Baseline',
               units='', data=np.array(baselines), channel_width=1)]
 
-            for corrlist in corrs:
+            casatools.ms.open(self.inputs.vis)
+            casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
+#            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
+#              'antenna2'], ifraxis=True, average=True)
+            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
+              'antenna2'], ifraxis=True, average=False)
+            LOG.info('ifrdata shape: %s' % str(np.shape(ifrdata['data'])))
+            casatools.ms.close()
+
+            for icorr,corrlist in enumerate(corrs):
                 corr = corrlist[0]
                 data = np.zeros([nchans, 
                   (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)])
@@ -464,28 +446,31 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                   (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.bool)
 
                 # build the basic view
-                for ant1 in ants:
+                for ifr in range(np.shape(ifrdata['data'])[2]):
                     slice = np.zeros([nchans])
                     slice_flag = np.ones([nchans])
 
-                    for ant2 in ants[ants > ant1]:
-                        for chan in range(nchans): 
-                            try:
-                                slice[chan] = \
-                                  self._plotdata[(spwid,corr,ant1,ant2,chan)]
-                                slice_flag[chan] = 0
-                            except:
-                                pass
+                    ant1 = ifrdata['antenna1'][ifr]
+                    ant2 = ifrdata['antenna2'][ifr]
+#                    slice[:] = np.abs(ifrdata['data'][icorr, :, ifr]) 
+#                    slice_flag[:] = ifrdata['flag'][icorr, :, ifr]
+                    for chan in range(nchans):
+                        d = ifrdata['data'][icorr][chan][ifr]
+                        f = ifrdata['flag'][icorr][chan][ifr]
+                        valid_data = d[f==False]
+                        if len(valid_data) > 0:
+                            slice[chan] = np.abs(np.mean(valid_data))
+                            slice_flag[chan] = False
 
-                        slice -= np.median(slice)
+                    slice -= np.median(slice)
 
-                        ant_offset = ant1 * (ants[-1] + 1) + ant2
-                        data[:,ant_offset] = slice
-                        flag[:,ant_offset] = slice_flag
+                    ant_offset = ant1 * (ants[-1] + 1) + ant2
+                    data[:,ant_offset] = slice
+                    flag[:,ant_offset] = slice_flag
 
-                        ant_offset = ant2 * (ants[-1] + 1) + ant1
-                        data[:,ant_offset] = slice
-                        flag[:,ant_offset] = slice_flag
+                    ant_offset = ant2 * (ants[-1] + 1) + ant1
+                    data[:,ant_offset] = slice
+                    flag[:,ant_offset] = slice_flag
 
                 # refine the view by subtracting the median over all baselines
                 # for each channel
@@ -501,5 +486,3 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                     # add the view results to the result structure
                     self.result.addview(viewresult.description, viewresult)
 
-        # tidy up
-        os.system('rm -fr %s' % plotfile)
