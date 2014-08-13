@@ -113,7 +113,7 @@ class ImageAnalysis
 
     String brightnessunit() const;
 
-    void calc(const String& pixels);
+    void calc(const String& expr, Bool verbose);
 
     // regions should be a Record of Records having different regions
 
@@ -511,9 +511,10 @@ class ImageAnalysis
                            const casa::IPosition& shape) const;
     
     // Make a block of regions from a Record
-    void makeRegionBlock(casa::PtrBlock<const casa::ImageRegion*>& regions,
-                         const casa::Record& Regions,
-                         casa::LogIO& logger);
+    static void _makeRegionBlock(
+    	PtrBlock<const ImageRegion*>& regions,
+    	const Record& Regions
+    );
 
     // Some helper functions that needs to be in casa namespace coordsys
 

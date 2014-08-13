@@ -304,11 +304,7 @@ void ImageAnalysis::imagecalc(
 	const Bool overwrite
 ) {
 	*_log << LogOrigin(className(), __func__);
-	if (_imageFloat || _imageComplex) {
-		*_log << LogIO::WARN
-			<< "This method will overwrite the currently attached image"
-			<< LogIO::POST;
-	}
+
 	Record regions;
 	// Check output file name
 	if (!outfile.empty() && !overwrite) {
@@ -330,7 +326,7 @@ void ImageAnalysis::imagecalc(
 	Block<LatticeExprNode> temps;
 	String exprName;
 	PtrBlock<const ImageRegion*> tempRegs;
-	makeRegionBlock(tempRegs, regions, *_log);
+	_makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(expr, temps, tempRegs);
 
 	// Get the shape of the expression
@@ -349,25 +345,25 @@ void ImageAnalysis::imagecalc(
 	AlwaysAssert (imCoord != 0, AipsError);
 	CoordinateSystem csys = imCoord->coordinates();
 	DataType type = node.dataType();
+	if (_imageFloat || _imageComplex) {
+		*_log << LogIO::WARN
+			<< "Replacing the currently attached image"
+			<< LogIO::POST;
+	}
 	if (type == TpComplex || type == TpDComplex) {
 		_imageComplex = _imagecalc<Complex>(
-			node, shape,
-			csys, imCoord,
-			outfile,
-			overwrite, expr
+			node, shape, csys, imCoord,
+			outfile, overwrite, expr
 		);
 	}
 	else {
 		_imageFloat = _imagecalc<Float>(
-			node, shape,
-			csys, imCoord,
-			outfile,
-			overwrite, expr
+			node, shape, csys, imCoord,
+			outfile, overwrite, expr
 		);
 	}
-
 	// Delete the ImageRegions (by using an empty Record).
-	makeRegionBlock(tempRegs, Record(), *_log);
+	_makeRegionBlock(tempRegs, Record());
 }
 
 Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
@@ -665,22 +661,17 @@ String ImageAnalysis::brightnessunit() const {
 	return rstat;
 }
 
-void ImageAnalysis::calc(const String& expr) {
+void ImageAnalysis::calc(const String& expr, Bool verbose) {
 	*_log << LogOrigin(className(), __func__);
-	*_log << LogIO::WARN
-		<< "This method will overwrite the currently attached image"
-		<< LogIO::POST;
 
+	ThrowIf(
+		expr.empty(), "You must specify an expression"
+	);
 	Record regions;
-	if (expr.empty()) {
-		throw AipsError(
-			"You must specify an expression"
-		);
-	}
 	Block<LatticeExprNode> temps;
 	String newexpr = expr;
 	PtrBlock<const ImageRegion*> tempRegs;
-	makeRegionBlock(tempRegs, regions, *_log);
+	_makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
 	DataType type = node.dataType();
 	Bool isReal = casa::isReal(type);
@@ -701,16 +692,18 @@ void ImageAnalysis::calc(const String& expr) {
 		"Resulting image is complex valued but"
 		"the attached image is real valued"
 	);
-	// Delete the ImageRegions (by using an empty GlishRecord)
-	makeRegionBlock(tempRegs, Record(), *_log);
-
+	_makeRegionBlock(tempRegs, Record());
+	if (verbose) {
+		*_log << LogIO::WARN << "Overwriting pixel values "
+			<< "of the currently attached image"
+			<< LogIO::POST;
+	}
 	if (_imageFloat) {
 		_calc(_imageFloat, node);
 	}
 	else {
 		_calc(_imageComplex, node);
 	}
-
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data have changed
 	deleteHist();
@@ -731,11 +724,11 @@ Bool ImageAnalysis::calcmask(
 	);
 	Block<LatticeExprNode> temps;
 	PtrBlock<const ImageRegion*> tempRegs;
-	makeRegionBlock(tempRegs, regions, *_log);
+	_makeRegionBlock(tempRegs, regions);
 	LatticeExprNode node = ImageExprParse::command(mask, temps, tempRegs);
 
 	// Delete the ImageRegions
-	makeRegionBlock(tempRegs, Record(), *_log);
+	_makeRegionBlock(tempRegs, Record());
 
 	// Make sure the expression is Boolean
 	DataType type = node.dataType();
@@ -2842,11 +2835,11 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 		//String newexpr = substituteOID (temps, exprName, pixels);
 		String newexpr = pixels;
 		PtrBlock<const ImageRegion*> tempRegs;
-		makeRegionBlock(tempRegs, tempRegions, *_log);
+		_makeRegionBlock(tempRegs, tempRegions);
 		LatticeExprNode node =
-				ImageExprParse::command(newexpr, temps, tempRegs);
+			ImageExprParse::command(newexpr, temps, tempRegs);
 		// Delete the ImageRegions (by using an empty GlishRecord).
-		makeRegionBlock(tempRegs, Record(), *_log);
+		_makeRegionBlock(tempRegs, Record());
 		// We must have a scalar expression
 		if (!node.isScalar()) {
 			*_log << "The pixels expression must be scalar"
@@ -3132,11 +3125,10 @@ void ImageAnalysis::deleteHist() {
 	pOldHistMaskRegion_p.reset();
 }
 
-void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
-		const Record& Regions, LogIO& ) {
-
-	// Trying to mimick  a glishRegion by a Record of Records
-
+void ImageAnalysis::_makeRegionBlock(
+	PtrBlock<const ImageRegion*>& regions,
+	const Record& Regions
+) {
 	for (uInt j = 0; j < regions.nelements(); j++) {
 		delete regions[j];
 	}
