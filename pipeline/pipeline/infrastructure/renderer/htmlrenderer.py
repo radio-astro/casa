@@ -108,7 +108,7 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.ExportData:
         return 'Export data products'
 
-    if task_cls is hif.tasks.Flagchans:
+    if task_cls is hif.tasks.Rawflagchans:
         return 'Flag channels in raw data'
 
     if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
@@ -2640,17 +2640,17 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class T2_4MDetailsFlagchansRenderer(T2_4MDetailsDefaultRenderer):
+class T2_4MDetailsRawflagchansRenderer(T2_4MDetailsDefaultRenderer):
     '''
-    Renders detailed HTML output for the Flagchans task.
+    Renders detailed HTML output for the Rawflagchans task.
     '''
-    def __init__(self, template='t2-4m_details-hif_flagchans.html',
+    def __init__(self, template='t2-4m_details-hif_rawflagchans.html',
             always_rerender=False):
-        super(T2_4MDetailsFlagchansRenderer, self).__init__(template,
+        super(T2_4MDetailsRawflagchansRenderer, self).__init__(template,
                 always_rerender)
 
     def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsFlagchansRenderer, self)
+        super_cls = super(T2_4MDetailsRawflagchansRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
         htmlreports = self.get_htmlreports(context, results)
@@ -6450,7 +6450,7 @@ renderer_map = {
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.ExportData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_exportdata.html'),
-        hif.tasks.Flagchans      : T2_4MDetailsFlagchansRenderer(),
+        hif.tasks.Rawflagchans   : T2_4MDetailsRawflagchansRenderer(),
         hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
