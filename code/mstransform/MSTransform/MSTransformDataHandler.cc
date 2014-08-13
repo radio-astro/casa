@@ -1458,7 +1458,6 @@ Bool MSTransformDataHandler::fillSubTables(const Vector<MS::PredefinedColumns>&)
 	// Run this after running the other copy*()s.
 	// Maybe there should be an option to *not* run it.
 	success &= copyGenericSubtables();
-
 	return success;
 }
 
@@ -2450,10 +2449,9 @@ Bool MSTransformDataHandler::copySource()
 			}
 		}
 
-		return True;
 	}
 
-	return False;
+	return True;
 }
 
 // -----------------------------------------------------------------------
