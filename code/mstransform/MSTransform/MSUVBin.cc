@@ -529,6 +529,8 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 	Vector<Double> c(1,0.0);
 	SpectralCoordinate spec=csys_p.spectralCoordinate(2);
 	Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
+	//Vector<Double> visFreq;
+	//vbutil_p.convertFrequency(visFreq, vb, MFrequency::LSRK);
 	chanMap_p.resize(visFreq.nelements());
 	chanMap_p.set(-1);
 	for (Int chan=0; chan < vb.nChannels(); ++chan){
@@ -539,6 +541,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 				chanMap_p(chan)=pixel;
 				c[0]=pixel;
 				spec.toWorld(f, c);
+				//cout << " pixel " << pixel << " chan " << chan << endl;
 				if((abs(visFreq[chan]-f[0])/f[0]) > fracbw)
 				  fracbw=(abs(visFreq[chan]-f[0])/f[0]);
 			}
@@ -751,8 +754,8 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	SpectralCoordinate spec=csys_p.spectralCoordinate(2);
 	DirectionCoordinate thedir=csys_p.directionCoordinate(0);
 	Vector<Float> scale(2);
-	scale(0)=(nx_p*thedir.increment()(0))/C::c;
-	scale(1)=(ny_p*thedir.increment()(1))/C::c;
+	scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
+	scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
 	///Index
 	Vector<Int> rowToIndex(nx_p*ny_p, -1);
 	Matrix<Int> locu(vb.nChannels(), nrows, -1);
@@ -1025,29 +1028,15 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
     DirectionCoordinate thedir=csys_p.directionCoordinate(0);
     Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
     Vector<Float> scale(2);
-    scale(0)=(nx_p*thedir.increment()(0))/C::c;
-    scale(1)=(ny_p*thedir.increment()(1))/C::c;
+    scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
+    scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
     //Dang i thought the new vb will return Data or FloatData if correctedData was
 	    //not there
 	    Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
 		//locateuvw(locuv, vb.uvw());
 	    Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
 		for (Int k=0; k < vb.nRows(); ++k){
-		  /*Int newrow=locuv(1,k)*nx_p+locuv(0,k);
-			if(rowFlag(newrow) && !(vb.flagRow()(k))){
-				rowFlag(newrow)=False;
-				/////TEST
-				//uvw(0,newrow)=vb.uvw()(0,k);
-				//uvw(1,newrow)=vb.uvw()(1,k);
-				/////
-				uvw(2,newrow)=vb.uvw()(2,k);
-				cerr << newrow << " rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,newrow) << endl;
-				ant1(newrow)=vb.antenna1()(k);
-				ant2(newrow)=vb.antenna2()(k);
-				timeCen(newrow)=vb.time()(k);
-
-			}
-		  */
+		  if(!vb.flagRow()[k]){
 		  Int locu, locv;
 		  {
 		    locv=Int(ny_p/2+vb.uvw()(1,k)*refFreq*scale(1));
@@ -1056,13 +1045,14 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		  }
 
 		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
-				if(chanMap_p(chan) >=0){
-				  //Double outChanFreq;
-				  //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
-				  if(fracbw > 0.05){
-				    locv=Int(ny_p/2+vb.uvw()(1,k)*visFreq(chan)*scale(1));
-				    locu=Int(nx_p/2+vb.uvw()(0,k)*visFreq(chan)*scale(0));
-				  }
+		    if(chanMap_p(chan) >=0){
+		      //Double outChanFreq;
+		      //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
+		      if(fracbw > 0.05){
+			locv=Int(ny_p/2+vb.uvw()(1,k)*visFreq(chan)*scale(1));
+			locu=Int(nx_p/2+vb.uvw()(0,k)*visFreq(chan)*scale(0));
+		      }
+		      if(locv < ny_p && locu < nx_p){ 
 				  Int newrow=locv*nx_p+locu;
 				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
 				    rowFlag(newrow)=False;
@@ -1092,8 +1082,9 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				    ///We should do that at the end totally
 				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
 				  }
-				}
-			}
+		      }//locu && locv
+		    }
+		  }
 			//sum wgtspec along channels for weight
 			/*for (Int pol=0; pol < wght.shape()(0); ++pol){
 				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
@@ -1101,8 +1092,8 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				//cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
 			}
 			*/
+		  }
 		}
-
 
 
 
@@ -1134,8 +1125,9 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 	for (Int row=0; row < wghtSpec.shape()[2]; ++row){
 	  for (Int pol=0; pol < npol_p; ++pol){
 	    //cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
-	    weight(pol,row)=median(wghtSpec.xyPlane(row).row(pol));
-	    //cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
+	    weight(pol,row)=max(wghtSpec.xyPlane(row).row(pol));
+	    //if(!rowFlag(row))
+	    //  cerr << "pol " << pol << " row "<< row << " median  "<< weight(pol, row) << " min-max " << (min(wghtSpec.xyPlane(row).row(pol))+max(wghtSpec.xyPlane(row).row(pol)))/2.0 << " mean " << mean(wghtSpec.xyPlane(row).row(pol)) << endl;
 	  }
 	}
 	msc.weight().putColumn(weight);	
