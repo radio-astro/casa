@@ -166,7 +166,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @property
     def niter(self):
         if self._niter is None:
-            return 1
+            return 3
         return self._niter
 
     @niter.setter
@@ -269,7 +269,6 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
         self.ms = inputs.context.observing_run.get_ms(name=self.result.vis)
 
         # Get the spws to use
-        print 'spw', inputs.spw
         spwids = map(int, inputs.spw.split(','))
 
         # Get antenna names, ids
@@ -429,60 +428,76 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
               commonresultobjects.ResultAxis(name='Baseline',
               units='', data=np.array(baselines), channel_width=1)]
 
+            data = np.zeros([len(corrs), nchans, 
+              (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.complex)
+            flag = np.ones([len(corrs), nchans, 
+              (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.bool)
+            ndata = np.zeros([len(corrs), nchans, 
+              (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.int)
+
+            LOG.info('calculating flagging view for spw %s' % spwid)
             casatools.ms.open(self.inputs.vis)
             casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
 #            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
 #              'antenna2'], ifraxis=True, average=True)
-            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
-              'antenna2'], ifraxis=True, average=False)
-            LOG.info('ifrdata shape: %s' % str(np.shape(ifrdata['data'])))
+            casatools.ms.iterinit(maxrows=500)
+            casatools.ms.iterorigin()
+            iterating = True
+            while iterating:
+                rec = casatools.ms.getdata(['data', 'flag', 'antenna1',
+                  'antenna2'])
+                if 'data' not in rec.keys():
+                    break
+
+                for row in range(np.shape(rec['data'])[2]):
+                    ant1 = rec['antenna1'][row]
+                    ant2 = rec['antenna2'][row]
+
+                    baseline1 = ant1 * (ants[-1] + 1) + ant2
+                    baseline2 = ant2 * (ants[-1] + 1) + ant1
+
+                    for icorr,corrlist in enumerate(corrs):
+                       data[icorr,:,baseline1][
+                         rec['flag'][icorr,:,row]==False]\
+                         += rec['data'][icorr,:,row][
+                         rec['flag'][icorr,:,row]==False]
+                       ndata[icorr,:,baseline1][
+                         rec['flag'][icorr,:,row]==False] += 1
+                       data[icorr,:,baseline2][
+                         rec['flag'][icorr,:,row]==False]\
+                         += rec['data'][icorr,:,row][
+                         rec['flag'][icorr,:,row]==False]
+                       ndata[icorr,:,baseline2][
+                         rec['flag'][icorr,:,row]==False] += 1
+
+                iterating = casatools.ms.iternext()
+
             casatools.ms.close()
 
+            # calculate the average values - ignore divide by 0
+            old_settings = np.seterr(divide='ignore')
+            data /= ndata
+            np.seterr(**old_settings)
+            data = np.abs(data)
+            flag = ndata==0
+
+            # store the views
             for icorr,corrlist in enumerate(corrs):
                 corr = corrlist[0]
-                data = np.zeros([nchans, 
-                  (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)])
-                flag = np.ones([nchans, 
-                  (self.antenna_ids[-1]+1) * (self.antenna_ids[-1]+1)], np.bool)
 
-                # build the basic view
-                for ifr in range(np.shape(ifrdata['data'])[2]):
-                    slice = np.zeros([nchans])
-                    slice_flag = np.ones([nchans])
-
-                    ant1 = ifrdata['antenna1'][ifr]
-                    ant2 = ifrdata['antenna2'][ifr]
-#                    slice[:] = np.abs(ifrdata['data'][icorr, :, ifr]) 
-#                    slice_flag[:] = ifrdata['flag'][icorr, :, ifr]
-                    for chan in range(nchans):
-                        d = ifrdata['data'][icorr][chan][ifr]
-                        f = ifrdata['flag'][icorr][chan][ifr]
-                        valid_data = d[f==False]
-                        if len(valid_data) > 0:
-                            slice[chan] = np.abs(np.mean(valid_data))
-                            slice_flag[chan] = False
-
-                    slice -= np.median(slice)
-
-                    ant_offset = ant1 * (ants[-1] + 1) + ant2
-                    data[:,ant_offset] = slice
-                    flag[:,ant_offset] = slice_flag
-
-                    ant_offset = ant2 * (ants[-1] + 1) + ant1
-                    data[:,ant_offset] = slice
-                    flag[:,ant_offset] = slice_flag
+                for baseline in range(np.shape(data)[2]):
+                   data[icorr,:,baseline] -= np.median(data[icorr,:,baseline])
 
                 # refine the view by subtracting the median over all baselines
                 # for each channel
                 for chan in range(nchans):
-                    data[chan,:] -= np.median(data[chan,:])
+                    data[icorr,chan,:] -= np.median(data[icorr,chan,:])
 
-                for ant1 in self.antenna_ids:
-                    viewresult = commonresultobjects.ImageResult(
-                      filename=self.inputs.vis, data=data,
-                      flag=flag, axes=axes, datatype='Mean amplitude',
-                      spw=spwid, pol=corr, intent=intent)
+                viewresult = commonresultobjects.ImageResult(
+                  filename=self.inputs.vis, data=data[icorr],
+                  flag=flag[icorr], axes=axes, datatype='Mean amplitude',
+                  spw=spwid, pol=corr, intent=intent)
 
-                    # add the view results to the result structure
-                    self.result.addview(viewresult.description, viewresult)
+                # add the view results to the result structure
+                self.result.addview(viewresult.description, viewresult)
 
