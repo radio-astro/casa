@@ -1507,9 +1507,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-        SubMS thems(msobj);
-        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
-	  //if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
+        //SubMS thems(msobj);
+        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
