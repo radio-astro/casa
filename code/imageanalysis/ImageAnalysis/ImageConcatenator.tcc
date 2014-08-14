@@ -75,7 +75,6 @@ SPIIT ImageConcatenator<T>::concatenate(
 		setAxis(-1);
 	}
 	*this->_getLog() << LogOrigin(_class, __func__, WHERE);
-
 	// There could be wild cards embedded in our list so expand them out
 	ThrowIf(
 		imageNames.size() < 1,
@@ -163,7 +162,6 @@ SPIIT ImageConcatenator<T>::concatenate(
 			<< imageList[0] << " will be used as the reference"
 			<< LogIO::POST;
 	}
-
 	std::auto_ptr<ImageConcat<T> > pConcat(new ImageConcat<T> (_axis, _tempClose));
 	ThrowIf(
 		! pConcat.get(), "Failed to create ImageConcat object"
@@ -209,16 +207,17 @@ template <class T> Bool ImageConcatenator<T>::_minMaxAxisValues(
 		ndim != this->_getImage()->ndim(),
 		"All images must have the same number of dimensions"
 	);
-	Vector<Double> pix(ndim);
+	const CoordinateSystem csys = image->coordinates();
+	Vector<Double> pix = csys.referencePixel();
 	pix[_axis] = 0;
-	mymin = image->coordinates().toWorld(pix)[_axis];
+	mymin = csys.toWorld(pix)[_axis];
 	IPosition shape = image->shape();
 	if (shape[_axis] == 1) {
 		mymax = mymin;
 		return this->_getImage()->coordinates().increment()[_axis] > 0;
 	}
 	pix[_axis] = shape[_axis] - 1;
-	mymax = image->coordinates().toWorld(pix)[_axis];
+	mymax = csys.toWorld(pix)[_axis];
 	Bool isIncreasing = mymax > mymin;
 	if (! isIncreasing) {
         std::swap(mymin, mymax);
