@@ -78,7 +78,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   // Data partitioning rules for CONTINUUM imaging
-  //  ALL members are strings ONLY.
+  //
+  //  ALL members of the selection parameters in selpars are strings
+  //  ONLY.  This methods reads the selection parameters from selpars
+  //  and returns a partitioned Record with npart data selection
+  //  entries.
+  //
+  //  The algorithm used to do the partitioning along the TIME axis is
+  //  as follows:
+  //    
+  //    for each MS in selpars
+  //      - get the selection parameters
+  //      - generate a selected MS
+  //      - get number of rows in the selected MS
+  //      - divide the rows in nparts
+  //      - for each part
+  //          - get compute rowBeg and rowEnd
+  //          - modify rowEnd such that rowEnd points to the end of
+  //            full integration data.  This is done as follows:
+  //               tRef = TIME(rowEnd);
+  //               reduce rowEnd till TIME(rowEnd) != tRef
+  //          - Construct a T0~T1 string
+  //          - Fill it in the timeSelPerPart[msID][PartNo] array
+  //
   Record SynthesisUtilMethods::continuumDataPartition(Record &selpars, const Int npart)
   {
     LogIO os( LogOrigin("SynthesisUtilMethods","continuumDataPartition",WHERE) );
@@ -119,49 +141,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	Double Tint;
 	ROMSMainColumns mainCols(selectedMS);
-	Int nRows=selectedMS.nrow(), dRows=nRows/npart;
-	Int rowBeg=0, rowEnd=0;
-	rowEnd = rowBeg + dRows;
+	Vector<uInt> rowNumbers = selectedMS.rowNumbers();
+	Int nRows=selectedMS.nrow(), 
+	  dRows=nRows/npart;
+	Int rowBegID=0, rowEndID=nRows-1;
+	Int rowBeg=rowNumbers[rowBegID], rowEnd=rowNumbers[rowEndID];
+	cerr << "NRows, dRows, npart = " << nRows << " " << dRows << " " << npart << " " << rowBeg << " " << rowEnd << endl;
+
+	rowEndID = rowBegID + dRows;
+	
 
 	MVTime mvInt=mainCols.intervalQuant()(0);
 	Time intT(mvInt.getTime());
 	Tint = intT.modifiedJulianDay();
 
 	Int partNo=0;
-	while(rowEnd < nRows)
+	while(rowEndID < nRows)
 	  {
+	    //	    rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[rowEndID];
+	    rowBeg=rowBegID; rowEnd = rowEndID;
 	    MVTime mvt0=mainCols.timeQuant()(rowBeg), mvt1=mainCols.timeQuant()(rowEnd);
 	    Time t0(mvt0.getTime()), t1(mvt1.getTime());
 	    Double mjdRef=t1.modifiedJulianDay(),
 	      mjdT0=t1.modifiedJulianDay();
 
-	    while((fabs(mjdT0 - mjdRef) <= Tint) && (rowEnd < nRows))
+	    //	    while((fabs(mjdT0 - mjdRef) >= Tint) && (rowEndID < nRows))
+	    while((mjdT0 == mjdRef) && (rowEndID > rowBegID))
 	      {
-		rowEnd++;
+		rowEndID--;
+		//if ((rowEnd - rowBeg) > dRows) break;
+		//rowEnd = rowNumbers[rowEndID];
+		rowEnd = rowEndID;
 		MVTime mvt=mainCols.timeQuant()(rowEnd);
 		Time tt(mvt.getTime());
 		mjdT0=tt.modifiedJulianDay();
 	      }
-	    rowEnd--;
+	    //	    rowEndID--;
+	    
+	    //rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[rowEndID];
+	    rowBeg=rowBegID; rowEnd = rowEndID;
 	    MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
 	    Time tB(mvtB.getTime()), tE(mvtE.getTime());
-	    timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
-	    // cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
-	    // 	 << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
-	    // 	 << endl;	    
+	    timeSelPerPart[msID][partNo] = "[" + SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE) + "]";
+	    cerr << tB.toString() << "~" << tE.toString() << endl;
+	    cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " " << rowEnd - rowBeg << " " 
+	    	 << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	    	 << endl;	    
 
+	    if (partNo == npart - 1) break;
 	    partNo++;
-	    rowBeg = rowEnd+1;
-	    rowEnd = min(rowBeg + dRows, nRows-1);
-	    if (rowEnd == nRows-1) break;
+	    rowBegID = rowEndID+1;
+	    rowEndID = min(rowBegID + dRows, nRows-1);
+	    if (rowEndID == nRows-1) break;
 	  }
 
+	//rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[nRows-1];
+	rowBeg=rowBegID; rowEnd = nRows-1;
 	MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
 	Time tB(mvtB.getTime()), tE(mvtE.getTime());
-	timeSelPerPart[msID][partNo] = SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE);
-	// cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
-	//      << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
-	//      << endl;	    
+	timeSelPerPart[msID][partNo] = "[" + SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE) + "]";
+	cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
+	     << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
+	     << endl;	    
       }
     //
     // The time selection strings for all parts of the current
@@ -224,6 +265,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // return allparts;
   }
+
 
   // Data partitioning rules for CUBE imaging
   Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Int npart,
@@ -1465,9 +1507,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else 
       {
-        //SubMS thems(msobj);
-        //if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
-	if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
+        SubMS thems(msobj);
+        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+	  //if(!MSTransformRegridder::combineSpwsCore(os,msobj, spwids,dataChanFreq,dataChanWidth))
           {
             os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
           }
