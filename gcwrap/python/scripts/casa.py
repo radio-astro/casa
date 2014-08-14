@@ -163,6 +163,7 @@ try:
     from sdcal import sdcal
     from sdsmooth import sdsmooth
     from sdbaseline import sdbaseline
+    from sdbaseline2 import sdbaseline2
     from sdreduce import sdreduce
     from sdcoadd import sdcoadd
     from sdsave import sdsave
@@ -185,6 +186,7 @@ except ImportError:
     sdlist = None
     sdfit = None
     sdbaseline = None
+    sdbaseline2 = None
     sdstat = None
     sdsave = None
     sdflag = None

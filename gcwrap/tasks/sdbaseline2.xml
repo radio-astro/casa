@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<!-- This is the param set for sdbaseline2 -->
+
+<task type="function" name="sdbaseline2" startup="false" category="single dish">
+
+  <shortdescription>Fit/subtract a spectral baseline </shortdescription>
+
+  <description>
+Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
+  </description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+        <description>name of input SD dataset</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="antenna">
+        <description>select an antenna name or ID, e.g. \'PM03\' (only effective for MS input)</description>
+        <any type="variant" limittype="string int"/>
+        <value type="int">0</value>
+    </param> 
+
+    <param type="string" name="field">
+        <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="spw">
+        <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="any" name="restfreq" subparam="true">
+        <description>the rest frequency, e.g. \'1.41GHz\' (default unit: Hz) (see examples in help)</description>
+        <any type="variant" limittype="double int string doubleArray intArray stringArray dictArray" />
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="frame" subparam="true">
+        <shortdescription>frequency reference frame [\'LSRK\', \'TOPO\', \'LSRD\', \'BARY\', \'GALACTO\', \'LGROUP\', or \'CMB\'] (\'\'=current)</shortdescription>
+        <description>frequency reference frame (\'\'=current)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="doppler" subparam="true">
+        <shortdescription>doppler convention [\'RADIO\', \'OPTICAL\', \'Z\', \'BETA\', or \'GAMMA\'] (\'\'=current)</shortdescription>
+        <description>doppler convention (\'\'=current). Effective only when spw selection is in velocity unit.</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="timerange">
+        <description>select data by time range, e.g. \'09:14:0~09:54:0\' (\'\'=all) (see examples in help)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="scan">
+        <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="pol">
+        <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="blmode">
+        <description>baselining mode (\'subtract\' or \'apply\')</description>
+        <value type="string">subtract</value>
+    </param>
+
+    <param type="any" name="blparam" subparam="true">
+        <description>per spectrum fit parameters</description>
+        <any type="variant" limittype="dictArray"/>
+        <value type="dictArray"></value>
+    </param>
+
+    <param type="string" name="bltable">
+        <description>name of baseline table</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="outfile">
+        <description>name of output file (See a WARNING in help)</description>
+        <value></value>
+    </param>
+
+    <param type="bool" name="overwrite">
+        <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
+        <description>overwrite the output file if already exists</description>
+        <value>False</value>
+    </param>
+
+    <constraints>
+            <when param="spw">
+                <notequals value="">
+                    <default param="restfreq"><value type="string"></value></default>
+                    <default param="frame"><value type="string"></value></default>
+                    <default param="doppler"><value type="string"></value></default>
+                </notequals>
+            </when>
+            <when param="blmode">
+                <equals value="subtract">
+                    <default param="blparam"><value type="dict">{}</value></default>
+                </equals>
+            </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+-----------------
+Keyword arguments
+-----------------
+infile -- name of input SD dataset
+antenna -- select an antenna name or ID
+        default: 0
+        example: 'PM03'
+        NOTE this parameter is effective only for MS input
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)/channels
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='30~45GHz' (IF IDs with the center frequencies in range 30-45GHz; all channels)
+                 spw='0:5~61' (IF ID 0; channels 5 to 61; all channels)
+                 spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
+                 spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
+                 spw='1~4;6:15~48' (for channels 15 through 48 for IF IDs 1,2,3,4 and 6)
+        this selection is in addition to the other selections to data
+    &gt;&gt;&gt; spw expandable parameter
+        restfreq -- the rest frequency
+                    available type includes float, int, string, list of float, 
+                    list of int, list of string, and list of dictionary. the 
+                    default unit of restfreq in case of float, int, or string 
+                    without unit is Hz. string input can be a value only 
+                    (treated as Hz) or a value followed by unit for which 'GHz',
+                    'MHz','kHz',and 'Hz' are available. 
+                    a list can be used to set different rest frequencies for 
+                    each IF. the length of list input must be number of IFs. 
+                    dictionary input should be a pair of line name and 
+                    frequency with keys of 'name' and 'value', respectively. 
+                    values in the dictionary input follows the same manner as 
+                    as for single float or string input. 
+                example: 345.796
+                         '1420MHz'
+                         [345.8, 347.0, 356.7]
+                         ['345.8MHz', '347.0MHz', '356.7MHz']
+                         [{'name':'CO','value':345}]
+        frame -- frequency reference frame
+                options: 'LSRK', 'TOPO', 'LSRD', 'BARY', 'GALACTO', 'LGROUP', 'CMB'
+                default: '' (keep current frame in data)
+        doppler -- doppler convention (effective only when spw is in
+                   velocity unit)
+                options: 'RADIO', 'OPTICAL', 'Z', 'BETA', or 'GAMMA'
+                default: '' (keep current doppler setting in data)
+timerange -- select data by time range
+        default: '' (use all)
+        example: timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                 Note: YYYY/MM/DD can be dropped as needed:
+                 timerange='09:14:00~09:54:00' # this time range
+                 timerange='09:44:00' # data within one integration of time
+                 timerange='&gt;10:24:00' # data after this time
+                 timerange='09:44:00+00:13:00' #data 13 minutes after time
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+blmode -- 'subtract' or 'apply'
+        default: 'subtract'
+    &gt;&gt;&gt; blmode expandable parameter
+        blparam -- per spectrum fit parameters. it must be a list of 
+                   dictionary. Each dictionary corresponds to each 
+                   spectrum and must contain the following keys and values:
+                     'row': row number, 
+                     'blfunc': function name. available ones include
+                               'poly', 'chebyshev', 'cspline' and 'sinusoid', 
+                     'order': maximum order of polynomial. needed when
+                              blfunc='poly' or 'chebyshev', 
+                     'npiece': number or piecewise polynomial.
+                               needed when blfunc='cspline' and
+                     'nwave': a list of sinusoidal wave numbers.
+                              needed when blfunc='sinusoid'.
+                example: [{'row':0,'blfunc':'poly','order':5}, 
+                          {'row':1,'blfunc':'chebyshev','order':10},
+                          {'row':2,'blfunc':'cspline','npiece':4}, 
+                          {'row':3,'blfunc':'sinusoid','nwave':[0,1,2,3]}, ...]
+bltable -- the name of baseline table (bltable='' would subtract baseline without 
+        creating bltable. mandatory when blmode='apply')
+        default: ''
+outfile -- name of output file
+        default: '' (&lt;infile&gt;_bs)
+overwrite -- overwrite existing outfile and bltable or not
+        options: (bool) True, False
+        default: False
+
+-----------
+DESCRIPTION
+-----------
+
+Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
+
+-----------------------
+BASELINE MODEL FUNCTION
+-----------------------
+The list of available model functions are shown above (see Keyword arguments
+section). In general 'cspline' or 'chebyshev' are recommended since they are
+more stable than others. 'poly' will work for lower order but will be unstable
+for higher order fitting. 'sinusoid' is kind of special mode that will be
+useful for the data that clearly shows standing wave in the spectral baseline.
+
+----------------------------------
+SIGMA CLIPPING (ITERATIVE FITTING)
+----------------------------------
+In general least square fitting is strongly affected by an extreme data
+so that the resulting fit makes worse. Sigma clipping is an iterative
+baseline fitting with data clipping based on a certain threshold. Threshold
+is set as a certain factor times rms of the resulting (baseline subtracted)
+spectra. If sigma clipping is on, baseline fit/removal is performed several
+times. After each baseline subtraction, the data whose absolute value is
+above threshold are detected and those data are excluded from the next round
+of fitting. By using sigma clipping, extreme data are excluded from the
+fit so that resulting fit is more robust.
+
+The user is able to control a multiplication factor using parameter
+clipthresh for clipping threshold based on rms. Actual threshold for sigma
+clipping will be (clipthresh) x (rms of spectra). Also, the user can specify
+number of maximum iteration to the parameter clipniter.
+
+In general, sigma clipping will lower the performance since it increases
+number of fits per spectra. However, it is strongly recommended to turn
+on sigma clipping unless you are sure that the data is free from any kind
+of extreme values that may affect the fit.
+
+  </example>
+
+</task>
+
+</casaxml>

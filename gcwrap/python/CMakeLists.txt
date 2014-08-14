@@ -156,6 +156,7 @@ scripts/task_rmfit.py
 scripts/task_rmtables.py
 scripts/task_sdaverage.py
 scripts/task_sdbaseline.py
+scripts/task_sdbaseline2.py
 scripts/task_sdcal.py
 scripts/task_sdcal2.py
 scripts/task_sdcoadd.py

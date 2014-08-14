@@ -633,6 +633,68 @@ def get_selector(in_scans=None, in_ifs=None, in_pols=None, \
 
     return selector
 
+def combine_masklist(masklist1, masklist2, mode='and'):
+    """
+    merge two masklists into one following given mode.
+    mode should be binary logical operator. currently
+    implemented for 'and', 'or' and 'xor'.
+
+    sample: masklist1 = [[10,20],[100,120]]
+            masklist2 = [[15,140],[200,220]]
+            the result with the available modes will be as follows:
+            [[15,20],[100,120]]  for mode='and',
+            [[10,140],[200,220]] for mode='or' and
+            [[10,14],[21,99],[121,140],[200,220]] for mode='xor'.
+    """
+    max_idx = 0
+    for i in xrange(len(masklist1)):
+        max_elem = max(masklist1[i][0], masklist1[i][1])
+        if max_elem > max_idx: max_idx = max_elem
+    for i in xrange(len(masklist2)):
+        max_elem = max(masklist2[i][0], masklist2[i][1])
+        if max_elem > max_idx: max_idx = max_elem
+    numblist = max_idx + 1
+    blist1 = [False]*numblist
+    for i in xrange(len(masklist1)):
+        min_elem = min(masklist1[i][0], masklist1[i][1])
+        max_elem = max(masklist1[i][0], masklist1[i][1])
+        for j in xrange(min_elem, max_elem+1):
+            blist1[j] = True
+    blist2 = [False]*numblist
+    for i in xrange(len(masklist2)):
+        min_elem = min(masklist2[i][0], masklist2[i][1])
+        max_elem = max(masklist2[i][0], masklist2[i][1])
+        for j in xrange(min_elem, max_elem+1):
+            blist2[j] = True
+    blist3 = []
+    if mode == 'and':
+        for i in xrange(len(blist1)):
+            blist3.append(blist1[i] and blist2[i])
+    elif mode == 'or':
+        for i in xrange(len(blist1)):
+            blist3.append(blist1[i] or blist2[i])
+    elif mode == 'xor':
+        for i in xrange(len(blist1)):
+            blist3.append(blist1[i] ^ blist2[i])
+    heads = []
+    tails = []
+    for i in xrange(len(blist3)):
+        if (i == 0):
+            if blist3[i]: heads.append(0)
+        else:
+            if (not blist3[i-1]) and blist3[i]:
+                heads.append(i)
+            elif blist3[i-1] and not blist3[i]:
+                tails.append(i-1)
+        if (i == len(blist3)-1) and blist3[i]:
+            tails.append(i)
+    if len(heads) != len(tails):
+        raise Exception, "Internal error: heads and tails of resulting masklist have different length."
+    res = []
+    for i in xrange(len(heads)):
+        res.append([heads[i], tails[i]])
+
+    return res
 
 def get_restfreq_in_Hz(s_restfreq):
     qatl = casac.quanta()

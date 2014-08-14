@@ -144,6 +144,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_rg_fromtextfile.py
   test_sdaverage.py
   test_sdbaseline.py
+  test_sdbaseline2.py
   test_sdcal.py
   test_sdcal2.py
   test_sdcoadd.py

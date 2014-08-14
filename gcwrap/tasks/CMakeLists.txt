@@ -87,6 +87,7 @@ rmfit.xml
 rmtables.xml
 sdaverage.xml
 sdbaseline.xml
+sdbaseline2.xml
 sdcal.xml
 sdcal2.xml
 sdcoadd.xml

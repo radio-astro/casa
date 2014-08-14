@@ -245,6 +245,7 @@ from mstransform_pg import mstransform_pg as mstransform
 try:
     #import asap as sd
     from sdbaseline_pg import sdbaseline_pg as sdbaseline
+    from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
     from sdcal_pg import sdcal_pg as sdcal
     from sdcoadd_pg import sdcoadd_pg as sdcoadd
     from sdflag_pg import sdflag_pg as sdflag
@@ -271,6 +272,7 @@ except ImportError, e:
     sdlist = None
     sdfit = None
     sdbaseline = None
+    sdbaseline2 = None
     sdstat = None
     sdsave = None
     sdflag = None
@@ -437,6 +439,7 @@ def go(taskname=None):
 #    from sdcal_pg import sdcal_pg as sdcal
 #    from sdsmooth_pg import sdsmooth_pg as sdsmooth
 #    from sdbaseline_pg import sdbaseline_pg as sdbaseline
+#    from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
 #    from sdreduce_pg import sdreduce_pg as sdreduce
 #    from sdcoadd_pg import sdcoadd_pg as sdcoadd
 #    from sdsave_pg import sdsave_pg as sdsave
@@ -452,6 +455,7 @@ def go(taskname=None):
 #    myf['sdcal']=sdcal
 #    myf['sdsmooth']=sdsmooth
 #    myf['sdbaseline']=sdbaseline
+#    myf['sdbaseline2']=sdbaseline2
 #    myf['sdreduce']=sdreduce
 #    myf['sdcoadd']=sdcoadd
 #    myf['sdsave']=sdsave

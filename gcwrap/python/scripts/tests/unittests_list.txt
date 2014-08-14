@@ -120,8 +120,9 @@ test_rg_frombcs                 dmehring@nrao.edu
 test_rg_fromtextfile            dmehring@nrao.edu
 test_rg_selectedchannels        dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
-test_sdaverage                   kana.sugi@nao.ac.jp
+test_sdaverage                  kana.sugi@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
+test_sdbaseline2		wataru.kawasaki@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
 test_sdcal2                     takeshi.nakazato@nao.ac.jp
 test_sdcoadd                    kana.sugi@nao.ac.jp
