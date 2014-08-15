@@ -137,9 +137,6 @@ class FlagCmd(object):
 
         flagcmd += " reason='%s'" % reason
 
-        if self.antenna is not None:
-            flagcmd += " antenna='%s'" % (self.antenna)
-
         if spw is not None:
             flagcmd += " spw='%s'" % spw
 
@@ -184,7 +181,7 @@ class FlagCmd(object):
                     ax_antenna = flagcoords[k]
             if ax_antenna is not None:
                 flagcmd += " antenna='%s'" % (ax_antenna)
-                self.antenna = ax_antenna
+#                self.antenna = ax_antenna
 
             flag_time = None
             for k,name in enumerate(axisnames):
@@ -201,6 +198,11 @@ class FlagCmd(object):
                 end = casatools.quanta.quantity(self.end_time + 0.5, 's')
                 end = casatools.quanta.time(end, form=['ymd'])
                 flagcmd += " timerange='%s~%s'" % (start[0], end[0])
+
+        # have to be careful with antenna as it may have been set during
+        # the analysis of flagcoords
+        if self.antenna is not None and 'antenna' not in flagcmd:
+            flagcmd += " antenna='%s'" % (self.antenna)
 
         flagcmd = flagcmd.strip()
 
@@ -278,8 +280,11 @@ class FlagCmd(object):
 
         # does antenna match?
         if self.antenna is not None:
-            match = match and (('ANTENNA' in str(self.axisnames).upper()) or 
-              ('BASELINE' in str(self.axisnames).upper()))
+            if image.ant is not None:
+                match = match and (self.antenna==image.ant[0])
+            else:
+                match = match and (('ANTENNA' in str(self.axisnames).upper()) or 
+                  ('BASELINE' in str(self.axisnames).upper()))
 
 #        if self.flag_time is not None:
 #            match = match and ('TIME' in self.axisnames)
