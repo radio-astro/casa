@@ -183,7 +183,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         if type(inputs.vis) is not types.ListType:
             inputs.vis = [inputs.vis]
 
-        # read the spw, if none then set default depending on mode
+        # read the spw, if none then set default 
         spw = inputs.spw
    
         if spw == '':
@@ -223,7 +223,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         if cell == []:
             for spwspec in spwlist:
                 # the heuristic cell is always the same for x and y as
-                # the value derives from a single value returned by
+                # the value derives from the single value returned by
                 # imager.advise
                 cells[spwspec], valid_data[spwspec] = self.heuristics.cell(
                   field_intent_list=field_intent_list, spwspec=spwspec)
