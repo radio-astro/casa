@@ -171,10 +171,10 @@ Image2DConvolver<T> &Image2DConvolver<T>::operator=(const Image2DConvolver<T> &o
 
 template <class T> void Image2DConvolver<T>::convolve(
 	LogIO& os, SPIIT imageOut,
-	const ImageInterface<T>& imageIn, const VectorKernel::KernelTypes kernelType,
+	const ImageInterface<T>& imageIn, VectorKernel::KernelTypes kernelType,
 	const IPosition& pixelAxes, const Vector<Quantity>& parameters,
-	const Bool autoScale, const Double scale, const Bool copyMiscellaneous,
-	const Bool targetres
+	Bool autoScale, Double scale, Bool copyMiscellaneous,
+	Bool targetres
 ) {
 	ThrowIf(
 		parameters.nelements() != 3,
@@ -235,7 +235,6 @@ template <class T> void Image2DConvolver<T>::convolve(
 	String brightnessUnitOut;
 	ImageInfo iiOut = imageOut->imageInfo();
 	if (imageInfo.hasMultipleBeams()) {
-		// std::tr1::shared_ptr<const ImageInterface<T> > imageOutConst(imageOut);
 		ImageMetaData md(imageOut);
 		uInt nChan = md.nChannels();
 		uInt nPol = md.nStokes();
@@ -499,11 +498,37 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 	const GaussianBeam& beamIn, const Unit& brightnessUnitIn,
 	const Bool autoScale, const Double scale, const Bool emitMessage
 ) {
-	os << LogOrigin("Image2DConvolver", __FUNCTION__);
+	os << LogOrigin("Image2DConvolver", __func__);
 	// Find out if convolution axes hold the sky.  Scaling from
 	// Jy/beam and Jy/pixel only really makes sense if this is True
 	Bool holdsOneSkyAxis;
 	Bool hasSky = CoordinateUtil::holdsSky (holdsOneSkyAxis, cSys, pixelAxes.asVector());
+	if (hasSky) {
+		const DirectionCoordinate dc = cSys.directionCoordinate();
+		Vector<Double> inc = dc.increment();
+		Vector<String> unit = dc.worldAxisUnits();
+		Quantity x(inc[0], unit[0]);
+		Quantity y(inc[1], unit[1]);
+		Quantity diag = sqrt(x*x + y*y);
+		if (parameters[1] < diag) {
+			diag.convert(parameters[1].getFullUnit());
+			os << LogIO::WARN << "Convolving kernel has minor axis "
+				<< parameters[1] << " which is less than the pixel diagonal "
+				<< "length of " << diag << ". Thus, the kernel is poorly sampled, "
+				<< "and so the output of this application may not be what you expect. "
+				<< "You should consider increasing the kernel size or regridding "
+				<< "the image to a smaller pixel size" << LogIO::POST;
+		}
+		else if (beamIn.getMinor() < diag) {
+			diag.convert(beamIn.getMinor().getFullUnit());
+			os << LogIO::WARN << "Input beam has minor axis "
+				<< beamIn.getMinor() << " which is less than the pixel diagonal "
+				<< "length of " << diag << ". Thus, the beam is poorly sampled, "
+				<< "and so the output of this application may not be what you expect. "
+				<< "You should consider regridding "
+				<< "the image to a smaller pixel size." << LogIO::POST;
+		}
+	}
 	if (emitMessage) {
 		os << "You are " << (hasSky ? "" : " not ") << "convolving the sky" << LogIO::POST;
 	}

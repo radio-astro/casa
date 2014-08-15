@@ -109,14 +109,10 @@ public:
 	// units and logger will be copied from the input to the output
 	// unless you indicate not to (copyMiscellaneous).
 	static void convolve(
-		LogIO& os, std::tr1::shared_ptr<ImageInterface<T> > imageOut,
-		const ImageInterface<T>& imageIn,
-		const VectorKernel::KernelTypes kernelType,
-		const IPosition& pixelAxes,
-		const Vector<Quantity>& parameters,
-		const Bool autoScale, const Double scale,
-		const Bool copyMiscellaneous=True,
-		const Bool targetres=False
+		LogIO& os, SPIIT imageOut, const ImageInterface<T>& imageIn,
+		VectorKernel::KernelTypes kernelType, const IPosition& pixelAxes,
+		const Vector<Quantity>& parameters, Bool autoScale, Double scale,
+		Bool copyMiscellaneous=True, Bool targetres=False
 	);
 
 	SPIIT convolve();
