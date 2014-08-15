@@ -227,7 +227,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             newflags.append(arrayflaggerbase.FlagCmd(
                               reason='outlier',
                               filename=table, rulename=rulename,
-                              spw=spw, axisnames=[xtitle, ytitle],
+                              spw=spw, antenna=antenna,
+                              axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord, pol=pol))
   
                         # Flag the view.
