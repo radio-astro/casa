@@ -422,8 +422,8 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             axes = [
               commonresultobjects.ResultAxis(name='channels',
               units='', data=np.arange(nchans)),
-              commonresultobjects.ResultAxis(name='Baseline',
-              units='', data=np.array(baselines), channel_width=1)]
+              commonresultobjects.ResultAxis(name='Antenna2',
+              units='id', data=np.arange(self.antenna_ids[-1]+1))]
 
             data = np.zeros([len(corrs), self.antenna_ids[-1]+1, nchans, 
               self.antenna_ids[-1]+1], np.complex)
