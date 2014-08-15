@@ -259,7 +259,7 @@ class Pipeline(object):
             # .. the user-specified file
             with open(context, 'rb') as context_file:
                 LOG.info ('Reading context from file {0}'.format(context))          
-                last_context = pickle.load(context_file)
+                last_context = utils.pickle_load(context_file)
                 self.context = last_context
 
         self._link_casa_log(self.context)

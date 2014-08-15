@@ -869,7 +869,7 @@ class ResultsProxy(object):
                             'saved_state',
                             self._basename)
         with open(path) as infile:
-            return pickle.load(infile)
+            return utils.pickle_load(infile)
 
     def _write_stage_logs(self, result):
         """
@@ -978,17 +978,6 @@ class StandardTaskTemplate(api.Task):
         """
         raise NotImplementedError
 
-    def _copy(self, original):
-        LOG.trace('Cloning {0} for {1} task'.format(
-            original.__class__.__name__, self.__class__.__name__))
-        pickled = StringIO.StringIO()
-        pickle.dump(original, pickled, -1)
-        # rewind to the start of the 'file', allowing it to be read in its
-        # entirety - otherwise we get an EOFError
-        pickled.seek(0)
-        copy = pickle.load(pickled)
-        return copy
-
     def _merge_jobs(self, jobs, task, merge=(), ignore=()):
         """
         Merge jobs that are identical apart from the arguments named in
@@ -1069,7 +1058,7 @@ class StandardTaskTemplate(api.Task):
         # this copy to the Inputs. Tasks can then merge results with this
         # duplicate context at will, as we'll later restore the originals.
         original_inputs = self.inputs
-        self.inputs = self._copy(original_inputs)
+        self.inputs = utils.pickle_copy(original_inputs)
 
         # create a job executor that tasks can use to execute subtasks
         self._executor = Executor(self.inputs.context, dry_run)

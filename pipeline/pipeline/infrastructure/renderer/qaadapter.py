@@ -6,6 +6,7 @@ by the QA sections of the weblog.
 import collections
 import json
 import os
+import weakref
 
 import pipeline.infrastructure as infrastructure
 
@@ -54,7 +55,8 @@ class Topic(object):
         in_section = filter(self.handles_result, results)
         d = collections.defaultdict(list)
         for result in in_section:
-            d[result.__class__].append(result)
+            ref = weakref.proxy(result)
+            d[result.__class__].append(ref)
 
         self.results_by_type.clear()
         self.results_by_type.update(d)

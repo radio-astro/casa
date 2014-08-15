@@ -21,6 +21,7 @@ import re
 import string
 import StringIO
 import types
+import weakref
 
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.extern.ps_mem as ps_mem
@@ -372,7 +373,7 @@ class memoized(object):
     '''
     def __init__(self, func):
         self.func = func
-        self.cache = {}
+        self.cache = weakref.WeakKeyDictionary()
     def __call__(self, *args):
         if not isinstance(args, collections.Hashable):
             # uncacheable. a list, for instance.
@@ -382,7 +383,11 @@ class memoized(object):
             return self.cache[args]
         else:
             value = self.func(*args)
-            self.cache[args] = value
+            try:
+                self.cache[args] = value
+            except TypeError:
+                # can't create reference to primitive types
+                pass
             return value
     def __repr__(self):
         '''Return the function's docstring.'''
@@ -404,8 +409,13 @@ def pickle_copy(original):
     # rewind to the start of the 'file', allowing it to be read in its
     # entirety - otherwise we get an EOFError
     stream.seek(0)
-    pcopy = pickle.load(stream)
-    return pcopy
+    return pickle_load(stream)
+
+def pickle_load(fileobj):
+    unpickled = pickle.load(fileobj)
+    if hasattr(unpickled, 'reconnect_weakrefs'):
+        unpickled.reconnect_weakrefs()
+    return unpickled
 
 def gen_hash(o):
     """
