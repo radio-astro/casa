@@ -396,16 +396,22 @@ unsigned int STSideBandSep::setupShift()
   else {
     os << "Found IFNO = " << sigIfno_
        << " in the first table." << LogIO::POST;
+#ifdef KS_DEBUG
+    cout << "Frequencies in the first table: freq0 = " << basech0 << ", incr = " << baseinc << ", nch = " << basench << endl;
+#endif
   }
   if (ftol_.getUnit().empty()) {
     // tolerance in unit of channels
-    ftolval = ftol_.getValue() * baseinc;
+    ftolval = abs(ftol_.getValue() * baseinc);
   }
   else {
-    ftolval = ftol_.getValue("Hz");
+    ftolval = abs(ftol_.getValue("Hz"));
   }
   inctolval = abs(baseinc/(double) basench);
   const string poltype0 = stab->getPolType();
+#ifdef KS_DEBUG
+  cout << "Looking for pairs that satisfies freqtol = " << ftolval << ", inctol = " << inctolval << endl;
+#endif
 
   // Initialize shift values
   initshift();
@@ -447,6 +453,12 @@ unsigned int STSideBandSep::setupShift()
       unsigned int nch;
       double freq0, incr;
       if ( getFreqInfo(stab, *iter, freq0, incr, nch) ){
+#ifdef KS_DEBUG
+	cout << "Checking IF=" << *iter << " int Table " << itab <<": freq0 = " << freq0 << ", incr = " << incr << ", nch = " << nch << endl;
+	cout << "- number of channels: " << nch << endl;
+	cout << "- chan0 difference: " << abs(freq0-basech0) << " (threshold: " << ftolval << ")" << endl;
+	cout << "- inc difference: " << abs(incr-baseinc) << " (threshold: " << inctolval << ")" << endl;
+#endif
 	if ( (nch == basench) && (abs(freq0-basech0) < ftolval)
 	     && (abs(incr-baseinc) < inctolval) ){
 	  //Found
