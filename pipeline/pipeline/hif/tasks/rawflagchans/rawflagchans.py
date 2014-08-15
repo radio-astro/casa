@@ -164,7 +164,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @property
     def niter(self):
         if self._niter is None:
-            return 1
+            return 2
         return self._niter
 
     @niter.setter
@@ -393,17 +393,17 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                   in this list.
         """
 
-        # the current view will be very similar to the last, if available.
-        # For now approximate as being identical which will save having to
-        # recalculate
-        prev_descriptions = self.result.descriptions()
-        if prev_descriptions:
-            for description in prev_descriptions:
-                prev_result = self.result.last(description)
-                self.result.addview(description, prev_result)
+#        # the current view will be very similar to the last, if available.
+#        # For now approximate as being identical which will save having to
+#        # recalculate
+#        prev_descriptions = self.result.descriptions()
+#        if prev_descriptions:
+#            for description in prev_descriptions:
+#                prev_result = self.result.last(description)
+#                self.result.addview(description, prev_result)
 
-            # EARLY RETURN
-            return
+#            # EARLY RETURN
+#            return
 
         ants = np.array(self.antenna_ids)
 
@@ -497,7 +497,7 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                       filename=self.inputs.vis, data=data[icorr,ant1],
                       flag=flag[icorr,ant1], axes=axes,
                       datatype='Mean amplitude',
-                      spw=spwid, pol=corr, ant=self.antenna_name[ant1])
+                      spw=spwid, pol=corr, ant=(ant1,self.antenna_name[ant1]))
 
                     # add the view results and their children results to the
                     # class result structure
