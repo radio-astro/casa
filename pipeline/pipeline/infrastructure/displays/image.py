@@ -189,8 +189,6 @@ class ImageDisplay(object):
         xunits = image.axes[0].units
         ytitle = image.axes[1].name
         ydata = image.axes[1].data
-#        if isinstance(ydata[0], types.StringType):
-#            ydata = np.arange(len(ydata))
         yunits = image.axes[1].units
         dataunits = image.units
         datatype = image.datatype
@@ -280,11 +278,15 @@ class ImageDisplay(object):
         # matplotlib
         plt.subplot(1, nplots, plotnumber)
 
-        if ydata[0]==ydata[-1]:
-            # sometimes causes empty plots if min==max
-            extent=[xdata[0], xdata[-1], ydata[0], ydata[-1]+1]
+        if isinstance(ydata[0], types.StringType):
+            ydata_numeric = np.arange(len(ydata))
         else:
-            extent=[xdata[0], xdata[-1], ydata[0], ydata[-1]]
+            ydata_numeric = ydata
+        if ydata_numeric[0]==ydata_numeric[-1]:
+            # sometimes causes empty plots if min==max
+            extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
+        else:
+            extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
           vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect,
           extent=extent)
