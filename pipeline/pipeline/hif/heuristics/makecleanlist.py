@@ -106,7 +106,43 @@ class MakeCleanListHeuristics(object):
                         for fintents in fintents_list:
                             for fintent in fintents:
                                 field_intent_result.update((f, fintent))
-                            
+
+        # eliminate redundant copies of field/intent keys that map to the
+        # same data - to prevent duplicate images being produced
+
+        done_vis_scanids = []
+
+        for field_intent in list(field_intent_result):
+            field = field_intent[0]
+            intent = field_intent[1]
+ 
+            # regex for string matching - escape likely problem chars.
+            re_field = field.replace('*', '.*')
+            re_field = re_field.replace('[', '\[')
+            re_field = re_field.replace(']', '\]')
+            re_field = re_field.replace('(', '\(')
+            re_field = re_field.replace(')', '\)')
+            re_field = re_field.replace('+', '\+')
+
+            vis_scanids = {}
+            for vis in self.vislist:
+                ms = self.context.observing_run.get_ms(name=vis)
+
+                scanids = [scan.id for scan in ms.scans if
+                  intent in scan.intents and
+                  re.search(pattern=re_field, string=str(scan.fields))]
+                scanids.sort()
+
+                vis_scanids[vis] = scanids
+
+            if vis_scanids in done_vis_scanids:
+                LOG.warn(
+                  'field: %s intent: %s is a duplicate - removing from cleanlist' %
+                  (field, intent))
+                field_intent_result.discard(field_intent)
+            else:
+                done_vis_scanids.append(vis_scanids)
+                
         return field_intent_result
 
     def beam(self, spwspec):
