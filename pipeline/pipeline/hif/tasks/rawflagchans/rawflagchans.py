@@ -166,7 +166,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @property
     def niter(self):
         if self._niter is None:
-            return 3
+            return 1
         return self._niter
 
     @niter.setter
@@ -290,9 +290,109 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
+#    def calculate_separate_view(self, spwids, intent):
+#        """
+#        spwid     -- view will be calculated using data for this spw id.
+#        """
+
+        # the current view will be very similar to the last, if available.
+        # For now approximate as being identical which will save having to
+        # recalculate
+#        prev_descriptions = self.result.descriptions()
+#        if prev_descriptions:
+#            for description in prev_descriptions:
+#                prev_result = self.result.last(description)
+#                self.result.addview(description, prev_result)
+
+            # EARLY RETURN
+#            return
+
+        # plotms uses field and not intent
+#        fieldids = [field.id for field in self.ms.get_fields(intent=intent)]
+#        if not fieldids:
+#            LOG.error('no data for intent: %s' % intent)
+#            raise Exception, 'no data for intent: %s' % intent
+
+#        fieldids = ','.join([str(fieldid) for fieldid in fieldids])
+#        plotfile='%s_temp.txt' % os.path.basename(self.inputs.vis)
+#        print 'plotfile', plotfile
+
+        # plotms export seems unreliable except for small bits of dataset
+        # so this is inefficient but might work better in future
+#        self._plotdata = {}
+#        ants = np.array(self.antenna_ids)
+#        for spwid in spwids:
+#            first = True
+#            for ant in ants:
+#                print 'plotting', ant
+#                if first:
+#                    casa.plotms(vis=self.inputs.vis, xaxis='channel',
+#                      yaxis='amp', field=fieldids, spw=str(spwid),
+#                      antenna=str(ant),
+#                      averagedata=True, avgtime='3600',
+#                      plotfile=plotfile, expformat='txt', overwrite=True,
+#                      showgui=False)
+##                    first = False
+
+#                print 'reading'
+#                self._readfile(plotfile)
+
+        # now construct the views
+#        for spwid in spwids:
+#            corrs = commonhelpermethods.get_corr_products(self.ms, spwid)
+#            spw = self.ms.get_spectral_window(spwid)
+#            nchans = spw.num_channels
+
+#            axes = [
+#              commonresultobjects.ResultAxis(name='channels',
+#              units='', data=np.arange(nchans)),
+#              commonresultobjects.ResultAxis(name='Antenna2',
+#              units='id', data=np.arange(self.antenna_ids[-1]+1))]
+
+#            for corrlist in corrs:
+#                corr = corrlist[0]
+#                data = np.zeros([self.antenna_ids[-1]+1, nchans, 
+#                  self.antenna_ids[-1]+1])
+#                flag = np.ones([self.antenna_ids[-1]+1, nchans,
+#                  self.antenna_ids[-1]+1], np.bool)
+#                ants = np.array(self.antenna_ids)
+
+#                for ant1 in ants:
+#                    slice = np.zeros([nchans])
+#                    slice_flag = np.ones([nchans])
+
+#                    for ant2 in ants[ants > ant1]: 
+#                        for chan in range(nchans): 
+#                            try:
+#                                slice[chan] = \
+#                                  self._plotdata[(spwid,corr,ant1,ant2,chan)]
+#                                slice_flag[chan] = 0
+#                            except:
+#                                pass
+
+#                        slice -= np.median(slice)
+#                        data[ant1,:,ant2] = slice
+#                        data[ant2,:,ant1] = slice
+#                        flag[ant1,:,ant2] = slice_flag
+#                        flag[ant2,:,ant1] = slice_flag
+
+#                for ant1 in ants:
+#                    viewresult = commonresultobjects.ImageResult(
+#                      filename=self.inputs.vis, data=data[ant1],
+#                      flag=flag[ant1], axes=axes, datatype='Mean amplitude',
+#                      spw=spwid, pol=corr, ant=self.antenna_name[ant1])
+
+                    # add the view results and their children results to the
+                    # class result structure
+#                    self.result.addview(viewresult.description, viewresult)
+
+        # tidy up
+#        os.system('rm -fr %s' % plotfile)
+
     def calculate_separate_view(self, spwids, intent):
         """
-        spwid     -- view will be calculated using data for this spw id.
+        spwids -- views will be calculated using data for each spw id
+                  in this list.
         """
 
         # the current view will be very similar to the last, if available.
@@ -307,35 +407,7 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             # EARLY RETURN
             return
 
-        # plotms uses field and not intent
-        fieldids = [field.id for field in self.ms.get_fields(intent=intent)]
-        if not fieldids:
-            LOG.error('no data for intent: %s' % intent)
-            raise Exception, 'no data for intent: %s' % intent
-
-        fieldids = ','.join([str(fieldid) for fieldid in fieldids])
-        plotfile='%s_temp.txt' % os.path.basename(self.inputs.vis)
-        print 'plotfile', plotfile
-
-        # plotms export seems unreliable except for small bits of dataset
-        # so this is inefficient but might work better in future
-        self._plotdata = {}
         ants = np.array(self.antenna_ids)
-        for spwid in spwids:
-            first = True
-            for ant in ants:
-                print 'plotting', ant
-                if first:
-                    casa.plotms(vis=self.inputs.vis, xaxis='channel',
-                      yaxis='amp', field=fieldids, spw=str(spwid),
-                      antenna=str(ant),
-                      averagedata=True, avgtime='3600',
-                      plotfile=plotfile, expformat='txt', overwrite=True,
-                      showgui=False)
-#                    first = False
-
-                print 'reading'
-                self._readfile(plotfile)
 
         # now construct the views
         for spwid in spwids:
@@ -343,52 +415,95 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             spw = self.ms.get_spectral_window(spwid)
             nchans = spw.num_channels
 
+            ants = np.array(self.antenna_ids)
+            baselines = []
+            for ant1 in ants:
+                for ant2 in ants: 
+                    baselines.append('%s&%s' % (ant1, ant2))
+
             axes = [
               commonresultobjects.ResultAxis(name='channels',
               units='', data=np.arange(nchans)),
-              commonresultobjects.ResultAxis(name='Antenna2',
-              units='id', data=np.arange(self.antenna_ids[-1]+1))]
+              commonresultobjects.ResultAxis(name='Baseline',
+              units='', data=np.array(baselines), channel_width=1)]
 
-            for corrlist in corrs:
+            data = np.zeros([len(corrs), self.antenna_ids[-1]+1, nchans, 
+              self.antenna_ids[-1]+1], np.complex)
+            flag = np.ones([len(corrs), self.antenna_ids[-1]+1, nchans,
+              self.antenna_ids[-1]+1], np.bool)
+            ndata = np.zeros([len(corrs), self.antenna_ids[-1]+1, nchans,
+              self.antenna_ids[-1]+1], np.int)
+
+            LOG.info('calculating flagging view for spw %s' % spwid)
+            casatools.ms.open(self.inputs.vis)
+            casatools.ms.msselect({'scanintent':'*BANDPASS*','spw':str(spwid)})
+#            ifrdata = casatools.ms.getdata(['data', 'flag', 'antenna1',
+#              'antenna2'], ifraxis=True, average=True)
+            casatools.ms.iterinit(maxrows=500)
+            casatools.ms.iterorigin()
+            iterating = True
+            while iterating:
+                rec = casatools.ms.getdata(['data', 'flag', 'antenna1',
+                  'antenna2'])
+                if 'data' not in rec.keys():
+                    break
+
+                for row in range(np.shape(rec['data'])[2]):
+                    ant1 = rec['antenna1'][row]
+                    ant2 = rec['antenna2'][row]
+
+                    if ant1==ant2:
+                        continue
+
+                    for icorr,corrlist in enumerate(corrs):
+                       data[icorr,ant1,:,ant2][
+                         rec['flag'][icorr,:,row]==False]\
+                         += rec['data'][icorr,:,row][
+                         rec['flag'][icorr,:,row]==False]
+                       ndata[icorr,ant1,:,ant2][
+                         rec['flag'][icorr,:,row]==False] += 1
+                       data[icorr,ant2,:,ant1][
+                         rec['flag'][icorr,:,row]==False]\
+                         += rec['data'][icorr,:,row][
+                         rec['flag'][icorr,:,row]==False]
+                       ndata[icorr,ant2,:,ant1][
+                         rec['flag'][icorr,:,row]==False] += 1
+
+                iterating = casatools.ms.iternext()
+
+            casatools.ms.close()
+
+            # calculate the average values - ignore divide by 0
+            old_settings = np.seterr(divide='ignore')
+            data /= ndata
+            np.seterr(**old_settings)
+            data = np.abs(data)
+            flag = ndata==0
+
+            # store the views
+            for icorr,corrlist in enumerate(corrs):
                 corr = corrlist[0]
-                data = np.zeros([self.antenna_ids[-1]+1, nchans, 
-                  self.antenna_ids[-1]+1])
-                flag = np.ones([self.antenna_ids[-1]+1, nchans,
-                  self.antenna_ids[-1]+1], np.bool)
-                ants = np.array(self.antenna_ids)
 
                 for ant1 in ants:
-                    slice = np.zeros([nchans])
-                    slice_flag = np.ones([nchans])
+                    # refine the view
+                    for ant2 in ants:
+                        data[icorr,ant1,:,ant2] -= np.median(
+                          data[icorr,ant1,:,ant2])
 
-                    for ant2 in ants[ants > ant1]: 
-                        for chan in range(nchans): 
-                            try:
-                                slice[chan] = \
-                                  self._plotdata[(spwid,corr,ant1,ant2,chan)]
-                                slice_flag[chan] = 0
-                            except:
-                                pass
+                    for chan in range(nchans):
+                        data[icorr,ant1,chan,:] -= np.median(
+                          data[icorr,ant1,chan,:])
 
-                        slice -= np.median(slice)
-                        data[ant1,:,ant2] = slice
-                        data[ant2,:,ant1] = slice
-                        flag[ant1,:,ant2] = slice_flag
-                        flag[ant2,:,ant1] = slice_flag
-
-                for ant1 in ants:
+                    # store the view result
                     viewresult = commonresultobjects.ImageResult(
-                      filename=self.inputs.vis, data=data[ant1],
-                      flag=flag[ant1], axes=axes, datatype='Mean amplitude',
+                      filename=self.inputs.vis, data=data[icorr,ant1],
+                      flag=flag[icorr,ant1], axes=axes,
+                      datatype='Mean amplitude',
                       spw=spwid, pol=corr, ant=self.antenna_name[ant1])
 
                     # add the view results and their children results to the
                     # class result structure
                     self.result.addview(viewresult.description, viewresult)
-
-        # tidy up
-        os.system('rm -fr %s' % plotfile)
-
 
     def calculate_combined_view(self, spwids, intent):
         """
@@ -452,6 +567,9 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                 for row in range(np.shape(rec['data'])[2]):
                     ant1 = rec['antenna1'][row]
                     ant2 = rec['antenna2'][row]
+
+                    if ant1==ant2:
+                        continue
 
                     baseline1 = ant1 * (ants[-1] + 1) + ant2
                     baseline2 = ant2 * (ants[-1] + 1) + ant1
