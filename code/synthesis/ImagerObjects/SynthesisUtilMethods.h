@@ -81,13 +81,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Data partitioning rules for CUBE imaging
     //uniform contiguous partition in frequency step
-    static Record cubeDataPartition(Record &selpars, const Int npart, const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype=MFrequency::LSRK);
+    static Record cubeDataPartition(const Record &selpars, const Int npart, const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype=MFrequency::LSRK);
 
     // freqBeg and freqEnd are frequency range  of the sub image cubes defined in frame set here
     // number of partions is obviously the length of freqBeg and freqEnd 
     // Use this for non uniform width of imge frequencies
-    static Record cubeDataPartition(Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>& freqEnd, const MFrequency::Types frame=MFrequency::LSRK);
+    static Record cubeDataPartition(const Record& selpars, const Vector<Double>& freqBeg, const Vector<Double>& freqEnd, const MFrequency::Types frame=MFrequency::LSRK);
     
+    //CoordinateSystem and number of channels of original cube is passed in 
+    //Output record is the ms's and data selection for each part.
+    // also the Vector of outCsys and outnChan are the  coordinatesystems
+    // and nchannel of the sub cube for each part.
+    static Record cubeDataPartition(const Record & selpars, const CoordinateSystem&
+				    incsys, const Int npart, const Int nchannel, 
+				    Vector<CoordinateSystem>& outCsys,
+				    Vector<Int>& outnChan);
+
     // Image cube partitioning rules for CUBE imaging
     Record cubeImagePartition(Record &impars, Int npart);
     

@@ -48,6 +48,7 @@
 #include <images/Images/TempImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
+#include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MRadialVelocity.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -268,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Data partitioning rules for CUBE imaging
-  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Int npart,
+  Record SynthesisUtilMethods::cubeDataPartition(const Record &selpars, const Int npart,
 		  const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype)
   {
     LogIO os( LogOrigin("SynthesisUtilMethods","cubeDataPartition",WHERE) );
@@ -286,7 +287,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  Record SynthesisUtilMethods::cubeDataPartition(Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
+
+  Record SynthesisUtilMethods::cubeDataPartition(const Record & selpars, const CoordinateSystem&
+				    incsys, const Int npart, const Int nchannel, 
+				    Vector<CoordinateSystem>& outCsys,
+						 Vector<Int>& outnChan){
+
+    outnChan.resize(npart);
+    outCsys.resize(npart);
+    Int nomnchan=nchannel/npart;
+    outnChan.set(nomnchan);
+    nomnchan=nchannel%npart;
+    for (Int k=0; k < nomnchan; ++k)
+      outnChan[k]+=1;
+    Vector<Int> shp(0);
+    Vector<Float> shift(4, 0.0);
+    Vector<Float> fac(4, 1.0);
+    Vector<Double> freqEnd(npart);
+    Vector<Double> freqStart(npart);
+    Float chanshift=0.0;
+    for (Int k =0; k <npart; ++k){
+      shift(3)=chanshift;
+      outCsys[k]=incsys.subImage(shift, fac, shp);
+      freqStart[k]=SpectralImageUtil::worldFreq(outCsys[k], 0.0);
+      freqEnd[k]=SpectralImageUtil::worldFreq(outCsys[k], Double(outnChan[k]-1));
+      chanshift+=Float(outnChan[k]);      
+    }
+    MFrequency::Types eltype=incsys.spectralCoordinate(CoordinateUtil::findSpectralAxis(incsys)).frequencySystem(True);
+    return cubeDataPartition(selpars, freqStart, freqEnd, eltype);
+
+  }
+
+  Record SynthesisUtilMethods::cubeDataPartition(const Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
     Record retRec;
     Int npart=freqBeg.shape()(0);
     for (Int k=0; k < npart; ++k){

@@ -42,7 +42,7 @@
 #include <casa/Logging/LogIO.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
-#include <synthesis/Utilities/SpectralImageUtil.h>
+#include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <lattices/Lattices/LatticeConcat.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>
@@ -61,21 +61,59 @@ int main(int argc, char **argv)
 
 
 
-	  Record msrec;
-	  msrec.define("msname", "ngc5921.ms.contsub");
-	  msrec.define("field", "0");
-	  msrec.define("spw", "0:5~51");
-	  Record parsrec;
-	  parsrec.defineRecord("ms0", msrec);
-	  Vector<Double> start(20);
-	  Vector<Double> end(20);
-	  start(0)=1.412787e9;
-	  end(0)=1.412787e9+2.5e4;
-	  for (Int k=1; k < 20; ++k){
-	    start(k)=start(k-1)+2.5e4;
-	    end(k)=end(k-1)+2.5e4;
-	  }
-	  cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, start, end, MFrequency::LSRK) << endl;
+    String msname(argv[1]);
+    Record msrec;
+    msrec.define("msname", msname);
+    msrec.define("field", "0");
+    msrec.define("spw", "0:5~51");
+    Record parsrec;
+    parsrec.defineRecord("ms0", msrec);
+    //Vector<Double> start(20);
+    //Vector<Double> end(20);
+    //start(0)=1.412787e9;
+    //end(0)=1.412787e9+2.5e4;
+    //for (Int k=1; k < 20; ++k){
+    //  start(k)=start(k-1)+2.5e4;
+    //  end(k)=end(k-1)+2.5e4;
+    //}
+	  
+    SynthesisParamsImage impars;
+    Vector<Int> ims(2);ims[0]=1000; ims[1]=1000;
+    impars.imsize=ims;
+    Vector<Quantity> cells(2); cells[0]=Quantity(1, "arcsec"), cells[1]=Quantity(2,"arcsec");
+    impars.cellsize=cells;
+    impars.stokes="I";
+    impars.phaseCenter=MDirection(Quantity(20.0, "deg"), Quantity(40.0, "deg"), MDirection::J2000);
+    impars.nchan=1000;
+    //impars.freqStart=freqStart;
+    //impars.freqStep=freqStep;
+    impars.restFreq=Quantity(1.420, "GHz");
+    //impars.nTaylorTerms=nTaylorTerms;
+    //impars.refFreq=refFreq;
+    impars.projection=Projection::SIN;
+    impars.freqFrame=MFrequency::LSRK;
+    //impars.overwrite=overwrite;
+    //impars.startModel=startmodel;
+    impars.velStart=Quantity(200.0, "km/s");
+    impars.velStep=Quantity(1, "km/s");
+    impars.veltype="OPTICAL";
+
+    MeasurementSet elms(msname, Table::Old);
+    Block<Int> sort;
+    ROVisibilityIterator vi(elms, sort);
+
+    CoordinateSystem cs=impars.buildCoordinateSystem(&vi);
+    
+  
+  
+
+    Vector<CoordinateSystem> oCs;
+    Vector<Int> oNchan;
+    
+    cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, cs, 10, 55, oCs, oNchan) << endl;
+
+
+    //	  cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, start, end, MFrequency::LSRK) << endl;
     
 	  
 
