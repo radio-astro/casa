@@ -23,7 +23,6 @@ class RawflagchansResults(basetask.Results):
     def merge_with_context(self, context):
         # do nothing, the tsys cal files should already be in the context
         # and we don't want to insert them twice.
-        print 'MERGE'
         pass
 
     def addview(self, description, viewresult):
