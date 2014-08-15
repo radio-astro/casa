@@ -51,10 +51,10 @@ ImageStatsCalculator::ImageStatsCalculator(
 		"", maskInp, "", False
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
 	_oldStatsStorageForce(False),
-	_axes(Vector<Int>(0)),_plotStats(Vector<String>(0)),
-	_includepix(Vector<Float>(0)), _excludepix(Vector<Float>(0)),
-	_plotter(""), _nx(1), _ny(1), _list(True), _force(False),
-	_disk(False), _robust(False), _verbose(True) {
+	_axes(),_plotStats(),
+	_includepix(), _excludepix(),
+	_plotter(""), _nx(1), _ny(1), _list(False), _force(False),
+	_disk(False), _robust(False), _verbose(False) {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
 }
@@ -62,7 +62,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 ImageStatsCalculator::~ImageStatsCalculator() {}
 
 Record ImageStatsCalculator::calculate() {
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __func__);
 	std::auto_ptr<vector<String> > messageStore(
 		_getLogFile() == 0 ? 0 : new vector<String>()
 	);

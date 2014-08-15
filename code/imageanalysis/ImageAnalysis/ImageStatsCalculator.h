@@ -63,7 +63,7 @@ public:
    	ImageStatsCalculator(
    		const SPCIIF image,
     	const Record *const &regionPtr,
-    	const String& maskInp, Bool beVerboseDuringConstruction
+    	const String& maskInp, Bool beVerboseDuringConstruction=False
     );
 
     ~ImageStatsCalculator();
