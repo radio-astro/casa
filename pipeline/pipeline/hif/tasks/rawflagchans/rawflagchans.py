@@ -34,7 +34,6 @@ class RawflagchansInputs(basetask.StandardInputs):
     @property
     def spw(self):
         if self._spw is not None:
-            print 'property', self._spw, type(self._spw)
             return str(self._spw)
 
         if type(self.vis) is types.ListType:
@@ -45,7 +44,6 @@ class RawflagchansInputs(basetask.StandardInputs):
 
     @spw.setter
     def spw(self, value):
-        print 'setter', value, type(value)
         self._spw = value
 
     @property
