@@ -184,14 +184,18 @@ def gpcal_score(gpcal_stats):
 
     # Using average sigmas for now. Eric's report lists sigmas per band / frequency.
     # Need to check if we have to distinguish by band.
+    # Increased the limits for the pipeline release until some of the
+    # heuristics issues are resolved.
 
     xySig1 = 4.25e-6
-    xySig3 = 7.955e-5
+    #xySig3 = 7.955e-5
+    xySig3 = 7.955e-2
     xyM = 6.0 / np.sqrt(2.0) / (xySig1 - xySig3)
     xyB = 3.0 / np.sqrt(2.0) * (1.0 - 2.0 * xySig1 / (xySig1 - xySig3))
 
     x2x1Sig1 = 3.08e-5
-    x2x1Sig3 = 2.24e-4
+    #x2x1Sig3 = 2.24e-4
+    x2x1Sig3 = 2.24e-2
     x2x1M = 6.0 / np.sqrt(2.0) / (x2x1Sig1 - x2x1Sig3)
     x2x1B = 3.0 / np.sqrt(2.0) * (1.0 - 2.0 * x2x1Sig1 / (x2x1Sig1 - x2x1Sig3))
 
