@@ -24,13 +24,10 @@ LOG = infrastructure.get_logger(__name__)
 <%
 try:
     r = result[0]
-    print 'r', r
-    print r.stage_number
     stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
-    print 'here'
     plots = []
     for r in result:
         if r.view:
@@ -39,8 +36,6 @@ try:
             LOG.info('Plotting')
             plots.append(displays.ImageDisplay().plot(context=pcontext,
               results=r, reportdir=stage_dir))
-
-    print 'here1'
 
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
@@ -51,8 +46,6 @@ try:
         plot_group.filename = renderer.filename
         with renderer.get_file() as fileobj:
             fileobj.write(renderer.render())
-    print 'here2'
-
 
 except Exception, e:
     print 'hif_tsysflagchans html template exception:', e
