@@ -1063,7 +1063,7 @@ def saveinputs(taskname=None, outfile='', myparams=None, ipython_globals=None, s
                 else:
                     print "         inputs because given file (%s) is a dir..." % outpathfile
                 print "********************************************************************************"
-        f=zip(myf[taskname].__call__.func_code.co_varnames,myf[taskname].__call__.func_defaults)
+        f=zip(myf[taskname].__call__.func_code.co_varnames[1:],myf[taskname].__call__.func_defaults)
         scriptstring='#'+str(taskname)+'('
 	if myparams == None :
 		myparams = {}
