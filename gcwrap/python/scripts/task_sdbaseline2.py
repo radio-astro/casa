@@ -8,7 +8,7 @@ import asap as sd
 from asap.scantable import is_scantable
 
 @sdutil.sdtask_decorator
-def sdbaseline2(infile, antenna, field, spw, restfreq, frame, doppler, timerange, scan, pol, blmode, blparam, bltable, outfile, overwrite):
+def sdbaseline2(infile, antenna, row, field, spw, restfreq, frame, doppler, timerange, scan, pol, blmode, blparam, bltable, outfile, overwrite, keeprows):
     with sdutil.sdtask_manager(sdbaseline2_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -22,6 +22,9 @@ class sdbaseline2_worker(sdutil.sdtask_template):
 
     def initialize_scan(self):
         sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
+
+        if len(self.row.strip()) > 0:
+            self.rowlist = self.sorg.parse_idx_selection('row', self.row)
         
         sel = self.get_selector(sorg)
         sorg.set_selection(sel)
@@ -61,6 +64,9 @@ class sdbaseline2_worker(sdutil.sdtask_template):
         
         engine.execute()
         engine.finalize()
+
+        if self.keeprows:
+            self.scan.set_selection()
 
     def save(self):
         sdutil.save(self.scan, self.project, 'ASAP', self.overwrite)

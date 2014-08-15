@@ -28,6 +28,11 @@ Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
         <value type="int">0</value>
     </param> 
 
+    <param type="string" name="row">
+        <description>select data by row IDs, e.g. \'3,5,7\' (\'\'=all)</description>
+        <value></value>
+    </param>
+
     <param type="string" name="field">
         <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
         <value></value>
@@ -95,6 +100,11 @@ Task sdbaseline2 performs baseline fitting/removal for single-dish spectra.
     <param type="bool" name="overwrite">
         <shortdescription>overwrite the output file if already exists [True, False] </shortdescription>
         <description>overwrite the output file if already exists</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="keeprows">
+        <description>keep all rows of input scantable in output table [True, False] </description>
         <value>False</value>
     </param>
 
