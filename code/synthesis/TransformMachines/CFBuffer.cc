@@ -464,8 +464,11 @@ namespace casa{
 
   void CFBuffer::initPolMaps(PolMapType& polMap, PolMapType& conjPolMap) 
   {
-    muellerElementsIndex_p = polMap;
-    conjMuellerElementsIndex_p = conjPolMap;
+    // cerr << polMap << endl;
+    // cerr << muellerElementsIndex_p << endl;
+
+    muellerElementsIndex_p.assign(polMap);
+    conjMuellerElementsIndex_p.assign(conjPolMap);
   }
 
   void CFBuffer::getFreqNdxMaps(Vector<Vector<Int> >& freqNdx, Vector<Vector<Int> >& conjFreqNdx)
