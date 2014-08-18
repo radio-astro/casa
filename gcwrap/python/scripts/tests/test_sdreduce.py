@@ -1201,8 +1201,11 @@ class sdreduce_test_average_flag(unittest.TestCase):
 
     Test list
         test_average_flag: test if average handles flag information properly
-        test_average_novaliddata: test if the task throws exception if
-                                  no valid data exists
+        test_average_novaliddata: test if average handles fully flagged data
+                                  properly
+        test_avearge_novaliddata_scan: test if the task handles the data that
+                                       has several scans and one scan is
+                                       fully flagged
         test_smooth_hanning: test if hanning smoothing (direct convolution)
                              handles flag information correctly
         test_smooth_gaussian: test if gaussian smoothing (FFT convolution)
@@ -1450,13 +1453,68 @@ class sdreduce_test_average_flag(unittest.TestCase):
         self.assertTrue(all(flagrow == 1), msg='Failed to preparing data')
 
         outfile = self.prefix + '.asap'
-        # the task must raise RuntimeError with correct message
-        with self.assertRaises(RuntimeError) as cm:
-            sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
-        the_exception = cm.exception
-        message = the_exception.message
-        expected_message = 'Can\'t average fully flagged data.'
-        self.assertEqual(message, expected_message, msg='Exception contains unexpected message: "%s" (expected "%s")'%(message,expected_message))
+        sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
+        
+        flagrow_in, flagtra_in, spectra_in, interval_in = self._get_data(self.rawfile, ['INTERVAL'])
+        flagrow_out, flagtra_out, spectra_out, interval_out = self._get_data(outfile, ['INTERVAL'])
+
+        # all data are averaged to one spectrum
+        nrow_expected = 1
+        shape_expected = (flagtra_in.shape[0],nrow_expected,)
+        self.assertEqual(len(flagrow_out), nrow_expected, msg='FLAGROW: shape differ')
+        self.assertEqual(len(interval_out), nrow_expected, msg='INTERVAL: shape differ')
+        self.assertEqual(flagtra_out.shape, shape_expected, msg='FLAGTRA: shape differ')
+        self.assertEqual(spectra_out.shape, shape_expected, msg='SPECTRA: shape differ')
+
+        # FLAGROW must be 1
+        self.assertEqual(flagrow_out[0], 1, msg='FLAGROW: value differ')
+
+        # FLAGTRA must be all 128
+        self.assertTrue(all(flagtra_out.flatten() == 128), msg='FLAGTRA: value differ')
+
+        # SPECTRA must be nominal averaged data
+        spectra_expected = (spectra_in * interval_in).sum(axis=1) / interval_in.sum()
+        diff = abs((spectra_out.flatten() - spectra_expected) / spectra_expected)
+        tol = 1.0e-6
+        self.assertTrue(all(diff < tol), msg='SPECTRA: value differ')
+
+        # INTERVAL must be a sum of all rows
+        self.assertEqual(interval_out, interval_in.sum(), msg='INTERVAL: value differ')
+        ## # the task must raise RuntimeError with correct message
+        ## with self.assertRaises(RuntimeError) as cm:
+        ##     sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', kernel='none', blfunc='none')
+        ## the_exception = cm.exception
+        ## message = the_exception.message
+        ## expected_message = 'Can\'t average fully flagged data.'
+        ## self.assertEqual(message, expected_message, msg='Exception contains unexpected message: "%s" (expected "%s")'%(message,expected_message))
+
+    def test_average_novaliddata_scan(self):
+        """test_avearge_novaliddata_scan: test if the task handles the data that has several scans and one scan is fully flagged"""
+        outfile = self.prefix + '.asap'
+        res = sdreduce(infile=self.rawfile, outfile=outfile, calmode='none', average=True, timeaverage=True, tweight='tint', scanaverage=True, kernel='none', blfunc='none')
+
+        # one row per scan
+        # there are three rows that has proper scan number (0, 1, 2)
+        # scan 1 is row flagged so that resulting data is just a copy
+        # of rows 0 and 2 of input data
+        flagrow_in, flagtra_in, spectra_in = self._get_data(self.rawfile)
+        flagrow_out, flagtra_out, spectra_out = self._get_data(outfile)
+
+        #valid_rows = numpy.where(flagrow_in == 0)[0]
+        #flagtra_expected = flagtra_in.take(valid_rows, axis=1)
+        #spectra_expected = spectra_in.take(valid_rows, axis=1)
+        # if all data are flagged, FLAGTRA will be all 128
+        flagtra_expected = flagtra_in.copy()
+        for irow in xrange(len(flagrow_in)):
+            if flagrow_in[irow] != 0:
+                flagtra_expected[:,irow] = 128
+        spectra_expected = spectra_in
+        self.assertEqual(flagrow_out.shape, flagrow_in.shape, msg='FLAGROW: shape differ')
+        self.assertEqual(flagtra_out.shape, flagtra_expected.shape, msg='FLAGTRA: shape differ')
+        self.assertEqual(spectra_out.shape, spectra_expected.shape, msg='SPECTRA: shape differ')
+        self.assertTrue(all(flagrow_out == flagrow_in), msg='FLAGROW: value differ')
+        self.assertTrue(all(flagtra_out.flatten() == flagtra_expected.flatten()), msg='FLAGTRA: value differ')
+        self.assertTrue(all(spectra_out.flatten() == spectra_expected.flatten()), msg='SPECTRA: value differ')
 
     def test_smooth_hanning(self):
         """test_smooth_hanning: test if hanning smoothing (direct convolution) handles flag information correctly"""
