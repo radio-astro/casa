@@ -100,8 +100,8 @@ class Raster(object):
         casalog.post(separator)
         casalog.post('Raster Row Detection Summary')
         casalog.post(separator)
-        headertitles = ['Filename', 'Number of Raster Rows']
-        headervalues = [self.infile, self.nrow]
+        headertitles = ['Filename', 'Nominal Spw for Detection', 'Nominal Pol for Detection', 'Number of Raster Rows']
+        headervalues = [self.infile, self.spw, self.pol, self.nrow]
         headertemplate = '%-{digit}s: %s'.format(digit=max(map(len,headertitles)))
         for (t,v) in zip(headertitles, headervalues):
             ht = t
