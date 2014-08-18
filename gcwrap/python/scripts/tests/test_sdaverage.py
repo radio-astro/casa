@@ -2490,8 +2490,8 @@ class sdaverage_test_average_flag(unittest.TestCase):
 
     Test list
         test_average_flag: test if average handles flag information properly
-        test_average_novaliddata: test if the task throws exception if
-                                  no valid data exists
+        test_average_novaliddata: test if the task handles fully flagged data
+                                  properly
         test_avearge_novaliddata_scan: test if the task handles the data that
                                        has several scans and one scan is
                                        fully flagged
