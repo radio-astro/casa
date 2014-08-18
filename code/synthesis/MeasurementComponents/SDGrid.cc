@@ -1465,7 +1465,7 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       if(weightspec.nelements()==0){
 	
 	for (Int k=0; k < vb.nRow(); ++k){ 
-	  cerr << "nrow " << vb.nRow() << " " << weight.shape() << "  "  << weight.column(k).shape() << endl;
+	  //cerr << "nrow " << vb.nRow() << " " << weight.shape() << "  "  << weight.column(k).shape() << endl;
 	  weight.column(k).set(vb.weight()(k));
 	}
       }
