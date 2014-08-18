@@ -309,7 +309,12 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   //frequency conversions
 
   MPosition obsPosition;
-  if(!(MeasTable::Observatory(obsPosition, telescop))){
+  if(nonDefaultLocation()) {
+    os << LogIO::DEBUG1 << "Using user defined location: "
+       << mLocation_p.getRefString() << " " << mLocation_p.get("m")
+       << LogIO::POST;
+    freqFrameValid_p = True;
+  } else if(!(MeasTable::Observatory(obsPosition, telescop))){
     os << LogIO::WARN << "Did not get the position of " << telescop 
        << " from data repository" << LogIO::POST;
     os << LogIO::WARN 
@@ -321,6 +326,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   else{
     mLocation_p = obsPosition;
     freqFrameValid_p = True;
+    os << LogIO::DEBUG1 << "Using observatory location of "
+       << telescop << ": " << mLocation_p.getRefString()
+       << " " << mLocation_p.get("m") << LogIO::POST;
   }
    //Make sure frame conversion is switched off for REST frame data.
   freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
@@ -779,6 +787,18 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
   return True;
 }
 
+//Return if mLocation_p is non-default MPosition
+Bool Imager::nonDefaultLocation(){
+  MPosition default_MPosition;
+  //Check for measure reference
+  if (mLocation_p.getRefString() != default_MPosition.getRefString())
+    return True;
+  //Check for measure value
+  if (mLocation_p.get("m") != default_MPosition.get("m"))
+    return True;
+  return False;
+}
+
 
 // Make standard choices for coordinates
 Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose) 
@@ -855,7 +875,9 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
   //frequency conversions
 
   MPosition obsPosition;
-  if(!(MeasTable::Observatory(obsPosition, telescop))){
+  if(nonDefaultLocation()) {
+    freqFrameValid_p = True;
+  } else if(!(MeasTable::Observatory(obsPosition, telescop))){
     os << LogIO::WARN << "Did not get the position of " << telescop 
        << " from data repository" << LogIO::POST;
     os << LogIO::WARN 

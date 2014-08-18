@@ -935,6 +935,9 @@ protected:
                            const ConstantSpectrum& cspectrum) const;
 
   Vector<Int> decideNPolPlanes(Bool checkwithMS);
+
+  //returns if mLocation_p is set (= non-default MPosition)
+  Bool nonDefaultLocation();
  
   ComponentList* componentList_p;
 
