@@ -1,4 +1,4 @@
-from taskinit import casalog, gentools
+from taskinit import casalog, gentools, qa
 import pylab as pl
 import numpy
 import os
@@ -6,6 +6,21 @@ import os
 import asap as sd
 
 tb = gentools(['tb'])[0]
+
+def asdatestring(mjd, timeonly=False):
+    datedict = qa.splitdate(qa.quantity(mjd, 'd'))
+    if timeonly:
+        return '%s:%s:%s'%(datedict['hour'],datedict['min'],datedict['sec'])
+    else:
+        return '%s/%s/%s/%s:%s:%s'%(datedict['year'],datedict['month'],datedict['monthday'],datedict['hour'],datedict['min'],datedict['sec'])
+
+def astimerange(mjd0, mjd1):
+    if int(mjd0) == int(mjd1):
+        # same date, different time
+        return '%s~%s'%(asdatestring(mjd0), asdatestring(mjd1,timeonly=True))
+    else:
+        # different date
+        return '%s~%s'%(tuple(map(asdatestring,[mjd0,mjd1])))
 
 class Raster(object):
     def __init__(self, infile):
@@ -16,6 +31,10 @@ class Raster(object):
         self.pol = None
         self.gaplist = []
         self.ngap = 0
+
+    @property
+    def nrow(self):
+        return self.ngap - 1
 
     @property
     def nominal_spw(self):
@@ -62,16 +81,44 @@ class Raster(object):
             self.pol = self.nominal_pol
         else:
             self.pol = pol
-        casalog.post('spw, pol = %s, %s'%(self.spw, self.pol))
+        casalog.post('spw, pol = %s, %s'%(self.spw, self.pol), priority='DEBUG')
         self.gaplist = detect_gap(self.infile, self.spw, self.pol)
         self.ngap = len(self.gaplist)
-    
+
+        self.summarize()
+
+    def summarize(self):
+        if self.spw is None:
+            self.detect()
         casalog.post('gaplist=%s (length %s)'%(self.gaplist, self.ngap), priority='DEBUG')
-        casalog.post('%s rows detected'%(self.ngap), priority='INFO')
+        separator = '-' * 35
+        splitter = ' ' * 2
+        indent = splitter * 2
+        width = int(numpy.ceil(numpy.log10(self.nrow))) + 1
+        column0 = '%{digit}s'.format(digit=width)
+        formatline = lambda x,y: indent + column0%(x) + splitter + y
+        casalog.post(separator)
+        casalog.post('Raster Row Detection Summary')
+        casalog.post(separator)
+        headertitles = ['Filename', 'Number of Raster Rows']
+        headervalues = [self.infile, self.nrow]
+        headertemplate = '%-{digit}s: %s'.format(digit=max(map(len,headertitles)))
+        for (t,v) in zip(headertitles, headervalues):
+            ht = t
+            casalog.post(headertemplate%(ht,v))
+        casalog.post(separator)
+        header = formatline('ROW', 'TIMERANGE')
+        casalog.post(header)
+        for i in xrange(self.nrow):
+            rows = self.select(i)
+            mjd_range = self.mjd_range
+            daterangestring = astimerange(*self.mjd_range)
+            casalog.post(formatline(i, daterangestring))
+            
         
     def select(self, rowid):
-        if rowid >= self.ngap - 1:
-            raise IndexError('row index %s is out of range (number of rows detected: %s)'%(rowid,ngap-1))
+        if rowid >= self.nrow:
+            raise IndexError('row index %s is out of range (number of rows detected: %s)'%(rowid,self.nrow))
 
         tb.open(self.infile)
         tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
