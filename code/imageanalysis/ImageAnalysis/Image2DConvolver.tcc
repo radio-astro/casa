@@ -510,10 +510,15 @@ template <class T> T Image2DConvolver<T>::_dealWithRestoringBeam(
 		Quantity x(inc[0], unit[0]);
 		Quantity y(inc[1], unit[1]);
 		Quantity diag = sqrt(x*x + y*y);
-		if (parameters[1] < diag) {
-			diag.convert(parameters[1].getFullUnit());
+		Quantity minAx = parameters[1];
+		if (minAx.getUnit().startsWith("pix")) {
+			minAx.setValue(minAx.getValue()*x.getValue());
+			minAx.setUnit(x.getUnit());
+		}
+		if (minAx < diag) {
+			diag.convert(minAx.getFullUnit());
 			os << LogIO::WARN << "Convolving kernel has minor axis "
-				<< parameters[1] << " which is less than the pixel diagonal "
+				<< minAx << " which is less than the pixel diagonal "
 				<< "length of " << diag << ". Thus, the kernel is poorly sampled, "
 				<< "and so the output of this application may not be what you expect. "
 				<< "You should consider increasing the kernel size or regridding "
