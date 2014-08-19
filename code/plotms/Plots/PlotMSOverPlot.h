@@ -148,7 +148,8 @@ private:
     //Returns the iteration for the canvas located at row, r, and column, c.
     int getIterationIndex( int r, int c, const PlotMSPage& page );
 
-
+    //Post a plot message to the logger.
+    void logMessage( const QString& msg ) const;
 
     //Note:  First index for a plot is the dataCount,
     //second index is the number of iteration.
