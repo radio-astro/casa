@@ -381,6 +381,7 @@ namespace casa{
 
 		    //tim.mark();
 		    resizeCF(cfWtBuf, xSupportWt, ySupportWt, samplingWt,0.0);
+		    //log_l << "CF WT Support: " << xSupport << " (" << xSupportWt << ") " << "pixels" <<  LogIO::POST;
 		    //tim.show("Resize:");
 
 		    //tim.mark();
@@ -983,7 +984,7 @@ namespace casa{
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
 
-    Int supportBuffer = aTerm_p->getOversampling();
+    Int supportBuffer = (Int)(aTerm_p->getOversampling()*1.5);
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
     //    bot *= 2; top *= 2;
