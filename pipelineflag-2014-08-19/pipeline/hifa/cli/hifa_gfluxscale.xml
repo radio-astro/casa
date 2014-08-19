@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_gfluxscale" category="pipeline">
+<shortdescription>Derive flux density scales from standard calibrators</shortdescription>
+<description>
+Derive the flux density scale from standard calibrators.
+</description>
+<input>
+    <param type="string" name="vis" subparam="true">
+        <description>List of input measurements sets</description>
+        <value></value>
+    </param>
+
+    <param type="variant" name="reference" subparam="true">
+        <description>Reference calibrator field name(s)</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="variant" name="transfer" subparam="true">
+        <description>Transfer calibrator field name(s)</description>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="refintent" subparam="true">
+        <description>Observing intent of reference fields</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="transintent" subparam="true">
+        <description>Observing intent of transfer fields</description>
+        <value></value>
+    </param>
+
+    <param type="intArray" name="refspwmap" subparam="true">
+        <description>Map accross spectral window boundaries</description>
+        <value>-1</value>
+    </param>
+
+    <param type="any" name="phaseupsolint">
+        <description>Phaseup correction solution interval</description>
+        <any type="variant"/>
+        <value type="string">int</value>
+    </param>
+
+    <param type="any" name="solint">
+        <description>Amplitude correction solution interval</description>
+        <any type="variant"/>
+        <value type="string">inf</value>
+    </param>
+
+    <param type="double" name="minsnr">
+        <description>Minimum SNR for gain solutions</description>
+        <value>2.0</value>
+    </param>
+
+    <param type="string" name="refant" subparam="true">
+        <description>The name or ID of the reference antenna</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="hm_resolvedcals">
+        <description>The resolved calibrators heuristics method</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>manual</value>
+        </allowed>
+    </param>
+
+    <param type="string" name="antenna" subparam="true">
+        <description>Antennas to be used in fluxscale</description>
+        <value></value>
+    </param>
+
+    <param type="double" name="peak_fraction" subparam="true">
+        <description>Fraction of peak visibility at uv-distance limit of antennas to be used</description>
+        <value>0.2</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operating mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or display commands (True)</description>
+        <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically accept results into context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="reference"><value type="string"></value></default>
+                <default param="transfer"><value type="string"></value></default>
+                <default param="refint"><value type="string"></value></default>
+                <default param="transintent"><value type="string"></value></default>
+                <default param="refspwmap"><value type="intArray">-1</value></default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="hm_resolvedcals"><value type="string">automatic</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="reference"><value type="string"></value></default>
+                <default param="transfer"><value type="string"></value></default>
+                <default param="refint"><value type="string"></value></default>
+                <default param="transintent"><value type="string"></value></default>
+                <default param="refspwmap"><value type="intArray">-1</value></default>
+                <default param="refant"><value type="string"></value></default>
+                <default param="hm_resolvedcals"><value type="string">automatic</value></default>
+            </equals>
+        </when>
+
+        <when param="hm_resolvedcals">
+            <equals type="string" value="automatic">
+                <default param="peak_fraction"><value type="double">0.2</value></default>
+            </equals>
+            <equals type="string" value="manual">
+                <default param="antenna"><value type="string"></value></default>
+            </equals>
+        </when>
+
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Derive flux densities for point source transfer calibrators using flux models
+for reference calibrators.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+    determines the values of all context defined pipeline inputs automatically.
+    In interactive mode the user can set the pipeline context defined
+    parameters manually.  In 'getinputs' mode the users can check the settings
+    of all pipeline parameters without running the task.
+    default: 'automatic'.
+
+phaseupsolint --  Time solution intervals in CASA syntax for the phase solution.
+    default: 'int'
+    example: 'inf', 'int', '100sec'
+
+solint --  Time solution intervals in CASA syntax for the amplitude solution.
+    default: 'inf'
+    example: 'inf', 'int', '100sec'
+
+minsnr -- Minimum signal to noise ratio for gain calibration solutions.
+    default: 2.0
+    example: 1.5, 0.0
+
+hm_resolvedcals - Heuristics method for handling resolved calibrators. The
+    options are 'automatic' and 'manual'. In automatic mode antennas closer
+    to the reference antenna than the uv distance where visibilities fall to
+    'peak_fraction' of the peak are used. In manual mode the antennas specified
+    in 'antenna' are used.
+
+antenna -- A comma delimited string specifying the antenna names or ids to be
+    used for the fluxscale determination. Used in hm_resolvedcals='manual' mode. 
+    default: ''.
+    example: 'DV16,DV07,DA12,DA08'  
+
+peak_fraction -- The limiting UV distance from the reference antenna forantennas
+    to be included in the flux calibration. Defined as the point where the 
+    calibrator visibilities have fallen to 'peak_fraction' of the peak value. 
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurment
+    sets specified in the pipeline context
+    default: ''
+    example: ['M32A.ms', 'M32B.ms']
+
+reference -- A string containing a comma delimited list of  field names
+    defining the reference calibrators. Defaults to field names with
+    intent '*AMP*'.
+    default: ''
+    example: 'M82,3C273'
+
+transfer -- A string containing a comma delimited list of  field names
+    defining the transfer calibrators. Defaults to field names with
+    intent '*PHASE*'.
+    default: ''
+    example: 'J1328+041,J1206+30'
+
+refintent -- A string containing a comma delimited list of intents 
+    used to select the reference calibrators. Defaults to *AMP*.
+    default: ''
+    example: '', '*AMP*'
+
+refspwmap -- Vector of spectral window ids enabling scaling across
+    spectral windows. Defaults to no scaling
+    default: [-1]
+    example: [1,1,3,3] (4 spws, reference fields in 1 and 3, transfer
+             fields in 0,1,2,3
+
+transintent -- A string containing a comma delimited list of intents 
+    defining the transfer calibrators. Defaults to *PHASE*.
+    default: ''
+    example: '', '*PHASE*'
+
+refant -- A string specifying the reference antenna(s). By default
+    this is read from the context.
+    default: ''
+    example: 'DV05'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned
+
+
+Description
+
+Derive flux densities for point source transfer calibrators using flux models
+for reference calibrators.
+
+Flux values are determined by:
+
+o computing complex gain phase only solutions for all the science spectral
+  windows using the calibrator data selected by the 'reference' and
+  'refintent' parameters and the 'transfer' and 'transintent' parameters,
+  and the value of the 'phaseupsolint' parameter.
+
+o computing complex amplitude only solutions for all the science spectral
+  windows using calibrator data selected with 'reference' and 'refintent'
+  parameters and the 'transfer' and 'transintent' parameters, the value
+  of the 'solint' parameter. 
+
+o transfering the flux scale from the reference calibrators to the transfer
+  calibrators using refspwmap for windows without data in the reference
+  calibrators
+
+o extracted the computed flux values from the CASA logs and inserting
+  them into the MODEL_DATA column.
+
+
+Resolved calibrators are handled via antenna selection either automatically,
+hm_resolvedcals='automatic' or manually, hm_resolvedcals='manual'. In
+the former case antennas closer to the reference antenna than the uv
+distance where visibilities fall to 'peak_fraction' of the peak are used.
+In manual mode the antennas specified in 'antenna' are used.
+
+Note that the flux corrected calibration table computed internally is
+not currently used in later pipeline apply calibration steps. 
+
+
+Issues
+
+Should we add a spw window selection option here?
+
+The code which extracts the flux scales from the logs needs to be replaced
+with code which uses the values returned from the CASA fluxscale task.
+
+
+Examples
+
+1. Compute flux flux values for the phase calibrator using model data from
+   the amplitude calibrator.
+
+   hifa_gfluxscale ()
+
+</example>
+
+</task>
+</casaxml>

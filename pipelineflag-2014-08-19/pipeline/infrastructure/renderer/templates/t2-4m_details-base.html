@@ -1,0 +1,283 @@
+<%!
+import cgi
+import os
+
+import pipeline.domain.measures as measures
+import pipeline.extern.asizeof as asizeof
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
+import pipeline.infrastructure.utils as utils
+
+def get_qascores(pool, lo, hi):
+	with_score = [s for s in pool if s.score not in ('', 'N/A', None)]
+	return [s for s in with_score if s.score > lo and s.score <= hi]
+%>
+
+<%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, plot_accessor=lambda d: [('No Intent', d)])">
+% if plot_dict:
+	<h3>${caller.title()}</h3>
+
+	% if hasattr(caller, 'preamble'):
+		 ${caller.preamble()}
+	% endif
+
+	% for ms, ms_plots in plot_dict.items():
+		<%
+			relurl = url_fn(ms)
+			subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
+			subpage_path = os.path.relpath(os.path.join(dirname, relurl), pcontext.report_dir)
+			subpage_exists = os.path.exists(subpage_abspath)
+		%>
+		<h4>
+			% if subpage_exists:
+			<a class="replace"
+			   href="${subpage_path}">
+			% endif
+				${ms}
+			% if subpage_exists:
+			</a>
+			% endif
+		</h4>	
+
+		% if hasattr(caller, 'ms_preamble'):
+		 	${caller.ms_preamble(ms)}
+		% endif
+
+	    <ul class="thumbnails">
+	        % for intent, intent_plots in plot_accessor(ms_plots):					
+				% for plot in intent_plots:
+		            % if os.path.exists(plot.thumbnail):
+		            <%
+		            	fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
+		            	thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
+		            %>
+		            
+		            <li class="span3">
+		                <div class="thumbnail">
+							<a href="${fullsize_relpath}"
+							   class="fancybox"
+							   rel="${relurl}"
+							   % if hasattr(caller, 'fancybox_caption'):
+							   caption="${caller.fancybox_caption(plot)}"
+							   % endif
+							   data-thumbnail="${thumbnail_relpath}">
+								<img src="${thumbnail_relpath}"
+									 % if hasattr(caller, 'mouseover'):
+							   		 title="${caller.mouseover(plot)}"
+							   		 % endif
+							   		 data-thumbnail="${thumbnail_relpath}">
+							   	</img>
+							</a>
+
+		                    <div class="caption">
+								<h4>
+								% if subpage_exists:
+									<a href="${subpage_path}"
+									% if data_field:
+									   data-field="${cgi.escape(plot.parameters['field'], True)}"
+									% endif
+									% if data_spw:
+									   data-spw="${plot.parameters['spw']}"
+									% endif
+									% if data_baseband:
+									   data-baseband="${plot.parameters['baseband']}"
+									% endif
+		   							   class="replace">
+								% endif
+								${caller.caption_title(plot)}
+								% if subpage_exists:
+									</a>
+								% endif
+								</h4>
+								
+								% if hasattr(caller, 'caption_text'):		
+		                        <p>${caller.caption_text(plot, intent)}</p>
+		                        % endif
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+	        % endfor
+	    </ul>
+
+	% endfor
+		
+% endif
+</%def>
+
+<div class="page-header">
+	<h1>${hr.get_stage_number(result)}. <%block name="title">Untitled Task</%block><%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
+</div>
+
+<ul class="unstyled">
+%if result.qa.pool:
+	% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
+	<li class="alert alert-error">
+		<i class="icon-remove-sign"></i> <strong>QA</strong> ${qascore.longmsg}
+	</li>
+	% endfor
+	% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
+	<li class="alert">
+		<i class="icon-question-sign"></i> <strong>QA</strong> ${qascore.longmsg}
+	</li>
+	% endfor
+%endif
+% for r in result:
+	% for logrecord in utils.get_logrecords(r, logging.ERROR):
+	<li class="alert alert-error">
+		<strong>Error!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+	% for logrecord in utils.get_logrecords(r, logging.WARNING):
+	<li class="alert">
+		<strong>Warning!</strong> ${logrecord.msg}
+	</li>
+	% endfor
+	% if alerts_info is not UNDEFINED:
+	% for msg in alerts_info:
+	<li class="alert alert-info">
+		${msg}
+	</li>
+	% endfor
+	% endif
+	% if alerts_success is not UNDEFINED:
+	% for msg in alerts_success:
+	<li class="alert alert-success">
+		${msg}
+	</li>
+	% endfor
+	% endif
+%endfor	
+</ul>
+
+${next.body()}
+
+<div class="accordion" id="details-accordion">
+
+<%doc>
+Help disabled until the task descriptions from John's presentation are added
+
+%if taskhelp:
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseOne">
+	        	Task Help
+	      	</a>
+	    </div>
+	    <div id="collapseOne" class="accordion-body collapse">
+			<div class="accordion-inner">
+				${taskhelp}
+			</div>
+		</div>
+	</div>
+%endif
+</%doc>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo">
+	        	CASA Logs
+	      	</a>
+	    </div>
+	    <div id="collapseTwo" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<pre>${stagelog}</pre>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+		<div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseQA">
+	        	Pipeline QA
+	      	</a>
+		</div>
+		<div id="collapseQA" class="accordion-body collapse">
+			<div class="accordion-inner">
+				% if result.qa.pool:
+				<table class="table table-bordered" summary="Pipeline QA summary">
+					<caption>Pipeline QA summary for this task.</caption>
+				    <thead>
+				        <tr>
+				            <th>Score</th>
+				            <th>Reason</th>
+				        </tr>
+				    </thead>
+					<tbody>
+					% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
+					<tr class="error">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
+					<tr class="warning">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_WARNING, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL):
+					<tr class="info">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+					% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_SUBOPTIMAL, 1.0):
+					<tr class="success">
+				    	<td>${'%0.2f' % qascore.score}</td>
+				    	<td>${qascore.longmsg}</td>
+				  	</tr>
+				  	% endfor
+				</table>
+				% else:
+					No pipeline QA for this task.
+				% endif
+			</div>		
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree">
+	        	Input Parameters
+	      	</a>
+	    </div>
+	    <div id="collapseThree" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+				% for k, v in result.inputs.iteritems():
+					<dt>${str(k)}</dt>
+					<dd>${str(v) if str(v) != '' else '&nbsp;'}</dd>
+				% endfor
+				</dl>
+			</div>
+		</div>
+	</div>
+
+	<div class="accordion-group">
+	    <div class="accordion-heading">
+			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseFour">
+				Task Execution Times
+	      	</a>
+	    </div>
+	    <div id="collapseFour" class="accordion-body collapse">
+			<div class="accordion-inner">
+				<dl class="dl-horizontal">
+					<dt>Start time</dt>
+					<dd>${utils.format_datetime(result.timestamps.start, dp=3)}</dd>
+					<dt>End</dt>
+					<dd>${utils.format_datetime(result.timestamps.end, dp=3)}</dd>
+					<dt>Duration</dt>
+					<dd>${utils.format_timedelta(result.timestamps.end - result.timestamps.start, dp=3)}</dd>
+					<dt>Context size</dt>
+					<dd>${str(measures.FileSize(asizeof.asizeof(pcontext), measures.FileSizeUnits.BYTES))}</dd>
+				</dl>
+			</div>
+		</div>
+	</div>
+
+</div>

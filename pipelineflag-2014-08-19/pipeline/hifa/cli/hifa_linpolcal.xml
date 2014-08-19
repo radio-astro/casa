@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hifa_linpolcal" category="pipeline">
+<shortdescription>Compute polarization calibration</shortdescription>
+<description>
+Compute polarization calibration.
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input measurement sets, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="field" subparam="true">
+    <description>Set of data selection field names or ids</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="intent" subparam="true">
+    <description>Set of data selection intents</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="g0table" subparam="true">
+    <description>Name of table holding G0 gain - not accounting for source pol</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="delaytable" subparam="true">
+    <description>Name of table holding cross-hand delay</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="xyf0table" subparam="true">
+    <description>Name of table holding residual X-Y phase spectrum and source Q and U</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="g1table" subparam="true">
+    <description>Name of table holding G1 gain - accounting for source pol</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="df0table" subparam="true">
+    <description>Name of table holding instrument polarization gain</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="refant" subparam="true">
+    <description>Reference antenna names</description>
+      <value></value>
+  </param>
+
+  <param type="string" name="spw" subparam="true">
+    <description>Set of data selection spectral window/channels</description>
+      <value></value>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic"/>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="g0table"><value type="string"></value></default>
+        <default param="delaytable"><value type="string"></value></default>
+        <default param="xyf0table"><value type="string"></value></default>
+        <default param="g1table"><value type="string"></value></default>
+        <default param="df0table"><value type="string"></value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="g0table"><value type="string"></value></default>
+        <default param="delaytable"><value type="string"></value></default>
+        <default param="xyf0table"><value type="string"></value></default>
+        <default param="g1table"><value type="string"></value></default>
+        <default param="df0table"><value type="string"></value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+Compute a polarization calibration.
+
+Keyword arguments:
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+       determines the values of all context defined pipeline inputs
+       automatically.  In interactive mode the user can set the pipeline
+       context defined parameters manually.  In 'getinputs' mode the user
+       can check the settings of all pipeline parameters without running
+       the task.
+       default: 'automatic'.
+
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets in the context. CURRENTLY THE LIST MUST CONTAIN 1 MEASUREMENT SET.
+    default: ''
+    example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Examples:
+TBD
+</example>
+
+</task>
+</casaxml>
+

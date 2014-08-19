@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_restoredata" category="pipeline">
+<shortdescription>Restore flagged and calibration interferometry data from a pipeline run</shortdescription>
+<description>
+</description>
+<input>
+    <param type="stringArray" name="vis">
+	<description>List of input visibility data</description>
+	<value></value>
+    </param>
+
+    <param type="stringArray" name="session">
+	<description>List of sessions one per visibility file</description>
+	<value></value>
+    </param>
+
+    <param type="string" name="products_dir">
+	<description>The archived pipeline data products directory</description>
+	<value>../products</value>
+    </param>
+
+    <param type="bool" name="copytoraw">
+	<description>Copy calibration and flagging tables to raw data directory</description>
+	<value>True</value>
+    </param>
+
+    <param type="string" name="rawdata_dir">
+	<description>The rawdata directory</description>
+	<value>../rawdata</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+	<description>The pipeline operating mode</description>
+	<value>automatic</value>
+	<allowed kind="enum">
+	    <value>automatic</value>
+	    <value>interactive</value>
+	    <value>getinputs</value>
+	</allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+	<description>Run the task (False) or display task command (True)</description>
+	<value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+	<description>Add the results into the pipeline context</description>
+	<value>True</value>
+    </param>
+
+    <constraints>
+	<when param="pipelinemode">
+	    <equals type="string" value="automatic">
+	    </equals>
+	    <equals type="string" value="interactive">
+		<default param="dryrun"><value type="bool">False</value></default>
+		<default param="acceptresults"><value type="bool">True</value></default>
+	    </equals>
+	    <equals type="string" value="getinputs">
+	    </equals>
+	</when>
+    </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+The hif_restoredata task restores flagged and calibrated measurements sets
+from archived ASDMs and pipeline flagging and calibration date products. 
+
+Keyword arguments:
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In 'interactive' mode the user can set the pipeline context defined
+   parameters manually.  In 'getinputs' mode the user can check the settings
+   of all pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline context defined parameter argument which can be set only in
+'interactive mode'
+
+vis -- List of raw visibility  data files to be restored. Assumed to be
+   in the directory specified by rawdata_dir.
+   default: None
+   example: vis=['uid___A002_X30a93d_X43e']
+
+session -- List of sessions one per visibility file. 
+   default: None 
+   example: session=['session_3']
+
+products_dir -- Name of the data products directory. Currently not
+   used.
+   default: '../products'
+   example: products_dir='myproductspath'
+
+rawdata_dir -- Name of the rawdata subdirectory. 
+   default: '../rawdata'
+   example: rawdata_dir='myrawdatapath'
+
+
+--- pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+   the results object for the pipeline task is returned.
+
+Description
+
+The hif_restoredata restores flagged and calibrated data from archived
+ASDMs and pipeline flagging and calibration data products. Pending archive
+retrieval support hif_restore data assumes that the required products
+are available in the rawdata_dir in the format produced by the
+hif_exportdata task.
+
+hif_restoredata assumes that the following entities are available in the raw
+data directory
+
+o the ASDMs to be restored
+o for each ASDM in the input list
+   o a compressed tar file of the final flagversions file, e.g.  
+     uid___A002_X30a93d_X43e.ms.flagversions.tar.gz
+   o a text file containing the applycal instructions, e.g.
+     uid___A002_X30a93d_X43e.ms.calapply.txt
+   o a compressed tar file containing the caltables for the parent session,
+     e.g. uid___A001_X74_X29.session_3.caltables.tar.gz
+
+hif_restore data performs the followinga operations
+
+o imports the ASDM(s))
+o removes the default MS.flagversions directory created by the filler
+o restores the final MS.flagversions directory stored by the pipeline
+o restores the final set of pipeine flags to the MS
+o restores the final calibration state of the MS
+o restores the final calibration tables for each MS
+o applies the calibration tables to each MS
+
+
+Issues
+
+Examples
+
+1. Restore the pipeline results for a single ASDM in a single session 
+
+    hif_restoredata (vis=['uid___A002_X30a93d_X43e'], session=['session_1'])
+
+</example>
+</task>
+</casaxml>

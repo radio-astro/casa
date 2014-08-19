@@ -1,0 +1,342 @@
+@CHARSET "UTF-8";
+
+body {
+	margin:0;
+	padding:0;
+	border:0;			/* This removes the border around the viewport in old versions of IE */
+	width:100%;
+	background:#fff;
+	min-width:600px;    	/* Minimum width of layout - remove line if not required */
+					/* The min-width property does not work in old versions of Internet Explorer */
+	font-size:90%;
+}
+a {
+	color:#369;
+}
+h1, h2, h3 {
+	margin:.8em 0 .2em 0;
+	padding:0;
+}
+p {
+	margin:.4em 0 .8em 0;
+	padding:0;
+}
+img {
+	margin:10px 0 5px;
+}
+#ads img {
+	display:block;
+	padding-top:10px;
+}
+
+/* Header styles */
+#header {
+	clear:both;
+	float:left;
+	width:100%;
+}
+#header {
+	border-bottom:1px solid #000;
+}
+#header p,
+#header h1,
+#header h2 {
+	padding:.4em 15px 0 15px;
+	margin:0;
+}
+#header ul {
+	clear:left;
+	float:left;
+	width:100%;
+	list-style:none;
+	margin:10px 0 0 0;
+	padding:0;
+}
+#header ul li {
+	display:inline;
+	list-style:none;
+	margin:0;
+	padding:0;
+}
+#header ul li a {
+	display:block;
+	float:left;
+	margin:0 0 0 1px;
+	padding:3px 10px;
+	text-align:center;
+	background:#eee;
+	color:#000;
+	text-decoration:none;
+	position:relative;
+	left:15px;
+	line-height:1.3em;
+}
+#header ul li a:hover {
+	background:#369;
+	color:#fff;
+}
+#header ul li a.active,
+#header ul li a.active:hover {
+	color:#fff;
+	background:#000;
+	font-weight:bold;
+}
+#header ul li a span {
+	display:block;
+}
+/* 'widths' sub menu */
+#layoutdims {
+	clear:both;
+	background:#eee;
+	border-top:4px solid #000;
+	margin:0;
+	padding:6px 15px !important;
+	text-align:right;
+}
+/* column container */
+.colmask {
+	position:relative;	/* This fixes the IE7 overflow hidden bug */
+	clear:both;
+	float:left;
+	width:100%;			/* width of whole page */
+	overflow:hidden;		/* This chops off any overhanging divs */
+}
+/* common column settings */
+.colright,
+.colmid,
+.colleft {
+	float:left;
+	width:100%;
+	position:relative;
+}
+.col1,
+.col2,
+.col3 {
+	float:left;
+	position:relative;
+	padding:0 0 1em 0;
+	overflow:hidden;
+}
+/* 2 Column (left menu) settings */
+.leftmenu {
+	background:#fff;		/* right column background colour */
+}
+.leftmenu .colleft {
+	right:75%;			/* right column width */
+	background:#f4f4f4;	/* left column background colour */
+}
+.leftmenu .col1 {
+	width:71%;			/* right column content width */
+	left:102%;			/* 100% plus left column left padding */
+}
+.leftmenu .col2 {
+	width:21%;			/* left column content width (column width minus left and right padding) */
+	left:6%;			/* (right column left and right padding) plus (left column left padding) */
+}
+/* Footer styles */
+#footer {
+	clear:both;
+	float:left;
+	width:100%;
+	border-top:1px solid #000;
+}
+#footer p {
+	padding:10px;
+	margin:0;
+}
+
+iframe {height:80%; width:100%}
+
+ul.thumb {
+    float: left;
+    list-style: none;
+    margin: 0; 
+    padding: 10px 10px 0px 0px;
+}
+ul.thumb li {
+    margin: 0; 
+    padding: 5px;
+    float: left;
+    position: relative;
+    width: 112px;
+    height: 87px;
+}
+ul.thumb li img {
+    width: 100px; 
+    height: 75px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: #f0f0f0;
+    position: absolute;
+    left: 0; top: 0;
+    -ms-interpolation-mode: bicubic; 
+}
+
+table.one-column-emphasis
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+#	margin: 45px;
+#	width: 480px;
+	text-align: left;
+	border-collapse: collapse;
+}
+table.one-column-emphasis th
+{
+	font-size: 14px;
+	font-weight: normal;
+	padding: 12px 15px;
+	color: #039;
+}
+table.one-column-emphasis td
+{
+	padding: 4px 6px;
+	color: #669;
+	border-top: 1px solid #e8edff;
+}
+.oce-first
+{
+	background: #d0dafd;
+	border-right: 10px solid transparent;
+	border-left: 10px solid transparent;
+}
+table.one-column-emphasis tr:hover td
+{
+	color: #339;
+	background: #eff2ff;
+}
+
+table.one-column-emphasis caption 
+{
+	caption-side:bottom;
+	padding: 8px;
+}
+
+table.minimalist
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	background: #fff;
+	margin: 45px;
+#	width: 480px;
+	border-collapse: collapse;
+	text-align: left;
+}
+table.minimalist th
+{
+	font-size: 14px;
+	font-weight: normal;
+	color: #039;
+	padding: 10px 8px;
+	border-top: 2px solid #6678b1;
+	border-bottom: 2px solid #6678b1;
+	text-align: center;
+}
+table.minimalist td
+{
+	border-bottom: 1px solid #ccc;
+	color: #669;
+	padding: 6px 8px;
+}
+table.minimalist tbody tr:hover td
+{
+	color: #009;
+}
+table.minimalist caption 
+{
+	caption-side:bottom;
+	padding: 8px;
+}
+
+table.box
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: 45px;
+	width: 480px;
+	text-align: left;
+	border-collapse: collapse;
+}
+table.box th
+{
+	font-size: 13px;
+	font-weight: normal;
+	padding: 8px;
+	background: #b9c9fe;
+	border-top: 4px solid #aabcfe;
+	border-bottom: 1px solid #fff;
+	color: #039;
+}
+table.box td
+{
+	padding: 8px;
+	background: #e8edff; 
+	border-bottom: 1px solid #fff;
+	color: #669;
+	border-top: 1px solid transparent;
+}
+table.box tr:hover td
+{
+	background: #d0dafd;
+	color: #339;
+}
+
+
+.gallery {
+#	width:600px;
+	margin:0 auto;
+	clear:both;
+	overflow:auto;
+}
+.gallery ul, .gallery ul p {
+	margin:0;
+	padding:0;
+	list-style-type:none;
+}
+.gallery ul li {
+	display:inline;
+}
+.gallery ul li img {
+    width: 150px;
+    height: 112px;
+#    border: 1px solid #ddd;
+    padding: 5px;
+    background: #f0f0f0;
+    -ms-interpolation-mode: bicubic;
+}
+.gallery ul li a {
+	display:block;
+	margin:5px;
+	float:left;
+	padding:5px;
+	width:162px;
+}
+.gallery ul li a:hover {
+	color:#fff;
+	background:#369;
+	text-decoration:none;
+}
+.gallery ul p {
+	text-align:center;
+	padding:2px 0 2px 0;
+}
+
+pre {
+	line-height: 1.1em;
+	font-size: 10px;
+	padding: 1em;
+	border: 1px dashed #2f6fab;
+	color: black;
+	background-color: #f9f9f9;
+	font-family: monospace,Courier;
+	overflow: auto;
+}
+
+#taskdetails {
+	margin: 10px;
+}
+
+.warning li {
+   background: url('warning.gif') 50% 50% no-repeat no-repeat;
+   padding-left: 5px;
+}

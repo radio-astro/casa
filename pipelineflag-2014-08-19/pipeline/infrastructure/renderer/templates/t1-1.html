@@ -1,0 +1,219 @@
+<%!
+navbar_active='Home'
+
+import collections
+import datetime
+import itertools
+import operator
+import os
+
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.utils as utils
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Home</%block>
+
+<div class="row-fluid">
+	<div class="span6">
+		<h2>Observation Overview</h2>
+		<table class="table table-condensed" summary="Data Details">
+			<thead>
+				<tr>
+					<th class="span5"></th>
+					<th class="span7"></th>
+				</tr>
+			</thead>
+			<tbody>
+		% if project_id is not None:
+				<tr>
+					<th>Project</th>
+					<td>${project_uids}</td>
+				</tr>
+		% endif
+		% if observer is not None:
+				<tr>
+					<th>Principal Investigator</th>
+					<td>${observers}</td>
+				</tr>
+		% endif
+		
+		% if ous_uid != 'unknown':
+				<tr>
+					<th>OUS Status Entity id</th>
+					<td>${ousstatus_entity_id}</td>
+				</tr>
+		% endif
+				<tr>
+					<th>Observation Start</th>
+					<td>${obs_start}&nbsp;UTC</td>
+				</tr>
+				<tr>
+					<th>Observation End</th>
+					<td>${obs_end}&nbsp;UTC</td>
+				</tr>
+		
+
+			</tbody>
+		</table>
+	</div>
+
+
+
+	<div class="span6">
+		<h2>Pipeline Summary</h2>
+
+		<table class="table table-condensed">
+			<thead>
+				<tr>
+					<th class="span3"></th>
+					<th class="span6"></th>
+					<th class="span2"></th>
+					<th class="span1"></th>
+				</tr>
+			</thead>
+			<tbody>
+				% if ppr_uid is not None:
+				<tr>
+					<th>PPR ID</th>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+				% endif
+				<tr>
+					<th>Pipeline Version</th>
+					<td>${pipeline_revision}</td>					
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<th>CASA Version</th>
+					<td>${casa_version} r${casa_revision}</td>					
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<th>Pipeline Start</th>
+					<td>${exec_start}&nbsp;UTC</td>
+					<td></td>
+					<td></td>
+				</tr>
+				<tr>
+					<th>Execution Duration</th>
+					<td>${exec_duration}</td>
+					<td></td>
+					<td></td>
+				</tr>
+<%doc>
+				<tr>
+					<th>QA Total</th>
+					<td></td>
+					<td><div class="progress" style="margin-bottom:0px;"><div class="bar" style="width:0%;"><span class="text-center"></span></div></div></td>
+					<td><span class="badge">N/A</span></td>
+				</tr>
+				% for section in topicregistry.topics.values():
+				<tr>
+					<td>&nbsp;&nbsp;&nbsp;&nbsp;<a href="${section.url}">${section.description}</a></td>
+                                        <td></td>
+					<td><div class="progress" style="margin-bottom:0px;">
+					      <div class="bar" style="width:0%;">
+					        <span class="text-center"></span>
+					      </div>
+					    </div>
+					</td>
+					<td><span class="badge">N/A</span></td>
+
+				</tr>
+				% endfor
+</%doc>
+			</tbody>
+		</table>								
+<!-- 
+		% if pcontext.logtype == 'GOUS':
+		<li>GOUS ID</li>
+		<ul>
+			<li>MOUS1 ID</li>
+			<li>MOUS2 ID</li>
+			<li>MOUS3 ID</li>
+		</ul>
+		% endif
+ -->
+	</div>
+
+</div>
+
+
+
+	    <h2>Observation Summary</h2>
+            
+
+
+	    <table class="table table-bordered table-condensed" 
+		    summary="Measurement Set Summaries">
+		    
+		<thead>
+		    <tr>
+
+			<th scope="col" rowspan="2">Measurement Set</th>
+			<th scope="col" rowspan="2">Receivers</th>
+			<th scope="col" rowspan="2">Num Antennas</th>
+			<th scope="col" colspan="3">Time (UTC)</th>
+				    <!-- break heading divider for subcolumns -->
+			<th scope="col" colspan="3">Baseline Length</th>
+			<th scope="col" rowspan="2">Size</th>
+		    </tr>
+		    <tr>
+			<th scope="col">Start</th>
+			<th scope="col">End</th>
+			<th scope="col">On Source</th>
+			<th scope="col">Min</th>
+			<th scope="col">Max</th>
+			<th scope="col">RMS</th>
+		    </tr>
+		</thead>
+		    <tbody>
+			    % for ouskey, ousgroup in itertools.groupby(sorted(ms_summary_rows, key=lambda x: (x.ousstatus_entity_id, x.schedblock_id, x.session)), key=operator.attrgetter('ousstatus_entity_id')):
+			       <%
+                                        ouslabel = '<b> Observing Unit Set Status: </b>'
+                                        ousid = ouskey
+                                %>
+
+			        % for sbkey, sbgroup in itertools.groupby(ousgroup, key=operator.attrgetter('schedblock_id')):
+                                    <%
+                                        sblabel = '<b> Scheduling Block ID: </b>'
+                                        sbid = sbkey
+                                    %>
+
+			            % for sessionkey, sessiongroup in itertools.groupby(sbgroup, key=operator.attrgetter('session')):
+			                <tr bgcolor="#D1E0FF">
+			                    <td colspan="10">${ouslabel} ${ousid} ${sblabel} ${sbid}  </td>
+			                </tr>
+			                <tr bgcolor="#E8F0FF">
+			                    <td colspan="10"><b>Session:</b> ${sessionkey} </td>
+			                </tr>
+			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
+					    <tr>
+				                <td><a href="${row.href}">${row.ms}</a></td>
+				                <td>${utils.commafy(row.receivers, quotes=False)}</td>
+				                <td>${row.num_antennas}</td>
+				                <td>${row.time_start}</td>
+				                <td>${row.time_end}</td>
+				                <td>${row.time_on_source}</td>
+				                <td>${str(row.baseline_min)}</td>
+				                <td>${str(row.baseline_max)}</td>
+				                <td>${str(row.baseline_rms)}</td>
+				               <td>${str(row.filesize)}</td>
+					    </tr>
+				        %endfor
+				        <%
+				            ouslabel = ''
+                                            ousid = ''
+                                            sblabel = ''
+                                            sbid = ''
+                                        %>
+				    % endfor
+				%endfor
+			    % endfor
+		    </tbody>
+	    </table>

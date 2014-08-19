@@ -1,0 +1,188 @@
+<%!
+rsc_path = ""
+import cgi
+import os
+import string
+import types
+
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.utils as utils
+
+agent_description = {
+	'before'   : 'Before',
+	'applycal' : 'After',
+}
+
+total_keys = {
+	'TOTAL'        : 'All Data',
+	'SCIENCE SPWS' : 'Science Spectral Windows',
+	'BANDPASS'     : 'Bandpass',
+	'AMPLITUDE'    : 'Flux',
+	'PHASE'        : 'Phase',
+	'TARGET'       : 'Target'
+}
+
+def template_agent_header1(agent):
+	span = 'col' if agent in ('online','template') else 'row'
+	return '<th %sspan=2>%s</th>' % (span, agent_description[agent])
+
+def template_agent_header2(agent):
+	if agent in ('online', 'template'):
+		return '<th>File</th><th>Number of Statements</th>'
+	else:
+		return ''		
+
+def get_template_agents(agents):
+	return [a for a in agents if a in ('online', 'template')]
+
+def sanitise(url):
+	return filenamer.sanitize(url)
+
+
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+<script>
+$(document).ready(function(){
+    // return a function that sets the SPW text field to the given spw
+    var createSelectSetter = function(val, element_id) {
+    	return function() {
+    		var vals = val.toString().split(',');
+    		// trigger a change event, otherwise the filters are not changed
+            $(element_id).select2("val", vals).trigger("change");
+        };
+    };
+    
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var spw = o.data("spw");
+        var field = o.data("field");
+		if (typeof field === 'undefined') {
+	        o.data("callback", createSelectSetter(spw, "#select-spw"));
+		} else {
+	        o.data("callback", [createSelectSetter(spw, "#select-spw"),
+	                            createSelectSetter(field, "#select-field")]);
+		}
+    });
+
+    $(".fancybox").fancybox({
+        type: 'image',
+        prevEffect: 'none',
+        nextEffect: 'none',
+        loop: false,
+        helpers: {
+            title: {
+                type: 'outside'
+            },
+            thumbs: {
+                width: 50,
+                height: 50,
+            }
+        }
+    });
+	
+    // fix the thumbnail margins for plots on the n>1 row
+    UTILS.fixThumbnailMargins();
+});
+</script>
+
+
+
+<%block name="title">Set model flux</%block>
+
+<h2>Results</h2>
+<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
+<table class="table table-bordered table-striped" summary="Flux density results">
+	<caption>Setjy Results</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Measurement Set</th>
+	        <th scope="col" rowspan="2">Field</th>
+	        <th scope="col" rowspan="2">SpW</th>
+	        <th scope="col" rowspan="2">Centre Freq.</th>
+	        <th scope="col" rowspan="2">Band</th>
+	        <th scope="col" colspan="4">Flux Density</th>
+		</tr>
+		<tr>
+	        <th scope="col">I</th>
+	        <th scope="col">Q</th>
+	        <th scope="col">U</th>
+	        <th scope="col">V</th>
+	    </tr>
+	</thead>
+	<tbody>
+%for single_result in result:
+<%
+    vis = os.path.basename(single_result.vis)
+
+    ms = pcontext.observing_run.get_ms(vis)
+    spws = ms.get_spectral_windows()
+%>
+	%for field in single_result.measurements:
+		%for flux in sorted(single_result.measurements[field], key=lambda m: int(m.spw_id)):
+		<tr>
+			<td>${os.path.basename(single_result.vis)}</td>
+			<td>${field}</td>
+			<td>${flux.spw_id}</td>
+			<td>${[str(spw.centre_frequency) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
+			<td>${[str(spw.band) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
+			<td>${str(flux.I)}</td>
+			<td>${str(flux.Q)}</td>
+			<td>${str(flux.U)}</td>
+			<td>${str(flux.V)}</td>
+		</tr>
+		%endfor
+	%endfor
+%endfor
+	</tbody>
+</table>
+
+
+
+
+%if amp_vs_uv_plots:
+	<h3>Model amplitude vs UV distance</h3>
+
+	% for ms in amp_vs_uv_plots:
+	    <h4> ${ms} </h4>
+		% for intent in amp_vs_uv_plots[ms]:
+		    <ul class="thumbnails">
+		        % for plot in amp_vs_uv_plots[ms][intent]:
+		            % if os.path.exists(plot.thumbnail):
+		            <li class="span3">
+		                <div class="thumbnail">
+		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       class="fancybox"
+		                       rel="amp_vs_uv-${ms}">
+		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+		                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
+		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+		                        </img>
+		                    </a>
+		
+		                    <div class="caption">
+								<h4>
+
+					                   Baseband ${plot.parameters['baseband']}
+
+								</h4>
+								
+		                        <p>Model amp vs UV distance for ${intent} calibrator  baseband ${plot.parameters['baseband']}, all antennas and correlations. Data are colored by spw.
+		                        </p>
+		                    </div>
+		                </div>
+		            </li>
+		            % endif
+		        % endfor
+		    </ul>
+		% endfor
+	%endfor
+%endif
+
+
+

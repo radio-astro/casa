@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="h_resume" category="pipeline">
+<shortdescription>Restore a save pipeline state from disk</shortdescription>
+<description>
+h_resume restores a name pipeline state from disk allowing a suspended 
+pipeline reduction session to be resumed.
+</description>
+<input>
+    <param type="string" name="filename">
+	<description>Filename of saved state to be restored</description>
+	<value>last</value>
+    </param>
+</input>
+<example>
+
+h_resume restores a name pipeline state from disk allowing a suspended 
+pipeline reduction session to be resumed.
+
+Keyword parameters:
+
+filename -- Name of the saved pipeline state. Setting filename to
+    'last' restores the most recently saved pipeline state whose
+    name begins with 'context*'.
+    default: 'last'
+    example: filename='context.s3.2012-02-13T10:49:11'
+	     filename='last' 
+
+Description
+
+h_resume restores a name pipeline state from disk allowing a suspended 
+pipeline reduction session to be resumed.
+
+Issues
+
+Examples
+
+1. Resume the last saved session
+
+    h_resume()
+
+2. Resume the named saved session
+
+    h_resume(filename='context.s3.2012-02-13T10:49:11')
+
+</example>
+</task>
+</casaxml>

@@ -1,0 +1,85 @@
+<%!
+rsc_path = ""
+css_file = "css/pipeline.css"
+navbar_active=''
+
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<%block name="head">
+<!-- Add jQuery library -->
+<script src="${self.attr.rsc_path}resources/js/jquery-1.9.1.js"></script>
+<link href="${self.attr.rsc_path}resources/css/bootstrap.min.css" rel="stylesheet" media="screen"></link>
+<script src="${self.attr.rsc_path}resources/js/bootstrap.min.js"></script>
+
+<!-- Add mousewheel plugin (this is optional) -->
+<script src="${self.attr.rsc_path}resources/fancybox/lib/jquery.mousewheel-3.0.6.pack.js"></script>
+
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/jquery.fancybox.css" type="text/css" media="screen" />
+<script src="${self.attr.rsc_path}resources/fancybox/source/jquery.fancybox.pack.js"></script>
+
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-buttons.css" type="text/css" media="screen" />
+<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-buttons.js"></script>
+<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-media.js"></script>
+
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-thumbs.css" type="text/css" media="screen" />
+<script src="${self.attr.rsc_path}resources/fancybox/source/helpers/jquery.fancybox-thumbs.js"></script>
+
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/${self.attr.css_file}" type="text/css" media="screen" />
+ 
+<!--  Add purl-JS URL parsing extension -->
+<script src="${self.attr.rsc_path}resources/js/purl-2.2.1.js"></script>
+
+<!--  add FontAwesome -->
+<link rel="stylesheet" href="${self.attr.rsc_path}resources/css/font-awesome.min.css">
+
+<!--  Add image holder library for missing plots -->
+<script src="${self.attr.rsc_path}resources/js/holder.js"></script>
+
+</%block>
+
+<title>
+% if pcontext.project_summary.proposal_code != '':
+${pcontext.project_summary.proposal_code} -
+% endif
+<%block name="title">Untitled Page</%block></title>
+</head>
+<body>
+
+<%block name="header">
+<div class='navbar navbar-fixed-top'>
+	<div class="navbar-inner">
+		<div class="nav-collapse collapse">
+			<ul class="nav">
+			
+			        <a class="brand" href="#"><img style="position:absolute; TOP:0px; LEFT:-15px; HEIGHT:40px; WIDTH:29px"  src="${self.attr.rsc_path}resources/img/${pcontext.project_summary.telescope.lower()}logo.gif"></a>
+			        <a class="brand" href="#">${pcontext.project_summary.telescope}</a>
+			        <li class="divider-vertical"></li>
+				% if pcontext.project_summary.proposal_code != '':
+				<a class="brand" href="#">${pcontext.project_summary.proposal_code}</a>
+				<li class="divider-vertical"></li>
+				% endif				
+				<li class="${'active' if self.attr.navbar_active == 'Home' else ''}"><a href="t1-1.html"><i class="icon-home"></i> Home</a></li>
+				% if pcontext.logtype != 'GOUS':
+				<li class="${'active' if self.attr.navbar_active == 'By Topic' else ''}"><a href="t1-3.html">By Topic</a></li>
+				% endif
+				<li class="${'active' if self.attr.navbar_active == 'By Task' else ''}"><a href="t1-4.html">By Task</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+</%block>
+
+<div id="app-container" class="container-fluid">
+	${next.body()}
+	
+	<div class="footer">
+		<%block name="footer"></%block>
+	</div>
+</div>
+
+</body>
+</html>
