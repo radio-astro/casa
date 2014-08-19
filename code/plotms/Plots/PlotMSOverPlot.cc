@@ -572,6 +572,17 @@ void PlotMSOverPlot::constructorSetup() {
 
 // Private Methods //
 
+void PlotMSOverPlot::logMessage( const QString& msg ) const {
+	if ( itsParent_ != NULL ){
+		stringstream ss;
+		ss << msg.toStdString().c_str();
+		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+					PMS::LOG_ORIGIN_PLOT,
+					ss.str(),
+					PMS::LOG_EVENT_PLOT);
+	}
+}
+
 bool PlotMSOverPlot::updateCache() {
 	PMS_PP_MSData* data = itsParams_.typedGroup<PMS_PP_MSData>();
 	PMS_PP_Cache* cache = itsParams_.typedGroup<PMS_PP_Cache>();
@@ -587,13 +598,7 @@ bool PlotMSOverPlot::updateCache() {
 	// Trap bad averaging/iteration combo
 	if (data->averaging().baseline() &&
 			iter->iterationAxis()==PMS::ANTENNA) {
-		stringstream ss;
-		ss << "Cannot iterate on Antenna if averaging over baseline, "
-				<< "so turning off iteration.";
-		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
-				PMS::LOG_ORIGIN_PLOT,
-				ss.str(),
-				PMS::LOG_EVENT_PLOT);
+		logMessage( "Cannot iterate on Antenna if averaging over baseline, so turning off iteration.");
 		iter->setIterationAxis(PMS::NONE);
 	}
 
@@ -633,11 +638,7 @@ bool PlotMSOverPlot::updateCache() {
 	}
 	catch( AipsError& error ){
 		cacheUpdating = false;
-		String errorMsg = error.getMesg();
-		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
-					PMS::LOG_ORIGIN_PLOT,
-					errorMsg,
-					PMS::LOG_EVENT_PLOT);
+		logMessage( error.getMesg().c_str() );
 		result = false;
 	}
 	return result;
@@ -1032,7 +1033,7 @@ bool PlotMSOverPlot::setIter( int index ){
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		pages.setCurrentPageNum( index );
 		iter_ = index;
-
+		
 		recalculateIteration();
 		successful = true;
 	}

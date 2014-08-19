@@ -731,9 +731,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
             else {
                 PlotMSPlotParameters* sp =
                     itsPlotms_.getPlotManager().plotParameters(index);
-                sp->holdNotification(this);
-                *sp = ppp;
-                sp->releaseNotification();
+                if ( sp != NULL ){
+                	sp->holdNotification(this);
+                	*sp = ppp;
+                	sp->releaseNotification();
+                }
             }
         }
         else if(updateImmediately){
@@ -898,7 +900,7 @@ bool PlotMSDBusApp::update() {
 	// single threaded here
     itsUpdateFlag_ = false;
     unsigned int n = itsPlotms_.getPlotManager().plotParameters().size();
-
+   
     // update plot parameters
     PlotMSPlotParameters* p;
     for(unsigned int i = 0; i < n; i++) {
