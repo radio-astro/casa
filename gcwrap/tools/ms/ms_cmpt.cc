@@ -3535,7 +3535,7 @@ ms::moments(const std::vector<int>& moments,
 
 bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 {
-  Bool retVal;
+  Bool retVal=False;
   try
     {
      *itsLog << LogOrigin("ms", "msselect");
@@ -3555,7 +3555,7 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
 	  if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "observation")   {obsExpr        = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "array")         {arrayExpr      = casaRec->asString(RecordFieldId(i));}
-	  if (casaRec->name(i) == "taql")          {taQLExpr      = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "taql")          {taQLExpr       = casaRec->asString(RecordFieldId(i));}
 	}
       // if (itsSelectedMS) delete itsSelectedMS;
       // itsSelectedMS = new MeasurementSet();
@@ -3566,13 +3566,18 @@ bool ms::msselect(const ::casac::record& exprs, const bool onlyparse)
       // and not the actual selected MS.
       //
       if (onlyparse)
-	itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
-		      taQLExpr,polnExpr,scanExpr,arrayExpr,scanIntentExpr,obsExpr);
+	{
+	  itsMSS->reset(*itsMS, MSSelection::PARSE_NOW,timeExpr,baselineExpr,fieldExpr,spwExpr,uvDistExpr,
+			taQLExpr,polnExpr,scanExpr,arrayExpr,scanIntentExpr,obsExpr);
+	  retVal=(itsMSS->getTEN(itsMS).isNull() == False);
+	}
       else
-	retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
-			    timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
-			    taQLExpr, polnExpr, scanExpr,
-			    arrayExpr, scanIntentExpr, obsExpr, itsMSS);
+	{
+	  retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
+			      timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
+			      taQLExpr, polnExpr, scanExpr,
+			      arrayExpr, scanIntentExpr, obsExpr, itsMSS);
+	}
       itsSel->setMS(*itsMS);
       return retVal;
     }
