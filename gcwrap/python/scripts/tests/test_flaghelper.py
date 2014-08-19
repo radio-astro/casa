@@ -1,6 +1,7 @@
 import shutil
 import unittest
 import os
+import shutil
 import filecmp
 import pprint
 import exceptions
@@ -76,15 +77,29 @@ class test_base(unittest.TestCase):
             print "Moving data..."
             os.system('cp -r '+datapath + self.vis +' '+ self.vis)
 
+    def setUp_onlineFlags(self):
+        '''Large file with online flags'''
+        self.inpfile = "BigOnlineFlags.txt"
+
+        if not os.path.exists(self.inpfile):
+            os.system('cp '+datapath + self.inpfile +' '+ self.inpfile)
+            
+    def tearDown_all(self):
+        '''Remove used files'''
+        os.system('rm -rf flaghelper*.txt')
+        
 
 class test_flaghelper(test_base):
+    
+    def tearDown(self):
+        self.tearDown_all()
     
     def test_readFile1(self):
         '''flaghelper: read a file from disk'''
         # creat input file
         myinput = "scan='1~3' mode='manual'\n"+"scan='5' mode='manualflag'\n"\
                   "#scan='4'"
-        filename = 'file1.txt'
+        filename = 'flaghelper1.txt'
         create_input(myinput, filename)
         
         alist = fh.readFile(filename)
@@ -95,7 +110,7 @@ class test_flaghelper(test_base):
         # creat input file
         myinput = "scan='1~3' mode='manual'\n"+"scan=' 5'      mode='manualflag'\n"\
                   "antenna='DV04 &&*'"
-        filename = 'file_spaces.txt'
+        filename = 'flaghelper2.txt'
         create_input(myinput, filename)
         
         alist = fh.readFile(filename)
@@ -109,7 +124,7 @@ class test_flaghelper(test_base):
                 "scan='2'\n"\
                 "# a comment line\n"\
                 "empty_line"
-        filename1 = 'file2a.txt'
+        filename1 = 'flaghelper3a.txt'
         create_input(myinput, filename1)
         
         # Create second input file
@@ -117,12 +132,12 @@ class test_flaghelper(test_base):
                   " \n"\
                 "scan='6'\n"\
                 "scan='7'"        
-        filename2 = 'file2b.txt'
+        filename2 = 'flaghelper3b.txt'
         create_input(myinput, filename2)
         
          # Create third input file
         myinput = "scan='4' mode='clip' clipminmax=[0,4]" 
-        filename3 = 'file2c.txt'
+        filename3 = 'flaghelper3c.txt'
         create_input(myinput, filename3)
         
         alist = fh.readFiles([filename1,filename2,filename3])
@@ -153,7 +168,7 @@ class test_flaghelper(test_base):
                   "antenna='DV09&&*' timerange='2013/11/15/10:18:11.798~2013/11/15/10:18:13.837'\n"\
                   "antenna='DV05&&*' timerange='2013/11/15/10:40:38.165~2013/11/15/10:40:38.419'"
         
-        filename1 = 'online.txt'
+        filename1 = 'flaghelperonline1.txt'
         create_input(myinput, filename1)
         
         dlist1 = fh.readAndParse([filename1])
@@ -202,7 +217,7 @@ class test_flaghelper(test_base):
                   "antenna='DV09&&*' timerange='2013/11/15/10:18:11.798~2013/11/15/10:18:13.837'\n"\
                   "antenna='DV05&&*' timerange='2013/11/15/10:40:38.165~2013/11/15/10:40:38.419'"
         
-        filename1 = 'online.txt'
+        filename1 = 'flaghelperonline2.txt'
         create_input(myinput, filename1)
         
         # First timerange from online before padding
@@ -248,7 +263,7 @@ class test_flaghelper(test_base):
                   "antenna='DV04 &&*'\n"\
                   "#mode=shadow\n"\
                   "antenna='DV01&&*' timerange='2013/11/15/10:25:30.516~2013/11/15/10:25:32.454' reason='ACS_not in place'"
-        filename = 'filedict1.txt'
+        filename = 'flaghelper4.txt'
         create_input(myinput, filename)
         
         alist = fh.readFile(filename)
@@ -321,7 +336,6 @@ class test_flaghelper(test_base):
         first = ' '
         second = '='
         reference = OrderedDict([('mode', "manual"), ('antenna', 'ea24'), ('spw', '0'), ('reason', 'MY WHITESPACES')])
-        print reference
         
         # cmd with single quote inside a string
         cmd = " mode='manual'   antenna='ea24'      spw='0'   reason='MY WHITESPACES'"
@@ -331,7 +345,6 @@ class test_flaghelper(test_base):
         
         # evaluate parameters to fix single quote 
         resdict = fh.evaluateParameters(res)
-        print resdict
         self.assertDictEqual(reference, resdict, 'Failed to evaluateParameters with many whitespaces')
 
 
@@ -354,27 +367,77 @@ class test_flaghelper(test_base):
         resdict = fh.evaluateParameters(res)
         self.assertDictEqual(reference, resdict, 'Failed to evaluateParameters with single quote in value')
        
-#     def test_parse2List(self):
-#         '''flaghelper: test the Parser class'''
-#         
-#         # Dividers for string 
-#         first = ' '
-#         second = '='
-#         cmdlist = [" mode='tfcrop' antenna='ea24' ", " mode='extend' antenna='ea24'  flagnearfreq=True " ]
-#         reference = ["mode='tfcrop' antenna='ea24'", "mode='extend' antenna='ea24' flagnearfreq=True"]
-#         
-#         # cmd with whitespace between pairs and at the end
-#         myparser = fh.Parser(first,second)
-#         
-#         ii = 0
-#         for cmd in cmdlist:
-#             res = myparser.parse2List(cmd)
-#             print res
-# #            self.assertListEqual(reference[ii], res, 'Failed to parser2List() with whitespaces everywhere')
-# #            ii = ii+1
+    def test_evaluateFlagParameters1(self):
+        '''flaghelper: evaluate non-existing flagdata parameters'''
+        cmd = ["antenna='''BK07""'asdf timesrange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'"]
+
+        from tasks import flagdata
+        fparams = flagdata.parameters
         
+        mydict = fh.parseDictionary(cmd)
+        try:
+            res = fh.evaluateFlagParameters(mydict, fparams)
+        except exceptions.IOError, instance:
+            print 'Expected error: %s'%instance
+        else:
+            self.assertNotEqual(res, True, 'Some parameter in cmd should not evaluate True')
+       
+    def test_evaluateFlagParameters2(self):
+        '''flaghelper: evaluate wrong rflag parameter type'''
+        cmd = ["antenna='''BK07""'asdf timerange='2013/01/31/08:09:55.248~2013/01/31/08:10:01.296' reason='quack'",
+               "mode='rflag' timedev={'threshold':3.0} freqdev=5.0"]
+        
+        from tasks import flagdata
+        fparams = flagdata.parameters
+        
+        mydict = fh.parseDictionary(cmd)
 
+        try:
+            res = fh.evaluateFlagParameters(mydict,fparams)
+        except exceptions.IOError, instance:
+            print 'Expected error: %s'%instance
+        else:
+            self.assertNotEqual(res, True, 'Some parameter in cmd should not evaluate True')
+      
+    def test_evaluateFlagParameters3(self):
+        '''flaghelper: evaluate correct parameter types'''
+        from tasks import flagdata
+        fparams = flagdata.parameters
 
+        cmd = ["antenna='DA31'",
+               "mode='clip' clipzeros=True"]
+        mydict = fh.parseDictionary(cmd)
+        self.assertTrue(fh.evaluateFlagParameters(mydict,fparams))
+        
+    def test_evaluateDataSelectionParameters(self):
+        '''flaghelper: evaluate wrong type of data selection parameters'''
+        from tasks import flagdata
+        fparams = flagdata.parameters
+
+        cmd = ["field=2 spw=1 observation=0",
+               "mode='manual' spw='0'"]
+        mydict = fh.parseDictionary(cmd)
+        try:
+            res = fh.evaluateFlagParameters(mydict,fparams)
+        except exceptions.IOError, instance:
+            print 'Expected error: %s'%instance
+        else:
+            self.assertNotEqual(res, True, 'Some parameter in cmd should not evaluate True')
+        
+    def test_veryLongOnlineFlags(self):
+        '''flaghelper: evaluate a very long list of parameters'''
+        from tasks import flagdata
+        # Get a big input file
+        self.setUp_onlineFlags()
+        fparams = flagdata.parameters
+        
+        alist = fh.readFile(self.inpfile)
+        adict = fh.parseDictionary(alist)
+        os.system('rm -rf '+self.inpfile)
+        
+        self.assertTrue(fh.evaluateFlagParameters(adict, fparams))
+        
+        
 def suite():
     return [test_flaghelper]
 

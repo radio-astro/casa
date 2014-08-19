@@ -9,7 +9,7 @@ import ast
 import copy
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
-from collections import deque
+from collections import deque,defaultdict
 # needed in Python 2.6
 from OrderedDictionary import OrderedDict
 # for Python 2.7
@@ -949,7 +949,7 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
                     cmd.pop(k)
 
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,row), 'DEBUG')
-        casalog.post('%s'%cmd, 'DEBUG')            
+        casalog.post('%s'%cmd,'DEBUG')            
 
         # Parse the dictionary of parameters to the tool
         if (not aflocal.parseagentparameters(cmd)):
@@ -1742,32 +1742,19 @@ def plotFlagCommands(myflags,plotname,t1sdata,t2sdata,):
     return
 
 def evaluateParameters(pardict):
-    '''Evaluate the correct types in a string with parameters'''
+    '''Evaluate the correct types in a string with parameters
+    
+    Keyword arguments:
+        pardict    -- a dictionary with flag commands as returned by parseDictionary()
+    
+        It evaluates each value to its correct Python type.
+    '''
     
     cmddict = OrderedDict()
     
     for key,val in pardict.iteritems():
         newval = None        
-        # Selection parameters are always string
-        if key == 'spw' or key == 'scan' or key == 'field' or \
-            key == 'antenna' or key == 'correlation' or key == 'array' or \
-            key == 'timerange' or key == 'uvrange' or key == 'feed':
-            
-            if val.count("'") > 0:
-                val = val.strip("'")
-            if val.count('"') > 0:
-                val = val.strip('"')
-            
-            # CAS-6553 cannot have only one quote. remove it
-            if val.count("'") == 1:
-                val = val.replace("'", '')
-            if val.count('"') == 1:
-                val = val.replace('"', '')
                 
-            newval = str(val).strip()
-            cmddict[key] = newval
-            continue
-        
         if val.startswith('['):
             newval = ast.literal_eval(val)
         elif val.startswith('{'):
@@ -1803,6 +1790,159 @@ def evaluateParameters(pardict):
         cmddict[key] = newval
     
     return cmddict
+
+def evaluateFlagParameters(pardict, pars):
+    """Check if a flagdata parameter dictionary is valid
+
+    Keyword arguments:
+        pardict -- a dictionary with flag commands as returned by parseDictionary()
+        pars    -- dictionary of flagdata's parameters (locals() inside flagdata task)
+
+        It checks if the parameter exists in the reference tuple.
+        It checks if the type of the parameter value matches the type in the reference
+        for that parameter.
+        It raises an exception if any parameter or type of value do not match.
+
+    """
+    from tasks import flagdata
+     
+    # Make a deepcopy of flagdata parameters dictionary for modification
+    fpars = copy.deepcopy(pars)
+ 
+    # Get the defaults of each parameter 
+    for par in fpars.keys():
+        fpars[par] = flagdata.itsdefault(par)
+     
+    # Define the parameters that don't go in an input list in flagdata
+    removepars = ['vis','inpfile','flagbackup','tbuff','cmdreason','savepars','outfile',
+                  'display','action','async']
+     
+    # Remove the parameters we don't need to evaluate
+    for par in removepars:
+        if fpars.has_key(par):
+            fpars.pop(par)
+        
+    # Define the parameters that have variant type in flagdata
+    dup_pars = ['ntime','observation','addantenna','timedev','timedev','freqdev','freqdev']
+    dup_types = [0.0,0,{},[],0.0,[],0.0]
+         
+    # Create a tuple from flagdata's parameters
+    ftup = fpars.items()
+     
+    # Create a list of the tuples
+    flist = list(ftup)
+ 
+    # Append the duplicated types
+    for d in range(len(dup_pars)):
+        # Create a tuple and append to list
+        dpar = (dup_pars[d],dup_types[d])    
+        flist.append(dpar)
+         
+     
+    # Create a tuple of the reference dictionary
+    reftup = tuple(flist) 
+        
+    # Reference parameters for flagdata task
+#     reftup = (('field','string'),('spw','string'),('antenna','string'),('timerange','string'),('correlation','string'),
+#               ('scan','string'),('intent','string'),('array','string'),('uvrange','string'),
+#               ('observation','string'),
+#               ('observation',0),
+#               ('feed','string'),
+#               ('mode','string'),
+#               ('reason','string'),
+#                # manual
+#               ('autocorr', True),
+#                 # clip
+#               ('datacolumn','string'),
+#               ('clipminmax',[]),
+#               ('clipoutside',True),
+#               ('channelavg',False),
+#               ('clipzeros',False),
+#                 # elevation
+#               ('lowerlimit',0.0),
+#               ('upperlimit',90.0),
+#                 # shadow
+#               ('tolerance',0.0),
+#               ('addantenna','string'),
+#               ('addantenna',{}),
+#                 # quack
+#               ('quackinterval',0.0),
+#               ('quackmode','string'),
+#               ('quackincrement',False),
+#                 # tfcrop
+#               ('ntime','string'),
+#               ('ntime',0.0),
+#               ('combinescans',False),
+#               ('timecutoff',4.0),
+#               ('freqcutoff',3.0),
+#               ('timefit','string'),
+#               ('freqfit','string'),
+#               ('maxnpieces',7),
+#               ('flagdimension','string'),
+#               ('usewindowstats','string'),
+#               ('halfwin',1),
+#               ('extendflags',True),
+#                 # rflag
+#               ('winsize',3),
+#               ('timedev','string'),
+#               ('timedev',[]),
+#               ('timedev',0.0),
+#               ('freqdev','string'),
+#               ('freqdev',[]),
+#               ('freqdev',0.0),
+#               ('timedevscale',5.0),
+#               ('freqdevscale',5.0),
+#               ('spectralmax',1000000.0),
+#               ('spectralmin',0.0),
+#                 # extend
+#               ('extendpols',True),
+#               ('growtime',50.0),
+#               ('growfreq',50.0),
+#               ('growaround',False),
+#               ('flagneartime',False),
+#               ('flagnearfreq',False),
+#                 # summary
+#               ('minrel',0.0),
+#               ('maxrel',1.0),
+#               ('minabs',0),
+#               ('maxabs',1),
+#               ('spwchan',False),
+#               ('spwcorr',False),
+#               ('basecnt',False),
+#               ('name','string'))
+
+    
+    reference = defaultdict(list)
+    for k, v in reftup:
+        reference[k].append(v)
+
+    refkeys = reference.keys()
+
+    # Check the user dictionary against the reference
+    count = 0
+    for idx in pardict.keys():
+        mydict = pardict[idx]['command']
+        count += 1
+        for key,val in mydict.iteritems():
+            if key not in refkeys:
+                raise IOError, 'Parameter \'%s\' in row=%s is not a valid flagdata parameter'%(key,idx)
+
+            # reference[key] is always a list
+            refval = reference[key]
+            vtypes = "" 
+            match = False       
+            for tt in refval:
+                vtypes = vtypes + str(type(tt)) + ','
+                if type(val) == type(tt):
+                    # type matches
+                    match = True
+            if not match:
+                raise IOError,'Parameter %s=%s in row=%s has wrong type.\nSupported types are: %s.'%(key,val,idx,vtypes.rstrip(','))
+
+    casalog.post('Evaluated %s rows of dictionary'%count,'DEBUG1')
+    return True
+
+
 
 def evaluateNumpyType(elem):
     '''Evaluate if an element is of numpy type.

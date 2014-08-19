@@ -364,6 +364,12 @@ def flagdata(vis,
                         
                 # Parse and create a dictionary
                 flagcmd = fh.parseDictionary(flaglist, reason)
+                
+                # Validate the dictionary. 
+                # IMPORTANT: if any parameter changes its type, the following
+                # function needs to be updated. The same if any new parameter is
+                # added or removed from the task
+                fh.evaluateFlagParameters(flagcmd,orig_locals)
                     
                 # List of flag commands in dictionary
                 vrows = flagcmd.keys()
@@ -378,58 +384,6 @@ def flagdata(vis,
 
             casalog.post('Selected ' + str(vrows.__len__())
                          + ' commands from combined input list(s) ')
-
-#####################################################################################            
-            # Parse the input file
-#             try:            
-#                 # Input commands are given in a list
-#                 if isinstance(inpfile, list):
-#                     
-#                     # It is a list of input files
-#                     if os.path.isfile(inpfile[0]):
-#                         flaglist = []
-#                         for ifile in inpfile:
-#                             templist = fh.readFile(ifile)
-#                             nlines = len(templist)
-#                             casalog.post('Read %s command(s) from file %s'%(nlines, ifile))      
-#                             flaglist = flaglist + templist
-#                                             
-#                     # It is a list of strings with flag commands
-#                     else:
-# #                        casalog.post('Will read commands from a Python list')
-#                         flaglist = inpfile
-#                         nlines = len(flaglist)
-#                         casalog.post('Read %s command(s) from a Python list of strings'%nlines)    
-#                     
-#                 # Input commands are given in a file
-#                 elif isinstance(inpfile, str):
-#                     
-#                     if inpfile == '':
-#                          casalog.post('Input file is empty', 'ERROR')
-#                          
-# #                    casalog.post('Will read commands from the file '+inpfile)
-#                     flaglist = fh.readFile(inpfile)
-#                     nlines = len(flaglist)
-#                     casalog.post('Read %s command(s) from file %s'%(nlines, inpfile))                              
-#                     casalog.post('%s'%flaglist,'DEBUG')
-#                                     
-#                 else:
-#                     casalog.post('Input type is not supported', 'ERROR')
-#                     
-#                 # Parse the list(s) to a dictionary
-#                 flagcmd = fh.parseDictionary(flaglist, reason)
-#                 casalog.post('%s'%flagcmd,'DEBUG1')
-#                                                                     
-#                 # List of flag commands in dictionary
-#                 vrows = flagcmd.keys()
-#                 
-#             except Exception, instance:
-#                 casalog.post('%s'%instance,'ERROR')
-#                 raise Exception, 'Error reading the input list. Make sure the syntax used in the list '\
-#                                  'follows the rules given in the inline help of the task.'
-#             
-#             casalog.post('Selected ' + str(vrows.__len__())
-#                          + ' commands from combined input list(s) ')
                              
         elif mode == 'manual':
             agent_pars['autocorr'] = autocorr
@@ -641,7 +595,7 @@ def flagdata(vis,
 
             # CAS-3959 Handle channel selection at the FlagAgent level
             agent_pars['spw'] = spw
-            casalog.post('Parsing the parameters for the %s mode'%mode, 'DEBUG1')
+            casalog.post('Parsing the parameters for %s mode'%mode, 'DEBUG1')
             if (not aflocal.parseagentparameters(agent_pars)):
 #                casalog.post('Failed to parse parameters for mode %s' %mode, 'ERROR')
                 raise ValueError, 'Failed to parse parameters for mode %s' %mode

@@ -1560,19 +1560,22 @@ class test_list_file(test_base):
         self.assertEqual(res['flagged'], 99198)
 
     def test_anychar(self):
-        '''flagdata: parse any printable character'''
+        '''flagdata: Do not continue if parameter doesn't exist'''
         myinput = "mode=manualflag field='Any $3[=character (}'"
         filename = 'anychar.txt'
         create_input(myinput, filename)
         
-        outname = 'outweirdname.txt'
+        outname = 'wrongpar.txt'
         
-        flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True,
+        # CAS-6704: should raise an exception because parameter $3[ doesn't exist in flagdata
+        try:
+            flagdata(vis=self.vis, mode='list', inpfile=filename, action='', savepars=True,
                   outfile=outname)
-        self.assertTrue(os.path.exists(outname))
+        except Exception, instance:
+            print 'Expected IOError error: %s'%instance
         
-        # Compare output with input. The output should have quotes around manualflag
-        self.assertFalse(filecmp.cmp(filename, outname, 1), 'Files should not be equal')
+        # It should fail above and not create an output file
+        self.assertFalse(os.path.exists(outname))
 
     def test_file_summary1(self):
         '''flagdata: summary commands in list mode'''
@@ -1625,6 +1628,38 @@ class test_list_file(test_base):
                          'scan=1~3,5 should be flagged')
         self.assertEqual(summary_reps[1]['flagged']-summary_reps[0]['flagged'],rscan5['flagged'],\
                          'scan=5 should be flagged')
+        
+    def test_file_scan_int(self):
+        '''flagdata: select a scan by giving an int value'''
+        # The new fh.parseFlagParameters should allow this
+        myinput = "mode='manual' scan=1\n"\
+                  "scan='2'\n"\
+                  "mode='summary'"
+        filename = 'intscan.txt'
+        create_input(myinput, filename)
+        
+        try:
+            res = flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
+            
+        except exceptions.IOError, instance:
+            print 'Expected error!'
+        
+    def test_file_scan_list(self):
+        '''flagdata: select a scan by giving a list value. Expect error.'''
+        # The new fh.parseFlagParameters should NOT allow this
+        myinput = "scan='1' mode='manual'\n"\
+                   "scan=[2]\n"\
+                   "mode='summary'"
+        
+        filename = 'listscan.txt'
+        create_input(myinput, filename)
+        try:
+            res = flagdata(vis=self.vis, mode='list', inpfile=filename, flagbackup=False)
+            
+        except exceptions.IOError, instance:
+            print 'Expected error!'
+               
+        
 
 class test_list_list(test_base):
     """Test of mode = 'list' using input list"""

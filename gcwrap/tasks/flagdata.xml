@@ -157,7 +157,7 @@
                 <value type="string" />
             </param>
             <param type="any" name="intent" subparam="true">
-                <description>Observation intent: \'\' ==> all, intent=\'CAL*POINT*\'</description>
+                <description>Scan intent: \'\' ==> all, intent=\'CAL*POINT*\'</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string" />
             </param>
@@ -730,7 +730,7 @@
 	scan -- Select data based on scan number
 	    default: '' (all); example: scan='&gt;3'
 	
-	intent -- Select data based on observation intent
+	intent -- Select data based on scan intent
 	    default: '' (all); example: intent='*CAL*,*BAND*'
 	  -->intent selection is not supported for cal tables.                          
 	
@@ -757,8 +757,8 @@
                 as a command to the task. If data is pre-selected using any of the selection 
                 parameters, then flagging will apply only to that subset of the MS.
                                     
-                For optimization, the task will create a union of the data selection parameters
-                present in the list and select only that portion of the MS.
+                For optimization and whenever possible, the task will create a union of the data selection 
+                parameters present in the list and select only that portion of the MS.
 
                     NOTE: the flag commands will be applied only when action='apply'. If
                           action='calculate' the flags will be calculated, but not applied.
@@ -773,12 +773,16 @@
                            [] with filenames or 
                            '' with a filename.
 
-                    IMPORTANT: string values must contain quotes around them or the parser
+                    IMPORTANT: From CASA 4.3 onwards, the parser will be strict and accept only
+                               valid flagdata parameters in the list. It will check each parameter
+                               name and type and exit with an error if any of them is wrong. 
+    
+                               String values must contain quotes around them or the parser
                                will not work. The parser evaluates the commands in the list
                                and considers only existing Python types.
 	
                     NOTE: There should be no whitespace between KEY=VALUE since the parser 
-                          first breaks command lines on whitespace, then on "=". Use only whitespaces 
+                          first breaks command lines on whitespace, then on "=". Use only one whitespace 
                           to separate the parameters (no commas). Scroll down to the bottom to see
                           a detailed description of the input list syntax.
 
@@ -1598,6 +1602,10 @@
           being 'manual' if not given.
 
           Comment lines can start with '#' and will be ignored.
+    
+          The parser used in flagdata will check each parameter name and type and
+          exit with an error if the parameter is not a valid flagdata parameter or
+          of a wrong type.
 
           Example:
         
