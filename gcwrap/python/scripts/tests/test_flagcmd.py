@@ -280,7 +280,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        myinput = "scan=1"
+        myinput = "scan='1'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True)
         
@@ -288,7 +288,7 @@ class test_unapply(test_base):
         # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
         #           and one flag difference on a Mac (32)
         #           Other scans give differences at the 0.005% level.
-        myinput = "scan=4 mode=tfcrop correlation='ABS_RR' extendflags=False"
+        myinput = "scan='4' mode=tfcrop correlation='ABS_RR' extendflags=False"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -310,7 +310,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        myinput = "scan=4"
+        myinput = "scan='4'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         
@@ -324,7 +324,7 @@ class test_unapply(test_base):
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
-        myinput = "scan=4 mode=tfcrop correlation='ABS_RR' extendflags=False"
+        myinput = "scan='4' mode=tfcrop correlation='ABS_RR' extendflags=False"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -356,7 +356,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        myinput = "scan=4"
+        myinput = "scan='4'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         
@@ -370,7 +370,7 @@ class test_unapply(test_base):
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
-        myinput = "scan=4 mode=rflag "
+        myinput = "scan='4' mode=rflag "
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -402,7 +402,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        myinput = "scan=4"
+        myinput = "scan='4'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
         
@@ -416,7 +416,7 @@ class test_unapply(test_base):
         self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
         
         # Flag using tfcrop agent from file
-        myinput = "scan=4 mode=clip "
+        myinput = "scan='4' mode=clip "
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -448,7 +448,7 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using the quack agent
-        myinput = "scan=1~3 mode=quack quackinterval=1.0"
+        myinput = "scan='1~3' mode=quack quackinterval=1.0"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -456,7 +456,7 @@ class test_unapply(test_base):
         quack_flags = result['scan']['1']['flagged']
 
         # Flag using manual agent
-        myinput = "scan=1"
+        myinput = "scan='1'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -481,13 +481,13 @@ class test_unapply(test_base):
         flagcmd(vis=self.vis, action='clear', clearall=True)
 
         # Flag using manual agent
-        myinput = "scan=1"
+        myinput = "scan='1'"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
 
         # Flag using the quack agent
-        myinput = "scan=1~3 mode=quack quackinterval=1.0"
+        myinput = "scan='1~3' mode=quack quackinterval=1.0"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
