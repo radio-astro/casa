@@ -640,7 +640,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(65000, self.plotfile2_jpg)
         print    
         
-    def test027(self):
+    def stest027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
         self.plotFiles = [self.outputDir + "testPlot027.jpg",
                           self.outputDir + "testPlot0272.jpg",
@@ -721,7 +721,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(249000, self.plotfile_jpg)      
         
-    def stest029(self):
+    def test029(self):
         '''Plotms 29: Test that generation of a single plot with two y-axes using identical data returns false.'''
         self.plotfile_jpg = self.outputDir + "testPlot029.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -773,10 +773,10 @@ class plotms_test1(test_base):
                           showgui=False,            
                           plotfile=self.plotFiles[i])
             self.assertTrue(self.res)
-            self._checkPlotFile(59000, self.plotFiles[i])
+            self._checkPlotFile(57000, self.plotFiles[i])
             
                   
-    def stest031(self):
+    def test031(self):
         print
         '''Plotms 31: Set a custom flagged plotting symbol'''
         self.plotfile_jpg = self.outputDir + "testPlot031.jpg"
@@ -793,10 +793,10 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(60000, self.plotfile_jpg)
+        self._checkPlotFile(51000, self.plotfile_jpg)
         print 
         
-    def test032(self):
+    def stest032(self):
         '''Plotms 32: Pipeline no plot scenario.  Test was developed in response to CAS-6662.'''      
         self.plotFile = '/tmp/testPlot032.png'
         self.plotFile2 = '/tmp/testPlot0322.png'
@@ -846,6 +846,39 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           plotfile=self.plotFiles[1])
         self.assertTrue(self.res)
         self._checkPlotFile(50000, self.plotFiles[1]) '''     
+
+    def stest033(self):
+        print
+        '''Plotms 33: CAS-6813, Iteration problem with two spws in a row'''
+        plotFile = 'home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms'
+        self.plotfile1_jpg = "/tmp/testPlot033.jpg"
+        self.plotfile2_jpg = "/tmp/testPlot0332.jpg"
+    
+        print 'Writing to ', self.plotfile1_jpg, ' ', self.plotfile2_jpg
+        if os.path.exists( self.plotfile1_jpg):    
+            os.remove( self.plotfile1_jpg)
+        if os.path.exists( self.plotfile2_jpg):    
+            os.remove( self.plotfile2_jpg)    
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', yaxis='amp',
+                          xaxis='freq',spw='0',field='0',avgtime='1e8',avgscan=True,clearplots=True,
+                          showgui=False,plotfile=self.plotfile1_jpg)  
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot  1 was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
+        self._checkPlotFile(48000, self.plotfile1_jpg)
+        
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms',yaxis='amp',
+                          xaxis='freq',spw='1',field='0',avgtime='1e8',avgscan=True,clearplots=True,
+                          showgui=False,plotfile=self.plotfile2_jpg)  
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot  2 was not created')
+        print 'Plot file 2 size is ', os.path.getsize(self.plotfile2_jpg)
+        self._checkPlotFile(47000, self.plotfile2_jpg)
+        
+        print 
+
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'

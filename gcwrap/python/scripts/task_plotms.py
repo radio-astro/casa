@@ -155,7 +155,8 @@ def plotms(vis=None, plotindex=None,
                      default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
-    exprange -- whether to export all iteration plots or only the current one
+    exprange -- whether to export all plots ('all') or only the current one.
+                    default: '' (only export the current plot)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
     showlegend -- show a legend on the plot
@@ -228,7 +229,7 @@ def plotms(vis=None, plotindex=None,
         pm.setShowGui( showgui )
         
         #Clear any existing plots.
-        if clearplots and not showgui:
+        if clearplots:
             pm.clearPlots()
        
         gridChange = False    
@@ -238,6 +239,7 @@ def plotms(vis=None, plotindex=None,
                 gridrows = 1
             if not gridcols:
                 gridcols = 1
+    
         if gridChange:
             pm.setGridSize( gridrows, gridcols )
         pm.setPlotMSFilename(vis, False, plotindex )
