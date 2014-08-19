@@ -861,17 +861,15 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
             os.remove( self.plotfile2_jpg)    
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', yaxis='amp',
-                          xaxis='freq',spw='0',field='0',avgtime='1e8',avgscan=True,clearplots=True,
-                          showgui=False,plotfile=self.plotfile1_jpg)  
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms',
+                          spw='0')  
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot  1 was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
         self._checkPlotFile(48000, self.plotfile1_jpg)
         
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms',yaxis='amp',
-                          xaxis='freq',spw='1',field='0',avgtime='1e8',avgscan=True,clearplots=True,
-                          showgui=False,plotfile=self.plotfile2_jpg)  
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms',yaxis='amp',
+                          xaxis='freq',spw='1',field='0',avgtime='1e8',avgscan=True,clearplots=True)  
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot  2 was not created')
         print 'Plot file 2 size is ', os.path.getsize(self.plotfile2_jpg)

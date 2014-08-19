@@ -1199,7 +1199,7 @@ Constraints
     
     <when param="showgui">
     	<equals type="bool" value="True">
-    		<default param="clearplots"><value type="bool">False</value></default>
+    		<default param="clearplots"><value type="bool">True</value></default>
     	</equals>
         <equals type="bool" value="False">
             <default param="clearplots"><value type="bool">True</value></default>
