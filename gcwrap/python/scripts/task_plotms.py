@@ -104,7 +104,7 @@ def plotms(vis=None, plotindex=None,
         msselect -- TaQL selection expression
                     default: '' (all).
     
-    averagedata -- data averaing parameters flag
+    averagedata -- data averaging parameters flag
                    default: False.
       &gt;&gt;&gt; averagedata expandable parameters
         avgchannel -- average over channel?  either blank for none, or a value
@@ -228,7 +228,7 @@ def plotms(vis=None, plotindex=None,
         pm.setShowGui( showgui )
         
         #Clear any existing plots.
-        if clearplots and not showgui:
+        if clearplots:
             pm.clearPlots()
        
         gridChange = False    
@@ -238,6 +238,7 @@ def plotms(vis=None, plotindex=None,
                 gridrows = 1
             if not gridcols:
                 gridcols = 1
+    
         if gridChange:
             pm.setGridSize( gridrows, gridcols )
         pm.setPlotMSFilename(vis, False, plotindex )
