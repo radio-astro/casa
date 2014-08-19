@@ -55,17 +55,17 @@ MS Parameters
   </param>
   
    <param type="int" name="plotindex">
-    <description>Index of the plot in case of multiple plots</description>
+    <description>Index of the plot in case of multiple plots.</description>
     <value>0</value>
   </param>
   
   <param type="int" name="gridrows">
-    <description>The number of rows to display, for multiple plots on a page. This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid rows.</description>
+    <description>The number of plot rows (blank for default=1).</description>
   	<value>0</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>The number of columns to display, for multiple plots on a page.  This does not need to be set except in cases where scripts are not using the default 1x1 display.  For multiple plots per page, it should be set once for each change in the number of grid columns.</description>
+    <description>The number of plot columns (blank for default=1).</description>
   	<value>0</value>
   </param>
 
@@ -1199,7 +1199,7 @@ Constraints
     
     <when param="showgui">
     	<equals type="bool" value="True">
-    		<default param="clearplots"><value type="bool">False</value></default>
+    		<default param="clearplots"><value type="bool">True</value></default>
     	</equals>
         <equals type="bool" value="False">
             <default param="clearplots"><value type="bool">True</value></default>
