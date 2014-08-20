@@ -12,7 +12,7 @@ from feather import feather
 from concat import concat
 from imregrid import imregrid
 from immath import immath
-from sdimagingold import sdimagingold
+from sdimaging import sdimaging
 
 def simalma(
     project=None,
@@ -1132,7 +1132,7 @@ def simalma(
                 if tp_kernel.upper() == 'SF':
                     msg("Generating TP image using 'SF' kernel.",\
                          priority=v_priority)
-                    # Parameters for sdimagingold
+                    # Parameters for sdimaging
                     task_param = {}
                     task_param['infiles'] = vis_tp
                     task_param['gridfunction'] = 'sf'
@@ -1141,7 +1141,7 @@ def simalma(
                     task_param['imsize'] = imsize_tp
                     task_param['cell'] = cell_tp
                     task_param['phasecenter'] = model_refdir
-                    task_param['dochannelmap'] = True
+                    task_param['mode'] = 'channel'
                     task_param['nchan'] = model_nchan
                 else:
                     msg("Generating TP image using 'GJinc' kernel.",\
@@ -1157,7 +1157,7 @@ def simalma(
                     gwidth = qa.tos(qa.mul(qhwhm, convfac))
                     jwidth = qa.tos(qa.mul(jfac/gfac/pl.log(2.),gwidth))
                     #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
-                    # Parameters for sdimagingold
+                    # Parameters for sdimaging
                     task_param = {}
 #                     task_param['infile'] = fileroot+"/"+vis_tp
                     task_param['infiles'] = vis_tp
@@ -1166,22 +1166,22 @@ def simalma(
                     task_param['jwidth'] = jwidth
                     task_param['outfile'] = temp_out
                     task_param['imsize'] = imsize_tp
-                    # sdimagingold doesn't actually take a quantity,
+                    # sdimaging doesn't actually take a quantity,
                     #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
                     #task_param['cell'] = cell_arcmin
                     task_param['cell'] = cell_tp
                     task_param['phasecenter'] = model_refdir
-                    task_param['dochannelmap'] = True
+                    task_param['mode'] = 'channel'
                     task_param['nchan'] = model_nchan
 
-                saveinputs('sdimagingold',
-                           fileroot+"/"+project+".sd.sdimagingold.last",
+                saveinputs('sdimaging',
+                           fileroot+"/"+project+".sd.sdimaging.last",
                            myparams=task_param)
-                msg("Having set up the gridding parameters, the sdimagingold task is called to actually creage the image:",priority=v_priority)
-                msg(get_taskstr('sdimagingold', task_param), priority="info")
+                msg("Having set up the gridding parameters, the sdimaging task is called to actually creage the image:",priority=v_priority)
+                msg(get_taskstr('sdimaging', task_param), priority="info")
 
                 if not dryrun:
-                    sdimagingold(**task_param)
+                    sdimaging(**task_param)
                 del task_param
                 # TODO: scale TP image
                 
@@ -1798,15 +1798,3 @@ def calc_imsize(mapsize=None, cell=None):
     return [npixx, npixy]
 
 
-def get_taskstr(taskname, params):
-    out = ("%s(" % taskname)
-    for key, val in params.items():
-        out += (key + "=" + _get_str(val) + ", ")
-
-    return ( out.rstrip(", ") + ")" )
-
-def _get_str(paramval):
-    if type(paramval) == str:
-        return ("'%s'" % paramval)
-    # else
-    return str(paramval)

@@ -24,7 +24,29 @@ def is_array_type(value):
     else:
         return False
 
+# the method which returns a string of task function call with parameter
+def get_taskstr(taskname, params):
+    """
+    Returns a task call string.
+    Arguments
+        taskname : task name string
+        params   : a dictionary of parameter (key) and value pairs.
+    Example
+        get_taskstr('mytask', {'vis': 'foo.ms', 'factor': 2.0})
+        returns a string, 'mytask(vis='foo.ms', factor=2.0)'
+    """
+    out = ("%s(" % taskname)
+    sep = ", "
+    for key, val in params.items():
+        out += (key + "=" + __get_str(val) + sep)
 
+    return ( out.rstrip(sep) + ")" )
+
+def __get_str(paramval):
+    if type(paramval) == str:
+        return ("'%s'" % paramval)
+    # else
+    return str(paramval)
 
 
 class compositenumber:

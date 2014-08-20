@@ -4,7 +4,7 @@ import os
 import re
 import pylab as pl
 import pdb
-from sdimagingold import sdimagingold
+from sdimaging import sdimaging
 from imregrid import imregrid
 from immath import immath
 
@@ -431,6 +431,11 @@ def simanalyze(
                 imbeam = {'major': qa.quantity(pb_asec,'arcsec'),
                           'minor': qa.quantity(pb_asec,'arcsec'),
                           'positionangle': qa.quantity(0.0,'deg')}
+
+                # Common imaging parameters
+                sdim_param = dict(infiles=[tpmstoimage], overwrite=overwrite,
+                                  phasecenter=model_refdir, mode='channel',
+                                  nchan=model_nchan, start=0, width=1)
                 
                 if True: #SF gridding
                     msg("Generating TP image using 'SF' kernel.",origin='simanalyze')
@@ -459,18 +464,22 @@ def simanalyze(
                     msg("- Cell size (arcsec): [%s, %s]" % (temp_cell[0], temp_cell[1]),origin='simanalyze')
                     msg("- Imsize to cover final TP image area: [%d, %d] (type: %s)" % (temp_imsize[0], temp_imsize[1], type(temp_imsize[0])),origin='simanalyze')
                     msg("- convolution support: %d" % sfsupport,origin='simanalyze')
-                    msg("sdimagingold(infiles=['"+tpmstoimage+"'], gridfunction='SF', convsupport = "+str(sfsupport)+
-                        ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
-                        ",imsize="+str(temp_imsize)+", cell="+str(temp_cell)+
-                        ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
-                        "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
+                    # kernel specific imaging parameters
+                    sdim_param['gridfunction'] = 'SF'
+                    sdim_param['convsupport'] = sfsupport
+                    sdim_param['outfile'] = temp_out
+                    sdim_param['imsize'] = temp_imsize
+                    sdim_param['cell'] = temp_cell
+
+                    msg(get_taskstr('sdimaging', sdim_param), priority="info")
                     if not dryrun:
-                        sdimagingold(infiles=[tpmstoimage], gridfunction='SF',
-                              convsupport = sfsupport,
-                              outfile=temp_out, overwrite=overwrite,
-                              imsize=temp_imsize, cell=temp_cell,
-                              phasecenter=model_refdir, dochannelmap=True,
-                              nchan=model_nchan, start=0, step=1, spw=[0])
+                        sdimaging(**sdim_param)
+                        #sdimaging(infiles=[tpmstoimage], gridfunction='SF',
+                        #      convsupport = sfsupport,
+                        #      outfile=temp_out, overwrite=overwrite,
+                        #      imsize=temp_imsize, cell=temp_cell,
+                        #      phasecenter=model_refdir, mode='channel',
+                        #      nchan=model_nchan, start=0, width=1)
                         if not os.path.exists(temp_out):
                             raise RuntimeError, "TP imaging failed."
 
@@ -532,17 +541,20 @@ def simanalyze(
                     sdimsize = imsize
                     sdcell = [qa.tos(cell[0]), qa.tos(cell[1])]
                     ### TODO: need to set phasecenter properly based on imdirection
-                    msg("sdimagingold(infiles=['"+tpmstoimage+"'], gridfunction='PB'"+
-                        ",outfile='"+temp_out+"', overwrite="+str(overwrite)+
-                        ",imsize="+str(sdimsize)+", cell="+str(sdcell)+
-                        ",phasecenter='"+model_refdir+"', dochannelmap=True,"+
-                        "nchan="+str(model_nchan)+", start=0, step=1, spw=[0])",priority="info")
+                    # kernel specific imaging parameters
+                    sdim_param['gridfunction'] = 'PB'
+                    sdim_param['outfile'] = tpimage
+                    sdim_param['imsize'] = sdimsize
+                    sdim_param['cell'] = sdcell
+                    
+                    msg(get_taskstr('sdimaging', sdim_param), priority="info")
                     if not dryrun:
-                        sdimagingold(infiles=[tpmstoimage],gridfunction='PB',
-                              outfile=tpimage, overwrite=overwrite,
-                              imsize=sdimsize, cell=sdcell,
-                              phasecenter=model_refdir, dochannelmap=True,
-                              nchan=model_nchan,start=0,step=1,spw=[0])
+                        sdimaging(**sdim_param)
+                        #sdimaging(infiles=[tpmstoimage],gridfunction='PB',
+                        #      outfile=tpimage, overwrite=overwrite,
+                        #      imsize=sdimsize, cell=sdcell,
+                        #      phasecenter=model_refdir, mode='channel',
+                        #      nchan=model_nchan,start=0,width=1)
                     del sdimsize, sdcell
                     # TODO: Define PSF of image here
                     # for now use default 
