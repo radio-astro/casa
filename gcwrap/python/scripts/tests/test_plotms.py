@@ -187,8 +187,8 @@ class plotms_test1(test_base):
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg,
                           gridrows=2, gridcols=2, 
                           overwrite=True, showgui=False, expformat='jpg', 
-                          exprange='all', iteraxis='scan'
-                          ,xselfscale=True, yselfscale=True, 
+                          iteraxis='scan',
+                           exprange='all',xselfscale=True, yselfscale=True, 
                           xsharedaxis=True, ysharedaxis=True
                           )   
         self.assertTrue(self.res)
@@ -261,7 +261,7 @@ class plotms_test1(test_base):
                           showgui=False, clearplots=False, rowindex=1, colindex=0)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=3, title='Plot D',
-                          plotfile=self.plotfile_jpg, expformat='jpg',  exprange='all',
+                          plotfile=self.plotfile_jpg, expformat='jpg',  
                           overwrite=True, showgui=False, clearplots=False, rowindex=1, colindex=1)
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
@@ -296,7 +296,7 @@ class plotms_test1(test_base):
                           rowindex=1, clearplots=False, colindex=1)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=5, title='Plot F',
-                          plotfile=self.plotfile_jpg, expformat='jpg',  exprange='all',
+                          plotfile=self.plotfile_jpg, expformat='jpg',
                           overwrite=True, clearplots=False,
                           rowindex=1, colindex=2)
         self.assertTrue(self.res)
@@ -307,7 +307,7 @@ class plotms_test1(test_base):
                           gridrows=1, gridcols=2,
                           rowindex=0, colindex=0)
         self.res = plotms(vis=self.ms, plotindex=1, title='Plot B',
-                          plotfile=self.plotfile2_jpg, expformat='jpg',  exprange='all',
+                          plotfile=self.plotfile2_jpg, expformat='jpg',
                           overwrite=True,  clearplots=False,
                           rowindex=0, colindex=1)
         self.assertTrue(self.res)
@@ -486,8 +486,8 @@ class plotms_test1(test_base):
         
         '''Make iteration plots over scan'''
         self.res = plotms(vis=self.ms, plotfile=self.plotFiles[0],
-                          overwrite=True, showgui=False, expformat='jpg', 
-                          exprange='all', iteraxis='scan', gridrows=1, gridcols=1)   
+                          overwrite=True, showgui=False, expformat='jpg',  exprange='all',
+                          iteraxis='scan', gridrows=1, gridcols=1)   
         self.assertTrue(self.res)
         
         '''Check each page got saved'''
@@ -640,7 +640,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(65000, self.plotfile2_jpg)
         print    
         
-    def stest027(self):
+    def test027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
         self.plotFiles = [self.outputDir + "testPlot027.jpg",
                           self.outputDir + "testPlot0272.jpg",

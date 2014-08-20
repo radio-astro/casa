@@ -776,15 +776,15 @@ Gets the MS transformations parameters for the plot at the given index as a reco
 <method type="function" name="setExportRange">
   <keyword>setExportRange</keyword>
   
-  <shortdescription>Sets the export range.</shortdescription>
+  <shortdescription>Export all iteration plots or only the current one.</shortdescription>
   
   <description>
-	Sets the export range (applies to iteration plots where there may be more than one page).
+	Plot export range (for multiple page iterations): All plots or only the current one (blank).
   </description>
   
   <input>
     <param type="string" name="range">
-      <description>Export range (or none).</description>
+      <description>Iteration plot export range: all or current(blank).</description>
       <value />
     </param>
   </input>

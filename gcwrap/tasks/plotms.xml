@@ -795,7 +795,7 @@ Export plot as image Parameters
         </allowed>
      </param>
      <param type="string" name="exprange" subparam="true">
-        <description>Pages to export.</description>
+        <description>Export all iteration plots or only the current one.</description>
         <allowed kind="enum">
             <value />
             <value>current</value>

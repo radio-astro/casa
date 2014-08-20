@@ -155,8 +155,8 @@ def plotms(vis=None, plotindex=None,
                      default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
-    exprange -- whether to export all plots ('all') or only the current one.
-                    default: '' (only export the current plot)
+    exprange -- Export all iteration plots ('all') or only the current one.
+                    default: '' (only export the current iteration plot)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
     showlegend -- show a legend on the plot
