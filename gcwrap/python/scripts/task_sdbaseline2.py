@@ -23,16 +23,13 @@ class sdbaseline2_worker(sdutil.sdtask_template):
     def initialize_scan(self):
         sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
 
+        if len(self.row.strip()) > 0:
+            self.rowlist = sorg.parse_idx_selection('row', self.row)
+        
         sel = self.get_selector(sorg)
         sorg.set_selection(sel)
         del sel
 
-        if len(self.row.strip()) > 0:
-            self.rowlist = sorg.parse_idx_selection('row', self.row)
-            sel = self.get_selector(sorg)
-            sorg.set_selection(sel)
-            del sel
-        
         # Copy scantable when using disk storage not to modify
         # the original table.
         if is_scantable(self.infile) and self.is_disk_storage:
