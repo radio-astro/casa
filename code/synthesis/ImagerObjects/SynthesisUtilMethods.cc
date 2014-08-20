@@ -1,5 +1,5 @@
-//# SynthesisUtilMethods.cc: Implementation of Imager.h
-//# Copyright (C) 1997-2008
+//# SynthesisUtilMethods.cc: 
+//# Copyright (C) 2013-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -288,7 +288,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  Record SynthesisUtilMethods::cubeDataPartition(const Record & selpars, const CoordinateSystem&
+  Record SynthesisUtilMethods::cubeDataImagePartition(const Record & selpars, const CoordinateSystem&
 				    incsys, const Int npart, const Int nchannel, 
 				    Vector<CoordinateSystem>& outCsys,
 						 Vector<Int>& outnChan){
@@ -301,6 +301,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (Int k=0; k < nomnchan; ++k)
       outnChan[k]+=1;
     Vector<Int> shp(0);
+    //shp(0)=20; shp(1)=20; shp(2)=1; shp(3)=outnChan[0];
     Vector<Float> shift(4, 0.0);
     Vector<Float> fac(4, 1.0);
     Vector<Double> freqEnd(npart);
@@ -308,14 +309,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Float chanshift=0.0;
     for (Int k =0; k <npart; ++k){
       shift(3)=chanshift;
+      //cerr << k << " shift " << shift << endl;
       outCsys[k]=incsys.subImage(shift, fac, shp);
       freqStart[k]=SpectralImageUtil::worldFreq(outCsys[k], 0.0);
       freqEnd[k]=SpectralImageUtil::worldFreq(outCsys[k], Double(outnChan[k]-1));
+      if(freqStart[k] > freqEnd[k]){
+	Double tmp=freqEnd[k];
+	freqEnd[k]=freqStart[k];
+	freqStart[k]=tmp;
+      }
       chanshift+=Float(outnChan[k]);      
     }
-    MFrequency::Types eltype=incsys.spectralCoordinate(CoordinateUtil::findSpectralAxis(incsys)).frequencySystem(True);
-    return cubeDataPartition(selpars, freqStart, freqEnd, eltype);
+     MFrequency::Types eltype=incsys.spectralCoordinate(incsys.findCoordinate(Coordinate::SPECTRAL)).frequencySystem(True);
 
+     //cerr << "freqStart " << freqStart << " end " << freqEnd << endl;
+
+     Record rec=cubeDataPartition(selpars, freqStart, freqEnd, eltype);
+     for (Int k=0; k < npart ; ++k){
+       outCsys[k].save(rec.asrwRecord(String::toString(k)), "coordsys");
+       rec.asrwRecord(String::toString(k)).define("nchan", outnChan[k]);
+     }
+     return rec;
   }
 
   Record SynthesisUtilMethods::cubeDataPartition(const Record &selpars, const Vector<Double>& freqBeg, const Vector<Double>&freqEnd, const MFrequency::Types eltype){
@@ -339,8 +353,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		  Vector<Int> freqSpw;
     		  Vector<Int> freqStart;
     		  Vector<Int> freqNchan;
-    		  MSUtil::getSpwInFreqRange(freqSpw, freqStart, freqNchan, elms, freqBeg(k), freqEnd(k),0.0, eltype, fieldsel[0]);
-    		  String newspw=mergeSpwSel(freqSpw, freqStart, freqNchan, spwsel);
+		  String newspw;
+		  try{
+		    MSUtil::getSpwInFreqRange(freqSpw, freqStart, freqNchan, elms, freqBeg(k), freqEnd(k),0.0, eltype, fieldsel[0]);
+		    newspw=mergeSpwSel(freqSpw, freqStart, freqNchan, spwsel);
+		    //cerr << "try " << freqSpw <<  "  " << freqStart << "  " << freqNchan << endl;
+		  }
+		  catch(...){
+		    //cerr << "In catch " << endl;
+		    newspw="";
+		  }
+		  //String newspw=mergeSpwSel(freqSpw, freqStart, freqNchan, spwsel);
+		  if(newspw=="") newspw="-1";
     		  msRec.define("spw", newspw);
     		  partRec.defineRecord(String("ms"+String::toString(j)),msRec);
     	  }

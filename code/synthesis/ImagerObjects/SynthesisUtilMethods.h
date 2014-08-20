@@ -81,6 +81,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Data partitioning rules for CUBE imaging
     //uniform contiguous partition in frequency step
+    // Note that the spw selection will have a "-1"
+    //if there is no overlap in the data selection provided and 
+    // frequency range provided
     static Record cubeDataPartition(const Record &selpars, const Int npart, const Double freqBeg, const Double freqEnd, const MFrequency::Types eltype=MFrequency::LSRK);
 
     // freqBeg and freqEnd are frequency range  of the sub image cubes defined in frame set here
@@ -92,7 +95,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Output record is the ms's and data selection for each part.
     // also the Vector of outCsys and outnChan are the  coordinatesystems
     // and nchannel of the sub cube for each part.
-    static Record cubeDataPartition(const Record & selpars, const CoordinateSystem&
+    // The image is divided  in n part along spectral channel
+    //now if one of the sub cube has no match the  the spw selection will have a "-1"
+    //for that part. The caller will have to deal with that for load balancing etc..
+    //  Output Record (example for partitioning on spw) : 
+    //  { '0' : { 'ms0' : { 'msname':xxx1, 'spw': '0:5~10' } ,
+    //              'ms1' : { 'msname':xxx2, 'spw':'0:20~25' },   
+    //                 'nchan': 6, 
+    //                 'coordsys': { A record of the coordinatesystem of subcube 0}}
+    //    '1' : { 'ms0' : { 'msname':xxx1, 'spw':'0:9~14' } ,
+    //               'ms1' : { 'msname':xxx2, 'spw':'0:24~29' },
+    //               'nchan':6, 
+    //                'coordsys': { A record of the coordinatesystem of subcube 1} }
+    //   }
+    static Record cubeDataImagePartition(const Record & selpars, const CoordinateSystem&
 				    incsys, const Int npart, const Int nchannel, 
 				    Vector<CoordinateSystem>& outCsys,
 				    Vector<Int>& outnChan);

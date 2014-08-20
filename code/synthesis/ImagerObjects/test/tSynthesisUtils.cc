@@ -1,7 +1,7 @@
 /*
- * tSynthesisImager.cc
- *SynthesisImager.cc: test of SynthesisImager
-//# Copyright (C) 2013
+ * tSynthesisUtils.cc
+ *demo of SynthesisUtil functionality
+//# Copyright (C) 2013-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -52,6 +52,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <ms/MeasurementSets/MSSourceIndex.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+#include <measures/Measures/VelocityMachine.h>
 
 int main(int argc, char **argv)
 {
@@ -94,8 +95,8 @@ int main(int argc, char **argv)
     impars.freqFrame=MFrequency::LSRK;
     //impars.overwrite=overwrite;
     //impars.startModel=startmodel;
-    impars.velStart=Quantity(200.0, "km/s");
-    impars.velStep=Quantity(1, "km/s");
+    impars.velStart=Quantity(1320.0, "km/s");
+    impars.velStep=Quantity(0.3, "km/s");
     impars.veltype="OPTICAL";
 
     MeasurementSet elms(msname, Table::Old);
@@ -104,13 +105,34 @@ int main(int argc, char **argv)
 
     CoordinateSystem cs=impars.buildCoordinateSystem(&vi);
     
+    ////////////////
+    SpectralCoordinate spCoord=cs.spectralCoordinate(2);
+    cerr << "Returned tabular values " << spCoord.worldValues() << endl;
+    VelocityMachine vm(MFrequency::Ref(MFrequency::LSRK),  Unit("Hz"),  MVFrequency(Quantity(1.420, "GHz")), MDoppler::Ref(MDoppler::OPTICAL), Unit("km/s"));
+    Vector<Double> worldFreq(impars.nchan);
+    for (Int k=0; k< impars.nchan; ++k)
+      worldFreq[k]=vm.makeFrequency(impars.velStart.getValue() + impars.velStep.getValue()*Double(k)).getValue();
+    //cerr << "should be these values " << worldFreq << endl;
+    
+
+    SpectralCoordinate newSpec(impars.freqFrame,  worldFreq,  spCoord.restFrequency());
+    // Fixing the coordinateSystem for OPTICAL (see cas-6658)
+    cs.replaceCoordinate(newSpec, 2);
+
+
+
+
+
+
+    ///////////////////
   
   
 
     Vector<CoordinateSystem> oCs;
     Vector<Int> oNchan;
     
-    cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, cs, 10, 55, oCs, oNchan) << endl;
+    Record rec=SynthesisUtilMethods::cubeDataImagePartition(parsrec, cs, 10, impars.nchan, oCs, oNchan);
+    cerr << rec << endl;
 
 
     //	  cerr << SynthesisUtilMethods::cubeDataPartition(parsrec, start, end, MFrequency::LSRK) << endl;
