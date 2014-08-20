@@ -425,9 +425,24 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
 
-  case PMS::DELAY:
+  case PMS::DELAY:{
+	  if ( !parsAreComplex()){
+		  *par_[chunk] = cti.fparam();
+	  }
+	  else {
+		  throw(AipsError( "delay has no meaning for this table"));
+	  }
+	  break;
+  }
+
   case PMS::OPAC: {
-    *par_[chunk] = cti.fparam();
+
+	if ( !parsAreComplex()){
+		*par_[chunk] = cti.fparam();
+	}
+	else {
+		throw(AipsError( "opacity has no meaning for this table"));
+	}
     break;
   }
   case PMS::SWP: {
