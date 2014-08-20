@@ -59,12 +59,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SDMaskHandler::SDMaskHandler()
   {
-    
+    interactiveMasker_p = new InteractiveMasking();
   }
   
   SDMaskHandler::~SDMaskHandler()
   {
-    
+    if (interactiveMasker_p != 0)
+      delete interactiveMasker_p;
   }
   
   void SDMaskHandler::resetMask(CountedPtr<SIImageStore> imstore)
@@ -78,6 +79,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << "Make mask" << LogIO::POST;
   }
 
+  Int SDMaskHandler::makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
+					  Int& niter, Int& ncycles, String& threshold)
+  {
+    Int ret;
+    // Int niter=1000, ncycles=100;
+    // String thresh="0.001mJy";
+    String imageName = imstore->getName()+".residual";
+    String maskName = imageName + ".mask";
+    ret = interactiveMasker_p->interactivemask(imageName, maskName, 
+					       niter, ncycles, threshold);
+    return ret;
+  }
 
   void SDMaskHandler::makeAutoMask(CountedPtr<SIImageStore> imstore)
   {

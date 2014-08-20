@@ -39,6 +39,7 @@
 
 #include<synthesis/ImagerObjects/SIImageStore.h>
 #include<synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
+#include <synthesis/ImagerObjects/InteractiveMasking.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -54,13 +55,16 @@ public:
 
   void makeMask();
 
+  int makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
+			  Int& niter, Int& ncycles, 
+			  String& threshold);
+
   // Return a reference to an imageinterface for the mask.
   void makeAutoMask(CountedPtr<SIImageStore> imstore);
 
   void makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit);
-
 protected:
-
+  InteractiveMasking *interactiveMasker_p;
 };
 
 } //# NAMESPACE CASA - END

@@ -298,6 +298,7 @@ casa_add_library( synthesis
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
+ ImagerObjects/InteractiveMasking.cc
   )
 
 install (FILES
@@ -533,6 +534,7 @@ install (FILES
 	ImagerObjects/SDAlgorithmMSClean.h
 	ImagerObjects/SDAlgorithmClarkClean.h
 	ImagerObjects/SDAlgorithmMEM.h
+	ImagerObjects/InteractiveMasking.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
