@@ -120,7 +120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Or, call this from outside... in SynthesisImager.....
 	    //itsMaskHandler.makeAutoMask( itsImages );
 	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
-	    Int stopCode;
+	    Int stopCode, ret=1;
 
 	    // Int ret=1, cycleNiter=loopcontrols.getCycleNiter(), ncycles=100;
 	    // ostringstream thresh;
