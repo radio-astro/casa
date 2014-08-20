@@ -55,7 +55,7 @@ MS Parameters
   </param>
   
    <param type="int" name="plotindex">
-    <description>Index of the plot in case of multiple plots.</description>
+    <description>Index of plot in grid (0-based, English reading order).</description>
     <value>0</value>
   </param>
   
@@ -1134,8 +1134,6 @@ Constraints
     </when>
     <when param="iteraxis">
         <notequals type="string" value="">
-        	<default param="iternx"><value>1</value></default>
-        	<default param="iterny"><value>1</value></default>
             <default param="xselfscale"><value>False</value></default>
             <default param="yselfscale"><value>False</value></default>
             <default param="xsharedaxis"><value>False</value></default>
@@ -1488,10 +1486,6 @@ Constraints
                 default: '' (no iteration)
                 options: 'scan','field','spw','baseline','antenna', 'time',''
       &gt;&gt;&gt; iteraxis expandable parameters
-      	iternx -- Number of rows per page.
-      			default: 1
-      	iterny -- Number of columns per page.
-      			default: 1
         xselfscale -- If true, self-scale each iterated plot on the x axis
         yselfscale -- If true, self-scale each iterated plot on the y axis
                       default: false, which will scale all plots globally

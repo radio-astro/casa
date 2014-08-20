@@ -640,7 +640,7 @@ class plotms_test1(test_base):
         self._checkPlotFile(65000, self.plotfile2_jpg)
         print    
         
-    def test027(self):
+    def stest027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
         self.plotFiles = [self.outputDir + "testPlot027.jpg",
                           self.outputDir + "testPlot0272.jpg",
@@ -721,7 +721,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(249000, self.plotfile_jpg)      
         
-    def test029(self):
+    def stest029(self):
         '''Plotms 29: Test that generation of a single plot with two y-axes using identical data returns false.'''
         self.plotfile_jpg = self.outputDir + "testPlot029.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -776,7 +776,7 @@ class plotms_test1(test_base):
             self._checkPlotFile(57000, self.plotFiles[i])
             
                   
-    def test031(self):
+    def stest031(self):
         print
         '''Plotms 31: Set a custom flagged plotting symbol'''
         self.plotfile_jpg = self.outputDir + "testPlot031.jpg"
@@ -877,6 +877,26 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         
         print 
 
+    def test034(self):
+        print
+        '''Plotms 34: Tests whether an iteration plot can be placed in the second slot of a 2x2 grid'''
+        self.plotfile_jpg = self.outputDir + "testPlot034.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):    
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        self.res = plotms(vis=self.ms,  
+                          plotindex=1, 
+                          gridrows=2, gridcols=2, 
+                          iteraxis='baseline', 
+                          showgui=False, plotfile=self.plotfile_jpg)  
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        self._checkPlotFile(200000, self.plotfile_jpg)
+        print 
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'

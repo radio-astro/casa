@@ -54,7 +54,7 @@ def plotms(vis=None, plotindex=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
-    plotindex -- specific plot identifier in cases of multiple plots (zero-based).
+    plotindex -- Index of plot in grid (0-based, English reading order).
             default: 0
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
