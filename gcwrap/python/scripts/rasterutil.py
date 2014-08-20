@@ -215,7 +215,7 @@ def _detect_gap(timestamp, threshold=None):
             dtm = threshold
         gaplist=[0]
         gap=(dt>dtm)
-        gaplist.extend(numpy.where(dt > dtm * 5)[0] + 1)
+        gaplist.extend(numpy.where(dt > dtm)[0] + 1)
         if gaplist[-1] != nrow:
             gaplist.append(nrow)
 
