@@ -26,15 +26,23 @@ class Raster(object):
     def __init__(self, infile):
         self.infile = infile
         self.rows = None
+        self.rasters = None
         self.mjd_range = None
+        self.mjd_range_raster = None
         self.spw = None
         self.pol = None
         self.gaplist = []
+        self.gaplist_raster = []
         self.ngap = 0
+        self.ngap_raster = 0
 
     @property
     def nrow(self):
         return self.ngap - 1
+
+    @property
+    def nrow_raster(self):
+        return self.ngap_raster - 1
 
     @property
     def nominal_spw(self):
@@ -82,8 +90,9 @@ class Raster(object):
         else:
             self.pol = pol
         casalog.post('spw, pol = %s, %s'%(self.spw, self.pol), priority='DEBUG')
-        self.gaplist = detect_gap(self.infile, self.spw, self.pol)
+        self.gaplist, self.gaplist_raster = detect_gap(self.infile, self.spw, self.pol)
         self.ngap = len(self.gaplist)
+        self.ngap_raster = len(self.gaplist_raster)
 
         self.summarize()
 
@@ -92,16 +101,16 @@ class Raster(object):
             self.detect()
         casalog.post('gaplist=%s (length %s)'%(self.gaplist, self.ngap), priority='DEBUG')
         separator = '-' * 35
-        splitter = ' ' * 2
-        indent = splitter * 2
-        width = int(numpy.ceil(numpy.log10(self.nrow))) + 1
+        splitter = ' ' * 1
+        indent = splitter * 1
+        width = int(numpy.ceil(numpy.log10(self.nrow))) + 4
         column0 = '%{digit}s'.format(digit=width)
         formatline = lambda x,y: indent + column0%(x) + splitter + y
         casalog.post(separator)
-        casalog.post('Raster Row Detection Summary')
+        casalog.post('Raster Row/Raster Detection Summary')
         casalog.post(separator)
-        headertitles = ['Filename', 'Nominal Spw for Detection', 'Nominal Pol for Detection', 'Number of Raster Rows']
-        headervalues = [self.infile, self.spw, self.pol, self.nrow]
+        headertitles = ['Filename', 'Nominal Spw for Detection', 'Nominal Pol for Detection', 'Number of Raster Rows', 'Number of Rasters']
+        headervalues = [self.infile, self.spw, self.pol, self.nrow, self.nrow_raster]
         headertemplate = '%-{digit}s: %s'.format(digit=max(map(len,headertitles)))
         for (t,v) in zip(headertitles, headervalues):
             ht = t
@@ -110,15 +119,30 @@ class Raster(object):
         header = formatline('ROW', 'TIMERANGE')
         casalog.post(header)
         for i in xrange(self.nrow):
-            rows = self.select(i)
+            rows = self.select(rowid=i)
             mjd_range = self.mjd_range
             daterangestring = astimerange(*self.mjd_range)
             casalog.post(formatline(i, daterangestring))
+
+        casalog.post(separator)
+        header = formatline('RASTER', 'TIMERANGE')
+        casalog.post(header)
+        for i in xrange(self.nrow_raster):
+            rows = self.select(rasterid=i)
+            mjd_range_raster = self.mjd_range_raster
+            daterangestring = astimerange(*self.mjd_range_raster)
+            casalog.post(formatline(i, daterangestring))
+
             
         
-    def select(self, rowid):
-        if rowid >= self.nrow:
+    def select(self, rowid=None, rasterid=None):
+        if not ((rowid is None) ^ (rasterid is None)):
+            raise RuntimeError('one of rowid or rasterid must be specified')
+
+        if (rowid is not None) and (rowid >= self.nrow):
             raise IndexError('row index %s is out of range (number of rows detected: %s)'%(rowid,self.nrow))
+        if (rasterid is not None) and (rasterid >= self.nrow_raster):
+            raise IndexError('row index %s is out of range (number of rasters detected: %s)'%(rasterid,self.nrow_raster))
 
         tb.open(self.infile)
         tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
@@ -128,33 +152,52 @@ class Raster(object):
         tsel.close()
         tb.close()
 
-        rows = allrows[self.gaplist[rowid]:self.gaplist[rowid+1]]
-        casalog.post('rownumber list for rowid %s: %s'%(rowid, rows), priority='DEBUG')
-        times = alltimes[self.gaplist[rowid]:self.gaplist[rowid+1]]
-        mean_interval = allintervals.mean() / 86400.0
+        if rowid is not None:
+            rows = allrows[self.gaplist[rowid]:self.gaplist[rowid+1]]
+            casalog.post('rownumber list for rowid %s: %s'%(rowid, rows), priority='DEBUG')
+            times = alltimes[self.gaplist[rowid]:self.gaplist[rowid+1]]
+            mean_interval = allintervals.mean() / 86400.0
 
-        self.mjd_range = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
-        casalog.post('time range: %s ~ %s'%(self.mjd_range), priority='DEBUG')
-        
-        if len(rows) > 0:
-            self.rows = map(int, rows)
-    
-        return rows
+            self.mjd_range = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
+            casalog.post('time range: %s ~ %s'%(self.mjd_range), priority='DEBUG')
+            
+            if len(rows) > 0:
+                self.rows = map(int, rows)
+            return rows
 
-    def asscantable(self, rowid=None):
+        else:
+            rasters = allrows[self.gaplist_raster[rasterid]:self.gaplist_raster[rasterid+1]]
+            casalog.post('rownumber list for rasterid %s: %s'%(rasterid, rasters), priority='DEBUG')
+            times = alltimes[self.gaplist_raster[rasterid]:self.gaplist_raster[rasterid+1]]
+            mean_interval = allintervals.mean() / 86400.0
+
+            self.mjd_range_raster = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
+            casalog.post('time range: %s ~ %s'%(self.mjd_range_raster), priority='DEBUG')
+            
+            if len(rasters) > 0:
+                self.rasters = map(int, rasters)
+            return rasters
+
+    def asscantable(self, rowid=None, rasterid=None):
         s = sd.scantable(self.infile, average=False)
-        sel = self.asselector(rowid)
+        sel = self.asselector(rowid=rowid, rasterid=rasterid)
         s.set_selection(sel)
         return s
 
-    def astaql(self, rowid=None):
-        rows = self.select(rowid)
+    def astaql(self, rowid=None, rasterid=None):
+        if not ((rowid is None) ^ (rasterid is None)):
+            raise RuntimeError('one of rowid or rasterid must be specified')
 
-        taql = 'TIME > %s && TIME < %s'%(self.mjd_range)
+        if rowid is not None:
+            rows = self.select(rowid=rowid)
+            taql = 'TIME > %s && TIME < %s'%(self.mjd_range)
+        else:
+            rasters = self.select(rasterid=rasterid)
+            taql = 'TIME > %s && TIME < %s'%(self.mjd_range_raster)
         return taql
     
-    def asselector(self, rowid=None, input_selector=None):
-        taql = self.astaql(rowid)
+    def asselector(self, rowid=None, rasterid=None, input_selector=None):
+        taql = self.astaql(rowid=rowid, rasterid=rasterid)
         
         if input_selector is None:
             sel = sd.selector(query=taql)
@@ -169,7 +212,7 @@ class Raster(object):
         return sel
 
     def plot_row(self, rowid):
-        taql = self.astaql(rowid)
+        taql = self.astaql(rowid=rowid)
 
         tb.open(self.infile)
         tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
@@ -196,8 +239,9 @@ def detect_gap(infile, spw, pol):
     tsel.close()
     tb.close()
 
-    return _detect_gap(timestamp)
-
+    row_gap = _detect_gap(timestamp)
+    ras_gap = _detect_gap_raster(timestamp, alldir, row_gap=row_gap)
+    return row_gap, ras_gap
 
 def _detect_gap(timestamp, threshold=None):
     nrow = len(timestamp)
@@ -221,3 +265,28 @@ def _detect_gap(timestamp, threshold=None):
 
     return gaplist
 
+def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, threshold_raster=None):
+    nrow = len(timestamp)
+    if row_gap is None:
+        row_gaplist = _detect_gap(timestamp, threshold_row)
+    else:
+        row_gaplist = row_gap
+    nrow_gaplist = len(row_gaplist)
+
+    if nrow_gaplist == 0:
+        raster_gaplist = []
+    else:
+        dd0 = alldir[:,1:]-alldir[:,:-1]
+        dd = numpy.sqrt(dd0[0]*dd0[0]+dd0[1]*dd0[1])
+        if threshold_raster is None:
+            ddm = 5.0 * numpy.median(dd[dd.nonzero()])
+        else:
+            ddm = threshold_raster
+        raster_gaplist=[0]
+        for i in row_gaplist[1:-1]:
+            if (i > 0) and (dd[i-1] > ddm):
+                raster_gaplist.append(i)
+        if raster_gaplist[-1] != nrow:
+            raster_gaplist.append(nrow)
+
+    return raster_gaplist
