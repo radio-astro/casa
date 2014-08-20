@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.54 2014/08/05 02:17:32 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.55 2014/08/20 18:16:07 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.54 2014/08/05 02:17:32 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.55 2014/08/20 18:16:07 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1213,6 +1213,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         VisCal = mytb.getkeyword('VisCal')      # string = 'B TSYS'
         PolBasis = mytb.getkeyword('PolBasis')  # string = 'LINEAR'
         spectralWindowTable = mytb.getkeyword('SPECTRAL_WINDOW').split()[1]
+        antennaTable = mytb.getkeyword('ANTENNA').split()[1]
+        fieldTable = mytb.getkeyword('FIELD').split()[1]
         mytb.close()
         mytb.open(spectralWindowTable)
         chanFreqGHz = []
@@ -1223,14 +1225,21 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             # They array shapes can vary.
             chanFreqGHz.append(1e-9 * mytb.getcell('CHAN_FREQ',i))
         mytb.close()
+        #      CAS-6801 changes
+        mytb.open(antennaTable)
+        msAnt = mytb.getcol('NAME')
+        mytb.close()
+        mytb.open(fieldTable)
+        msFields = mytb.getcol('NAME')
+        mytb.close()
 
     # Now open the associated ms tables via msmd tool
-    msAnt = []
+#     msAnt = []  # comment this out when CAS-6801 changes are in place
     if (debug): print  "creating msmd tool"
     if (casadef.casa_version < '4.1.0'):
         print "This version of casa is too old to use the msmd tool.  Use au.plotbandpass instead."
         return
-    mymsmd = createCasaTool(msmdtool)
+    mymsmd = ''
     observatoryName = ''
     if (debug): print  "msName = %s." % (msName)
     if (os.path.exists(msName) or os.path.exists(os.path.dirname(caltable)+'/'+msName)):
@@ -1242,6 +1251,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             return
         try:
             if (debug): print "Running mymsmd on %s..." % (msName)
+            mymsmd = createCasaTool(msmdtool)
             mymsmd.open(msName)
             donetime = timeUtilities.time()
             if (debug): print "%.1f sec elapsed" % (donetime-mytimestamp)
@@ -1257,13 +1267,15 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             print "1)Could not open the associated measurement set tables (%s). Will not translate antenna names or frequencies." % (msName)
             return
     else:
-        if (vis==''):
+        if (vis=='' and tableFormat < 34):
             print "Could not find the associated measurement set (%s). Will not translate antenna names or frequencies." % (msName)
-        elif (os.path.exists(vis)):
+        elif (vis != ''):
             # Use the ms name passed in from the command line
             msName = vis
 # #          print "************* 2) Set msName to %s" % (msName)
             try:
+                mymsmd = createCasaTool(msmdtool)
+                if (debug): print "Running msmd.open on %s" % (msName)
                 mymsmd.open(msName)
                 donetime = timeUtilities.time()
                 if (debug): print "%.1f sec elapsed" % (donetime-mytimestamp)
@@ -1275,8 +1287,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
                 print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
-        else:
-            print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
     msFound =  False
     if (len(msAnt) > 0):
         msFound = True
@@ -1411,26 +1421,28 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     # Now generate the list of minimal basebands that contain the spws to be plotted
     if (casadef.casa_version >= '4.1.0' and msFound):
         allBasebands = []
-        try:
+        if (mymsmd != ''):
+          try:
             for spw in originalSpwsToPlot:
                 mybaseband = mymsmd.baseband(spw)
                 if (debug): print "appending: spw=%d -> bb=%d" % (spw,mybaseband)
                 allBasebands.append(mybaseband)
             allBasebands = np.unique(allBasebands)
-            basebandDict = getBasebandDict(msName)  # needed later by showFDM()
-        except:
+            basebandDict = getBasebandDict(msName,caltable=caltable)  # needed later by showFDM()
+          except:
             basebandDict = {}
-            if (observatoryName.find('SMA')>=0):
-                print "This SMA dataset (%s) does not have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (msName)
-            else:
-                print "This MS (%s) is too old to have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (msName)
-            if (overlay.find('spw')>=0):
-                print "As such, overlay='spw' is not supported, but overlay='baseband' should work."
-                return
+            print "This dataset (%s) does not have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (msName)
+        else:
+            basebandDict = {}
+            telescopeName = getTelescopeNameFromCaltable(caltable)
+            print "This %s caltable (%s) is too old to have a BBC_NO column in the SPECTRAL_WINDOW_TABLE." % (telescopeName,caltable)
+        if (basebandDict == {} and overlay.find('spw') >= 0):
+            print "As such, overlay='spw' is not supported, but overlay='baseband' should work."
+            return
     elif (msFound==False):
         allBasebands = [1,2,3,4]
     else:
-        basebandDict = getBasebandDict(msName)  # needed later by showFDM()
+        basebandDict = getBasebandDict(msName,caltable=caltable)  # needed later by showFDM()
         allBasebands = []
         for spw in originalSpwsToPlot:
             mybaseband = [key for key in basebandDict if spw in basebandDict[key]]
@@ -1839,10 +1851,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                            antlist = range(mymsmd.nantennas())
                            removeAntenna.append(mymsmd.antennaids(token[1:])[0])
                        else:
-                           print "Antenna %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nantennas())))
+                           print "Antenna %s is not in the ms. It contains: " % (token), mymsmd.antennanames(range(mymsmd.nantennas()))
                            return()
                    else:
-                       print "Antenna %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nantennas())))
+                       print "Antenna %s is not in the ms. It contains: " % (token), mymsmd.antennanames(range(mymsmd.nantennas()))
                        return()
                antlist = np.array(antlist)
                for rm in removeAntenna:
@@ -2416,7 +2428,42 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           nRows2 = len(gain2)
           if (debug): print "nRows2 = %s" % (str(nRows2))
   
-    try:
+    if (tableFormat == 34):
+        # CAS-6801, unfortunately corr_type is not available in the caltable
+        mytb.open(caltable)
+        spectralWindowTable = mytb.getkeyword('SPECTRAL_WINDOW').split()[1]
+        if ('OBSERVATION' in mytb.getkeywords()):
+            observationTable = mytb.getkeyword('OBSERVATION').split()[1]
+        else:
+            observationTable = None
+        mytb.open(spectralWindowTable)
+        refFreq = mytb.getcol('REF_FREQUENCY')
+        net_sideband = mytb.getcol('NET_SIDEBAND')
+        measFreqRef = mytb.getcol('MEAS_FREQ_REF')
+        mytb.close()
+        corr_type = None
+        if (os.path.exists(msName)):
+          try:
+              (corr_type, corr_type_string, nPolarizations) = getCorrType(msName,originalSpwsToPlot,mymsmd,debug)
+          except:
+              print "4) Could not getCorrType"
+        if (corr_type == None):
+          if (observationTable == None):
+              corr_type, corr_type_string, nPolarizations = getCorrTypeByAntennaName(msAnt[0].lower())
+          else:
+              telescope = getTelescopeNameFromCaltableObservationTable(observationTable)
+              if (telescope.find('ALMA') >= 0):
+                  print "Using telescope name (%s) to set the polarization type." % (telescope)
+                  corr_type_string = ['XX','YY']
+                  corr_type = [9,12]
+              elif (telescope.find('VLA') >= 0):
+                  print "Using telescope name (%s) to set the polarization type." % (telescope)
+                  corr_type_string = ['RR','LL']
+                  corr_type = [5,8]
+              else:  
+                  corr_type, corr_type_string, noPolarizations = getCorrTypeByAntennaName(msAnt[0].lower())
+    else:
+      try:
         if (DEBUG):
             print "Trying to open %s" % (msName+'/SPECTRAL_WINDOW')
         mytb.open(msName+'/SPECTRAL_WINDOW')
@@ -2429,7 +2476,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, originalSpwsToPlot, mymsmd, debug)
         if (corr_type_string == []):
             return()
-    except:
+      except:
         print "4) Could not open the associated measurement set tables (%s). Will not translate antenna names." % (msName)
         mymsmd = ''
         print "I will assume ALMA data: XX, YY, and refFreq=first channel."
@@ -2620,8 +2667,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
        else:
            baseband = 0  # add from here to "ispw=" on 2014-04-05
            if (casadef.casa_version >= '4.1.0'):
-               if (debug): print "A"
-               if (getBasebandDict(msName) != {}):
+               if (debug): print "A, msName=%s, vis=%s" % (msName,vis)
+               if (getBasebandDict(vis=msName,caltable=caltable) != {}):
                    if (debug): print "B"
                    try:
                        baseband = mymsmd.baseband(originalSpwsToPlot[spwctr])
@@ -2647,7 +2694,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 if (groupByBaseband == False):
                     baseband = 0
                     if (casadef.casa_version >= '4.1.0'):
-                        if (getBasebandDict(msName) != {}):
+                        if (getBasebandDict(vis=msName,caltable=caltable) != {}):
                             try:
                                 baseband = mymsmd.baseband(originalSpwsToPlot[spwctr])
                                 if (baseband not in basebands):
@@ -5001,10 +5048,48 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         mymsmd.close()
         return(madstats)
     else:
-        if (msFound):
+        if (msFound and mymsmd != ''):
             mymsmd.close()
         return()
     # end of plotbandpass
+
+def getTelescopeNameFromCaltable(caltable):
+    mytb = createCasaTool(tbtool)
+    mytb.open(caltable)
+    if ('OBSERVATION' in mytb.getkeywords()):
+        observationTable = mytb.getkeyword('OBSERVATION').split()[1]
+    else:
+        observationTable = None
+    mytb.close()
+    if (observationTable == None):
+        return('')
+    else:
+        return(getTelescopeNameFromCaltableObservationTable(observationTable))
+    
+
+def getTelescopeNameFromCaltableObservationTable(observationTable):
+    mytb = createCasaTool(tbtool)
+    mytb.open(observationTable)
+    telescope = mytb.getcell('TELESCOPE_NAME')
+    mytb.close()
+    return(telescope)
+
+def getCorrTypeByAntennaName(firstAntenna):
+    """
+    This function is used only if the OBSERVATION table of the caltable is blank and the MS is unavailable.
+    """
+    print "Using antenna name (%s) to set the polarization type." % (firstAntenna)
+    if (firstAntenna.find('ea') >= 0):
+        corr_type_string = ['RR','LL']
+        corr_type = [5,8]
+    elif (firstAntenna.find('dv') >= 0 or firstAntenna.find('da') >= 0 or
+          firstAntenna.find('pm') >= 0 or firstAntenna.find('da') >= 0):
+        corr_type_string = ['XX','YY']
+        corr_type = [9,12]
+    else: # SMA
+        corr_type_string = ['XX']
+        corr_type = [9]
+    return(corr_type, corr_type_string, len(corr_type))
 
 def MAD(a, c=0.6745, axis=0):
     """
@@ -6051,9 +6136,9 @@ def getSpwsForBaseband(vis,bb):
         mymsmd.close()
         return(s)
     else:
-        return(getBasebandDict(vis))
+        return(getBasebandDict(vis,caltable=caltable))
         
-def getBasebandDict(vis, spwlist=[]):
+def getBasebandDict(vis=None, spwlist=[], caltable=None):
     """
     Builds a dictionary with baseband numbers as the keys and the
     associated spws as the values.  The optional parameter spwlist can
@@ -6061,29 +6146,75 @@ def getBasebandDict(vis, spwlist=[]):
     Note: This is obsoleted by msmd.spwsforbaseband(-1)
     """
     bbdict = {}
-    bbs = getBasebandNumbers(vis)
+    if (vis != None):
+        if (os.path.exists(vis)):
+            bbs = getBasebandNumbers(vis)
+        elif (caltable != None):
+            bbs = getBasebandNumbersFromCaltable(caltable)
+        else:
+            print "Must specify either vis or caltable"
+            return
+    elif (caltable != None):
+        bbs = getBasebandNumbersFromCaltable(caltable)
+    else:
+        print "Must specify either vis or caltable"
+        return
     if (type(bbs) == int):  # old datasets will bomb on msmd.baseband()
         return(bbdict)
-    if (casadef.casa_version >= '4.1.0'):
-        mymsmd = createCasaTool(msmdtool)
-        mymsmd.open(vis)
-        if (spwlist == []):
-            nspws = mymsmd.nspw()
-            spwlist = range(nspws)
-        for spw in spwlist:
-            bbc_no = mymsmd.baseband(spw)
-            if (bbc_no not in bbdict.keys()):
-                bbdict[bbc_no] = [spw]
-            else:
-                bbdict[bbc_no].append(spw)
-        mymsmd.close()
-    else: # read from spw table
+    if (casadef.casa_version >= '4.1.0' and vis != None):
+        if (os.path.exists(vis)):
+            mymsmd = createCasaTool(msmdtool)
+            mymsmd.open(vis)
+            if (spwlist == []):
+                nspws = mymsmd.nspw()
+                spwlist = range(nspws)
+            for spw in spwlist:
+                bbc_no = mymsmd.baseband(spw)
+                if (bbc_no not in bbdict.keys()):
+                    bbdict[bbc_no] = [spw]
+                else:
+                    bbdict[bbc_no].append(spw)
+            mymsmd.close()
+    if (bbdict == {}):
+        # read from spw table
         ubbs = np.unique(bbs)
         for bb in ubbs:
             bbdict[bb] = []
         for i in range(len(bbs)):
             bbdict[bbs[i]].append(i)
     return(bbdict)
+
+def getBasebandNumbersFromCaltable(caltable) :
+    """
+    Returns the baseband numbers associated with each spw in 
+    the specified caltable.
+    Todd Hunter
+    """
+    if (os.path.exists(caltable) == False):
+        print "getBasebandNumbersFromCaltable(): caltable set not found"
+        return -1
+    mytb = createCasaTool(tbtool)
+    mytb.open(caltable)
+    spectralWindowTable = mytb.getkeyword('SPECTRAL_WINDOW').split()[1]
+    mytb.close()
+    mytb.open(spectralWindowTable)
+    if ("BBC_NO" in mytb.colnames()):
+        bbNums = mytb.getcol("BBC_NO")
+    else:
+        # until CAS-6853 is solved, need to get it from the name
+#        print "BBC_NO not in colnames (CAS-6853).  Using NAME column."
+        names = mytb.getcol('NAME')
+        bbNums = []
+        trivial = True
+        for name in names:
+            if (name.find('#BB_') > 0):
+                bbNums.append(int(name.split('#BB_')[1].split('#')[0]))
+                trivial = False
+            else:
+                bbNums.append(-1)
+        if (trivial): bbNums = -1
+    mytb.close()
+    return bbNums
 
 def createCasaTool(mytool):
     """
