@@ -603,7 +603,7 @@ namespace casa {
 			if ( fixedItem != NULL ) {
 				fixedStr = fixedItem->getFixedStr();
 			}
-			logMessage.append( "  Estimate "+QString::number((i+1))+":  Peak="+peakStr+" "+getYUnitPrefix()+getYUnit()+" Center="+centerStr+" "+
+			logMessage.append( "  Estimate "+QString::number((i+1))+":  Peak="+peakStr+" "+/*getYUnitPrefix()+getYUnit()*/pixelCanvas->getDisplayYUnits()+" Center="+centerStr+" "+
 			                   getXAxisUnit().c_str()+" FWHM="+fwhmStr+" "+getXAxisUnit().c_str() );
 			if ( !fixedStr.isNull() && !fixedStr.isEmpty()) {
 				logMessage.append(" Fixed="+fixedStr);
@@ -954,7 +954,6 @@ namespace casa {
 		Double centerValPix = pcf->getCenter();
 		double fwhmValPix = pcf->getFWHM();
 		float peakVal = static_cast<float>(pcf->getAmpl());
-
 		if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
 		        isinf( fwhmValPix) || isinf( centerValPix) || isinf( peakVal)) {
 			return false;
@@ -1001,7 +1000,7 @@ namespace casa {
 		//fit image is using.  We need to convert it to the image units that the canvas
 		//knows about (which may not be the same thing if we are fitting a different
 		//image than the canvas is using for the main display.
-		const Unit imageUnit = img->units();
+		/*const Unit imageUnit = img->units();
 		String imageUnits = imageUnit.getName();
 		QString imageUnitsStr( imageUnits.c_str());
 		QString canvasUnits = pixelCanvas->getDisplayYUnits();
@@ -1012,8 +1011,9 @@ namespace casa {
 			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
 			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal,
 					imageUnitsStr, canvasUnits, xAxisUnit, coord );
+			qDebug() << "convertedPeakVal="<<convertedPeakVal<<" imageUnits="<<imageUnitsStr<<" canvasUnits="<<canvasUnits;
 			peakVal = convertedPeakVal;
-		}
+		}*/
 
 		SpecFit* gaussFit = new SpecFitGaussian( peakVal, centerVal, fwhmVal, index );
 		curves.append( gaussFit );

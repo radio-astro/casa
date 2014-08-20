@@ -2451,41 +2451,6 @@ namespace casa {
 		profileStatus->showMessage(position);
 	}
 
-	/*bool QtProfile::getFrequencyProfileWrapper( std::tr1::shared_ptr<ImageInterface<Float> >& img,
-			const Vector<double> &wxv, const Vector<double> &wyv,
-	        Vector<Float> &z_xval, Vector<Float> &z_yval,
-	        const String& xytype, const String& specaxis,
-	        const Int& whichStokes, const Int& whichTabular,
-	        const Int& whichLinear, String& xunits,
-	        const String& specFrame, QtProfile::ExtrType combineType,
-	        const Int& whichQuality, const String& restValue, const String& shape ) {
-
-		Bool ok = false;
-
-		//Int beamChannel = 0;
-
-		// might want to introduce more fancy selection of the
-		//beamChannel here but using channel 0 is a good choice already
-		ok = analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
-		                               combineType, whichQuality, restValue,
-		                               beamChannel, shape);
-
-
-		//Note:  we don't have to worry about applying smoothing here because the callers
-		//of this method currently do it.
-
-		//Note that the warning below is no longer needed because the new PixelValueManipulator
-		//can correctly handle images with multiple beams per channel.
-		if ( itsPlotType == QtProfile::PFLUX ) {
-			//Post a warning that flux was calculated using a given channel
-			//and the resulting calculation was only an approximation.
-			ostringstream oss;
-			oss << "Calculation was performed using the beam for channel " << beamChannel << endl << "The result should be considered an approximation.";
-			postStatus( oss.str() );
-		}
-		return ok;
-	}*/
 
 
 	bool QtProfile::assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
@@ -2499,45 +2464,33 @@ namespace casa {
 
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
-			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0,
-					xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEAN, 0, restValue, -1, shape );*/
+
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 					shape, QtProfile::MEAN, xaxisUnit, coordinateType,
 					restValue, spcRefFrame);
 
 			break;
 		case QtProfile::PMEDIAN:
-			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEDIAN, 0, restValue, -1, shape );*/
+
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::MEDIAN, xaxisUnit, coordinateType,
 								restValue, spcRefFrame);
 			break;
 		case QtProfile::PSUM:
-			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::SUM, 0, restValue, -1, shape );*/
+
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::SUM, xaxisUnit, coordinateType,
 								restValue, spcRefFrame);
 			break;
 		case QtProfile::PFLUX:
-			/*ok=getFrequencyProfileWrapper( image, wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0,
-					xaxisUnit, spcRefFrame,
-					QtProfile::FLUX, 0, restValue, shape);*/
+
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 					shape, QtProfile::FLUX, xaxisUnit, coordinateType,
 					restValue, spcRefFrame);
 			break;
 
 		default:
-			/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
-					WORLD_COORDINATES, coordinateType, 0, whichTabular, 0, xaxisUnit, spcRefFrame,
-					(Int)QtProfile::MEAN, 0, restValue, -1, shape );*/
+
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::MEAN, xaxisUnit, coordinateType,
 								restValue, spcRefFrame);
@@ -2598,9 +2551,6 @@ namespace casa {
 					//  		 z_eval.resize(0);
 					//		 break;
 				default:
-					/*ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
-					                             WORLD_COORDINATES, coordinateType, 0, tabularIndex, 0, xaxisUnit, spcRefFrame,
-					                             (Int)QtProfile::RMSE, 0, cSysRval, -1, shape);*/
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 										shape, QtProfile::RMSE, xaxisUnit, coordinateType,
 										cSysRval, spcRefFrame);
@@ -2745,6 +2695,7 @@ namespace casa {
 		} else { // no correction
 			yUnitPrefix = "";
 		}
+
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
 		return ordersOfM;
 	}
@@ -3462,7 +3413,11 @@ namespace casa {
 		}
 
 		//Convert the y values
-		Vector<float> yValues = getYValues();
+
+		Vector<float> yValues(zxCount);
+		for ( int i = 0; i < zxCount; i++ ){
+			yValues[i] = z_yval[i];
+		}
 		Double beamAngle;
 		Double beamArea;
 		getBeamInfo( image, beamAngle, beamArea );
