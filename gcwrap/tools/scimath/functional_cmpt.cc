@@ -17,6 +17,7 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Functionals/Gaussian2D.h>
+#include <scimath/Functionals/Polynomial.h>
 #include <scimath/Functionals/PowerLogarithmicPolynomial.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
@@ -61,7 +62,6 @@ functional::functional() : _log(new LogIO())
 
 }
 
-
 functional::functional(
 	Gaussian1D<Double>*& function //, Gaussian1D<AutoDiff<Double> >*& first
 ) :  _log(new LogIO()), _functional(function) //, _firstDeriv(first)
@@ -74,6 +74,11 @@ functional::functional(
 
 functional::functional(
 	PowerLogarithmicPolynomial<Double>*& function
+) :  _log(new LogIO()), _functional(function)
+{}
+
+functional::functional(
+	Polynomial<Double>*& function
 ) :  _log(new LogIO()), _functional(function)
 {}
 
@@ -144,148 +149,12 @@ variant* functional::f(const variant& v) {
 	);
 }
 
-/*
-::casac::variant*
-functional::cf(const std::vector<casac::complex>& x)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-
-::casac::variant*
-functional::fdf(const variant& v) {
-	try {
-		switch(v.type()) {
-		case variant::INT:
-			// allow fall through
-		case variant::DOUBLE:
-			// allow fall through
-		case variant::INTVEC:
-			// allow fall through
-		case variant::DOUBLEVEC: {
-			vector<double> y;
-			vector<double> x = v.toDoubleVec();
-			for (vector<double>::const_iterator iter=x.begin(); iter!=x.end(); iter++) {
-                Vector<Double> derivs = (*_firstDeriv)(*iter).derivatives();
-                cout << "val, deriv " << derivs  << endl;;
-				y.push_back(_functional->operator ()(*iter));
-			}
-			return new variant(y);
-		}
-		default:
-			throw AipsError("Unpermitted type for value");
-		}
-	}
-	catch (const AipsError& x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
-		RETHROW(x);
-
-	}
-
-}
-
-::casac::variant*
-functional::cfdf(const std::vector<casac::complex>& x)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-std::string
-functional::type()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-int
-functional::npar()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-*/
-
 int functional::ndim() {
 	_FUNC(
 		return _functional->ndim();
 	)
 }
 
-/*
-int
-functional::order()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-::casac::record*
-functional::state()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-std::vector<double>
-functional::parameters()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-bool
-functional::setparameters(const std::vector<double>& par)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-double
-functional::par(const int n)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-std::vector<double>
-functional::setpar(const int n, const double v)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-std::vector<bool>
-functional::masks()
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-bool
-functional::setmasks(const std::vector<bool>& mask)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-double
-functional::mask(const int n)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-
-std::vector<bool>
-functional::setmask(const int n, const bool v)
-{
-
-    // TODO : IMPLEMENT ME HERE !
-}
-*/
 bool
 functional::done() {
     _log.reset(0);
@@ -342,6 +211,15 @@ functional* functional::gaussian2d(
 
 }
 
+::casac::functional* functional::polynomial(
+	const vector<double>& parms
+) {
+	_FUNC2(
+		Polynomial<Double> *poly = new Polynomial<Double>(parms.size());
+		poly->setCoefficients(Vector<Double>(parms));
+		return new functional(poly);
+	);
+}
 
 ::casac::functional* functional::powerlogpoly(
 	const vector<double>& parms
@@ -351,6 +229,7 @@ functional* functional::gaussian2d(
 		return new functional(plp);
 	);
 }
+
 
 
 /*

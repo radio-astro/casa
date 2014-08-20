@@ -969,6 +969,34 @@ v =  g2d.f([0,1,1.5,0])
 </example>
 </method>
 
+
+<method type="function" name="polynomial">
+   <shortdescription>Create and return a new functional tool representing a 1D polynomial function, y = c_0 + c_1*x + c_2*x**2 + ... + c_n*x**n</shortdescription>
+
+<input>
+     <param type="doubleArray" direction="in" name="coefficients">
+        <value>0</value>
+        <description>Array of coefficients. Number of coefficients determines order of polynomial.</description>
+     </param>
+</input>
+<returns type="functional">Functional</returns>
+<description>
+
+Create a 1-dimensional polynomial function with the specified coefficents.
+
+</description>
+
+<example>
+
+# get the value and derivatives of 3 + 2*x + 4*x*x
+poly = fn.powerlogpoly(3, 2, 4)
+
+# value at 3
+vals = poly.f(3)
+
+</example>
+</method>
+
 <method type="function" name="powerlogpoly">
    <shortdescription>Create and return a new functional tool representing a 1D power log polynomial function, y = c_0 * x**( c_1 + c_2*ln(x) + c_3*ln(x)**2 + ... c_n*ln(x)**(n-1)</shortdescription>
 

@@ -636,6 +636,58 @@ class specfit_test(unittest.TestCase):
             gs["fwhm"][0,0,0,0,0] = nanvalue
             gs["fwhm"][0,0,0,0,1] = nanvalue
             self.assertTrue((abs(gs["fwhm"] - fwhm) < 1e-13).all())
+    
+    def test_8a(self):
+        """ Test two gaussian + one polynomial image with estimates"""
+        imagename = "tg_poly.im"
+        estimates = datapath + "poly+2gauss_estimates.txt"
+        myia = iatool()
+        nx = 5
+        ny = 5
+        nz = 120
+        myia.fromshape(imagename, [nx, ny, nz])
+        myia.setbrightnessunit("Jy/pixel")
+        bb = myia.getchunk()
+        c = numpy.zeros([3, nx, ny])
+        center = numpy.zeros([2, nx, ny])
+        amp = numpy.zeros([2, nx, ny])
+        width = numpy.zeros([2, nx, ny])
+        for i in range(nx):
+            for j in range(ny):
+                c[0, i, j] = 1+i+j
+                c[1, i, j] = 5 + 0.1*(0.5*i*i + 0.2*j)
+                c[2, i, j] = 0.1*(2*i - 0.2*j*j)
+                #c[3, i, j] = (0.001)*(0.1*i + 0.2*j)
+                print "coeffs ", c[:, i, j]
+                cubic = fn.polynomial(c[:, i, j])
+                amp[0, i, j] = 50 + 0.02*i - 0.03*j
+                center[0, i, j] = 90 + 0.01*i - 0.03*j
+                width[0, i, j] = 10 + 0.01*i - 0.025*j
+                amp[1, i, j] = 10 + 0.02*i - 0.03*j
+                center[1, i, j] = 30 + 0.01*i - 0.03*j
+                width[1, i, j] = 7 + 0.01*i - 0.025*j
+                g0 = fn.gaussian1d(amp[0, i, j], center[0, i, j], width[0, i, j])
+                g1 = fn.gaussian1d(amp[1, i, j], center[1, i, j], width[1, i, j])
+                for k in range(nz):
+                    bb[i, j, k] = cubic.f(k)  + g0.f(k) + g1.f(k)
+        myia.putchunk(bb)
+        myia.done()
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=2,
+                multifit=True, model="", residual="",
+                estimates=estimates
+            )
+            self.assertTrue((res['ncomps'] == 3).all())                   
+            res = code(
+                imagename=imagename, box="", region="", chans="",
+                stokes="", axis=2, mask="", ngauss=0, poly=2,
+                multifit=True, model="", residual="",
+                pampest=[50, 10], pcenterest=[90, 30], pfwhmest=[10, 7]
+            )   
+            self.assertTrue((res['ncomps'] == 3).all())                   
+
 
     def test_9(self):
         """Polynomial fitting, moved from imagetest_regression.py"""
