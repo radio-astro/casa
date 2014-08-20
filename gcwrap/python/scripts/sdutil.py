@@ -648,22 +648,22 @@ def combine_masklist(masklist1, masklist2, mode='and'):
     """
     max_idx = 0
     for i in xrange(len(masklist1)):
-        max_elem = max(masklist1[i][0], masklist1[i][1])
+        max_elem = int(max(masklist1[i][0], masklist1[i][1]))
         if max_elem > max_idx: max_idx = max_elem
     for i in xrange(len(masklist2)):
-        max_elem = max(masklist2[i][0], masklist2[i][1])
+        max_elem = int(max(masklist2[i][0], masklist2[i][1]))
         if max_elem > max_idx: max_idx = max_elem
     numblist = max_idx + 1
     blist1 = [False]*numblist
     for i in xrange(len(masklist1)):
-        min_elem = min(masklist1[i][0], masklist1[i][1])
-        max_elem = max(masklist1[i][0], masklist1[i][1])
+        min_elem = int(min(masklist1[i][0], masklist1[i][1]))
+        max_elem = int(max(masklist1[i][0], masklist1[i][1]))
         for j in xrange(min_elem, max_elem+1):
             blist1[j] = True
     blist2 = [False]*numblist
     for i in xrange(len(masklist2)):
-        min_elem = min(masklist2[i][0], masklist2[i][1])
-        max_elem = max(masklist2[i][0], masklist2[i][1])
+        min_elem = int(min(masklist2[i][0], masklist2[i][1]))
+        max_elem = int(max(masklist2[i][0], masklist2[i][1]))
         for j in xrange(min_elem, max_elem+1):
             blist2[j] = True
     blist3 = []

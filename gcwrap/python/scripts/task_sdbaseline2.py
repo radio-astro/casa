@@ -23,13 +23,16 @@ class sdbaseline2_worker(sdutil.sdtask_template):
     def initialize_scan(self):
         sorg = sd.scantable(self.infile, average=False, antenna=self.antenna)
 
-        if len(self.row.strip()) > 0:
-            self.rowlist = self.sorg.parse_idx_selection('row', self.row)
-        
         sel = self.get_selector(sorg)
         sorg.set_selection(sel)
         del sel
 
+        if len(self.row.strip()) > 0:
+            self.rowlist = sorg.parse_idx_selection('row', self.row)
+            sel = self.get_selector(sorg)
+            sorg.set_selection(sel)
+            del sel
+        
         # Copy scantable when using disk storage not to modify
         # the original table.
         if is_scantable(self.infile) and self.is_disk_storage:
@@ -101,11 +104,14 @@ class sdbaseline2_engine(sdutil.sdtask_engine):
             self.params['blinfo'] = self.blparam
             if isinstance(self.params['blinfo'], list):
                 for i in xrange(len(self.params['blinfo'])):
-                    in_masklist = maskdict[scan.getif(self.params['blinfo'][i]['row'])]
-                    if self.params['blinfo'][i].has_key('masklist'):
-                        self.params['blinfo'][i]['masklist'] = sdutil.combine_masklist(in_masklist, self.params['blinfo'][i]['masklist'])
-                    else:
-                        self.params['blinfo'][i]['masklist'] = in_masklist
+                    blinfo = self.params['blinfo'][i]
+                    ifno = scan.getif(blinfo['row'])
+                    if maskdict.has_key(ifno):
+                        in_masklist = maskdict[ifno]
+                        if blinfo.has_key('masklist'):
+                            blinfo['masklist'] = sdutil.combine_masklist(in_masklist, blinfo['masklist'])
+                        else:
+                            blinfo['masklist'] = in_masklist
         else:
             self.params['inbltable'] = self.bltable
             self.params['outbltable'] = ''
