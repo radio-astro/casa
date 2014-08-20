@@ -192,16 +192,12 @@ void ImageProfileFitterResults::_marshalFitResults(
 	const StokesCoordinate *polcoord = csysSub.hasPolarizationCoordinate()
 		? &csysSub.stokesCoordinate() : 0;
 	IPosition pixel;
-	Vector<Double> world;
-	String latitude, longitude;
 	Double increment = fabs(_fitAxisIncrement());
 	for (
-		inIter.reset();
-		! inIter.atEnd();
-		inIter++
+		inIter.reset();	! inIter.atEnd(); inIter++
 	) {
         IPosition pixel = inIter.position();
-        const std::tr1::shared_ptr<ProfileFitResults> fitter = (*_fitters)(pixel);
+        std::tr1::shared_ptr<const ProfileFitResults> fitter = (*_fitters)(pixel);
 		if (! fitter) {
 			continue;
 		}
@@ -210,136 +206,167 @@ void ImageProfileFitterResults::_marshalFitResults(
 		convergedArr(pixel) = attemptedArr(pixel) && successArr(pixel)
 			&& fitter->converged();
 		validArr(pixel) = convergedArr(pixel) && fitter->isValid();
-		if (csysSub.toWorld(world, pixel)) {
-			for (uInt i=0; i<world.size(); i++) {
-				// The Coordinate::format() calls have the potential of modifying the
-				// input unit so this needs to be reset at the beginning of the loop
-				// rather than outside the loop
-				String emptyUnit = "";
-				if ((Int)i != _fitAxis) {
-					if (_axisTypes[i] == LONGITUDE) {
-						longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-                        IPosition x(1, LONGITUDE);
-                        x.append(pixel);
-                        _worldCoords(x) = longitude;
-					}
-					else if (_axisTypes[i] == LATITUDE) {
-						latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
-						IPosition x(1, LATITUDE);
-                        x.append(pixel);
-                        _worldCoords(x) = latitude;
-					}
-					else if (_axisTypes[i] == FREQUENCY) {
-                        IPosition x(1, FREQUENCY);
-                        x.append(pixel);
-						_worldCoords(x) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-					}
-					else if (_axisTypes[i] == POLARIZATION) {
-                        IPosition x(1, POLARIZATION);
-                        x.append(pixel);
-						_worldCoords(x) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-					}
-				}
-			}
-			if (returnDirection) {
-				directionInfo(pixel) = directionType + " "
-					+ longitude + " " + latitude;
-			}
-		}
-		else {
-			ThrowCc(
-				"Could not convert pixel to world coordinate: "
-				+ csysSub.errorMessage()
+		_doWorldCoords(
+			directionInfo, csysSub, pixel, dcoord, spcoord,
+			polcoord, returnDirection, directionType
+		);
+		if (validArr(pixel)) {
+			_processSolutions(
+				mask, typeMat, niterArr, nCompArr, pixel, fitter, inIter,
+				pcfArrays, plpArrays, ltpArrays, increment
 			);
 		}
-		if (validArr(pixel)) {
-			mask(pixel) = anyTrue(inIter.getMask());
-			niterArr(pixel) = (Int)fitter->getNumberIterations();
-			nCompArr(pixel) = (Int)fitter->getList().nelements();
-			SpectralList solutions = fitter->getList();
-			uInt gCount = 0;
-			uInt gmCount = 0;
-			uInt lseCount = 0;
-			for (uInt i=0; i<solutions.nelements(); i++) {
-				SpectralElement::Types type = solutions[i]->getType();
-                IPosition tPos(1, i);
-                tPos.prepend(pixel);
-				typeMat(tPos) = SpectralElement::fromType(type);
-				switch (type) {
-				case SpectralElement::POLYNOMIAL:
-					break;
-				case SpectralElement::GAUSSIAN:
-					// allow fall through because gaussians and lorentzians use common code
-				case SpectralElement::LORENTZIAN:
-				{
-					const PCFSpectralElement *pcf = dynamic_cast<
-						const PCFSpectralElement*
-					>(solutions[i]);
-					uInt plane = _lsPlane;
-					uInt col = lseCount;
-					// if block because we allow case fall through
-					if (type == SpectralElement::LORENTZIAN) {
-						lseCount++;
-					}
-					else {
-						plane = _gsPlane;
-						col = gCount;
-						gCount++;
-					}
-					_insertPCF(
-						*pcfArrays, pixel, *pcf, plane, col,
-						increment
-					);
+	}
+}
+
+void ImageProfileFitterResults::_processSolutions(
+	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
+	Array<Int>& nCompArr, const IPosition& pixel,
+	std::tr1::shared_ptr<const ProfileFitResults> fitter,
+	const RO_MaskedLatticeIterator<Float>& inIter,
+	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
+	Double increment
+) {
+	mask(pixel) = anyTrue(inIter.getMask());
+	niterArr(pixel) = (Int)fitter->getNumberIterations();
+	nCompArr(pixel) = (Int)fitter->getList().nelements();
+	SpectralList solutions = fitter->getList();
+	uInt gCount = 0;
+	uInt gmCount = 0;
+	uInt lseCount = 0;
+	uInt nSolutions = solutions.nelements();
+	for (uInt i=0; i<nSolutions; i++) {
+		SpectralElement::Types type = solutions[i]->getType();
+		IPosition tPos(1, i);
+		tPos.prepend(pixel);
+		typeMat(tPos) = SpectralElement::fromType(type);
+		switch (type) {
+		case SpectralElement::POLYNOMIAL:
+			break;
+		case SpectralElement::GAUSSIAN:
+			// allow fall through because gaussians and lorentzians use common code
+		case SpectralElement::LORENTZIAN:
+		{
+			const PCFSpectralElement *pcf = dynamic_cast<
+				const PCFSpectralElement*
+			>(solutions[i]);
+			uInt plane = _lsPlane;
+			uInt col = lseCount;
+			// if block because we allow case fall through
+			if (type == SpectralElement::LORENTZIAN) {
+				lseCount++;
+			}
+			else {
+				plane = _gsPlane;
+				col = gCount;
+				gCount++;
+			}
+			_insertPCF(
+				*pcfArrays, pixel, *pcf, plane, col,
+				increment
+			);
+		}
+		break;
+		case SpectralElement::GMULTIPLET:
+		{
+			const GaussianMultipletSpectralElement *gm = dynamic_cast<
+				const GaussianMultipletSpectralElement*
+			>(solutions[i]);
+			const Vector<GaussianSpectralElement> g = gm->getGaussians();
+			for (uInt k=0; k<g.size(); k++) {
+				_insertPCF(
+					*pcfArrays, pixel, g[k], gmCount+2,
+					k, increment
+				);
+			}
+			gmCount++;
+		}
+		break;
+		case SpectralElement::POWERLOGPOLY:
+		{
+			Vector<Double> sols = solutions[i]->get();
+			Vector<Double> errs = solutions[i]->getError();
+			for (uInt j=0; j<_nPLPCoeffs; j++) {
+				// here
+				IPosition arrIdx(1, j);
+				arrIdx.prepend(pixel);
+				plpArrays[SPXSOL](arrIdx) = sols[j];
+				plpArrays[SPXERR](arrIdx) = errs[j];
+			}
+		}
+		break;
+		case SpectralElement::LOGTRANSPOLY:
+		{
+			Vector<Double> sols = solutions[i]->get();
+			Vector<Double> errs = solutions[i]->getError();
+			for (uInt j=0; j<_nLTPCoeffs; j++) {
+				IPosition arrIdx(1, j);
+				arrIdx.prepend(pixel);
+				ltpArrays[SPXSOL](arrIdx) = sols[j];
+				ltpArrays[SPXERR](arrIdx) = errs[j];
+			}
+		}
+		break;
+		default:
+			ThrowCc(
+				"Logic Error: Unhandled Spectral Element type"
+			);
+			break;
+		}
+	}
+}
+
+void ImageProfileFitterResults::_doWorldCoords(
+	Array<String>& directionInfo, const CoordinateSystem& csysSub,
+	const IPosition& pixel, const DirectionCoordinate* const &dcoord,
+	const SpectralCoordinate * const &spcoord,
+	const StokesCoordinate* const &polcoord, Bool returnDirection,
+	const String& directionType
+) {
+	Vector<Double> world;
+	if (csysSub.toWorld(world, pixel)) {
+		String latitude, longitude;
+		for (uInt i=0; i<world.size(); i++) {
+			// The Coordinate::format() calls have the potential of modifying the
+			// input unit so this needs to be reset at the beginning of the loop
+			// rather than outside the loop
+			String emptyUnit = "";
+			if ((Int)i != _fitAxis) {
+				if (_axisTypes[i] == LONGITUDE) {
+					longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+					IPosition x(1, LONGITUDE);
+					x.append(pixel);
+					_worldCoords(x) = longitude;
 				}
-				break;
-				case SpectralElement::GMULTIPLET:
-				{
-					const GaussianMultipletSpectralElement *gm = dynamic_cast<
-						const GaussianMultipletSpectralElement*
-					>(solutions[i]);
-					const Vector<GaussianSpectralElement> g = gm->getGaussians();
-					for (uInt k=0; k<g.size(); k++) {
-						_insertPCF(
-							*pcfArrays, pixel, g[k], gmCount+2,
-							k, increment
-						);
-					}
-					gmCount++;
+				else if (_axisTypes[i] == LATITUDE) {
+					latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
+					IPosition x(1, LATITUDE);
+					x.append(pixel);
+					_worldCoords(x) = latitude;
 				}
-				break;
-				case SpectralElement::POWERLOGPOLY:
-				{
-					Vector<Double> sols = solutions[i]->get();
-					Vector<Double> errs = solutions[i]->getError();
-					for (uInt j=0; j<_nPLPCoeffs; j++) {
-                        // here
-                        IPosition arrIdx(1, j);
-                        arrIdx.prepend(pixel);
-                        plpArrays[SPXSOL](arrIdx) = sols[j];
-						plpArrays[SPXERR](arrIdx) = errs[j];
-					}
+				else if (_axisTypes[i] == FREQUENCY) {
+					IPosition x(1, FREQUENCY);
+					x.append(pixel);
+					_worldCoords(x) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 				}
-				break;
-				case SpectralElement::LOGTRANSPOLY:
-				{
-					Vector<Double> sols = solutions[i]->get();
-					Vector<Double> errs = solutions[i]->getError();
-					for (uInt j=0; j<_nLTPCoeffs; j++) {
-                        IPosition arrIdx(1, j);
-                        arrIdx.prepend(pixel);
-						ltpArrays[SPXSOL](arrIdx) = sols[j];
-						ltpArrays[SPXERR](arrIdx) = errs[j];
-					}
-				}
-				break;
-				default:
-					ThrowCc(
-						"Logic Error: Unhandled Spectral Element type"
-					);
-					break;
+				else if (_axisTypes[i] == POLARIZATION) {
+					IPosition x(1, POLARIZATION);
+					x.append(pixel);
+					_worldCoords(x) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 				}
 			}
 		}
+		if (returnDirection) {
+			directionInfo(pixel) = directionType + " "
+				+ longitude + " " + latitude;
+		}
+	}
+	else {
+		ThrowCc(
+			"Could not convert pixel to world coordinate: "
+				+ csysSub.errorMessage()
+		);
 	}
 }
 
@@ -388,7 +415,6 @@ void ImageProfileFitterResults::_setResults() {
     // the componenet number being solved for.
     vector<Array<Double> > plpArrays(NSPXSOLMATRICES);
 	vector<Array<Double> > ltpArrays(NSPXSOLMATRICES);
-
 	for (uInt i=0; i<NSPXSOLMATRICES; i++) {
 		// because assignmet of Arrays is by reference, which is horribly confusing
 		if (_nPLPCoeffs > 0) {
@@ -466,7 +492,6 @@ void ImageProfileFitterResults::_setResults() {
 		_results.define("direction", directionInfo);
 	}
 	_results.define("xUnit", _xUnit);
-
 	const String yUnit = _subImage->units().getName();
 	_results.define("yUnit", yUnit);
     _results.define( "type", typeArr);
@@ -1135,7 +1160,7 @@ String ImageProfileFitterResults::_pcfToString(
 String ImageProfileFitterResults::_gaussianMultipletToString(
 	const GaussianMultipletSpectralElement& gm,
 	const CoordinateSystem& csys,
-	const Vector<Double> world, const IPosition imPos
+	const Vector<Double>& world, const IPosition& imPos
 ) const {
 	Vector<GaussianSpectralElement> g = gm.getGaussians();
 	ostringstream summary;
@@ -1152,17 +1177,23 @@ String ImageProfileFitterResults::_gaussianMultipletToString(
 
 String ImageProfileFitterResults::_polynomialToString(
 	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-	const Vector<Double> imPix, const Vector<Double> world
+	const Vector<Double>& imPix, const Vector<Double>& world
 ) const {
 	ostringstream summary;
 	summary << "        Type: POLYNOMIAL" << endl;
 	Vector<Double> parms, errs;
 	poly.get(parms);
 	poly.getError(errs);
-	for (uInt j=0; j<parms.size(); j++) {
+	uInt n = parms.size();
+	for (uInt j=0; j<n; j++) {
 		String unit = _subImage->units().getName();
         if (j > 0) {
-			unit = unit + "/((pixel)" + String::toString(j) + ")";
+        	if (j == 1) {
+        		unit += "/(pixel)";
+        	}
+        	else {
+        		unit += "/((pixel)" + String::toString(j) + ")";
+        	}
 		}
 		summary << "         c" << j << " : "
             << _elementToString(parms[j], errs[j], unit, False) << endl;
@@ -1182,11 +1213,11 @@ String ImageProfileFitterResults::_polynomialToString(
         x0 = world0[_fitAxis];
        // deltaX = csys.increment()[_fitAxis];
     }
-    Vector<Double> pCoeff(_polyOrder + 1, 0);
-    Vector<Double> pCoeffErr(_polyOrder + 1, 0);
-    for (Int j=0; j<=_polyOrder; j++) {
+    Vector<Double> pCoeff(n, 0);
+    Vector<Double> pCoeffErr(n, 0);
+    for (uInt j=0; j<n; j++) {
         Double sumsq = 0;
-        for (Int k=j; k<=_polyOrder; k++) {
+        for (uInt k=j; k<n; k++) {
         	/*
             Double multiplier = Combinatorics::choose(k, j)
                 * casa::pow(x0, Float(k-j))
@@ -1206,7 +1237,12 @@ String ImageProfileFitterResults::_polynomialToString(
         summary << "         c" << j << " : ";
 		String unit = _subImage->units().getName();
 		if (j > 0 ) {
-			unit = unit + "/" + "((" + _xUnit + ")" + String::toString(j) + ")";
+			if (j == 1) {
+				unit += "/(" + _xUnit + ")";
+			}
+			else {
+				unit += "/((" + _xUnit + ")" + String::toString(j) + ")";
+			}
 		}
         summary << _elementToString(pCoeff[j], pCoeffErr[j], unit, False) << endl;
     }

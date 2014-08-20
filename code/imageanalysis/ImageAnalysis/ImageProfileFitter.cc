@@ -741,7 +741,7 @@ void ImageProfileFitter::_fitProfiles(
 
 	PtrHolder<const PolynomialSpectralElement> polyEl;
 	if (_polyOrder >= 0) {
-		polyEl.set(new PolynomialSpectralElement(_polyOrder));
+		polyEl.set(new PolynomialSpectralElement(Vector<Double>(_polyOrder + 1, 0)));
 		if (newEstimates.nelements() > 0) {
 			newEstimates.add(*polyEl);
 		}

@@ -192,21 +192,21 @@ private:
 
     String _pcfToString(
     	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double>& world, const IPosition& imPos, const Bool showTypeString=True,
+    	const Vector<Double>& world, const IPosition& imPos, Bool showTypeString=True,
     	const String& indent=""
     ) const;
 
     String _gaussianMultipletToString(
     	const GaussianMultipletSpectralElement& gm,
-    	const CoordinateSystem& csys, const Vector<Double> world,
-    	const IPosition imPos
+    	const CoordinateSystem& csys, const Vector<Double>& world,
+    	const IPosition& imPos
     ) const;
 
     Bool _setAxisTypes();
 
     String _polynomialToString(
     	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-    	const Vector<Double> imPix, const Vector<Double> world
+    	const Vector<Double>& imPix, const Vector<Double>& world
     ) const;
 
     String _powerLogPolyToString(
@@ -259,6 +259,23 @@ private:
     // the input array must have a degenerate last axis. It will be replicated
     // along this axis n times to form an array with a last axis laength of n.
     static Array<Bool> _replicateMask(const Array<Bool>& array, Int n);
+
+    void _doWorldCoords(
+    	Array<String>& directionInfo, const CoordinateSystem& csysSub,
+    	const IPosition& pixel, const DirectionCoordinate* const &dcoord,
+    	const SpectralCoordinate* const &spcoord, const StokesCoordinate* const &polcoord,
+    	Bool returnDirection, const String& directionType
+	);
+
+    void _processSolutions(
+    	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
+    	Array<Int>& nCompArr, const IPosition& pixel,
+    	std::tr1::shared_ptr<const ProfileFitResults> fitter,
+    	const RO_MaskedLatticeIterator<Float>& inIter,
+    	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
+    	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
+    	Double increment
+    );
 };
 }
 
