@@ -54,8 +54,12 @@ def plotms(vis=None, plotindex=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
-    plotindex -- specific plot identifier in cases of multiple plots (zero-based).
+    plotindex -- Index of the plot (0-based).
             default: 0
+    gridrows -- Row count in a multiplot grid.
+            default: 1
+    gridcols -- Column count in a multiplot grid.
+            default: 1     
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
@@ -67,10 +71,10 @@ def plotms(vis=None, plotindex=None,
     iteraxis -- what axis to iterate on when doing iteration plots
                 default: ''
               &gt;&gt;&gt; rowindex, colindex, xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters
-        rowindex -- the row location for this plot in the case of multiple plots per page.
-                    default: 1.
-        colindex -- the column location for this ploat in the case of multiple plots per page.
-                    default: 1.
+        rowindex -- Row location of the plot (0-based).
+                    default: 0
+        colindex -- Column location of the plot (0-based).
+                    default: 0   
         xselfscale -- use a common scale for the x-axis.
                        default: False.
         yselfscale -- use a common scale for the y-axis.
@@ -155,7 +159,8 @@ def plotms(vis=None, plotindex=None,
                      default: ''  (ignored - same as colorizing off)              
     
     title  -- title along top of plot (called "canvas" in some places)
-    exprange -- whether to export all iteration plots or only the current one
+    exprange -- Export all iteration plots ('all') or only the current one.
+                    default: '' (only export the current iteration plot)
     xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
     showlegend -- show a legend on the plot
