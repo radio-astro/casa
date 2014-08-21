@@ -177,6 +177,16 @@ QList<PlotMSPlot*> PlotMSPlotManager::getCanvasPlots(int row, int col) const {
 }
 
 // Private Methods //
+void PlotMSPlotManager::logMessage( const QString& msg ) const {
+	if ( itsParent_ != NULL ){
+		stringstream ss;
+		ss << msg.toStdString().c_str();
+		itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+					PMS::LOG_ORIGIN_PLOT,
+					ss.str(),
+					PMS::LOG_EVENT_PLOT);
+	}
+}
 
 void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
         const PlotMSPlotParameters* params) {
@@ -206,6 +216,7 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     itsPages_.setupCurrentPage();
 
     bool locationFound = isPlottable( plot );
+
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }
@@ -220,14 +231,16 @@ bool PlotMSPlotManager::isPlottable( PlotMSPlot* plot ) {
 	//valid location.  First check to see if its current one is valid.
 	PlotMSPlotParameters& plotParams = plot->parameters();
 	PMS_PP_Iteration* iterParams = plotParams.typedGroup<PMS_PP_Iteration>();
-	int desiredRow = iterParams->getGridRow();
-	int desiredCol = iterParams->getGridCol();
-	bool wantsLocation = true;
-	if ( desiredRow < 0 || desiredCol < 0 ){
-		wantsLocation = false;
+	int desiredRow = 0;
+	int desiredCol = 0;
+	if ( iterParams != NULL ){
+		desiredRow = iterParams->getGridRow();
+		desiredCol = iterParams->getGridCol();
 	}
-	if ( iterParams != NULL && wantsLocation ){
+
+	if ( desiredRow >= 0 && desiredCol >= 0 ){
 		locationFound = itsPages_.isSpot( desiredRow, desiredCol, plot );
+
 	}
    	return locationFound;
 }

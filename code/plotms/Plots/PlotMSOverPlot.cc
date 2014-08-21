@@ -290,7 +290,8 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 	int rows = params.getRowCount();
 	int cols = params.getColCount();
 	resize( pages, rows, cols );
-	PlotMSPage& page = pages[pages.currentPageNumber()];
+	int currentPage = pages.currentPageNumber();
+	PlotMSPage& page = pages[currentPage];
 
 	const PMS_PP_Iteration* iterParams = itsParams_.typedGroup<PMS_PP_Iteration>();
 	int rowIndex = 0;
@@ -300,17 +301,19 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 		colIndex = iterParams->getGridCol();
 	}
 
+
 	page.disown( this );
 	if ( rowIndex >= 0 && colIndex >= 0 ){
-
 		//Find a canvas for this plot.
 		for(int r = 0; r < rows; ++r) {
 			bool assigned = false;
 			for(int c = 0; c < cols; ++c) {
 				if ( isIteration() ){
-					if( !page.isOwned(r, c)) {
-						page.setOwner(r, c, this);
-						itsCanvases_[r][c] = page.canvas(r, c);
+					if ( (r > rowIndex) || (r == rowIndex && c>=colIndex) || currentPage > 0 ){
+						if( !page.isOwned(r, c)) {
+							page.setOwner(r, c, this);
+							itsCanvases_[r][c] = page.canvas(r, c);
+						}
 					}
 				}
 				else {
