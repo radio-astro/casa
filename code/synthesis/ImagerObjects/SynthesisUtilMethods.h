@@ -108,6 +108,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //               'nchan':6, 
     //                'coordsys': { A record of the coordinatesystem of subcube 1} }
     //   }
+    // the coordsys keyed record can be use in CoordinateSystem:;restore to reconstrucr
+    // it is the same as the parameter outCsys
     static Record cubeDataImagePartition(const Record & selpars, const CoordinateSystem&
 				    incsys, const Int npart, const Int nchannel, 
 				    Vector<CoordinateSystem>& outCsys,
