@@ -1719,7 +1719,7 @@ std::tr1::shared_ptr<Quantum<Vector<Double> > > MSMetaData::_getExposureTimes() 
 }
 
 std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
-	if (_flagsColumn && ! _flagsColumn->nrow() > 0) {
+	if (_flagsColumn && _flagsColumn->nrow() > 0) {
 		return _flagsColumn;
 	}
 	String flagColName = MeasurementSet::columnName(MSMainEnums::FLAG);
@@ -1735,7 +1735,6 @@ std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaData::_getFlags() const {
 	}
 	return flagsColumn;
 }
-
 
 std::set<Double> MSMetaData::getTimesForScans(
 	std::set<Int> scans
@@ -1856,9 +1855,10 @@ std::pair<Double, Double> MSMetaData::getTimeRange() const {
 	_getTimesAndInvervals(scanToTimeRangeMap, scanSpwToAverageIntervalMap);
 	std::map<Int, std::pair<Double,Double> >::const_iterator iter = scanToTimeRangeMap.begin();
 	std::map<Int, std::pair<Double,Double> >::const_iterator end = scanToTimeRangeMap.end();
-	std::pair<Double, Double> timerange = std::make_pair<Double, Double>(
+	std::pair<Double, Double> timerange(
 		iter->second.first, iter->second.second
 	);
+
 	iter++;
 	while (iter != end) {
 		timerange.first = min(timerange.first, iter->second.first);
