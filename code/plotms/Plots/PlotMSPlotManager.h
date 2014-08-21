@@ -161,6 +161,9 @@ private:
     //we don't get a seg fault from a draw thread hanging onto deleted
     //data.
     void waitForDrawing();
+
+    //Post a plot message to the logger.
+    void logMessage( const QString& msg ) const;
 };
 
 
