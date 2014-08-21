@@ -55,19 +55,21 @@ MS Parameters
   </param>
   
    <param type="int" name="plotindex">
-    <description>Index of plot in grid (0-based, English reading order).</description>
+    <description>Index of the plot (0-based).</description>
     <value>0</value>
   </param>
   
   <param type="int" name="gridrows">
-    <description>The number of plot rows (blank for default=1).</description>
+    <description>Row location of the plot (blank for default 0).</description>
   	<value>0</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>The number of plot columns (blank for default=1).</description>
+    <description>The number of plot columns (blank for default 0).</description>
   	<value>0</value>
   </param>
+  
+  
 
   <param type="string" name="xaxis">
     <description>plot x-axis (blank for default/current)</description>
@@ -254,6 +256,8 @@ MS Parameters
         <value>right</value>
       </allowed>
     </param>
+    
+  
 <!--
 ###############################################################################
 MS Selection parameters
@@ -497,13 +501,13 @@ Iteration Parameters
       </allowed>
    </param>
 
-	<param type="int" name="rowindex" subparam="true">
-       <description>In the case of multiple plots per page, this indicates the row location for the plot. Values are 0-based so the first row would have an index 0. </description>
+   <param type="int" name="rowindex" subparam="true">
+       <description>Row location of the plot (0-based, default 0)</description>
        <value>0</value>
    </param>
 
    <param type="int" name="colindex" subparam="true">
-       <description>In the case of multiple plots per page, this indicates the column location for the plot.  Values are 0-based so the first column would have index 0.</description>
+       <description>Column location of the plot (0-based, default 0)</description>
        <value>0</value>
    </param>
 
@@ -527,7 +531,7 @@ Iteration Parameters
        <value>False</value>
    </param>
 
-
+ 
 <!--
 ###############################################################################
 Display Parameters
@@ -1140,10 +1144,10 @@ Constraints
             <default param="ysharedaxis"><value>False</value></default>
         </notequals>
     </when>
- 	<when param="exprange">
+ 	<!--<when param="exprange">
         <notequals type="string" value="">
         </notequals>
-    </when>
+    </when> -->
     <when param="customsymbol">
         <equals type="bool" value="True">
             <default param="symbolshape">
@@ -1486,6 +1490,10 @@ Constraints
                 default: '' (no iteration)
                 options: 'scan','field','spw','baseline','antenna', 'time',''
       &gt;&gt;&gt; iteraxis expandable parameters
+        rowindex -- Row location of the plot (0-based).
+                    default: 0
+        colindex -- Column location of the plot (0-based).
+                    default: 0   
         xselfscale -- If true, self-scale each iterated plot on the x axis
         yselfscale -- If true, self-scale each iterated plot on the y axis
                       default: false, which will scale all plots globally
@@ -1548,15 +1556,15 @@ Constraints
     
     
     showmajorgrid  -- show major grid lines (horiz and vert.)
-                  default: False.
-      &gt;&gt;&gt;  major grid expandable parameters
+                  default: False
+      &gt;&gt;&gt;  showmajorgrid expandable parameters
         majorwidth  -- line width in pixels of major grid lines
         majorstyle  -- major grid line style: solid dash dot none
         majorcolor  -- color in hex code of major grid lines
 
     showminorgrid  -- show minor grid lines (horiz and vert.)
-                  default: False.
-      &gt;&gt;&gt;  minor grid expandable parameters
+                  default: False
+      &gt;&gt;&gt;  showminorgrid expandable parameters
         minorwidth  --  line width in pixels of minor grid lines
         minorstyle  --  minor grid line style: solid dash dot none
         minorcolor  --  color in hex code of minor grid lines

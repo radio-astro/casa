@@ -224,7 +224,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
 
-    def stest008(self):
+    def test008(self):
         '''Plotms 8: Check that the display can be set to multiple row/col and that a plot can
         be placed in a particular location of the grid.'''
         self.plotfile_jpg = self.outputDir + "testPlot008.jpg"
@@ -235,7 +235,7 @@ class plotms_test1(test_base):
         time.sleep(5)
         '''Use a grid with 2 rows and 3 columns. Put the plot in the second row, second col'''
         self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
-                          overwrite=True, showgui=False, gridrows=2, gridcols=3,
+                          overwrite=True, showgui=False, gridrows=2, gridcols=3, xaxis="time",
                           rowindex=1, colindex=1)
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
@@ -879,7 +879,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
 
     def test034(self):
         print
-        '''Plotms 34: Tests whether an iteration plot can be placed in the second slot of a 2x2 grid'''
+        '''Plotms 34: Tests whether an iteration plot can be placed in the first slot of a 2x2 grid, when specifying a plot index out of range.'''
         self.plotfile_jpg = self.outputDir + "testPlot034.jpg"
         print 'Writing to ', self.plotfile_jpg
         if os.path.exists( self.plotfile_jpg):    
@@ -887,15 +887,15 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
-        self.res = plotms(vis=self.ms,  
-                          plotindex=1, 
+        self.res = plotms(vis=self.ms, plotindex=1,
+                          rowindex=0, colindex=1, 
                           gridrows=2, gridcols=2, 
-                          iteraxis='baseline', 
+                          iteraxis='baseline',
                           showgui=False, plotfile=self.plotfile_jpg)  
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(200000, self.plotfile_jpg)
+        self._checkPlotFile(190000, self.plotfile_jpg)
         print 
  
 def suite():
