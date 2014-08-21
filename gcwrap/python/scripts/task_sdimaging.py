@@ -36,9 +36,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                                                           'im',
                                                           self.overwrite)
         # fix spw
-        if self.spw.strip() == '*': self.spw = ''
-        # WORKAROUND for CAS-6422, i.e., ":X~Y" fails while "*:X~Y" works.
-        if self.spw.startswith(":"): self.spw = '*' + self.spw
+        if type(self.spw) == str:
+            self.spw = self.__format_spw_string(self.spw)
         # check unit of start and width
         # fix default
         if self.mode == 'channel':
@@ -77,6 +76,17 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             param = getattr(self, name)
             if not self.__check_selection_length(param, nfile):
                 raise ValueError, "Length of %s != infiles." % (name)
+
+    def __format_spw_string(self, spw):
+        """
+        Returns formatted spw selection string which is accepted by imager.
+        """
+        if type(spw) != str:
+            raise ValueError, "The parameter should be string."
+        if spw.strip() == '*': spw = ''
+        # WORKAROUND for CAS-6422, i.e., ":X~Y" fails while "*:X~Y" works.
+        if spw.startswith(":"): spw = '*' + spw
+        return spw        
 
     def __format_quantum_unit(self, data, unit):
         """
@@ -127,6 +137,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             vis = self.infiles[file_idx]
             field = self.get_selection_param_for_ms(file_idx, self.field)
             spw = self.get_selection_param_for_ms(file_idx, self.spw)
+            spw = self.__format_spw_string(spw)
             antenna = self.get_selection_param_for_ms(file_idx, self.antenna)
             if antenna == -1: antenna = ''
             scan = self.get_selection_param_for_ms(file_idx, self.scanno)
