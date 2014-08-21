@@ -56,7 +56,8 @@ class SubtableColumns;
 
 
 // <summary>
-// VisibilityIterator2 iterates through one or more readonly MeasurementSets
+// FinalTvi2 - Class that serves as the final Tvi2 in a pipeline; it adds simple write functionality that
+// allows writing back the data contained in the associated VB2.
 // </summary>
 
 // <use visibility=export>
@@ -65,22 +66,13 @@ class SubtableColumns;
 // </reviewed>
 
 // <prerequisite>
-//   <li> <linkto class="MSIter">MSIter</linkto>
-//   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
-//   <li> <linkto class="VisSet">VisSet</linkto>
 // </prerequisite>
 //
 // <etymology>
-// The VisibilityIterator2 is a readonly iterator returning visibilities
+// The FinalTvi2 in a transforming VI2 pipeline.
 // </etymology>
 //
 // <synopsis>
-// VisibilityIterator2 provides iteration with various sort orders
-// for one or more MSs. It has member functions to retrieve the fields
-// commonly needed in synthesis calibration and imaging.
-//
-// One should use <linkto class="VisBuffer">VisBuffer</linkto>
-// to access chunks of data.
 // </synopsis>
 //
 // <example>
@@ -90,9 +82,8 @@ class SubtableColumns;
 // </example>
 //
 // <motivation>
-// For imaging and calibration you need to access an MS in some consistent
-// order (by field, spectralwindow, time interval etc.). This class provides
-// that access.
+// At the end of a Transforming VI pipeline it can be handy to write out the result.  Putting a FinalTvi2
+// as the last transforming VI allows the output to disk of the transformed data into a brand new MS.
 // </motivation>
 //
 // <thrown>
@@ -100,9 +91,7 @@ class SubtableColumns;
 //    <li>
 // </thrown>
 //
-// <todo asof="1997/05/30">
-//   <li> cleanup the currently dual interface for visibilities and flags
-//   <li> sort out what to do with weights when interpolating
+// <todo asof="2014/08/21">
 // </todo>
 
 class FinalTvi2 : public TransformingVi2 {
@@ -161,62 +150,32 @@ public:
 
     virtual void writeBackChanges (VisBuffer2 * vb);
 
-    // Write/modify the flags in the data.
-    // This will flag all channels in the original data that contributed to
-    // the output channel in the case of channel averaging.
-    // All polarizations have the same flag value.
+    // These methods will throw a not-implemented exception if called.  They are here
+    // because the interface requires them but the intended use of FinalTvi2 expects
+    // that the data will be output using only the writeBackChanges method.
+
     virtual void writeFlag (const Matrix<Bool> & flag);
-
-    // Write/modify the flags in the data.
-    // This writes the flags as found in the MS, Cube (npol,nchan,nrow),
-    // where nrow is the number of rows in the current iteration (given by
-    // nRow ()).
     virtual void writeFlag (const Cube<Bool> & flag);
-
-    // Write/modify the flag row column; dimension Vector (nrow)
     virtual void writeFlagRow (const Vector<Bool> & rowflags);
-
     virtual void writeFlagCategory(const Array<Bool>& fc);
-
-    // Write/modify the visibilities.
-    // This is possibly only for a 'reference' MS which has a new DATA column.
-    // The first axis of the matrix should equal the selected number of channels
-    // in the original MS.
-    // If the MS does not contain all polarizations, only the parallel
-    // hand polarizations are used.
-//    virtual void writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes);
-//    virtual void writeVisModel (const Matrix<CStokesVector> & visibilityStokes);
-//    virtual void writeVisObserved (const Matrix<CStokesVector> & visibilityStokes);
-
-    // Write/modify the visibilities
-    // This writes the data as found in the MS, Cube (npol,nchan,nrow).
     virtual void writeVisCorrected (const Cube<Complex> & vis);
     virtual void writeVisModel (const Cube<Complex> & vis);
     virtual void writeVisObserved (const Cube<Complex> & vis);
-
-    // Write/modify the weights
-    virtual void writeWeight (const Vector<Float> & wt);
-
-    // Write/modify the weightMat
-    virtual void writeWeightMat (const Matrix<Float> & wtmat);
-
-    // Write/modify the weightSpectrum
+    virtual void writeWeight (const Matrix<Float> & wt);
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
-
-    // Write/modify the Sigma
-    virtual void writeSigma (const Vector<Float> & sig);
-
-    // Write/modify the ncorr x nrow SigmaMat.
-    virtual void writeSigmaMat (const Matrix<Float> & sigmat);
-
-    // Write the information needed to generate on-the-fly model visibilities.
-
+    virtual void writeSigma (const Matrix <Float> & sig);
     virtual void writeModel(const RecordInterface& rec, Bool iscomponentlist=True,
                             Bool incremental=False);
 
 protected:
 
     void configureNewSubchunk ();
+
+    // These are the methods that actually write the data in the VB2 out to the new
+    // MS when called by writeBackChanges.  The VB's data are handled as four categories:
+    //    data - the various visibility data and the associated weight, weight spectrum, sigma, etc.
+    //    keys - the values of the columns that ID the row (e.g., antennas, DdId, etc.)
+    //    misc - the column values that don't fall in the data or key categories.
 
     void writeDataValues (MeasurementSet & ms, const RefRows & rows);
     void writeKeyValues (MeasurementSet & ms, const RefRows & rows);

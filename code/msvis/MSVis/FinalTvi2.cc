@@ -31,6 +31,11 @@ FinalTvi2::~FinalTvi2 ()
 void
 FinalTvi2::configureNewSubchunk ()
 {
+    // Configure the VisBuffer for the new subchunk.  Most information comes from
+    // the Transforming VI2 superclass which in turn gets it from its VI implementation
+    // object.  The main addition is the need to provide the name of the MS output and
+    // the MS index which is always zero since we only support a single output MS.
+
     Vector<Int> channels = getChannels (0, 0); // args are ignored
     Int nChannels = channels.nelements();
 
@@ -65,17 +70,20 @@ FinalTvi2::next ()
     configureNewSubchunk ();
 }
 
-
 void
 FinalTvi2::writeBackChanges (VisBuffer2 * vb)
 {
-    // Extend the measurement set
+    // Extend the measurement set by the number of rows contained
+    // in the VB
 
     if (! columnsAttached_p){
 
         columns_p.attachColumns (ms_p, True);
         columnsAttached_p = True;
     }
+
+    // Remember the current fillability state of the VB and then set it
+    // to fillable.
 
     Bool wasFillable = vb->isFillable();
     vb->setFillable (True);
@@ -84,17 +92,21 @@ FinalTvi2::writeBackChanges (VisBuffer2 * vb)
     ms_p.addRow (vb->nRows());
     RefRows rows (firstRowAdded, ms_p.nrow() - 1);
 
-    // Write out the key column values
+    // Write out the data contained in the VB
+
+    // First the key column values
 
     writeKeyValues (ms_p, rows);
 
-    // Write out the data column values
+    // Next the data column values
 
     writeDataValues (ms_p, rows);
 
-    // Write out the other column values
+    // Finally everything else
 
     writeMiscellaneousValues (ms_p, rows);
+
+    // Put the fillability attribute back the way it was.
 
     vb->setFillable (wasFillable);
 }
@@ -102,6 +114,10 @@ FinalTvi2::writeBackChanges (VisBuffer2 * vb)
 void
 FinalTvi2::writeDataValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
+    // For each of the data columns, check to see if the output MS has the columns.
+    // If so, write out to the MS the data in the VB for that column.
+    //------------------------------------------------------------------------------
+
     // Write out the visibility data either complex or float
 
     if (columns_p.isFloatDataPresent()){
@@ -135,6 +151,8 @@ FinalTvi2::writeDataValues (MeasurementSet & /*ms*/, const RefRows & rows)
 void
 FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
+    // Write out the values that are the database key for the VB rows.
+
     columns_p.antenna1_p.putColumnCells (rows, getVisBuffer()->antenna1());
 
     columns_p.antenna2_p.putColumnCells (rows, getVisBuffer()->antenna2());
@@ -155,6 +173,8 @@ FinalTvi2::writeKeyValues (MeasurementSet & /*ms*/, const RefRows & rows)
 void
 FinalTvi2::writeMiscellaneousValues (MeasurementSet & /*ms*/, const RefRows & rows)
 {
+    // WRite out the non-key values for the rows contained in the VB.
+
     columns_p.timeInterval_p.putColumnCells (rows, getVisBuffer()->timeInterval());
 
     columns_p.exposure_p.putColumnCells (rows, getVisBuffer()->exposure());
@@ -196,22 +216,6 @@ FinalTvi2::writeFlagCategory(const Array<Bool>& /*fc*/)
     Throw ("Not Implemented");
 }
 
-//void
-//FinalTvi2::writeVisCorrected (const Matrix<CStokesVector> & /*visibilityStokes*/)
-//{
-//    Throw ("Not Implemented");
-//}
-
-//void
-//FinalTvi2::writeVisModel (const Matrix<CStokesVector> & /*visibilityStokes*/)
-//{
-//    Throw ("Not Implemented");
-//}
-//void
-//FinalTvi2::writeVisObserved (const Matrix<CStokesVector> & /*visibilityStokes*/)
-//{
-//    Throw ("Not Implemented");
-//}
 
 void
 FinalTvi2::writeVisCorrected (const Cube<Complex> & /*vis*/)
@@ -230,13 +234,7 @@ FinalTvi2::writeVisObserved (const Cube<Complex> & /*vis*/)
 }
 
 void
-FinalTvi2::writeWeight (const Vector<Float> & /*wt*/)
-{
-    Throw ("Not Implemented");
-}
-
-void
-FinalTvi2::writeWeightMat (const Matrix<Float> & /*wtmat*/)
+FinalTvi2::writeWeight (const Matrix<Float> & /*wt*/)
 {
     Throw ("Not Implemented");
 }
@@ -248,13 +246,7 @@ FinalTvi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
 }
 
 void
-FinalTvi2::writeSigma (const Vector<Float> & /*sig*/)
-{
-    Throw ("Not Implemented");
-}
-
-void
-FinalTvi2::writeSigmaMat (const Matrix<Float> & /*sigmat*/)
+FinalTvi2::writeSigma (const Matrix<Float> & /*sig*/)
 {
     Throw ("Not Implemented");
 }

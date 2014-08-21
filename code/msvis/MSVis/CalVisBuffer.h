@@ -88,7 +88,7 @@ public:
 
   // Update (simple) coord info 
   // (this OVERRIDES VisBuffer::updateCoordInfo(), which does more)
-  void updateCoordInfo();
+  void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
 
   // Apply amp-only or phase-only to data
   void enforceAPonData(const String& apmode);

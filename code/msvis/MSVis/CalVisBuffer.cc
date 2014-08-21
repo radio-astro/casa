@@ -97,7 +97,7 @@ CalVisBuffer& CalVisBuffer::assign(const VisBuffer& other, Bool copy)
 
 }
 
-void CalVisBuffer::updateCoordInfo()
+void CalVisBuffer::updateCoordInfo(const VisBuffer * /*vb=NULL*/, const Bool /*dirDependent=True*/)
 {
   // Just do the nominally non-row-dep values
   arrayId();

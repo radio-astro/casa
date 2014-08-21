@@ -528,16 +528,16 @@ private:
 
 MsRowAvg::MsRowAvg (Int row, const VbAvg * vb)
 : Vbi2MsRow (row, vb),
-  vbAvg_p (const_cast<VbAvg *> (vb)),
-  normalizationFactor_p(0.0)
+  normalizationFactor_p(0.0),
+  vbAvg_p (const_cast<VbAvg *> (vb))
 {}
 
 // Constructor for read/write access
 
 MsRowAvg::MsRowAvg (Int row, VbAvg * vb)
 : Vbi2MsRow (row, vb),
-  vbAvg_p (vb),
-  normalizationFactor_p(0.0)
+  normalizationFactor_p(0.0),
+  vbAvg_p (vb)
 {}
 
 Bool
