@@ -11,6 +11,7 @@ from pipeline.infrastructure import sdtablereader
 from ... import heuristics
 from .. import common
 from ..common import utils
+from . import tsystablemapper
 
 import asap as sd
 
@@ -57,8 +58,8 @@ class SDConvertDataResults(common.SingleDishResults):
         
     def merge_with_context(self, context):
         if not isinstance(context.observing_run, domain.ScantableList):
+            self.replace_callibrary(context)
             context.observing_run = domain.ScantableList()
-            context.callibrary = callibrary.SDCalLibrary(context)
         target = context.observing_run
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
@@ -66,6 +67,41 @@ class SDConvertDataResults(common.SingleDishResults):
         for st in self.scantables:
             LOG.info('Adding {0} to context'.format(st.name))            
             target.add_scantable(st)
+
+    def replace_callibrary(self, context):
+        assert hasattr(self, 'mappedcaltables')
+        
+        #mslist = context.measurement_sets
+        callib = context.callibrary
+        mycallib = callibrary.SDCalLibrary(context)
+        for st in self.scantables:
+            ms = st.ms
+            vis = ms.name
+            basename = ms.basename
+            antenna = st.antenna.name
+            caltable_list = self.mappedcaltables[basename]
+
+            calto = callibrary.CalTo(vis=vis)
+            calstate = callib.get_calstate(calto)
+            calfrom = calstate.merged().values()[0][0]
+            spwmap = calfrom.spwmap
+
+            myspwmap = remap_spwmap(spwmap)
+            for key in myspwmap.keys():
+                filtered_value = [spw for spw in myspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+                myspwmap[key] = filtered_value
+            mycalto = callibrary.CalTo(vis=vis,
+                                       spw='',
+                                       antenna=antenna,
+                                       intent='TARGET,REFERENCE')
+            mycalfrom = callibrary.SDCalFrom(gaintable=caltable_list[antenna],
+                                             interp='',
+                                             spwmap=myspwmap,
+                                             caltype='tsys')
+            #mycalapp = callibrary.SDCalApplication(mycalto, mycalfrom)
+            mycallib.add(mycalto, mycalfrom)
+
+        context.callibrary = mycallib
             
     def __repr__(self):
         return 'SDConvertDataResults:\n\t{0}\n\t{1}'.format(
@@ -96,7 +132,8 @@ class SDConvertData(common.SingleDishTaskTemplate):
         context = inputs.context
         infiles = inputs.infiles
         vis = [v.name for v in inputs.context.observing_run.measurement_sets]
-        to_import = set(vis)
+        #to_import = set(vis)
+        to_import = vis
 
         to_import_sd = set()
         to_convert_sd = set()
@@ -119,12 +156,12 @@ class SDConvertData(common.SingleDishTaskTemplate):
         LOG.debug('to_import=%s'%(to_import))
             
         # execute applycal to apply flags in Tsys caltable
-        jobs = self._applycal_list(to_import)
-        for job in jobs:
-            self._executor.execute(job)
-            
-        if self._executor._dry_run:
-            return SDConvertDataResults()
+        #jobs = self._applycal_list(to_import)
+        #for job in jobs:
+        #    self._executor.execute(job)
+        #    
+        #if self._executor._dry_run:
+        #    return SDConvertDataResults()
 
         ms_reader = sdtablereader.ObservingRunReader
 
@@ -164,9 +201,10 @@ class SDConvertData(common.SingleDishTaskTemplate):
         LOG.debug('scantable_list=%s'%(scantable_list))
         LOG.debug('to_import=%s'%(to_import))
         LOG.debug('st_ms_map=%s'%(st_ms_map))
-        observing_run_sd = ms_reader.get_observing_run_for_sd(scantable_list,
-                                                              to_import,
-                                                              st_ms_map)
+        ms_objects = context.observing_run.measurement_sets
+        observing_run_sd = ms_reader.get_observing_run_for_sd2(scantable_list,
+                                                               ms_objects,
+                                                               st_ms_map)
     
         for st in observing_run_sd:
             LOG.debug('Setting session to %s for %s' % (inputs.session, 
@@ -183,6 +221,30 @@ class SDConvertData(common.SingleDishTaskTemplate):
         return results
     
     def analyse(self, results):
+        # convert interferometric Tsys caltable to single dish ones
+        sdtsystables = {}
+        for ms in results.mses:
+            callib = self.inputs.context.callibrary
+            reftable = None
+            for st in results.scantables:
+                if st.ms == ms:
+                    reftable = st.basename
+                    break
+            assert reftable is not None
+            
+            vis = ms.basename
+            prefix = vis.replace('.ms','')
+            calto = callibrary.CalTo(vis=vis)
+            calstate = callib.get_calstate(calto)
+            allcaltables = calstate.get_caltable()
+            tsyscaltables = [name for name in allcaltables if re.search('.*\.tsyscal\.tbl$', name) is not None]
+            assert len(tsyscaltables) == 1
+
+            caltable = tsyscaltables[0]
+            names = tsystablemapper.map(prefix, caltable, reftable)
+            sdtsystables[vis] = names
+        results.mappedcaltables = sdtsystables
+                                                 
         return results
 
     def _import_to_scantable(self, data):
@@ -223,3 +285,12 @@ class SDConvertData(common.SingleDishTaskTemplate):
                                 callib.mark_as_applied(calto, calfrom)
                         yield casa_tasks.applycal(**args) 
                             
+def remap_spwmap(spwmap):
+    remapped = {}
+    for (i,spw) in enumerate(spwmap):
+        if i != spw:
+            if remapped.has_key(spw):
+                remapped[spw].append(i)
+            else:
+                remapped[spw] = [i]
+    return remapped
