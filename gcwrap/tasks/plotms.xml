@@ -1138,6 +1138,8 @@ Constraints
     </when>
     <when param="iteraxis">
         <notequals type="string" value="">
+        	<default param="rowindex"><value>0</value></default>
+        	<default param="colindex"><value>0</value></default>
             <default param="xselfscale"><value>False</value></default>
             <default param="yselfscale"><value>False</value></default>
             <default param="xsharedaxis"><value>False</value></default>
