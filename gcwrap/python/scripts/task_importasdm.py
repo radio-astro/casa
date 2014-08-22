@@ -33,7 +33,8 @@ def importasdm(
     overwrite=None,
     showversion=None,
     useversion=None,
-    bdfflags=None
+    bdfflags=None,
+    with_pointing_correction=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -114,10 +115,11 @@ def importasdm(
 ....   process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
 ....          default: True
 
-....   process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
+....   process_pointing -- The Pointing table is processed if and only if this parameter is set to True. If the parameter is set to False
+                       the resulting MS will have an empty POINTING table.
 ....          default: True
 
-....   process_flags -- Process the online flggs and save them to the FLAG_CMD sub-table.
+....  process_flags -- Process the online flags and save them to the FLAG_CMD sub-table.
 ....          default: True
 
             &gt;&gt;&gt; process_flags expandable parameter
@@ -145,7 +147,11 @@ def importasdm(
 ....   useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
                      
-       bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+....  bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+                   default: false
+
+....  with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written
+                                   in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833))
                    default: false
            
         """
@@ -154,6 +160,9 @@ def importasdm(
 
     # make agentflagger tool local
     aflocal = casac.agentflagger()
+
+    # make table tool local
+    tblocal = casac.table()
 
     try:
         casalog.origin('importasdm')
@@ -301,7 +310,6 @@ def importasdm(
         if not overwrite and os.path.exists(viso):
             raise Exception, \
                 'You have specified an existing MS and have indicated you do not wish to overwrite it'
-
         #
         # If viso+".flagversions" then process differently depending on the value of overwrite..
         #
@@ -326,6 +334,9 @@ def importasdm(
                          , 'WARN')
             execute_string = theexecutable + ' --revision'
 
+        if with_pointing_correction:
+            execute_string = execute_string + ' --with-pointing-correction'
+
         casalog.post('Running ' + theexecutable
                      + ' standalone invoked as:')
         # print execute_string
@@ -342,6 +353,64 @@ def importasdm(
         if showversion:
             return
 
+        #
+        # Populate the HISTORY table of the MS with informations about the context in which it's been created
+        #
+        casalog.post("About to update the HISTORY of " + viso)
+        versionInfo = "version : %s rev. %s %s" % (casa["build"]["version"], casa["build"]["number"],casa["build"]["time"])
+        tblocal.open(viso+"/HISTORY", nomodify=False, lockoptions={'option':'user'})
+        tblocal.lock()
+        
+        aRow = {'APPLICATION' : 'asdm2MS',
+                'OBJECT_ID' : 0,
+                'ORIGIN' : 'importasdm',
+                'PRIORITY' : 'INFO',
+                'OBSERVATION_ID' : -1}
+        try :
+            f = open('importasdm.last', 'r')
+            for line in f:
+                
+                tblocal.addrows(1); cRow = tblocal.nrows()-1
+                for key in aRow.keys():
+                    tblocal.putcell(key, cRow, aRow[key])
+                if line[0] != '#' :
+                    parts=line.split()
+                    if (len(parts) == 3) and (parts[1] == '=') :
+                        tblocal.putcell('TIME', cRow, me.epoch('utc','today')['m0']['value']*86400.0)
+                        tblocal.putcell('MESSAGE', cRow, "%s = %s" % (parts[0],  parts[2]))
+                        if parts[0] == 'taskname':
+                            tblocal.addrows(1); cRow = tblocal.nrows()-1
+                            for key in aRow.keys():
+                                tblocal.putcell(key, cRow, aRow[key])
+                            tblocal.putcell('TIME', cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
+                            tblocal.putcell('MESSAGE', cRow, versionInfo)
+            f.close()
+        except IOError, e:
+            #
+            # Assume that an IOError occurs when the file importasdm.last could not be found. In such a case
+            # we put a minimum of information.
+            #
+            casalog.post(repr(e) + ". Putting the minimum information in the HISTORY of " + viso, "WARNING")
+            tblocal.addrows(1); cRow = tblocal.nrows()-1
+            for key in aRow.keys():
+                tblocal.putcell(key, cRow, aRow[key])
+                tblocal.putcell("TIME", cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
+                tblocal.putcell("MESSAGE", cRow, "taskname = importasdm")
+                
+                tblocal.addrows(1); cRow = tblocal.nrows()-1
+                for key in aRow.keys():
+                    tblocal.putcell(key, cRow, aRow[key])
+                    tblocal.putcell("TIME", cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
+                    tblocal.putcell("MESSAGE", cRow, versionInfo)
+                   
+        except :
+            casalog.post(" - Could not update at all the HISTORY of " + viso, "WARNING")
+            pass
+        
+        tblocal.unlock()
+        tblocal.done()
+        casalog.post("Finished with the update of HISTORY in " + viso , "INFO")
+        
         # Binary Flag processing
         if bdfflags:
             casalog.post('Parameter bdfflags==True: flags from the ASDM binary data will be used to set the MS flags ...')
