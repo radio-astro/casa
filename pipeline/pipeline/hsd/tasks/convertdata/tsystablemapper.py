@@ -49,7 +49,10 @@ TABLE_KEYWORD = {'VERSION': 1,
                  'ApplyType': 'CALTSYS',
                  'FREQUENCIES': 'Table: {name}'}
 
-def create(prefix, caltable, reftable):
+def map(prefix, caltable, reftable):
+    # initial check
+    check(caltable)
+    
     tb = tbobj()
     antenna = antennanames(caltable)
     names = {}
@@ -74,6 +77,15 @@ def create(prefix, caltable, reftable):
         finally:
             tb.close()
     return names
+
+def check(caltable):
+    # Make sure caltable type is B TSYS
+    tb = tbobj()
+    tb.open(caltable)
+    viscal = tb.getkeyword('VisCal')
+    tb.close()
+
+    assert viscal == 'B TSYS'
 
 def putkeyword(table, keywords):
     for (k,v) in keywords.items():
