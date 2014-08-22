@@ -75,9 +75,9 @@ def plotms(vis=None, plotindex=None,
                     default: 0
         colindex -- Column location of the plot (0-based).
                     default: 0   
-        xselfscale -- use a common scale for the x-axis.
+        xselfscale -- If true, iterated plots should share a common x-axis label per column.
                        default: False.
-        yselfscale -- use a common scale for the y-axis.
+        yselfscale -- If true, iterated plots should share a common y-axis label per row.
                        default: False.
         xsharedaxis -- use a common x-axis for vertically aligned plots.
                         default: False.
