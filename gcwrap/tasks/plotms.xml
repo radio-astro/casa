@@ -512,12 +512,12 @@ Iteration Parameters
    </param>
 
    <param type="bool" name="xselfscale" subparam="true">
-       <description>Self-scale X axis in each plot </description>
+       <description>If true, iterated plots should share a common x-axis label per column.</description>
        <value>False</value>
    </param>
 
    <param type="bool" name="yselfscale" subparam="true">
-       <description>Self-scale Y axis in each plot </description>
+       <description>If true, iterated plots should share a common y-axis label per row.</description>
        <value>False</value>
    </param>
    
@@ -1494,8 +1494,8 @@ Constraints
                     default: 0
         colindex -- Column location of the plot (0-based).
                     default: 0   
-        xselfscale -- If true, self-scale each iterated plot on the x axis
-        yselfscale -- If true, self-scale each iterated plot on the y axis
+        xselfscale -- If true, iterated plots should share a common x-axis label per column.
+        yselfscale -- If true, iterated plots should share a common y-axis label per row.
                       default: false, which will scale all plots globally
         xsharedaxis -- If true, iterated plots should share a common x-axis.
         			  default: false, each plot will have its own x-axis.

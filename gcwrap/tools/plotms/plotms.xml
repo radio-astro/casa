@@ -679,12 +679,12 @@ specifying multiple plots per page will be added here)
     </param>
     
     <param type="bool" name="xselfscale">
-      <description>Selfscale X axis</description>
+      <description>If true, iterated plots should share a common x-axis label per column.</description>
       <value>false</value>
     </param>
 
     <param type="bool" name="yselfscale">
-      <description>Selfscale Y axis</description>
+      <description>If true, iterated plots should share a common y-axis label per row.</description>
       <value>false</value>
     </param>
     
