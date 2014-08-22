@@ -103,7 +103,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="process_pointing">
-      <description>The Pointing table is processed if and only if this parameter is set to true.</description>
+      <description>The Pointing table is processed if and only if this parameter is set to true. If set to False, the POINTING table is empty in the resulting MS</description>
       <value>True</value>
     </param>
 
@@ -184,6 +184,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="bool" name="bdfflags">
 	    <description>Set the MS FLAG column according to the ASDM _binary_ flags</description>
 	    <value>False</value>
+    </param>
+
+    <param type="bool" name="with_pointing_correction">
+      <description> add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833))</description>
+      <value>False</value>
     </param>
 
     </input>
@@ -316,6 +321,9 @@ useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, should
 
 bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
             default: false
+
+with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written 
+                            in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833)) 
            
   </example>
 
