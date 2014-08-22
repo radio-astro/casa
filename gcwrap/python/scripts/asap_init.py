@@ -100,8 +100,9 @@ def asap_init():
     print("sdsmooth has been incorporated in the new task and removed.")
     print("")
     print("The tasks with old interfaces are available with name")
-    print("{taskname}old and kept by CASA 4.3 release. Users are")
-    print("adviced to update existing scripts.")
+    print("{taskname}old. They will be kept until CASA 4.3 release")
+    print("and removed from later releases. Users are advised to")
+    print("update existing scripts.")
     print("")
     print("#"*50)
     
