@@ -44,7 +44,7 @@ ActionSummaryDialog::ActionSummaryDialog(Client* client)
 }
 
 bool ActionSummaryDialog::doActionSpecific( PlotMSApp* plotms){
-	vector<String> files = plotms->getFiles();
+	vector<String> files  = client->getFiles();
 	bool success = true;
 	if ( files.size() == 0 ){
 		success = false;

@@ -112,6 +112,11 @@ void PlotMSPlotter::showGUI(bool show) {
     itsPlotter_->showGUI(show);
 }
 
+vector<String> PlotMSPlotter::getFiles() const {
+	return itsPlotTab_->getFiles();
+}
+
+
 bool PlotMSPlotter::guiShown() const {
 	return QMainWindow::isVisible();
 }

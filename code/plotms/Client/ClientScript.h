@@ -127,6 +127,9 @@ public:
 		return false;
 	}
 	virtual void gridSizeChanged( int /*rowCount*/, int /*colCount*/ );
+
+	virtual vector<String> getFiles() const;
+
 private:
 	void initializeCurrentPlot();
 	void initialize( Plotter::Implementation impl );

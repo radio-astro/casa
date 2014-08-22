@@ -269,7 +269,13 @@ void PlotMSDataCollapsible::showContextMenu( const QPoint& location ) {
 
 }
 
-
+String PlotMSDataCollapsible::getFile() const {
+	String fileName("");
+	if ( plotTab != NULL ){
+		fileName = plotTab->getFileName();
+	}
+	return fileName;
+}
 
 PlotMSDataCollapsible::~PlotMSDataCollapsible(){
 	if ( nameLabel->parent() == NULL ){

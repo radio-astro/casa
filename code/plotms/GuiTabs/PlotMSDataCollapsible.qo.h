@@ -105,6 +105,10 @@ public:
     //the same canvas are done updating their data in background threads.
     void completePlotting( bool success );
     void clearData();
+
+    //Return the ms that was loaded or an empty string.
+    String getFile() const;
+
 signals:
 	void close( PlotMSDataCollapsible*);
 

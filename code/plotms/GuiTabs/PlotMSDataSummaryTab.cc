@@ -271,6 +271,18 @@ void PlotMSDataSummaryTab::observeModKeys()   {
 	its_force_reload = using_shift_key  ||  always_replot_checked;
 }
 
+vector<String> PlotMSDataSummaryTab::getFiles() const {
+	vector<String> loadedFiles;
+	for ( int i = 0; i < dataList.size(); i++ ){
+		String fileName = dataList[i]->getFile();
+		if ( fileName.length() > 0 ){
+			loadedFiles.push_back( fileName );
+		}
+	}
+	return loadedFiles;
+}
+
+
 void PlotMSDataSummaryTab::resizeEvent( QResizeEvent* /*event*/ ){
 	QSize currentSize = size();
 	int usedHeight = 0;

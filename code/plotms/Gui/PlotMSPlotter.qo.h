@@ -75,7 +75,10 @@ public:
     virtual bool isInteractive() const;
 	virtual void canvasAdded( PlotCanvasPtr& canvas );
 	virtual void setAnnotationModeActive( PlotMSAction::Type type, bool active );
-    // Static //
+	virtual vector<String> getFiles() const;
+
+
+	// Static //
     
     // Returns "about" text for the given implementation, using HTML or not.
     static String aboutText(Plotter::Implementation implementation,

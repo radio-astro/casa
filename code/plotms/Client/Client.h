@@ -70,6 +70,10 @@ public:
 	virtual PlotAxis getAxisLocationX() const;
 	virtual PlotAxis getAxisLocationY() const;
 
+	//Return a list of files loaded in the client
+	virtual vector<String> getFiles() const = 0;
+
+
 	//Flagging
 	virtual void setFlagging(PlotMSFlagging flag) = 0;
 

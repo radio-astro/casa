@@ -162,6 +162,10 @@ void ClientScript::gridSizeChanged( int /*rowCount*/, int /*colCount*/ ){
 
 }
 
+vector<String> ClientScript::getFiles() const {
+	return plotController->getFiles();
+}
+
 
 void ClientScript::initialize(Plotter::Implementation impl){
 	// Try to initialize plotter, and throw error on failure.

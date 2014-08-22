@@ -84,6 +84,9 @@ public:
     //the same canvas are done updating their data in background threads.
     void completePlotting( bool success);
 
+    //Get the files that the user loaded.
+    vector<String> getFiles() const;
+
 signals:
 	void changed( int index );
 
