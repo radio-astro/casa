@@ -181,7 +181,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			if ( itsLoopController ) {
 				if (itsLoopController->interactiveInputRequired()) {
-					pauseForUserInteraction();
+				  cout << "SynthesisIterBot.cc : Not pausing for interaction via original code" <<  endl;
+				  //					pauseForUserInteraction();
 				}
 				returnRecord = itsLoopController->getMinorCycleControls();
 			}
@@ -226,7 +227,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}// end of pauseForUserInteraction
 	}
 
-
+        void SynthesisIterBot::changeStopFlag( Bool stopflag ) {
+	  if ( itsLoopController ) {
+	    itsLoopController->changeStopFlag( stopflag );
+	  }
+        }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ////    Internal Functions start here.  These are not visible to the tool layer.

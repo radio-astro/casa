@@ -16,7 +16,14 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <casa/Logging/LogIO.h>
 
+//#include <synthesis/ImagerObjects/TmpSwitch.h>
+
+//#ifdef USEVIVB2
+//#include <synthesis/ImagerObjects2/SynthesisImager.h>
+//#else
 #include <synthesis/ImagerObjects/SynthesisImager.h>
+//#endif
+
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 
 #include <synthesisimager_cmpt.h>

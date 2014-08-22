@@ -171,6 +171,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return returnRecord;
   }
+
+  Record SynthesisDeconvolver::interactiveGUI(Record& iterRec)
+  {
+    LogIO os( LogOrigin("SynthesisDeconvolver","interactiveGUI",WHERE) );
+    Record returnRecord;
+
+    try {
+
+      // Check that required parameters are present in the iterRec.
+      Int niter=0,cycleniter=0;
+      Float threshold=0.0;
+      if( iterRec.isDefined("niter") &&  
+	  iterRec.isDefined("cycleniter") &&  
+	  iterRec.isDefined("threshold") ) 
+	{
+	  iterRec.get("niter", niter);
+	  iterRec.get("cycleniter", cycleniter);
+	  iterRec.get("threshold", threshold);
+	}
+      else throw(AipsError("SD::interactiveGui() needs valid niter, cycleniter, threshold to start up."));
+
+      if( itsImages.null() ) itsImages = makeImageStore( itsImageName );
+
+      SDMaskHandler masker;
+      String strthresh = String::toString(threshold)+"Jy";
+      Int stopcode = masker.makeInteractiveMask( itsImages, niter, cycleniter, strthresh );
+      //   maskHandler.makeAutoMask( itsImages );
+
+      returnRecord.define( RecordFieldId("actioncode"), stopcode );
+      returnRecord.define( RecordFieldId("niter"), niter );
+      returnRecord.define( RecordFieldId("cycleniter"), cycleniter );
+      returnRecord.define( RecordFieldId("threshold"), threshold );
+
+    } catch(AipsError &x) {
+      throw( AipsError("Error in Interactive GUI : "+x.getMesg()) );
+    }
+    return returnRecord;
+  }
+
   
   
   Record SynthesisDeconvolver::executeMinorCycle(Record& minorCycleControlRec)

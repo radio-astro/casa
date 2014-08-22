@@ -86,9 +86,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Int niter=1000, ncycles=100;
     // String thresh="0.001mJy";
     String imageName = imstore->getName()+".residual";
-    String maskName = imageName + ".mask";
+    String maskName = imstore->getName() + ".mask";
+    imstore->mask()->unlock();
+    cout << "Before interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << endl;
     ret = interactiveMasker_p->interactivemask(imageName, maskName, 
 					       niter, ncycles, threshold);
+    cout << "After interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << "  ------ ret : " << ret << endl;
     return ret;
   }
 

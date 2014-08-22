@@ -43,6 +43,7 @@ class PySynthesisImager:
 
         ## Number of fields ( main + outliers )
         self.NF = len(self.allimpars.keys())
+        self.stopMinor = [0]*self.NF
         ## Number of nodes. This gets set for parallel runs
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
@@ -143,6 +144,7 @@ class PySynthesisImager:
     def initDefaults(self):
         # Reset globals/members
          self.NF=1
+         self.stopMinor=[0]  # Flag to call minor cycle for this field or not.
          self.NN=1
          self.SItool=None
          self.SDtools=[]
@@ -169,6 +171,8 @@ class PySynthesisImager:
               print "Peak res of field ",immod, " : " ,initrec['peakresidual']
 #              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
+         self.runInteractiveGUI()
+
         # Check with the iteration controller about convergence.
          stopflag = self.IBtool.cleanComplete()
          print 'Converged : ', stopflag
@@ -176,6 +180,26 @@ class PySynthesisImager:
              stopreasons = ['iteration limit', 'threshold', 'force stop']
              casalog.post("Reached global stopping criterion : " + stopreasons[stopflag-1], "INFO")
          return (stopflag>0)
+
+#############################################
+    def runInteractiveGUI(self):
+        if self.iterpars['interactive'] == True:
+            iterdetails = self.IBtool.getiterationdetails()
+            for immod in range(0,self.NF):
+                if self.stopMinor[immod]==0 :
+                    iterparsmod =  self.SDtools[immod].interactivegui( iterdetails ) 
+                    print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
+                    print 'Output iterpars : ', iterparsmod['niter'],iterparsmod['cycleniter'],iterparsmod['threshold']
+                    self.iterpars.update(iterparsmod) 
+                    print 'Output iterpars 2: ', self.iterpars['niter'],self.iterpars['cycleniter'],self.iterpars['threshold']
+                    itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
+
+                    if iterparsmod.has_key('actioncode') :
+                        self.stopMinor[immod] = iterparsmod['actioncode']  # 0 or 1 or 2 ( old interactive viewer )
+
+            if self.stopMinor==[2]*self.NF:
+                self.IBtool.changestopflag( True )
+             #itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
 
 #############################################
     def makePSF(self):
@@ -227,11 +251,13 @@ class PySynthesisImager:
     def runMinorCycle(self):
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
+        #print "Minor Cycle controls : ", iterbotrec
         # Run minor cycle
-        for immod in range(0,self.NF):
-             exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
-             #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
-             self.IBtool.mergeexecrecord( exrec )
+        for immod in range(0,self.NF):  
+            if self.stopMinor[immod]<2 :
+                exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
+                #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
+                self.IBtool.mergeexecrecord( exrec )
 
 #############################################
     def runMajorMinorLoops(self):
@@ -845,8 +871,8 @@ class ImagerParameters():
 
         ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
-                          'loopgain':loopgain, 'interactive':interactive }  # Ignoring cyclefactor, minpsffraction, maxpsffraction for now.
-
+                          'loopgain':loopgain, 'interactive':interactive,
+                          'cyclefactor':cyclefactor, 'minpsffraction':minpsffraction, 'maxpsffraction':maxpsffraction}
 
         #self.reusename=reuse
 

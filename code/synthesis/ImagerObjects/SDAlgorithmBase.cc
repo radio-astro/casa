@@ -120,21 +120,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Or, call this from outside... in SynthesisImager.....
 	    //itsMaskHandler.makeAutoMask( itsImages );
 	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
-	    Int stopCode, ret=1;
+	    Int stopCode=0;
+	    /*
+	     Int ret=1, cycleNiter=loopcontrols.getCycleNiter(), ncycles=100;
+	     ostringstream thresh;
+	     thresh << loopcontrols.getCycleThreshold() << "Jy";
+	     String tt=thresh.str();
+	     ret=itsMaskHandler.makeInteractiveMask(itsImages, cycleNiter, ncycles, tt);
+	    */
 
-	    // Int ret=1, cycleNiter=loopcontrols.getCycleNiter(), ncycles=100;
-	    // ostringstream thresh;
-	    // thresh << loopcontrols.getCycleThreshold() << "Jy";
-	    // String tt=thresh.str();
-	    // ret=itsMaskHandler.makeInteractiveMask(itsImages, cycleNiter, ncycles, tt);
-	    
 	    initializeDeconvolver( peakresidual, modelflux );
 	    
 	    Float startpeakresidual = peakresidual;
 	    Float startmodelflux = modelflux;
 
-	    if (ret == 2) stopCode=1;
-	    else          stopCode = checkStop( loopcontrols,  peakresidual );
+	    //	    	    if (ret == 2) stopCode=1;
+	    //	   	    else          stopCode = checkStop( loopcontrols,  peakresidual );
 
 	    //	    while ( ! checkStop( loopcontrols,  peakresidual ) )
 	    while ( stopCode==0 )

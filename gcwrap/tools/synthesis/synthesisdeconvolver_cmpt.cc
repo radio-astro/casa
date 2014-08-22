@@ -70,6 +70,17 @@ casac::record* synthesisdeconvolver::initminorcycle()
   return rstat;
 }
 
+casac::record* synthesisdeconvolver::interactivegui(const casac::record& iterbot)
+{
+  casac::record* rstat(False);
+  try {
+    casa::Record recpars = *toRecord( iterbot );
+    rstat = fromRecord(itsDeconvolver->interactiveGUI( recpars ));
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
 
 casac::record* synthesisdeconvolver::executeminorcycle(const casac::record& iterbot)
 {

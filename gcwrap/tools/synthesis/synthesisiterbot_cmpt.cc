@@ -178,6 +178,22 @@ bool synthesisiterbot::mergeexecrecord(const casac::record& execrecord)
   return rstat;
 }
 
+  bool synthesisiterbot::changestopflag(const bool stopflag)
+{
+  Bool rstat(True);
+  
+  try 
+    {
+      itsIterBot->changeStopFlag(stopflag);
+     } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
+
 
 bool
 synthesisiterbot::done()

@@ -118,6 +118,22 @@ This is used to construct {\tt synthesisiterbot} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="changestopflag">
+   <shortdescription>Change the stop flag (for interactive clean)</shortdescription>
+
+<description>
+</description>
+<input>
+     <param type="bool" name="stopflag">
+     <description>Set to False for the next cleanComplete() check to stop the run</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="mergeinitrecord">
    <shortdescription>Initialize the iterbot with starting peak residuals</shortdescription>
 

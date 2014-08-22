@@ -47,6 +47,8 @@
 
 #include <msvis/MSVis/VisibilityIterator.h>
 
+#include <synthesis/ImagerObjects/TmpSwitch.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   class SynthesisParams;
@@ -189,6 +191,11 @@ public:
 
   // Generate Coordinate System 
   CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
+  CoordinateSystem buildCoordinateSystem(vi::VisibilityIterator2* vi2);
+  CoordinateSystem buildCoordinateSystemCore(MeasurementSet& msobj, 
+					     Vector<Int> spwids, Int fld, 
+					     Double freqmin, Double freqmax);
+
   Vector<Int> decideNPolPlanes(const String& stokes) const;
   IPosition shp() const;
   Bool getImFreq(Vector<Double>& ChanFreq, Vector<Double>& ChanWidth, 

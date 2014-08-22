@@ -74,6 +74,8 @@ class SynthesisDeconvolver
   Record initMinorCycle();
   Record executeMinorCycle(Record& subIterBot);
 
+  Record interactiveGUI(Record& iterRec);
+
   // Helpers
   /*
   Float getPeakResidual();

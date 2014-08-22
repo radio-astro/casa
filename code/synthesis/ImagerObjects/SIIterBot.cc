@@ -572,6 +572,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if (recordIn.isDefined("interactive"))
 			changeInteractiveMode(recordIn.asBool(RecordFieldId("interactive")));
+
+		printOut("After Setting : ", False);
+
 	}
 
 	/* Print out contents of the IterBot. For debugging. */

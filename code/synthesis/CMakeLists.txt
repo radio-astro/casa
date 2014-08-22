@@ -298,6 +298,10 @@ casa_add_library( synthesis
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
+# ImagerObjects2/SynthesisImager.cc
+# ImagerObjects2/SIMapperCollection.cc
+# ImagerObjects2/SIMapper.cc
+# ImagerObjects2/SIMapperImageMosaic.cc
  ImagerObjects/InteractiveMasking.cc
   )
 

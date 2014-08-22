@@ -80,6 +80,8 @@ class SynthesisIterBot
 
   void endMajorCycle();
 
+  void changeStopFlag( Bool stopflag );
+
 protected:
 
   void pauseForUserInteraction();

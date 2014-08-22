@@ -78,6 +78,24 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="interactivegui">
+   <shortdescription>Run interactive GUI</shortdescription>
+
+<description>
+</description>
+
+<input>
+     <param type="record" name="iterbotrecord">
+     <description>All parameters that control iterations</description>
+     <value type="record"></value>
+     </param>
+</input>
+
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
    <method type="function" name="executeminorcycle">
    <shortdescription>Run a minor cycle</shortdescription>
 
@@ -85,7 +103,7 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 </description>
 <input>
      <param type="record" name="iterbotrecord">
-     <description>All parameters that control major cycle</description>
+     <description>All parameters that control minor cycle</description>
      <value type="record"></value>
      </param>
 </input>

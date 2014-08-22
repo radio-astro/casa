@@ -62,6 +62,8 @@
 #include <mstransform/MSTransform/MSTransformRegridder.h>
 #include <msvis/MSVis/MSUtil.h>
 
+#include <msvis/MSVis/VisibilityIterator2.h>
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
@@ -1458,13 +1460,47 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////       ( need to supply MS only to add  'ObsInfo' to the csys )
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi)
+  /*
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(vi::VisibilityIterator2* vi2) const
+  {
+    /// This version uses the new vi2/vb2
+    // get the first ms for multiple MSes
+    const MeasurementSet msobj=vi2->getMeasurementSet();
+    Vector<Int> spwids;
+    vi2->spectralWindows( spwids );
+    Vector<Int> flds;
+    vi2->fieldIds( flds );
+    AlwaysAssert( flds.nelements()>0 , AipsError );
+    Int fld = flds[0];
+    Double freqmin=0, freqmax=0;
+    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+    vi2->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax );
+  }
+  */
+
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi ) 
+  {
+    /// This version uses the old vi/vb
+    // get the first ms for multiple MSes
+    MeasurementSet msobj=rvi->getMeasurementSet();
+    Vector<Int> spwids;
+    Vector<Int> nvischan;
+    rvi->allSelectedSpectralWindows(spwids,nvischan);
+    Int fld = rvi->fieldId();
+    Double freqmin=0, freqmax=0;
+    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+    return buildCoordinateSystemCore( msobj, spwids, fld, freqmin, freqmax );
+  }
+
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystemCore(
+								   MeasurementSet& msobj, 
+								   Vector<Int> spwids, Int fld, 
+								   Double freqmin, Double freqmax)
   {
     LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
   
-
-    // get the first ms for multiple MSes
-    MeasurementSet msobj=rvi->getMeasurementSet();
 
     MDirection phaseCenterToUse = phaseCenter;
 
@@ -1542,12 +1578,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //Bool freqFrameValid=(freqFrame != MFrequency::REST);
 
     //freqFrameValid=(freqFrame != MFrequency::REST );
-    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+    //UR//freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+    //UR - moved freqFrameValid calc to vi/vi2 dependent wrappers.
 
-    // *** get selected spw ids ***
-    Vector<Int> spwids;
-    Vector<Int> nvischan;
-    rvi->allSelectedSpectralWindows(spwids,nvischan);
     if(spwids.nelements()==0)
       {
         Int nspw=msc.spectralWindow().nrow();
@@ -1573,7 +1606,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
     if( qrestfreq.getValue("Hz")==0 ) 
       {
-        Int fld = rvi->fieldId();
         MSDopplerUtil msdoppler(msobj);
         Vector<Double> restfreqvec;
         msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
@@ -1583,10 +1615,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> chanFreq;
     Vector<Double> chanFreqStep;
     String specmode;
-
-    //for mfs 
-    Double freqmin=0, freqmax=0;
-    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
 
     if (!getImFreq(chanFreq, chanFreqStep, refPix, specmode, obsEpoch, 
 		   obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax,
@@ -1709,6 +1737,256 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return csys;
   }
+
+
+  /*
+#ifdef USEVIVB2
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(vi::VisibilityIterator2* vi2)
+#else
+  CoordinateSystem SynthesisParamsImage::buildCoordinateSystem(ROVisibilityIterator* rvi )
+#endif
+  {
+    LogIO os( LogOrigin("SynthesisParamsImage","buildCoordinateSystem",WHERE) );
+  
+
+    // get the first ms for multiple MSes
+#ifdef USEVIVB2
+    MeasurementSet msobj=vi2->getMeasurementSet();
+#else
+    MeasurementSet msobj=rvi->getMeasurementSet();
+#endif
+
+    MDirection phaseCenterToUse = phaseCenter;
+
+    if( phaseCenterFieldId != -1 )
+      {
+	ROMSFieldColumns msfield(msobj.field());
+	phaseCenterToUse=msfield.phaseDirMeas( phaseCenterFieldId ); 
+      }
+    // Setup Phase center if it is specified only by field id.
+
+    /////////////////// Direction Coordinates
+    MVDirection mvPhaseCenter(phaseCenterToUse.getAngle());
+    // Normalize correctly
+    MVAngle ra=mvPhaseCenter.get()(0);
+    ra(0.0);
+
+    MVAngle dec=mvPhaseCenter.get()(1);
+    Vector<Double> refCoord(2);
+    refCoord(0)=ra.get().getValue();    
+    refCoord(1)=dec;
+    Vector<Double> refPixel(2); 
+    refPixel(0) = Double(imsize[0]/2);
+    refPixel(1) = Double(imsize[1]/2);
+
+    Vector<Double> deltas(2);
+    deltas(0)=-1* cellsize[0].get("rad").getValue();
+    deltas(1)=cellsize[1].get("rad").getValue();
+    Matrix<Double> xform(2,2);
+    xform=0.0;xform.diagonal()=1.0;
+
+    Vector<Double> projparams(2); 
+    projparams = 0.0;
+    if( useNCP==True ) { projparams[0]=0.0, projparams[1]=1/tan(refCoord(1));   }
+    Projection projTo( projection.type(), projparams );
+
+    DirectionCoordinate
+      myRaDec(MDirection::Types(phaseCenterToUse.getRefPtr()->getType()),
+	      //	      projection,
+	      projTo,
+	      refCoord(0), refCoord(1),
+	      deltas(0), deltas(1),
+	      xform,
+	      refPixel(0), refPixel(1));
+
+
+    //defining observatory...needed for position on earth
+    // get the first ms for multiple MSes
+    ROMSColumns msc(msobj);
+    String telescop = msc.observation().telescopeName()(0);
+    MEpoch obsEpoch = msc.timeMeas()(0);
+    MPosition obsPosition;
+    if(!(MeasTable::Observatory(obsPosition, telescop)))
+      {
+        os << LogIO::WARN << "Did not get the position of " << telescop
+           << " from data repository" << LogIO::POST;
+        os << LogIO::WARN
+           << "Please contact CASA to add it to the repository."
+           << LogIO::POST;
+        os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+      }
+
+    ObsInfo myobsinfo;
+    myobsinfo.setTelescope(telescop);
+    myobsinfo.setPointingCenter(mvPhaseCenter);
+    myobsinfo.setObsDate(obsEpoch);
+    myobsinfo.setObserver(msc.observation().observer()(0));
+
+    /// Attach obsInfo to the CoordinateSystem
+    ///csys.setObsInfo(myobsinfo);
+
+
+    /////////////////// Spectral Coordinate
+
+    //Make sure frame conversion is switched off for REST frame data.
+    //Bool freqFrameValid=(freqFrame != MFrequency::REST);
+
+    //freqFrameValid=(freqFrame != MFrequency::REST );
+    freqFrameValid=(freqFrame != MFrequency::REST || mode != "cubedata" );
+
+    // *** get selected spw ids ***
+    Vector<Int> spwids;
+#ifdef USEVIVB2
+    vi2->spectralWindows( spwids );
+#else
+    Vector<Int> nvischan;
+    rvi->allSelectedSpectralWindows(spwids,nvischan);
+#endif
+    if(spwids.nelements()==0)
+      {
+        Int nspw=msc.spectralWindow().nrow();
+        spwids.resize(nspw);
+        indgen(spwids); 
+      }
+    MFrequency::Types dataFrame=(MFrequency::Types)msc.spectralWindow().measFreqRef()(spwids[0]);
+    Vector<Double> dataChanFreq, dataChanWidth;
+    if(spwids.nelements()==1)
+      {
+        dataChanFreq=msc.spectralWindow().chanFreq()(spwids[0]);
+        dataChanWidth=msc.spectralWindow().chanWidth()(spwids[0]);
+      }
+    else 
+      {
+        SubMS thems(msobj);
+        if(!thems.combineSpws(spwids,True,dataChanFreq,dataChanWidth))
+	  //if(!MSTransformRegridder::combineSpws(os,msobj.tableName(),spwids,dataChanFreq,dataChanWidth))
+          {
+            os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
+          }
+      }
+    
+    Quantity qrestfreq = restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz");
+    if( qrestfreq.getValue("Hz")==0 ) 
+      {
+#ifdef USEVIVB2
+	///// TTCheck
+	Vector<Int> flds;
+	vi2->fieldIds( flds );
+	AlwaysAssert( flds.nelements()>0 , AipsError );
+	Int fld = flds[0];
+#else
+        Int fld = rvi->fieldId();
+#endif
+        MSDopplerUtil msdoppler(msobj);
+        Vector<Double> restfreqvec;
+        msdoppler.dopplerInfo(restfreqvec, spwids[0], fld);
+        qrestfreq = restfreqvec.nelements() >0 ? Quantity(restfreqvec[0],"Hz"): Quantity(0.0, "Hz");
+      }
+    Double refPix;
+    Vector<Double> chanFreq;
+    Vector<Double> chanFreqStep;
+    String specmode;
+
+    //for mfs 
+    Double freqmin=0, freqmax=0;
+#ifdef USEVIVB2
+    vi2->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+#else
+    rvi->getFreqInSpwRange(freqmin,freqmax,freqFrameValid? freqFrame:MFrequency::REST );
+#endif
+
+    if (!getImFreq(chanFreq, chanFreqStep, refPix, specmode, obsEpoch, 
+		   obsPosition, dataChanFreq, dataChanWidth, dataFrame, qrestfreq, freqmin, freqmax,
+		   phaseCenterToUse))
+      throw(AipsError("Failed to determine channelization parameters"));
+
+    Bool nonLinearFreq(false);
+    String veltype_p=veltype;
+    veltype_p.upcase(); 
+    if(veltype_p.contains("OPTICAL") || veltype_p.matches("Z") || veltype_p.contains("BETA") ||
+         veltype_p.contains("RELATI") || veltype_p.contains("GAMMA")) 
+      {
+        nonLinearFreq= true;
+      }
+
+    SpectralCoordinate mySpectral;
+    Double stepf;
+    if(!nonLinearFreq) 
+    //TODO: velocity mode default start case (use last channels?)
+      {
+        Double startf=chanFreq[0];
+        //Double stepf=chanFreqStep[0];
+        if(chanFreq.nelements()==1) 
+          {
+            stepf=chanFreqStep[0];
+          }
+        else 
+          { 
+            stepf=chanFreq[1]-chanFreq[0];
+          }
+        Double restf=qrestfreq.getValue("Hz");
+        //cerr<<" startf="<<startf<<" stepf="<<stepf<<" refPix="<<refPix<<" restF="<<restf<<endl;
+        // once NOFRAME is implemented do this 
+        if(mode=="cubedata") 
+          {
+      //       mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST, 
+             mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST? 
+                                             MFrequency::REST : MFrequency::Undefined, 
+        	                             startf, stepf, refPix, restf);
+          }
+        else 
+          {
+             mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST, 
+		startf, stepf, refPix, restf);
+          }
+      }
+    else 
+      { // nonlinear freq coords - use tabular setting
+        // once NOFRAME is implemented do this 
+        if(mode=="cubedata") 
+          {
+            //mySpectral = SpectralCoordinate(freqFrameValid ? MFrequency::Undefined : MFrequency::REST,
+            mySpectral = SpectralCoordinate(freqFrame == MFrequency::REST ? 
+                                            MFrequency::REST : MFrequency::Undefined,
+                                            chanFreq, (Double)qrestfreq.getValue("Hz"));
+          }
+        else 
+          {
+            mySpectral = SpectralCoordinate(freqFrameValid ? freqFrame : MFrequency::REST,
+                 chanFreq, (Double)qrestfreq.getValue("Hz"));
+          }
+      }
+    //cout << "Rest Freq : " << restFreq << endl;
+
+    for(uInt k=1 ; k < restFreq.nelements(); ++k)
+      mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
+
+    if ( freqFrameValid ) {
+      mySpectral.setReferenceConversion(MFrequency::LSRK,obsEpoch,obsPosition,phaseCenterToUse);   
+    }
+
+    //    cout << "RF from coordinate : " << mySpectral.restFrequency() << endl;
+
+    ////////////////// Stokes Coordinate
+   
+    Vector<Int> whichStokes = decideNPolPlanes(stokes);
+    if(whichStokes.nelements()==0)
+      throw(AipsError("Stokes selection of " + stokes + " is invalid"));
+    StokesCoordinate myStokes(whichStokes);
+
+    //////////////////  Build Full coordinate system. 
+
+    CoordinateSystem csys;
+    csys.addCoordinate(myRaDec);
+    csys.addCoordinate(myStokes);
+    csys.addCoordinate(mySpectral);
+    csys.setObsInfo(myobsinfo);
+
+    //////////////// Set Observatory info, if MS is provided.
+    // (remove this section after verified...)
+    return csys;
+  }
+*/
 
   Bool SynthesisParamsImage::getImFreq(Vector<Double>& chanFreq, Vector<Double>& chanFreqStep, 
                                        Double& refPix, String& specmode,

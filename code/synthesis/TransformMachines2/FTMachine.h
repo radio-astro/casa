@@ -56,6 +56,8 @@
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
+#include <synthesis/TransformMachines2/SkyJones.h>
+
 namespace casa{ //# namespace casa
 
   class UVWMachine;
@@ -219,8 +221,8 @@ public:
   // All FTMachines that fill weightimage, need to set this.
   // TODO : Make this pure virtual.
   virtual Bool useWeightImage(){return False;}; 
-  //virtual Bool isSkyJonesSet(){return (sj_p.nelements()>0) && !(sj_p[0]).null()  ;}
-  //virtual Bool isSkyJonesChanged(vi::VisBuffer2& vb, Int row){if(sj_p.nelements()>0){return sj_p[0]->changed(vb,row);} else {return False;} };
+  virtual Bool isSkyJonesSet(){return (sj_p.nelements()>0) && !( sj_p[0]).null()  ;}
+  virtual Bool isSkyJonesChanged(vi::VisBuffer2& vb, Int row){if(sj_p.nelements()>0){return sj_p[0]->changed(vb,row);} else {return False;} };
 
   // Set SkyJones if image domain corrections /applycation are needed
   // To reset the the FTMachine for stopping image based correction/applycation
@@ -465,7 +467,7 @@ protected:
 
   Float pbLimit_p;
   //  Vector<SkyJones *> sj_p;
-  Vector<CountedPtr<refim::SkyJones> > sj_p;
+  Vector<CountedPtr<SkyJones> > sj_p;
   //A holder for the complex image if nobody else is keeping it
   CountedPtr<ImageInterface<Complex> > cmplxImage_p;
 
