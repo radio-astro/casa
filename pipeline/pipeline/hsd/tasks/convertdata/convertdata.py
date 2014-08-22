@@ -69,37 +69,36 @@ class SDConvertDataResults(common.SingleDishResults):
             target.add_scantable(st)
 
     def replace_callibrary(self, context):
-        assert hasattr(self, 'mappedcaltables')
-        
-        #mslist = context.measurement_sets
         callib = context.callibrary
         mycallib = callibrary.SDCalLibrary(context)
-        for st in self.scantables:
-            ms = st.ms
-            vis = ms.name
-            basename = ms.basename
-            antenna = st.antenna.name
-            caltable_list = self.mappedcaltables[basename]
 
-            calto = callibrary.CalTo(vis=vis)
-            calstate = callib.get_calstate(calto)
-            calfrom = calstate.merged().values()[0][0]
-            spwmap = calfrom.spwmap
+        if hasattr(self, 'mappedcaltables'):
+            LOG.debug('register mapped Tsys caltables to callibrary')
+            for st in self.scantables:
+                ms = st.ms
+                vis = ms.name
+                basename = ms.basename
+                antenna = st.antenna.name
+                caltable_list = self.mappedcaltables[basename]
 
-            myspwmap = remap_spwmap(spwmap)
-            for key in myspwmap.keys():
-                filtered_value = [spw for spw in myspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
-                myspwmap[key] = filtered_value
-            mycalto = callibrary.CalTo(vis=vis,
-                                       spw='',
-                                       antenna=antenna,
-                                       intent='TARGET,REFERENCE')
-            mycalfrom = callibrary.SDCalFrom(gaintable=caltable_list[antenna],
-                                             interp='',
-                                             spwmap=myspwmap,
-                                             caltype='tsys')
-            #mycalapp = callibrary.SDCalApplication(mycalto, mycalfrom)
-            mycallib.add(mycalto, mycalfrom)
+                calto = callibrary.CalTo(vis=vis)
+                calstate = callib.get_calstate(calto)
+                calfrom = calstate.merged().values()[0][0]
+                spwmap = calfrom.spwmap
+
+                myspwmap = remap_spwmap(spwmap)
+                for key in myspwmap.keys():
+                    filtered_value = [spw for spw in myspwmap[key] if st.spectral_window[spw].nchan > 1 and st.spectral_window[spw].is_target]
+                    myspwmap[key] = filtered_value
+                mycalto = callibrary.CalTo(vis=vis,
+                                           spw='',
+                                           antenna=antenna,
+                                           intent='TARGET,REFERENCE')
+                mycalfrom = callibrary.SDCalFrom(gaintable=caltable_list[antenna],
+                                                 interp='',
+                                                 spwmap=myspwmap,
+                                                 caltype='tsys')
+                mycallib.add(mycalto, mycalfrom)
 
         context.callibrary = mycallib
             
@@ -237,13 +236,19 @@ class SDConvertData(common.SingleDishTaskTemplate):
             calto = callibrary.CalTo(vis=vis)
             calstate = callib.get_calstate(calto)
             allcaltables = calstate.get_caltable()
+            if len(allcaltables) == 0:
+                continue
+            
             tsyscaltables = [name for name in allcaltables if re.search('.*\.tsyscal\.tbl$', name) is not None]
             assert len(tsyscaltables) == 1
 
             caltable = tsyscaltables[0]
             names = tsystablemapper.map(prefix, caltable, reftable)
             sdtsystables[vis] = names
-        results.mappedcaltables = sdtsystables
+
+        if len(sdtsystables) > 0:
+            LOG.debug('setting mappedcaltables attribute to result object')
+            results.mappedcaltables = sdtsystables
                                                  
         return results
 
