@@ -47,7 +47,7 @@
 
 #include <msvis/MSVis/VisibilityIterator.h>
 
-#include <synthesis/ImagerObjects/TmpSwitch.h>
+//#include <synthesis/ImagerObjects/TmpSwitch.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
