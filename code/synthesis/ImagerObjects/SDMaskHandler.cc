@@ -29,15 +29,23 @@
 #include <casa/OS/HostInfo.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentList.h>
+#include <images/Images/ImageRegrid.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
+#include <images/Regions/RegionManager.h>
+#include <images/Regions/WCBox.h>
+#include <images/Regions/WCUnion.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/LCEllipsoid.h>
+#include <lattices/Lattices/LCUnion.h>
+#include <lattices/Lattices/LCExtension.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
@@ -51,6 +59,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 
+#include <imageanalysis/Annotations/RegionTextList.h>
 #include <synthesis/ImagerObjects/SDMaskHandler.h>
 
 
@@ -73,14 +82,262 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->set(1.0);
   }
 
-  void SDMaskHandler::makeMask()
+  //void SDMaskHandler::makeMask()
+   CountedPtr<ImageInterface<Float> > SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
+   //void SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
+                               ImageInterface<Float>& tempim)
+   //                             ImageInterface<Float>& tempim,
+   //                           ImageInterface<Float> *newMaskImage)
   {
     LogIO os( LogOrigin("SDMaskHandler","makeMask",WHERE) );
-    //os << "Make mask" << LogIO::POST;
+    //
+    // create mask from a threshold... Imager::mask()...
+    //default handling?
+    String maskFileName(maskName);
+    if ( maskFileName=="" ) { 
+      maskFileName = tempim.name() + ".mask";
+    }
+    if (!cloneImShape(tempim, maskFileName)) {
+      throw(AipsError("Cannot make a mask from "+tempim.name()));
+    }
+    PagedImage<Float> *newMaskImage = new PagedImage<Float>(maskFileName, TableLock::AutoNoReadLocking);
+    //newMaskImage = PagedImage<Float>(maskFileName, TableLock::AutoNoReadLocking);
+    //PagedImage<Float>(maskFileName, TableLock::AutoNoReadLocking);
+    StokesImageUtil::MaskFrom(*newMaskImage, tempim, threshold);
+    return newMaskImage;
   }
 
+  Bool SDMaskHandler::regionToImageMask(const String& maskName, Record* regionRec, Matrix<Quantity>& blctrcs,
+  //Bool SDMaskHandler::regionToImageMask(const String& maskName, Record& regionRec, Matrix<Quantity>& blctrcs,
+            Matrix<Float>& circles, const Float& value) {
+
+    LogIO os(LogOrigin("imager", "regionToImageMask", WHERE));
+
+    try {
+      PagedImage<Float> maskImage(maskName);
+      CoordinateSystem cSys=maskImage.coordinates();
+      maskImage.table().markForDelete();
+      ImageRegion *boxregions=0;
+      ImageRegion *circleregions=0;
+      RegionManager regMan;
+      regMan.setcoordsys(cSys);
+      if (blctrcs.nelements()!=0){
+        boxRegionToImageRegion(maskImage, blctrcs, boxregions);
+      }
+      if (circles.nelements()!=0) {
+        circleRegionToImageRegion(maskImage, circles, circleregions);
+      } 
+      ImageRegion* recordRegion=0;
+      if(regionRec !=0){
+      //if(regionRec.nfields() !=0){
+        recordRegionToImageRegion(regionRec, recordRegion);
+      }
+   
+      ImageRegion *unionReg=0;
+      if(boxregions!=0 && recordRegion!=0){
+        unionReg=regMan.doUnion(*boxregions, *recordRegion);
+        delete boxregions; boxregions=0;
+        delete recordRegion; recordRegion=0;
+      }
+      else if(boxregions !=0){
+        unionReg=boxregions;
+      }
+      else if(recordRegion !=0){
+        unionReg=recordRegion;
+      } 
+
+      if(unionReg !=0){
+        regionToMask(maskImage, *unionReg, value);
+        delete unionReg; unionReg=0;
+      }
+      //As i can't unionize LCRegions and WCRegions;  do circles seperately
+      if(circleregions !=0){
+        regionToMask(maskImage, *circleregions, value);
+        delete circleregions;
+        circleregions=0;
+      }
+      maskImage.table().unmarkForDelete();
+    }
+    catch (AipsError& x) {
+      os << "Error in regionToMaskImage() : " << x.getMesg() << LogIO::EXCEPTION;
+    }
+    return True;
+  }
+
+  Bool SDMaskHandler::regionToMask(ImageInterface<Float>& maskImage, ImageRegion& imageregion, const Float& value) 
+  {
+    SubImage<Float> partToMask(maskImage, imageregion, True);
+    LatticeRegion latReg=imageregion.toLatticeRegion(maskImage.coordinates(), maskImage.shape());
+    ArrayLattice<Bool> pixmask(latReg.get());
+    LatticeExpr<Float> myexpr(iif(pixmask, value, partToMask) );
+    partToMask.copyData(myexpr);
+    return True;
+  }
+
+  void SDMaskHandler::boxRegionToImageRegion(const ImageInterface<Float>& maskImage, const Matrix<Quantity>& blctrcs, ImageRegion*& boxImageRegions)
+  {
+    if(blctrcs.shape()(1) != 4)
+      throw(AipsError("Need a list of 4 elements to define a box"));
+
+    CoordinateSystem cSys=maskImage.coordinates();
+    RegionManager regMan;
+    regMan.setcoordsys(cSys);
+    Vector<Quantum<Double> > blc(2);
+    Vector<Quantum<Double> > trc(2);
+    Int nrow=blctrcs.shape()(0);
+    Vector<Int> absRel(2, RegionType::Abs);
+    PtrBlock<const WCRegion *> lesbox(nrow);
+    for (Int k=0; k < nrow; ++k){
+      blc(0) = blctrcs(k,0);
+      blc(1) = blctrcs(k,1);
+      trc(0) = blctrcs(k,2);
+      trc(1) = blctrcs(k,3);
+      lesbox[k]= new WCBox (blc, trc, cSys, absRel);
+    }
+    boxImageRegions=regMan.doUnion(lesbox);
+    if (boxImageRegions!=0) {
+    }
+    for (Int k=0; k < nrow; ++k){
+      delete lesbox[k];
+    }
+  }
+
+  void SDMaskHandler::circleRegionToImageRegion(const ImageInterface<Float>& maskImage, const Matrix<Float>& circles, 
+                                         ImageRegion*& circleImageRegions)
+  {
+    if(circles.shape()(1) != 3)
+      throw(AipsError("Need a list of 3 elements to define a circle"));
+
+    CoordinateSystem cSys=maskImage.coordinates();
+    RegionManager regMan;
+    regMan.setcoordsys(cSys);
+    Int nrow=circles.shape()(0);
+    Vector<Float> cent(2);
+    cent(0)=circles(0,1); cent(1)=circles(0,2);
+    Float radius=circles(0,0);
+    IPosition xyshape(2,maskImage.shape()(0),maskImage.shape()(1));
+    LCEllipsoid *circ= new LCEllipsoid(cent, radius, xyshape);
+    //Tell LCUnion to delete the pointers
+    LCUnion *elunion= new LCUnion(True, circ);
+    //now lets do the remainder
+    for (Int k=1; k < nrow; ++k){
+      cent(0)=circles(k,1); cent(1)=circles(k,2);
+      radius=circles(k,0);
+      circ= new LCEllipsoid(cent, radius, xyshape);
+      elunion=new LCUnion(True, elunion, circ);
+    }
+    //now lets extend that to the whole image
+    IPosition trc(2);
+    trc(0)=maskImage.shape()(2)-1;
+    trc(1)=maskImage.shape()(3)-1;
+    LCBox lbox(IPosition(2,0,0), trc,
+               IPosition(2,maskImage.shape()(2),maskImage.shape()(3)) );
+    LCExtension linter(*elunion, IPosition(2,2,3),lbox);
+    circleImageRegions=new ImageRegion(linter);
+    delete elunion;
+  }
+ 
+  void SDMaskHandler::recordRegionToImageRegion(Record* imageRegRec, ImageRegion*& imageRegion ) 
+  //void SDMaskHandler::recordRegionToImageRegion(Record& imageRegRec, ImageRegion*& imageRegion ) 
+  {
+    if(imageRegRec !=0){
+    //if(imageRegRec.nfields() !=0){
+      ImageRegion::tweakedRegionRecord(imageRegRec);
+      //ImageRegion::tweakedRegionRecord(&imageRegRec);
+      TableRecord rec1;
+      rec1.assign(*imageRegRec);
+      imageRegion=ImageRegion::fromRecord(rec1,"");
+    }
+  }
+
+  void SDMaskHandler::regionTextToImageRegion(const String& text, const ImageInterface<Float>& regionImage,
+                                            ImageRegion*& imageRegion)
+  {
+    LogIO os( LogOrigin("SDMaskHandler", "regionTextToImageRegion",WHERE) );
+
+     try {
+       IPosition imshape = regionImage.shape();
+       CoordinateSystem csys = regionImage.coordinates();
+       File fname(text); 
+       Record* imageRegRec=0;
+       Record myrec;
+       //Record imageRegRec;
+       if (fname.exists() && fname.isRegular()) {
+         RegionTextList  CRTFList(text, csys, imshape);
+         myrec = CRTFList.regionAsRecord();
+       }
+       else { // direct text input....
+         RegionTextList CRTFList(csys, text, imshape);
+         myrec = CRTFList.regionAsRecord();
+       }
+       imageRegRec = new Record();
+       imageRegRec->assign(myrec);
+       recordRegionToImageRegion(imageRegRec, imageRegion);
+       delete imageRegRec;
+     }
+     catch (AipsError& x) {
+       os << LogIO::SEVERE << "Exception: "<< x.getMesg() << LogIO::POST;
+     }  
+  }
+
+  void SDMaskHandler::copyAllMasks(const Vector< ImageInterface<Float> >& inImageMasks, ImageInterface<Float>& outImageMask)
+  {
+     LogIO os( LogOrigin("SDMaskHandler", "copyAllMasks", WHERE) );
+
+     TempImage<Float> tempoutmask(outImageMask.shape(), outImageMask.coordinates());
+     
+     for (uInt i = 0; i < inImageMasks.nelements(); i++) {
+       copyMask(inImageMasks(i), tempoutmask);
+        outImageMask.copyData( (LatticeExpr<Float>)(tempoutmask+outImageMask) );
+     }
+  }
+
+  void SDMaskHandler::copyMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask) 
+  {
+    LogIO os( LogOrigin("SDMaskHandler", "copyMask", WHERE) );
+  
+    // do regrid   
+    IPosition axes(3,0, 1, 2);
+    CoordinateSystem incsys = inImageMask.coordinates(); 
+    Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
+    axes(0) = dirAxes(0); 
+    axes(1) = dirAxes(1);
+    axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+    ImageRegrid<Float> imregrid;
+    imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
+  } 
+
+  void SDMaskHandler::expandMask(const ImageInterface<Float>& smallchanmask, ImageInterface<Float>& outimage)
+  {
+    LogIO os( LogOrigin("SDMaskHandler", "extendMask", WHERE) );
+
+    // expand mask with input range (in spectral axis and stokes?) ... to output range on outimage
+
+  }
+
+  // was Imager::clone()...
+  //static Bool cloneImShape(const ImageInterface<Float>& inImage, ImageInterface<Float>& outImage)
+  Bool SDMaskHandler::cloneImShape(const ImageInterface<Float>& inImage, const String& outImageName)
+  { 
+    LogIO os( LogOrigin("SDMaskHandler", "cloneImShape",WHERE) );
+    
+    try {
+      PagedImage<Float> newImage(TiledShape(inImage.shape(),
+                                          inImage.niceCursorShape()), inImage.coordinates(),
+    //                           outImage.name());
+                               outImageName);
+      newImage.set(0.0);
+      newImage.table().flush(True, True);
+    } catch (AipsError& x) {
+      os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
+      return False;
+    }
+    return True;
+  }
+
+
   Int SDMaskHandler::makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
-					  Int& niter, Int& ncycles, String& threshold)
+                                          Int& niter, Int& ncycles, String& threshold)
   {
     Int ret;
     // Int niter=1000, ncycles=100;
@@ -89,8 +346,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String maskName = imstore->getName() + ".mask";
     imstore->mask()->unlock();
     cout << "Before interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << endl;
-    ret = interactiveMasker_p->interactivemask(imageName, maskName, 
-					       niter, ncycles, threshold);
+    ret = interactiveMasker_p->interactivemask(imageName, maskName,
+                                               niter, ncycles, threshold);
     cout << "After interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << "  ------ ret : " << ret << endl;
     return ret;
   }
