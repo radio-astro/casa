@@ -1151,6 +1151,7 @@ Constraints
         </notequals>
     </when> -->
     <when param="customsymbol">
+        <equals type="bool" value="False" />
         <equals type="bool" value="True">
             <default param="symbolshape">
                 <value type="string">autoscaling</value>
@@ -1167,8 +1168,7 @@ Constraints
             <default param="symboloutline">
                 <value type="bool">False</value>
             </default>
-        </equals>
-        <equals type="bool" value="False" />
+        </equals>    
     </when>
 
     <when param="customflaggedsymbol">
@@ -1505,7 +1505,7 @@ Constraints
         			  default: false, each plot will have its own y-axis.              
 
     customsymbol -- If true, use a custom symbol for drawing unflagged points
-                    default: True
+                    default: False
       &gt;&gt;&gt; customsymbol expandable parameters
         symbolshape -- If true, use a custom shape to draw unflagged symbols
                        default: 'autoscaling' (ignores symbolsize)
