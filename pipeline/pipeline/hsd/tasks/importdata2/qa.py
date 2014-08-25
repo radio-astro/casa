@@ -17,6 +17,9 @@ from . import importdata2
 
 class SDImportData2QAHandler(importdataqa.ImportDataQAHandler):
     result_cls = importdata2.SDImportData2Results
+    child_cls = None
+    generating_task = importdata2.SDImportData2
+    
     def _check_intents(self, mses):
         '''
         Check each measurement set in the list for a set of required intents.
