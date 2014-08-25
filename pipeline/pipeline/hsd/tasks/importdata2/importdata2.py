@@ -19,6 +19,14 @@ import pipeline.hif.tasks.importdata.importdata as importdata
 
 LOG = infrastructure.get_logger(__name__)
 
+class SDImportData2Inputs(importdata.ImportDataInputs):
+    @basetask.log_equivalent_CASA_call
+    def __init__(self, context=None, vis=None, output_dir=None,
+                 asis=None, process_caldevice=None,
+         session=None, overwrite=None, save_flagonline=None,
+         bdfflags=None):
+        self._init_properties(vars())
+
 class SDImportData2Results(basetask.Results):
     '''
     SDImportData2Results is an equivalent class with ImportDataResults. 
@@ -46,7 +54,7 @@ class SDImportData2Results(basetask.Results):
                 '\n\t'.join([ms.name for ms in self.mses]))
 
 class SDImportData2(importdata.ImportData):
-    Inputs = importdata.ImportDataInputs 
+    Inputs = SDImportData2Inputs 
     
     def prepare(self, **parameters):
         results = super(SDImportData2, self).prepare()

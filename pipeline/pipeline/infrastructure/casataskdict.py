@@ -166,7 +166,8 @@ CASA_COMMANDS_PROLOGUE = (
 TASK_COMMENTS = {
     (hif_tasks.ImportData,
      hifa_tasks.ALMAImportData, 
-     hifv_tasks.VLAImportData): (
+     hifv_tasks.VLAImportData,
+     hsd_tasks.SDImportData2): (
         'If required, ASDMs are converted to measurement sets.'
     ),
     (hifa_tasks.ALMAAgentFlagger,
