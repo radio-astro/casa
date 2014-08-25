@@ -66,8 +66,8 @@ ImageProfileFitter::ImageProfileFitter(
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
 	_nLorentzSinglets(0), _nPLPCoeffs(0), _nLTPCoeffs(0),
 	_minGoodPoints(1), _results(Record()),
-	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
-	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
+	_nonPolyEstimates(), _goodAmpRange(),
+	_goodCenterRange(), _goodFWHMRange(),
 	_sigma(), _abscissaDivisor(1.0) {
 	*_getLog() << LogOrigin(_class, __func__);
     if (! estimatesFilename.empty()) {
@@ -738,7 +738,6 @@ void ImageProfileFitter::_fitProfiles(
 		}
 	}
 	Bool abscissaSet = abscissaValues.size() > 0;
-
 	PtrHolder<const PolynomialSpectralElement> polyEl;
 	if (_polyOrder >= 0) {
 		polyEl.set(new PolynomialSpectralElement(Vector<Double>(_polyOrder + 1, 0)));
@@ -859,9 +858,25 @@ void ImageProfileFitter::_setFitterElements(
 	uInt nOrigComps
 ) const {
 	if (_nonPolyEstimates.nelements() == 0) {
-		if (! fitter.setGaussianElements (_nGaussSinglets)) {
-			*_getLog() << "Unable to set gaussian elements"
-				<< LogIO::EXCEPTION;
+		ThrowIf(
+			! fitter.setGaussianElements (_nGaussSinglets),
+			"Unable to set gaussian elements"
+		);
+		uInt ng = fitter.getList(False).nelements();
+		if (ng != _nGaussSinglets) {
+			*this->_getLog() << LogOrigin(getClass(), __func__) << LogIO::WARN;
+			if (ng == 0) {
+				*this->_getLog() << "Unable to estimate "
+					<< "parameters for any Gaussian singlets. ";
+			}
+			else {
+				*this->_getLog() << "Only able to estimate parameters for " << ng
+					<< " Gaussian singlets. ";
+			}
+			*this->_getLog() << "If you really want "
+				<< _nGaussSinglets << " Gaussian singlets to be fit, "
+				<< "you should specify initial parameter estimates for all of them"
+				<< LogIO::POST;
 		}
 		if (polyEl.ptr()) {
 			fitter.addElement(*polyEl);
