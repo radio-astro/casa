@@ -230,6 +230,9 @@ def _get_task_description_for_class(task_cls):
     
     if task_cls is hifv.tasks.testBPdcals:
         return 'Initial test calibrations'
+    
+    if task_cls is hifv.tasks.Hanning:
+        return 'Hanning smoothing'
         
     if task_cls is hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters:
         return 'Flag bad deformatters'
@@ -6491,6 +6494,7 @@ renderer_map = {
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=True),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=True),
         hifv.tasks.testBPdcals                   : T2_4MDetailstestBPdcalsRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=True),
+        hifv.tasks.Hanning                       :T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hanning.html', always_rerender=True),
         hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=True),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=True),
         hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=True),
