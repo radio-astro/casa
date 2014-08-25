@@ -197,10 +197,11 @@ def _record_constructor_args(func, *args, **kwargs):
             key = 'vis'
         else:
             key = 'infiles'
+        remove_slash = lambda x: x.rstrip('/')
         if isinstance(remapped[key], str):
-            remapped[key] = os.path.basename(remapped[key])
+            remapped[key] = os.path.basename(remove_slash(remapped[key]))
         else:
-            remapped[key] = [os.path.basename(v) for v in remapped[key]]
+            remapped[key] = [os.path.basename(remove_slash(v)) for v in remapped[key]]
 
     task_args = ['%s=%r' % (k,v) for k,v in remapped.items()
                  if k not in ['self', 'context']
