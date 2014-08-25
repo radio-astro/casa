@@ -42,6 +42,18 @@ class ObservingRunReader(object):
                 observing_run.append(st)
         return observing_run
 
+    @staticmethod
+    def get_observing_run_for_sd2(st_files, ms_objects, st_ms_map=[]):
+        observing_run = domain.singledish.ScantableList()
+        for ms in ms_objects:
+            observing_run.add_measurement_set(ms)
+        LOG.info('measurement_sets=%s'%(observing_run.measurement_sets))
+        LOG.info('st_ms_map=%s'%(st_ms_map))
+        for (st_file,index) in zip(st_files,st_ms_map):
+            ms = observing_run.measurement_sets[index] if index >= 0 else None
+            st = ScantableReaderFromMS.get_scantable(st_file, ms)
+            observing_run.append(st)
+        return observing_run
 
 ### single dish specific
 class ScantableReader(object):
