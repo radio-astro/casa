@@ -41,7 +41,7 @@ class Raster(object):
         return self.ngap - 1
 
     @property
-    def nrow_raster(self):
+    def nraster(self):
         return self.ngap_raster - 1
 
     @property
@@ -110,7 +110,7 @@ class Raster(object):
         casalog.post('Raster Row/Raster Detection Summary')
         casalog.post(separator)
         headertitles = ['Filename', 'Nominal Spw for Detection', 'Nominal Pol for Detection', 'Number of Raster Rows', 'Number of Rasters']
-        headervalues = [self.infile, self.spw, self.pol, self.nrow, self.nrow_raster]
+        headervalues = [self.infile, self.spw, self.pol, self.nrow, self.nraster]
         headertemplate = '%-{digit}s: %s'.format(digit=max(map(len,headertitles)))
         for (t,v) in zip(headertitles, headervalues):
             ht = t
@@ -127,7 +127,7 @@ class Raster(object):
         casalog.post(separator)
         header = formatline('RASTER', 'TIMERANGE')
         casalog.post(header)
-        for i in xrange(self.nrow_raster):
+        for i in xrange(self.nraster):
             rows = self.select(rasterid=i)
             mjd_range_raster = self.mjd_range_raster
             daterangestring = astimerange(*self.mjd_range_raster)
@@ -141,8 +141,8 @@ class Raster(object):
 
         if (rowid is not None) and (rowid >= self.nrow):
             raise IndexError('row index %s is out of range (number of rows detected: %s)'%(rowid,self.nrow))
-        if (rasterid is not None) and (rasterid >= self.nrow_raster):
-            raise IndexError('row index %s is out of range (number of rasters detected: %s)'%(rasterid,self.nrow_raster))
+        if (rasterid is not None) and (rasterid >= self.nraster):
+            raise IndexError('row index %s is out of range (number of rasters detected: %s)'%(rasterid,self.nraster))
 
         tb.open(self.infile)
         tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
