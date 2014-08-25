@@ -877,7 +877,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         
         print 
 
-    def test034(self):
+    def stest034(self):
         print
         '''Plotms 34: Tests whether an iteration plot can be placed in the first slot of a 2x2 grid, when specifying a plot index out of range.'''
         self.plotfile_jpg = self.outputDir + "testPlot034.jpg"
@@ -897,6 +897,66 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         self._checkPlotFile(190000, self.plotfile_jpg)
         print 
+        
+    def stest035(self):
+        print
+        '''Plotms 34: See CAS-6844. Huge and fuzzy plot for large plot index'''
+        self.plotfile_jpg = self.outputDir + "testPlot035.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot0352.jpg"
+        print 'Writing to ', self.plotfile_jpg, ' ', self.plotfile2_jpg
+        if os.path.exists( self.plotfile_jpg):    
+            os.remove( self.plotfile_jpg)
+        if os.path.exists( self.plotfile2_jpg):    
+            os.remove( self.plotfile2_jpg)    
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        self.res = plotms(vis=self.ms, plotindex=0, 
+                          gridrows=3, gridcols=3,
+                          showgui=False, plotfile=self.plotfile_jpg)  
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        self._checkPlotFile(190000, self.plotfile_jpg)
+        
+        '''Now increase the plot index to something huge'''
+        self.res = plotms(vis=self.ms, plotindex=400, 
+                          gridrows=3, gridcols=3,
+                          showgui=False, plotfile=self.plotfile_jpg)
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', 
+                           plotindex=400, 
+                          gridrows=3, gridcols=3,
+                          showgui=True)
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot was not created')   
+        
+        print 'Plot file size is ', os.path.getsize(self.plotfile2_jpg)
+        self._checkPlotFile(190000, self.plotfile2_jpg)
+        print  
+        
+    def test036(self):
+        print
+        '''Plotms 36: See CAS-6857 Pixel symbol shape not selectable'''
+        self.plotfile_jpg = self.outputDir + "testPlot036.jpg"
+        
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):    
+            os.remove( self.plotfile_jpg)
+        
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+                          showgui=False,
+                          customsymbol=True, symbolshape='pixel',
+                          gridrows=1, gridcols=1)
+        
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        self._checkPlotFile(94000, self.plotfile_jpg)
+       
+        print            
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
