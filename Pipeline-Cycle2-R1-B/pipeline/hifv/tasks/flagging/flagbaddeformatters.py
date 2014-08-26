@@ -276,6 +276,8 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 job = casa_tasks.flagdata(**task_args)
                 
+                flaggingresult = self._executor.execute(job)
+                
                 return flaglist
                 
         #If the flag commands are not executed.
