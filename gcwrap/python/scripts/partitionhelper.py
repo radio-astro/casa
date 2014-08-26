@@ -641,6 +641,29 @@ def getMMSSpwIds(thisdict):
         
     return spwlist
 
+def getSubMSSpwIds(subms, thisdict):
+    
+    import numpy as np
+    tkeys = thisdict.keys()
+    aspws = np.array([],dtype='int32')
+    mysubms = os.path.basename(subms)
+    for k in tkeys:
+        if thisdict[k]['MS'] == mysubms:
+            # get the spwIds of this subMS
+            scanlist = thisdict[k]['scanId'].keys()
+            for s in scanlist:
+                spwids = thisdict[k]['scanId'][s]['spwIds']
+                aspws = np.append(aspws, spwids)
+            break
+                
+    # Sort spws  and remove duplicates
+    aspws.sort()
+    uniquespws = np.unique(aspws)
+    
+    # Try to return a list
+    spwlist = uniquespws.ravel().tolist()
+    return spwlist
+
 def getDiskUsage(msfile):
     """Return the size in bytes of an MS or MMS in disk.
     

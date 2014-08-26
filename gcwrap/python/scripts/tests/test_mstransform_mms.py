@@ -197,7 +197,7 @@ class test_mms_transformations(test_base):
 
         self.assertTrue((outtsh==flagtsh).all(), 'Tile shapes are different')
 
-    def test_output_mms1(self):
+    def test_channels_mms1(self):
         '''mstransform: create MMS with spw separation and channel selections'''
         self.outputms = "testmms1.mms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='0~4,5:1~10',createmms=True,
@@ -214,7 +214,7 @@ class test_mms_transformations(test_base):
         sepaxis = ph.axisType(self.outputms)
         self.assertEqual(sepaxis, 'spw', 'AxisType is not correctly written to output MMS')
 
-    def test_output_mms2(self):
+    def test_channels_mms2(self):
         '''mstransform: create MMS with spw/scan separation and channel selections'''
         self.outputms = "testmms2.mms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
@@ -239,7 +239,7 @@ class test_mms_transformations(test_base):
         sepaxis = ph.axisType(self.outputms)
         self.assertEqual(sepaxis, 'scan,spw', 'AxisType is not correctly written to output MMS')
 
-    def test_output_mms3(self):
+    def test_channels_mms3(self):
         '''mstransform: create MMS with scan separation and channel selections'''
         self.outputms = "testmms3.mms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='0:0~10,1:60~63',createmms=True,
@@ -257,7 +257,7 @@ class test_mms_transformations(test_base):
         sepaxis = ph.axisType(self.outputms)
         self.assertEqual(sepaxis, 'scan', 'AxisType is not correctly written to output MMS')
 
-    def test_output_mms4(self):
+    def test_channels_mms4(self):
         '''mstransform: verify spw sub-table consolidation in sequential'''
         self.outputms = "testmms4.mms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='3,5:10~20,7,11,13',createmms=True,
@@ -691,7 +691,6 @@ class test_mms_input(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-#        os.system('rm -rf '+ self.inputmms)
         os.system('rm -rf '+ self.outputms)
         
     def test_MMS1(self):
@@ -729,7 +728,7 @@ class test_mms_input(test_base):
         out_sepaxis = ph.axisType(self.outputms)
         self.assertEqual(in_sepaxis, out_sepaxis, 'AxisTypes from input and output MMS do not match')
 
-    def test_MMS2(self):
+    def test_split_MMS(self):
         '''mstransform: Split MMS in parallel'''
         # Create an MMS in the setup. It creates self.testmms
         self.createMMS(self.vis, axis='scan', spws='0,1')
@@ -767,7 +766,7 @@ class test_mms_input(test_base):
         self.outputms = 'monolithicMMS.mms'
         # Treat MMS as a monolithic MS and create an output MMS with different separation axis.
         mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data', combinespws=True)
-        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output is not an MMS')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
         
         # The separation axis should be copied to the output MMS
         in_sepaxis = ph.axisType(self.testmms)
@@ -786,13 +785,171 @@ class test_mms_input(test_base):
 
         self.outputms = "monocombspw11.ms"
         mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combinespws=True, spw='0~3')
-        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output is not an MMS')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
 
         ret = th.verifyMS(self.outputms, 1, 256, 0)
         self.assertTrue(ret[0],ret[1])
 
         listobs(self.outputms, listfile='list2.obs')
         self.assertTrue(os.path.exists('list2.obs'), 'Probable error in sub-table re-indexing')
+        
+    def test_timespan_scan_axis(self):
+        '''mstransform: timeaverage=True, timespan=scan, separationaxis=scan'''
+        self.createMMS(self.vis, axis='scan',spws='10')
+        self.outputms = "spanscan_scan.mms"
+        # subMSs do not have all scans (30,31). Treat MMS as a monolithic MS
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',timeaverage=True, 
+                    timebin='100s',timespan='scan')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
+        self.assertEqual(ph.axisType(self.outputms),'spw')
+        
+        mymsmd = msmdtool()
+        mymsmd.open(self.outputms)
+        t30 = mymsmd.exposuretime(30)['value']
+        t31 = mymsmd.exposuretime(31)['value']
+        mymsmd.close()
+        self.assertEqual(t30, 100)
+        self.assertEqual(t31, 79)
+        
+    def test_timespan_spw_axis(self):
+        '''mstransform: timeaverage=True, timespan=scan, separationaxis=spw'''
+        self.createMMS(self.vis, axis='spw',spws='1,3')
+        self.outputms = "spanscan_spw.mms"
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',timeaverage=True, 
+                    timebin='100s',timespan='scan')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
+        self.assertEqual(ph.axisType(self.outputms),'spw')
+        
+        mymsmd = msmdtool()
+        mymsmd.open(self.outputms)
+        t30 = mymsmd.exposuretime(30)['value']
+        t31 = mymsmd.exposuretime(31)['value']
+        mymsmd.close()
+        self.assertEqual(t30, 100)
+        self.assertEqual(t31, 79)
+        
+    def test_combspws_timespan_error(self):
+        '''mstransform: combinespws=True, timespan=scan axis=auto timebin=40s'''
+        self.createMMS(self.vis, axis='auto',spws='1,3')
+        self.outputms = "spanscan_comb.mms"
+        # combinespws is not possible. It should create and MS
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                    combinespws=True, timeaverage=True, timebin='40s',timespan='scan')
+        self.assertFalse(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MS')
+        mymsmd = msmdtool()
+        mymsmd.open(self.outputms)
+        nspw = mymsmd.nspw()
+        mymsmd.close()
+        self.assertEqual(nspw,1)
+        
+    def test_combspws_timespan(self):
+        '''mstransform: combinespws=True, timespan=scan axis=auto'''
+        self.createMMS(self.vis, axis='auto',spws='3')
+        self.outputms = "2transformations.mms"
+        # This should work. 
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                        combinespws=True, timeaverage=True, timebin='40s',timespan='scan')
+        self.assertFalse(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MS')
+      
+    def test_combspws_timespan_fail(self):
+        '''mstransform: combinespws=True, timespan=scan axis=auto timebin=200s'''
+        self.createMMS(self.vis, axis='auto',spws='3')
+        self.outputms = "errormms.mms"
+        # Scans are shorter than timebin. Create an MS
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                    combinespws=True, timeaverage=True, timebin='200s',timespan='scan')
+        self.assertFalse(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MS')
+        mymsmd = msmdtool()
+        mymsmd.open(self.outputms)
+        nscan = mymsmd.nscans()
+        exposure = mymsmd.exposuretime(30)['value']
+        mymsmd.close()
+        self.assertEqual(nscan,1)
+        self.assertEqual(exposure, 179)
+
+    def test_combspws_timespan_spw_axis(self):
+        '''mstransform: combinespws=True, timespan=scan axis=spw'''
+        self.createMMS(self.vis, axis='spw',scans='30',spws='10')
+        self.outputms = "spwaxisok.mms"
+        # This should work
+        try:
+            mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                        combinespws=True, timeaverage=True, timebin='20s',timespan='scan')
+            self.assertTrue((ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS'))
+        
+        except Exception, instance:
+            print 'This error should have not happened %s'%instance
+        
+    def test_combspws_timespan_spw_axis_error(self):
+        '''mstransform: combinespws=True, timespan=scan axis=spw'''
+        self.createMMS(self.vis, axis='spw',scans='30',spws='10,11')
+        self.outputms = "spwaxiserror.mms"
+        # subMSs do not have all spws. Create an MS
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                    combinespws=True, timeaverage=True, timebin='20s',timespan='scan')
+        self.assertFalse(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MS')
+        mymsmd = msmdtool()
+        mymsmd.open(self.outputms)
+        nspw = mymsmd.nspw()
+        mymsmd.close()
+        self.assertEqual(nspw,1)
+        
+    def test_combspws_timespan_scan_axis(self):
+        '''mstransform: combinespws=True, timespan=scan axis=scan'''
+        self.createMMS(self.vis, axis='scan',spws='0')
+        self.outputms = "scanaxiserror.mms"
+        # subMSs do not have all scans. Create an MS.
+        try:
+            mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data',
+                        combinespws=True, timeaverage=True, timebin='20s',timespan='scan')
+            self.assertTrue((ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS'))
+        
+        except Exception, instance:
+            print 'Expected error: %s'%instance
+
+
+class test_mms_output(test_base):
+    '''Tests for outputMMS and transformations'''
+    
+    def setUp(self):
+        self.setUp_4ants()
+
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_output_mms1(self):
+        '''mstransform: combinespws=True, output axis=auto. Expect error.'''
+        self.outputms = 'outmms1.mms'
+        try:
+            mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', createmms=True, combinespws=True, spw='12,13', scan='31')
+        except Exception, instance:
+            print 'Expected error: %s'%instance
+
+    def test_output_mms2(self):
+        '''mstransform: combinespws=True, output axis=spw. Expect error.'''
+        self.outputms = 'outmms2.mms'
+        try:
+            mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', createmms=True, combinespws=True, spw='12,13',
+                        separationaxis='scan')
+        except Exception, instance:
+            print 'Expected error: %s'%instance
+
+    def test_output_mms3(self):
+        '''mstransform: timeaverage=True, timespan=scan, output axis=auto.'''
+        self.outputms = 'outmms3.mms'
+        # Just give a WARNING
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='data', createmms=True, timeaverage=True, spw='1,3',
+                        separationaxis='auto', timebin='100s',timespan='scan')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
+
+    def test_output_mms4(self):
+        '''mstransform: timeaverage=True, output axis=scan, timespan=scan'''
+        self.outputms = 'outmms4.mms'
+        # Just give a WARNING
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='corrected', createmms=True, timeaverage=True, spw='12,13',
+                    separationaxis='scan',timebin='10s',timespan='scan')
+        self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms),'Output should be an MMS')
 
 # Cleanup class
 class Cleanup(test_base):
@@ -816,4 +973,5 @@ def suite():
             test_mms_parallel,
             test_mms_spw_poln,
             test_mms_input,
+            test_mms_output,
             Cleanup]

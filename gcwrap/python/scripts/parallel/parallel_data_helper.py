@@ -164,97 +164,217 @@ class ParallelDataHelper(ParallelTaskHelper):
            heuristics associated with the input MMS and the several
            transformations that the task does.
            The parameters are validated based on the client task.
-           This method must use the local class self.__args parameters
+           This method must use the self.__args parameters from the local class.
+           
+           This method will determine if the task can process the MMS in parallel
+           or not.
            
            It returns a dictionary of the following:
-               retval{'status':True, 'axis':''} in case of success
-           in case of failure, it sets status to False and writes 
+            retval{'status': True,  'axis':''}         --> can run in parallel        
+            retval{'status': False, 'axis':'value'}    --> treat MMS as monolithic MS, set axis of output MMS
+            retval{'status': False, 'axis':''}         --> treat MMS as monolithic MS, create output MS
+               
            the new axis, which can be: scan,spw or auto.
            
-        """
-
-        # Return dictionary
-        # retval = {}
-        # retval['status'] = True or False
-        # retval['axis'] = '' or 'scan' or 'spw' or 'auto'
-        
+        """                
         # Return dictionary
         retval = {}
         retval['status'] = True
         retval['axis'] = ''
         
-        # Get the separationaxis of input MMS. TODO: Replace by ms tool method later
+        # Get the separationaxis of input MMS. 
         sepaxis = ph.axisType(self.__args['vis'])
         if sepaxis.isspace() or sepaxis.__len__() == 0:
             sepaxis = 'unknown'
-                    
-        n = 0
+        elif sepaxis == 'scan,spw':
+            sepaxis = 'auto'
+            
+        #Get list of subMSs in MMS
+        subMSList = ParallelTaskHelper.getReferencedMSs(self.__args['vis'])
+        
         if self.__taskname == "mstransform":
-            if sepaxis != 'scan' and (self.__args['combinespws'] == True or self.__args['nspw'] > 1):
-                # Check if the spw selection is contained in all subMSs
-                spwsel = self.__args['spw']
-                subMSList = ParallelTaskHelper.getReferencedMSs(self.__args['vis'])
-                for ms in subMSList:
-                    if not self.__spwIsSelected(ms, spw=spwsel):
-                        casalog.post('Cannot combine or separate SPWs in parallel when input separation axis is %s '\
-                             %sepaxis, 'WARN')
-                        casalog.post('Will process input MMS as a monolithic MS', 'WARN')                
+            
+            if (self.__args['combinespws'] == True or self.__args['nspw'] > 1) and \
+                (self.__args['timeaverage'] == False):
+                spwsel = self.__getSpwIds(self.__args['vis'], self.__args['spw'])                    
+                # Get dictionary with spwids of all subMS in the MMS
+                spwdict = ph.getScanSpwSummary(subMSList)                
+                # For each subMS, check if it has the spw selection
+                for subms in subMSList:
+                    subms_spwids = ph.getSubMSSpwIds(subms, spwdict)
+                    slist = map(str,subms_spwids)
+                    print 'subms=%s, slist=%s'%(subms,slist)
+                    # Check if the subms contains all the selected spws
+                    if not self.__isSpwContained(spwsel, slist):
+                        casalog.post('Cannot combine or separate spws in parallel because the subMSs do not contain all the selected spws',\
+                              'WARN')
                         # Set the new separation axis for the output
-                        n += 1
                         retval['status'] = False
                         retval['axis'] = 'scan'
                         break
-    
-            if (self.__args['timeaverage'] == True and self.__args['timespan'] == 'scan' and
-                sepaxis != 'spw'):
-                casalog.post('Cannot process MMS in parallel when timespan=\'scan\' and input separation axis is %s, '\
-                             %sepaxis, 'WARN')
-                casalog.post('Will process input MMS as a monolithic MS', 'WARN')
-                # Set the new separation axis for the output
-                n += 1
-                retval['status'] = False
-                retval['axis'] = 'spw'
+                    
+            elif (self.__args['timeaverage'] == True and self.__args['timespan'] == 'scan') and \
+                (self.__args['combinespws'] == False and self.__args['nspw'] == 1):
+                # Get the value of timebin as a float
+                timebin = self.__args['timebin']
+                tsec = qa.quantity(timebin,'s')['value']
+                scansel = self.__getScanIds(self.__args['vis'], self.__args['scan'])
+                # For each subms, check if scans length is <=  timebin
+                for subms in subMSList:
+                    if not self.__isScanContained(subms, scansel, tsec):
+                        casalog.post('Cannot process MMS in parallel when timespan=\'scan\' because the subMSs do not contain all the selected scans',\
+                                     'WARN')
+                        # Set the new separation axis for the output
+                        retval['status'] = False
+                        retval['axis'] = 'spw'
+                        break
                 
-            # when there are two transformations
-            if n > 1:
-                retval['axis'] = 'auto'
-                
+            # Two transformations are requested.
+            elif (self.__args['combinespws'] == True or self.__args['nspw'] > 1) and \
+                (self.__args['timeaverage'] == True and self.__args['timespan'] == 'scan'):
+                # Check spws and scans in subMSs
+                spwsel = self.__getSpwIds(self.__args['vis'], self.__args['spw'])
+                spwdict = ph.getScanSpwSummary(subMSList) 
+                scansel = self.__getScanIds(self.__args['vis'], self.__args['scan'])
+                timebin = self.__args['timebin']
+                tsec = qa.quantity(timebin,'s')['value']
+                for subms in subMSList:
+                    subms_spwids = ph.getSubMSSpwIds(subms, spwdict)
+                    slist = map(str,subms_spwids)
+                    if self.__isSpwContained(spwsel, slist):
+                        if not self.__isScanContained(subms, scansel, tsec):
+                            casalog.post('The subMSs of input MMS do not contain the necessary scans','WARN')
+                            retval['status'] = False
+                            retval['axis'] = ''
+                            break                        
+                    else:
+                        casalog.post('The subMSs of input MMS do not contain the necessary spws','WARN')
+                        retval['status'] = False
+                        retval['axis'] = ''
+                        break
+                                                
+                                    
         elif self.__taskname == "split2":                            
             if (sepaxis != 'spw' and self.__args['combine'] == 'scan'):
-                casalog.post("Unable to process MMS in parallel when combine=\'scan\' and input separation axis is %s."
-                             %sepaxis, 'ERROR')                          
-                casalog.post("Please use task mstransform in this case.",'ERROR')
-                retval['status'] = False
+                scansel = self.__getScanIds(self.__args['vis'], self.__args['scan'])
+                timebin = self.__args['timebin']
+                tsec = qa.quantity(timebin,'s')['value']
+                for subms in subMSList:
+                    if not self.__isScanContained(subms, scansel, tsec):
+                        casalog.post('Cannot process MMS in parallel when combine=\'scan\' because the subMSs do not contain all the selected scans',\
+                                     'WARN')
+                        casalog.post("Please set keepmms to False or use task mstransform in this case.",'ERROR')
+                        retval['status'] = False
+                        retval['axis'] = ''
+                        break
 
         return retval
 
-    def __spwIsSelected(self, vis, spw):
-        """ Return True if the selection is True or False otherwise. """
+#    @dump_args
+    def __getSpwIds(self, msfile, spwsel):
+        """Get the spw IDs of the spw selection
+        Keyword arguments
+            msfile    -- MS or MMS name
+            spwsel    -- spw selection
+            
+            It will remove the channels from the selection and return only the spw ids.
+        """
+        myspwsel = spwsel
+        if myspwsel.isspace() or myspwsel.__len__() == 0:
+            myspwsel = '*'
+    
+        spwlist = []
+        msTool = mstool()
+        try:
+            seldict = msTool.msseltoindex(vis=msfile,spw=myspwsel)
+        except:
+            return spwlist
+    
+        spwids = list(set(seldict['spw']))
+        spwlist = map(str,spwids)
+    
+        del msTool
+        return spwlist
+                    
+#    @dump_args
+    def __isSpwContained(self, spwlist, subms_spws):
+        """ Return True if the subMS contains the spw selection or False otherwise. 
+        Keyword arguments:
+            spwlist    -- list of selected spwids in MMS, e.g. ['0','1']. Do not include channels
+            subms_spws -- list of spwids in subMS
+        """
         
         isSelected = False
-                
-        mysel = {}
-        if spw.isspace() or spw.__len__() == 0:
-            # TODO: do this later!!!!!
-            spw = '*'
-            return False
-        mysel['spw'] = spw
-        
-        msTool = mstool()
-        
-        try:
-            try:
-                msTool.open(vis)    
-                isSelected = msTool.msselect(mysel, onlyparse=True)
-            except:
-                isSelected = False
-        finally:
-            msTool.close()
-            del msTool
-        
+                                
+        # Check if the selected spws are in the subMS
+        if set(spwlist) <= set(subms_spws):
+            isSelected = True
+                        
         return isSelected
 
-#    @dump_args
+    def __getScanIds(self, msfile, scansel):
+        """ Get the scan IDs of the scan selection.
+        Keyword arguments:
+        msfile    -- MS or MMS name
+        scansel   -- scan selection
+        
+        Returns a list of the scan IDs (list of strings) or [] in case of failure.
+        """
+        scanlist = []
+        if scansel.isspace() or scansel.__len__() == 0:
+            # Get all the scan ids
+            mymsmd = msmdtool()
+            mymsmd.open(msfile)
+            scans = mymsmd.scannumbers()
+            mymsmd.close()
+            scanlist = map(str,scans)
+        else:
+            try:            
+                myms.open(msfile)
+                myms.msselect({'scan':scansel})
+                scans = myms.msselectedindices()['scan']
+                scanlist = map(str,scans)
+                myms.close()
+            except:
+                myms.close()
+                scanlist = []
+            
+        return scanlist
+        
+    def __isScanContained(self, subms, scanlist, tbin):
+            """ Check if subMS contains all the selected scans
+                and if the duration of the subMS scans is larger or 
+                equal to the timebin.
+                
+            Keyword arguments:
+            subms      -- subMS name
+            scanlist   -- list with selected scans for the MMS
+            tbin       -- timebin as a Float
+            
+            Returns True on success, False otherwise.
+            """
+            isContained = False                            
+            
+            mymsmd = msmdtool()
+            mymsmd.open(subms)
+            
+            # Check if subms scans contain all selected scans
+            hasScans = False
+            s = mymsmd.scannumbers()
+            subms_scans = map(str, s)
+            if set(scanlist) <= set(subms_scans):
+                hasScans = True
+                
+            if hasScans:
+                t = mymsmd.timesforscans(s)
+                mymsmd.close()
+                t_range = t.max() - t.min()
+            
+                if t_range >= tbin:  
+                    isContained = True
+                
+            return isContained
+                
     def validateOutputParams(self):
         """ This method should run before setting up the cluster to work all the
            heuristics associated with the separationaxis and the several
@@ -273,14 +393,11 @@ class ParallelDataHelper(ParallelTaskHelper):
         # Task mstransform
         if self.__taskname == "mstransform":
             if sepaxis != 'scan' and (self.__args['combinespws'] == True or self.__args['nspw'] > 1):
-                if self.__args['combinespws'] == True:
-                    casalog.post('Cannot partition MS per spw or scan/spw when combinespws = True or nspw > 1', 'WARN')
-                    retval = 0
+                casalog.post('Cannot partition MS per spw or auto when combinespws = True or nspw > 1', 'WARN')
+                retval = 0
                         
             elif sepaxis != 'spw' and self.__args['timespan'] == 'scan':
-                    casalog.post('Cannot partition MS per scan or scan/spw when timespan=\'scan\'', 'WARN')
-                    self.__args['timespan'] = ''
-                    retval = 0
+                    casalog.post('Time averaging across scans may lead to wrong results when separation axis is not spw', 'WARN')
             
         return retval
 
@@ -1236,13 +1353,15 @@ class ParallelDataHelper(ParallelTaskHelper):
                     casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
                     raise
 
-        if nFailures > 0:
+        if len(nFailures) > 0:
+            casalog.post('%s subMSs failed to be created'%nFailures)
             # need to rename/re-index the subMSs
             newList = copy.deepcopy(subMSList)
             idx = 0
             for subms in newList:
                 suffix = re.findall(r".\d{4}.ms",subms)
-                newms = subms.rstrip(suffix[-1])
+#                newms = subms.rpartition(suffix[-1])[0]   
+                newms = subms[:-len(suffix[-1])]
                 newms = newms+'.%04d.ms'%idx
                 os.rename(subms,newms)
                 newList[idx] = newms

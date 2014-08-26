@@ -75,6 +75,7 @@ def mstransform(
     pdh = ParallelDataHelper('mstransform', locals())
     
     # When dealing with MMS, process in parallel or sequential
+    # disableparallel is a hidden parameter. Only for debugging purposes!
     if disableparallel:
         pdh.bypassParallelProcessing(1)
     else:
@@ -89,19 +90,31 @@ def mstransform(
 
     # Process the input Multi-MS
     if ParallelDataHelper.isParallelMS(vis) == True and monolithic_processing == False:
+        '''
+        retval{'status': True,  'axis':''}         --> can run in parallel        
+        retval{'status': False, 'axis':'value'}    --> treat MMS as monolithic MS, set new axis for output MMS
+        retval{'status': False, 'axis':''}         --> treat MMS as monolithic MS, create an output MS
+        '''
         
-        # MMS is processed as monolithic MS. 
         retval = pdh.validateInputParams()
-        if not retval['status']:
+        # Cannot create an output MMS.
+        if retval['status'] == False and retval['axis'] == '':
+            casalog.post('Cannot process MMS with the requested transformations','WARN')
+            casalog.post('Use task listpartition to see the contents of the MMS')
+            casalog.post('Will create an output MS','WARN')
+            createmms = False
+            
+        # MMS is processed as monolithic MS. 
+        elif retval['status'] == False and retval['axis'] != '':
             createmms = True
             pdh.override__args('createmms', True)
-            # TODO: implement a time separation axis
             pdh.override__args('monolithic_processing', True)
-            if retval['axis'] != '':
-                pdh.override__args('separationaxis', retval['axis'])
-                casalog.post("Will create an output MMS with separation axis \'%s\'"%retval['axis'],'WARN')
+            separationaxis = retval['axis']
+            pdh.override__args('separationaxis', retval['axis'])
+            casalog.post("Will process the input MMS as a monolithic MS",'WARN')
+            casalog.post("Will create an output MMS with separation axis \'%s\'"%retval['axis'],'WARN')
             
-        # MMS in parallel
+        # MMS is processed in parallel
         else:
             createmms = False
             try:
@@ -117,10 +130,10 @@ def mstransform(
     # Create an output Multi-MS
     if createmms == True:
         
-         # Check the heuristics of separationaxis and the requested transformations
+        # Check the heuristics of separationaxis and the requested transformations
         pval = pdh.validateOutputParams()
         if pval == 0:
-            raise Exception, 'Cannot partition using separationaxis=%s with some of the requested transformations.'\
+            raise Exception, 'Cannot create MMS using separationaxis=%s with some of the requested transformations.'\
                             %separationaxis
                              
         try:

@@ -38,7 +38,6 @@ Mapping of parameters between split-mstransform and cvel-mstransform.
     timebin             timeaverage=True, timebin                        perform time averaging
     combine             timeaverage=True, timespan                       time averaging with time spanning
     keepflags           keepflags                                        keep or drop flags in output
-    keepmms             createmms=True                                   create an output Multi-MS
 
 \end{verbatim}
 
@@ -102,36 +101,84 @@ split.
   will select 100 channels from spw 0 and all of spw 3 and 5
 \end{verbatim}
 
+\subsection{Multi-MS Structure}
+%% describe here how a multi-MS is layed in disk etc
+
 \subsection{Partition and Multi-MS support}
-From CASA 4.1.0 onwards, task partition uses the MSTransform framework.
-Task mstransform (or partition) can partition an MS to create an MMS using
-different separation axes. The default is to separate using both scan and spw axes.
-It supports channel selections and re-indexing of sub-tables. 
 
-The user has the option to create an output MMS in parallel (using simple_cluster) or
-in sequence. Set the parameter {\it parallel} to True to use simple_cluster.
-Note that for small MSs, we recommend to create MMSs in sequential, as the overhead of creating
-a cluster and managing the engines can become significant.
+\subsubsection{Input Multi-MS Processing}
+MStransform will process an input MMS in parallel whenever possible. Each SubMS
+of the MMS will be processed in a separate engine and the results will be
+post-processed at the end to create an output MMS.
 
-The combination of some transformations and createmms=True is not possible in
-some cases, depending on the choice of {\it separationaxis}. The following table summarizes this:
+Naturally, some transformations available in mstransform require more care
+when the user first partition the MS. If one wants to do a combination of
+spws by setting {\it combinespws=True} in mstransform, the input 
+MMS needs to contain all the selected spws in each of the SubMSs or the
+processing will fail. For this, one may set the initial {\it separationaxis}
+to {\bf scan} or use the default {\bf auto} with a proper {\it numsubms} set so
+that each SubMS in the MMS is self-contained with all the necessary spws
+for the combination.
+
+The task will check if the subMSs contain all the selected spws when
+{\it combinespws=True} and if not, it will issue a warning and process the input
+MMS as a monolithic MS. In this case, the separation axis of the output MMS will
+be set to {\bf scan}.
+
+A similar case happens when the separation axis of the input MMS is per scan
+and the user asks to do time averaging with time spanning across scans. If the
+individual SubMSs are not self-contained of the necessary scans and the
+duration of the scans is shorter than the given timebin, the spanning will not
+be possible. In this case, the task will process the input MMS as a monolithic
+MS and will set the axis of the output MMS to {\bf spw}.
+
+It is important that the user sets the separation axis correctly when first
+partitioning the MS. See the table below for the heuristic details when
+processing an {\bf input MMS}.
 
 \begin{verbatim}
 
-separationaxis  combinespws  nspw > 1  regridms  chanaverage  timespan='scan' hanning
---------------------------------------------------------------------------------------
-spw                NO         NO         YES        YES           YES           YES
-scan               YES        YES        YES        YES           YES*          YES
-both               NO         NO         YES        YES           YES*          YES
+input separationaxis   combinespws   nspw > 1   timespan='scan'
+ -----------------------------------------------------------
+ spw                    NO            NO         YES        
+ scan                   YES           YES        NO           
+ auto                   YES*          YES*       YES**               
+                
 
-* --> it can partition per scan or scan,spw but cannot let timebins span changes
-in scan when timeaverage=True. The task will reset timespan to None in these cases.
+*  --> it can process in parallel only if each SubMS contains
+all the selected spws.
+** --> it can process in parallel only if each SubMS contains
+all the selected scans and the scans duration is >= timebin.
+\end{verbatim}
+
+\subsubsection{Output Multi-MS Creation}
+Task mstransform (or partition) can partition a normal MS to create an output
+MMS. This is controlled by the parameter {\it createmms}, which only has effect
+if the input is an MS. It can partition the MS using different separation axes.
+The default is to separate using an auto mode that first separates per scans
+then per spws. It supports channel selections and re-indexing of sub-tables. 
+
+As explained in the previous section, some transformations require
+that either selected spws or scans are contained in each SubMS of the MMS
+in order to work. The combination of some transformations and {\it
+createmms=True} is not possible in some cases, depending on the choice of {\it
+separationaxis} and {\it numsubms}. The following table summarizes this:
+
+\begin{verbatim}
+
+output separationaxis   combinespws  nspw > 1  timespan='scan'
+-----------------------------------------------------------------------------
+spw                       NO          NO         YES    
+scan                      YES         YES        NO*   
+auto                      NO          NO         NO*   
+
+** --> this may lead to wrong results and will issue a WARNING.
 
 \end{verbatim}
 
-Depending on the structure of the data, some partitions will have empty data.
-For example, if an MS has scan=1 with spw=0,1 and scan=2 only with spw=0. If
-you run partition with separationaxis='both', it will try to create the
+Depending on the structure of the data, some subMSs will have empty data.
+For example, if an MS has scan=1 with spw=0,1 and scan=2 with spw=0. If
+you run partition with separationaxis='auto', it will try to create the
 following group of subMSs.
 
 \begin{verbatim}
@@ -145,30 +192,25 @@ subMS.0003.ms    2         1  -----> NULL selection
 
 \end{verbatim}
 
-Obviously, subMS.0003.ms has not data in scan=2 spw=1, so it would naturally
+Obviously, subMS.0003.ms has no data in scan=2 spw=1, so it will naturally
 issue a NULL MS Selection exception. The partition/mstransform task tries to
 pre-select the subMSs before actually sending them to the engines and catchs 
 this type of NULL selections. It issues a warning for these cases and continues.
 The output MMS of the above example would contain 3 subMSs, running from 0000
 to 0002.
 
-You can use the task listpartition to verify the contents of an MMS.
+You can use the task {\it listpartition} to verify the contents of an MMS.
 Listpartition is similar to listobs and can also save the output to a file
 or return it as a Python dictionary.
 
 \begin{verbatim}
-    mstransform('uid.ms', outputvis='myout.mms', createmms=True, separationaxis='spw', datacolumn='all', parallel=False)
+    mstransform('uid.ms', outputvis='myout.mms', createmms=True, separationaxis='spw', datacolumn='all')
     
     or
     
-    partition('uid.ms', outputvis='myout.mms', separationaxis='spw', datacolumn='all', parallel=False)
+    partition('uid.ms', outputvis='myout.mms', separationaxis='spw', datacolumn='all')
     
 \end{verbatim}
-
-NOTE: the default values of partition and mstransform are different.
-By default, partition will create an MMS using simple_cluster in parallel.
-On the other hand, the default of mstransform is createmms=False and
-parallel=False.
 
 \subsection{Combination of spectral windows}
 Task mstransform can combine spectral windows independently or

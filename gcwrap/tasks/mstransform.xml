@@ -411,7 +411,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     outputvis -- Name of output visibility file or Multi-MS
         default: ''; example: outputvis='ngc5921.mms'
 
-    createmms -- Create an output multi-MS from an input MS.
+    createmms -- Create an output Multi-MS from an input MS.
         default: False
 
         This parameter only has effect if set to True, when it will try
@@ -427,14 +427,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         some cases, depending on the choice of separationaxis. The following table 
         summarizes this:
 
-        separationaxis  combinespws  nspw > 1  regridms  chanaverage  timespan='scan' hanning
-        --------------------------------------------------------------------------------------
-        spw                NO         NO         YES        YES           YES           YES
-        scan               YES        YES        YES        YES           YES*          YES
-        scan,spw           NO         NO         YES        YES           YES*          YES
+        separationaxis  combinespws  nspw > 1  timespan='scan' 
+        -------------------------------------------------------
+        spw                NO         NO         YES          
+        scan               YES        YES        NO*          
+        auto               NO         NO         NO*          
 
-        * --> it can partition per scan or scan,spw (auto), but cannot let timebins span across scans
-              when timeaverage=True. The task will reset timespan to None in these cases.
+        * --> it will issue a WARNING that this may lead to wrong results!
         
 
         separationaxis -- Axis to do parallelization across. 
@@ -703,7 +702,52 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           that can be included in an average. (int)
             default: 0.0 (given in meters)
 
+    
+    ------ Multi-MS Heuristics ---------
+    
+    ** Input Multi-MS (MMS) **
+    
+    MStransform will process an input MMS in parallel whenever possible. Each SubMS
+    of the MMS will be processed in a separate engine and the results will be post-processed 
+    at the end to create an output MMS.
 
+    Naturally, some transformations available in mstransform require more care
+    when the user first partition the MS. If one wants to do a combination of
+    spws by setting combinespws=True in mstransform, the input MMS needs to contain all the 
+    selected spws in each of the SubMSs or the processing will fail. For this, one may set 
+    the initial separationaxis to scan or use the default auto with a proper numsubms set so
+    that each SubMS in the MMS is self-contained with all the necessary spws
+    for the combination.
+
+    The task will check if the subMSs contain all the selected spws when
+    combinespws=True and if not, it will issue a warning and process the input
+    MMS as a monolithic MS. In this case, the separation axis of the output MMS will
+    be set to scan.
+
+    A similar case happens when the separation axis of the input MMS is per scan
+    and the user asks to do time averaging with time spanning across scans (timespan='scan'). 
+    If the individual SubMSs are not self-contained of the necessary scans and the
+    duration of the scans is shorter than the given timebin, the spanning will not
+    be possible. In this case, the task will process the input MMS as a monolithic
+    MS and will set the axis of the output MMS to spw.
+    
+    It is important that the user sets the separation axis correctly when first
+    partitioning the MS and before running these transformation in mstransform. See the 
+    table below for the heuristic details when processing an input MMS.
+            
+    input separationaxis   combinespws   nspw > 1   timespan='scan'
+     -----------------------------------------------------------
+     spw                    NO            NO         YES        
+     scan                   YES           YES        NO           
+     auto                   YES*          YES*       YES**               
+                    
+    
+    *  --> it can process in parallel only if each SubMS contains all the selected spws.
+    ** --> it can process in parallel only if each SubMS contains all the selected scans and the 
+           scans duration is >= timebin.
+
+        
+    
 ------ EXAMPLES ------
 	
 More documentation on mstransform can be found here:

@@ -1867,6 +1867,7 @@ class test_base(unittest.TestCase):
         
         if os.path.exists(self.testmms):
             os.system("rm -rf " + self.testmms)
+            os.system("rm -rf " + self.testmms +'.flagversions')
             
         print "................. Creating test MMS .................."
         partition(vis=msfile, outputvis=self.testmms, separationaxis=axis, scan=scans, spw=spws)
@@ -1968,6 +1969,36 @@ class splitTests(test_base):
         ret = th.verifyMS(self.outputms, 1, 1, 0, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])
        
+    def test_combinescan_mms(self):
+        '''split2: combine=scan with axis=scan'''
+        self.createMMS(self.vis, axis='scan', spws='0')
+        
+        self.outputms = "split_combscan_spw.mms"
+        # This should not work because scan length is 89s
+        try:
+            split2(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
+                    timebin='100s')
+            self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
+        except Exception, instance:
+            print 'Expected error!'
+
+    def test_combinescan_ms(self):
+        '''split2: combine=scan with axis=scan, keepmms=false'''
+        self.createMMS(self.vis, axis='scan', spws='0')
+        
+        self.outputms = "split_combscan_spw.ms"
+        split2(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
+                    timebin='100s', keepmms=False)
+        self.assertFalse(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MS')
+            
+    def test_combinescan_spw_mms(self):
+        '''split2: combine=scan with axis=spw'''
+        self.createMMS(self.vis, axis='spw', scans='31',spws='0,3,4')
+        
+        self.outputms = "split_combscan.mms"
+        split2(vis=self.testmms, outputvis=self.outputms, datacolumn='data',combine='scan',
+                    timebin='100s')
+        self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output should be an MMS')
        
         
 class splitSpwPoln(test_base):
