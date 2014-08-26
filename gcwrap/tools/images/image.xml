@@ -8873,14 +8873,15 @@ print ia.brightnessunit()
 <returns type="bool">T or fail</returns>
 <description>
 
-This function replaces the Coordinate System in the image. Coordinate
-System are stored in and manipulated with the
-<link anchor="images:coordsys">Coordsys</link> \tool.  The Coordinate System can be
+This function replaces the coordinate system in the image. It is supported for both
+float and complex valued images. Coordinate systems are manipulated with the
+<link anchor="images:coordsys">cs</link> \tool.  The coordinate system can be
 recovered from an image via the <link anchor="images:coordsys">coordsys</link>
 function.
 
-Note that changing the Coordsys \tool\ has no effect on the original
-image, until it is replaced with this function.
+Note that changing the cs \tool\ has no effect on the original
+image, until it is replaced with this function; the value returned
+by coordsys() is a copy of, not a reference to, the image's coordinate system.
 
 </description>
 

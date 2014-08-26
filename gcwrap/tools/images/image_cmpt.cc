@@ -4014,8 +4014,9 @@ bool image::setcoordsys(const ::casac::record& csys) {
 	bool rstat(false);
 	try {
 		_log << _ORIGIN;
-		if (detached())
+		if (detached()) {
 			return rstat;
+		}
 
 		Record *coordinates = toRecord(csys);
 		rstat = _image->setcoordsys(*coordinates);
