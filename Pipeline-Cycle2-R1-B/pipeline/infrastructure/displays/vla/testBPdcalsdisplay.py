@@ -126,7 +126,7 @@ class testDelaysPerAntennaChart(object):
         
         plots = []
         
-        LOG.info("Plotting test delays")
+        
     
 	#nplots=int(numAntenna/3)
 	
@@ -151,6 +151,7 @@ class testDelaysPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
+	            LOG.info("Plotting test delays")
 	            casa.plotcal(caltable='testdelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
@@ -214,7 +215,7 @@ class ampGainPerAntennaChart(object):
         
         plots = []
         
-        LOG.info("Plotting amplitude gain solutions")
+        
     
 	nplots=int(numAntenna/3)
 	
@@ -250,6 +251,7 @@ class ampGainPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
+	            LOG.info("Plotting amplitude gain solutions")
 	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False, plotsymbol='o',plotcolor='blue',markersize=5.0,fontsize=10.0,showgui=False,figfile=figfile)
 	            #plots.append(figfile)
 
@@ -315,7 +317,7 @@ class phaseGainPerAntennaChart(object):
         
         plots = []
         
-        LOG.info("Plotting phase gain solutions")
+        
     
 	nplots=int(numAntenna/3)
 	
@@ -350,6 +352,7 @@ class phaseGainPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
+	            LOG.info("Plotting phase gain solutions")
 	            casa.plotcal(caltable='testBPdinitialgain.g', xaxis='time', yaxis='phase', poln='', field='',  antenna=antPlot, spw='', timerange='',        subplot=111, overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-180,180], showflags=False, plotsymbol='o-',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
@@ -416,7 +419,7 @@ class bpSolAmpPerAntennaChart(object):
         
         plots = []
         
-        LOG.info("Plotting amp bandpass solutions")
+        
     
 	nplots=int(numAntenna/3)
 	
@@ -479,6 +482,7 @@ class bpSolAmpPerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
+	            LOG.info("Plotting amp bandpass solutions")
 	            casa.plotcal(caltable='testBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile)
 	            #plots.append(figfile)
 
@@ -543,7 +547,7 @@ class bpSolPhasePerAntennaChart(object):
         
         plots = []
         
-        LOG.info("Plotting phase bandpass solutions")
+        
     
 	nplots=int(numAntenna/3)
 	
@@ -606,6 +610,7 @@ class bpSolPhasePerAntennaChart(object):
 	
 	    if not os.path.exists(figfile):
 	        try:
+	            LOG.info("Plotting phase bandpass solutions")
 	            casa.plotcal(caltable='testBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile)
 	            #plots.append(figfile)
 
