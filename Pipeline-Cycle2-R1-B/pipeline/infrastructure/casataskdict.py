@@ -126,7 +126,7 @@ classToCASATask = {
     hsd_tasks.SDReduction : 'hsd_reduce',
     #VLA tasks
     hifv_tasks.VLAImportData       : 'hifv_importdata',
-    hifv_tasks.Hanning             : 'hifv_hanning'
+    hifv_tasks.Hanning             : 'hifv_hanning',
     hifv_tasks.FlagDeterVLA        : 'hifv_flagdata',
     hifv_tasks.SetModel            : 'hifv_setmodel',
     hifv_tasks.VLASetjy            : 'hifv_vlasetjy',
