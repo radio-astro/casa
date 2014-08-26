@@ -51,6 +51,7 @@ CasaTaskDict = {
                    'hifa_wvrgcal'      : 'Wvrgcal',
                    'hifa_wvrgcalflag'  : 'Wvrgcalflag',
                    'hifv_importdata'  : 'VLAImportData',
+                   'hifv_hanning'     : 'Hanning'
                    'hifv_flagdata'    : 'FlagDeterVLA',
                    'hifv_setmodel'    : 'SetModel',
                    'hifv_vlasetjy'    : 'VLASetjy',
@@ -125,6 +126,7 @@ classToCASATask = {
     hsd_tasks.SDReduction : 'hsd_reduce',
     #VLA tasks
     hifv_tasks.VLAImportData       : 'hifv_importdata',
+    hifv_tasks.Hanning             : 'hifv_hanning'
     hifv_tasks.FlagDeterVLA        : 'hifv_flagdata',
     hifv_tasks.SetModel            : 'hifv_setmodel',
     hifv_tasks.VLASetjy            : 'hifv_vlasetjy',

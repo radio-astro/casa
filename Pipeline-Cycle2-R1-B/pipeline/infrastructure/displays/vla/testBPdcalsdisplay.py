@@ -160,11 +160,19 @@ class testDelaysPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+            
                 plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Delay',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'testdelay',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
@@ -251,11 +259,19 @@ class ampGainPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+            
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Amp',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'ampgain',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
@@ -343,11 +359,19 @@ class phaseGainPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+            
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Phase',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'phasegain',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
@@ -464,11 +488,19 @@ class bpSolAmpPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+            
                 plot = logger.Plot(figfile, x_axis='Freq', y_axis='Amp',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'bpsolamp',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
@@ -583,11 +615,19 @@ class bpSolPhasePerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+            
                 plot = logger.Plot(figfile, x_axis='Freq', y_axis='Phase',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'bpsolphase',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
