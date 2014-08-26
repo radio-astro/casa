@@ -26,7 +26,8 @@ _PLOT_LEVELS = {'all'     : 30,
                 'summary' : 10}
 # detail plots will be generated if PLOT_LEVEL is greater than this
 _PLOT_DETAIL_THRESHOLDS = {'default'     :20,
-                           'hif_applycal':30}
+                           'hif_applycal':30,
+                           'hifv_applycals':10}
 
 def set_plot_level(plotlevel):
     if plotlevel not in ('all', 'summary', 'default'):
@@ -46,5 +47,8 @@ def generate_detail_plots(result=None):
     task = getattr(result, 'pipeline_casa_task', '')
     if task.startswith('hif_applycal'):
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hif_applycal'] 
+    elif task.startswith('hifv_applycals'):
+        return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hifv_applycals'] 
+        LOG.info('Using plot level for the VLA as: '+str(_PLOT_DETAIL_THRESHOLDS['hifv_applycals']))
     else:
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['default']

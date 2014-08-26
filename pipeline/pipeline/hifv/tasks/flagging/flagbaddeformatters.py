@@ -104,6 +104,8 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
 
         startdate = ms_summary['BeginTime']
         
+        LOG.info("Start date for flag bad deformatters is: " + str(startdate))
+        
         if startdate <= 56062.7:
             doflagdata = False
         else:
@@ -275,6 +277,8 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                              'flagbackup' : True}
                 
                 job = casa_tasks.flagdata(**task_args)
+                
+                flaggingresult = self._executor.execute(job)
                 
                 return flaglist
                 

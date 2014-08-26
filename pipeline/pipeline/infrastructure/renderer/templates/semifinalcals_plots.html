@@ -72,7 +72,7 @@ $(document).ready(function () {
 
 <div class="column-fluid">
 	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: int(p.parameters['ant'])):
+	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
@@ -80,11 +80,11 @@ $(document).ready(function () {
 				   title="Antenna ${plot.parameters['ant']} "
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="Antenna index ${plot.parameters['ant']} "
+						 title="Antenna ${plot.parameters['ant']} "
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">Antenna index ${plot.parameters['ant']}</p>
+					<p class="text-center">Antenna ${plot.parameters['ant']}</p>
 			</div>
 		</li>
 	% endfor
