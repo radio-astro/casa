@@ -196,13 +196,13 @@ void REFHogbomCleanImageSkyModelmsgput(Int *npol, Int* /*pol*/, Int* iter, Int* 
     itsImages->mask()->get( itsMatMask, True );
     //    cout << "Mask in SDAlHog : " << sum( itsMatMask ) << " pixels " << endl;
 
+    /*
     if( sum( itsMatMask )==0 ) 
       {
 	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
 	itsMatMask = 1.0; 
       }
-
-
+    */
     //cout << "Image Shapes : " << itsMatResidual.shape() << endl;
 
   }

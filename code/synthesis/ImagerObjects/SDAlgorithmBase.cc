@@ -85,6 +85,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cout << "Check imstore from deconvolver : " << endl;
     imagestore->validate();
 
+    //itsImages = imagestore;
+
+    //    loadMask();
+
     //os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
@@ -117,27 +121,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    Int iterdone=0;
 	    //	Bool converged=False;
 
-	    // Or, call this from outside... in SynthesisImager.....
-	    //itsMaskHandler.makeAutoMask( itsImages );
-	    itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
+	    ///itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    Int stopCode=0;
-	    /*
-	     Int ret=1, cycleNiter=loopcontrols.getCycleNiter(), ncycles=100;
-	     ostringstream thresh;
-	     thresh << loopcontrols.getCycleThreshold() << "Jy";
-	     String tt=thresh.str();
-	     ret=itsMaskHandler.makeInteractiveMask(itsImages, cycleNiter, ncycles, tt);
-	    */
-
 	    initializeDeconvolver( peakresidual, modelflux );
-	    
+
 	    Float startpeakresidual = peakresidual;
 	    Float startmodelflux = modelflux;
 
-	    //	    	    if (ret == 2) stopCode=1;
-	    //	   	    else          stopCode = checkStop( loopcontrols,  peakresidual );
-
-	    //	    while ( ! checkStop( loopcontrols,  peakresidual ) )
+	    
+	    if( sum(itsMatMask)>0 )
+	      {
 	    while ( stopCode==0 )
 	      {
 		
@@ -160,7 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      }// end of minor cycle iterations for this subimage.
 	    
 	    finalizeDeconvolver();
-	    
+	      }// if !skip
+
 	    // same as checking on itscycleniter.....
 	    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
 	    
@@ -182,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		os << ", Reached cyclethreshold.";
 		break;
 	      case 3:
-		os << ", Minor cycle algorithm decided to stop early.";
+		os << ", Zero iterations performed.";
 		break;
 	      default:
 		break;
@@ -221,13 +215,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return loopcontrols.majorCycleRequired(currentresidual);
   }
 
-
   void SDAlgorithmBase::setRestoringBeam( GaussianBeam restbeam, String usebeam )
   {
     itsRestoringBeam = restbeam;
     itsUseBeam = usebeam;
   }
-  
+
+  /*
+  void SDAlgorithmBase::setMaskOptions( String maskstring )
+  {
+    itsMaskString = maskstring;
+  }
+  */
+  /*
+  void SDAlgorithmBase::loadMask()
+  { 
+    if (! itsIsMaskLoaded ) {
+	if( itsMaskString.length()==0 )   {
+	  itsMaskHandler.resetMask( itsImages );
+	}
+	else {
+	  itsMaskHandler.fillMask( itsImages->mask() , itsMaskString );
+	}
+	itsIsMaskLoaded=True;
+      }
+  }
+  */
+
    void SDAlgorithmBase::restore(CountedPtr<SIImageStore> imagestore )
   {
 

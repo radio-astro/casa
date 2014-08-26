@@ -63,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void finalizeDeconvolver();
     virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
 
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf; //, itsMatMask;
     Array<Float> itsMatDeltaModel;
 
     Int psfpatch_p;

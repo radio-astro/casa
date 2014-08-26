@@ -2454,7 +2454,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	err += readVal( inrec, String("scales"), scales );
 
-	err += readVal( inrec, String("mask"), maskType );
+	err += readVal( inrec, String("mask"), maskString );
 
         if( inrec.isDefined("restoringbeam") )     
 	  {
@@ -2529,7 +2529,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     deconvolverId=0;
     nTaylorTerms=1;
     scales.resize(1); scales[0]=0.0;
-    maskType="none";
+    maskString="";
     
   }
 
@@ -2543,7 +2543,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("id",deconvolverId);
     decpar.define("ntaylorterms",nTaylorTerms);
     decpar.define("scales",scales);
-    decpar.define("mask",maskType);
+    decpar.define("mask",maskString);
 
     return decpar;
   }

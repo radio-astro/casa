@@ -296,7 +296,7 @@ public:
   Int deconvolverId; // maybe remove ? It's only to tag summary info.
   Int nTaylorTerms; 
   Vector<Float> scales;
-  String maskType;
+  String maskString;
 
   GaussianBeam restoringbeam;
   String usebeam;

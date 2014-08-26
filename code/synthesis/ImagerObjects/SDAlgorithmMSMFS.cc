@@ -130,12 +130,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->mask()->get( itsMatMask, True );
     //cout << "Mask in SDAlgoMSMFS : " << sum( itsMatMask ) << endl;
 
+    /*
     if( sum( itsMatMask )==0 ) 
       {
 	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
 	itsMatMask = 1.0; 
       }
-
+    */
 
     /// Find initial max vals..
     findMaxAbsMask( itsMatResiduals[0], itsMatMask, itsPeakResidual, itsMaxPos );

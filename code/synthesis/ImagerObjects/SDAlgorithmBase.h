@@ -68,6 +68,9 @@ public:
 		   Int deconvolverid);
 
   void setRestoringBeam( GaussianBeam restbeam, String usebeam );
+  //  void setMaskOptions( String maskstring );
+
+  //  void loadMask();
 
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
@@ -107,11 +110,13 @@ protected:
   Float itsPeakResidual;
   Float itsModelFlux;
 
-  SDMaskHandler itsMaskHandler;
-  //  Array<Float> itsMatMask;
+  //  SDMaskHandler itsMaskHandler;
+  Array<Float> itsMatMask;
 
   GaussianBeam itsRestoringBeam;
   String itsUseBeam;
+  //  String itsMaskString;
+  //  Bool itsIsMaskLoaded; // Annoying state variable. Remove if possible. 
 
 };
 

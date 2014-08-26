@@ -66,9 +66,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       //                                       itsPartImageNames(Vector<String>(0)),
 				       itsBeam(0.0),
 				       itsDeconvolverId(0),
-				       itsScales(Vector<Float>())
+				       itsScales(Vector<Float>()),
+				       itsMaskString(String("")),
+				       itsIsMaskLoaded(False)
   {
-    
   }
   
   SynthesisDeconvolver::~SynthesisDeconvolver() 
@@ -123,6 +124,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Set restoring beam options
 	itsDeconvolver->setRestoringBeam( decpars.restoringbeam, decpars.usebeam );
 
+	// Set Masking options
+	//	itsDeconvolver->setMaskOptions( decpars.maskType );
+	itsMaskHandler = new SDMaskHandler();
+	itsMaskString = decpars.maskString;
+	
       }
     catch(AipsError &x)
       {
@@ -194,10 +200,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       if( itsImages.null() ) itsImages = makeImageStore( itsImageName );
 
-      SDMaskHandler masker;
+      //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
-      Int stopcode = masker.makeInteractiveMask( itsImages, niter, cycleniter, strthresh );
-      //   maskHandler.makeAutoMask( itsImages );
+      if( itsMaskString.length()>0 ) {
+	itsMaskHandler->fillMask( itsImages->mask(), itsMaskString );
+      }
+      Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, niter, cycleniter, strthresh );
+      itsIsMaskLoaded=True;
 
       returnRecord.define( RecordFieldId("actioncode"), stopcode );
       returnRecord.define( RecordFieldId("niter"), niter );
@@ -219,7 +228,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
-      //   maskHandler.makeAutoMask( itsImages );
+
+
+      if( itsIsMaskLoaded == False ) {
+	if( itsMaskString.length()==0 ) {
+	  itsMaskHandler->resetMask( itsImages );
+	}
+	else {
+	  itsMaskHandler->fillMask( itsImages->mask(), itsMaskString );
+	}
+      }
+
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
       returnRecord = itsLoopController.getCycleExecutionRecord();
 

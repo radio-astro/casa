@@ -82,6 +82,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->set(1.0);
   }
 
+  void SDMaskHandler::fillMask(CountedPtr<ImageInterface<Float> > maskImage, String maskString)
+  {
+    cout << "Call makeMask here to fill in " << maskImage->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
+
+    /////// Temporary code to set a mask in the inner quarter.
+    /////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
+    IPosition imshp = maskImage->shape();
+    AlwaysAssert( imshp.nelements() >=2 , AipsError );
+
+    Slicer themask;
+    IPosition blc(imshp.nelements(), 0);
+    IPosition trc = imshp-1;
+    IPosition inc(imshp.nelements(), 1);
+
+    blc(0)=imshp[0]*0.25;
+    blc(1)=imshp[1]*0.25;
+    trc(0)=imshp[0]*0.75;
+    trc(1)=imshp[1]*0.75;
+
+    LCBox::verify(blc, trc, inc, imshp);
+    Slicer imslice(blc, trc, inc, Slicer::endIsLast);
+
+    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*maskImage, imslice, True);
+    referenceImage->set(1.0);
+
+  }
+
   //void SDMaskHandler::makeMask()
    CountedPtr<ImageInterface<Float> > SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
    //void SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,

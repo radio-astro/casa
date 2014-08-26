@@ -109,11 +109,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->mask()->get( itsMatMask, True );
     //    cout << "Mask in SDAlHog : " << sum( itsMatMask ) << " pixels " << endl;
 
+    /*
     if( sum( itsMatMask )==0 ) 
       {
 	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
 	itsMatMask = 1.0; 
       }
+    */
 
     // Initialize the Delta Image model. Resize if needed.
     if ( itsMatDeltaModel.shape().nelements() != itsMatModel.shape().nelements() )

@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void finalizeDeconvolver();
 
     Array<Float> itsMatPsf, itsMatResidual, itsMatModel;
-    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
+    //    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
     MatrixCleaner itsCleaner;
     Vector<Float> itsScaleSizes;

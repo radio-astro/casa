@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    CountedPtr<SIImageStore> itsImages;
 
     Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
-    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
+    //Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
     /*    
     IPosition itsMaxPos;

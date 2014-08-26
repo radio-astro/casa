@@ -138,6 +138,9 @@ protected:
 
   uInt itsDeconvolverId;
   Vector<Float> itsScales;
+
+  String itsMaskString;
+  Bool itsIsMaskLoaded; // Try to get rid of this state variable ! 
  
 };
 

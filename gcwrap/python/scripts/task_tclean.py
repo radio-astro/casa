@@ -93,6 +93,7 @@ def tclean(
     minpsffraction=0.1,
     maxpsffraction=0.8,
     interactive=False, 
+    mask='',
     savemodel="none",
     recalcres=True,
 
@@ -105,11 +106,6 @@ def tclean(
     #### Sanity checks and controls
     #####################################################
     
-    ### TEMP check. Remove
-    if interactive==True:
-        casalog.post( "Interactive clean is not enabled yet." ,"WARN","task_tclean")
-        return
-
     ### Move these checks elsewhere ? 
     if specmode=='mfs' and ntaylorterms>1 and deconvolver != "mtmfs":
         casalog.post( "MTMFS is the only available deconvolution algorithm for ntaylorterms>1.\
@@ -248,6 +244,7 @@ def tclean(
         ntaylorterms=ntaylorterms,
         restoringbeam=restoringbeam,
         mtype=mtype,
+        mask=mask,
 
         usescratch=usescratch,
         readonly=readonly,

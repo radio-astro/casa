@@ -189,7 +189,6 @@ class PySynthesisImager:
                 if self.stopMinor[immod]==0 :
                     iterparsmod =  self.SDtools[immod].interactivegui( iterdetails ) 
                     print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
-                    print 'Output iterpars : ', iterparsmod['niter'],iterparsmod['cycleniter'],iterparsmod['threshold']
                     self.iterpars.update(iterparsmod) 
                     print 'Output iterpars 2: ', self.iterpars['niter'],self.iterpars['cycleniter'],self.iterpars['threshold']
                     itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
@@ -251,7 +250,7 @@ class PySynthesisImager:
     def runMinorCycle(self):
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
-        #print "Minor Cycle controls : ", iterbotrec
+        print "Minor Cycle controls : ", iterbotrec
         # Run minor cycle
         for immod in range(0,self.NF):  
             if self.stopMinor[immod]<2 :
@@ -819,6 +818,7 @@ class ImagerParameters():
                  ntaylorterms=1, 
                  restoringbeam=[],
                  mtype='default',
+                 mask='',
 
                  usescratch=True,
                  readonly=True,
@@ -867,7 +867,7 @@ class ImagerParameters():
 
         ######### Deconvolution
         self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
-                                    'scales':scales, 'restoringbeam':restoringbeam } }
+                                    'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask } }
 
         ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 

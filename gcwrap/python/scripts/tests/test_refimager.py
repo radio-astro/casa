@@ -18,6 +18,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      # Interaction ON or OFF
      interactive=False
+     mask='hello'
 
      if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
           casalog.post("==================================");
@@ -65,7 +66,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==21):  ## 21 image-field, mfs --- Multiple Stokes planes -- Clark
@@ -85,7 +86,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==20):  ## 1 image-field, mfs, multiscale
@@ -109,7 +110,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
 
@@ -136,7 +137,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
      if(testnum==18): ## mode=cube (with doppler correction)
           casalog.post("==================================");
@@ -158,7 +159,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
      if(testnum==17): ## mode=cubedata 
           casalog.post("==================================");
@@ -180,7 +181,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
      if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
           casalog.post("==================================");
@@ -202,7 +203,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                         restoringbeam=restoringbeam,
-                                      interactive=interactive)
+                                      interactive=interactive,mask=mask)
      
      if(testnum==15):  ## 2 image-fields, mfs, Overlapping models. Both multi-term
           casalog.post("==================================");
@@ -225,7 +226,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==14):  ## 2 image-fields, mfs, Overlapping models. Single term
@@ -248,7 +249,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
@@ -334,7 +335,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
 
@@ -363,7 +364,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
      if(testnum==11):  ## 1 image-field, mfs --- WB AWP ( single term )
           casalog.post("==================================");
@@ -391,7 +392,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
      if(testnum==10):  ## 1 image-field, mfs --- Narrow-band AWP
           casalog.post("==================================");
@@ -418,7 +419,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==9):  ## Image domain mosaic for single-term (narrow band )
@@ -442,7 +443,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
  
 
      if(testnum==8):  # MTMFS + Facets
@@ -463,7 +464,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==7):  # MTMFS 
@@ -486,7 +487,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==6): ## Facetted imaging
@@ -507,7 +508,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
@@ -527,7 +528,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
@@ -554,7 +555,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
      
@@ -578,7 +579,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
      
      
      if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
@@ -598,7 +599,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
      
 
      if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
@@ -622,7 +623,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive)
+                                       interactive=interactive,mask=mask)
 
 
 
