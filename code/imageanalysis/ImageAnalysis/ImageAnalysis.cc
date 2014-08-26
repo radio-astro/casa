@@ -2874,19 +2874,33 @@ Bool ImageAnalysis::set(const String& lespixels, const Int pixelmask,
 }
 
 Bool ImageAnalysis::setcoordsys(const Record& coordinates) {
-	_onlyFloat(__func__);
-	*_log << LogOrigin("ImageAnalysis", "setcoordsys");
-	if (coordinates.nfields() == 0) {
-		*_log << "CoordinateSystem is empty" << LogIO::EXCEPTION;
-		return False;
+	*_log << LogOrigin(className(), __func__);
+	ThrowIf(
+		coordinates.nfields() == 0,
+		"CoordinateSystem is empty"
+	);
+	Bool ok = False;
+	if (_imageFloat) {
+		PtrHolder<CoordinateSystem> cSys(
+			makeCoordinateSystem(
+				coordinates, _imageFloat->shape()
+			)
+		);
+		ok = _imageFloat->setCoordinateInfo(*(cSys.ptr()));
 	}
-	PtrHolder<CoordinateSystem> cSys(makeCoordinateSystem(coordinates,
-			_imageFloat->shape()));
-	Bool ok = _imageFloat->setCoordinateInfo(*(cSys.ptr()));
-	if (!ok) {
-		*_log << "Failed to set CoordinateSystem" << LogIO::EXCEPTION;
+	else if (_imageComplex) {
+		PtrHolder<CoordinateSystem> cSys(
+			makeCoordinateSystem(
+				coordinates, _imageComplex->shape()
+			)
+		);
+		ok = _imageComplex->setCoordinateInfo(*(cSys.ptr()));
 	}
-	return ok;
+	else {
+		ThrowCc("No image is defined");
+	}
+	ThrowIf(!ok, "Failed to set CoordinateSystem");
+	return True;
 }
 
 Bool ImageAnalysis::twopointcorrelation(
