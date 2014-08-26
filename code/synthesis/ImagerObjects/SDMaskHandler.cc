@@ -82,13 +82,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->set(1.0);
   }
 
-  void SDMaskHandler::fillMask(CountedPtr<ImageInterface<Float> > maskImage, String maskString)
+  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, String maskString)
   {
-    cout << "Call makeMask here to fill in " << maskImage->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
+
+    //// imstore->mask() will return a pointer to an ImageInterface (allocation happens on first access). 
+
+    cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
 
     /////// Temporary code to set a mask in the inner quarter.
     /////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
-    IPosition imshp = maskImage->shape();
+    IPosition imshp = imstore->mask()->shape();
     AlwaysAssert( imshp.nelements() >=2 , AipsError );
 
     Slicer themask;
@@ -104,7 +107,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LCBox::verify(blc, trc, inc, imshp);
     Slicer imslice(blc, trc, inc, Slicer::endIsLast);
 
-    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*maskImage, imslice, True);
+    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*(imstore->mask()), imslice, True);
     referenceImage->set(1.0);
 
   }

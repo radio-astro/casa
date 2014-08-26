@@ -203,7 +203,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
       if( itsMaskString.length()>0 ) {
-	itsMaskHandler->fillMask( itsImages->mask(), itsMaskString );
+	itsMaskHandler->fillMask( itsImages, itsMaskString );
       }
       Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, niter, cycleniter, strthresh );
       itsIsMaskLoaded=True;
@@ -235,7 +235,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  itsMaskHandler->resetMask( itsImages );
 	}
 	else {
-	  itsMaskHandler->fillMask( itsImages->mask(), itsMaskString );
+	  itsMaskHandler->fillMask( itsImages, itsMaskString );
 	}
       }
 

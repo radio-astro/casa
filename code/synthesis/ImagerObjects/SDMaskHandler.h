@@ -53,7 +53,7 @@ public:
 
   void resetMask(CountedPtr<SIImageStore> imstore);
 
-  void fillMask(CountedPtr<ImageInterface<Float> > maskImage, String maskString);
+  void fillMask(CountedPtr<SIImageStore> imstore, String maskString);
 
   // Collection of methods translate mask description (text, record, threshold, etc) to
   // mask image where the region(s) of interest are represented by the value (default = 1.0)
