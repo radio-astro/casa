@@ -63,14 +63,12 @@ execute_process( COMMAND
   OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-if( NOT SVNREVISION )
-    execute_process( COMMAND
-      ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
-      WORKING_DIRECTORY ${casadef_source_dir}
-      OUTPUT_VARIABLE SVNREVISION
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      )
-endif( )
+execute_process( COMMAND
+  ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
+  WORKING_DIRECTORY ${casadef_source_dir}
+  OUTPUT_VARIABLE SVNREVISION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
 
 execute_process( COMMAND
   ${casadef_perl} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"

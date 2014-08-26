@@ -21,6 +21,8 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
+set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
+
 include( config )
 include( ui )
 include( target )

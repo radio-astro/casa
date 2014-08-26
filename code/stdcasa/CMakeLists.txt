@@ -26,10 +26,10 @@
 add_custom_target( stdcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
 
 
-# This is delegated to the cmake script code/install/casadef.cmake in
-# order to allow setting environment variables portably.
+# This is delegated to the generate-svninfo script to allow for overriding
+# subversion information via environment variables.
 add_custom_command( OUTPUT definitions
-	  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+	    COMMAND ${CASA_svngen} url=${CMAKE_SOURCE_DIR} > definitions_tmp
 	    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 	    )
 

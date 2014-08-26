@@ -1,0 +1,119 @@
+#!/usr/bin/perl
+
+$location=$ENV{SVNGEN_URL};
+$revision=$ENV{SVNGEN_REVISION};
+
+#!/usr/bin/perl
+use List::Util qw(max);
+
+$branch='';
+$url='';
+$verbose='';
+$out='';
+
+foreach ( @ARGV ) {
+    m|^branch=(.+)| && ( $branch = $1, next );
+    m|^url=(.+)| && ( $url = $1, next );
+    m|^out=(.+)| && ( $out = $1, next );
+	m|^-v$| && ( $verbose = 'yes', next );
+    m|^-help$| && ( usage( ), exit );
+	usage("unrecognized argument: $_");
+}
+
+unless ( $location ) { 
+	if ( $url ) {
+		$location = $url;
+		$revision = '';
+	} elsif ( $branch ) {
+		$location = find_url($branch);
+		$revision = '';
+	} else {
+		die usage("could not find a subversion URL/path");
+	}
+}
+
+#build_time = "Sat 2014/08/23 07:50:42 UTC"
+chomp($build_date = `date -u "+%a %Y/%m/%d %H:%M:%S UTC"`);
+
+unless ( $location ) { die "no location available" }
+
+open( INFO, "svn info $location |" ) or die "could not get subversion information";
+
+$subversion_url='';
+$subversion_revision='';
+$subversion_date='';
+foreach ( <INFO> ) {
+	m|URL: (\S+)| && ( $subversion_url = $1, next );
+	m|Last Changed Rev: (\S+)| && ( $subversion_revision=$1, next );
+	m|Last Changed Date:\s+(.+)| && ( $subversion_date=$1, next );
+}
+close( INFO );
+
+unless( $subversion_url && $subversion_revision && $subversion_date ) { die "incomplete subversion information" }
+if ( $out ) {
+	open( my $fh, ">> $out" ) or die "cannot open $out for writing";
+	output( $fh );
+	close( $fh );
+} else {
+	output( *STDOUT );
+}
+
+exit 0;
+
+sub output {
+	my $fh = shift(@_);
+	my $date = $build_date;
+	$date =~ s|"|\\"|g;
+	print $fh "build_time = \"$date\"\n";
+	my $url = $subversion_url;
+	$url =~ s|"|\\"|g;
+	print $fh "subversion_url = \"$url\"\n";
+	my $rev = ($revision ? $revision : $subversion_revision);
+	$rev =~ s|"|\\"|g;
+	print $fh "subversion_revision = \"$rev\"\n";
+	my $date = $subversion_date;
+	$date =~ s|"|\\"|g;
+	print $fh "subversion_date = \"$date\"\n";
+}
+
+sub usage {
+    my $error = shift(@_);
+    print "usage:\n\tgenerate-svninfo [-help] [-v] [url=<URL-OR-PATH>] [branch=<BRANCH-LABEL>] [out=<OUTPUT-FILE>]\n";
+    print "\t\t-v\t\tverbose\n";
+    print "\t\t-help\t\tdisplay this message and exit\n";
+    die $error if $error;
+}
+
+sub find_url {
+	my $branch = shift(@_);
+	my $result='';
+	my $current = '';
+	my %branches = ( );
+	open( my $branches, "echo t | svn info --depth immediates https://svn.cv.nrao.edu/svn/casa/branches 2> /dev/null |" );
+	foreach ( <$branches> ) {
+		if ( m|Path:\s+$branch-(\S+)| ||
+		     m|Path:\s+$branch$| && $branch =~ m|((?:[0-9]+_)+[0-9]+)| ) {
+			my $suffix = $1;
+			next unless $suffix =~ m|_|;
+			if ( $verbose ) { print STDERR "found $branch-$suffix\n" }
+			my @ver = split('_',$suffix);
+			my $place = 1;
+			$current = 0;
+			foreach $val ( reverse @ver ) {
+				$current += $val * $place;
+				$place *= 10;
+			}
+			if ( $verbose ) { print STDERR "\tcalculated numeric value of $current\n" }
+		} elsif ( m|URL: (\S+)| && $current ) {
+			if ( $verbose ) { print STDERR "\tfound URL $1 for $current\n" }
+			$branches{$current} = $1;
+			$current = 0;
+		}
+	}
+	close($branches);
+
+	my $version = max(keys %branches);
+	my $url = $branches{$version};
+	unless( $url ) { die "could not find URL" }
+	return $url;
+}
