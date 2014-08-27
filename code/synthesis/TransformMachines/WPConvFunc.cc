@@ -36,6 +36,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/OS/HostInfo.h>
+#include <casa/OS/Timer.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/CompositeNumber.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -55,11 +56,15 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
+#include <scimath/Mathematics/FFTPack.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
-
+#include <synthesis/TransformMachines/SimplePBConvFunc.h> //por SINCOS
 
 #include <synthesis/TransformMachines/WPConvFunc.h>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -132,7 +137,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "Scaling in W (at maximum W) = " << 1.0/wScale_p
 	    << " wavelengths per pixel" << LogIO::POST;
   }
-  
+
+  Timer tim;
   // Get the coordinate system
   CoordinateSystem coords(image.coordinates());
   Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
@@ -226,6 +232,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convFunc.resize(); // break any reference 
   convFunc.resize(convSize/2-1, convSize/2-1, wConvSize);
   convFunc.set(0.0);
+  Bool convFuncStor=False;
+  Complex *convFuncPtr=convFunc.getStorage(convFuncStor);
 
   IPosition start(4, 0, 0, 0, 0);
   IPosition pbSlice(4, convSize, convSize, 1, 1);
@@ -235,23 +243,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Accumulate terms 
-  Matrix<Complex> screen(convSize, convSize);
-  for (Int iw=0;iw<wConvSize;iw++) {
+  //Matrix<Complex> screen(convSize, convSize);
+  //screen.set(Complex(0.0));
+  Matrix<Complex> corr(inner, inner);
+  Vector<Complex> correction(inner);
+   for (Int iy=-inner/2;iy<inner/2;iy++) {
+     
+     ggridder.correctX1D(correction, iy+inner/2);
+     corr.row(iy+inner/2)=correction;
+   }
+   Bool cpcor;
+  
+   Complex *cor=corr.getStorage(cpcor);
+   Double s1=sampling(1);
+   Double s0=sampling(0);
+   ///////////Por FFTPack
+   Vector<Float> wsave(2*convSize*convSize+15);
+   Int lsav=2*convSize*convSize+15;
+   Bool wsavesave;
+   Float *wsaveptr=wsave.getStorage(wsavesave);
+   Int ier;
+   FFTPack::cfft2i(convSize, convSize, wsaveptr, lsav, ier);
+   //////////
+#ifdef HAS_OMP
+   omp_set_nested(0);
+#endif
+
+   //////openmp like to share reference param ...but i don't like to share
+   Int cpConvSize=convSize;
+   Int cpWConvSize=wConvSize;
+
+#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner ) 
+
+  for (Int iw=0; iw< cpWConvSize;iw++) {
     // First the w term
+    Matrix<Complex> screen(cpConvSize, cpConvSize);
     screen=0.0;
-    if(wConvSize>1) {
+    Bool cpscr;
+    Complex *scr=screen.getStorage(cpscr);
+    if(cpWConvSize>1) {
       //      Double twoPiW=2.0*C::pi*sqrt(Double(iw))/uvScale(2);
       //      Double twoPiW=2.0*C::pi*Double(iw)/uvScale(2);
       Double twoPiW=2.0*C::pi*Double(iw*iw)/wScale_p;
+      //#ifdef HAS_OMP
+      //      omp_set_nested(1);
+      //#endif
+      //#pragma omp parallel for default(none) firstprivate(twoPiW, scr, cor, inner, s0, s1) shared(convSize)
       for (Int iy=-inner/2;iy<inner/2;iy++) {
-	Double m=sampling(1)*Double(iy);
+	Double m=s1*Double(iy);
 	Double msq=m*m;
+	//////Int offset= (iy+convSize/2)*convSize;
+	///fftpack likes it flipped
+	Int offset= (iy>-1 ? iy : (iy+cpConvSize))*cpConvSize;
 	for (Int ix=-inner/2;ix<inner/2;ix++) {
-	  Double l=sampling(0)*Double(ix);
+	  //////	  Int ind=offset+ix+convSize/2;
+	  ///fftpack likes it flipped
+	  Int ind=offset+(ix > -1 ? ix : ix+cpConvSize);
+	  Double l=s0*Double(ix);
 	  Double rsq=l*l+msq;
 	  if(rsq<1.0) {
 	    Double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-	    screen(ix+convSize/2,iy+convSize/2)=Complex(cos(phase),sin(phase));
+	    Double cval, sval;
+	    SINCOS(phase, sval, cval);
+	    Complex comval(cval, sval);
+	    scr[ind]=(cor[ix+inner/2+ (iy+inner/2)*inner])*comval;
+	    //screen(ix+convSize/2, iy+convSize/2)=comval; 
 	  }
 	}
       }
@@ -259,17 +315,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else {
       screen=1.0;
     }
+    /////////screen.putStorage(scr, cpscr);
+    
     // spheroidal function
-    Vector<Complex> correction(inner);
+    /*    Vector<Complex> correction(inner);
     for (Int iy=-inner/2;iy<inner/2;iy++) {
       ggridder.correctX1D(correction, iy+inner/2);
       for (Int ix=-inner/2;ix<inner/2;ix++) {
 	screen(ix+convSize/2,iy+convSize/2)*=correction(ix+inner/2);
       }
     }
-    twoDPB.putSlice(screen, IPosition(4, 0));
+    */
+    //twoDPB.putSlice(screen, IPosition(4, 0));
     // Write out screen as an image
-    if(writeResults) {
+    /*if(writeResults) {
       ostringstream name;
       name << "Screen" << iw+1;
       if(Table::canDeleteTable(name)) Table::deleteTable(name);
@@ -277,12 +336,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       LatticeExpr<Float> le(real(twoDPB));
       thisScreen.copyData(le);
     }
+    */
 
-    // Now FFT and get the result back
-    LatticeFFT::cfft2d(twoDPB);
-
+    
+ // Now FFT and get the result back
+    //LatticeFFT::cfft2d(twoDPB);
+    /////////Por FFTPack
+    Vector<Float>work(2*cpConvSize*cpConvSize);
+    Int lenwrk=2*cpConvSize*cpConvSize;
+    Bool worksave;
+    Float *workptr=work.getStorage(worksave);
+    FFTPack::cfft2f(cpConvSize, cpConvSize, cpConvSize, scr, wsaveptr, lsav, workptr, lenwrk, ier);
+   
+    screen.putStorage(scr, cpscr);
+    /////////////////////
     // Write out FT of screen as an image
-    if(writeResults) {
+    /*if(1) {
       CoordinateSystem ftCoords(coords);
       directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
       AlwaysAssert(directionIndex>=0, AipsError);
@@ -296,15 +365,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       name << "FTScreen" << iw+1;
       if(Table::canDeleteTable(name)) Table::deleteTable(name);
       PagedImage<Float> thisScreen(pbShape, ftCoords, name);
-      LatticeExpr<Float> le(real(twoDPB));
-      thisScreen.copyData(le);
+      //LatticeExpr<Float> le(real(twoDPB));
+      //thisScreen.copyData(le);
+      thisScreen.put(real(screen));
     }
-    IPosition start(4, convSize/2, convSize/2, 0, 0);
-    IPosition pbSlice(4, convSize/2-1, convSize/2-1, 1, 1);
-    convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
+    */
+    ////////IPosition start(4, convSize/2, convSize/2, 0, 0);
+    ////////IPosition pbSlice(4, convSize/2-1, convSize/2-1, 1, 1);
+    ///////convFunc.xyPlane(iw)=twoDPB.getSlice(start, pbSlice, True);
+    //////Matrix<Complex> quarter(twoDPB.getSlice(start, pbSlice, True));
+    //   cerr << "quartershape " << quarter.shape() << endl;
+    uInt offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
+    //    cerr << "offset " << offset << " convfuncshape " << convFunc.shape() << " convSize " << convSize  << endl;
+    for (uInt y=0; y< uInt(cpConvSize/2)-1; ++y){
+      for (uInt x=0; x< uInt(cpConvSize/2)-1; ++x){
+	////////convFuncPtr[offset+y*(convSize/2-1)+x] = quarter(x,y);
+	convFuncPtr[offset+y*(cpConvSize/2-1)+x] = screen(x,y);
+      }
+    }
+
   }
+  
+  convFunc.putStorage(convFuncPtr, convFuncStor);
+  corr.putStorage(cor, cpcor);
 
   Complex maxconv=max(abs(convFunc));
+  //cerr << "maxconv " << maxconv << endl;
   convFunc=convFunc/maxconv;
 
   // Find the edge of the function by stepping in from the
@@ -358,7 +444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   else {
     os << "Convolution function integral is not positive"
 	    << LogIO::EXCEPTION;
-  }
+  } 
   os << "Convolution support = " << convSupport*convSampling_p
 	  << " pixels in Fourier plane"
 	  << LogIO::POST;
@@ -398,7 +484,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   convSampling=convSampling_p;
   wScale=wScale_p;
-
+  //tim.show("After calculating WConv funx ");
 
 
 

@@ -25,7 +25,7 @@
 //#
 //# $Id$
 
-#include <msvis/MSVis/VisibilityIterator.h>
+
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/UnitVal.h>
@@ -46,6 +46,7 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Containers/Block.h>
@@ -88,7 +89,7 @@ WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize,
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   convSize=0;
   tangentSpecified_p=False;
@@ -106,7 +107,7 @@ WProjectFT::WProjectFT(Int nWPlanes,
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero),  
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -126,7 +127,7 @@ WProjectFT::WProjectFT(
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero), 
-    machineName_p("WProjectFT")
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -139,7 +140,7 @@ WProjectFT::WProjectFT(
 }
 
 WProjectFT::WProjectFT(const RecordInterface& stateRec)
-  : FTMachine(),machineName_p("WProjectFT")
+  : FTMachine(),machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   // Construct from the input state record
   String error;
@@ -184,12 +185,16 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     usezero_p=other.usezero_p;
     machineName_p=other.machineName_p;
     wpConvFunc_p=other.wpConvFunc_p;
+    timemass_p=0.0;
+    timegrid_p=0.0;
+    timedegrid_p=0.0;
   };
   return *this;
 };
 
 //----------------------------------------------------------------------
-  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT")
+  WProjectFT::WProjectFT(const WProjectFT& other) :FTMachine(), machineName_p("WProjectFT"),
+timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
 {
   operator=(other);
 }
@@ -422,6 +427,9 @@ void WProjectFT::prepGridForDegrid(){
 
 void WProjectFT::finalizeToVis()
 {
+
+  //cerr <<"Time to degrid " << timedegrid_p << endl;
+  timedegrid_p=0.0;
   griddedData.resize();
   if(isTiled) {
     
@@ -500,6 +508,11 @@ void WProjectFT::initializeToSky(ImageInterface<Complex>& iimage,
 void WProjectFT::finalizeToSky()
 {
   
+
+  //cerr <<"Time to massage data " << timemass_p << endl;
+  //cerr <<"Time to grid data " << timegrid_p << endl;
+  timemass_p=0.0;
+  timegrid_p=0.0;
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
   if(isTiled) {
@@ -745,7 +758,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   //No point in reading data if its not matching in frequency
   if(max(chanMap)==-1)
     return;
-
+   Timer tim;
+   tim.mark();
 
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
@@ -854,12 +868,12 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   else{   
     nth= omp_get_max_threads();
   }
-  nth=min(4,nth);
+  //nth=min(4,nth);
 #endif
 
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)  
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)  
 {
-#pragma omp for
+  // #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
     //locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
     //	      locstor, 
@@ -868,11 +882,27 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }  
 
  }//end pragma parallel
-
+  Int maxx=0; 
+  Int minx=1000000;
+  Int maxy=0;
+  Int miny=1000000;
+  //Int maxsupp=max(convSupport);
+  maxx=max(loc.yzPlane(0));
+  maxx=min(nx-1,  maxx-1);
+  minx=min(loc.yzPlane(0));
+  minx=max(0, minx-1);
+  maxy=max(loc.yzPlane(1));
+  maxy=min(ny-1, maxy-1);
+  miny=min(loc.yzPlane(1));
+  miny=max(0,miny-1);
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
-  if (nth >3){
+  if(nth > 0){
+    ixsub=14;
+    iysub=14;
+  }
+  /*if (nth >3){
     ixsub=2;
     iysub=2; 
   }
@@ -880,10 +910,17 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
      ixsub=2;
      iysub=1; 
   }
+  */
   x0=1;
   y0=1;
-  nxsub=nx;
-  nysub=ny;
+  //nxsub=nx;
+  //nysub=ny;
+  nxsub=maxx-minx+1;
+  nysub=maxy-miny+1;
+  timemass_p +=tim.real();
+  tim.mark(); 
+
+
   Int rbeg=startRow+1;
   Int rend=endRow+1;
   Block<Matrix<Double> > sumwgt(ixsub*iysub);
@@ -895,8 +932,19 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Int *cmapstor=chanMap.getStorage(del);
   Int nc=nchan;
   Int np=npol;
-  Int nxp=nx;
-  Int nyp=ny;
+  //Int nxp=nx;
+  //Int nyp=ny;
+  minx=min(nx-maxx, minx);
+  miny=min(ny-maxy, miny);
+  maxx=nx-minx-1;
+  maxy=ny-miny-1;
+  nxsub=maxx-minx+1;
+  nysub=maxy-miny+1;
+  Int nxcopy=nx;
+  Int nycopy=ny;
+  //cerr << "maxx " << maxx << " minx " << minx << " maxy " << maxy << " miny " << miny << endl;
+  Int nxp=maxx-minx+1;
+  Int nyp=maxy-miny+1;
   Int csize=convSize;
    Int wcsize=wConvSize;
   const Int * flagstor=flags.getStorage(del);
@@ -905,22 +953,11 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 
   if(!useDoubleGrid_p){
     Complex *gridstor=griddedData.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, nxcopy, nycopy, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, minx, miny) shared(sumwgt) num_threads(nth)
     {
-#pragma omp for      
+#pragma omp for schedule(dynamic)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
-      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
-      iy=(icounter)/ixsub+1;
-      y0=(nyp/iysub)*(iy-1)+1;
-      nysub=nyp/iysub;
-      if( iy == iysub) {
-	nysub=nyp-(nyp/iysub)*(iy-1);
-      }
-      x0=(nxp/ixsub)*(ix-1)+1;
-      nxsub=nxp/ixsub;
-      if( ix == ixsub){
-	nxsub=nxp-(nxp/ixsub)*(ix-1);
-      } 
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub);
 
       sectgwgrids(uvwstor,
 	   datStorage,
@@ -932,8 +969,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   wgtStorage,
 	   &nvisrow,
 	   gridstor,
-	   &nxp,
-	   &nyp,
+	   &nxcopy,
+	   &nycopy,
 	   &np,
 	   &nc,
 	   suppstor,
@@ -959,24 +996,12 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   else{
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
-#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
+#pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, nxcopy, nycopy, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor,minx,miny) shared(sumwgt) num_threads(nth)
     {
-#pragma omp for      
+#pragma omp for schedule(dynamic)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
-      ix= (icounter+1)-((icounter)/ixsub)*ixsub;
-      iy=(icounter)/ixsub+1;
-      y0=(nyp/iysub)*(iy-1)+1;
-      nysub=nyp/iysub;
-      if( iy == iysub) {
-	nysub=nyp-(nyp/iysub)*(iy-1);
-      }
-      x0=(nxp/ixsub)*(ix-1)+1;
-      nxsub=nxp/ixsub;
-      if( ix == ixsub){
-	nxsub=nxp-(nxp/ixsub)*(ix-1);
-      } 
-
-      sectgwgridd(uvwstor,
+      findGridSector(nxp, nyp, ixsub, iysub, minx, miny, icounter, x0, y0, nxsub, nysub);
+       sectgwgridd(uvwstor,
 	   datStorage,
 	   &nvp,
 	   &nvc,
@@ -986,8 +1011,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 	   wgtStorage,
 	   &nvisrow,
 	   gridstor,
-	   &nxp,
-	   &nyp,
+	   &nxcopy,
+	   &nycopy,
 	   &np,
 	   &nc,
 	   suppstor,
@@ -1012,10 +1037,65 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   }
   uvw.freeStorage(uvwstor, uvwcopy);
   convFunc.freeStorage(convstor, convcopy);
-  
+  timegrid_p+=tim.real();
   if(!dopsf)
     data.freeStorage(datStorage, isCopy);
   elWeight.freeStorage(wgtStorage,iswgtCopy);
+}
+
+void WProjectFT::findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int&  nxsub, Int& nysub){
+  /* Vector<Int> ord(36);
+       ord(0)=14; 
+      ord(1)=15;
+      ord(2)=20;
+      ord(3)=21;ord(4)=13;
+      ord(5)=16;ord(6)=19;ord(7)=22;ord(8)=8;ord(9)=9;
+      ord(10)=26;ord(11)=27;ord(12)=25;ord(13)=28;ord(14)=7;
+      ord(15)=10;ord(16)=32;ord(17)=33;ord(18)=2;ord(19)=3;
+      ord(20)=18;ord(21)=23;ord(22)=12;ord(23)=17;ord(24)=1;
+      ord(25)=4;ord(26)=6;ord(27)=11;ord(28)=24;ord(29)=29;
+      ord(30)=31;ord(31)=34;ord(32)=0;ord(33)=5;ord(34)=30;
+      ord(35)=35;
+      */
+      Int ix= (icounter+1)-((icounter)/ixsub)*ixsub;
+      Int iy=(icounter)/ixsub+1;
+      y0=(nyp/iysub)*(iy-1)+1+miny;
+      nysub=nyp/iysub;
+      if( iy == iysub) {
+	nysub=nyp-(nyp/iysub)*(iy-1);
+      }
+      x0=(nxp/ixsub)*(ix-1)+1+minx;
+      nxsub=nxp/ixsub;
+      if( ix == ixsub){
+	nxsub=nxp-(nxp/ixsub)*(ix-1);
+      }
+
+      
+      /* 
+      {
+	Int elrow=icounter/ixsub;
+	Int elcol=(icounter-elrow*ixsub);
+	//cerr << "row "<< elrow << " col " << elcol; 
+	nxsub=Int(floor(((ceil(fabs(float(2*elcol+1-ixsub)/2.0))-1.0)*5 +1)*nxp/36.0 + 0.5));
+	x0=minx;
+	elcol-=1;
+	while(elcol >= 0){
+	  x0+=Int(floor(((ceil(fabs(float(2*elcol+1-ixsub)/2.0))-1.0)*5 +1)*nxp/36.0+0.5));
+	  elcol-=1;
+	}
+	nysub=Int(floor(((ceil(fabs(float(2*elrow+1-iysub)/2.0))-1.0)*5 +1)*nyp/36.0+0.5));
+	y0=miny;
+	elrow-=1;
+	
+	while(elrow >=0){
+	  y0+=Int(floor(((ceil(fabs(float(2*elrow+1-iysub)/2.0))-1.0)*5 +1)*nyp/36.0+0.5));
+	  elrow-=1;
+	}
+      }
+      y0+=1;
+      x0+=1;
+      */
+   
 }
 
 void WProjectFT::get(VisBuffer& vb, Int row)
@@ -1134,14 +1214,14 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   else{   
     nth= omp_get_max_threads();
   }
-  nth=min(4,nth);
+  // nth=min(4,nth);
 #endif
   Int dow=1;
   Double cinv=Double(1.0)/C::c;
 
-#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth) 
+  //#pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvc, scalestor, offsetstor, csamp, phasorstor, uvwstor, locstor, offstor, dpstor, dow, cinv) shared(startRow, endRow) num_threads(nth) 
   {
-#pragma omp for
+    //#pragma omp for
     for (irow=startRow; irow<=endRow; ++irow){
       /*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
 		locstor, 
@@ -1152,17 +1232,15 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   }//end pragma parallel
   Int rbeg=startRow+1;
   Int rend=endRow+1;
-  Int npart=1;
-  if (nth >3){
-    npart=4;
-  }
-  else if(nth >1){
-    npart=2; 
-  }
+  Int npart=nth;
+  
+ Timer tim;
+  tim.mark();
+  
   Int ix=0;
-  #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
+  #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(nth)
   {
-    #pragma omp for 
+#pragma omp for schedule(dynamic,1) 
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
@@ -1194,7 +1272,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   uvw.freeStorage(uvwstor, uvwcopy);
   griddedData.freeStorage(gridstor, gridcopy);
   convFunc.freeStorage(convstor, convcopy);
-  
+   timedegrid_p+=tim.real();
 
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
