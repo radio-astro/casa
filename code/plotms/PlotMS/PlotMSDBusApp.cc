@@ -228,6 +228,16 @@ void PlotMSDBusApp::plotsChanged(const PlotMSPlotManager& manager) {
 
 // Protected Methods //
 
+bool PlotMSDBusApp::checkPlotIndex( int index ) {
+	bool validIndex = true;
+	if ( index > static_cast<int>(itsPlotParams_.size() + 1) ){
+		itsPlotms_.getLogger()->postMessage(PMS::LOG_ORIGIN, PMS::LOG_ORIGIN_DBUS,
+					"Invalid plot index", PMS::LOG_EVENT_PLOT);
+		validIndex = false;
+	}
+	return validIndex;
+}
+
 void PlotMSDBusApp::dbusRunXmlMethod(
 		const String& methodName, const Record& parameters, Record& retValue,
 		const String& /*callerName*/, bool isAsync) {
@@ -292,6 +302,10 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 		retValue.defineRecord(0, ret);
 
 	} else if(methodName == METHOD_SETPLOTMSPARAMS) {
+		bool validPlotIndex = checkPlotIndex( index );
+		if ( !validPlotIndex ){
+			return;
+		}
 		if(parameters.isDefined(PARAM_CLEARSELECTIONS) &&
 				parameters.dataType(PARAM_CLEARSELECTIONS) == TpBool)
 			itsPlotms_.getParameters().setClearSelectionsOnAxesChange(
@@ -412,6 +426,11 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 
 
 	else if (methodName == METHOD_SETPLOTPARAMS)  {
+
+		bool validPlotIndex = checkPlotIndex( index );
+		if ( !validPlotIndex ){
+			return;
+		}
 		bool resized = plotParameters(index);
 
 		PlotMSPlotParameters& ppp = itsPlotParams_[index];
@@ -884,14 +903,15 @@ void PlotMSDBusApp::log(const String& m) {
 
 bool PlotMSDBusApp::plotParameters(int& plotIndex) const {
 	if(plotIndex < 0) plotIndex = 0;
-	/*if((unsigned int)plotIndex > itsPlotParams_.size()){
+	if((unsigned int)plotIndex > itsPlotParams_.size()){
 		plotIndex = itsPlotParams_.size();
-	}*/
+
+	}
 	bool resized = false;
 	if((unsigned int)plotIndex >= itsPlotParams_.size()) {
 		resized = true;
 		const_cast<PlotMSDBusApp*>(this)->itsPlotParams_.resize(plotIndex + 1,
-				PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
+			PlotMSPlotParameters(itsPlotms_.getPlotFactory()));
 	}
 	return resized;
 }
