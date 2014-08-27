@@ -609,9 +609,196 @@ protected:
         vector (destinationRow) = vector (sourceRow);
     }
 
-private:
+  //private:
 
     ShapePattern shapePattern_p;
+};
+
+  template <typename T, Bool IsComputed = False, size_t Alignment = 64>
+class VbCacheItemArrayAligned : public VbCacheItemArray<T, IsComputed> {
+public:
+
+    typedef typename VbCacheItem<T>::Filler Filler;
+    typedef typename T::value_type DataType;
+
+    VbCacheItemArrayAligned ()
+      : VbCacheItemArray<T, IsComputed>(),
+	storage_p(0)
+    {}
+  
+    virtual ~VbCacheItemArrayAligned ()
+    {
+      deallocate();
+    }
+
+    virtual void fill () const
+    {
+      const IPosition desiredShape = this->getVb()->getValidShape (this->shapePattern_p);
+      allocateStorage(desiredShape);
+      VbCacheItem<T, IsComputed>::fill();
+    }
+
+    virtual void appendRows (Int nRows, Bool truncate)
+    {
+        IPosition shape = this->getItem().shape();
+        Int nDims = shape.size();
+
+        if (nDims == 0 || this->shapePattern_p == NoCheck){
+            // This item is empty or unfillable so leave it alone.
+        }
+        else if (truncate){
+
+            // Make any excess rows disappear with a little hack to
+            // avoid a copy:
+            //
+            // The array tmp is copy constructed to reference this item's
+            // array, thus sharing its storage.  Then tmp is resized to have
+            // the appropriate shape (few rows). Finally the original array
+            // is set up to share the storage of tmp. This leave the current
+            // array with excess storage but the proper number of elements.
+            // When this item's array is freed or resized it will return all
+            // of the storage so there is no memory leak;
+
+            shape [nDims - 1] = nRows;
+
+            //T tmp = this->getItem();
+            //tmp.resize (shape, True);
+            //this->getItem().reference (tmp);
+	    resizeStorage(shape, True);
+        }
+        else{
+
+            IPosition desiredShape = this->getVb()->getValidShape (this->shapePattern_p);
+
+            desiredShape [nDims - 1] = shape [nDims - 1] + nRows;
+
+            //this->getItem().resize (desiredShape, True);
+	    resizeStorage(desiredShape, True);
+        }
+
+        // Resize the array copying the existing values if needed.
+
+    }
+
+    void
+    resize (Bool copyValues)
+    {
+        if (this->shapePattern_p != NoCheck){
+
+            IPosition desiredShape = this->getVb()->getValidShape (this->shapePattern_p);
+	    resizeStorage(desiredShape, copyValues);
+            //this->getItem().resize (desiredShape, copyValues);
+	      
+	    //if (! copyValues){
+	    //    this->getItem() = typename T::value_type();
+	    //}
+
+        }
+    }
+
+    void
+    resizeRows (Int newNRows)
+    {
+        IPosition shape = this->getItem().shape();
+
+        if (this->shapePattern_p != NoCheck){
+
+            // Change the last dimension to be the new number of rows,
+            // then resize, copying values.
+
+            shape (shape.nelements() - 1) = newNRows;
+
+            //this->getItem().resize (shape, True);
+	    resizeStorage(shape, True);
+
+            this->setDirty();
+        }
+    }
+
+    virtual void
+    set (const T & newItem)
+    {
+        ThrowIf (! this->getVb()->isWritable (), "This VisBuffer is readonly");
+
+        ThrowIf (this->isKey() && ! this->getVb()->isRekeyable (),
+                 "This VisBuffer is does not allow row key values to be changed.");
+
+        // Now check for a conformant shape.
+
+        IPosition itemShape = newItem.shape();
+        Bool parameterShapeOk = this->shapePattern_p == NoCheck ||
+                                itemShape == this->getVb()->getValidShape (this->shapePattern_p);
+        ThrowIf (! parameterShapeOk,
+                 "Invalid parameter shape:: " + this->shapeErrorMessage (& itemShape));
+
+	// resize array in advance
+	resizeStorage(itemShape, False);
+	
+        VbCacheItem<T,IsComputed>::set (newItem);
+    }
+
+    template <typename U>
+    void
+    set (const U & newItem)
+    {
+        VbCacheItem<T,IsComputed>::set (newItem);
+    }
+
+protected:
+
+    virtual void
+    copy (const VbCacheItemBase * otherRaw, Bool fetchIfNeeded)
+    {
+      VbCacheItem<T, IsComputed>::copy(otherRaw, fetchIfNeeded);
+      VbCacheItemArrayAligned<T, IsComputed, Alignment> *other =
+	dynamic_cast<VbCacheItemArrayAligned<T, IsComputed, Alignment> >(otherRaw);
+      storage_p = other->storage_p;
+    }
+  
+private:
+    void allocateStorage(const IPosition &shape)
+    {
+      resizeStorage(shape, False);
+    }
+
+    void resizeStorage(const IPosition &shape, Bool copyValues)
+    {
+      void *storage = storage_p;
+      const size_t currentLength = this->getItem().shape().product();
+      const size_t newLength = shape.product();
+      if (newLength > currentLength) {
+	allocate(&storage, newLength * sizeof(DataType));
+	if (copyValues) {
+	  memcpy(storage, storage_p, currentLength * sizeof(DataType));
+	}
+	deallocate();
+      }
+      attachToItem(shape, storage);
+    }
+
+    int allocate(void **storage, const size_t size)
+    {
+      const int status = posix_memalign(&storage, Alignment, size);
+      ThrowIf(status != 0,
+	      String::format("posix_memalign failed with error code %d", status));
+      return status;
+    }
+  
+    void deallocate()
+    {
+      if (storage_p) {
+	free(storage_p);
+      }
+    }
+
+    void attachToItem(const IPosition &shape, void *storage)
+    {
+      DataType *array = reinterpret_cast<DataType *>(storage);
+      this->getItem().takeStorage(shape, array, SHARE);
+      storage_p = storage;
+    }
+  
+    void *storage_p;
 };
 
 class VisBufferCache {
