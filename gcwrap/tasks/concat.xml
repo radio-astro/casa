@@ -52,11 +52,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   </param>
 
 </input>
-<example>
-
+<description>
 The list of data sets given in the vis argument are chronologically concatenated 
 into an output data set in concatvis, i.e. the data sets in vis are first ordered
 by the time of their earliest integration and then concatenated.  
+
+If there are fields whose direction agrees within the direction tolerance
+(parameter dirtol), the actual direction in the resulting, merged output field
+will be the one from the chronologically first input MS.
 
 If concatvis already exists (e.g., it is the same as the first input data set), 
 then the other input data sets will be appended to the concatvis data set.  
@@ -88,22 +91,6 @@ concatvis -- Name of visibility file that will contain the concatenated data
               an existing file.
 	default: none; example: concatvis='src2.ms'
 	         example: concatvis='outvis.ms'
-
-        other examples: 
-           concat(vis=['src2.ms','ngc5921.ms'], concatvis='src2.ms')
-               will concatenate 'ngc5921.ms' into 'src2.ms', and the original
-	       src2.ms is lost
-
-	   concat(vis=['src2.ms','ngc5921.ms'], concatvis='out.ms') 
-               will concatenate 'ngc5921.ms' and 'src2.ms' into a file named 
-               'out.ms'; the original 'ngc5921.ms' and 'src2.ms' are untouched.
-
-           concat(vis=['v1.ms','v2.ms'], concatvis = 'vall.ms')
-              then
-           concat(vis=['v3.ms','v4.ms'], concatvis = 'vall.ms')
-             vall.ms will contains v1.ms+v2.ms+v3.ms+v4.ms
-
-     Note: run flagmanager to save flags in the concatvis
 
 freqtol -- Frequency shift tolerance for considering data to be in the same
            spwid.  The number of channels must also be the same.
@@ -140,8 +127,31 @@ visweightscale -- The weights of the individual MSs will be scaled in the concat
 	factors. See the cookbook for more details.
 	example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
 	default: [] (empty list) - no scaling
+</description> 
 
-</example> 
+<example>
+           concat(vis=['src2.ms','ngc5921.ms'], concatvis='src2.ms')
+               will concatenate 'ngc5921.ms' into 'src2.ms', and the original
+	       src2.ms is lost
+
+	   concat(vis=['src2.ms','ngc5921.ms'], concatvis='out.ms') 
+               will concatenate 'ngc5921.ms' and 'src2.ms' into a file named 
+               'out.ms'; the original 'ngc5921.ms' and 'src2.ms' are untouched.
+
+	   concat(vis=['src2.ms','ngc5921.ms'], concatvis='out.ms', dirtol='0.5arcsec') 
+               like the previous example but using a direction tolerance increased to
+               0.5 arcsec. Fields whose directions differ by less than this limit are
+               merged into one field with the name and direction from the 
+               chronologically first input MS.
+
+           concat(vis=['v1.ms','v2.ms'], concatvis = 'vall.ms')
+              then
+           concat(vis=['v3.ms','v4.ms'], concatvis = 'vall.ms')
+             vall.ms will contains v1.ms+v2.ms+v3.ms+v4.ms
+
+           Note: run flagmanager to save flags in the concatvis
+</example>
+
 
 </task>
 </casaxml>
