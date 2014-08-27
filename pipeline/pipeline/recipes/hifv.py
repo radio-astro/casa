@@ -39,8 +39,8 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 
     try:
 	# Initialize the pipeline
-        h_init()
-        #h_init(loglevel='trace')
+        h_init(plotlevel='summary')
+        #h_init(loglevel='trace', plotlevel='summary')
 
         # Load the data
         hifv_importdata (vis=vislist, pipelinemode=pipelinemode)
