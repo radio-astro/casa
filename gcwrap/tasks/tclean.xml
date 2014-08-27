@@ -328,6 +328,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	      <value>multiscale</value>
 	      <value>mtmfs</value>
 	      <value>mem</value>
+	      <value>aasp</value>
 	    </allowed>
     </param>
 
@@ -587,6 +588,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="ntaylorterms"><value>2</value></default>  
+	 <default param="restoringbeam"><value type="stringArray"></value></default>
+       </equals>
+       <equals type="string" value="aasp">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
      </when>

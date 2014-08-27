@@ -1902,6 +1902,11 @@ Date/Time:                         RR:                      RL:                 
      </input>
      <returns type="bool"/>
      <description>
+       A retun value of True implies that the combination of all selection expressions
+       resulted in a non-Null combined TaQL expression. False implies
+       that the combined TaQL could not be formed (i.e. it is Null,
+       and the "selected MS" will be the same as the input MS).
+
        The details of selection expressions are desribed in the
        <link anchor="http://casa.nrao.edu/other_doc.shtml">MSSelection Memo.</link>
 
