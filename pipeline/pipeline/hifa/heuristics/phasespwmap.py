@@ -1,3 +1,5 @@
+import decimal
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
@@ -60,9 +62,10 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 
 	    # Skip if the match window is narrower than the
 	    # window in question or narrower than a certain
-	    # fraction of the maximum bandwidth
+	    # fraction of the maximum bandwidth. Don't understand this
+	    # conversion issue.
 	    if matchspw.bandwidth < scispw.bandwidth or \
-	        matchspw.bandwidth < maxbwfrac * maxnbw:
+	        matchspw.bandwidth < decimal.Decimal(str(maxbwfrac)) * maxnbw:
                 #LOG.info('Skipping condition match spw id %s' % matchspw.id)
 	        continue
 
@@ -82,7 +85,7 @@ def simple_w2nspwmap (allspws, scispws, maxnarrowbw, maxbwfrac, samebb):
 		# as the science spw but the current best match is not
 		# then switch matches.
 
-	        if matchspw.baseband == scispw.basband and \
+	        if matchspw.baseband == scispw.baseband and \
 		    bestspw.baseband != scispw.baseband:
 		    bestspw = matchspw
 		else:
