@@ -48,7 +48,7 @@ def generate_detail_plots(result=None):
     if task.startswith('hif_applycal'):
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hif_applycal'] 
     elif task.startswith('hifv_applycals'):
-        return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hifv_applycals'] 
         LOG.info('Using plot level for the VLA as: '+str(_PLOT_DETAIL_THRESHOLDS['hifv_applycals']))
+        return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['hifv_applycals'] 
     else:
         return PLOT_LEVEL >= _PLOT_DETAIL_THRESHOLDS['default']
