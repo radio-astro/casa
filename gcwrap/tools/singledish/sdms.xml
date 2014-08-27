@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/tools/xml/casa.xsd">
+
+
+   <tool name="sdms" module="sdms">
+   <shortdescription>New single dish tool interface to process an MS</shortdescription>
+
+
+<code>
+	<include>tools/singledish/sdms_forward.h</include>
+<private>
+	<include>tools/singledish/sdms_private.h</include>
+</private>
+</code>
+ 
+   <method type="constructor" name="sdms">
+   <shortdescription>Construct sdms tool</shortdescription>
+   
+<description>
+This is used to construct an {\tt sdms} tool.
+</description>
+<input>
+</input>
+<returns type="sdms"/>
+<example>
+Manual tool construction is done this way:
+
+ssd = casac.sdms()
+
+</example>
+</method>
+
+<method type="function" name="open">
+   <shortdescription>>Open a new MeasurementSet for processing after closing current MeasurementSet
+   </shortdescription>
+<description>
+Close the current MeasurementSet and open a new MeasurementSet
+instead. The current state of {\tt sdms} is retained, except for
+the data selection.
+</description>
+<input>
+     <param type="string" name="ms_name">
+     <description>New MeasurementSet to be processed</description>
+     <value></value>
+     </param>
+</input>
+<returns type="bool">
+</returns>
+<example>
+sdms.open('m100_sd.ms')
+</example>
+</method>
+
+<method type="function" name="name">
+  <shortdescription>Provide the name of the attached MeasurementSet</shortdescription>
+  
+  <description>
+    Returns the name of the attached MeasurementSet.
+  </description>
+  <returns type="string">
+  </returns>
+  <example>
+sdms.name()
+  </example>
+</method>
+
+<method type="function" name="close">
+   <shortdescription>Close the {\tt sdms} tool, with data written on disk, keeping sdms running for future use
+   </shortdescription>
+   <description>
+This is used to close {\tt sdms} tools. Note that the
+data is written to disk and detached from {\tt sdms} tool.
+This is a synonym for done.
+   </description>
+   <returns type="bool">
+   </returns>
+   <example>
+sdms.close()
+   </example>
+</method>
+
+<method type="function" name="done">
+  <shortdescription>Close the {\tt sdms} tool</shortdescription>
+
+  <description>
+This is used to close and {\tt sdms} tools. Note that the
+data is written to disk  and detached from {\tt sdms} tool.
+This is a synonym for close.
+  </description>
+  <returns type="bool"></returns>
+   <example>
+sdms.done()
+   </example>
+</method>
+
+</tool>
+</casaxml>

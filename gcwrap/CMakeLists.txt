@@ -711,6 +711,7 @@ else()
        mstransform
        nrao
        plotms
+       singledish
        spectrallines
        stdcasa
        synthesis

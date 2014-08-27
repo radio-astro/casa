@@ -91,6 +91,7 @@ casa_add_library( tools
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
  singledish/sakura_cmpt.cc
+ singledish/sdms_cmpt.cc
  scimath/fitter_cmpt.cc
  scimath/functional_cmpt.cc
  StdCasa/conversions_python.cc
@@ -157,6 +158,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  nrao/vlafillertask.xml
  plotms/plotms.xml
  singledish/sakura.xml
+ singledish/sdms.xml
  scimath/fitter.xml
  scimath/functional.xml
  spectralline/spectralline.xml
