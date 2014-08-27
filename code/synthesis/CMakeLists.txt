@@ -40,11 +40,14 @@ casa_add_library( synthesis
   TransformMachines/ComponentFTMachine.cc
   TransformMachines/ConvolutionFunction.cc
   TransformMachines/AWConvFunc.cc
+#  TransformMachines/AWConvFunc2.cc
   TransformMachines/AWConvFuncEPJones.cc
   TransformMachines/AWProjectFT.cc
   TransformMachines/AWProjectWBFT.cc
   TransformMachines/AWProjectWBFTNew.cc
   TransformMachines/AWVisResampler.cc
+#  TransformMachines/ProtoVR.cc
+#  TransformMachines/cDataToGridImpl.cc
   TransformMachines/BeamCalc.cc
   TransformMachines/BeamCalcParams.cc
   TransformMachines/DBeamSkyJones.cc
@@ -295,6 +298,7 @@ casa_add_library( synthesis
  ImagerObjects/SDAlgorithmMSClean.cc
  ImagerObjects/SDAlgorithmClarkClean.cc
  ImagerObjects/SDAlgorithmMEM.cc
+ ImagerObjects/SDAlgorithmAAspClean.cc
  ImagerObjects/SDMaskHandler.cc
  ImagerObjects/SynthesisNormalizer.cc
  ImagerObjects/SynthesisUtilMethods.cc
@@ -538,6 +542,7 @@ install (FILES
 	ImagerObjects/SDAlgorithmMSClean.h
 	ImagerObjects/SDAlgorithmClarkClean.h
 	ImagerObjects/SDAlgorithmMEM.h
+	ImagerObjects/SDAlgorithmAAspClean.h
 	ImagerObjects/InteractiveMasking.h
 	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
@@ -611,12 +616,14 @@ install (FILES
 	TransformMachines/WProjectFT.h
         TransformMachines/ATerm.h
         TransformMachines/NoOpATerm.h
-        TransformMachines/AWConvFunc.h
+#        TransformMachines/AWConvFunc2.h
         TransformMachines/AWConvFuncEPJones.h
         TransformMachines/AWProjectFT.h
         TransformMachines/AWProjectWBFT.h
         TransformMachines/AWProjectWBFTNew.h
 	TransformMachines/AWVisResampler.h
+#	TransformMachines/ProtoVR.h
+#	TransformMachines/cDataToGridImpl.h
 	TransformMachines/AzElAperture.h
 	TransformMachines/EVLAAperture.h
 	TransformMachines/EVLAConvFunc.h
@@ -646,7 +653,9 @@ casa_add_assay( synthesis ImagerObjects/test/tSynthesisUtils.cc )
 casa_add_assay( synthesis TransformMachines2/test/tVisModelDataRefim.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
+#casa_add_assay( synthesis TransformMachines/test/tCFCache.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
+#casa_add_assay( synthesis TransformMachines/test/tInitMaps.cc )
 casa_add_assay( synthesis DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis IDL/test/tIDL.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tALMAAperture.cc )
@@ -680,5 +689,6 @@ casa_add_assay( synthesis CalTables/test/tRIorAPArray.cc )
 casa_add_assay( synthesis CalTables/test/tCLPatchPanel.cc )
 casa_add_assay( synthesis CalTables/test/tCTTimeInterp1.cc )
 casa_add_assay( synthesis CalTables/test/tCTPatchedInterp.cc )
+#casa_add_assay( synthesis CalTables/test/tCalTables.cc )
 casa_add_assay( synthesis CalTables/test/tCTSelection.cc )
 casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )

@@ -116,6 +116,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    itsDeconvolver = new SDAlgorithmMEM( "entropy" ); 
 	  } 
+	else if (decpars.algorithm==String("aasp"))
+	  {
+	    itsDeconvolver = new SDAlgorithmAAspClean();
+	  }
 	else
 	  {
 	    throw( AipsError("Un-known algorithm : "+decpars.algorithm) );
