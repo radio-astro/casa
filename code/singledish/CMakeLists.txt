@@ -19,12 +19,15 @@
 #
 
 casa_add_library( singledish
-    SingleDish/SingleDishDummy.cc
+    #SingleDish/SingleDishDummy.cc
+    SingleDish/SingleDishMS.cc
 )
 
 install (FILES
-    SingleDish/SingleDishDummy.h
-    DESTINATION include/casacode/singledish
+    #SingleDish/SingleDishDummy.h
+    SingleDish/SingleDishMS.h
+    DESTINATION include/casacode/singledish/SingleDish
 )
 
-casa_add_assay( singledish  SingleDish/test/tSingleDishDummy.cc )
+#casa_add_assay( singledish  SingleDish/test/tSingleDishDummy.cc SingleDish/test/tSingleDishMS.cc )
+casa_add_assay( singledish  SingleDish/test/tSingleDishMS.cc )
