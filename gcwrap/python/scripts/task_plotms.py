@@ -223,9 +223,20 @@ def plotms(vis=None, plotindex=None,
         vis = vis.strip()
         if len(vis) > 0:
             vis = os.path.abspath(vis) 
+        
+        
         if not plotindex:
-            plotindex = 0
-      
+            plotindex = 0  
+        if plotindex < 0:
+            casalog.post("A negative plotindex is not valid.", "SEVERE")
+            return False  
+        if clearplots and plotindex > 0:   
+            casalog.post("A nonzero plotindex is not valid when clearing plots.", "SEVERE")
+            return False
+        elif ( gridrows > 0 or gridcols > 0) and plotindex > 0:
+            casalog.post("A nonzero plotindex is not valid when resetting the page grid", "SEVERE")
+            return False
+    
     
         #Determine whether this is going to be a scripting client or a full GUI supporting
         #user interaction.  This must be done before other properties are set because it affects
