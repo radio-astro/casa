@@ -70,8 +70,6 @@ public:
   void setRestoringBeam( GaussianBeam restbeam, String usebeam );
   //  void setMaskOptions( String maskstring );
 
-  //  void loadMask();
-
   // Base Class contains standard restoration. Overload for more complex behaviour.
   virtual void restore( CountedPtr<SIImageStore> imagestore );
   virtual void pbcor( CountedPtr<SIImageStore> imagestore );
@@ -85,12 +83,13 @@ protected:
   // Pure virtual functions to be implemented by various algorithm deconvolvers.
   virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, 
 			    Float &peakresidual, Float &modelflux, Int& iterdone )=0;
-  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
+  //  virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux )=0;
+  virtual void initializeDeconvolver()=0;
   virtual void finalizeDeconvolver()=0;
 
   // Base Class implements the option of single-plane images for the minor cycle.
   virtual void queryDesiredShape(Int &nchanchunks, Int& npolchunks, IPosition imshape);
-  //  virtual void restorePlane();
+
 
   // Non virtual. Implemented only in the base class.
   Int checkStop( SIMinorCycleController &loopcontrols, Float currentresidual );
@@ -111,7 +110,7 @@ protected:
   Float itsModelFlux;
 
   //  SDMaskHandler itsMaskHandler;
-  Array<Float> itsMatMask;
+  //Array<Float> itsMatMask;
 
   GaussianBeam itsRestoringBeam;
   String itsUseBeam;

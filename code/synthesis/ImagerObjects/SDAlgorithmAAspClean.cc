@@ -73,7 +73,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  void SDAlgorithmAAspClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  //  void SDAlgorithmAAspClean::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  void SDAlgorithmAAspClean::initializeDeconvolver()
   {
     LogIO os( LogOrigin("SDAlgorithmAAspClean","initializeDeconvolver",WHERE) );
 
@@ -82,10 +83,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsImages->psf()->get( itsMatPsf, True );
     itsImages->mask()->get( itsMatMask, True );
 
+    /*
     /////////////////
     findMaxAbsMask( itsMatResidual, itsMatMask, itsPeakResidual, itsMaxPos );
     peakresidual = itsPeakResidual;
     modelflux = sum( itsMatModel ); // Performance hog ?
+    */
   }
 
 

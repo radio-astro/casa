@@ -82,7 +82,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  }
 
  
-  void SDAlgorithmMSMFS::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  //  void SDAlgorithmMSMFS::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  void SDAlgorithmMSMFS::initializeDeconvolver()
   {
     LogIO os( LogOrigin("SDAlgorithmMSMFS","initializeDeconvolver",WHERE) );
 
@@ -104,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(itsImages->psf(tix))->get( itsMatPsfs[tix], True );
       }
 
+    itsImages->mask()->get( itsMatMask, True );
 
     //// Initialize the MultiTermMatrixCleaner.
 
@@ -127,24 +129,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     /// -----------------------------------------
 
-    itsImages->mask()->get( itsMatMask, True );
-    //cout << "Mask in SDAlgoMSMFS : " << sum( itsMatMask ) << endl;
-
     /*
-    if( sum( itsMatMask )==0 ) 
-      {
-	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
-	itsMatMask = 1.0; 
-      }
-    */
-
     /// Find initial max vals..
     findMaxAbsMask( itsMatResiduals[0], itsMatMask, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModels[0] );
 
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
-
+    */
 
     // Parts to be repeated at each minor cycle start....
 
@@ -166,6 +158,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   }
+
 
   void SDAlgorithmMSMFS::takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone)
   {

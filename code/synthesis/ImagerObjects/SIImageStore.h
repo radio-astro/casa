@@ -132,7 +132,7 @@ class SIImageStore
   virtual void makeImageBeamSet();
   ImageBeamSet getBeamSet();
   virtual void printBeamSet();
-  GaussianBeam findGoodBeam(Bool replace=False);
+  GaussianBeam findGoodBeam();
   void lineFit(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2);
   Float calcMean(Vector<Float> &vect, Vector<Bool> &flag);
   Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit);
@@ -155,6 +155,7 @@ class SIImageStore
 
   // Image Statistics....
   Float getPeakResidual();
+  Float getPeakResidualWithinMask();
   Float getModelFlux();
   Float getPSFSidelobeLevel();
   void findMinMax(const Array<Float>& lattice,
@@ -162,7 +163,7 @@ class SIImageStore
 		  Float& minVal, Float& maxVal,
 		  Float& minValMask, Float& maxValMask);
   void printImageStats();
-
+  Float getMaskSum();
 
   //
   //---------------------------------------------------------------

@@ -59,32 +59,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Local functions to be overloaded by various algorithm deconvolvers.
     virtual void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    virtual void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    virtual void initializeDeconvolver();
     virtual void finalizeDeconvolver();
-    ///    virtual void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-    //    virtual void restorePlane();
 
-    /*
-    void findNextComponent( Float loopgain );
-    void updateModel();
-    void updateResidual();
-    */
-
-    /*
-    SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-    Float itsComp;
-    */
-    //SubImage<Float> itsResidual, itsPsf, itsModel, itsImage;
-
-    Array<Float> itsMatResidual, itsMatModel, itsMatPsf;//, itsMatMask;
-
-    /*
-    IPosition itsMaxPos;
-    Float itsPeakResidual;
-    Float itsModelFlux;
-
-    Matrix<Float> itsMatMask;
-    */
+    Array<Float> itsMatResidual, itsMatModel, itsMatPsf, itsMatMask;
 
   };
 

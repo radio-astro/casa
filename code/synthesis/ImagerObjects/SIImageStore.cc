@@ -1403,7 +1403,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //// If rbeam is Null but usebeam=='common', calculate a common beam and set 'rbeam'
     //// If rbeam is given (or exists due to 'common'), just use it.
     if( rbeam.isNull() && usebeam=="common") {
-      rbeam = findGoodBeam(False);
+      rbeam = findGoodBeam();
     }
     if( !rbeam.isNull() ) {
       for( Int chanid=0; chanid<nchan;chanid++) {
@@ -1451,7 +1451,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }// end of restore()
 
-  GaussianBeam SIImageStore::findGoodBeam(Bool replace)
+  GaussianBeam SIImageStore::findGoodBeam()
   {
     LogIO os( LogOrigin("SIImageStore","findGoodBeam",WHERE) );
     IPosition beamshp = itsPSFBeams.shape();
@@ -1850,6 +1850,15 @@ Float SIImageStore::getPeakResidual()
     return maxresidual;
   }
 
+Float SIImageStore::getPeakResidualWithinMask()
+  {
+    LogIO os( LogOrigin("SIImageStore","getPeakResidualWithinMask",WHERE) );
+    Float minresmask, maxresmask, minres, maxres;
+    findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
+
+    return maxresmask;
+  }
+
   // Calculate the total model flux
   Float SIImageStore::getModelFlux()
   {
@@ -1894,7 +1903,7 @@ Float SIImageStore::getPeakResidual()
 
   void SIImageStore::printImageStats()
   {
-    LogIO os( LogOrigin("SIImageStore","getPeakResidual",WHERE) );
+    LogIO os( LogOrigin("SIImageStore","printImageStats",WHERE) );
     Float minresmask, maxresmask, minres, maxres;
     findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
 
@@ -1906,6 +1915,15 @@ Float SIImageStore::getPeakResidual()
 
   }
 
+  // Calculate the total model flux
+  Float SIImageStore::getMaskSum()
+  {
+    LogIO os( LogOrigin("SIImageStore","getMaskSum",WHERE) );
+
+    Float masksum = sum( mask()->get() );
+
+    return masksum;
+  }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

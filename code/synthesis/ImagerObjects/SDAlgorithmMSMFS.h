@@ -62,10 +62,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // Local functions to be overloaded by various algorithm deconvolvers.
     void takeOneStep( Float loopgain, Int cycleNiter, Float cycleThreshold, Float &peakresidual, Float &modelflux, Int &iterdone );
-    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    //    void initializeDeconvolver( Float &peakresidual, Float &modelflux );
+    void initializeDeconvolver();
     void finalizeDeconvolver();
     void queryDesiredShape(Bool &onechan, Bool &onepol); // , nImageFacets.
-    //    virtual void restorePlane();
 
     uInt getNTaylorTerms(){ return itsNTerms; };
     
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    CountedPtr<SIImageStore> itsImages;
 
     Vector< Array<Float> > itsMatPsfs, itsMatResiduals, itsMatModels;
-    //Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
+    Array<Float> itsMatMask;  // Make an array if we eventually use multi-term masks...
 
     /*    
     IPosition itsMaxPos;

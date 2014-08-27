@@ -93,34 +93,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    
  }
 
-  void SDAlgorithmMEM::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  //  void SDAlgorithmMEM::initializeDeconvolver( Float &peakresidual, Float &modelflux )
+  void SDAlgorithmMEM::initializeDeconvolver()
   {
     LogIO os( LogOrigin("SDAlgorithmMEM","initializeDeconvolver",WHERE) );
 
     itsImages->residual()->get( itsMatResidual, True );
     itsImages->model()->get( itsMatModel, True );
     itsImages->psf()->get( itsMatPsf, True );
+    itsImages->mask()->get( itsMatMask, True );
+
 
     //    cout << "initDecon : " << itsImages->residual()->shape() << " : " << itsMatResidual.shape() 
     //	 << itsImages->model()->shape() << " : " << itsMatModel.shape() 
     //	 << itsImages->psf()->shape() << " : " << itsMatPsf.shape() 
     //	 << endl;
 
+    /*
     findMaxAbs( itsMatResidual, itsPeakResidual, itsMaxPos );
     itsModelFlux = sum( itsMatModel );
 
     peakresidual = itsPeakResidual;
     modelflux = itsModelFlux;
-
-    itsImages->mask()->get( itsMatMask, True );
-    //    cout << "Mask in SDAlHog : " << sum( itsMatMask ) << " pixels " << endl;
-
-    /*
-    if( sum( itsMatMask )==0 ) 
-      {
-	os << LogIO::WARN << "ZERO MASK. Forcing all pixels to 1.0" << LogIO::POST; 
-	itsMatMask = 1.0; 
-      }
     */
 
     // Initialize the Delta Image model. Resize if needed.
@@ -129,7 +123,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   }
-
 
   // Code obtained from Deconvolver.cc
   void SDAlgorithmMEM::takeOneStep( Float /*loopgain*/, 

@@ -99,10 +99,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition trc = imshp-1;
     IPosition inc(imshp.nelements(), 1);
 
-    blc(0)=imshp[0]*0.25;
-    blc(1)=imshp[1]*0.25;
-    trc(0)=imshp[0]*0.75;
-    trc(1)=imshp[1]*0.75;
+    blc(0)=int(imshp[0]*0.25);
+    blc(1)=int(imshp[1]*0.25);
+    trc(0)=int(imshp[0]*0.75);
+    trc(1)=int(imshp[1]*0.75);
 
     LCBox::verify(blc, trc, inc, imshp);
     Slicer imslice(blc, trc, inc, Slicer::endIsLast);
@@ -337,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
   } 
 
-  void SDMaskHandler::expandMask(const ImageInterface<Float>& smallchanmask, ImageInterface<Float>& outimage)
+  void SDMaskHandler::expandMask(const ImageInterface<Float>& /*smallchanmask*/, ImageInterface<Float>& /*outimage*/)
   {
     LogIO os( LogOrigin("SDMaskHandler", "extendMask", WHERE) );
 
@@ -372,13 +372,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int ret;
     // Int niter=1000, ncycles=100;
     // String thresh="0.001mJy";
-    String imageName = imstore->getName()+".residual";
+    String imageName = imstore->getName()+".residual"+(imstore->getNTaylorTerms()>1?".tt0":"");
     String maskName = imstore->getName() + ".mask";
     imstore->mask()->unlock();
-    cout << "Before interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << endl;
+    //    cout << "Before interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << endl;
     ret = interactiveMasker_p->interactivemask(imageName, maskName,
                                                niter, ncycles, threshold);
-    cout << "After interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << "  ------ ret : " << ret << endl;
+    //    cout << "After interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << "  ------ ret : " << ret << endl;
     return ret;
   }
 

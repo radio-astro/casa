@@ -112,49 +112,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    //	    itsImages = imagestore->getSubImageStoreOld( chanid, onechan, polid, onepol );
 	    itsImages = imagestore->getSubImageStore( 0, 1, chanid, nSubChans, polid, nSubPols );
 	    
-	    // Assign current subimages.
-	    //	initializeSubImages( imagestore, subimageid );
-	    
 	    Int startiteration = loopcontrols.getIterDone();
 	    Float peakresidual=0.0;
 	    Float modelflux=0.0;
 	    Int iterdone=0;
-	    //	Bool converged=False;
 
 	    ///itsMaskHandler.resetMask( itsImages ); //, (loopcontrols.getCycleThreshold()/peakresidual) );
 	    Int stopCode=0;
-	    initializeDeconvolver( peakresidual, modelflux );
 
-	    Float startpeakresidual = peakresidual;
-	    Float startmodelflux = modelflux;
+	    Float startpeakresidual = 0.0;
+	    Float startmodelflux = 0.0;
+	    Bool validMask = ( itsImages->getMaskSum() > 0 );
 
-	    
-	    if( sum(itsMatMask)>0 )
+	    if( validMask ) peakresidual = itsImages->getPeakResidualWithinMask();
+	    else peakresidual = itsImages->getPeakResidual();
+	    modelflux = itsImages->getModelFlux();
+
+	    startpeakresidual = peakresidual;
+	    startmodelflux = modelflux;
+
+	    if( validMask )
 	      {
-	    while ( stopCode==0 )
-	      {
 		
-		takeOneStep( loopcontrols.getLoopGain(), 
-			     loopcontrols.getCycleNiter(), 
-			     loopcontrols.getCycleThreshold(),
-			     peakresidual, 
-			     modelflux,
-			     iterdone);
+		//	    initializeDeconvolver( peakresidual, modelflux );
+		initializeDeconvolver();
 		
-		//os << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+		while ( stopCode==0 )
+		  {
+		    
+		    takeOneStep( loopcontrols.getLoopGain(), 
+				 loopcontrols.getCycleNiter(), 
+				 loopcontrols.getCycleThreshold(),
+				 peakresidual, 
+				 modelflux,
+				 iterdone);
+		    
+		    //os << "SDAlgoBase: After one step, dec : " << deconvolverid << "    residual=" << peakresidual << " model=" << modelflux << " iters=" << iterdone << LogIO::POST; 
+		    
+		    loopcontrols.incrementMinorCycleCount( iterdone );
+		    
+		    stopCode = checkStop( loopcontrols,  peakresidual );
+		    
+		    loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
+						  modelflux, peakresidual );
+		    
+		  }// end of minor cycle iterations for this subimage.
 		
-		loopcontrols.incrementMinorCycleCount( iterdone );
-
-		stopCode = checkStop( loopcontrols,  peakresidual );
-
-		loopcontrols.addSummaryMinor( deconvolverid, chanid+polid*nSubChans, 
-					      modelflux, peakresidual );
-
-	      }// end of minor cycle iterations for this subimage.
+		finalizeDeconvolver();
+	      }// if validmask
 	    
-	    finalizeDeconvolver();
-	      }// if !skip
-
 	    // same as checking on itscycleniter.....
 	    loopcontrols.setUpdatedModelFlag( loopcontrols.getIterDone()-startiteration );
 	    
@@ -169,6 +175,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    switch (stopCode)
 	      {
+	      case 0:
+		os << ", Skipped this plane. Zero mask.";
+		break;
 	      case 1: 
 		os << ", Reached cycleniter.";
 		break;
@@ -185,8 +194,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       os << LogIO::POST;
 	    
 	    loopcontrols.resetCycleIter(); 
-
-	    //	    maxResidualAcrossPlanes = max ( maxResidualAcrossPlanes , peakresidual );
 
 	    if( peakresidual > maxResidualAcrossPlanes )
 	      {maxResidualAcrossPlanes=peakresidual; maxResChan=chanid; maxResPol=polid;}
