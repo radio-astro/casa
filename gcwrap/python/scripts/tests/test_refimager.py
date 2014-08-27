@@ -18,7 +18,6 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      # Interaction ON or OFF
      interactive=False
-     mask='hello'
 
      if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
           casalog.post("==================================");
@@ -66,7 +65,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==21):  ## 21 image-field, mfs --- Multiple Stokes planes -- Clark
@@ -86,7 +85,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==20):  ## 1 image-field, mfs, multiscale
@@ -110,7 +109,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
 
@@ -137,7 +136,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
      if(testnum==18): ## mode=cube (with doppler correction)
           casalog.post("==================================");
@@ -159,7 +158,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
      if(testnum==17): ## mode=cubedata 
           casalog.post("==================================");
@@ -181,7 +180,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
      if(testnum==16):  ## 2 image-fields, mfs - one with nterms 1 and one with nterms 2
           casalog.post("==================================");
@@ -203,7 +202,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                         restoringbeam=restoringbeam,
-                                      interactive=interactive,mask=mask)
+                                      interactive=interactive)
      
      if(testnum==15):  ## 2 image-fields, mfs, Overlapping models. Both multi-term
           casalog.post("==================================");
@@ -226,7 +225,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==14):  ## 2 image-fields, mfs, Overlapping models. Single term
@@ -249,20 +248,35 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
           casalog.post("==================================");
           casalog.post("Test 13 image-field, cube --- Real Imaging with various cube parameter specifications");
           #casalog.post("==================================");
+          ## chan 5 (TOPO)
           qfstart=qa.quantity("1.1GHz")
-          qvstart=qa.quantity("-59958.5km/s")
-          mfstart=me.frequency('LSRK',qa.quantity("1.1GHz"))
-          mvstart=me.radialvelocity('BARY',qa.quantity("-59976.1km/s"))
-          dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
-          qvstep = qa.quantity("11991.700km/s")
+          #qvstart=qa.quantity("-59958.5km/s")
+          # for restf=1.25GHz
+          #qvstart=qa.quantity("35975.1km/s")
+          # ch10
+          qvstart=qa.quantity("16788.4km/s")
+
+          ##mfstart=me.frequency('LSRK',qa.quantity("1.1GHz"))
+          mfstart=me.frequency('LSRK',qa.quantity("1.09999GHz"))
+          #mvstart=me.radialvelocity('BARY',qa.quantity("-59976.1km/s"))
+          mvstart=me.radialvelocity('BARY',qa.quantity("11977.6km/s"))
+          #dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
+          dop = me.todoppler('radio',mfstart,qa.quantity('1.25GHz'))
+          #1chan width 
+          #qvstep = qa.quantity("11991.700km/s")
+          qvstep = qa.quantity("4796.7km/s")
           mvstep = me.radialvelocity('TOPO',qvstep)
+
+          # restf = 1.25GHz
+          # vel range: 59961.1 -  -31174.7 km/s (lsrk/radio)
+          #            74952.3 -  -28238.3 km/s (lsrk/optical)  
 
           testList = {
                       0:{'imagename':'Cubetest_chandefstdefstep','spw':'0','start':0,'step':1,'frame':'LSRK',
@@ -273,29 +287,39 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                         'desc':'channel, default start, step=2, LSRK'},
                       3:{'imagename':'Cubetest_chanst5wd1','spw':'0','start':5,'step':1, 'frame':'LSRK',
                         'desc':'channel, start=5, default step, LSRK'},
+                      # currently 4 is failing, investigating  - 2014.08.27 TT
                       4:{'imagename':'Cubetest_chandefstwd1spwsel','spw':'0:5~19','start':0,'step':1, 'frame':'LSRK',
                         'desc':'channel, spw=0:5~19, LSRK'},
                       5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','step':'40MHz','frame':'TOPO',
                         'desc':'frequency, default start, step=\'40MHz\', TOPO'},
                       6:{'imagename':'Cubetest_freqst5defwd','spw':'0','start':'1.1GHz','step':'','frame':'TOPO',
                         'desc':'frequency, start=\'1.1GHz\', default step, TOPO'},
-                      #7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:6~19','start':'1.1GHz','step':'','frame':'TOPO',
                       7:{'imagename':'Cubetest_freqst5defwdspwsel','spw':'0:4~19','start':'1.1GHz','step':'','frame':'TOPO',
                         'desc':'frequency, start=\'1.1GHz\', default step, spw=0:6~19, TOPO'},
                       8:{'imagename':'Cubetest_freqst10wdm','spw':'0','start':'1.2GHz','step':'-20MHz','frame':'TOPO',
                         'desc':'frequency, start=\'1.2GHz\', step=\'-20MHz\', TOPO'},
-                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','step':'11991.700km/s','frame':'TOPO',
-                        'desc':'frequency, default start, step=\'11991.700km/s\', TOPO'},
-                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','step':'-11991.700km/s','frame':'TOPO',
-                        'desc':'velocity, default start, step=\'-11991.700km/s\', TOPO'},
-                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','start':'-59958.5km/s','step':'','frame':'TOPO',
-                        'desc':'velocity, start=\'-59958.5km/s\', default step, TOPO'},
-                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','start':'-59976.1km/s','step':'','frame':'BARY',
-                        'desc':'velocity, start=\'-59976.1km/s\', default step, BARY'},
+                      9:{'imagename':'Cubetest_veldefstwd2','spw':'0','start':'','step':'9593.4km/s','frame':'TOPO',
+                        'desc':'frequency, default start, step=\'9593.4km/s\', TOPO'},
+                     10:{'imagename':'Cubetest_veldefstwd2m','spw':'0','start':'','step':'-9593.40km/s','frame':'TOPO',
+                        'desc':'velocity, default start, step=\'-9593.40m/s\', TOPO'},
+                     11:{'imagename':'Cubetest_velst10defwd','spw':'0','start':'11991.7km/s','step':'','frame':'TOPO',
+                        'desc':'velocity, start=\'11991.7km/s\', default step, TOPO'},
+                     12:{'imagename':'Cubetest_velst10defwdbary','spw':'0','start':'11977.6km/s','step':'','frame':'BARY',
+                        'desc':'velocity, start=\'11977.6km/s\', default step, BARY'},
+                     # currently 13 is not quite properly working, investigating - 2014.08.27 TT 
                      #13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','step':'4234.40km/s',
-                     13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','step':'5500.0km/s',
+                     ##13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'-49962.6km/s','step':'5500.0km/s',
+                     ##13:{'imagename':'Cubetest_optvelst10defwdlsrk','spw':'0','start':'74952.3km/s','step':'5500.0km/s',
+                     ##   'veltype':'optical','frame':'LSRK',
+                     ##   'desc':'velocity, start=\'74952.3km/s\', default step, veltype=optical LSRK'},
+                     ### smallest w in vopt = 4792.2km/s (ch19-20), largest w in vopt: 8817km/s (ch0-1)
+                     ##13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'74952.3km/s','step':'',
+                     13:{'imagename':'Cubetest_optvelst10wdeflsrk','spw':'0','start':'12494.8km/s','step':'',
+                     #13:{'imagename':'Cubetest_optvelst0defwdlsrk','spw':'0','start':'26072.5km/s','step':'8817km/s',
+                     #13:{'imagename':'Cubetest_optvelst2defwdlsrk','spw':'0','start':'132605km/s','step':'-8817km/s',
                         'veltype':'optical','frame':'LSRK',
-                        'desc':'velocity, start=\'-49962.6km/s\', default step, veltype=optical LSRK'},
+                     ##   'desc':'velocity, start=\'74952.3km/s\', default step, veltype=optical LSRK'},
+                        'desc':'velocity, start=\'12494.8km/s\', default step, veltype=optical LSRK'},
                      14:{'imagename':'Cubetest_stqfreqdefwd','spw':'0','start':qfstart,'step':'', 'veltype':'radio','frame':'',
                         'desc':'frequency, start=%s, default step, veltype=radio TOPO' % qfstart},
                      15:{'imagename':'Cubetest_stmfreqdefwd','spw':'0','start':mfstart,'step':'', 'veltype':'radio','frame':'',
@@ -307,7 +331,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                      18:{'imagename':'Cubetest_veldefstqvstep','spw':'0','start':'','step':qvstep,'frame':'TOPO',
                         'desc':'velocity, default start, step=%s, TOPO' % qvstep},
                      19:{'imagename':'Cubetest_veldefstmvstep','spw':'0','start':'','step':mvstep,'frame':'TOPO',
-                        'desc':'velocity, default start, step=%s, TOPO' % mvstart},
+                        'desc':'velocity, default start, step=%s, TOPO' % mvstep},
+                     # this also fails, investigating - 2014.08.27 TT
                      20:{'imagename':'Cubetest_stdopdefwd','spw':'0','start':dop,'step':'','frame':'TOPO',
                         'desc':'doppler, start=%s, default step, LSRK' % dop}
                     }
@@ -322,7 +347,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        spw=testList[testid]['spw'],\
                                        usescratch=True,readonly=True,\
                                        imagename=testList[testid]['imagename'], mode='cube',\
+                                       #nchan=3,\
                                        nchan=10,\
+                                       #nchan=20,\
+                                       restfreq=['1.25GHz'],\
+                                       #restfreq=['1.5GHz'],\
                                        start=testList[testid]['start'],\
                                        step=testList[testid]['step'],\
                                        veltype=inveltype,\
@@ -335,7 +364,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
 
@@ -364,7 +393,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
      if(testnum==11):  ## 1 image-field, mfs --- WB AWP ( single term )
           casalog.post("==================================");
@@ -392,7 +421,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
      if(testnum==10):  ## 1 image-field, mfs --- Narrow-band AWP
           casalog.post("==================================");
@@ -419,7 +448,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==9):  ## Image domain mosaic for single-term (narrow band )
@@ -443,7 +472,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
  
 
      if(testnum==8):  # MTMFS + Facets
@@ -464,7 +493,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==7):  # MTMFS 
@@ -487,7 +516,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==6): ## Facetted imaging
@@ -508,7 +537,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
@@ -528,7 +557,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
@@ -555,7 +584,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
      
@@ -579,7 +608,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
      
      
      if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
@@ -599,7 +628,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
      
 
      if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
@@ -623,7 +652,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
-                                       interactive=interactive,mask=mask)
+                                       interactive=interactive)
 
 
 
@@ -969,6 +998,222 @@ def testImageCoordinates( testnum=1, testid=0):
         os.system('rm -rf '+impars['imagename']+'*')
 
       doMajor(params)
+
+      ok = ia.open(impars['imagename']+'.residual')
+      if ok:
+        selpars = paramList.getSelPars()
+        outcsys=ia.coordsys().torecord()
+        imsummary=ia.summary()
+        ia.done()
+        #print selpars
+        nchan = impars['nchan']
+        if (nchan!=imsummary['shape'][3]): 
+          print "No. of image channel =%s while nchan asked is %s" % (imsummary['shape'][3], nchan) 
+        checkimcoord(outcsys,selpars,impars) 
+
+def checkimcoord(csys,selpars,impars):
+    """
+    check the output image from testImageCoordinates if it is consistent
+    with the input data and image parameters (selpars, impars)
+    """
+
+    errs=[]
+    # freq frame dict
+    specframes={0:'REST',1:'LSRK',2:'LSRD',3:'BARY',4:'GEO',5:'TOPO',6:'GALACTO',7:'LGROUP',8:'CMB',64:'Undefined'}
+
+    msname=selpars['ms0']['msname']
+    selspw=selpars['ms0']['spw'] 
+    selfield=selpars['ms0']['field'] 
+    if selspw=='': selspw='*'
+    ms.open(msname)    
+    sel={}
+    sel['spw']=selspw
+    sel['field']=selfield
+    ms.msselect(sel)
+    selected = ms.msselectedindices()
+    #print "selected=",selected
+    tb.open(msname+'/SPECTRAL_WINDOW')
+    chanfreqs=tb.getcell('CHAN_FREQ',selected['spw'])
+    chanw=tb.getcell('CHAN_WIDTH',selected['spw'])
+    msframe=tb.getcell('MEAS_FREQ_REF',selected['spw'][0])
+    tb.close()
+    dataframe=specframes[msframe]
+    #print "dataframe=",dataframe
+    chansel = selected['channel'][0][1]
+    chanselend = selected['channel'][0][2]
+    #print "start freq=",chanfreqs[chansel]
+    #print "csys=",csys 
+    # kower edge freq
+    descendingfreq = False
+    if chanw[0] < 0:
+      descendingfreq = True
+
+    floedge = chanfreqs[chansel]-chanw[chansel]/2.0
+    fhiedge = chanfreqs[chanselend]+chanw[chansel]/2.0
+    #print "floedge=",floedge, "fhiedge=",fhiedge
+    outframe=impars['frame']
+    veltype=impars['veltype']
+    start=impars['start']
+    width=impars['step']
+    restf=impars['restfreq'][0]
+
+    reversechanorder=False
+    # default start handling with width specification
+    # - also depends on freq ordering in the data
+    if type(start)==str and start=="":
+      widthval=0
+      if type(width)==dict:
+        if width.has_key('type') and width['type']=='radialvelocity':
+          widthval = width['m0']['value']
+        elif width.has_key('unit') and width['unit'].count('m/s'):
+          widthval = width['value']
+        if (descendingfreq and widthval < 0) or (not descendingfreq and widthval > 0):
+          reversechanorder=True
+      elif width.count('m/s')!=0:
+        widthval = qa.quantity(width)['value']
+        if (descendingfreq and widthval < 0) or (not descendingfreq and widthval > 0):
+          reversechanorder=True
+          
+    #print "descendingfreq=",descendingfreq
+    #print "reversechanorder=",reversechanorder
+    needfreqconv=False
+    if dataframe!=outframe:
+       needfreqconv=True
+
+    # from output image --------------------------------
+    # freqframe
+    specCoord = csys['spectral2']
+    imframe=specCoord['system']
+    # conversion layer- this should be LSRK by default
+    convframe=specCoord['conversion']['system']
+    imch0=specCoord['wcs']['crval']
+    iminc=specCoord['wcs']['cdelt']
+    obsdate=csys['obsdate']
+    # if image channel reversed, check last channel 
+    if reversechanorder:
+      imch0=imch0+iminc*(impars['nchan']-1)
+    # check frames
+    if convframe!="LSRK":
+      errs.append('Error: conversion layer is not set to LSRK!')
+    if imframe!=outframe:
+      errs.append('Error: inconsistent output spec frame:%s, should be %s' % (imframe,outframe))
+
+    startfreq = 0
+    imch0conv = imch0
+    vmode = False
+    if type(start)==int:
+      if start>=chansel:
+        if type(width)==int and width > 0:
+          range = start + width - 1   
+          startfreq = (chanfreqs[range] + chanfreqs[start]) /2.0 
+        else:
+          startfreq=chanfreqs[start]
+    else:
+      if type(start)==str:
+      # start parameter 
+        if start=="":
+          freq0q = qa.quantity(str(chanfreqs[chansel])+'Hz')
+        elif start.count('Hz') !=0:
+          freq0q = qa.quantity(start)
+        elif start.count('m/s') !=0:
+          freq0q = vfconv(start,outframe,restf,veltype)['m0']
+          vmode = True
+      elif type(start)==dict:
+        # measure freq/vel format
+        if start.has_key('type'):
+          mframe = start['refer']
+          if start['type']=='frequency':
+            freq0q = start['m0']
+          else:
+            freq0q = vfconv(str(start['m0']['value'])+start['m0']['unit'], mframe, restf, veltype)['m0']
+            vmode = True  
+        else:
+          if start['unit'].count('Hz') != 0:
+            freq0q = start
+          elif start['unit'].count('m/s') != 0:
+            freq0q = vfconv(str(start['value'])+start['unit'],outframe,restf,veltype)['m0']
+            vmode = True  
+
+      # step(width)
+      qhalfw = 0
+      if type(width)==str and width!="":
+        if width.count('Hz') != 0:
+          qhalfw = qa.div(qa.quantity(width),2)
+        elif width.count('m/s') != 0:
+          qhalfw = qa.div(qa.quantity(width),2) 
+          vmode = True
+
+      if qhalfw:
+        # add width part to the starting frequency
+        if vmode:
+          qvst = qa.quantity(start)
+          if qvst['value']==0.0:
+            qvst = vfconv(str(freq0q['value'])+freq0q['unit'],outframe, restf, veltype)['m0']
+          qvstedge = qa.sub(qvst,qhalfw)
+          qfstedge = vfconv(str(qvstedge['value'])+qvstedge['unit'], outframe, restf, veltype)['m0']
+          fstedge = qa.convert(qfstedge, 'Hz')['value']
+
+          if reversechanorder:
+            if (fstedge > floedge and not descendingfreq) or (fstedge < floedge and descendingfreq):
+              qvelcen = qa.sub(vfconv(str(floedge)+'Hz',outframe, restf,veltype)['m0'],qhalfw)
+            else:
+              qvelcen = qvst 
+          else:
+            if (fstedge < floedge and not descendingfreq) or (fstedge > floedge and descendingfreq):
+              # shift start to fit into data....
+              #qvelcen = qa.add(qa.quantity(start),qhalfw)
+              qvelcen = qa.add(vfconv(str(floedge)+'Hz',outframe, restf,veltype)['m0'],qhalfw)
+            else:
+              qvelcen = qvst 
+          qstfreq = vfconv(str(qvelcen['value'])+qvelcen['unit'], outframe, restf, veltype)['m0']
+          startfreq = qa.convert(qstfreq,'Hz')['value']
+        else:
+          qfstedge = qa.sub(freq0q,qhalfw)
+          fstedge = qa.convert(qfstedge, 'Hz')['value']
+          if (fstedge < floedge and not descendingfreq) or (fstedge > floedge and descendingfreq):
+            qfrqcen = qa.add(qa.quantity(floedge,'Hz'),qhalfw)
+            qstfreq = qa.convert(qfrqcen,'Hz')
+          else:
+            qstfreq = freq0q
+          startfreq = qa.convert(qstfreq,'Hz')['value']
+      else:
+        startfreq = qa.convert(freq0q,'Hz')['value']
+        
+    #print "startfreq=",startfreq
+    if needfreqconv:
+      #print "converting image ch0 freq to freq in dataframe=",dataframe
+      me.doframe(me.epoch(obsdate['refer'],str(obsdate['m0']['value'])+obsdate['m0']['unit']))
+      me.doframe(csys['telescopeposition'])
+      me.doframe(me.direction(csys['direction0']['conversionSystem'],str(csys['direction0']['crval'][0])+'rad',str(csys['direction0']['crval'][1])+'rad'))
+      print "******************\n"
+      #print me.showframe()
+      #print "imch0=", imch0
+      imch0conv=me.measure(me.frequency(imframe,str(imch0)+'Hz'),dataframe)['m0']['value']
+    #print "dataframe=",dataframe, " outframe=",outframe, " imframe=",imframe
+    if (abs(imch0conv-startfreq)/startfreq < 0.0001):      
+      if (reversechanorder):
+        print "OK, image last chan freq match with the data selections and start specification: start freq=", startfreq 
+      else:
+        print "OK, image ch0 freq match with the data selections and start specification: start freq=", startfreq 
+    else:
+      print "Error, image ch0 freq does not match with the data selections+start specification, imch0(in %s)=%s start freq=%s" % (dataframe,imch0conv,startfreq)
+
+
+def vfconv(velorfreqstr, frame, restfstr, veltype):
+    """
+    vel to freq or freq to vel convesion
+    velorfreq - input vel of freq in a string with unit
+    """
+    if (qa.quantity(velorfreqstr)['unit'].find('m/s') > -1 ):
+      dop = me.doppler(veltype, qa.quantity(velorfreqstr))
+      retvf = me.tofrequency(frame, dop, qa.quantity(restfstr))
+    elif (qa.quantity(velorfreqstr)['unit'].find('Hz') > -1 ):
+      mfreq = me.frequency(frame, qa.quantity(velorfreqstr))
+      retvf = me.todoppler(veltype, mfreq, qa.quantity(restfstr))
+    else:
+      print "Error! cannot convert ", velorfreqstr
+    return retvf
+    
 
 #def testmakeimage():
 #     params = getparams( testnum=1 )
