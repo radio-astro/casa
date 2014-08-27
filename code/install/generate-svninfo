@@ -37,7 +37,7 @@ chomp($build_date = `date -u "+%a %Y/%m/%d %H:%M:%S UTC"`);
 
 unless ( $location ) { die "no location available" }
 
-open( INFO, "svn info $location |" ) or die "could not get subversion information";
+open( INFO, "echo t | svn info $location |" ) or die "could not get subversion information";
 
 $subversion_url='';
 $subversion_revision='';
