@@ -301,6 +301,9 @@ private:
     // helper for locate
     Record _locateInfo(const Record& parameters);
 
+    //Make sure users don't set the plot index to an invalid value.
+    bool checkPlotIndex( int index );
+
 };
 
 }
