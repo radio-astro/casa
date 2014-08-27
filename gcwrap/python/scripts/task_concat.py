@@ -8,10 +8,17 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 	   visweightscale):
 	"""concatenate visibility datasets
-	The list of data sets given in the vis argument are concatenated into an output
-	data set in concatvis.  If concatvis already exists (e.g., it is the same as the
-	first input data set), then the other input data sets will be appended to the
-	concatvis data set.  There is no limit to the number of input data sets.
+	The list of data sets given in the vis argument are chronologically concatenated 
+	into an output data set in concatvis, i.e. the data sets in vis are first ordered
+	by the time of their earliest integration and then concatenated.  
+	
+	If there are fields whose direction agrees within the direction tolerance
+	(parameter dirtol), the actual direction in the resulting, merged output field
+	will be the one from the chronologically first input MS.
+
+	If concatvis already exists (e.g., it is the same as the first input data set), 
+	then the other input data sets will be appended to the concatvis data set.  
+	There is no limit to the number of input data sets.
 
 	If none of the input data sets have any scratch columns (model and corrected
 	columns), none are created in the concatvis.  Otherwise these columns are
@@ -26,8 +33,9 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 	of another field position in any other data set will be combined into one
 	field.  The field names need not be the same---only their position is used.
 
-	Each appended dataset is assigned a new observation id.
-
+	Each appended dataset is assigned a new observation id (provided the entries
+	in the observation table are indeed different).
+	
 	Keyword arguments:
 	vis -- Name of input visibility files to be combined
 		default: none; example: vis = ['src2.ms','ngc5921.ms','ngc315.ms']
@@ -220,17 +228,24 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 		# by checking if any of the MSs has them.
 		
 		considerscrcols = False
+		considercorr = False
+		considermodel = False
 		needscrcols = []
+		needmodel = []
+		needcorr = []
                 if ((type(theconcatvis)==str) and (os.path.exists(theconcatvis))):
 			
 			# check if all scratch columns are present
 			t.open(theconcatvis)
-			if(t.colnames().count('CORRECTED_DATA')==1 
-			   or  t.colnames().count('MODEL_DATA')==1):
-				considerscrcols = True  # there are scratch columns
+			if (t.colnames().count('MODEL_DATA')==1):
+				considermodel = True
+			if(t.colnames().count('CORRECTED_DATA')==1):
+				considercorr = True
 				
 			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
-					   or  t.colnames().count('MODEL_DATA')==0)
+					  or  t.colnames().count('MODEL_DATA')==0)
+			needmodel.append(t.colnames().count('MODEL_DATA')==0)
+			needcorr.append(t.colnames().count('CORRECTED_DATA')==0)
 			t.close()
                 else:
                         raise Exception, 'Visibility data set '+theconcatvis+' not found - please verify the name'
@@ -242,20 +257,28 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 
 			# check if all scratch columns are present
 			t.open(elvis)
-			if(t.colnames().count('CORRECTED_DATA')==1 
-                           or  t.colnames().count('MODEL_DATA')==1):
-				considerscrcols = True  # there are scratch columns
+			if (t.colnames().count('MODEL_DATA')==1):
+				considermodel = True
+			if(t.colnames().count('CORRECTED_DATA')==1):
+				considercorr = True
 
 			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
 					  or  t.colnames().count('MODEL_DATA')==0)
+			needmodel.append(t.colnames().count('MODEL_DATA')==0)
+			needcorr.append(t.colnames().count('CORRECTED_DATA')==0)
 			t.close()
+
+		considerscrcols = (considercorr or considermodel)   # there are scratch columns
+
 
 		# start actual work, file existence has already been checked
 		i = 0
 		if(considerscrcols and needscrcols[i]):
 			# create scratch cols			
 			casalog.post('creating scratch columns in '+theconcatvis , 'INFO')
-			cb.open(theconcatvis) # calibrator-open creates scratch columns
+			cb.open(theconcatvis,
+				addcorr=(considercorr and needcorr[i]),
+				addmodel=(considermodel and needmodel[i])) # calibrator-open creates scratch columns
 			cb.close()
 
 		# scale the weights of the first MS in the chain
@@ -304,7 +327,9 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 					tempname = elvis+'_with_scrcols'
 					shutil.rmtree(tempname, ignore_errors=True)
 					shutil.copytree(elvis, tempname)
-					cb.open(tempname) # calibrator-open creates scratch columns
+					cb.open(tempname,
+						addcorr=(considercorr and needcorr[i]),
+						addmodel=(considermodel and needmodel[i])) # calibrator-open creates scratch columns
 					cb.close()
 					# concatenate copy instead of original file
 					m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,respectname=respectname,
