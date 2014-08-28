@@ -2,8 +2,10 @@ import os
 import time
 from taskinit import *
 
-def plotms(vis=None, plotindex=None,
+def plotms(vis=None, 
            gridrows=None, gridcols=None,
+           rowindex=None,colindex=None,
+           plotindex=None,
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None, yaxislocation=None,
            selectdata=None, field=None, spw=None,
@@ -16,7 +18,7 @@ def plotms(vis=None, plotindex=None,
            freqframe=None,restfreq=None,veldef=None,shift=None,
            extendflag=None,
            extcorr=None, extchannel=None,
-           iteraxis=None,rowindex=None,colindex=None,xselfscale=None,yselfscale=None,
+           iteraxis=None,xselfscale=None,yselfscale=None,
            xsharedaxis=None, ysharedaxis=None,
            customsymbol=None, symbolshape=None, symbolsize=None,
            symbolcolor=None, symbolfill=None, symboloutline=None,
@@ -54,12 +56,17 @@ def plotms(vis=None, plotindex=None,
     Keyword arguments:
     vis -- input visibility dataset
            default: ''
-    plotindex -- Index of the plot (0-based).
-            default: 0
-    gridrows -- Row count in a multiplot grid.
-            default: 1
-    gridcols -- Column count in a multiplot grid.
-            default: 1     
+    
+    gridrows -- Number of subplot rows.
+                    default: 1
+    gridcols -- Number of subplot columns.
+                    default: 1 
+    rowindex -- Row location of the subplot (0-based).
+                    default: 0
+    colindex -- Column location of the subplot (0-based).
+                    default: 0          
+    plotindex -- Index to address a subplot (0-based).
+                    default: 0            
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
@@ -70,11 +77,7 @@ def plotms(vis=None, plotindex=None,
                        default: '' (uses PlotMS default).
     iteraxis -- what axis to iterate on when doing iteration plots
                 default: ''
-              &gt;&gt;&gt; rowindex, colindex, xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters
-        rowindex -- Row location of the plot (0-based).
-                    default: 0
-        colindex -- Column location of the plot (0-based).
-                    default: 0   
+              &gt;&gt;&gt; xsharedaxis, ysharedaxis, xselfscale, yselfscale expandable parameters 
         xselfscale -- If true, iterated plots should share a common x-axis label per column.
                        default: False.
         yselfscale -- If true, iterated plots should share a common y-axis label per row.
@@ -224,7 +227,6 @@ def plotms(vis=None, plotindex=None,
         if len(vis) > 0:
             vis = os.path.abspath(vis) 
         
-        
         if not plotindex:
             plotindex = 0  
         if plotindex < 0:
@@ -233,7 +235,7 @@ def plotms(vis=None, plotindex=None,
         if clearplots and plotindex > 0:   
             casalog.post("A nonzero plotindex is not valid when clearing plots.", "SEVERE")
             return False
-        elif ( gridrows > 0 or gridcols > 0) and plotindex > 0:
+        elif ( gridrows > 1 or gridcols > 1) and plotindex > 0:
             casalog.post("A nonzero plotindex is not valid when resetting the page grid", "SEVERE")
             return False
     
