@@ -614,7 +614,7 @@ protected:
     ShapePattern shapePattern_p;
 };
 
-  template <typename T, Bool IsComputed = False, size_t Alignment = 64>
+  template <typename T, Bool IsComputed = False, size_t Alignment = 32>
 class VbCacheItemArrayAligned : public VbCacheItemArray<T, IsComputed> {
 public:
 
@@ -778,7 +778,7 @@ private:
 
     int allocate(void **storage, const size_t size)
     {
-      const int status = posix_memalign(&storage, Alignment, size);
+      const int status = posix_memalign(storage, Alignment, size);
       ThrowIf(status != 0,
 	      String::format("posix_memalign failed with error code %d", status));
       return status;
