@@ -269,7 +269,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           #mvstart=me.radialvelocity('BARY',qa.quantity("-59976.1km/s"))
           mvstart=me.radialvelocity('BARY',qa.quantity("11977.6km/s"))
           #dop = me.todoppler('radio',mfstart,qa.quantity('1.0GHz'))
-          dop = me.todoppler('radio',mfstart,qa.quantity('1.25GHz'))
+          mfstart10=me.frequency('LSRK',qa.quantity(" 1.17999GHz"))                                                        
+          dop = me.todoppler('radio',mfstart10,qa.quantity('1.25GHz'))                                              
           #1chan width 
           #qvstep = qa.quantity("11991.700km/s")
           qvstep = qa.quantity("4796.7km/s")
@@ -288,7 +289,8 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                         'desc':'channel, default start, step=2, LSRK'},
                       3:{'imagename':'Cubetest_chanst5wd1','spw':'0','start':5,'step':1, 'frame':'LSRK',
                         'desc':'channel, start=5, default step, LSRK'},
-                      # currently 4 is failing, investigating  - 2014.08.27 TT
+                      # this will result in blank channnel images (calcChanFreqs requires start and width in channel       
+                      # mode to be given in chan index                                                                 
                       4:{'imagename':'Cubetest_chandefstwd1spwsel','spw':'0:5~19','start':0,'step':1, 'frame':'LSRK',
                         'desc':'channel, spw=0:5~19, LSRK'},
                       5:{'imagename':'Cubetest_freqdefstwd2','spw':'0','start':'','step':'40MHz','frame':'TOPO',
@@ -1109,6 +1111,9 @@ def checkimcoord(csys,selpars,impars):
           startfreq = (chanfreqs[range] + chanfreqs[start]) /2.0 
         else:
           startfreq=chanfreqs[start]
+      else:
+        # start chan idx less than chansel by spw. Will results in some blank channel images
+        startfreq = chanfreqs[start]
     else:
       if type(start)==str:
       # start parameter 

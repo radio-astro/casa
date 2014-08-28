@@ -997,6 +997,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("mode"), mode);
         err += readVal( inrec, String("frame"), frame);
         qmframe="";
+        // mveltype is only set when start/step is given in mdoppler
+        mveltype=""; 
         //start 
         if( inrec.isDefined("start") ) 
           {
@@ -1054,8 +1056,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                       }
                     else if( mtype=="doppler") 
                       {
-                        start = MDopToVelString(startRecord);
+                        //use veltype in mdoppler
+                        //start = MDopToVelString(startRecord);
+                        start = recordQMToString(startRecord);
                         stringToQuantity(start,velStart);
+                        startRecord.get(String("refer"), mveltype);
+                        mveltype.downcase();
                       }
                   }
                 else 
@@ -1126,8 +1132,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                       }
                     else if( mtype=="doppler") 
                       {
-                        step = MDopToVelString(stepRecord);
+                        //step = MDopToVelString(stepRecord);
+                        step = recordQMToString(stepRecord);
                         stringToQuantity(step,velStep);
+                        startRecord.get(String("refer"), mveltype);
+                        mveltype.downcase();
                       }
                   }
                 else 
@@ -1174,6 +1183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           }
    
 	err += readVal( inrec, String("veltype"), veltype); 
+        veltype = mveltype!=""? mveltype:veltype;
         // sysvel (String, Quantity)
         if( inrec.isDefined("sysvel") )
           {
@@ -1262,6 +1272,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             rec.get(String("refer"), mveltype);
             Record dopRecord = rec.subRecord("m0");
             String dopstr = recordQMToString(dopRecord);
+            cerr<<"dopstr="<<dopstr<<endl;
             MRadialVelocity::Types mvType;
             //use input frame
             qmframe = frame!=""? frame: "LSRK";

@@ -228,7 +228,7 @@ public:
   String start, step, frame, veltype, mode, reffreq, sysvel, sysvelframe;
   // private variable to store ref frame defined in Quantity or Measure 
   // in start or step parameters and veltype from measure (e.g. MDoppler)
-  String qmframe, mveltype;  
+  String qmframe, mveltype;
   String tststr;
   // for holding quantity or measure records
   Record startRecord, stepRecord, reffreqRecord, sysvelRecord, restfreqRecord;
