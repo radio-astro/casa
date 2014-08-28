@@ -620,10 +620,13 @@ public:
 
     typedef typename VbCacheItem<T>::Filler Filler;
     typedef typename T::value_type DataType;
+    //typedef sizeof(DataType) DataSize;
 
     VbCacheItemArrayAligned ()
       : VbCacheItemArray<T, IsComputed>(),
-	storage_p(0)
+	DataSize(sizeof(DataType)),
+	storage_p(0),
+	storageSize_p(0)
     {}
   
     virtual ~VbCacheItemArrayAligned ()
@@ -764,16 +767,18 @@ private:
     void resizeStorage(const IPosition &shape, Bool copyValues)
     {
       void *storage = storage_p;
-      const size_t currentLength = this->getItem().shape().product();
-      const size_t newLength = shape.product();
-      if (newLength > currentLength) {
-	allocate(&storage, newLength * sizeof(DataType));
+      size_t storageSize = storageSize_p;
+      const size_t currentSize = this->getItem().shape().product() * DataSize;
+      const size_t newSize = shape.product() * DataSize;
+      if (newSize > storageSize_p) {
+	allocate(&storage, newSize);
+	storageSize = newSize;
 	if (copyValues) {
-	  memcpy(storage, storage_p, currentLength * sizeof(DataType));
+	  memcpy(storage, storage_p, currentSize);
 	}
 	deallocate();
       }
-      attachToItem(shape, storage);
+      attachToItem(shape, storage, storageSize);
     }
 
     int allocate(void **storage, const size_t size)
@@ -791,14 +796,17 @@ private:
       }
     }
 
-    void attachToItem(const IPosition &shape, void *storage)
+    void attachToItem(const IPosition &shape, void *storage, const size_t storageSize)
     {
       DataType *array = reinterpret_cast<DataType *>(storage);
       this->getItem().takeStorage(shape, array, SHARE);
       storage_p = storage;
+      storageSize_p = storageSize;
     }
-  
+
+    const size_t DataSize;
     void *storage_p;
+    size_t storageSize_p;
 };
 
 class VisBufferCache {
