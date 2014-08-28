@@ -7,79 +7,80 @@
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Utilities/Assert.h>
 
+#include <ms/MeasurementSets/MSSelectionTools.h>
+
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
 
 namespace casa {
 
 SingleDishMS::SingleDishMS()
-  : msname_p(""), ms_p(0), mssel_p(0)
+  : msname_(""), ms_(0), mssel_(0)
 {
 }
 
 
-SingleDishMS::SingleDishMS(const string& ms_name)
-  : msname_p(ms_name), ms_p(0), mssel_p(0)
+SingleDishMS::SingleDishMS(string const& ms_name)
+  : msname_(ms_name), ms_(0), mssel_(0)
 {
   // Make a MeasurementSet object for the disk-base MeasurementSet
   String lems(ms_name);
-  ms_p = new MeasurementSet(lems, TableLock(TableLock::AutoNoReadLocking), 
+  ms_ = new MeasurementSet(lems, TableLock(TableLock::AutoNoReadLocking), 
 			    Table::Update);
-  AlwaysAssert(ms_p, AipsError);
+  AlwaysAssert(ms_, AipsError);
 }
 
 
 SingleDishMS::SingleDishMS(MeasurementSet &ms)
-  : msname_p(""), ms_p(0), mssel_p(0)
+  : msname_(""), ms_(0), mssel_(0)
 {
-  msname_p = static_cast<string>(ms.tableName());
-
-  ms_p = new MeasurementSet(ms);
-  AlwaysAssert(ms_p, AipsError);
+  msname_ = static_cast<string>(ms.tableName());
+  ms_ = new MeasurementSet(ms);
+  AlwaysAssert(ms_, AipsError);
 }
 
-SingleDishMS::SingleDishMS(const SingleDishMS &other)
-  : msname_p(""), ms_p(0)
+SingleDishMS::SingleDishMS(SingleDishMS const &other)
+  : msname_(""), ms_(0)
 {
-  ms_p = new MeasurementSet(*other.ms_p);
-  if(other.mssel_p) {
-    mssel_p = new MeasurementSet(*other.mssel_p);
+  ms_ = new MeasurementSet(*other.ms_);
+  if(other.mssel_) {
+    mssel_ = new MeasurementSet(*other.mssel_);
   }
 }
 
-SingleDishMS &SingleDishMS::operator=(const SingleDishMS &other)
+SingleDishMS &SingleDishMS::operator=(SingleDishMS const &other)
 {
-  msname_p = "";
-  if (ms_p && this != &other) {
-    *ms_p = *(other.ms_p);
+  msname_ = "";
+  if (ms_ && this != &other) {
+    *ms_ = *(other.ms_);
   }
-  if (mssel_p && this != &other && other.mssel_p) {
-    *mssel_p = *(other.mssel_p);
+  if (mssel_ && this != &other && other.mssel_) {
+    *mssel_ = *(other.mssel_);
   }
   return *this;
 }
 
 SingleDishMS::~SingleDishMS()
 {
-  if (ms_p) {
-    ms_p->relinquishAutoLocks();
-    ms_p->unlock();
-    delete ms_p;
+  if (ms_) {
+    ms_->relinquishAutoLocks();
+    ms_->unlock();
+    delete ms_;
   }
-  ms_p = 0;
-  if (mssel_p) {
-    mssel_p->relinquishAutoLocks();
-    mssel_p->unlock();
-    delete mssel_p;
+  ms_ = 0;
+  if (mssel_) {
+    mssel_->relinquishAutoLocks();
+    mssel_->unlock();
+    delete mssel_;
   }
-  mssel_p = 0;
-  msname_p = "";
+  mssel_ = 0;
+  msname_ = "";
 }
 
-// string SingleDishMS::name() const
-// {
-//   return msname_p;
-// }
+void SingleDishMS::check_MS()
+{
+  AlwaysAssert(ms_, AipsError);
+}
 
 bool SingleDishMS::close()
 {
@@ -87,13 +88,69 @@ bool SingleDishMS::close()
   os << "Closing MeasurementSet and detaching from SingleDishMS"
      << LogIO::POST;
 
-  ms_p->unlock();
-  if(mssel_p) mssel_p->unlock();
-  if(mssel_p) delete mssel_p; mssel_p = 0;
-  if(ms_p) delete ms_p; ms_p = 0;
-  msname_p = "";
+  ms_->unlock();
+  if(mssel_) {
+    mssel_->unlock();
+    delete mssel_;
+    mssel_ = 0;
+  }
+  if(ms_) delete ms_; ms_ = 0;
+  msname_ = "";
 
   return True;
+}
+
+void SingleDishMS::scale(double const factor)
+{
+  check_MS();
+  cout << "Got scaling factor = " << factor << endl;
+}
+
+void SingleDishMS::set_selection(Record const &selection)
+{
+  check_MS();
+  reset_selection();
+
+  //Parse selection
+  String timeExpr(""), antennaExpr(""), fieldExpr(""),
+    spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
+    scanExpr(""), arrayExpr(""), stateExpr(""), obsExpr("");
+  timeExpr = get_field_as_casa_string(selection,"time");
+  antennaExpr = get_field_as_casa_string(selection,"baseline");
+  fieldExpr = get_field_as_casa_string(selection,"field");
+  spwExpr = get_field_as_casa_string(selection,"spw");
+  uvDistExpr = get_field_as_casa_string(selection,"uvdist");
+  taQLExpr = get_field_as_casa_string(selection,"taql");
+  polnExpr = get_field_as_casa_string(selection,"polarization");
+  scanExpr = get_field_as_casa_string(selection,"scan");
+  arrayExpr = get_field_as_casa_string(selection,"array");
+  stateExpr = get_field_as_casa_string(selection,"state");
+  obsExpr = get_field_as_casa_string(selection,"observation");
+  //Now the actual selection.
+  mssel_ = new MeasurementSet(*ms_);
+  if (!mssSetData(*ms_,*mssel_,"",timeExpr,antennaExpr,fieldExpr,
+		  spwExpr,uvDistExpr,taQLExpr,polnExpr,scanExpr,
+		  arrayExpr,stateExpr,obsExpr)) { // no valid selection
+    reset_selection();
+    cout << "Reset selection" << endl;
+  }
+  if (mssel_!=0)
+    cout << "Selected nrows = " << mssel_->nrow() << " from " << ms_->nrow() << "rows" << endl;
+}
+
+String SingleDishMS::get_field_as_casa_string(Record const &in_data, string const &field_name){
+  Int ifield;
+  ifield = in_data.fieldNumber(String(field_name));
+  if (ifield>-1) return in_data.asString(ifield);
+  return "";
+}
+
+void SingleDishMS::reset_selection()
+{
+  if (mssel_) {
+    delete mssel_;
+    mssel_=0;
+  };
 }
 
 }  // End of casa namespace.
