@@ -54,22 +54,33 @@ MS Parameters
     <value />
   </param>
   
-   <param type="int" name="plotindex">
-    <description>Index of the plot (0-based).</description>
-    <value>0</value>
-  </param>
+  
   
   <param type="int" name="gridrows">
-    <description>Row location of the plot (blank for default 0).</description>
-  	<value>0</value>
+    <description>Number of subplot rows (default 1).</description>
+  	<value>1</value>
   </param>
   
   <param type="int" name="gridcols">
-    <description>The number of plot columns (blank for default 0).</description>
-  	<value>0</value>
+    <description>Number of subplot columns (default 1).</description>
+  	<value>1</value>
   </param>
   
+   <param type="int" name="rowindex">
+       <description>Row location of the plot (0-based, default 0)</description>
+       <value>0</value>
+   </param>
+
+   <param type="int" name="colindex">
+       <description>Column location of the plot (0-based, default 0)</description>
+       <value>0</value>
+   </param>
   
+  <param type="int" name="plotindex">
+    	<description>Index to address a subplot (0-based, default 0)</description>
+    	<value>0</value>
+  	</param>
+ 
 
   <param type="string" name="xaxis">
     <description>plot x-axis (blank for default/current)</description>
@@ -501,16 +512,6 @@ Iteration Parameters
       </allowed>
    </param>
 
-   <param type="int" name="rowindex" subparam="true">
-       <description>Row location of the plot (0-based, default 0)</description>
-       <value>0</value>
-   </param>
-
-   <param type="int" name="colindex" subparam="true">
-       <description>Column location of the plot (0-based, default 0)</description>
-       <value>0</value>
-   </param>
-
    <param type="bool" name="xselfscale" subparam="true">
        <description>If true, iterated plots should share a common x-axis label per column.</description>
        <value>False</value>
@@ -830,7 +831,8 @@ Export plot as image Parameters
      	<description>Remove any existing plots so new ones can replace them.</description>
      	<value>True</value>
      </param>
-
+     
+     
 <!--
 ###############################################################################
 Plotxy Compliance Parameters
@@ -1138,8 +1140,6 @@ Constraints
     </when>
     <when param="iteraxis">
         <notequals type="string" value="">
-        	<default param="rowindex"><value>0</value></default>
-        	<default param="colindex"><value>0</value></default>
             <default param="xselfscale"><value>False</value></default>
             <default param="yselfscale"><value>False</value></default>
             <default param="xsharedaxis"><value>False</value></default>
@@ -1284,6 +1284,16 @@ Constraints
     Keyword arguments:
     vis -- input MS or CalTable
            default: ''  (will merely launch the gui)
+    gridrows -- Number of subplot rows
+    				default: 1 
+    gridcols -- Number of subplot columns
+    				default: 1
+    rowindex -- Row location of the subplot (0-based).
+                    default: 0
+    colindex -- Column location of the subplot (0-based).
+                    default: 0
+    plotindex -- Index to address a subplot (0-based). 
+    				default: 0                         
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (defaults are xaxis='time',
                                  yaxis='amp' on first execution;
@@ -1492,10 +1502,6 @@ Constraints
                 default: '' (no iteration)
                 options: 'scan','field','spw','baseline','antenna', 'time',''
       &gt;&gt;&gt; iteraxis expandable parameters
-        rowindex -- Row location of the plot (0-based).
-                    default: 0
-        colindex -- Column location of the plot (0-based).
-                    default: 0   
         xselfscale -- If true, iterated plots should share a common x-axis label per column.
         yselfscale -- If true, iterated plots should share a common y-axis label per row.
                       default: false, which will scale all plots globally

@@ -224,7 +224,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
 
-    def test008(self):
+    def stest008(self):
         '''Plotms 8: Check that the display can be set to multiple row/col and that a plot can
         be placed in a particular location of the grid.'''
         self.plotfile_jpg = self.outputDir + "testPlot008.jpg"
@@ -934,7 +934,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile(190000, self.plotfile2_jpg)
         print  
         
-    def test036(self):
+    def stest036(self):
         print
         '''Plotms 36: See CAS-6857 Pixel symbol shape not selectable'''
         self.plotfile_jpg = self.outputDir + "testPlot036.jpg"
@@ -955,6 +955,62 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         self._checkPlotFile(94000, self.plotfile_jpg)
+       
+        print            
+ 
+    def test037(self):
+        print
+        '''Plotms 37: Juergan's cookbook example'''
+        self.plotfile_jpg = self.outputDir + "testPlot037.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot0372.jpg"
+        self.plotfile3_jpg = self.outputDir + "testPlot0373.jpg"
+        self.plotfile4_jpg = self.outputDir + "testPlot0374.jpg"
+        self.plotfile5_jpg = self.outputDir + "testPlot0375.jpg"
+        
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):    
+            os.remove( self.plotfile_jpg)
+        if os.path.exists( self.plotfile2_jpg):    
+            os.remove( self.plotfile2_jpg)
+        if os.path.exists( self.plotfile3_jpg):    
+            os.remove( self.plotfile3_jpg)        
+        
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        
+        #self.res = plotms(vis=self.ms, gridrows=2, gridcols=2, showgui=False, plotfile=self.plotfile_jpg)
+        #self.assertTrue(self.res)
+        #self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
+        
+        #Plot in the second column, first row, and define this plot as plotindex=0
+        self.res = plotms(vis=self.ms, gridrows=2, gridcols=2,
+                          showgui=False, plotfile=self.plotfile2_jpg,
+                          customsymbol=True, symbolshape='diamond', symbolsize=5,
+                          symbolcolor='ff0000')
+        self.assertTrue(self.res)
+        self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot 2 was not created')
+        
+        #Overplot in the same panel.
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', clearplots=False, 
+                          plotindex=1,yaxislocation='right', 
+                          showgui=False, plotfile=self.plotfile3_jpg,
+                          customsymbol=True, symbolshape='circle', symbolsize=5,
+                          symbolcolor='00ff00')
+        self.assertTrue(os.path.exists(self.plotfile3_jpg), 'Plot 3 was not created')
+        
+        #Define a second plot and give it a label plotindex=1, in the lower right corner
+        #self.res = plotms(vis=self.ms, clearplots=False, plotindex=1,rowindex=2,colindex=2, 
+        #                  showgui=False, plotfile=self.plotfile4_jpg)
+        #self.assertTrue(os.path.exists(self.plotfile4_jpg), 'Plot was not created')
+        
+        #Move the plot with the overplot one panel to the left
+        #self.res = plotms(clearplots=False, plotindex=1,rowindex=2,colindex=1, 
+        #                  showgui=False, plotfile=self.plotfile5_jpg)
+        #self.assertTrue(os.path.exists(self.plotfile5_jpg), 'Plot was not created')
+        
+        #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
+        #self._checkPlotFile(94000, self.plotfile_jpg)
        
         print            
  
