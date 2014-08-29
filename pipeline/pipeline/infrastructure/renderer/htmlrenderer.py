@@ -149,8 +149,8 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.Setjy:
         return 'Set calibrator model visibilities'
 
-    if task_cls is hsd.tasks.SDConvertData:
-        return 'Convert Data'
+    if task_cls is hsd.tasks.SDMsToScantable:
+        return 'Convert MS to Scantables'
 
     if task_cls is hsd.tasks.SDReduction:
         return 'Single-dish end-to-end reduction'
@@ -210,7 +210,7 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hsd.tasks.SDPlotFlagBaseline:
         return 'Plot whole spectra with baseline fit and flag result'
 
-    if task_cls is hsd.tasks.SDConvertData:
+    if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MSs into Scantables'
     
     if task_cls is hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger:

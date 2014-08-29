@@ -2,14 +2,14 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_convertdata(infiles=None, pipelinemode=None, overwrite=None, dryrun=None,
-                    acceptresults=None):
+def hsd_mstoscantable(infiles=None, pipelinemode=None, overwrite=None, dryrun=None,
+                      acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDConvertData'
+    task_name = 'SDMsToScantable'
     
     ##########################################################################
     #                                                                        #

@@ -4,7 +4,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hsd_convertdata" category="pipeline">
+<task type="function" name="hsd_mstoscantable" category="pipeline">
 <shortdescription>Imports data into the single dish pipeline</shortdescription>
 <description>
 </description>
@@ -67,7 +67,7 @@
 
 
 <example>
-The hsd_convertdata task loads the specified data into the pipeline
+The hsd_mstoscantable task loads the specified data into the pipeline
 context unpacking and / or converting it as necessary.
 
 Keyword arguments:

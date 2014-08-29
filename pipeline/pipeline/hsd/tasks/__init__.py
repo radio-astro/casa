@@ -5,7 +5,7 @@ from .importdata2 import SDImportData2
 from .exportdata import SDExportData
 from .calsky import SDCalSky
 from .caltsys import SDCalTsys
-from .convertdata import SDConvertData
+from .mstoscantable import SDMsToScantable
 from .applycal import SDApplyCal
 from .inspectdata import SDInspectData
 from .imaging import SDImaging

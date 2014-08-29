@@ -18,7 +18,7 @@ import asap as sd
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDConvertDataInputs(common.SingleDishInputs):
+class SDMsToScantableInputs(common.SingleDishInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, infiles=None, output_dir=None, 
                  session=None, overwrite=None):
@@ -50,9 +50,9 @@ class SDConvertDataInputs(common.SingleDishInputs):
         else:
             self._infiles = value
 
-class SDConvertDataResults(common.SingleDishResults):
+class SDMsToScantableResults(common.SingleDishResults):
     def __init__(self, mses=[], scantables=[]):
-        super(SDConvertDataResults, self).__init__()
+        super(SDMsToScantableResults, self).__init__()
         self.mses = mses
         self.scantables = scantables
         
@@ -103,13 +103,13 @@ class SDConvertDataResults(common.SingleDishResults):
         context.callibrary = mycallib
             
     def __repr__(self):
-        return 'SDConvertDataResults:\n\t{0}\n\t{1}'.format(
+        return 'SDMsToScantableResults:\n\t{0}\n\t{1}'.format(
             '\n\t'.join([ms.name for ms in self.mses]),
             '\n\t'.join([st.name for st in self.scantables]))
 
 
-class SDConvertData(common.SingleDishTaskTemplate):
-    Inputs = SDConvertDataInputs
+class SDMsToScantable(common.SingleDishTaskTemplate):
+    Inputs = SDMsToScantableInputs
 
     def _ms_directories(self, names):
         """
@@ -160,7 +160,7 @@ class SDConvertData(common.SingleDishTaskTemplate):
         #    self._executor.execute(job)
         #    
         #if self._executor._dry_run:
-        #    return SDConvertDataResults()
+        #    return SDMsToScantableResults()
 
         ms_reader = sdtablereader.ObservingRunReader
 
@@ -215,7 +215,7 @@ class SDConvertData(common.SingleDishTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-        results = SDConvertDataResults(observing_run_sd.measurement_sets,
+        results = SDMsToScantableResults(observing_run_sd.measurement_sets,
                                       observing_run_sd)
         return results
     
