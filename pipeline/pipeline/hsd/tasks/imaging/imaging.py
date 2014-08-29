@@ -20,7 +20,7 @@ from ..baseline import baseline
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImaging2Inputs(common.SingleDishInputs):
+class SDImagingInputs(common.SingleDishInputs):
     """
     Inputs for imaging
     """
@@ -65,13 +65,13 @@ class SDImaging2Inputs(common.SingleDishInputs):
     #        return callibrary.SDCalApplication.list_to_selection(self.pollist)
             
 
-class SDImaging2Results(common.SingleDishResults):
+class SDImagingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDImaging2Results, self).__init__(task, success, outcome)
+        super(SDImagingResults, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        super(SDImaging2Results, self).merge_with_context(context)
-        LOG.todo('need to decide what is done in SDImaging2Results.merge_with_context')
+        super(SDImagingResults, self).merge_with_context(context)
+        LOG.todo('need to decide what is done in SDImagingResults.merge_with_context')
         
         if self.outcome.has_key('export_results'):
             self.outcome['export_results'].merge_with_context(context)
@@ -80,8 +80,8 @@ class SDImaging2Results(common.SingleDishResults):
         # return [image.imagename for image in self.outcome]
         return self.outcome['image'].imagename
 
-class SDImaging2(common.SingleDishTaskTemplate):
-    Inputs = SDImaging2Inputs
+class SDImaging(common.SingleDishTaskTemplate):
+    Inputs = SDImagingInputs
 
     @common.datatable_setter
     def prepare(self):
@@ -271,12 +271,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 combined_pols.extend(pols)
                 combined_scans.extend(scans)
 
-                imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=infiles, 
+                imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=infiles, 
                                                                outfile=imagename, spwids=spwids,
                                                                scans=scans, pols=pols,
                                                                onsourceid=srctype, edge=edge,
                                                                vislist=exported_mses)
-                imager_task = worker.SDImaging2Worker(imager_inputs)
+                imager_task = worker.SDImagingWorker(imager_inputs)
                 imager_result = self._executor.execute(imager_task, merge=True)
                 logrecords.extend(imager_result.logrecords)
 
@@ -334,7 +334,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     outcome['file_index'] = indices
                     outcome['assoc_spws'] = spwids
                     outcome['assoc_pols'] = pols
-                    result = SDImaging2Results(task=self.__class__,
+                    result = SDImagingResults(task=self.__class__,
                                               success=True,
                                               outcome=outcome)
                     result.task = self.__class__
@@ -363,12 +363,12 @@ class SDImaging2(common.SingleDishTaskTemplate):
             # Step 4.
             # Imaging
             LOG.info('Step 4. Imaging')
-            imager_inputs = worker.SDImaging2Worker.Inputs(context, infiles=combined_infiles, 
+            imager_inputs = worker.SDImagingWorker.Inputs(context, infiles=combined_infiles, 
                                                            outfile=imagename, spwids=combined_spws,
                                                            scans=combined_scans, pols=combined_pols,
                                                            onsourceid=srctype, edge=edge,
                                                            vislist=exported_mses)
-            imager_task = worker.SDImaging2Worker(imager_inputs)
+            imager_task = worker.SDImagingWorker(imager_inputs)
             imager_result = self._executor.execute(imager_task, merge=True)
             logrecords.extend(imager_result.logrecords)
 
@@ -429,7 +429,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                 # to register exported_ms to each scantable instance
                 outcome['export_results'] = export_results
                 outcome['reduction_group_id'] = group_id
-                result = SDImaging2Results(task=self.__class__,
+                result = SDImagingResults(task=self.__class__,
                                           success=True,
                                           outcome=outcome)
                 result.task = self.__class__
@@ -438,7 +438,7 @@ class SDImaging2(common.SingleDishTaskTemplate):
                     
                 results.append(result)
                     
-        LOG.todo('logrecords for SDImaging2Results must be handled properly')
+        LOG.todo('logrecords for SDImagingResults must be handled properly')
         # only add logrecords to first result
         if len(results) > 0:
             results[0].logrecords = logrecords
