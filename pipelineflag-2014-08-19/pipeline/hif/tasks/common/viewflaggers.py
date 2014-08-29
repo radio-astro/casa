@@ -23,6 +23,21 @@ class MatrixFlaggerInputs(basetask.StandardInputs):
 class MatrixFlagger(basetask.StandardTaskTemplate):
     Inputs = MatrixFlaggerInputs
 
+    flag_reason_index = {'max abs':1,
+                         'min abs':2,
+                         'nmedian':3,
+                         'outlier':4,
+                         'high outlier':5,
+                         'low outlier':6,
+                         'too many flags':7}
+    flag_reason_key = {1:'max abs',
+                       2:'min abs',
+                       3:'nmedian',
+                       4:'outlier',
+                       5:'high outlier',
+                       6:'low outlier',
+                       7:'too many flags'}
+
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
     # will be replaced by a copy which breaks the connection between
@@ -46,6 +61,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
         iter = 1
         flags = []
+        flag_reason_plane = {}
+
         while iter <= niter:
 
             # Get latest data
@@ -59,7 +76,18 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             for description in descriptionlist:
                 image = result.last(description)
                 # get flags for this view according to the rules
-                newflags += self.generate_flags(image, rules)
+                theseflags, this_flag_reason_plane = self.generate_flags(image, rules)
+
+                # update flagging record
+                newflags += theseflags
+                if flag_reason_plane.has_key(description):
+                    # perhaps should add check here that flags are not being set
+                    # twice, which would imply that something inconsistent is 
+                    # happening
+                    flag_reason_plane[description][this_flag_reason_plane > 0] = \
+                      this_flag_reason_plane[this_flag_reason_plane > 0]
+                else:
+                    flag_reason_plane[description] = this_flag_reason_plane
 
             # set any flags raised
             if newflags:
@@ -88,6 +116,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # results object
         flags = list(set(flags))
         result.addflags(flags)
+        result.add_flag_reason_plane(flag_reason_plane, self.flag_reason_key)
+#        result.flag_reason_key = self.flag_reason_key
+#        print 'viewflagger', result.flag_reason_key
         result.table = flagsettertask.inputs.table
 
         return result
@@ -100,8 +131,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
       flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
       flag_hi=False, fhi_limit=5.0, fhi_minsample=5,
       flag_lo=False, flo_limit=5.0, flo_minsample=5,
-      flag_tmf1=False, tmf1_axis='Time', tmf1_limit=0.5,
-      flag_tmf2=False, tmf2_axis='Time', tmf2_limit=0.5,
+      flag_tmf1=False, tmf1_axis='Time', tmf1_limit=1.0, tmf1_excess_limit=10000000,
+      flag_tmf2=False, tmf2_axis='Time', tmf2_limit=1.0, tmf2_excess_limit=10000000,
       flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_maxabs=False, fmax_limit=0.1,
       flag_minabs=False, fmin_limit=0.0):
@@ -135,11 +166,13 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         if flag_tmf1:
             rules.append({'name':'too many flags',
               'axis':str.upper(tmf1_axis),
-              'limit':tmf1_limit})
+              'limit':tmf1_limit,
+              'excess limit':tmf1_excess_limit})
         if flag_tmf2:
             rules.append({'name':'too many flags',
               'axis':str.upper(tmf2_axis),
-              'limit':tmf2_limit})
+              'limit':tmf2_limit,
+              'excess limit':tmf2_excess_limit})
 
         return rules
 
@@ -172,6 +205,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
         # Initialize flags
         newflags = []
+        flag_reason = np.zeros(np.shape(flag), np.int)
 
         # Index arrays
         i,j = np.indices(np.shape(data))
@@ -233,6 +267,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
   
                         # Flag the view.
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     elif rulename == 'low outlier':
 
@@ -264,6 +300,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     elif rulename == 'high outlier':
 
@@ -295,6 +333,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     elif rulename == 'min abs':
 
@@ -321,6 +361,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Flag the view
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     elif rulename == 'max abs':
 
@@ -347,14 +389,23 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Flag the view
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     elif rulename == 'too many flags':
  
                         maxfraction = rule['limit']
+                        maxexcessflags = rule['excess limit']
                         axis = rule['axis']
                         axis = axis.upper().strip()
 
                         if axis == xtitle.upper().strip():
+
+                            # Compute median number flagged
+                            num_flagged = np.zeros([np.shape(data)[1]], np.int)
+                            for iy in np.arange(len(ydata)):
+                                num_flagged[iy] = len(data[:,iy][flag[:,iy]])
+                            median_num_flagged = np.median(num_flagged)
 
                             # look along x axis
                             for iy in np.arange(len(ydata)):
@@ -368,12 +419,18 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                                 fractionflagged = (
                                   float(len_flagged - len_no_data) /
                                   float(len_data - len_no_data))
-                                if fractionflagged <= maxfraction:
-                                    continue
+                                if fractionflagged > maxfraction:
+                                    i2flag = i[:,iy][np.logical_not(flag[:,iy])]
+                                    j2flag = j[:,iy][np.logical_not(flag[:,iy])]
+                                else:
+                                    i2flag = np.zeros([0], np.int)
+                                    j2flag = np.zeros([0], np.int)
 
-                                i2flag = i[:,iy][np.logical_not(flag[:,iy])]
-                                j2flag = j[:,iy][np.logical_not(flag[:,iy])]
-  
+                                # likewise for maxexcessflags
+                                if len_flagged > median_num_flagged + maxexcessflags:
+                                    i2flag = np.concatenate((i2flag, i[:,iy][np.logical_not(flag[:,iy])]))
+                                    j2flag = np.concatenate((j2flag, j[:,iy][np.logical_not(flag[:,iy])]))
+
                                 # Add new flag commands to flag data underlying 
                                 # the view.
                                 flagcoords = zip(xdata[i2flag], ydata[j2flag])
@@ -387,26 +444,39 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                                 # Flag the view
                                 flag[i2flag, j2flag] = True
+                                flag_reason[i2flag, j2flag] =\
+                                  self.flag_reason_index[rulename]
 
                         elif axis == ytitle.upper().strip():
+
+                            # Compute median number flagged
+                            num_flagged = np.zeros([np.shape(data)[0]], np.int)
+                            for ix in np.arange(len(xdata)):
+                                num_flagged[ix] = len(data[ix,:][flag[ix,:]])
+                            median_num_flagged = np.median(num_flagged)
 
                             # look along y axis
                             for ix in np.arange(len(xdata)):
                                 if all(flag[ix,:]):
                                     continue
 
-                                # Compute fraction flagged
                                 len_data = len(ydata)
                                 len_no_data = len(data[ix,:][nodata[ix,:]])
                                 len_flagged = len(data[ix,:][flag[ix,:]])
                                 fractionflagged = (
                                   float(len_flagged - len_no_data) / 
                                   float(len_data - len_no_data))
-                                if fractionflagged <= maxfraction:
-                                    continue
+                                if fractionflagged > maxfraction:
+                                    i2flag = i[ix,:][np.logical_not(flag[ix,:])]
+                                    j2flag = j[ix,:][np.logical_not(flag[ix,:])]
+                                else:
+                                    i2flag = np.zeros([0], np.int)
+                                    j2flag = np.zeros([0], np.int)
 
-                                i2flag = i[ix,:][np.logical_not(flag[ix,:])]
-                                j2flag = j[ix,:][np.logical_not(flag[ix,:])]
+                                len_flagged = len(data[ix,:][flag[ix,:]])
+                                if len_flagged > median_num_flagged + maxexcessflags:
+                                    i2flag = np.concatenate((i2flag, i[ix,:][np.logical_not(flag[ix,:])]))
+                                    j2flag = np.concatenate((j2flag, j[ix,:][np.logical_not(flag[ix,:])]))
 
                                 # Add new flag commands to flag data underlying 
                                 # the view.
@@ -420,6 +490,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                                 # Flag the view.
                                 flag[i2flag, j2flag] = True
+                                flag_reason[i2flag, j2flag] =\
+                                  self.flag_reason_index[rulename]
 
                     elif rulename == 'nmedian':
 
@@ -456,6 +528,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
+                        flag_reason[i2flag, j2flag] =\
+                          self.flag_reason_index[rulename]
 
                     else:           
                         raise NameError, 'bad rule: %s' % rule
@@ -464,7 +538,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # flagcmds that specify ranges
         newflags = arrayflaggerbase.consolidate_flagcmd_channels(newflags)
 
-        return newflags
+        return newflags, flag_reason
 
 
 class VectorFlaggerInputs(basetask.StandardInputs):
