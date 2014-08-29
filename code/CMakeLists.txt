@@ -21,6 +21,21 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
+set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
+execute_process( COMMAND ${CASA_svngen} -revision url=${CMAKE_SOURCE_DIR} 
+                 OUTPUT_VARIABLE SVNREVISION
+                 OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process( COMMAND ${CASA_svngen} -date url=${CMAKE_SOURCE_DIR} 
+                 OUTPUT_VARIABLE SVNDATE
+                 OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process( COMMAND ${CASA_svngen} -url url=${CMAKE_SOURCE_DIR} 
+                 OUTPUT_VARIABLE CASASRCURL
+                 OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+
 include( config )
 include( ui )
 include( target )
@@ -478,26 +493,6 @@ set( INCLUDE ${CMAKE_INSTALL_PREFIX}/include CACHE PATH "casa include file insta
 set( LDDPATH "" CACHE STRING "path for (DY)LD_LIBRARY_PATH" FORCE )
 set( LDDPRELOAD "" CACHE STRING "libraries to be pre-loaded at runtime" FORCE )
 set( LIBVERSION ${casa_soversion} CACHE STRING "shared library version number" FORCE )
-
-
-###
-### these are duplicated from casadef.cmake...
-###
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^Last Changed Rev:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASAREVISION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-
-execute_process( COMMAND
-  ${PERL_EXECUTABLE} -e "open(INFO, 'svn info |') ; while (<INFO>){ if ( s/^URL:\\s+//) { print; } }"
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  OUTPUT_VARIABLE CASASRCURL
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-###
-###
 
 configure_file( ${CMAKE_SOURCE_DIR}/install/casa-config.in ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config @ONLY )
 file( COPY ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/casa-config

@@ -21,6 +21,12 @@
 cmake_minimum_required( VERSION 2.8 )
 
 set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
+set( CASA_svngen ${CMAKE_SOURCE_DIR}/install/generate-svninfo )
+execute_process( COMMAND %{CASA_svngen} "u=+%a %Y/%m/%d %H:%M:%S UTC"
+                 OUTPUT_VARIABLE BUILDTIME 
+                 OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 include( config )
 include( ui )
 include( target )

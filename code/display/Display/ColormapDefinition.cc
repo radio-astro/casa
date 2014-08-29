@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// not the buitlin colormap
 			ok = loadColormap(itsName);
 		}
-		if (!ok && (mapName == "<default>") ) {
+		if ( !ok ) {
 			// .aipsrc has wrong entry set everything to builtin
 			ourDefaultColormap = "Greyscale 1";
 			itsName = "Greyscale 1";

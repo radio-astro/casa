@@ -26,20 +26,12 @@
 add_custom_target( stdcasa_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
 
 
-# This is delegated to the cmake script code/install/casadef.cmake in
-# order to allow setting environment variables portably.
+# This is delegated to the generate-svninfo script to allow for overriding
+# subversion information via environment variables.
 add_custom_command( OUTPUT definitions
-	  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+	    COMMAND ${CASA_svngen} url=${CMAKE_SOURCE_DIR} > definitions_tmp
 	    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 	    )
-
-
-# set SVNREVISION and BUILDTIME
-
-set( casadef_quiet TRUE )
-set( casadef_perl ${PERL_EXECUTABLE} )
-set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
-include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
 
 add_custom_command( OUTPUT version.cc
 	  COMMAND egrep subversion_revision definitions > tmp1.txt
@@ -51,7 +43,7 @@ add_custom_command( OUTPUT version.cc
 	-e 's|MINOR|${CASA_MINOR_VERSION}|'
 	-e 's|PATCH|${CASA_PATCH_VERSION}|'
 	-e 's|REVISION|${SVNREVISION}|'
-	-e 's|DATE|${TAGGEDTIME}|'
+	-e 's|DATE|${SVNDATE}|'
 	${CMAKE_CURRENT_SOURCE_DIR}/version.template > tmp4.txt
 	COMMAND cat tmp3.txt tmp4.txt > version_tmp.cc
 	|| ${PERL_EXECUTABLE} -e 'unlink("version_tmp.cc")\; exit 1\;'

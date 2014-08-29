@@ -24,10 +24,10 @@
 add_custom_target( tools_definitions COMMAND ${CMAKE_COMMAND} -E remove -f definitions )
 
 
-# This is delegated to the cmake script code/install/casadef.cmake in
-# order to allow setting environment variables portably.
+# This is delegated to the generate-svninfo script to allow for overriding
+# subversion information via environment variables.
 add_custom_command( OUTPUT definitions
-	  COMMAND ${CMAKE_COMMAND} -Dcasadef_perl=${PERL_EXECUTABLE} -Dcasadef_source_dir=${CMAKE_SOURCE_DIR} -P ${CMAKE_SOURCE_DIR}/install/casadef.cmake > definitions_tmp
+	    COMMAND ${CASA_svngen} url=${CMAKE_SOURCE_DIR} > definitions_tmp
 	    COMMAND ${CMAKE_COMMAND} -E copy definitions_tmp definitions
 	    )
     # Using only shell redirection (>) to generate the definitions file, will cause
@@ -56,16 +56,6 @@ add_dependencies( tools_python_casadef tools_definitions )
 add_dependencies( inst tools_python_casadef )
 add_dependencies( tools_fast tools_python_casadef )
 install( PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/casadef.py DESTINATION python/${PYTHONV} )
-
-# Make sure that compile time definitions (build time, svn revision number)
-# are recomputed in every build.
-
-# set SVNREVISION and BUILDTIME
-set( casadef_quiet TRUE )
-set( casadef_perl ${PERL_EXECUTABLE} )
-set( casadef_source_dir ${CMAKE_SOURCE_DIR} )
-#include( ${CMAKE_SOURCE_DIR}/install/casadef.cmake )
-#include( ${CMAKE_SOURCE_DIR}/install/ui.cmake )
 
 casa_add_library( tools
  atmosphere/atmosphere_cmpt.cc
