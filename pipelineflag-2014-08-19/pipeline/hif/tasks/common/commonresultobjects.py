@@ -70,6 +70,9 @@ class ImageResult(ResultBase):
         self.data = data.copy()
         self.axes = axes
 
+        self.flag_reason_plane = np.zeros(np.shape(data), np.int)
+        self.flag_reason_key = {}
+
         if flag is None:
             self.flag = np.zeros(np.shape(self.data), np.bool)
         else:
