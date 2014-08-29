@@ -13,7 +13,7 @@ from ..common import utils
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImaging2WorkerInputs(common.SingleDishInputs):
+class SDImagingWorkerInputs(common.SingleDishInputs):
     """
     Inputs for imaging worker
     """
@@ -23,20 +23,20 @@ class SDImaging2WorkerInputs(common.SingleDishInputs):
         #       is string (mssel) list
         self._init_properties(vars())
 
-class SDImaging2WorkerResults(common.SingleDishResults):
+class SDImagingWorkerResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDImaging2WorkerResults, self).__init__(task, success, outcome)
+        super(SDImagingWorkerResults, self).__init__(task, success, outcome)
 
     def merge_with_context(self, context):
-        super(SDImaging2WorkerResults, self).merge_with_context(context)
+        super(SDImagingWorkerResults, self).merge_with_context(context)
 
     def _outcome_name(self):
         # return [image.imagename for image in self.outcome]
         return self.outcome
 
 
-class SDImaging2Worker(common.SingleDishTaskTemplate):
-    Inputs = SDImaging2WorkerInputs
+class SDImagingWorker(common.SingleDishTaskTemplate):
+    Inputs = SDImagingWorkerInputs
     
     @common.datatable_setter
     def prepare(self):
@@ -49,7 +49,7 @@ class SDImaging2Worker(common.SingleDishTaskTemplate):
  
         self._do_imaging(infiles, spwid_list, scan_list, pols_list, outfile, edge)
  
-        result = SDImaging2WorkerResults(task=self.__class__,
+        result = SDImagingWorkerResults(task=self.__class__,
                                  success=True,
                                  outcome=outfile)
         result.task = self.__class__
