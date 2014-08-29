@@ -6,7 +6,8 @@ import os
 import re
 import types
 
-import casa
+#import casa
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -26,7 +27,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, spw=None,
       intent=None,
       metric=None, flag_hilo=None, fhl_limit=None, fhl_minsample=None,
-      flag_tmf=None, tmf_frac_limit=None, tmf_nchan_limit=None, niter=None):
+      flag_tmf=None, tmf_axis=None, tmf_excess_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -134,7 +135,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @property
     def flag_tmf(self):
         if self._flag_tmf is None:
-            return False
+            return True
         return self._flag_tmf
 
     @flag_tmf.setter
@@ -142,24 +143,24 @@ class RawflagchansInputs(basetask.StandardInputs):
         self._flag_tmf = value
 
     @property
-    def tmf_frac_limit(self):
-        if self._tmf_frac_limit is None:
-            return 0.3
-        return self._tmf_frac_limit
+    def tmf_axis(self):
+        if self._tmf_axis is None:
+            return 'Baseline'
+        return self._tmf_axis
 
-    @tmf_frac_limit.setter
-    def tmf_frac_limit(self, value):
-        self._tmf_frac_limit = value
+    @tmf_axis.setter
+    def tmf_axis(self, value):
+        self._tmf_axis = value
 
     @property
-    def tmf_nchan_limit(self):
-        if self._tmf_nchan_limit is None:
-            return 10
-        return self._tmf_nchan_limit
+    def tmf_excess_limit(self):
+        if self._tmf_excess_limit is None:
+            return 2
+        return self._tmf_excess_limit
 
-    @tmf_nchan_limit.setter
-    def tmf_nchan_limit(self, value):
-        self._tmf_nchan_limit = value
+    @tmf_excess_limit.setter
+    def tmf_excess_limit(self, value):
+        self._tmf_excess_limit = value
 
     @property
     def niter(self):
@@ -196,8 +197,9 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         rules = viewflaggers.MatrixFlagger.make_flag_rules (
           flag_hilo=inputs.flag_hilo, fhl_limit=inputs.fhl_limit,
           fhl_minsample=inputs.fhl_minsample,
-          flag_tmf1=inputs.flag_tmf, tmf1_axis='Antenna2',
-          tmf1_limit=inputs.tmf_frac_limit)
+#          flag_tmf1=inputs.flag_tmf, tmf1_axis='Antenna2',
+          flag_tmf1=inputs.flag_tmf, tmf1_axis=inputs.tmf_axis,
+          tmf1_limit=1.0, tmf1_excess_limit=inputs.tmf_excess_limit)
         flagger = viewflaggers.MatrixFlagger
  
         # Construct the flagger task around the data view task  and the
@@ -214,7 +216,13 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         flaggertask = flagger(flaggerinputs)
 
 	# Execute it to flag the data view
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        stats_after = self._executor.execute(summary_job)
+
+        result.summaries = [stats_before, stats_after]
         return result
 
     def analyse(self, result):
@@ -485,12 +493,14 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
                 for ant1 in ants:
                     # refine the view
                     for ant2 in ants:
-                        data[icorr,ant1,:,ant2] -= np.median(
-                          data[icorr,ant1,:,ant2])
+                        valid = data[icorr,ant1,:,ant2][flag[icorr,ant1,:,ant2]==False]
+                        if len(valid):
+                            data[icorr,ant1,:,ant2] -= np.median(valid)
 
                     for chan in range(nchans):
-                        data[icorr,ant1,chan,:] -= np.median(
-                          data[icorr,ant1,chan,:])
+                        valid = data[icorr,ant1,chan,:][flag[icorr,ant1,chan,:]==False]
+                        if len(valid):
+                            data[icorr,ant1,chan,:] -= np.median(valid)
 
                     # store the view result
                     viewresult = commonresultobjects.ImageResult(
@@ -597,17 +607,19 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
             data = np.abs(data)
             flag = ndata==0
 
-            # store the views
+            # refine and store the views
             for icorr,corrlist in enumerate(corrs):
                 corr = corrlist[0]
 
                 for baseline in range(np.shape(data)[2]):
-                   data[icorr,:,baseline] -= np.median(data[icorr,:,baseline])
+                    valid = data[icorr,:,baseline][flag[icorr,:,baseline]==False]
+                    if len(valid):
+                        data[icorr,:,baseline] -= np.median(valid)
 
-                # refine the view by subtracting the median over all baselines
-                # for each channel
                 for chan in range(nchans):
-                    data[icorr,chan,:] -= np.median(data[icorr,chan,:])
+                    valid = data[icorr,chan,:][flag[icorr,chan,:]==False]
+                    if len(valid):
+                        data[icorr,chan,:] -= np.median(valid)
 
                 viewresult = commonresultobjects.ImageResult(
                   filename=self.inputs.vis, data=data[icorr],
