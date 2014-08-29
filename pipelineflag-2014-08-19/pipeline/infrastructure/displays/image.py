@@ -64,13 +64,16 @@ class ImageDisplay(object):
             plotfile = sanitize(plotfile)
             plotfile = os.path.join(reportdir, plotfile)
 
+            ant = results.first(description).ant
+            if ant is not None:
+                ant = ant[0]
             plot = logger.Plot(plotfile,
               x_axis=xtitle, y_axis=ytitle,
               field=results.first(description).fieldname,
               parameters={'intent': results.first(description).intent,
               'spw': results.first(description).spw,
               'pol': results.first(description).pol,
-              'ant': results.first(description).ant,
+              'ant': ant,
               'type': results.first(description).datatype,
               'file': os.path.basename(results.first(description).filename)})
             plots.append(plot)
@@ -81,16 +84,16 @@ class ImageDisplay(object):
             
             if len(flagcmds) > 0:
                 nsubplots = 3
-                _ = self._plot_panel(nsubplots, 1,
-                  description, results.first(description),
+                self._plot_panel(nsubplots, 1, description,
+                  results.first(description),
                   'Before %s' % change, stagenumber)
 
-                _ = self._plot_panel(nsubplots, 2,
+                self._plot_panel(nsubplots, 2,
                   description, results.last(description),
                   'After', stagenumber, flagcmds)
             else:
                 nsubplots = 2
-                _ = self._plot_panel(nsubplots, 1,
+                self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   '', stagenumber)
 
@@ -184,6 +187,8 @@ class ImageDisplay(object):
 
         flag = image.flag
         data = image.data
+        flag_reason_plane = image.flag_reason_plane
+        flag_reason_key = image.flag_reason_key
         xtitle = image.axes[0].name
         xdata = image.axes[0].data
         xunits = image.axes[0].units
@@ -201,45 +206,18 @@ class ImageDisplay(object):
         data[flag!=0] = 2.0
         sentinels[2.0] = cc.to_rgb('violet')
 
+        # set points to their flag reason
+        data[flag_reason_plane>0] = flag_reason_plane[flag_reason_plane>0] + 10.0
+
         # sentinels to mark flagging.
+        sentinel_set = set(np.ravel(flag_reason_plane))
+        sentinel_set.discard(0)
 
-        # look at the flags in reverse so that the first time a point is
-        # flagged is what appears on the plot. Work on local copies to avoid
-        # unpredictable effects on global data.
+        sentinelvalues = np.array(list(sentinel_set), np.float) + 10.0
 
-        pixelsflagged = False
-
-        flagrules = set()
-        for flagcmd in flagcmds:
-            flagrules.update([flagcmd.rulename])
-
-        flagrules = list(flagrules)
-        flagrules.sort()
-        flagrules = np.array(flagrules)
-        flagind = np.indices(np.shape(flagrules))[0]
-
-        for flagcmd in flagcmds:
-            # ignore if the flagcm.rulename says so
-            if flagcmd.rulename == 'ignore':
-                continue
-
-            # ignore if flag does not have colour associated with it
-            if flag_color.get(flagcmd.rulename) is None:
-                continue
-
-            if flagcmd.match_image(image):
-                # flag does apply, set pixel colour accordingly
-                sentinelvalue = 10.0 + float(
-                  flagind[flagrules==flagcmd.rulename][0])
-                sentinels[sentinelvalue] = cc.to_rgb(
-                  flag_color[flagcmd.rulename])
-
-                flagx = flagcmd.flagcoords[0]
-                flagy = flagcmd.flagcoords[1]
-
-                fset = self._setsentinel(i, j, xdata, ydata, data, flagx,
-                  flagy, sentinelvalue) 
-                pixelsflagged = pixelsflagged or fset
+        for sentinelvalue in sentinelvalues:
+            sentinels[sentinelvalue] = cc.to_rgb(
+              flag_color[flag_reason_key[int(sentinelvalue)-10]])
 
         # plot points with no data indigo. 
         nodata = image.nodata
@@ -341,8 +319,6 @@ class ImageDisplay(object):
         # of image by other plotting commands.
         plt.axis(lims)
 
-        return pixelsflagged
-
     def plottext(self, xoff, yoff, text, maxchars, ny_subplot=1, mult=1):
         """Utility method to plot text and put line breaks in to keep the
         text within a given limit.
@@ -387,70 +363,6 @@ class ImageDisplay(object):
         yoff -= 0.02 * ny_subplot * mult
         return yoff
         
-    def _setsentinel(self, i, j, x, y, data, flagx, flagy, sentinel_value): 
-        """Set pixels to sentinel value. Returns True if any values
-        are actually set.
-
-        Keyword arguments:
-        i               -- i indices of data  
-        j               -- j indices of data
-        x               -- x-axis
-        y               -- y-axis
-        data            -- data array
-        flagx           -- |data at these values of x,y to be shown flagged 
-        flagy           -- |
-        sentinel_value  -- The sentinel value to set in the target data
-        """
-        sentinelset = False
-
-        # watch out for axes that are not numeric
-        if isinstance(flagx, types.StringTypes):
-            x_index = np.arange(len(x))
-            flagx_index = x_index[x==flagx]
-        else:
-            x_index = x
-            flagx_index = flagx
-
-        if isinstance(flagy, types.StringTypes):
-            y_index = np.arange(len(y)) 
-            flagy_index = y_index[y==flagy]
-        else:
-            y_index = y
-            flagy_index = flagy
-
-        # ensure flagx, flagy are iterable objects
-        if not isinstance(flagx_index, collections.Iterable):
-            flagx_index = np.array([flagx_index])
-        if not isinstance(flagy_index, collections.Iterable):
-            flagy_index = np.array([flagy_index])
-
-        i2flag = []
-        j2flag = []
-        # if flag colours are not plotted then it may be because of
-        # data position jitter. Uncommenting the following print
-        # statements may be useful to check.
-        #print 'flagx_index', tuple(flagx_index)
-        #print 'x_index', tuple(x_index)
-        #print 'flagy_index', tuple(flagy_index)
-        #print 'y_index', tuple(y_index)
-        for k in range(len(flagx_index)):
-            for kk in range(len(flagy_index)):
-                # tolerance set to 0.5 to handle jitter in positions
-                # between views - not sure why jitter occurs
-                i2flag.append(i[np.abs(flagx_index[k] - x_index) < 0.5,
-                  np.abs(flagy_index[kk] - y_index) < 0.5])
-                j2flag.append(j[np.abs(flagx_index[k] - x_index) < 0.5,
-                  np.abs(flagy_index[kk] - y_index) < 0.5])
-        #print 'i2flag', i2flag
-        #print 'j2flag', j2flag
-
-        if len(i2flag) > 0:
-            data[i2flag, j2flag] = sentinel_value
-            sentinelset = True
-
-        return sentinelset
-
-
 class _SentinelMap(Colormap):
     """Utility class for plotting sentinel pixels in colours."""
 
