@@ -265,7 +265,8 @@ def _detect_gap(timestamp, threshold=None):
 
     return gaplist
 
-def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, threshold_raster=None):
+"""
+def _detect_gap_raster_old(timestamp, alldir, row_gap=None, threshold_row=None, threshold_raster=None):
     nrow = len(timestamp)
     if row_gap is None:
         row_gaplist = _detect_gap(timestamp, threshold_row)
@@ -285,6 +286,49 @@ def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, thre
         raster_gaplist=[0]
         for i in row_gaplist[1:-1]:
             if (i > 0) and (dd[i-1] > ddm):
+                raster_gaplist.append(i)
+        if raster_gaplist[-1] != nrow:
+            raster_gaplist.append(nrow)
+
+    return raster_gaplist
+"""
+
+def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, threshold_raster=None):
+    nrow = len(timestamp)
+    if row_gap is None:
+        row_gaplist = _detect_gap(timestamp, threshold_row)
+    else:
+        row_gaplist = row_gap
+    nrow_gaplist = len(row_gaplist)
+
+    if nrow_gaplist == 0:
+        raster_gaplist = []
+    else:
+        #pointing gaps in the first raster row, calc its median, and rotate 90 degrees
+        rot = numpy.matrix(((0.0,1.0),(-1.0,0.0)))
+        inext = row_gaplist[1]
+        dd_row0 = numpy.median((alldir[:,1:inext]-alldir[:,:inext-1])[0])
+        dd_row1 = numpy.median((alldir[:,1:inext]-alldir[:,:inext-1])[1])
+        dd_row_rot = numpy.array(numpy.dot(numpy.array([dd_row0, dd_row1]), rot))
+
+        #inner product of poiting gap and rotated median pointing gap of the first raster row
+        dd0 = alldir[:,1:]-alldir[:,:-1]
+        dd = numpy.dot(dd_row_rot, dd0)
+        
+        ppgap = []
+        for i in row_gaplist:
+            if (i > 0) and (i < row_gaplist[-1]):
+                ppgap.append(dd[0][i-1])
+        med_ppgap = numpy.median(numpy.array(ppgap))
+        factor = -1.0 if med_ppgap > 0.0 else 1.0
+        if threshold_raster is None:
+            ddm = factor * med_ppgap
+        else:
+            ddm = factor * threshold_raster
+
+        raster_gaplist=[0]
+        for i in row_gaplist[1:-1]:
+            if (i > 0) and (((med_ppgap>0.0)and(dd[0][i-1]<ddm))or((med_ppgap<0.0)and(dd[0][i-1]>ddm))):
                 raster_gaplist.append(i)
         if raster_gaplist[-1] != nrow:
             raster_gaplist.append(nrow)
