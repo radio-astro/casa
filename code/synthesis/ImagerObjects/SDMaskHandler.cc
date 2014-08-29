@@ -88,7 +88,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //// imstore->mask() will return a pointer to an ImageInterface (allocation happens on first access). 
 
     cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
-
+    
+    //interpret maskString 
+    if (maskString !="") {
+      if ( Table::isReadable(maskString) ) {
+        Table imtab = Table(maskString, Table::Old);
+        Vector<String> colnames = imtab.tableDesc().columnNames();
+        if ( colnames[0]=="map" ) {
+          // looks like a CASA image ... probably should check coord exists in the keyword also...
+          cout << "copy this input mask...."<<endl;
+          PagedImage<Float> inmask(maskString); 
+          copyMask(inmask, *(imstore->mask()));
+        }
+      }
+      else {
+        cout << maskString << " is not image..."<<endl;
+        ImageRegion* imageRegion=0;
+        SDMaskHandler::regionTextToImageRegion(maskString, *(imstore->mask()), imageRegion);
+        if (imageRegion!=0)
+           SDMaskHandler::regionToMask(*(imstore->mask()),*imageRegion, Float(1.0));
+      }
+    }
+    else { 
     /////// Temporary code to set a mask in the inner quarter.
     /////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
     IPosition imshp = imstore->mask()->shape();
@@ -109,7 +130,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*(imstore->mask()), imslice, True);
     referenceImage->set(1.0);
-
+    }
   }
 
   //void SDMaskHandler::makeMask()
