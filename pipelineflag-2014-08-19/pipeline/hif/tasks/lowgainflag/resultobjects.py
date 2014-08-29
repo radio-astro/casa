@@ -32,6 +32,13 @@ class LowgainflagResults(basetask.Results):
     def addflags(self, flags):
         self.flagging += flags
 
+    def add_flag_reason_plane(self, flag_reason_plane, flag_reason_key):
+        for description in self.descriptions():
+            self.view[description][-1].flag_reason_plane = \
+              flag_reason_plane[description]
+            self.view[description][-1].flag_reason_key = \
+              flag_reason_key
+
     def descriptions(self):
         return self.view.keys()
 
@@ -40,9 +47,6 @@ class LowgainflagResults(basetask.Results):
 
     def flagcmds(self):
         return copy.deepcopy(self.flagging)
-
-#    def flagged(self):
-#        return len(self.flagging) > 0
 
     def last(self, description):
         return copy.deepcopy(self.view[description][-1])
