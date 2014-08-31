@@ -40,19 +40,20 @@ namespace casa {
 PlotMSThread::PlotMSThread(QtProgressWidget* progress,
         PMSPTMethod postThreadMethod, PMSPTObject postThreadObject)
         : ThreadController( progress, postThreadMethod, postThreadObject ) {
-    connect(progress, SIGNAL(backgroundRequested()), SLOT(backgroundThread()));
-    connect(progress, SIGNAL(pauseRequested()), SLOT(pauseThread()));
-    connect(progress, SIGNAL(resumeRequested()), SLOT(resumeThread()));
-    connect(progress, SIGNAL(cancelRequested()), SLOT(cancelThread()));
+    if ( progress != NULL ){
+    	connect(progress, SIGNAL(backgroundRequested()), SLOT(backgroundThread()));
+    	connect(progress, SIGNAL(pauseRequested()), SLOT(pauseThread()));
+    	connect(progress, SIGNAL(resumeRequested()), SLOT(resumeThread()));
+    	connect(progress, SIGNAL(cancelRequested()), SLOT(cancelThread()));
     
-    //Signal/slot calls rather than direct calls so that the updates go on
-    //the GUI thread
-    connect(this, SIGNAL(initProgress(const QString&)),
+    	//Signal/slot calls rather than direct calls so that the updates go on
+    	//the GUI thread
+    	connect(this, SIGNAL(initProgress(const QString&)),
             progress, SLOT(initialize(const QString&)));
-    connect(this, SIGNAL(updateProgress(unsigned int, const QString&)),
+    	connect(this, SIGNAL(updateProgress(unsigned int, const QString&)),
             progress, SLOT(setProgress(unsigned int, const QString&)));
-    connect(this, SIGNAL(finalizeProgress()), progress, SLOT(finalize()));
-
+    	connect(this, SIGNAL(finalizeProgress()), progress, SLOT(finalize()));
+    }
     QTime time = QTime::currentTime();
     qsrand((uint)time.msec());
     id = qrand() % 100;

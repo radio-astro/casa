@@ -112,6 +112,11 @@ void PlotMSPlotter::showGUI(bool show) {
     itsPlotter_->showGUI(show);
 }
 
+  /*vector<String> PlotMSPlotter::getFiles() const {
+	return itsPlotTab_->getFiles();
+	}*/
+
+
 bool PlotMSPlotter::guiShown() const {
 	return QMainWindow::isVisible();
 }
@@ -144,17 +149,34 @@ ThreadController* PlotMSPlotter::getThreadController( PlotMSAction::Type type,
 			if ( 0 <= index && index < plotCount ){
 				PlotMSPlotParameters params = plots[index]->parameters();
 				PMS_PP_Cache* paramsCache = params.typedGroup<PMS_PP_Cache>();
-				controller = new PlotMSCacheThread(itsThreadProgress_,this,
+				if ( showProgressWidget ){
+					controller = new PlotMSCacheThread(itsThreadProgress_,this,
 						&PMS_PP_Cache::notifyWatchers, paramsCache);
+				}
+				else {
+					controller = new PlotMSCacheThread( NULL,this,
+											&PMS_PP_Cache::notifyWatchers, paramsCache);
+				}
 			}
 		}
 		else {
-			controller = new PlotMSCacheThread( itsThreadProgress_, this, postThreadMethod,
+			if ( showProgressWidget ){
+				controller = new PlotMSCacheThread( itsThreadProgress_, this, postThreadMethod,
 					postThreadObject );
+			}
+			else {
+				controller = new PlotMSCacheThread( NULL, this, postThreadMethod,
+									postThreadObject );
+			}
 		}
 	}
 	else if ( type == PlotMSAction::HOLD_RELEASE_DRAWING ){
-		controller = new PlotMSDrawThread( this, itsThreadProgress_);
+		if ( showProgressWidget ){
+			controller = new PlotMSDrawThread( this, itsThreadProgress_);
+		}
+		else {
+			controller = new PlotMSDrawThread( this, NULL);
+		}
 	}
 	else {
 		qDebug() << "PlotMSPlotter::getThreadController Unsupported threaded operation: "<< type;
@@ -186,16 +208,22 @@ void PlotMSPlotter::doThreadedOperation( ThreadController* controller) {
         
         // disable and show progress GUI
         foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(false);
-        QRect rect = itsThreadProgress_->geometry();
-        rect.moveCenter(geometry().center());
-        itsThreadProgress_->move(rect.topLeft());
-        itsThreadProgress_->setVisible(true);
-        itsThreadProgress_->setEnabled(true);
+        if ( showProgressWidget ){
+        	QRect rect = itsThreadProgress_->geometry();
+        	rect.moveCenter(geometry().center());
+        	itsThreadProgress_->move(rect.topLeft());
+        	itsThreadProgress_->setVisible(true);
+        	itsThreadProgress_->setEnabled(true);
+        }
         itsCurrentThread_->startOperation();
     } else {
         // there is a currently running thread, so add to waiting list
         itsWaitingThreads_.push_back( t );
     }
+}
+
+void PlotMSPlotter::setShowProgress( bool showProgressDialog){
+	showProgressWidget = showProgressDialog;
 }
 
 bool PlotMSPlotter::isDrawing() const {
@@ -237,8 +265,12 @@ bool PlotMSPlotter::canvasDrawBeginning(
         }
         return true;
     }
-
-    dt = new PlotMSDrawThread(this, itsThreadProgress_ );
+    if ( showProgressWidget ){
+    	dt = new PlotMSDrawThread(this, itsThreadProgress_ );
+    }
+    else {
+    	dt = new PlotMSDrawThread(this, NULL );
+    }
     doThreadedOperation(dt);
     return true;
 }
@@ -447,14 +479,20 @@ void PlotMSPlotter::closeEvent(QCloseEvent* event) {
     if(!isQt_) itsPlotter_->close();
 }
 
+void PlotMSPlotter::tabChanged( ){
+	QWidget* currentWidget = tabWidget->currentWidget();
+	if ( currentWidget != this->itsOptionsTab_ ){
+		showProgressWidget = true;
+	}
 
+}
 
 // Private Methods //
 
 void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     // GUI initialize.
     setupUi(this);
-
+    showProgressWidget = true;
     // Try to initialize plotter, and throw error on failure.
     itsFactory_ = plotterImplementation(imp);
     if(itsFactory_.null()) {
@@ -474,9 +512,10 @@ void PlotMSPlotter::initialize(Plotter::Implementation imp) {
     splitter->setOpaqueResize(false);
     setCentralWidget(splitter);
     
-    QTabWidget* tabWidget = new QTabWidget();
+    tabWidget = new QTabWidget();
     tabWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     splitter->addWidget(tabWidget);
+    connect( tabWidget, SIGNAL(currentChanged(int)), this, SLOT(tabChanged()));
     
     //Initialize menu actions.
     connect(menuSummary, SIGNAL(triggered()), this, SLOT(summarize()));
@@ -724,6 +763,7 @@ void PlotMSPlotter::currentThreadFinished() {
 	}
 
     // Clean up current thread.
+
     delete itsCurrentThread_;
     itsCurrentThread_ = NULL;
     
@@ -737,9 +777,10 @@ void PlotMSPlotter::currentThreadFinished() {
     } else {
         foreach(QWidget* widget, itsEnableWidgets_) widget->setEnabled(true);
         itsThreadProgress_->setVisible(false);
-        
+
         // Update plot tab.
         itsPlotTab_->plotsChanged(itsParent_->getPlotManager());
+
     }
 }
 

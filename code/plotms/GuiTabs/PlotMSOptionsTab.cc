@@ -196,6 +196,7 @@ void PlotMSOptionsTab::gridChanged(){
 
 	if ( changed ){
 		itsChangeFlag_ = false;
+		itsPlotter_->setShowProgress( false );
 		itsParameters_.holdNotification(this);
 
 
@@ -203,6 +204,7 @@ void PlotMSOptionsTab::gridChanged(){
 		itsParameters_.setColCount(colCount);
 
 		itsParameters_.releaseNotification();
+
 		itsChangeFlag_ = true;
 	}
 }

@@ -337,14 +337,14 @@ bool PlotMSPlotManager::pageGridChanged( int rows, int cols, bool override ){
 		}
 		//For GUI mode, the plots do not redraw themselves in their new grid when
 		//the grid size is changed unless we tell them to redraw.
-		/*if ( guiShown ){
+		if ( guiShown ){
 			for ( int i = 0; i < plotCount; i++ ){
 				if ( isPlottable( itsPlots_[i])){
 					itsPlots_[i]->parametersHaveChanged( itsPlots_[i]->parameters(),
-							PMS_PP::UPDATE_REDRAW | PMS_PP::UPDATE_ITERATION | PMS_PP::UPDATE_CANVAS);
+							PMS_PP::UPDATE_MSDATA | PMS_PP::UPDATE_REDRAW | PMS_PP::UPDATE_ITERATION | PMS_PP::UPDATE_CANVAS);
 				}
 			}
-		}*/
+		}
 	}
 	return resized;
 }
