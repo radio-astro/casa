@@ -109,7 +109,7 @@ public:
     virtual bool isClosed() const;
 
     // Execution Methods //
-    
+    void setShowProgress( bool showProgressDialog);
     // Shows/hides the GUI.
     virtual void showGUI(bool show = true);
     
@@ -280,6 +280,10 @@ private:
     // "About" string.
     QString itsAboutString_;
     
+    bool showProgressWidget;
+
+    QTabWidget* tabWidget;
+
     
     bool _triggerAction(/*PlotMSAction& action*/PlotMSAction::Type type);
     
@@ -303,6 +307,8 @@ private slots:
 
 	//Export the current plots
 	void exportPlots();
+
+	void tabChanged( );
 };
 typedef CountedPtr<PlotMSPlotter> PlotMSPlotterPtr;
 

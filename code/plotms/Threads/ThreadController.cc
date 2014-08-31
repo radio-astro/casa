@@ -139,7 +139,9 @@ void ThreadController::setProgress(unsigned int progress){
 
 void ThreadController::setAllowedOperations(bool background, bool pauseResume,
         bool cancel) {
-    itsProgressWidget_->setAllowedOperations(background, pauseResume,cancel);
+	if ( itsProgressWidget_ != NULL ){
+		itsProgressWidget_->setAllowedOperations(background, pauseResume,cancel);
+	}
 }
 
 void ThreadController::setError( const String& errorMessage ){
