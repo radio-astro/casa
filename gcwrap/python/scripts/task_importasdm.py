@@ -357,58 +357,19 @@ def importasdm(
         # Populate the HISTORY table of the MS with informations about the context in which it's been created
         #
         casalog.post("About to update the HISTORY of " + viso)
-        versionInfo = "version : %s rev. %s %s" % (casa["build"]["version"], casa["build"]["number"],casa["build"]["time"])
-        tblocal.open(viso+"/HISTORY", nomodify=False, lockoptions={'option':'user'})
-        tblocal.lock()
-        
-        aRow = {'APPLICATION' : 'asdm2MS',
-                'OBJECT_ID' : 0,
-                'ORIGIN' : 'importasdm',
-                'PRIORITY' : 'INFO',
-                'OBSERVATION_ID' : -1}
-        try :
-            f = open('importasdm.last', 'r')
-            for line in f:
-                
-                tblocal.addrows(1); cRow = tblocal.nrows()-1
-                for key in aRow.keys():
-                    tblocal.putcell(key, cRow, aRow[key])
-                if line[0] != '#' :
-                    parts=line.split()
-                    if (len(parts) == 3) and (parts[1] == '=') :
-                        tblocal.putcell('TIME', cRow, me.epoch('utc','today')['m0']['value']*86400.0)
-                        tblocal.putcell('MESSAGE', cRow, "%s = %s" % (parts[0],  parts[2]))
-                        if parts[0] == 'taskname':
-                            tblocal.addrows(1); cRow = tblocal.nrows()-1
-                            for key in aRow.keys():
-                                tblocal.putcell(key, cRow, aRow[key])
-                            tblocal.putcell('TIME', cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
-                            tblocal.putcell('MESSAGE', cRow, versionInfo)
-            f.close()
-        except IOError, e:
-            #
-            # Assume that an IOError occurs when the file importasdm.last could not be found. In such a case
-            # we put a minimum of information.
-            #
-            casalog.post(repr(e) + ". Putting the minimum information in the HISTORY of " + viso, "WARNING")
-            tblocal.addrows(1); cRow = tblocal.nrows()-1
-            for key in aRow.keys():
-                tblocal.putcell(key, cRow, aRow[key])
-                tblocal.putcell("TIME", cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
-                tblocal.putcell("MESSAGE", cRow, "taskname = importasdm")
-                
-                tblocal.addrows(1); cRow = tblocal.nrows()-1
-                for key in aRow.keys():
-                    tblocal.putcell(key, cRow, aRow[key])
-                    tblocal.putcell("TIME", cRow,  me.epoch('utc','today')['m0']['value']*86400.0)
-                    tblocal.putcell("MESSAGE", cRow, versionInfo)
-                   
-        except :
-            casalog.post(" - Could not update at all the HISTORY of " + viso, "WARNING")
-            pass
-        
-        tblocal.unlock()
-        tblocal.done()
+        try: 
+            mslocal = mstool() 
+            param_names = importasdm.func_code.co_varnames[:importasdm.func_code.co_argcount] 
+            param_vals = [eval(p) for p in param_names] 
+            write_history(mslocal, viso, 'importasdm', param_names, 
+                          param_vals, casalog) 
+        except Exception, instance: 
+            casalog.post("*** Error \'%s\' updating HISTORY" % (instance), 
+                         'WARN')
+            return False 
+
+        if mslocal:
+            mslocal = None 
         casalog.post("Finished with the update of HISTORY in " + viso , "INFO")
         
         # Binary Flag processing
