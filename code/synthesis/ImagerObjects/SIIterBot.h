@@ -134,6 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   - cyclefactor
 			*/
 			void setControlsFromRecord(Record &recordIn);
+         	        Float readThreshold( Record recordIn, String id );
 
 			Record getDetailsRecord(); 
 			//Record getSubIterBotRecord();
@@ -236,6 +237,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Float itsThreshold;
 			Float itsCycleThreshold;
 			Float itsInteractiveThreshold;
+	  
+	                Bool itsIsCycleThresholdAuto;
 
 			Float itsCycleFactor;
 			Float itsLoopGain;

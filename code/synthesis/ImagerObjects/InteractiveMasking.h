@@ -69,6 +69,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int interactivemask(const String& image, const String& mask, 
 			Int& niter, Int& ncycles, String& thresh, 
 			const Bool forceReload=False);
+    Int interactivemask(const String& image, const String& mask, 
+			Int& niter, Int& cycleniter, String& thresh, String& cyclethresh, 
+			const Bool forceReload=False);
   private:
     ViewerProxy *viewer_p;
     int clean_panel_p;

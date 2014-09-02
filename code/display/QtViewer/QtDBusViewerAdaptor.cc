@@ -37,6 +37,7 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
+#include <display/QtViewer/QtCleanPanelGui2.qo.h>
 #include <display/Display/State.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/List.h>
@@ -546,7 +547,18 @@ namespace casa {
 
 			connect(cpg_, SIGNAL(interact(QVariant)), this, SLOT(handle_interact(QVariant)));
 
-		} else {
+		} else if ( type == "clean2" ) {
+
+			// <drs> need to ensure that this is not leaked...
+			QtCleanPanelGui2 *cpg_ = viewer_->createInteractiveCleanGui2( );
+			result = get_id( cpg_ );
+
+			if ( hidden ) cpg_->hide( );
+
+			connect(cpg_, SIGNAL(interact(QVariant)), this, SLOT(handle_interact(QVariant)));
+
+		} 
+		else {
 
 			QtDisplayPanelGui *dpg = create_panel( );
 			result = get_id( dpg );

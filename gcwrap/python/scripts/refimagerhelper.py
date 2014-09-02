@@ -188,9 +188,9 @@ class PySynthesisImager:
             for immod in range(0,self.NF):
                 if self.stopMinor[immod]==0 :
                     iterparsmod =  self.SDtools[immod].interactivegui( iterdetails ) 
-                    print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
+                    #print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
                     self.iterpars.update(iterparsmod) 
-                    print 'Output iterpars : ', self.iterpars['niter'],self.iterpars['cycleniter'],self.iterpars['threshold']
+                    #print 'Output iterpars : ', self.iterpars['niter'],self.iterpars['cycleniter'],self.iterpars['threshold']
                     itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
 
                     if iterparsmod.has_key('actioncode') :
@@ -250,7 +250,7 @@ class PySynthesisImager:
     def runMinorCycle(self):
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
-#        print "Minor Cycle controls : ", iterbotrec
+        ##print "Minor Cycle controls : ", iterbotrec
         # Run minor cycle
         for immod in range(0,self.NF):  
             if self.stopMinor[immod]<2 :
@@ -883,7 +883,7 @@ class ImagerParameters():
                              'ntaylorterms','reffreq','mode']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
-        self.outdecparlist=['deconvolver','startmodel','ntaylorterms']
+        self.outdecparlist=['deconvolver','startmodel','ntaylorterms','mask']
         self.outnormparlist=['mtype','weightlimit','ntaylorterms']
 #        self.outnormparlist=['imagename','mtype','weightlimit','ntaylorterms']
 

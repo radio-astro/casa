@@ -29,6 +29,7 @@
 #include <display/QtViewer/QtViewer.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
+#include <display/QtViewer/QtCleanPanelGui2.qo.h>
 
 
 extern int qInitResources_QtViewer();
@@ -153,6 +154,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtCleanPanelGui *QtViewer::createInteractiveCleanGui( ) {
 		QtCleanPanelGui* cpg = new QtCleanPanelGui(this,0,args_);
+		return cpg;
+	}
+
+	QtCleanPanelGui2 *QtViewer::createInteractiveCleanGui2( ) {
+		QtCleanPanelGui2* cpg = new QtCleanPanelGui2(this,0,args_);
 		return cpg;
 	}
 

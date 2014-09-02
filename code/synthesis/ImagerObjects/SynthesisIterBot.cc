@@ -181,8 +181,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			if ( itsLoopController ) {
 				if (itsLoopController->interactiveInputRequired()) {
-				  cout << "SynthesisIterBot.cc : Not pausing for interaction via original code" <<  endl;
-				  //					pauseForUserInteraction();
+				  //cout << "SynthesisIterBot.cc : Not pausing for interaction via original code" <<  endl;
+				  //pauseForUserInteraction();
 				}
 				returnRecord = itsLoopController->getMinorCycleControls();
 			}
@@ -221,10 +221,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		/* This call will make sure that the current values of loop control are
 		   available in the GUI and will not return until the user hits the
 		   button */
+		/*
 		if ( itsLoopController ) {
 			itsLoopController->waitForInteractiveInput();
-
 		}// end of pauseForUserInteraction
+		*/
+
+		
+
 	}
 
         void SynthesisIterBot::changeStopFlag( Bool stopflag ) {

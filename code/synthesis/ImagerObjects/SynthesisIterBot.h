@@ -38,6 +38,7 @@
 #include <boost/thread/thread.hpp>
 
 //#include<casa/random.h>
+//#include<synthesis/ImagerObjects/SDMaskHandler.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -91,6 +92,7 @@ protected:
 	std::tr1::shared_ptr<SIIterBot_callback> actionRequestSync;
 	std::tr1::shared_ptr<SIIterBot_state> itsLoopController;
 
+  //    CountedPtr<SDMaskHandler> itsMaskHandler;
     /////////////// All input parameters
 
  private:

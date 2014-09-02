@@ -84,6 +84,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtAnnotatorGui.qo.h
   QtViewer/QtCanvasManager.qo.h
   QtViewer/QtCleanPanelGui.qo.h
+  QtViewer/QtCleanPanelGui2.qo.h
   QtViewer/QtDataManager.qo.h
   QtViewer/QtExportManager.qo.h
   QtViewer/QtExportBrowser.qo.h
@@ -528,6 +529,7 @@ casa_add_library( display
   QtViewer/QtAnnotatorGui.cc
   QtViewer/QtCanvasManager.cc
   QtViewer/QtCleanPanelGui.cc
+  QtViewer/QtCleanPanelGui2.cc
   QtViewer/QtDataManager.cc
   QtViewer/QtExportManager.cc
   QtViewer/QtExportBrowser.cc
@@ -925,6 +927,7 @@ install ( FILES
           QtViewer/QtApp.h
           QtViewer/QtCanvasManager.qo.h
           QtViewer/QtCleanPanelGui.qo.h
+          QtViewer/QtCleanPanelGui2.qo.h
           QtViewer/QtDataManager.qo.h
           QtViewer/QtDataOptionsPanel.qo.h
           QtViewer/QtDBusViewerAdaptor.qo.h

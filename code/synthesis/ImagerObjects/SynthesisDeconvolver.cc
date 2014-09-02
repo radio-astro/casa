@@ -190,15 +190,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try {
 
       // Check that required parameters are present in the iterRec.
-      Int niter=0,cycleniter=0;
-      Float threshold=0.0;
+      Int niter=0,cycleniter=0,iterdone;
+      Float threshold=0.0, cyclethreshold=0.0;
       if( iterRec.isDefined("niter") &&  
 	  iterRec.isDefined("cycleniter") &&  
-	  iterRec.isDefined("threshold") ) 
+	  iterRec.isDefined("threshold") && 
+	  iterRec.isDefined("cyclethreshold") &&
+	  iterRec.isDefined("iterdone") )
 	{
 	  iterRec.get("niter", niter);
 	  iterRec.get("cycleniter", cycleniter);
 	  iterRec.get("threshold", threshold);
+	  iterRec.get("cyclethreshold", cyclethreshold);
+	  iterRec.get("iterdone",iterdone);
 	}
       else throw(AipsError("SD::interactiveGui() needs valid niter, cycleniter, threshold to start up."));
 
@@ -206,16 +210,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
+      String strcycthresh = String::toString(cyclethreshold)+"Jy";
       if( itsMaskString.length()>0 ) {
 	itsMaskHandler->fillMask( itsImages, itsMaskString );
       }
-      Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, niter, cycleniter, strthresh );
+	  
+	  Int iterleft = niter - iterdone;
+
+	  Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, iterleft, cycleniter, strthresh, strcycthresh );
+
+      Quantity qa;
+      casa::Quantity::read(qa,strthresh);
+      threshold = qa.getValue(Unit("Jy"));
+      casa::Quantity::read(qa,strcycthresh);
+      cyclethreshold = qa.getValue(Unit("Jy"));
+      
       itsIsMaskLoaded=True;
 
       returnRecord.define( RecordFieldId("actioncode"), stopcode );
-      returnRecord.define( RecordFieldId("niter"), niter );
+      returnRecord.define( RecordFieldId("niter"), iterdone + iterleft );
       returnRecord.define( RecordFieldId("cycleniter"), cycleniter );
       returnRecord.define( RecordFieldId("threshold"), threshold );
+      returnRecord.define( RecordFieldId("cyclethreshold"), cyclethreshold );
 
     } catch(AipsError &x) {
       throw( AipsError("Error in Interactive GUI : "+x.getMesg()) );

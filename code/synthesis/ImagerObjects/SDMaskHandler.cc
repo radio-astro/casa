@@ -87,7 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //// imstore->mask() will return a pointer to an ImageInterface (allocation happens on first access). 
 
-    cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
+    //    cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
     
     //interpret maskString 
     if (maskString !="") {
@@ -96,13 +96,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         Vector<String> colnames = imtab.tableDesc().columnNames();
         if ( colnames[0]=="map" ) {
           // looks like a CASA image ... probably should check coord exists in the keyword also...
-          cout << "copy this input mask...."<<endl;
+	  //          cout << "copy this input mask...."<<endl;
           PagedImage<Float> inmask(maskString); 
           copyMask(inmask, *(imstore->mask()));
         }
       }
       else {
-        cout << maskString << " is not image..."<<endl;
+        //cout << maskString << " is not image..."<<endl;
         ImageRegion* imageRegion=0;
         SDMaskHandler::regionTextToImageRegion(maskString, *(imstore->mask()), imageRegion);
         if (imageRegion!=0)
@@ -110,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     else { 
-    /////// Temporary code to set a mask in the inner quarter.
+/////// Temporary code to set a mask in the inner quarter.
     /////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
     IPosition imshp = imstore->mask()->shape();
     AlwaysAssert( imshp.nelements() >=2 , AipsError );
@@ -388,7 +388,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   Int SDMaskHandler::makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
-                                          Int& niter, Int& ncycles, String& threshold)
+					 Int& niter, Int& cycleniter, 
+					 String& threshold, String& cyclethreshold)
   {
     Int ret;
     // Int niter=1000, ncycles=100;
@@ -396,10 +397,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String imageName = imstore->getName()+".residual"+(imstore->getNTaylorTerms()>1?".tt0":"");
     String maskName = imstore->getName() + ".mask";
     imstore->mask()->unlock();
-    //    cout << "Before interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << endl;
+    cout << "Before interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << threshold << "  cyclethresh : " << cyclethreshold << endl;
+    //    ret = interactiveMasker_p->interactivemask(imageName, maskName,
+    //                                            niter, ncycles, threshold);
     ret = interactiveMasker_p->interactivemask(imageName, maskName,
-                                               niter, ncycles, threshold);
-    //    cout << "After interaction : niter : " << niter << " ncycles : " << ncycles << " thresh : " << threshold << "  ------ ret : " << ret << endl;
+                                               niter, cycleniter, threshold, cyclethreshold);
+    cout << "After interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << threshold << " cyclethresh : " << cyclethreshold << "  ------ ret : " << ret << endl;
     return ret;
   }
 

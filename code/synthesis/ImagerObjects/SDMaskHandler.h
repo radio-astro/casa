@@ -91,8 +91,8 @@ public:
   void InMaskToImageRegion(const ImageInterface<Float>& inimage );
 
   int makeInteractiveMask(CountedPtr<SIImageStore>& imstore,
-			  Int& niter, Int& ncycles, 
-			  String& threshold);
+			  Int& niter, Int& cycleniter,
+			  String& threshold, String& cyclethreshold);
 
   // Return a reference to an imageinterface for the mask.
   void makeAutoMask(CountedPtr<SIImageStore> imstore);

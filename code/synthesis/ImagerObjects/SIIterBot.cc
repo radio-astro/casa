@@ -74,6 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						itsThreshold(0),
 						itsCycleThreshold(0.0),
 						itsInteractiveThreshold(0.0),
+						itsIsCycleThresholdAuto(True),
 						itsCycleFactor(1.0),
 						itsLoopGain(0.1),
 						itsStopFlag(false),
@@ -171,7 +172,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 
-		updateCycleThreshold();
+		/* If autocalc, compute cyclethresh from peak res, cyclefactor and psf sidelobe 
+		   Otherwise, the user has explicitly set it (interactively) for this minor cycle */
+		if( itsIsCycleThresholdAuto == True )  updateCycleThreshold();
+		itsIsCycleThresholdAuto = True; /* Reset this, for the next round */
 
 		/* Now that we have set the threshold, zero the peak residual 
 		   so it can be found again after the minor cycles */
@@ -430,6 +434,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		returnRecord.define(RecordFieldId("interactiveniter"),itsInteractiveNiter);
 
 		returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
+		if( itsIsCycleThresholdAuto == True )  updateCycleThreshold();
 		returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
 		returnRecord.define( RecordFieldId("interactivethreshold"), itsInteractiveThreshold);  
 
@@ -481,6 +486,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void SIIterBot_state::changeCycleThreshold( Float cyclethreshold ) {
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);
 		itsCycleThreshold = cyclethreshold;
+		itsIsCycleThresholdAuto = False;
 	}
 
 	void SIIterBot_state::changeInteractiveThreshold( Float interactivethreshold ) {
@@ -530,37 +536,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			changeInteractiveNiter( recordIn.asInt(RecordFieldId("interactiveniter")) );
     
 		if (recordIn.isDefined("threshold")) 
-		  {
-		    // Threshold can be a variant, either Float or String(with units).
-		    Float fthresh=0.0;
-		    // If a number, treat it as a number in units of Jy.
-		    if( recordIn.dataType("threshold") == TpFloat || 
-			recordIn.dataType("threshold") == TpDouble || 
-			recordIn.dataType("threshold") == TpInt )
-		      { fthresh = recordIn.asFloat( RecordFieldId("threshold")); }
-		    // If a string, try to convert to a Quantity
-		    else if( recordIn.dataType("threshold") == TpString )
-		      {
-			Quantity thresh; 
-			// If it cannot be converted to a Quantity.... complain, and use zero.
-			if( ! casa::Quantity::read( thresh, recordIn.asString( RecordFieldId("threshold") ) ) )
-			  {os << LogIO::WARN << "Cannot parse threshold value. Setting to zero." << LogIO::POST;  
-			    fthresh=0.0;}
-			// If converted to Quantity, get value in Jy. 
-			// ( Note : This does not check for wrong units, e.g. if the user says '100m' ! )
-			else { fthresh = thresh.getValue(Unit("Jy")); }
-		      }
-		    // If neither valid datatype, print a warning and use zero.
-		    else {os << LogIO::WARN << "Threshold is neither a number nor a string Quantity. Setting to zero." << LogIO::POST;
-		      fthresh=0.0; }
-
-		    // Set the threshold as a float. This is the data format used everywhere internally. 
-		    changeThreshold( fthresh );
-		  }
+		    changeCycleThreshold( readThreshold( recordIn, "threshold" ) );
 		
 		if (recordIn.isDefined("cyclethreshold")) 
-			changeCycleThreshold(recordIn.asFloat( RecordFieldId("cyclethreshold")));
-    
+		    changeCycleThreshold( readThreshold( recordIn, "cyclethreshold" ) );
+
 		if (recordIn.isDefined("interactivethreshold")) 
 			changeInteractiveThreshold(recordIn.asFloat(RecordFieldId("interactivethreshold")));
 
@@ -573,10 +553,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (recordIn.isDefined("interactive"))
 			changeInteractiveMode(recordIn.asBool(RecordFieldId("interactive")));
 
-		printOut("After Setting : ", False);
+		//		printOut("After Setting : ", False);
 
 	}
 
+        Float SIIterBot_state::readThreshold( Record recordIn, String id )  {
+		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
+		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
+		// Threshold can be a variant, either Float or String(with units).
+		Float fthresh=0.0;
+		// If a number, treat it as a number in units of Jy.
+		if( recordIn.dataType(id) == TpFloat || 
+		    recordIn.dataType(id) == TpDouble || 
+		    recordIn.dataType(id) == TpInt )
+		  { fthresh = recordIn.asFloat( RecordFieldId(id)); }
+		// If a string, try to convert to a Quantity
+		else if( recordIn.dataType(id) == TpString )
+		  {
+		    Quantity thresh; 
+		    // If it cannot be converted to a Quantity.... complain, and use zero.
+		    if( ! casa::Quantity::read( thresh, recordIn.asString( RecordFieldId(id) ) ) )
+		      {os << LogIO::WARN << "Cannot parse threshold value. Setting to zero." << LogIO::POST;  
+			fthresh=0.0;}
+		    // If converted to Quantity, get value in Jy. 
+		    // ( Note : This does not check for wrong units, e.g. if the user says '100m' ! )
+		    else { fthresh = thresh.getValue(Unit("Jy")); }
+		  }
+		// If neither valid datatype, print a warning and use zero.
+		else {os << LogIO::WARN << id << " is neither a number nor a string Quantity. Setting to zero." << LogIO::POST;
+		  fthresh=0.0; }
+		return fthresh;
+	}
+  
 	/* Print out contents of the IterBot. For debugging. */
 	void SIIterBot_state::printOut( String prefix, Bool verbose ) {
 		if( verbose == True ) {

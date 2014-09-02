@@ -18,7 +18,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      # Interaction ON or OFF
      interactive=False
+     #mask='ttt.mask'
      mask=''
+     #mask = 'circle[[50pix,50pix],10pix]'
 
      if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
           casalog.post("==================================");
@@ -116,7 +118,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      if(testnum==19): ## mode=cubesrc (For interface test purpose only, the mode is not fully implemeted yet)
           casalog.post("==================================");
-          casalog.post("Test 19 image-field, cubesrc --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 19 image-field, cubesrc --- Imaging with various cube parameter specifications");
           #casalog.post("==================================");
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',\
                                        spw='0',\
@@ -252,9 +254,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive,mask=mask)
 
 
-     if(testnum==13): ## 1 image-field, cube --- Real Imaging with various cube parameter specifications
+     if(testnum==13): ## 1 image-field, cube --- Imaging with various cube parameter specifications
           casalog.post("==================================");
-          casalog.post("Test 13 image-field, cube --- Real Imaging with various cube parameter specifications");
+          casalog.post("Test 13 image-field, cube --- Imaging with various cube parameter specifications");
           #casalog.post("==================================");
           ## chan 5 (TOPO)
           qfstart=qa.quantity("1.1GHz")
@@ -543,9 +545,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive,mask=mask)
 
 
-     if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Real Imaging.
+     if(testnum==5):  ## 1 image-field, mfs, multiple input MSs --- Imaging.
           casalog.post("==================================");
-          casalog.post("Test 5 image-field, mfs, multiple input MSs --- Real Imaging.");
+          casalog.post("Test 5 image-field, mfs, multiple input MSs --- Imaging.");
           casalog.post("==================================");
           paramList = ImagerParameters(msname=['DataTest/point_onespw0.ms','DataTest/point_onespw1.ms'],\
                                        field='0',spw=['0','0'],\
@@ -563,9 +565,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive,mask=mask)
 
 
-     if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Real Imaging.
+     if(testnum==4):  ## 2 image-fields, one cube, one mfs --- Imaging.
           casalog.post("==================================");
-          casalog.post("Test 4 image-fields, one cube, one mfs --- Real Imaging.");
+          casalog.post("Test 4 image-fields, one cube, one mfs --- Imaging.");
           casalog.post("==================================");
           
           write_file('out4.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmode=mfs\nstart=1.0GHz\nstep=2.0GHz')
@@ -591,12 +593,15 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
 
      
-     if(testnum==3):  ## 2 image-fields, mfs --- Real Imaging.
+     if(testnum==3):  ## 2 image-fields, mfs --- Imaging.
           casalog.post("==================================");
-          casalog.post("Test 3 image-fields, mfs --- Real Imaging.");
+          casalog.post("Test 3 image-fields, mfs --- Imaging.");
           casalog.post("==================================");
           
-          write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543')
+          if len(mask)==0:
+               write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543')
+          else:
+               write_file('out3.txt', 'imagename=mytest1\nnchan=1\nimsize=[80,80]\ncellsize=[8.0arcsec,8.0arcsec]\nphasecenter=J2000 19:58:40.895 +40.55.58.543\nmask=circle[[40pix,40pix],10pix]')
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',\
                                        field='0',spw='0',\
                                        usescratch=True,readonly=True,\
@@ -614,9 +619,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive,mask=mask)
      
      
-     if(testnum==2):  ## 1 image-field, cube --- Real Imaging.
+     if(testnum==2):  ## 1 image-field, cube --- Imaging.
           casalog.post("==================================");
-          casalog.post("Test 2 image-field, cube --- Real Imaging.");
+          casalog.post("Test 2 image-field, cube --- Imaging.");
           casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms', field='0',spw='',\
@@ -634,9 +639,9 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        interactive=interactive,mask=mask)
      
 
-     if(testnum==1):  ## 1 image-field, mfs --- Real Imaging.
+     if(testnum==1):  ## 1 image-field, mfs --- Imaging.
           casalog.post("==================================");
-          casalog.post("Test 1 image-field, mfs --- Real Imaging.");
+          casalog.post("Test 1 image-field, mfs --- Imaging.");
           casalog.post("==================================");
           
           paramList = ImagerParameters(msname='DataTest/point_twospws.ms',field='0',spw='0',\
