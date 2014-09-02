@@ -142,6 +142,8 @@ void PlotMSPlotManager::clearPlotsAndCanvases( bool clearCanvases ) {
     	itsPages_.clearPages();
     }
     else {
+    	//Remove axes and titles from the plots.
+    	itsPages_.clearCanvases();
 
     	//Remove all trace of the plots on the pages.
     	int plotCount = itsPlots_.size();
@@ -216,7 +218,6 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     itsPages_.setupCurrentPage();
 
     bool locationFound = isPlottable( plot );
-
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
     }

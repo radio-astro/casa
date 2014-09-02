@@ -66,6 +66,9 @@ public:
     //Erase all traces of a plot at the specific location including removing axes and title.
     void clearCanvas( int row, int col );
 
+    //Remove axes and titles from all the canvases.
+    void clearCanvases();
+
     // Copy operator.
     PlotMSPage& operator=(const PlotMSPage& copy);
 
