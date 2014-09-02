@@ -660,8 +660,19 @@ def flagdata(vis,
                 agent_pars['reportdisplay'] = True
                 
             # CAS-3966 Add datacolumn to display agent parameters
+            # Check if FLOAT_DATA exist instead
+            tblocal = tbtool()
+            tblocal.open(vis)
+            allcols = tblocal.colnames()
+            tblocal.close()
+            float_data = 'FLOAT_DATA' in allcols
+            if datacolumn.upper() == 'DATA' and float_data == True:
+                datacolumn = 'FLOAT_DATA'
+                
             agent_pars['datacolumn'] = datacolumn.upper()
-            aflocal.parseagentparameters(agent_pars)
+            ret = aflocal.parseagentparameters(agent_pars)
+            if not ret:
+                casalog.post('Unable to load the display. Please check the datacolumn','ERROR')
             
             # Disable saving the parameters to avoid inconsistencies
             if savepars:

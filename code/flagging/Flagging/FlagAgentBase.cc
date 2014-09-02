@@ -1304,6 +1304,11 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			expression_p = config.asString("correlation");
 		}
+		else if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET and
+		        dataColumn_p.compare("FLOAT_DATA") == 0)
+		{
+		    expression_p = "REAL ALL";
+		}
 		else if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
 		{
 			expression_p = "ABS ALL";
@@ -1340,7 +1345,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< "; selecting REAL by default. "
-							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM/WEIGHT"
+							<< " Complex operators are not supported for FLOAT_DATA/FPARAM/SNR/WEIGHT_SPECTRUM/WEIGHT"
 							<< LogIO::POST;
 
 				String new_expression;

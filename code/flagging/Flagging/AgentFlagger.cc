@@ -429,6 +429,8 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 		if (not agentParams_p.isDefined("correlation")) {
 			// Default for tfcrop
 			correlation = "ABS_ALL";
+			if (datacolumn.compare("FLOAT_DATA") == 0)
+			    correlation = "REAL_ALL";
 			agentParams_p.define("correlation", correlation);
 		}
 		if (dbg){

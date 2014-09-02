@@ -87,6 +87,21 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         self.unflag_table()
         
+    def setUp_float_data(self):
+        '''Single-dish MS'''
+        self.vis = "SDFloatColumn.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        self.unflag_table()
+        
     def unflag_table(self):
 
         aflocal = casac.agentflagger()
@@ -791,7 +806,7 @@ class test_display(test_base):
         aflocal.parsesummaryparameters(spwchan=True)
 #        agentManual={'apply':True,'mode':'manual'}
 #        agentSummary={'apply':True,'mode':'summary','spwchan':True}
-        agentDisplay={'mode':'display','datadisplay':True,'pause':False}
+        agentDisplay={'mode':'display','datadisplay':True,'pause':False,'datacolumn':'CPARAM'}
 #        aflocal.parseagentparameters(agentManual)
 #        aflocal.parseagentparameters(agentSummary)
         aflocal.parseagentparameters(agentDisplay)
@@ -806,7 +821,22 @@ class test_display(test_base):
         self.assertEqual(summary['report0']['spw:channel']['1:60']['flagged'], 1300)
         self.assertEqual(summary['report0']['spw:channel']['1:59']['flagged'], 0)
         self.assertEqual(summary['report0']['flagged'], 15*1300)
-
+        
+    def test_display_float_data(self):
+        '''AgentFlagger: Select spw, display and flag single-dish MS'''
+        self.setUp_float_data()
+        aflocal = casac.agentflagger()
+        aflocal.open(self.vis)
+        aflocal.selectdata(spw='1~4')
+        aflocal.parsemanualparameters()
+        aflocal.parsesummaryparameters(name='Single-dish')
+        agentDisplay={'mode':'display','datadisplay':True,'pause':False,'datacolumn':'FLOAT_DATA'}
+        aflocal.parseagentparameters(agentDisplay)
+        aflocal.init()
+        summary = aflocal.run(writeflags=True)
+        aflocal.done()
+        self.assertEqual(summary['report0']['flagged'], 2052)
+    
 
 # Dummy class which cleans up created files
 class cleanup(test_base):

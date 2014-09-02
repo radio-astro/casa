@@ -1370,7 +1370,9 @@
 
         'apply' -- Apply the flags to the MS.
         
-               display -- Display data and/or end-of-MS reports at run-time.        
+               display -- Display data and/or end-of-MS reports at run-time. It needs to read
+                          a datacolumn for the plotting. The default for an MS is DATA, but the task
+                          will use FLOAT_DATA for a Sindle-dish MS.       
                    default: 'none'
                    options: 'none', 'data', 'report', 'both'
 
