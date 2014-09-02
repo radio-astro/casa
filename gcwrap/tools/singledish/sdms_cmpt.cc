@@ -94,7 +94,7 @@ sdms::name()
 }
 
 bool
-sdms::scale(double const factor)
+sdms::scale(float const factor)
 {
   bool rstat(false);
   try {

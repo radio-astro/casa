@@ -102,7 +102,7 @@ Multipy a scaling factor to selected spectra.
   </description>
   <input>
 
-    <param type="double" name="factor">
+    <param type="float" name="factor">
       <description>the scaling factor</description>
       <value>1.0</value>
     </param>
