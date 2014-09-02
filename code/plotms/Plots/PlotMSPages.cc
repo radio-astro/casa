@@ -160,6 +160,13 @@ void PlotMSPages::clearCanvas( int row, int col ){
 	}
 }
 
+//Erase axes & titles from all the canvases.
+void PlotMSPages::clearCanvases(){
+	for ( unsigned int i = 0; i < itsPages_.size(); i++ ){
+		itsPages_[i].clearCanvases();
+	}
+}
+
 PlotMSParameters PlotMSPages::getPageParameters(){
 	return itsManager_->getPageParameters();
 }

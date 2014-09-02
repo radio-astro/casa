@@ -242,6 +242,16 @@ bool PlotMSPage::disown(unsigned int row, unsigned int col, PlotMSPlot* plot ) {
     return true;
 }
 
+void PlotMSPage::clearCanvases(){
+	int rowCount = itsCanvases_.size();
+	for ( int i = 0; i < rowCount; i++ ){
+		int colCount = itsCanvases_[i].size();
+		for ( int j = 0; j < colCount; j++ ){
+			clearCanvas( i, j );
+		}
+	}
+}
+
 void PlotMSPage::clearCanvas( int row, int col ){
 	bool canvasDisowned = disown( row, col );
 	if ( canvasDisowned ){

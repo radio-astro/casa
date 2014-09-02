@@ -301,7 +301,6 @@ bool PlotMSOverPlot::assignCanvases(PlotMSPages &pages) {
 		colIndex = iterParams->getGridCol();
 	}
 
-
 	page.disown( this );
 	if ( rowIndex >= 0 && colIndex >= 0 ){
 		//Find a canvas for this plot.
@@ -380,6 +379,7 @@ bool PlotMSOverPlot::initializePlot() {
 	Int rows = 1;
 	Int cols = 1;
 	getPlotSize( rows, cols );
+
 	resizePlots( rows, cols );
 	setColors();
 	return true;
@@ -532,8 +532,7 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 			updateData = true;
 		}
 	}
-
-
+	
 	// Update cache if needed
 	bool handled = true;
 	if( dataSet && updateData ) {

@@ -86,6 +86,9 @@ public:
     //Erase all traces of a plot at the specific location including removing axes and title.
     void clearCanvas( int row, int col );
 
+    //Erase axes & titles from all the canvases.
+    void clearCanvases();
+
 	//Resize the page to the current number of rows and columns.
     bool gridChanged( int rows, int cols);
 
