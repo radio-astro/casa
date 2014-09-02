@@ -235,9 +235,10 @@ def plotms(vis=None,
         if clearplots and plotindex > 0:   
             casalog.post("A nonzero plotindex is not valid when clearing plots.", "SEVERE")
             return False
-        elif ( gridrows > 1 or gridcols > 1) and plotindex > 0:
-            casalog.post("A nonzero plotindex is not valid when resetting the page grid", "SEVERE")
-            return False
+        '''elif ( gridrows > 1 or gridcols > 1) and plotindex > 0:
+            if ( gridrows*gridcols - 1 < plotindex):
+                casalog.post("A nonzero plotindex is not valid when resetting the page grid", "SEVERE")
+                return False'''
     
     
         #Determine whether this is going to be a scripting client or a full GUI supporting
@@ -256,7 +257,7 @@ def plotms(vis=None,
                 gridrows = 1
             if not gridcols:
                 gridcols = 1
-    
+        
         if gridChange:
             pm.setGridSize( gridrows, gridcols )
         pm.setPlotMSFilename(vis, False, plotindex )
