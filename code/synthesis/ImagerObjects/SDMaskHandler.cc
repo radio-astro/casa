@@ -98,7 +98,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
           // looks like a CASA image ... probably should check coord exists in the keyword also...
 	  //          cout << "copy this input mask...."<<endl;
           PagedImage<Float> inmask(maskString); 
-          copyMask(inmask, *(imstore->mask()));
+          IPosition inShape = inmask.shape();
+          IPosition outShape = imstore->mask()->shape();
+          Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
+          Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
+          if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
+            expandMask(inmask, *(imstore->mask()));
+          }
+          else {
+            copyMask(inmask, *(imstore->mask()));
+          }
         }
       }
       else {
@@ -347,23 +356,84 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SDMaskHandler", "copyMask", WHERE) );
   
+    //output mask coords
+    IPosition outshape = outImageMask.shape();
+    CoordinateSystem outcsys = outImageMask.coordinates();
+    DirectionCoordinate outDirCsys = outcsys.directionCoordinate();
+    SpectralCoordinate outSpecCsys = outcsys.spectralCoordinate();
+     
     // do regrid   
     IPosition axes(3,0, 1, 2);
+    IPosition inshape = inImageMask.shape();
     CoordinateSystem incsys = inImageMask.coordinates(); 
+    DirectionCoordinate inDirCsys = incsys.directionCoordinate();
+    SpectralCoordinate inSpecCsys = incsys.spectralCoordinate();
+
     Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
     axes(0) = dirAxes(0); 
     axes(1) = dirAxes(1);
     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+   
     ImageRegrid<Float> imregrid;
     imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
   } 
 
-  void SDMaskHandler::expandMask(const ImageInterface<Float>& /*smallchanmask*/, ImageInterface<Float>& /*outimage*/)
+  void SDMaskHandler::expandMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask)
   {
-    LogIO os( LogOrigin("SDMaskHandler", "extendMask", WHERE) );
+    LogIO os( LogOrigin("SDMaskHandler", "expandMask", WHERE) );
 
     // expand mask with input range (in spectral axis and stokes?) ... to output range on outimage
+    // current expand a continuum mask to a cube mask in channels only (to all channels) 
+    IPosition inShape = inImageMask.shape();
+    CoordinateSystem inCsys = inImageMask.coordinates();
+    Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(inCsys);
+    Int inSpecAxis = CoordinateUtil::findSpectralAxis(inCsys);
+    Int inNchan = inShape(inSpecAxis); 
+    Vector<Stokes::StokesTypes> inWhichPols;
+    Int inStokesAxis = CoordinateUtil::findStokesAxis(inWhichPols,inCsys);
+    //
+    // Single channel(continuum) input mask to output cube mask case:
+    //  - It can be different shape in direction axes and will be regridded.
+    if (inNchan==1) {
+      IPosition outShape = outImageMask.shape();
+      CoordinateSystem outCsys = outImageMask.coordinates();
+      Vector<Int> outDirAxes = CoordinateUtil::findDirectionAxes(outCsys);
+      Int outSpecAxis = CoordinateUtil::findSpectralAxis(outCsys);
+      Int outNchan = outShape(outSpecAxis);
+      Vector<Stokes::StokesTypes> outWhichPols;
+      Int outStokesAxis = CoordinateUtil::findStokesAxis(outWhichPols,outCsys);
 
+      Int stokesInc = 1;
+      if (inShape(inStokesAxis)==outShape(outStokesAxis)) {
+        stokesInc = inShape(inStokesAxis);
+      }
+      IPosition start(4,0,0,0,0);
+      IPosition length(4,outShape(outDirAxes(0)), outShape(outDirAxes(1)),1,1);
+      length(outStokesAxis) = stokesInc;
+      Slicer sl(start, length); 
+
+      // make a subImage for regridding output       
+      SubImage<Float> chanMask(outImageMask, sl, True);
+      
+      ImageRegrid<Float> imregrid;
+      try {
+        imregrid.regrid(chanMask, Interpolate2D::LINEAR, dirAxes, inImageMask);
+      } catch (AipsError& x) {
+        cerr<<"Attempt to regrid the input mask image failed: "<<x.getMesg()<<endl;
+      }
+      Array<Float> inMaskData;
+      IPosition end2(4,outShape(outDirAxes(0)), outShape(outDirAxes(1)), 1, 1);
+      chanMask.doGetSlice(inMaskData, Slicer(start,end2));
+      for (Int ich = 1; ich < outNchan; ich++) {
+        start(outSpecAxis) = ich;
+        IPosition stride(4,1,1,1,1);
+        stride(outSpecAxis) = stokesInc; 
+        outImageMask.putSlice(inMaskData,start,stride); 
+      }
+    }
+    else {
+      throw(AipsError("Input mask,"+inImageMask.name()+" does not conform with the number of channels in output mask"));
+    }
   }
 
   // was Imager::clone()...

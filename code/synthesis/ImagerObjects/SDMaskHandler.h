@@ -85,8 +85,8 @@ public:
   void copyAllMasks(const Vector< ImageInterface<Float> >& inimage, ImageInterface<Float>& outimage);
   // copy and regrid a mask image to outimage
   void copyMask(const ImageInterface<Float>& inimage, ImageInterface<Float>& outimage);
-  // expand smaller chan mask image to larger one 
-  void expandMask(const ImageInterface<Float>& smallchanmask, ImageInterface<Float>& outimage);
+  // expand smaller chan mask image to larger one. - currently only works for a single channel (continuum) input mask 
+  void expandMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask);
   // convert internal mask to imageRegion
   void InMaskToImageRegion(const ImageInterface<Float>& inimage );
 
