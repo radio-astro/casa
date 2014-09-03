@@ -140,7 +140,7 @@ void CubeSkyEquation::init(FTMachine& ft){
     ift_=new WProjectFT(static_cast<WProjectFT &>(ft));
     ftm_p[0]=ft_;
     iftm_p[0]=ift_;
-    CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
+    CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc( *(static_cast<WProjectFT &>(ft).getConvFunc()));
     static_cast<WProjectFT &>(ft).setConvFunc(sharedconvFunc);
     static_cast<WProjectFT &>(*ftm_p[0]).setConvFunc(sharedconvFunc);
     static_cast<WProjectFT &>(*iftm_p[0]).setConvFunc(sharedconvFunc);
@@ -1670,8 +1670,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 void
 CubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  //for (Int model=0; model < sm_->numberOfModels(); ++model)
-  //        ftm_p[model]->finalizeToVis();
+  for (Int model=0; model < sm_->numberOfModels(); ++model)
+          ftm_p[model]->finalizeToVis();
 }
 
 Bool

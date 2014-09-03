@@ -242,7 +242,7 @@ class Imager
   Bool setoptions(const String& ftmachine, const Long cache, const Int tile,
 		  const String& gridfunction, const MPosition& mLocation,
                   const Float padding,
-		  const Int wprojplanes=1,
+		  const Int wprojplanes=-1,
 		  const String& epJTableName="",
 		  const Bool applyPointingOffsets=True,
 		  const Bool doPointingCorrection=True,

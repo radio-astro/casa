@@ -221,7 +221,7 @@ traceEvent(1,"Entering imager::defaults",25);
   setimaged_p=False;
   nullSelect_p=False;
   nx_p=128; ny_p=128; facets_p=1;
-  wprojPlanes_p=1;
+  wprojPlanes_p=-1;
   mcellx_p=Quantity(1, "arcsec"); mcelly_p=Quantity(1, "arcsec");
   shiftx_p=Quantity(0.0, "arcsec"); shifty_p=Quantity(0.0, "arcsec");
   distance_p=Quantity(0.0, "m");
@@ -1097,7 +1097,7 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
     ROVisIter& vi(*rvi_p);
     VisBuffer vb(vi);
     
-    for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+    for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
       for (vi.origin();vi.more();vi++) {
 	Int nRow=vb.nRow();
 	Int nChan=vb.nChannel();
@@ -1135,6 +1135,7 @@ Bool Imager::advise(const Bool takeAdvice, const Float amplitudeLoss,
       }
     }
     
+
     if(sumWt==0.0) {
       os << LogIO::WARN << "Visibility data are not yet weighted: using unweighted values" << LogIO::POST;
       sumWt = sum;

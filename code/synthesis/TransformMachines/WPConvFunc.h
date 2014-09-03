@@ -59,8 +59,13 @@ namespace casa{
   class WPConvFunc 
     {
     public:
-      WPConvFunc();
+      WPConvFunc(const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
       WPConvFunc(const RecordInterface& rec);
+      //Copy constructor
+      WPConvFunc(const WPConvFunc& other);
+      //
+      WPConvFunc& operator=(const WPConvFunc&other);
+
       virtual ~WPConvFunc();
 
       // Inputs are the image, visbuffer,  wConvsize
@@ -103,7 +108,7 @@ namespace casa{
       Double wScale_p;
       Int convSampling_p;
       Int nx_p, ny_p;
-
+      Double minW_p, maxW_p, rmsW_p;
 
     };
 };// end of namespace

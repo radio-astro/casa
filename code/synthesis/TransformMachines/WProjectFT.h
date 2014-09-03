@@ -138,16 +138,16 @@ public:
   // <group>
   WProjectFT(
 	   Int nFacets, Long cachesize, Int tilesize=16, 
-	   Bool usezero=True, Bool useDoublePrec=False);
+	   Bool usezero=True, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   //Constructor without tangent direction
   WProjectFT(Int nFacets, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   //Deprecated no longer need ms in constructor
   WProjectFT(
 	     Int nFacets, MDirection mTangent, MPosition mLocation,
 	     Long cachesize, Int tilesize=16, 
-	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False);
+	     Bool usezero=True, Float padding=1.0, Bool useDoublePrec=False, const Double minW=-1.0, const Double maxW=-1.0, const Double rmsW=-1.0);
   // </group>
 
   // Construct from a Record containing the WProjectFT state
@@ -310,6 +310,7 @@ protected:
 
   CountedPtr<WPConvFunc> wpConvFunc_p;
   Double timemass_p, timegrid_p, timedegrid_p;
+  Double minW_p, maxW_p, rmsW_p;
 };
 
 } //# NAMESPACE CASA - END

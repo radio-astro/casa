@@ -70,9 +70,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
- WPConvFunc::WPConvFunc():
+  WPConvFunc::WPConvFunc(const Double minW, const Double maxW, const Double rmsW):
    convFunctionMap_p(-1), 
-   actualConvIndex_p(-1), convSize_p(0), convSupport_p(0) {
+   actualConvIndex_p(-1), convSize_p(0), convSupport_p(0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW) {
    //
   }
 
@@ -87,12 +87,52 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (!fromRecord(error, rec)) {
       throw (AipsError("Failed to create WPConvFunc: " + error));
     }
+  
+  }
+  WPConvFunc::WPConvFunc(const WPConvFunc& other): convFunctionMap_p(-1), 
+   actualConvIndex_p(-1), convSize_p(0), convSupport_p(0){
 
+    operator=(other);
+  }
+
+  WPConvFunc& WPConvFunc::operator=(const WPConvFunc& other){
+    if(this != &other){
+      uInt numConv=other.convFunctions_p.nelements();
+      convFunctions_p.resize(numConv, True, False);
+      convSupportBlock_p.resize(numConv, True, False);
+      for (uInt k=0; k < numConv; ++k){
+	convFunctions_p[k]=new Cube<Complex>();
+	*(convFunctions_p[k])=*(other.convFunctions_p[k]);
+	convSupportBlock_p[k]=new Vector<Int> ();
+	*(convSupportBlock_p[k]) = *(other.convSupportBlock_p[k]);
+      }
+     
+      convFunctionMap_p=other.convFunctionMap_p;
+      convSizes_p.resize();
+      convSizes_p=other.convSizes_p;
+      actualConvIndex_p=other.actualConvIndex_p;
+      convSize_p=other.convSize_p;
+      convSupport_p.resize();
+      convSupport_p=other.convSupport_p;
+      convFunc_p.resize();
+      convFunc_p=other.convFunc_p;
+      wScale_p=other.wScale_p;
+      convSampling_p=other.convSampling_p;
+      nx_p=other.nx_p; 
+      ny_p=other.ny_p;
+      minW_p=other.minW_p;
+      maxW_p=other.maxW_p;
+      rmsW_p=other.rmsW_p;
+
+
+      
+    }
+    return *this;
   }
 
   void WPConvFunc::findConvFunction(const ImageInterface<Complex>& image, 
 				    const VisBuffer& vb,
-				    const Int& wConvSize,
+				    const Int& wConvSizeUser,
 				    const Vector<Double>& uvScale,
 				    const Vector<Double>& uvOffset, 
 				    const Float& padding,
@@ -109,6 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convFunc.reference(convFunc_p);
     convSize=convSize_p;
     convSampling=convSampling_p;
+    convSupport.resize();
     convSupport=convSupport_p;
     wScale=wScale_p;
     return;
@@ -119,11 +160,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   os << LogOrigin("WPConvFunc", "findConvFunction")  << LogIO::NORMAL;
   
   
+
+  Int wConvSize=wConvSizeUser;
+  ////Automatic mode
+  Double maxUVW;
+  if(wConvSize < 1){
+    maxUVW=rmsW_p < 0.5*(minW_p+maxW_p) ? 1.05*maxW_p: (rmsW_p /(0.5*((minW_p)+maxW_p))*1.05*maxW_p) ;
+    wConvSize=Int(sqrt(maxUVW)*10.0);
+    //maxUVW=1.05*maxW_p;
+    //wConvSize=100*(maxUVW*maxUVW*image.coordinates().increment()(0)*image.coordinates().increment()(0));
+    //cerr << "wConvSize 0 " << wConvSize << endl;
+    //if(rmsW_p < 0.5*(minW_p+maxW_p))
+    // wConvSize=wConvSize*(minW_p+maxW_p)*(minW_p+maxW_p)/(rmsW_p*rmsW_p);
+
+    convSupport.resize(wConvSize);
+  }
+  else{
+    if(maxW_p> 0.0)
+      maxUVW= 1.05*maxW_p;
+    else
+      maxUVW=0.25/abs(image.coordinates().increment()(0));
+
+  }
   if(wConvSize>1) {
     os << "W projection using " << wConvSize << " planes" << LogIO::POST;
-    Double maxUVW;
-    maxUVW=0.25/abs(image.coordinates().increment()(0));
-    os << "Estimating maximum possible W = " << maxUVW
+    
+    os << "Using maximum possible W = " << maxUVW
 	    << " (wavelengths)" << LogIO::POST;
     
     Double invLambdaC=vb.frequency()(0)/C::c;
@@ -133,6 +195,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    uvScale(2)=sqrt(Float(wConvSize-1))/maxUVW;
     //    uvScale(2)=(Float(wConvSize-1))/maxUVW;
     wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
+    //wScale=Float(wConvSize-1)/maxUVW;
     wScale_p=wScale;
     os << "Scaling in W (at maximum W) = " << 1.0/wScale_p
 	    << " wavelengths per pixel" << LogIO::POST;
@@ -168,13 +231,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // use memory size defined in aipsrc if exists
     Int maxMemoryMB=HostInfo::memoryTotal(true)/1024;
     //nominal  512 wprojplanes above that you may (or not) go swapping
-    Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/512.0);
+    Double maxConvSizeConsidered=sqrt(Double(maxMemoryMB)/8.0*1024.0*1024.0/Double(wConvSize));
     CompositeNumber cn(Int(maxConvSizeConsidered/2.0)*2);
     
     convSampling_p=4;
     convSize=max(Int(nx_p*padding),Int(ny_p*padding));
     convSize=min(convSize,(Int)cn.nearestEven(Int(maxConvSizeConsidered/2.0)*2));
-
 
     
   }
@@ -245,6 +307,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Accumulate terms 
   //Matrix<Complex> screen(convSize, convSize);
   //screen.set(Complex(0.0));
+  Vector<Complex> maxes(wConvSize);
+  Bool maxdel;
+  Complex* maxptr=maxes.getStorage(maxdel);
   Matrix<Complex> corr(inner, inner);
   Vector<Complex> correction(inner);
    for (Int iy=-inner/2;iy<inner/2;iy++) {
@@ -272,8 +337,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
    //////openmp like to share reference param ...but i don't like to share
    Int cpConvSize=convSize;
    Int cpWConvSize=wConvSize;
-
-#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner ) 
+   Float max0=1.0;
+#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner, maxptr ) 
 
   for (Int iw=0; iw< cpWConvSize;iw++) {
     // First the w term
@@ -283,7 +348,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Complex *scr=screen.getStorage(cpscr);
     if(cpWConvSize>1) {
       //      Double twoPiW=2.0*C::pi*sqrt(Double(iw))/uvScale(2);
-      //      Double twoPiW=2.0*C::pi*Double(iw)/uvScale(2);
+      //Double twoPiW=2.0*C::pi*Double(iw)/wScale_p;
       Double twoPiW=2.0*C::pi*Double(iw*iw)/wScale_p;
       //#ifdef HAS_OMP
       //      omp_set_nested(1);
@@ -377,31 +442,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   cerr << "quartershape " << quarter.shape() << endl;
     uInt offset=uInt(iw*(cpConvSize/2-1)*(cpConvSize/2-1));
     //    cerr << "offset " << offset << " convfuncshape " << convFunc.shape() << " convSize " << convSize  << endl;
+    maxptr[iw]=screen(0,0);
     for (uInt y=0; y< uInt(cpConvSize/2)-1; ++y){
       for (uInt x=0; x< uInt(cpConvSize/2)-1; ++x){
 	////////convFuncPtr[offset+y*(convSize/2-1)+x] = quarter(x,y);
 	convFuncPtr[offset+y*(cpConvSize/2-1)+x] = screen(x,y);
       }
     }
-
   }
   
   convFunc.putStorage(convFuncPtr, convFuncStor);
   corr.putStorage(cor, cpcor);
-
-  Complex maxconv=max(abs(convFunc));
-  //cerr << "maxconv " << maxconv << endl;
-  convFunc=convFunc/maxconv;
-
+  maxes.putStorage(maxptr, maxdel);
+  //tim.show("After convFunc making ");
+//Complex maxconv=max(abs(convFunc));
+ Complex maxconv=max(abs(maxes));
+ //cerr << maxes << " maxconv " << maxconv << endl;
+ convFunc=convFunc/real(maxconv);
+ //tim.show("After convFunc norming ");
   // Find the edge of the function by stepping in from the
   // uv plane edge. We do this for each plane to save time on the
   // gridding (about a factor of two)
   convSupport=-1;
-  for (Int iw=0;iw<wConvSize;iw++) {
+  Vector<Int> pcsupp=convSupport;
+#ifdef HAS_OMP
+  omp_set_nested(0);
+#endif
+  Bool delsupstor;
+  Int* suppstor=pcsupp.getStorage(delsupstor);
+  convFuncPtr=convFunc.getStorage(convFuncStor);
+#pragma omp parallel for default(none) firstprivate(suppstor, cpConvSize, cpWConvSize, convFuncPtr, maxConvSize) reduction(+: warner) 
+  for (Int iw=0;iw<cpWConvSize;iw++) {
     Bool found=False;
     Int trial=0;
-    for (trial=convSize/2-2;trial>0;trial--) {
-      if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
+    Int ploffset=(cpConvSize/2-1)*(cpConvSize/2-1)*iw;
+    for (trial=cpConvSize/2-2;trial>0;trial--) {
+      // if((abs(convFunc(trial,0,iw))>1e-3)||(abs(convFunc(0,trial,iw))>1e-3) ) {
+      if((abs(convFuncPtr[trial+ploffset])>1e-3)||(abs(convFuncPtr[trial*(cpConvSize/2-1)+ploffset])>1e-3) ) {
 	//cout <<"iw " << iw << " x " << abs(convFunc(trial,0,iw)) << " y " 
 	//   <<abs(convFunc(0,trial,iw)) << endl; 
 	found=True;
@@ -409,14 +486,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
     if(found) {
-      convSupport(iw)=Int(0.5+Float(trial)/Float(convSampling_p))+1;
-      if(convSupport(iw)*convSampling_p*2 >= maxConvSize){
-	convSupport(iw)=convSize/2/convSampling_p-1;
+      suppstor[iw]=Int(0.5+Float(trial)/Float(convSampling_p))+1;
+      if(suppstor[iw]*convSampling_p*2 >= maxConvSize){
+	suppstor[iw]=cpConvSize/2/convSampling_p-1;
 	++warner;
       }
     }
   }
-  
+  pcsupp.putStorage(suppstor, delsupstor);
+  convSupport=pcsupp;
+  //tim.show("After suppport locing ");
   if(convSupport(0)<1) {
     os << "Convolution function is misbehaved - support seems to be zero"
 	    << LogIO::EXCEPTION;
@@ -449,6 +528,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  << " pixels in Fourier plane"
 	  << LogIO::POST;
 
+  // tim.show("After pbsumming ");
 
   convSupportBlock_p.resize(actualConvIndex_p+1);
   convSupportBlock_p[actualConvIndex_p]= new Vector<Int>();
@@ -462,6 +542,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     IPosition trc(3, (newConvSize/2-2),
 		  (newConvSize/2-2),
 		  convSupport.shape()(0)-1);
+   
     *(convFunctions_p[actualConvIndex_p])=convFunc(blc,trc);
     // convFunctions_p[actualConvIndex_p]->assign(Cube<Complex>(convFunc(blc,trc)));
     convSize=newConvSize;

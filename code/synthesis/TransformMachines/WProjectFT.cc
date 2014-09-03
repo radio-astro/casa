@@ -1,6 +1,6 @@
 //# WProjectFT.cc: Implementation of WProjectFT class
 //# Copyright (C) 1997,1998,1999,2000,2001,2002,2003
-//# Associated Universities, Inc. Washington DC, USA.
+//# Associated Universities, Inc. Washington DC, USA
 //#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
@@ -84,50 +84,50 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 WProjectFT::WProjectFT( Int nWPlanes, Long icachesize, Int itilesize, 
-			Bool usezero, Bool useDoublePrec)
+			Bool usezero, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False), 
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)), usezero_p(usezero), 
-    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   tangentSpecified_p=False;
   lastIndex_p=0;
   useDoubleGrid_p=useDoublePrec;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
 
 }
 WProjectFT::WProjectFT(Int nWPlanes, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
-		       Bool usezero, Float padding, Bool useDoublePrec)
+		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero),  
-    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   savedWScale_p=0.0;
   tangentSpecified_p=False;
   mLocation_p=mLocation;
   lastIndex_p=0;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
   useDoubleGrid_p=useDoublePrec;
 }
 WProjectFT::WProjectFT(
 		       Int nWPlanes, MDirection mTangent, 
 		       MPosition mLocation, 
 		       Long icachesize, Int itilesize, 
-		       Bool usezero, Float padding, Bool useDoublePrec)
+		       Bool usezero, Float padding, Bool useDoublePrec, const Double minW, const Double maxW, const Double rmsW)
   : FTMachine(), padding_p(padding), nWPlanes_p(nWPlanes),
     imageCache(0), cachesize(icachesize), tilesize(itilesize),
     gridder(0), isTiled(False),  
     maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
     usezero_p(usezero), 
-    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0)
+    machineName_p("WProjectFT"), timemass_p(0.0), timegrid_p(0.0), timedegrid_p(0.0), minW_p(minW), maxW_p(maxW), rmsW_p(rmsW)
 {
   convSize=0;
   savedWScale_p=0.0;
@@ -135,7 +135,7 @@ WProjectFT::WProjectFT(
   tangentSpecified_p=True;
   mLocation_p=mLocation;
   lastIndex_p=0;
-  wpConvFunc_p=new WPConvFunc();
+  wpConvFunc_p=new WPConvFunc(minW, maxW, rmsW);
   useDoubleGrid_p=useDoublePrec;
 }
 
@@ -188,6 +188,9 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
     timemass_p=0.0;
     timegrid_p=0.0;
     timedegrid_p=0.0;
+    minW_p=other.minW_p;
+    maxW_p=other.maxW_p;
+    rmsW_p=other.rmsW_p;
   };
   return *this;
 };
@@ -234,7 +237,7 @@ void WProjectFT::init() {
  
   sumWeight.resize(npol, nchan);
   
-  wConvSize=max(1, nWPlanes_p);
+  wConvSize=max(0, nWPlanes_p);
   convSupport.resize(wConvSize);
   convSupport=0;
 
@@ -323,6 +326,8 @@ void WProjectFT::findConvFunction(const ImageInterface<Complex>& image,
 				 convFunc, convSize, convSupport, 
 				 savedWScale_p); 
 
+  nWPlanes_p=convSupport.nelements();
+  wConvSize=max(1,nWPlanes_p);
   uvScale(2)=savedWScale_p;
 
   
@@ -854,7 +859,8 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Double * visfreqstor=interpVisFreq_p.getStorage(del);
   const Double * scalestor=uvScale.getStorage(del);
   const Double * offsetstor=uvOffset.getStorage(del);
-  Int * locstor=loc.getStorage(del);
+  Bool delloc, deloff;
+  Int * locstor=loc.getStorage(delloc);
   Int * offstor=off.getStorage(del);
   const Double *dpstor=dphase.getStorage(del);
   Double cinv=Double(1.0)/C::c;
@@ -881,12 +887,16 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
+  
+
+
  }//end pragma parallel
   Int maxx=0; 
   Int minx=1000000;
   Int maxy=0;
   Int miny=1000000;
   //Int maxsupp=max(convSupport);
+  loc.putStorage(locstor, delloc);
   maxx=max(loc.yzPlane(0));
   maxx=min(nx-1,  maxx-1);
   minx=min(loc.yzPlane(0));
@@ -895,6 +905,10 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   maxy=min(ny-1, maxy-1);
   miny=min(loc.yzPlane(1));
   miny=max(0,miny-1);
+  locstor=loc.getStorage(delloc);
+  //cerr << "dels " << delloc << "  " << deloff << endl;
+  //cerr << "LOC " << min(loc.xzPlane(0)) << "  max " << loc.shape() << endl;
+
   Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
@@ -1461,14 +1475,17 @@ Bool WProjectFT::toRecord(String& error,
   outRec.define("nwplanes", nWPlanes_p);
   outRec.define("savedwscale", savedWScale_p);
   outRec.define("usezero", usezero_p);
-  outRec.define("convfunc", convFunc);
+  ///no need to save convfunc as it can be big and is recalculated anyways
+  ///outRec.define("convfunc", convFunc);
   outRec.define("convsampling", convSampling);
   outRec.define("convsize", convSize);
   outRec.define("convsupport", convSupport);
   outRec.define("convsizes", convSizes_p);
   outRec.define("wconvsize", wConvSize);
   outRec.define("lastindex", lastIndex_p);
-
+  outRec.define("minw", minW_p);
+  outRec.define("maxw", maxW_p);
+  outRec.define("rmsw", rmsW_p);
 
 
   return retval;
@@ -1496,23 +1513,29 @@ Bool WProjectFT::fromRecord(String& error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
+  inRec.get("minw", minW_p);
+  inRec.get("maxw", maxW_p);
+  inRec.get("rmsw", rmsW_p);
   if(inRec.isDefined("wpconvfunc")){
     wpConvFunc_p=new WPConvFunc(inRec.asRecord("wpconvfunc"));
   }
   else{
-    wpConvFunc_p=new WPConvFunc();
+    wpConvFunc_p=new WPConvFunc(minW_p, maxW_p, rmsW_p);
   }
   inRec.get("padding", padding_p);
   inRec.get("nwplanes", nWPlanes_p);
   inRec.get("savedwscale", savedWScale_p);
   inRec.get("usezero", usezero_p);
-  inRec.get("convfunc", convFunc);
+  ///have stopped saving this parameter
+  ////inRec.get("convfunc", convFunc);
+  convFunc.resize();
   inRec.get("convsampling", convSampling);
   inRec.get("convsize", convSize);
   inRec.get("convsupport", convSupport);
   inRec.get("convsizes", convSizes_p);
   inRec.get("wconvsize", wConvSize);
   inRec.get("lastindex", lastIndex_p);
+  
   gridder=0;
     ///setup some of the parameters
   init();
