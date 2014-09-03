@@ -2596,7 +2596,13 @@ Bool Imager::createFTMachine()
       for (rvi_p->origin();rvi_p->more();(*rvi_p)++) {
 	maxW=max(maxW, max(abs(vb.uvwMat().row(2)*max(vb.frequency())))/C::c);
 	minW=min(minW, min(abs(vb.uvwMat().row(2)*min(vb.frequency())))/C::c);
-	sumWW+=sum(vb.uvwMat().row(2)*vb.uvwMat().row(2));
+	///////////some shenanigans as some compilers is confusing * operator for vector
+	Vector<Double> elw;
+	elw=vb.uvwMat().row(2);
+	elw*=vb.uvwMat().row(2);
+	//////////////////////////////////////////////////
+	sumWW+=sum(elw);
+
 	nval+=Double(vb.nRow());
       }
     }
