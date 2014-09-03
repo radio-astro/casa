@@ -3604,7 +3604,7 @@ especially in wide-field cleaning.
   if it is True then imager will use the MODEL\_DATA column to do this.
 \item[wprojplanes] this parameter is is used only of {\tt ftmachine}
   is set to {\tt wproject}. This defines how many convolution functions
-  is used in the Wprojection gridder.
+  is used in the Wprojection gridder (a -1 implies an automatic determination).
 \end{description}
 </description>
 
@@ -3668,8 +3668,8 @@ especially in wide-field cleaning.
 
      <param type="int" name="wprojplanes">
      <description>No of gridding convolution functions used in
-  wproject-ft machine</description>
-     <value>1</value>
+  wproject-ft machine (-1 means let the code decide this number) </description>
+     <value>-1</value>
      </param>
 
      <param type="string" name="epjtablename">
@@ -4296,8 +4296,7 @@ sampling in the uv plane. The imaging weights are calculated on the fly
 when processing the data and can be viewed by
 <link anchor="imager:imager.plotweights.function">plotweights</link>. 
 
-To correct for visibility sampling effects, natural, uniform (the
-default), radial, and Briggs weighting are supported.  These work as
+To correct for visibility sampling effects, natural, uniform, radial, and Briggs weighting are supported.  These work as
 follows. Then:
 \begin{description}
 \item[natural]: minimizes the noise in the dirty image. The weight of
