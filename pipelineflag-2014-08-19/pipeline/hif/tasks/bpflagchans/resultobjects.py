@@ -44,6 +44,13 @@ class BandpassflagResults(basetask.Results):
     def flagcmds(self):
         return copy.deepcopy(self.flagging)
 
+    def add_flag_reason_plane(self, flag_reason_plane, flag_reason_key):
+        for description in self.descriptions():
+            self.view[description][-1].flag_reason_plane = \
+              flag_reason_plane[description]
+	    self.view[description][-1].flag_reason_key = \
+              flag_reason_key
+
     def flagged(self):
         return len(self.flagging) > 0
 
