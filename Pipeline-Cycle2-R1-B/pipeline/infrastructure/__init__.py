@@ -27,7 +27,7 @@ _PLOT_LEVELS = {'all'     : 30,
 # detail plots will be generated if PLOT_LEVEL is greater than this
 _PLOT_DETAIL_THRESHOLDS = {'default'     :20,
                            'hif_applycal':30,
-                           'hifv_applycals':10}
+                           'hifv_applycals':30}
 
 def set_plot_level(plotlevel):
     if plotlevel not in ('all', 'summary', 'default'):
