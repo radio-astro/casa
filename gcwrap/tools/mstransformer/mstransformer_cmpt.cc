@@ -48,7 +48,9 @@ mstransformer::~mstransformer()
 
 	} catch (AipsError x) {
 	    Table::relinquishAutoLocks(True);
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
 		RETHROW(x);
 	}
     Table::relinquishAutoLocks(True);
@@ -68,7 +70,9 @@ mstransformer::done()
 
 	} catch (AipsError x) {
 	    Table::relinquishAutoLocks(True);
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
 		RETHROW(x);
 	}
     Table::relinquishAutoLocks(True);
@@ -95,7 +99,9 @@ mstransformer::config(const ::casac::record& pars)
 		return true;
 
 	} catch(AipsError x) {
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -115,7 +121,9 @@ mstransformer::open()
 
 		return false;
 	} catch(AipsError x) {
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -126,8 +134,8 @@ mstransformer::open()
  mstransformer::run()
 {
 	casac::record *rstat(0);
-	//try
-	//{
+	try
+	{
 		if(mstransformer_p){
 			rstat =  fromRecord(mstransformer_p->run());
 		}
@@ -136,10 +144,12 @@ mstransformer::open()
 		}
 
 		return rstat;
-	//} catch(AipsError x){
-	//	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	//	RETHROW(x);
-	//}
+	} catch(AipsError x){
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
+		RETHROW(x);
+	}
 }
 
 bool
