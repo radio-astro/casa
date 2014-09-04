@@ -1715,11 +1715,11 @@ Bool MSTransformDataHandler::fillDDTables()
 	// Detect which optional columns of SPECTRAL_WINDOW are present.
 	// inSpWCols and msSpW should agree because addOptionalColumns() was done for
 	// SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling fillDDTables
-	Bool haveSpwAN = inSpWCols.assocNature().hasContent();
-	Bool haveSpwASI = inSpWCols.assocSpwId().hasContent();
-	Bool haveSpwBN = inSpWCols.bbcNo().hasContent();
-	Bool haveSpwBS = inSpWCols.bbcSideband().hasContent();
-	Bool haveSpwDI = inSpWCols.dopplerId().hasContent();
+	Bool haveSpwAN = columnOk(inSpWCols.assocNature());
+	Bool haveSpwASI = columnOk(inSpWCols.assocSpwId());
+	Bool haveSpwBN = columnOk(inSpWCols.bbcNo());
+	Bool haveSpwBS = columnOk(inSpWCols.bbcSideband());
+	Bool haveSpwDI = columnOk(inSpWCols.dopplerId());
 
 	// DATA_DESCRIPTION Table columns of output MS
 	MSDataDescColumns& msDD(msc_p->dataDescription());
@@ -3081,75 +3081,117 @@ Bool MSTransformDataHandler::copyGenericSubtables()
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 {
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
 	String filename_0 = filenames(0);
 	MeasurementSet ms_0(filename_0,Table::Update);
-	MSSpectralWindow spwTable_0 = ms_0.spectralWindow();
-	MSSpWindowColumns spwCols_0(spwTable_0);
 
-	uInt rowIndex = spwTable_0.nrow();
-
-	// Map subMS with spw_id to merge the FEED table later
-	Vector<uInt> mapSubmsSpwid;
-
-	// subMS_0000 starts with spw 0
-	uInt spwStart = 0;
-	mapSubmsSpwid.resize(filenames.size());
-	mapSubmsSpwid[0] = spwStart;
-
-	// for next subMS
-	spwStart = spwStart + rowIndex;
-
-	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+	if (Table::isReadable(ms_0.spectralWindowTableName()) and !ms_0.spectralWindow().isNull())
 	{
-		String filename_i = filenames(subms_index);
-		MeasurementSet ms_i(filename_i);
-		MSSpectralWindow spwTable_i = ms_i.spectralWindow();
-		MSSpWindowColumns spwCols_i(spwTable_i);
+		MSSpectralWindow spwTable_0 = ms_0.spectralWindow();
 
-		uInt nrow = spwTable_i.nrow();
-		spwTable_0.addRow(nrow);
-
-		// Map of this subMS to spw ID
-		mapSubmsSpwid[subms_index] = spwStart;
-
-		// for next subMS
-		spwStart = spwStart + nrow;
-
-		for (uInt subms_row_index=0;subms_row_index<spwTable_i.nrow();subms_row_index++)
+		if (spwTable_0.nrow() > 0)
 		{
-			spwCols_0.measFreqRef().put(rowIndex,spwCols_i.measFreqRef()(subms_row_index));
-			spwCols_0.chanFreq().put(rowIndex,spwCols_i.chanFreq()(subms_row_index));
-			spwCols_0.refFrequency().put(rowIndex,spwCols_i.refFrequency()(subms_row_index));
-			spwCols_0.chanWidth().put(rowIndex,spwCols_i.chanWidth()(subms_row_index));
-			spwCols_0.effectiveBW().put(rowIndex,spwCols_i.effectiveBW()(subms_row_index));
-			spwCols_0.resolution().put(rowIndex,spwCols_i.resolution()(subms_row_index));
-			spwCols_0.flagRow().put(rowIndex,spwCols_i.flagRow()(subms_row_index));
-			spwCols_0.freqGroup().put(rowIndex,spwCols_i.freqGroup()(subms_row_index));
-			spwCols_0.freqGroupName().put(rowIndex,spwCols_i.freqGroupName()(subms_row_index));
-			spwCols_0.ifConvChain().put(rowIndex,spwCols_i.ifConvChain()(subms_row_index));
-			spwCols_0.name().put(rowIndex,spwCols_i.name()(subms_row_index));
-			spwCols_0.netSideband().put(rowIndex,spwCols_i.netSideband()(subms_row_index));
-			spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
-			spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
+        	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        			<< "Merging SPECTRAL_WINDOW sub-tables from all sub-MSs to form MMS-level SPECTRAL_WINDOW sub-table" << LogIO::POST;
 
-			// Optional columns (BBC_NO, ASSOC_SPW_ID, ASSOC_NATURE)
-			if (spwCols_i.bbcNo().isNull()==false and spwCols_i.bbcNo().hasContent()==true)
-				spwCols_0.bbcNo().put(rowIndex,spwCols_i.bbcNo()(subms_row_index));
+        	MSSpWindowColumns spwCols_0(spwTable_0);
 
-			if (spwCols_i.assocSpwId().isNull()==false and spwCols_i.assocSpwId().hasContent()==true)
-				spwCols_0.assocSpwId().put(rowIndex,spwCols_i.assocSpwId()(subms_row_index));
+			// Map subMS with spw_id to merge the FEED table later
+			Vector<uInt> mapSubmsSpwid;
 
-			if(spwCols_i.assocNature().isNull()==false and spwCols_i.assocNature().hasContent()==true)
-				spwCols_0.assocNature().put(rowIndex,spwCols_i.assocNature()(subms_row_index));
+			// subMS_0000 starts with spw 0
+			uInt spwStart = 0;
+			mapSubmsSpwid.resize(filenames.size());
+			mapSubmsSpwid[0] = spwStart;
 
-			rowIndex += 1;
+			// for next subMS
+			uInt rowIndex = spwTable_0.nrow();
+			spwStart = spwStart + rowIndex;
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				MSSpectralWindow spwTable_i = ms_i.spectralWindow();
+
+				if (spwTable_i.nrow() > 0)
+				{
+					MSSpWindowColumns spwCols_i(spwTable_i);
+
+					uInt nrow = spwTable_i.nrow();
+					spwTable_0.addRow(nrow);
+
+					// Map of this subMS to spw ID
+					mapSubmsSpwid[subms_index] = spwStart;
+
+					// for next subMS
+					spwStart = spwStart + nrow;
+
+					for (uInt subms_row_index=0;subms_row_index<spwTable_i.nrow();subms_row_index++)
+					{
+						spwCols_0.measFreqRef().put(rowIndex,spwCols_i.measFreqRef()(subms_row_index));
+						spwCols_0.chanFreq().put(rowIndex,spwCols_i.chanFreq()(subms_row_index));
+						spwCols_0.refFrequency().put(rowIndex,spwCols_i.refFrequency()(subms_row_index));
+						spwCols_0.chanWidth().put(rowIndex,spwCols_i.chanWidth()(subms_row_index));
+						spwCols_0.effectiveBW().put(rowIndex,spwCols_i.effectiveBW()(subms_row_index));
+						spwCols_0.resolution().put(rowIndex,spwCols_i.resolution()(subms_row_index));
+						spwCols_0.flagRow().put(rowIndex,spwCols_i.flagRow()(subms_row_index));
+						spwCols_0.freqGroup().put(rowIndex,spwCols_i.freqGroup()(subms_row_index));
+						spwCols_0.freqGroupName().put(rowIndex,spwCols_i.freqGroupName()(subms_row_index));
+						spwCols_0.ifConvChain().put(rowIndex,spwCols_i.ifConvChain()(subms_row_index));
+						spwCols_0.name().put(rowIndex,spwCols_i.name()(subms_row_index));
+						spwCols_0.netSideband().put(rowIndex,spwCols_i.netSideband()(subms_row_index));
+						spwCols_0.numChan().put(rowIndex,spwCols_i.numChan()(subms_row_index));
+						spwCols_0.totalBandwidth().put(rowIndex,spwCols_i.totalBandwidth()(subms_row_index));
+
+						// Optional columns
+						if (columnOk(spwCols_i.bbcNo()))
+							spwCols_0.bbcNo().put(rowIndex,spwCols_i.bbcNo()(subms_row_index));
+
+						if (columnOk(spwCols_i.assocSpwId()))
+							spwCols_0.assocSpwId().put(rowIndex,spwCols_i.assocSpwId()(subms_row_index));
+
+						if(columnOk(spwCols_i.assocNature()))
+							spwCols_0.assocNature().put(rowIndex,spwCols_i.assocNature()(subms_row_index));
+
+						if (columnOk(spwCols_i.bbcSideband()))
+							spwCols_0.bbcSideband().put(rowIndex,spwCols_i.bbcSideband()(subms_row_index));
+
+						if (columnOk(spwCols_i.dopplerId()))
+							spwCols_0.dopplerId().put(rowIndex,spwCols_i.dopplerId()(subms_row_index));
+
+						if (columnOk(spwCols_i.receiverId()))
+							spwCols_0.receiverId().put(rowIndex,spwCols_i.receiverId()(subms_row_index));
+
+						rowIndex += 1;
+					}
+				}
+			}
+
+			spwTable_0.flush(True,True);
+
+			// Merge the other sub-tables using SPW map generated here
+			mergeDDISubTables(filenames);
+			mergeFeedSubTables(filenames, mapSubmsSpwid);
+			mergeSourceSubTables(filenames, mapSubmsSpwid);
+			mergeFreqOffsetTables(filenames, mapSubmsSpwid);
+			mergeCalDeviceSubtables(filenames, mapSubmsSpwid);
+			mergeSysPowerSubtables(filenames, mapSubmsSpwid);
+			mergeSyscalSubTables(filenames, mapSubmsSpwid);
+		}
+		else
+		{
+	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "SPECTRAL_WINDOW sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
 		}
 	}
-
-	ms_0.flush(True);
-
-	mergeDDISubTables(filenames);
-	mergeFeedSubTables(filenames, mapSubmsSpwid);
+	else
+	{
+    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "SPECTRAL_WINDOW sub-table not found " << LogIO::POST;
+    	return False;
+	}
 
 	return True;
 }
@@ -3159,36 +3201,64 @@ Bool MSTransformDataHandler::mergeSpwSubTables(Vector<String> filenames)
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 {
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
 	String filename_0 = filenames(0);
 	MeasurementSet ms_0(filename_0,Table::Update);
-	MSDataDescription ddiTable_0 = ms_0.dataDescription();
-	MSDataDescColumns ddiCols_0(ddiTable_0);
 
-	uInt rowIndex = ddiTable_0.nrow();
+    if (Table::isReadable(ms_0.dataDescriptionTableName()) and !ms_0.dataDescription().isNull())
+    {
+    	MSDataDescription ddiTable_0 = ms_0.dataDescription();
 
-	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
-	{
-		String filename_i = filenames(subms_index);
-		MeasurementSet ms_i(filename_i);
-		MSDataDescription dditable_i = ms_i.dataDescription();
-		MSDataDescColumns ddicols_i(dditable_i);
+    	if (ddiTable_0.nrow() > 0)
+    	{
+        	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        			<< "Merging DDI sub-tables from all sub-MSs to form MMS-level DDI sub-table" << LogIO::POST;
 
-		ddiTable_0.addRow(dditable_i.nrow());
+        	MSDataDescColumns ddiCols_0(ddiTable_0);
 
-		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
+        	uInt rowIndex = ddiTable_0.nrow();
+        	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+        	{
+        		String filename_i = filenames(subms_index);
+        		MeasurementSet ms_i(filename_i);
+        		MSDataDescription dditable_i = ms_i.dataDescription();
+
+        		if (dditable_i.nrow() > 0)
+        		{
+            		MSDataDescColumns ddicols_i(dditable_i);
+
+            		ddiTable_0.addRow(dditable_i.nrow());
+
+            		for (uInt subms_row_index=0;subms_row_index<dditable_i.nrow();subms_row_index++)
+            		{
+            			// get the last spw id entered in the 0th DD table
+            			uInt spwid = ddiCols_0.spectralWindowId().get(rowIndex-1);
+
+            			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
+            			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
+            			// SPW_ID cannot be the re-indexed value here
+            			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
+            			rowIndex += 1;
+            		}
+        		}
+        	}
+
+        	ddiTable_0.flush(True,True);
+    	}
+		else
 		{
-			// get the last spw id entered in the 0th DD table
-			uInt spwid = ddiCols_0.spectralWindowId().get(rowIndex-1);
-
-			ddiCols_0.flagRow().put(rowIndex,ddicols_i.flagRow()(subms_row_index));
-			ddiCols_0.polarizationId().put(rowIndex,ddicols_i.polarizationId()(subms_row_index));
-			// SPW_ID cannot be the re-indexed value here
-			ddiCols_0.spectralWindowId().put(rowIndex,spwid+1);
-			rowIndex += 1;
+	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "DDI sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
 		}
-	}
-
-	ms_0.flush(True);
+    }
+    else
+    {
+    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "DDI sub-table not found " << LogIO::POST;
+    	return False;
+    }
 
 	return True;
 }
@@ -3199,76 +3269,881 @@ Bool MSTransformDataHandler::mergeDDISubTables(Vector<String> filenames)
 // -----------------------------------------------------------------------
 Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
 {
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
 	String filename_0 = filenames(0);
 	MeasurementSet ms_0(filename_0,Table::Update);
-	MSFeed feedTable_0 = ms_0.feed();
-	MSFeedColumns feedCols_0(feedTable_0);
 
-	uInt rowIndex = feedTable_0.nrow();
+    if (Table::isReadable(ms_0.feedTableName()) and !ms_0.feed().isNull())
+    {
+    	MSFeed feedTable_0 = ms_0.feed();
 
-	if (filenames.size() != mapSubmsSpwid.size()){
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-		os 	<< LogIO::WARN << "There was an error merging the FEED tables of the subMSs"
-			<< LogIO::POST;
-		return false;
-	}
+    	if (feedTable_0.nrow() > 0)
+    	{
+        	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        			<< "Merging FEED sub-tables from all sub-MSs to form MMS-level FEED sub-table" << LogIO::POST;
 
-	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
-	{
-		String filename_i = filenames(subms_index);
-		MeasurementSet ms_i(filename_i);
-		MSFeed feedtable_i = ms_i.feed();
-		MSFeedColumns feedcols_i(feedtable_i);
+        	MSFeedColumns feedCols_0(feedTable_0);
 
-		feedTable_0.addRow(feedtable_i.nrow());
+        	uInt rowIndex = feedTable_0.nrow();
+           	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+            {
+            	String filename_i = filenames(subms_index);
+            	MeasurementSet ms_i(filename_i);
+            	MSFeed feedtable_i = ms_i.feed();
 
-		// The starting SPW ID of this subMS is
-		uInt spwid = mapSubmsSpwid[subms_index];
+            	if (feedtable_i.nrow() > 0)
+            	{
+                	MSFeedColumns feedcols_i(feedtable_i);
 
-		uInt spw_i_previous = 0;
+                	feedTable_0.addRow(feedtable_i.nrow());
 
-		for (uInt subms_row_index=0;subms_row_index<feedtable_i.nrow();subms_row_index++)
+                   	// Prepare row reference object
+                   	RefRows refRow(rowIndex,rowIndex+feedtable_i.nrow()-1);
+
+                   	// Re-index SPW col
+                   	Vector<Int> spectralWindowId_output(feedtable_i.nrow(),mapSubmsSpwid[subms_index]);
+                   	spectralWindowId_output += feedcols_i.spectralWindowId().getColumn();
+                   	feedCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+
+                   	// Columns that can be just copied
+                	feedCols_0.position().putColumnCells(refRow,feedcols_i.position().getColumn());
+                	feedCols_0.beamOffset().putColumnCells(refRow,feedcols_i.beamOffset().getColumn());
+                	feedCols_0.polarizationType().putColumnCells(refRow,feedcols_i.polarizationType().getColumn());
+                	feedCols_0.polResponse().putColumnCells(refRow,feedcols_i.polResponse().getColumn());
+                	feedCols_0.receptorAngle().putColumnCells(refRow,feedcols_i.receptorAngle().getColumn());
+                	feedCols_0.antennaId().putColumnCells(refRow,feedcols_i.antennaId().getColumn());
+                	feedCols_0.beamId().putColumnCells(refRow,feedcols_i.beamId().getColumn());
+                	feedCols_0.feedId().putColumnCells(refRow,feedcols_i.feedId().getColumn());
+                	feedCols_0.interval().putColumnCells(refRow,feedcols_i.interval().getColumn());
+                	feedCols_0.numReceptors().putColumnCells(refRow,feedcols_i.numReceptors().getColumn());
+                	feedCols_0.time().putColumnCells(refRow,feedcols_i.time().getColumn());
+
+                	// optional columns
+                	if (columnOk(feedCols_0.focusLength()))
+                	{
+                		feedCols_0.focusLength().putColumnCells(refRow,feedcols_i.focusLength().getColumn());
+                	}
+
+                	if (columnOk(feedCols_0.phasedFeedId()))
+                	{
+                		feedCols_0.phasedFeedId().putColumnCells(refRow,feedcols_i.phasedFeedId().getColumn());
+                	}
+
+                	// Increment row offset
+                   	rowIndex += feedtable_i.nrow();
+            	}
+            }
+
+        	// Flush changes
+            feedTable_0.flush(True,True);
+    	}
+		else
 		{
-
-			uInt spw_i = feedcols_i.spectralWindowId().get(subms_row_index);
-			if (spw_i != spw_i_previous){
-				// increment spwid
-				spwid += 1;
-			}
-
-			// FEED table columns"
-			// POSITION BEAM_OFFSET POLARIZATION_TYPE POL_RESPONSE RECEPTOR_ANGLE ANTENNA_ID
-			// BEAM_ID FEED_ID INTERVAL NUM_RECEPTORS SPECTRAL_WINDOW_ID TIME FOCUS_LENGTH
-
-			feedCols_0.position().put(rowIndex,feedcols_i.position()(subms_row_index));
-			feedCols_0.beamOffset().put(rowIndex,feedcols_i.beamOffset()(subms_row_index));
-			feedCols_0.polarizationType().put(rowIndex,feedcols_i.polarizationType()(subms_row_index));
-			feedCols_0.polResponse().put(rowIndex,feedcols_i.polResponse()(subms_row_index));
-			feedCols_0.receptorAngle().put(rowIndex,feedcols_i.receptorAngle()(subms_row_index));
-			feedCols_0.antennaId().put(rowIndex,feedcols_i.antennaId()(subms_row_index));
-			feedCols_0.beamId().put(rowIndex,feedcols_i.beamId()(subms_row_index));
-			feedCols_0.feedId().put(rowIndex,feedcols_i.feedId()(subms_row_index));
-			feedCols_0.interval().put(rowIndex,feedcols_i.interval()(subms_row_index));
-			feedCols_0.numReceptors().put(rowIndex,feedcols_i.numReceptors()(subms_row_index));
-			feedCols_0.time().put(rowIndex,feedcols_i.time()(subms_row_index));
-
-			// optional column (?)
-			if (feedcols_i.focusLength().isNull()==false and feedcols_i.focusLength().hasContent()==true){
-				feedCols_0.focusLength().put(rowIndex,feedcols_i.focusLength()(subms_row_index));
-			}
-
-			// SPW_ID cannot be the re-indexed value here
-			feedCols_0.spectralWindowId().put(rowIndex,spwid);
-
-			spw_i_previous = feedcols_i.spectralWindowId().get(subms_row_index);
-
-			rowIndex += 1;
+	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "FEED sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
 		}
-	}
-
-	ms_0.flush(True);
+    }
+    else
+    {
+    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+    			 "FEED sub-table not found " << LogIO::POST;
+    	return False;
+    }
 
 	return True;
+}
+
+// -----------------------------------------------------------------------
+// Method to merge Source sub-tables from SubMSs to create the MMS-level FEED sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeSourceSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+
+	if (Table::isReadable(ms_0.sourceTableName()) and !ms_0.source().isNull())
+	{
+		MSSource sourceTable_0 = ms_0.source();
+
+		if (sourceTable_0.nrow() > 0)
+		{
+	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "Merging SOURCE sub-tables from all sub-MSs to form MMS-level SOURCE sub-table" << LogIO::POST;
+
+			MSSourceColumns sourceCols_0(sourceTable_0);
+
+			uInt rowIndex = sourceTable_0.nrow();
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				MSSource sourcetable_i = ms_i.source();
+
+				if (sourcetable_i.nrow() > 0)
+				{
+					MSSourceColumns sourcecols_i(sourcetable_i);
+
+					sourceTable_0.addRow(sourcetable_i.nrow());
+
+		        	// Prepare row reference object
+		        	RefRows refRow(rowIndex,rowIndex+sourcetable_i.nrow()-1);
+
+		        	// Re-index SPW col
+		        	Vector<Int> spectralWindowId_output(sourcetable_i.nrow(),mapSubmsSpwid[subms_index]);
+		        	spectralWindowId_output += sourcecols_i.spectralWindowId().getColumn();
+		        	sourceCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+
+		        	// Columns that can be just copied
+		    		sourceCols_0.direction().putColumnCells(refRow,sourcecols_i.direction().getColumn());
+		    		sourceCols_0.properMotion().putColumnCells(refRow,sourcecols_i.properMotion().getColumn());
+		    		sourceCols_0.calibrationGroup().putColumnCells(refRow,sourcecols_i.calibrationGroup().getColumn());
+		    		sourceCols_0.code().putColumnCells(refRow,sourcecols_i.code().getColumn());
+		    		sourceCols_0.interval().putColumnCells(refRow,sourcecols_i.interval().getColumn());
+		    		sourceCols_0.name().putColumnCells(refRow,sourcecols_i.name().getColumn());
+		    		sourceCols_0.numLines().putColumnCells(refRow,sourcecols_i.numLines().getColumn());
+		    		sourceCols_0.sourceId().putColumnCells(refRow,sourcecols_i.sourceId().getColumn());
+		    		sourceCols_0.time().putColumnCells(refRow,sourcecols_i.time().getColumn());
+
+		    		// Optional columns
+		    		if (columnOk(sourceCols_0.position()))
+		    		{
+		    			sourceCols_0.position().putColumnCells(refRow,sourcecols_i.position().getColumn());
+		    		}
+
+		    		if (columnOk(sourceCols_0.transition()))
+		    		{
+		    			sourceCols_0.transition().putColumnCells(refRow,sourcecols_i.transition().getColumn());
+		    		}
+
+		    		if (columnOk(sourceCols_0.restFrequency()))
+		    		{
+		    			sourceCols_0.restFrequency().putColumnCells(refRow,sourcecols_i.restFrequency().getColumn());
+		    		}
+
+		    		if (columnOk(sourceCols_0.sysvel()))
+		    		{
+		    			sourceCols_0.sysvel().putColumnCells(refRow,sourcecols_i.sysvel().getColumn());
+		    		}
+
+		    		if (columnOk(sourceCols_0.pulsarId()))
+		    		{
+		    			sourceCols_0.pulsarId().putColumnCells(refRow,sourcecols_i.pulsarId().getColumn());
+		    		}
+
+		    		if (columnOk(sourceCols_0.sourceModel()))
+		    		{
+		    			sourceCols_0.sourceModel().putColumnCells(refRow,sourcecols_i.sourceModel().getColumn());
+		    		}
+
+		        	// Increment row offset
+		        	rowIndex += sourcetable_i.nrow();
+				}
+			}
+
+			// Flush changes
+			sourceTable_0.flush(True,True);
+		}
+		else
+		{
+	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "SOURCE sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
+		}
+	}
+	else
+	{
+		os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "SOURCE sub-table not found " << LogIO::POST;
+    	return False;
+	}
+
+	return True;
+}
+
+
+// -----------------------------------------------------------------------
+// Method to merge Syscal sub-tables from SubMSs to create the MMS-level Syscal sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+
+	if(Table::isReadable(ms_0.sysCalTableName()) and !ms_0.sysCal().isNull())
+	{
+		MSSysCal syscalTable_0 = ms_0.sysCal();
+
+		if (syscalTable_0.nrow() > 0)
+		{
+	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "Merging SYSCAL sub-tables from all sub-MSs to form MMS-level SYSCAL sub-table" << LogIO::POST;
+
+			MSSysCalColumns syscalCols_0(syscalTable_0);
+
+	    	uInt rowIndex = syscalTable_0.nrow();
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				MSSysCal syscaltable_i = ms_i.sysCal();
+
+				if (syscaltable_i.nrow() > 0)
+				{
+					MSSysCalColumns syscalcols_i(syscaltable_i);
+
+					syscalTable_0.addRow(syscaltable_i.nrow());
+
+		        	// Prepare row reference object
+		        	RefRows refRow(rowIndex,rowIndex+syscaltable_i.nrow()-1);
+
+		        	// Re-index SPW col
+		        	Vector<Int> spectralWindowId_output(syscaltable_i.nrow(),mapSubmsSpwid[subms_index]);
+		        	spectralWindowId_output += syscalcols_i.spectralWindowId().getColumn();
+		        	syscalCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+
+		        	// Columns that can be just copied
+		    		syscalCols_0.antennaId().putColumnCells(refRow,syscalcols_i.antennaId().getColumn());
+		    		syscalCols_0.feedId().putColumnCells(refRow,syscalcols_i.feedId().getColumn());
+		    		syscalCols_0.interval().putColumnCells(refRow,syscalcols_i.interval().getColumn());
+		    		syscalCols_0.time().putColumnCells(refRow,syscalcols_i.time().getColumn());
+
+		    		// Optional columns
+		    		if (columnOk(syscalCols_0.phaseDiff()))
+		    		{
+		    			syscalCols_0.phaseDiff().putColumnCells(refRow,syscalcols_i.phaseDiff().getColumn());
+		    		}
+
+		    		if (columnOk(syscalCols_0.phaseDiffFlag()))
+		        	{
+		        		syscalCols_0.phaseDiffFlag().putColumnCells(refRow,syscalcols_i.phaseDiffFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tant()))
+		        	{
+		        		syscalCols_0.tant().putColumnCells(refRow,syscalcols_i.tant().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tantFlag()))
+		        	{
+		        		syscalCols_0.tantFlag().putColumnCells(refRow,syscalcols_i.tantFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tantSpectrum()))
+		        	{
+		        		syscalCols_0.tantSpectrum().putColumnCells(refRow,syscalcols_i.tantSpectrum().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tantTsys()))
+		        	{
+		        		syscalCols_0.tantTsys().putColumnCells(refRow,syscalcols_i.tantTsys().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tantTsysFlag()))
+		        	{
+		        		syscalCols_0.tantTsysFlag().putColumnCells(refRow,syscalcols_i.tantTsysFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tantTsysSpectrum()))
+		        	{
+		        		syscalCols_0.tantTsysSpectrum().putColumnCells(refRow,syscalcols_i.tantTsysSpectrum().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tcal()))
+		        	{
+		        		syscalCols_0.tcal().putColumnCells(refRow,syscalcols_i.tcal().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tcalFlag()))
+		        	{
+		        		syscalCols_0.tcalFlag().putColumnCells(refRow,syscalcols_i.tcalFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tcalSpectrum()))
+		        	{
+		        		syscalCols_0.tcalSpectrum().putColumnCells(refRow,syscalcols_i.tcalSpectrum().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.trx()))
+		        	{
+		        		syscalCols_0.trx().putColumnCells(refRow,syscalcols_i.trx().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.trxFlag()))
+		        	{
+		        		syscalCols_0.trxFlag().putColumnCells(refRow,syscalcols_i.trxFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.trxSpectrum()))
+		        	{
+		        		syscalCols_0.trxSpectrum().putColumnCells(refRow,syscalcols_i.trxSpectrum().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tsky()))
+		        	{
+		        		syscalCols_0.tsky().putColumnCells(refRow,syscalcols_i.tsky().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tskyFlag()))
+		        	{
+		        		syscalCols_0.tskyFlag().putColumnCells(refRow,syscalcols_i.tskyFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tskySpectrum()))
+		        	{
+		        		syscalCols_0.tskySpectrum().putColumnCells(refRow,syscalcols_i.tskySpectrum().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tsys()))
+		        	{
+		        		syscalCols_0.tsys().putColumnCells(refRow,syscalcols_i.tsys().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tsysFlag()))
+		        	{
+		        		syscalCols_0.tsysFlag().putColumnCells(refRow,syscalcols_i.tsysFlag().getColumn());
+		        	}
+
+		    		if (columnOk(syscalCols_0.tsysSpectrum()))
+		        	{
+		        		syscalCols_0.tsysSpectrum().putColumnCells(refRow,syscalcols_i.tsysSpectrum().getColumn());
+		        	}
+
+		        	// Increment row offset
+		        	rowIndex += syscalcols_i.nrow();
+				}
+			}
+
+			// Flush changes
+			syscalTable_0.flush(True,True);
+		}
+		else
+		{
+	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
+		}
+	}
+	else
+	{
+		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "SYSCAL sub-table not found " << LogIO::POST;
+    	return False;
+	}
+
+	return True;
+}
+
+
+// -----------------------------------------------------------------------
+// Method to merge FreqOffset sub-tables from SubMSs to create the MMS-level FreqOffset sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+
+	if (Table::isReadable(ms_0.freqOffsetTableName()) and !ms_0.freqOffset().isNull())
+	{
+		MSFreqOffset freqoffsetTable_0 = ms_0.freqOffset();
+
+		if (freqoffsetTable_0.nrow() > 0)
+		{
+	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "Merging FREQ_OFFSET sub-tables from all sub-MSs to form MMS-level FREQ_OFFSET sub-table" << LogIO::POST;
+
+			MSFreqOffsetColumns freqoffsetCols_0(freqoffsetTable_0);
+
+			uInt rowIndex = freqoffsetTable_0.nrow();
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				MSFreqOffset freqoffsettable_i = ms_i.freqOffset();
+
+				if (freqoffsettable_i.nrow() > 0)
+				{
+					MSFreqOffsetColumns freqoffsetcols_i(freqoffsettable_i);
+
+					freqoffsetTable_0.addRow(freqoffsettable_i.nrow());
+
+		        	// Prepare row reference object
+		        	RefRows refRow(rowIndex,rowIndex+freqoffsettable_i.nrow()-1);
+
+		        	// Re-index SPW col
+		        	Vector<Int> spectralWindowId_output(freqoffsettable_i.nrow(),mapSubmsSpwid[subms_index]);
+		        	spectralWindowId_output += freqoffsetcols_i.spectralWindowId().getColumn();
+		        	freqoffsetCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+
+		        	// Columns that can be just copied
+		    		freqoffsetCols_0.antenna1().putColumnCells(refRow,freqoffsetcols_i.antenna1().getColumn());
+		    		freqoffsetCols_0.antenna2().putColumnCells(refRow,freqoffsetcols_i.antenna2().getColumn());
+		    		freqoffsetCols_0.feedId().putColumnCells(refRow,freqoffsetcols_i.feedId().getColumn());
+		    		freqoffsetCols_0.interval().putColumnCells(refRow,freqoffsetcols_i.interval().getColumn());
+		    		freqoffsetCols_0.offset().putColumnCells(refRow,freqoffsetcols_i.offset().getColumn());
+		    		freqoffsetCols_0.time().putColumnCells(refRow,freqoffsetcols_i.time().getColumn());
+
+		    		// NOTE (jagonzal): FreqOffset does not have optional columns
+
+		        	// Increment row offset
+		        	rowIndex += freqoffsettable_i.nrow();
+				}
+			}
+
+			// Flush changes
+			freqoffsetTable_0.flush(True,True);
+		}
+		else
+		{
+	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "FREQ_OFFSET sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
+		}
+
+	}
+	else
+	{
+		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
+    	return False;
+	}
+
+	return True;
+}
+
+// -----------------------------------------------------------------------
+// Method to merge CalDevice sub-tables from SubMSs to create the MMS-level CalDevice sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeCalDeviceSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+
+	if (Table::isReadable(ms_0.tableName() + "/CALDEVICE"))
+	{
+		Table subtable_0(ms_0.tableName() + "/CALDEVICE", Table::Update);
+
+		if (subtable_0.nrow() > 0)
+		{
+	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "Merging CALDEVICE sub-tables from all sub-MSs to form MMS-level CALDEVICE sub-table" << LogIO::POST;
+
+	        // Get RW access to columns
+			ScalarColumn<Int> antennaIdCol_0(subtable_0, "ANTENNA_ID");
+			ScalarColumn<Int> feedIdCol_0(subtable_0, "FEED_ID");
+			ScalarColumn<Int> spectralWindowIdCol_0(subtable_0, "SPECTRAL_WINDOW_ID");
+			ScalarColumn<Double> timeCol_0(subtable_0, "TIME");
+			ScalarColumn<Double> intervalCol_0(subtable_0, "INTERVAL");
+
+			ScalarColumn<Int> numCalLoadCol_0(subtable_0, "NUM_CAL_LOAD");
+			ArrayColumn<String> calLoadNamesCol_0(subtable_0, "CAL_LOAD_NAMES");
+			ScalarColumn<Int> numReceptorCol_0(subtable_0, "NUM_RECEPTOR");
+			ArrayColumn<Float> noiseCalCol_0(subtable_0, "NOISE_CAL");
+			ArrayColumn<Float> calEffCol_0(subtable_0, "CAL_EFF");
+			ArrayColumn<Double> temperatureLoadCol_0(subtable_0, "TEMPERATURE_LOAD");
+
+	        // Get original content of columns
+			Vector<Int> antennaId_0;
+			if (columnOk(antennaIdCol_0)) antennaId_0 = antennaIdCol_0.getColumn();
+			Vector<Int> feedId_0;
+			if (columnOk(feedIdCol_0)) feedId_0 = feedIdCol_0.getColumn();
+			Vector<Int> spectralWindowId_0;
+			if (columnOk(spectralWindowIdCol_0)) spectralWindowId_0 = spectralWindowIdCol_0.getColumn();
+			Vector<Double> time_0;
+			if (columnOk(timeCol_0)) time_0 = timeCol_0.getColumn();
+			Vector<Double> interval_0;
+			if (columnOk(intervalCol_0)) interval_0 = intervalCol_0.getColumn();
+
+			Vector<Int> numCalLoad_0;
+			if (columnOk(numCalLoadCol_0)) numCalLoad_0 = numCalLoadCol_0.getColumn();
+			Array<String> calLoadNames_0;
+			if (columnOk(calLoadNamesCol_0)) calLoadNames_0 = calLoadNamesCol_0.getColumn();
+			Vector<Int> numReceptor_0;
+			if (columnOk(numReceptorCol_0)) numReceptor_0 = numReceptorCol_0.getColumn();
+			Array<Float> noiseCal_0;
+			if (columnOk(noiseCalCol_0)) noiseCal_0 = noiseCalCol_0.getColumn();
+			Array<Float> calEff_0;
+			if (columnOk(calEffCol_0)) calEff_0 = calEffCol_0.getColumn();
+			Array<Double> temperatureLoad_0;
+			if (columnOk(temperatureLoadCol_0)) temperatureLoad_0 = temperatureLoadCol_0.getColumn();
+
+			uInt rowIndex = subtable_0.nrow();
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				Table subtable_i(ms_i.tableName() + "/CALDEVICE", Table::Update);
+
+				if (subtable_i.nrow() > 0)
+				{
+			        // Get RW access to columns
+					ScalarColumn<Int> antennaIdCol_i(subtable_i, "ANTENNA_ID");
+					ScalarColumn<Int> feedIdCol_i(subtable_i, "FEED_ID");
+					ScalarColumn<Int> spectralWindowIdCol_i(subtable_i, "SPECTRAL_WINDOW_ID");
+					ScalarColumn<Double> timeCol_i(subtable_i, "TIME");
+					ScalarColumn<Double> intervalCol_i(subtable_i, "INTERVAL");
+
+					ScalarColumn<Int> numCalLoadCol_i(subtable_i, "NUM_CAL_LOAD");
+					ArrayColumn<String> calLoadNamesCol_i(subtable_i, "CAL_LOAD_NAMES");
+					ScalarColumn<Int> numReceptorCol_i(subtable_i, "NUM_RECEPTOR");
+					ArrayColumn<Float> noiseCalCol_i(subtable_i, "NOISE_CAL");
+					ArrayColumn<Float> calEffCol_i(subtable_i, "CAL_EFF");
+					ArrayColumn<Double> temperatureLoadCol_i(subtable_i, "TEMPERATURE_LOAD");
+
+			        // Get original content of columns
+					Vector<Int> antennaId_i;
+					if (columnOk(antennaIdCol_i)) antennaId_i = antennaIdCol_i.getColumn();
+					Vector<Int> feedId_i;
+					if (columnOk(feedIdCol_i)) feedId_i = feedIdCol_i.getColumn();
+					Vector<Int> spectralWindowId_i;
+					if (columnOk(spectralWindowIdCol_i)) spectralWindowId_i = spectralWindowIdCol_i.getColumn();
+					Vector<Double> time_i;
+					if (columnOk(timeCol_i)) time_i = timeCol_i.getColumn();
+					Vector<Double> interval_i;
+					if (columnOk(intervalCol_i)) interval_i = intervalCol_i.getColumn();
+
+					Vector<Int> numCalLoad_i;
+					if (columnOk(numCalLoadCol_i)) numCalLoad_i = numCalLoadCol_i.getColumn();
+					Array<String> calLoadNames_i;
+					if (columnOk(calLoadNamesCol_i)) calLoadNames_i = calLoadNamesCol_i.getColumn();
+					Vector<Int> numReceptor_i;
+					if (columnOk(numReceptorCol_i)) numReceptor_i = numReceptorCol_i.getColumn();
+					Array<Float> noiseCal_i;
+					if (columnOk(noiseCalCol_i)) noiseCal_i = noiseCalCol_i.getColumn();
+					Array<Float> calEff_i;
+					if (columnOk(calEffCol_i)) calEff_i = calEffCol_i.getColumn();
+					Array<Double> temperatureLoad_i;
+					if (columnOk(temperatureLoadCol_i)) temperatureLoad_i = temperatureLoadCol_i.getColumn();
+
+					// Add n# rows to subtable_i equivalent to n# rows from subtable_0
+					subtable_0.addRow(subtable_i.nrow());
+
+		        	// Prepare row reference object
+		        	RefRows refRow(rowIndex,rowIndex+subtable_i.nrow()-1);
+
+		        	// Re-index SPW col
+		        	Vector<Int> spectralWindowId_output(spectralWindowId_i.size(),mapSubmsSpwid[subms_index]);
+		        	spectralWindowId_output += spectralWindowId_i;
+		        	spectralWindowIdCol_0.putColumnCells(refRow,spectralWindowId_output);
+
+		        	// Columns that can be just copied
+					if (columnOk(antennaIdCol_0) and columnOk(antennaIdCol_i))
+					{
+						antennaIdCol_0.putColumnCells(refRow,antennaId_i);
+					}
+
+					if (columnOk(feedIdCol_0) and columnOk(feedIdCol_i))
+					{
+						feedIdCol_0.putColumnCells(refRow,feedId_i);
+					}
+
+					if (columnOk(timeCol_0) and columnOk(timeCol_i))
+					{
+						timeCol_0.putColumnCells(refRow,time_i);
+					}
+
+					if (columnOk(intervalCol_0) and columnOk(intervalCol_i))
+					{
+						intervalCol_0.putColumnCells(refRow,interval_i);
+					}
+
+
+					if (columnOk(numCalLoadCol_0) and columnOk(numCalLoadCol_i))
+					{
+						numCalLoadCol_0.putColumnCells(refRow,numCalLoad_i);
+					}
+
+					if (columnOk(calLoadNamesCol_0) and columnOk(calLoadNamesCol_i))
+					{
+						calLoadNamesCol_0.putColumnCells(refRow,calLoadNames_i);
+					}
+
+					if (columnOk(numReceptorCol_0) and columnOk(numReceptorCol_i))
+					{
+						numReceptorCol_0.putColumnCells(refRow,numReceptor_i);
+					}
+
+					if (columnOk(noiseCalCol_0) and columnOk(noiseCalCol_i))
+					{
+						noiseCalCol_0.putColumnCells(refRow,noiseCal_i);
+					}
+
+					if (columnOk(calEffCol_0) and columnOk(calEffCol_i))
+					{
+						calEffCol_0.putColumnCells(refRow,calEff_i);
+					}
+
+					if (columnOk(temperatureLoadCol_0) and columnOk(temperatureLoadCol_i))
+					{
+						temperatureLoadCol_0.putColumnCells(refRow,temperatureLoad_i);
+					}
+
+		        	// Increment row offset
+		        	rowIndex += subtable_i.nrow();
+				}
+			}
+
+			// Flush changes
+			subtable_0.flush(True,True);
+		}
+		else
+		{
+	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "CALDEVICE sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
+		}
+	}
+	else
+	{
+		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "CALDEVICE sub-table not found " << LogIO::POST;
+    	return False;
+	}
+
+	return True;
+}
+
+
+// -----------------------------------------------------------------------
+// Method to merge SysPower sub-tables from SubMSs to create the MMS-level SysPower sub-table
+// -----------------------------------------------------------------------
+Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid)
+{
+	LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
+
+	if (filenames.size() != mapSubmsSpwid.size())
+	{
+		os 	<< LogIO::SEVERE << "List of Sub-MSs does not match size of SPW re-indexing map" << LogIO::POST;
+		return False;
+	}
+
+	String filename_0 = filenames(0);
+	MeasurementSet ms_0(filename_0,Table::Update);
+
+	if (Table::isReadable(ms_0.tableName() + "/SYSPOWER"))
+	{
+		Table subtable_0(ms_0.tableName() + "/SYSPOWER", Table::Update);
+
+		if (subtable_0.nrow() > 0)
+		{
+	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "Merging SYS_POWER sub-tables from all sub-MSs to form MMS-level SYS_POWER sub-table" << LogIO::POST;
+
+	        // Get RW access to columns
+			ScalarColumn<Int> antennaIdCol_0(subtable_0, "ANTENNA_ID");
+			ScalarColumn<Int> feedIdCol_0(subtable_0, "FEED_ID");
+			ScalarColumn<Int> spectralWindowIdCol_0(subtable_0, "SPECTRAL_WINDOW_ID");
+			ScalarColumn<Double> timeCol_0(subtable_0, "TIME");
+			ScalarColumn<Double> intervalCol_0(subtable_0, "INTERVAL");
+
+			ArrayColumn<Float> switchedDiffCol_0(subtable_0, "SWITCHED_DIFF");
+			ArrayColumn<Float> switchedSumCol_0(subtable_0, "SWITCHED_SUM");
+			ArrayColumn<Float> requantizerGainCol_0(subtable_0, "REQUANTIZER_GAIN");
+
+	        // Get original content of columns
+			Vector<Int> antennaId_0;
+			if (columnOk(antennaIdCol_0)) antennaId_0 = antennaIdCol_0.getColumn();
+			Vector<Int> feedId_0;
+			if (columnOk(feedIdCol_0)) feedId_0 = feedIdCol_0.getColumn();
+			Vector<Int> spectralWindowId_0;
+			if (columnOk(spectralWindowIdCol_0)) spectralWindowId_0 = spectralWindowIdCol_0.getColumn();
+			Vector<Double> time_0;
+			if (columnOk(timeCol_0)) time_0 = timeCol_0.getColumn();
+			Vector<Double> interval_0;
+			if (columnOk(intervalCol_0)) interval_0 = intervalCol_0.getColumn();
+
+			Array<Float> switchedDiff_0;
+			if (columnOk(switchedDiffCol_0)) switchedDiff_0 = switchedDiffCol_0.getColumn();
+			Array<Float> switchedSum_0;
+			if (columnOk(switchedSumCol_0)) switchedSum_0 = switchedSumCol_0.getColumn();
+			Array<Float> requantizerGain_0;
+			if (columnOk(requantizerGainCol_0)) requantizerGain_0 = requantizerGainCol_0.getColumn();
+
+			uInt rowIndex = subtable_0.nrow();
+			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+			{
+				String filename_i = filenames(subms_index);
+				MeasurementSet ms_i(filename_i);
+				Table subtable_i(ms_i.tableName() + "/SYSPOWER", Table::Update);
+
+				if (subtable_i.nrow() > 0)
+				{
+			        // Get RW access to columns
+					ScalarColumn<Int> antennaIdCol_i(subtable_i, "ANTENNA_ID");
+					ScalarColumn<Int> feedIdCol_i(subtable_i, "FEED_ID");
+					ScalarColumn<Int> spectralWindowIdCol_i(subtable_i, "SPECTRAL_WINDOW_ID");
+					ScalarColumn<Double> timeCol_i(subtable_i, "TIME");
+					ScalarColumn<Double> intervalCol_i(subtable_i, "INTERVAL");
+
+					ArrayColumn<Float> switchedDiffCol_i(subtable_i, "SWITCHED_DIFF");
+					ArrayColumn<Float> switchedSumCol_i(subtable_i, "SWITCHED_SUM");
+					ArrayColumn<Float> requantizerGainCol_i(subtable_i, "REQUANTIZER_GAIN");
+
+			        // Get original content of columns
+					Vector<Int> antennaId_i;
+					if (columnOk(antennaIdCol_i)) antennaId_i = antennaIdCol_i.getColumn();
+					Vector<Int> feedId_i;
+					if (columnOk(feedIdCol_i)) feedId_i = feedIdCol_i.getColumn();
+					Vector<Int> spectralWindowId_i;
+					if (columnOk(spectralWindowIdCol_i)) spectralWindowId_i = spectralWindowIdCol_i.getColumn();
+					Vector<Double> time_i;
+					if (columnOk(timeCol_i)) time_i = timeCol_i.getColumn();
+					Vector<Double> interval_i;
+					if (columnOk(intervalCol_i)) interval_i = intervalCol_i.getColumn();
+
+					Array<Float> switchedDiff_i;
+					if (columnOk(switchedDiffCol_i)) switchedDiff_i = switchedDiffCol_i.getColumn();
+					Array<Float> switchedSum_i;
+					if (columnOk(switchedSumCol_i)) switchedSum_i = switchedSumCol_i.getColumn();
+					Array<Float> requantizerGain_i;
+					if (columnOk(requantizerGainCol_i)) requantizerGain_i = requantizerGainCol_i.getColumn();
+
+					// Add n# rows to subtable_i equivalent to n# rows from subtable_0
+					subtable_0.addRow(subtable_i.nrow());
+
+		        	// Prepare row reference object
+		        	RefRows refRow(rowIndex,rowIndex+subtable_i.nrow()-1);
+
+		        	// Re-index SPW col
+		        	Vector<Int> spectralWindowId_output(spectralWindowId_i.size(),mapSubmsSpwid[subms_index]);
+		        	spectralWindowId_output += spectralWindowId_i;
+		        	spectralWindowIdCol_0.putColumnCells(refRow,spectralWindowId_output);
+
+		        	// Columns that can be just copied
+		        	if (columnOk(antennaIdCol_0) and columnOk(antennaIdCol_i))
+					{
+						antennaIdCol_0.putColumnCells(refRow,antennaId_i);
+					}
+
+		        	if (columnOk(feedIdCol_0) and columnOk(feedIdCol_i))
+					{
+						feedIdCol_0.putColumnCells(refRow,feedId_i);
+					}
+
+		        	if (columnOk(timeCol_0) and columnOk(timeCol_i))
+					{
+						timeCol_0.putColumnCells(refRow,time_i);
+					}
+
+		        	if (columnOk(intervalCol_0) and columnOk(intervalCol_i))
+					{
+						intervalCol_0.putColumnCells(refRow,interval_i);
+					}
+
+
+		        	if (columnOk(switchedDiffCol_0) and columnOk(switchedDiffCol_i))
+					{
+						switchedDiffCol_0.putColumnCells(refRow,switchedDiff_i);
+					}
+
+		        	if (columnOk(switchedSumCol_0) and columnOk(switchedSumCol_i))
+					{
+						switchedSumCol_0.putColumnCells(refRow,switchedSum_i);
+					}
+
+		        	if (columnOk(requantizerGainCol_0) and columnOk(requantizerGainCol_i))
+					{
+						requantizerGainCol_0.putColumnCells(refRow,requantizerGain_i);
+					}
+
+		        	// Increment row offset
+		        	rowIndex += subtable_i.nrow();
+				}
+			}
+
+			// Flush changes
+			subtable_0.flush(True,True);
+		}
+		else
+		{
+	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    			<< "SYSPOWER sub-table found but has no valid content" << LogIO::POST;
+	    	return False;
+		}
+	}
+	else
+	{
+		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "SYSPOWER sub-table not found " << LogIO::POST;
+    	return False;
+	}
+
+	return True;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T>  Bool MSTransformDataHandler::columnOk (ArrayColumn<T> column)
+{
+	Bool ret;
+	if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
+	{
+		ret = True;
+	}
+	else
+	{
+		ret = False;
+	}
+
+	return ret;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T>  Bool MSTransformDataHandler::columnOk (ScalarColumn<T> column)
+{
+	Bool ret;
+	if (column.isNull()==false and column.hasContent()==true)
+	{
+		ret = True;
+	}
+	else
+	{
+		ret = False;
+	}
+
+	return ret;
 }
 
 

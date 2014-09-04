@@ -239,6 +239,14 @@ public:
 	static Bool mergeSpwSubTables(Vector<String> filenames);
 	static Bool mergeDDISubTables(Vector<String> filenames);
 	static Bool mergeFeedSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static Bool mergeSourceSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static Bool mergeSyscalSubTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static Bool mergeFreqOffsetTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static Bool mergeCalDeviceSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	static Bool mergeSysPowerSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
+	template <class T>  static Bool columnOk(ArrayColumn<T> column);
+	template <class T>  static Bool columnOk(ScalarColumn<T> column);
+
 
 	// Accesors for the MS objects
 	MeasurementSet * getInputMS() {return &ms_p;};

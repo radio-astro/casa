@@ -355,13 +355,23 @@ protected:
 						Vector<Double> &regriddedCHAN_FREQ,
 						Vector<Double> &regriddedCHAN_WIDTH,
 						string msg);
+
 	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
 	void reindexSourceSubTable();
 	void reindexDDISubTable();
 	void reindexFeedSubTable();
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
+	void reindexGenericTimeDependentSubTable(const String& subtabname);
+
 	void separateSpwSubtable();
+	void separateFeedSubtable();
+	void separateSourceSubtable();
+	void separateSyscalSubtable();
+	void separateFreqOffsetSubtable();
+	void separateCalDeviceSubtable();
+	void separateSysPowerSubtable();
+
 
 	// Setter for the weight-based average
 	void setWeightBasedTransformations(uInt mode);
@@ -426,7 +436,7 @@ protected:
 	{
 		Bool transformed = True;
 
-		if ((combinespws_p) or (nspws_p >2))
+		if ((combinespws_p) or (nspws_p >1))
 		{
 			if (constant)
 			{
@@ -452,7 +462,7 @@ protected:
 	{
 		Bool transformed = True;
 
-		if ((inputOutputIndexMap.size()) or (nspws_p >2))
+		if ((inputOutputIndexMap.size()) or (nspws_p >1))
 		{
 			if (constant)
 			{

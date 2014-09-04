@@ -1059,11 +1059,15 @@ void MSTransformManager::setup()
 	{
 		initRefFrameTransParams();
 		regridAndCombineSpwSubtable();
-		reindexSourceSubTable();
 		reindexDDISubTable();
-		reindexFeedSubTable();
-		reindexSysCalSubTable();
+		reindexSourceSubTable();
+		//reindexFeedSubTable();
+		//reindexSysCalSubTable();
 		reindexFreqOffsetSubTable();
+		reindexGenericTimeDependentSubTable("FEED");
+		reindexGenericTimeDependentSubTable("SYSCAL");
+		reindexGenericTimeDependentSubTable("CALDEVICE");
+		reindexGenericTimeDependentSubTable("SYSPOWER");
 	}
 	else if (refFrameTransformation_p)
 	{
@@ -1251,6 +1255,12 @@ void MSTransformManager::setup()
 		}
 
 		separateSpwSubtable();
+		separateFeedSubtable();
+		separateSourceSubtable();
+		separateSyscalSubtable();
+		separateFreqOffsetSubtable();
+		separateCalDeviceSubtable();
+		separateSysPowerSubtable();
 
 		// CAS-5404. DDI sub-table has to be re-indexed after separating SPW sub-table
 		reindexDDISubTable();
@@ -2120,88 +2130,978 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 // -----------------------------------------------------------------------
 void MSTransformManager::separateSpwSubtable()
 {
-	// Access Spectral Window sub-table
-	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
-    MSSpWindowColumns spwCols(spwTable);
+	if (Table::isReadable(outputMs_p->spectralWindowTableName()) and !outputMs_p->spectralWindow().isNull())
+	{
+		// Access Spectral Window sub-table
+		MSSpectralWindow spwTable = outputMs_p->spectralWindow();
 
-    // Access columns which have to be separated
-    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
-    Vector<Double> chanFreq = chanFreqCol(0);
-    ArrayColumn<Double> chanWidthCol = spwCols.chanWidth();
-    Vector<Double> chanWidth = chanWidthCol(0);
-    ArrayColumn<Double> effectiveBWCol = spwCols.chanWidth();
-    Vector<Double> effectiveBW = effectiveBWCol(0);
-    ArrayColumn<Double> resolutionCol = spwCols.resolution();
-    Vector<Double> resolution = resolutionCol(0);
+		if (spwTable.nrow() > 0)
+		{
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+        			<< " Multiplexing SPECTRAL_WINDOW sub-table to take into account new SPWs " << LogIO::POST;
 
-    // Resize columns to be separated
-    if (tailOfChansforLastSpw_p)
-    {
-    	uInt nInChannels = chanFreq.size();
-    	uInt nOutChannels = nspws_p*chansPerOutputSpw_p;
-    	uInt newChannels = nOutChannels-nInChannels;
-    	Double lastFreq = chanFreq(chanFreq.size()-1);
-    	Double lastWidth = chanWidth(chanFreq.size()-1);
-    	Double lastEffectiveBW = effectiveBW(chanFreq.size()-1);
-    	Double lastResolution = resolution(chanFreq.size()-1);
+			MSSpWindowColumns spwCols(spwTable);
 
-    	chanFreq.resize(nOutChannels,True);
-    	chanWidth.resize(nOutChannels,True);
-    	effectiveBW.resize(nOutChannels,True);
-    	resolution.resize(nOutChannels,True);
+			// Access columns which have to be separated
+			ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+			Vector<Double> chanFreq = chanFreqCol(0);
+			ArrayColumn<Double> chanWidthCol = spwCols.chanWidth();
+			Vector<Double> chanWidth = chanWidthCol(0);
+			ArrayColumn<Double> effectiveBWCol = spwCols.chanWidth();
+			Vector<Double> effectiveBW = effectiveBWCol(0);
+			ArrayColumn<Double> resolutionCol = spwCols.resolution();
+			Vector<Double> resolution = resolutionCol(0);
 
-    	uInt outIndex;
-    	for (uInt newChanIdx = 0; newChanIdx<newChannels; newChanIdx++)
+			// Resize columns to be separated
+			if (tailOfChansforLastSpw_p)
+			{
+				uInt nInChannels = chanFreq.size();
+				uInt nOutChannels = nspws_p*chansPerOutputSpw_p;
+				uInt newChannels = nOutChannels-nInChannels;
+				Double lastFreq = chanFreq(chanFreq.size()-1);
+				Double lastWidth = chanWidth(chanFreq.size()-1);
+				Double lastEffectiveBW = effectiveBW(chanFreq.size()-1);
+				Double lastResolution = resolution(chanFreq.size()-1);
+
+				chanFreq.resize(nOutChannels,True);
+				chanWidth.resize(nOutChannels,True);
+				effectiveBW.resize(nOutChannels,True);
+				resolution.resize(nOutChannels,True);
+
+				uInt outIndex;
+				for (uInt newChanIdx = 0; newChanIdx<newChannels; newChanIdx++)
+				{
+					outIndex = nInChannels+newChanIdx;
+					chanFreq(outIndex) = lastFreq + (newChanIdx+1)*lastWidth;
+					chanWidth(outIndex) = lastWidth;
+					effectiveBW(outIndex) = lastEffectiveBW;
+					resolution(outIndex) = lastResolution;
+				}
+			}
+
+			// Calculate bandwidth per output spw
+			Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
+
+			uInt rowIndex = 1;
+			for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
+			{
+				// Add row
+				spwTable.addRow(1,True);
+
+				// Prepare slice
+				Slice slice(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
+
+				// Columns that can be just copied
+				spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
+				spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
+				spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
+				spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
+				spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
+				spwCols.name().put(rowIndex,spwCols.name()(0));
+				spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
+
+				// Optional columns
+				if (MSTransformDataHandler::columnOk(spwCols.bbcNo()))
+				{
+					spwCols.bbcNo().put(rowIndex,spwCols.bbcNo()(0));
+				}
+
+				if (MSTransformDataHandler::columnOk(spwCols.assocSpwId()))
+				{
+					spwCols.assocSpwId().put(rowIndex,spwCols.assocSpwId()(0));
+				}
+
+				if (MSTransformDataHandler::columnOk(spwCols.assocNature()))
+				{
+					spwCols.assocNature().put(rowIndex,spwCols.assocNature()(0));
+				}
+
+				if (MSTransformDataHandler::columnOk(spwCols.bbcSideband()))
+				{
+					spwCols.bbcSideband().put(rowIndex,spwCols.bbcSideband()(0));
+				}
+
+				if (MSTransformDataHandler::columnOk(spwCols.dopplerId()))
+				{
+					spwCols.dopplerId().put(rowIndex,spwCols.dopplerId()(0));
+				}
+
+				if (MSTransformDataHandler::columnOk(spwCols.receiverId()))
+				{
+					spwCols.receiverId().put(rowIndex,spwCols.receiverId()(0));
+				}
+
+				// Array columns that have to be modified
+				Slice range(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
+				spwCols.chanFreq().put(rowIndex,chanFreq(range));
+				spwCols.chanWidth().put(rowIndex,chanWidth(range));
+				spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
+				spwCols.resolution().put(rowIndex,resolution(range));
+
+				// Scalar columns that have to be modified
+				spwCols.numChan().put(rowIndex,chansPerOutputSpw_p);
+				spwCols.totalBandwidth().put(rowIndex,totalBandwidth);
+				spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
+
+				rowIndex += 1;
+			}
+
+			// Remove first row
+			spwTable.removeRow(0);
+
+			// Flush changes
+			spwTable.flush(True,True);
+		}
+    	else
     	{
-    		outIndex = nInChannels+newChanIdx;
-    		chanFreq(outIndex) = lastFreq + (newChanIdx+1)*lastWidth;
-    		chanWidth(outIndex) = lastWidth;
-    		effectiveBW(outIndex) = lastEffectiveBW;
-    		resolution(outIndex) = lastResolution;
+    		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "SPECTRAL_WINDOW sub-table found but has no valid content" << LogIO::POST;
     	}
     }
-
-    // Calculate bandwidth per output spw
-    Double totalBandwidth = chanWidth(0)*chansPerOutputSpw_p;
-
-    uInt rowIndex = 1;
-    for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
+    else
     {
-    	// Add row
-    	spwTable.addRow(1,True);
-
-    	// Prepare slice
-    	Slice slice(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
-
-    	// Columns that can be just copied
-    	spwCols.measFreqRef().put(rowIndex,spwCols.measFreqRef()(0));
-    	spwCols.flagRow().put(rowIndex,spwCols.flagRow()(0));
-    	spwCols.freqGroup().put(rowIndex,spwCols.freqGroup()(0));
-    	spwCols.freqGroupName().put(rowIndex,spwCols.freqGroupName()(0));
-		spwCols.ifConvChain().put(rowIndex,spwCols.ifConvChain()(0));
-		spwCols.name().put(rowIndex,spwCols.name()(0));
-		spwCols.netSideband().put(rowIndex,spwCols.netSideband()(0));
-
-		// Array columns that have to be modified
-		Slice range(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
-    	spwCols.chanFreq().put(rowIndex,chanFreq(range));
-    	spwCols.chanWidth().put(rowIndex,chanWidth(range));
-    	spwCols.effectiveBW().put(rowIndex,effectiveBW(range));
-    	spwCols.resolution().put(rowIndex,resolution(range));
-
-    	// Scalar columns that have to be modified
-		spwCols.numChan().put(rowIndex,chansPerOutputSpw_p);
-		spwCols.totalBandwidth().put(rowIndex,totalBandwidth);
-    	spwCols.refFrequency().put(rowIndex,chanFreq(range)(0));
-
-    	rowIndex += 1;
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "SPECTRAL_WINDOW sub-table not found " << LogIO::POST;
     }
 
-    // Remove first row
-    spwTable.removeRow(0);
+	return;
+}
 
-    // Flush changes
-    outputMs_p->flush(True);
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateFeedSubtable()
+{
+	if (Table::isReadable(outputMs_p->feedTableName()) and !outputMs_p->feed().isNull())
+	{
+		// Access Feed sub-table
+		MSFeed feedtable = outputMs_p->feed();
+
+		if (feedtable.nrow() > 0)
+		{
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+        			<< " Multiplexing FEED sub-table to take into account new SPWs " << LogIO::POST;
+
+			MSFeedColumns feedCols(feedtable);
+
+		    // Get original content from columns
+			Array<Double> position = feedCols.position().getColumn();
+			Array<Double> beamOffset = feedCols.beamOffset().getColumn();
+			Array<String> polarizationType = feedCols.polarizationType().getColumn();
+			Array<Complex> polResponse = feedCols.polResponse().getColumn();
+			Array<Double> receptorAngle = feedCols.receptorAngle().getColumn();
+			Array<Int> antennaId = feedCols.antennaId().getColumn();
+			Array<Int> beamId = feedCols.beamId().getColumn();
+			Array<Int> feedId = feedCols.feedId().getColumn();
+			Array<Double> interval = feedCols.interval().getColumn();
+			Array<Int> numReceptors = feedCols.numReceptors().getColumn();
+			Array<Int> spectralWindowId = feedCols.spectralWindowId().getColumn();
+			Array<Double> time = feedCols.time().getColumn();
+
+			// Optional columns
+			Array<Double> focusLength;
+			if (MSTransformDataHandler::columnOk(feedCols.focusLength()))
+			{
+				focusLength = feedCols.focusLength().getColumn();
+			}
+
+			Array<Int> phasedFeedId;
+			if (MSTransformDataHandler::columnOk(feedCols.phasedFeedId()))
+			{
+				phasedFeedId = feedCols.phasedFeedId().getColumn();
+			}
+
+			uInt nRowsPerSpw = feedCols.spectralWindowId().nrow();
+		    uInt rowIndex = nRowsPerSpw;
+		    for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+		    {
+		    	// Add rows
+		    	feedtable.addRow(nRowsPerSpw);
+
+		    	// Prepare row reference object
+		    	RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+		    	// Reindex SPW col
+		    	spectralWindowId = spw_i;
+		    	feedCols.spectralWindowId().putColumnCells(refRow,spectralWindowId);
+
+		    	// Columns that can be just copied
+		    	feedCols.position().putColumnCells(refRow,position);
+		    	feedCols.beamOffset().putColumnCells(refRow,beamOffset);
+		    	feedCols.polarizationType().putColumnCells(refRow,polarizationType);
+		    	feedCols.polResponse().putColumnCells(refRow,polResponse);
+		    	feedCols.receptorAngle().putColumnCells(refRow,receptorAngle);
+		    	feedCols.antennaId().putColumnCells(refRow,antennaId);
+		    	feedCols.beamId().putColumnCells(refRow,beamId);
+		    	feedCols.feedId().putColumnCells(refRow,feedId);
+		    	feedCols.interval().putColumnCells(refRow,interval);
+		    	feedCols.numReceptors().putColumnCells(refRow,numReceptors);
+		    	feedCols.time().putColumnCells(refRow,time);
+
+				// Optional columns
+		    	if (MSTransformDataHandler::columnOk(feedCols.focusLength()))
+				{
+					feedCols.focusLength().putColumnCells(refRow,focusLength);
+				}
+
+		    	if (MSTransformDataHandler::columnOk(feedCols.phasedFeedId()))
+				{
+					feedCols.phasedFeedId().putColumnCells(refRow,phasedFeedId);
+				}
+
+		    	// Increment row offset
+		    	rowIndex += nRowsPerSpw;
+		    }
+
+		    // Flush changes
+		    feedtable.flush(True,True);
+		}
+    	else
+    	{
+    		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "FEED sub-table found but has no valid content" << LogIO::POST;
+    	}
+    }
+    else
+    {
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "FEED sub-table not found " << LogIO::POST;
+    }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateSourceSubtable()
+{
+	if (Table::isReadable(outputMs_p->sourceTableName()) and !outputMs_p->source().isNull())
+	{
+		// Access Source sub-table
+		MSSource sourcetable = outputMs_p->source();
+
+		if (sourcetable.nrow() > 0)
+		{
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+        			<< " Multiplexing SOURCE sub-table to take into account new SPWs " << LogIO::POST;
+
+			MSSourceColumns sourceCols(sourcetable);
+
+		    // Get original content from columns
+			Array<Double> direction = sourceCols.direction().getColumn();
+			Array<Double> properMotion = sourceCols.properMotion().getColumn();
+			Array<Int> calibrationGroup = sourceCols.calibrationGroup().getColumn();
+			Array<String> code = sourceCols.code().getColumn();
+			Array<Double> interval = sourceCols.interval().getColumn();
+			Array<String> name = sourceCols.name().getColumn();
+			Array<Int> numLines = sourceCols.numLines().getColumn();
+			Array<Int> sourceId = sourceCols.sourceId().getColumn();
+			Array<Int> spectralWindowId = sourceCols.spectralWindowId().getColumn();
+			Array<Double> time = sourceCols.time().getColumn();
+
+			// Optional columns
+			Array<Double> position;
+			if (MSTransformDataHandler::columnOk(sourceCols.position()))
+			{
+				position = sourceCols.position().getColumn();
+			}
+
+			Array<String> transition;
+			if (MSTransformDataHandler::columnOk(sourceCols.transition()))
+			{
+				transition = sourceCols.transition().getColumn();
+			}
+
+			Array<Double> restFrequency;
+			if (MSTransformDataHandler::columnOk(sourceCols.restFrequency()))
+			{
+				restFrequency = sourceCols.restFrequency().getColumn();
+			}
+
+			Array<Double> sysvel;
+			if (MSTransformDataHandler::columnOk(sourceCols.sysvel()))
+			{
+				sysvel = sourceCols.sysvel().getColumn();
+			}
+
+			Array<Int> pulsarId;
+			if (MSTransformDataHandler::columnOk(sourceCols.pulsarId()))
+			{
+				pulsarId = sourceCols.pulsarId().getColumn();
+			}
+
+			Array<TableRecord> sourceModel;
+			if (MSTransformDataHandler::columnOk(sourceCols.sourceModel()))
+			{
+				sourceModel = sourceCols.sourceModel().getColumn();
+			}
+
+
+			uInt nRowsPerSpw = sourceCols.spectralWindowId().nrow();
+		    uInt rowIndex = nRowsPerSpw;
+		    for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+		    {
+		    	// Add rows
+		    	sourcetable.addRow(nRowsPerSpw);
+
+		    	// Prepare row reference object
+		    	RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+		    	// Re-index SPW col
+		    	spectralWindowId = spw_i;
+		    	sourceCols.spectralWindowId().putColumnCells(refRow,spectralWindowId);
+
+		    	// Columns that can be just copied
+		    	sourceCols.direction().putColumnCells(refRow,direction);
+		    	sourceCols.properMotion().putColumnCells(refRow,properMotion);
+		    	sourceCols.calibrationGroup().putColumnCells(refRow,calibrationGroup);
+		    	sourceCols.code().putColumnCells(refRow,code);
+		    	sourceCols.interval().putColumnCells(refRow,interval);
+		    	sourceCols.name().putColumnCells(refRow,name);
+		    	sourceCols.numLines().putColumnCells(refRow,numLines);
+		    	sourceCols.sourceId().putColumnCells(refRow,sourceId);
+		    	sourceCols.time().putColumnCells(refRow,time);
+
+		    	// Optional columns
+		    	if (MSTransformDataHandler::columnOk(sourceCols.position()))
+		    	{
+		    		sourceCols.position().putColumnCells(refRow,position);
+		    	}
+
+		    	if (MSTransformDataHandler::columnOk(sourceCols.transition()))
+		    	{
+		    		sourceCols.transition().putColumnCells(refRow,transition);
+		    	}
+
+		    	if (MSTransformDataHandler::columnOk(sourceCols.restFrequency()))
+		    	{
+		    		sourceCols.restFrequency().putColumnCells(refRow,restFrequency);
+		    	}
+
+		    	if (MSTransformDataHandler::columnOk(sourceCols.sysvel()))
+		    	{
+		    		sourceCols.sysvel().putColumnCells(refRow,sysvel);
+		    	}
+
+		    	if (MSTransformDataHandler::columnOk(sourceCols.pulsarId()))
+		    	{
+		    		sourceCols.pulsarId().putColumnCells(refRow,pulsarId);
+		    	}
+
+		    	if (MSTransformDataHandler::columnOk(sourceCols.sourceModel()))
+		    	{
+		    		sourceCols.sourceModel().putColumnCells(refRow,sourceModel);
+		    	}
+
+		    	// Increment row offset
+		    	rowIndex += nRowsPerSpw;
+		    }
+
+		    // Flush changes
+		    sourcetable.flush(True,True);
+		}
+    	else
+    	{
+    		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "SOURCE sub-table found but has no valid content" << LogIO::POST;
+    	}
+    }
+    else
+    {
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "SOURCE sub-table not found " << LogIO::POST;
+    }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateSyscalSubtable()
+{
+
+    if (Table::isReadable(outputMs_p->sysCalTableName()) and !outputMs_p->sysCal().isNull())
+    {
+    	// Access SysCal sub-table
+    	MSSysCal syscalTable = outputMs_p->sysCal();
+
+    	if (syscalTable.nrow() > 0)
+    	{
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+        			<< " Multiplexing SYSCAL sub-table to take into account new SPWs " << LogIO::POST;
+
+          	MSSysCalColumns syscalCols(syscalTable);
+
+			// Get original content from columns
+			Array<Int> antennaId = syscalCols.antennaId().getColumn();
+			Array<Int> feedId = syscalCols.feedId().getColumn();
+			Array<Double> interval = syscalCols.interval().getColumn();
+			Array<Int> spectralWindowId = syscalCols.spectralWindowId().getColumn();
+			Array<Double> time = syscalCols.time().getColumn();
+
+			// Optional columns
+			Array<Float> phaseDiff;
+			if (MSTransformDataHandler::columnOk(syscalCols.phaseDiff()))
+			{
+				phaseDiff = syscalCols.phaseDiff().getColumn();
+			}
+
+			Array<Bool> phaseDiffFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.phaseDiffFlag()))
+			{
+				phaseDiffFlag = syscalCols.phaseDiffFlag().getColumn();
+			}
+
+			Array<Float> tant;
+			if (MSTransformDataHandler::columnOk(syscalCols.tant()))
+			{
+				tant = syscalCols.tant().getColumn();
+			}
+
+			Array<Bool> tantFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.tantFlag()))
+			{
+				tantFlag = syscalCols.tantFlag().getColumn();
+			}
+
+			Array<Float> tantSpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.tantSpectrum()))
+			{
+				tantSpectrum = syscalCols.tantSpectrum().getColumn();
+			}
+
+			Array<Float> tantTsys;
+			if (MSTransformDataHandler::columnOk(syscalCols.tantTsys()))
+			{
+				tantTsys = syscalCols.tantTsys().getColumn();
+			}
+
+			Array<Bool> tantTsysFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.tantTsysFlag()))
+			{
+				tantTsysFlag = syscalCols.tantTsysFlag().getColumn();
+			}
+
+			Array<Float> tantTsysSpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.tantTsysSpectrum()))
+			{
+				tantTsysSpectrum = syscalCols.tantTsysSpectrum().getColumn();
+			}
+
+			Array<Float> tcal;
+			if (MSTransformDataHandler::columnOk(syscalCols.tcal()))
+			{
+				tcal = syscalCols.tcal().getColumn();
+			}
+
+			Array<Bool> tcalFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.tcalFlag()))
+			{
+				tcalFlag = syscalCols.tcalFlag().getColumn();
+			}
+
+			Array<Float> tcalSpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.tcalSpectrum()))
+			{
+				tcalSpectrum = syscalCols.tcalSpectrum().getColumn();
+			}
+
+			Array<Float> trx;
+			if (MSTransformDataHandler::columnOk(syscalCols.trx()))
+			{
+				trx = syscalCols.trx().getColumn();
+			}
+
+			Array<Bool> trxFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.trxFlag()))
+			{
+				trxFlag = syscalCols.trxFlag().getColumn();
+			}
+
+			Array<Float> trxSpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.trxSpectrum()))
+			{
+				trxSpectrum = syscalCols.trxSpectrum().getColumn();
+			}
+
+			Array<Float> tsky;
+			if (MSTransformDataHandler::columnOk(syscalCols.tsky()))
+			{
+				tsky = syscalCols.tsky().getColumn();
+			}
+
+			Array<Bool> tskyFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.tskyFlag()))
+			{
+				tskyFlag = syscalCols.tskyFlag().getColumn();
+			}
+
+			Array<Float> tskySpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.tskySpectrum()))
+			{
+				tskySpectrum = syscalCols.tskySpectrum().getColumn();
+			}
+
+			Array<Float> tsys;
+			if (MSTransformDataHandler::columnOk(syscalCols.tsys()))
+			{
+				tsys = syscalCols.tsys().getColumn();
+			}
+
+			Array<Bool> tsysFlag;
+			if (MSTransformDataHandler::columnOk(syscalCols.tsysFlag()))
+			{
+				tsysFlag = syscalCols.tsysFlag().getColumn();
+			}
+
+			Array<Float> tsysSpectrum;
+			if (MSTransformDataHandler::columnOk(syscalCols.tsysSpectrum()))
+			{
+				tsysSpectrum = syscalCols.tsysSpectrum().getColumn();
+			}
+
+
+			uInt nRowsPerSpw = syscalCols.spectralWindowId().nrow();
+			uInt rowIndex = nRowsPerSpw;
+			for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+			{
+				// Add rows
+				syscalTable.addRow(nRowsPerSpw);
+
+				// Prepare row reference object
+				RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+				// Re-index SPW col
+				spectralWindowId = spw_i;
+				syscalCols.spectralWindowId().putColumnCells(refRow,spectralWindowId);
+
+				// Columns that can be just copied
+				syscalCols.antennaId().putColumnCells(refRow,antennaId);
+				syscalCols.feedId().putColumnCells(refRow,feedId);
+				syscalCols.interval().putColumnCells(refRow,interval);
+				syscalCols.time().putColumnCells(refRow,time);
+
+				// Optional columns
+				if (MSTransformDataHandler::columnOk(syscalCols.phaseDiff()))
+				{
+					syscalCols.phaseDiff().putColumnCells(refRow,phaseDiff);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.phaseDiffFlag()))
+				{
+					syscalCols.phaseDiffFlag().putColumnCells(refRow,phaseDiffFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tant()))
+				{
+					syscalCols.tant().putColumnCells(refRow,tant);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tantFlag()))
+				{
+					syscalCols.tantFlag().putColumnCells(refRow,tantFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tantSpectrum()))
+				{
+					syscalCols.tantSpectrum().putColumnCells(refRow,tantSpectrum);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tantTsys()))
+				{
+					syscalCols.tantTsys().putColumnCells(refRow,tantTsys);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tantTsysFlag()))
+				{
+					syscalCols.tantTsysFlag().putColumnCells(refRow,tantTsysFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tantTsysSpectrum()))
+				{
+					syscalCols.tantTsysSpectrum().putColumnCells(refRow,tantTsysSpectrum);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tcal()))
+				{
+					syscalCols.tcal().putColumnCells(refRow,tcal);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tcalFlag()))
+				{
+					syscalCols.tcalFlag().putColumnCells(refRow,tcalFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tcalSpectrum()))
+				{
+					syscalCols.tcalSpectrum().putColumnCells(refRow,tcalSpectrum);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.trx()))
+				{
+					syscalCols.trx().putColumnCells(refRow,trx);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.trxFlag()))
+				{
+					syscalCols.trxFlag().putColumnCells(refRow,trxFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.trxSpectrum()))
+				{
+					syscalCols.trxSpectrum().putColumnCells(refRow,trxSpectrum);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tsky()))
+				{
+					syscalCols.tsky().putColumnCells(refRow,tsky);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tskyFlag()))
+				{
+					syscalCols.tskyFlag().putColumnCells(refRow,tskyFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tskySpectrum()))
+				{
+					syscalCols.tskySpectrum().putColumnCells(refRow,tskySpectrum);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tsys()))
+				{
+					syscalCols.tsys().putColumnCells(refRow,tsys);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tsysFlag()))
+				{
+					syscalCols.tsysFlag().putColumnCells(refRow,tsysFlag);
+				}
+
+				if (MSTransformDataHandler::columnOk(syscalCols.tsysSpectrum()))
+				{
+					syscalCols.tsysSpectrum().putColumnCells(refRow,tsysSpectrum);
+				}
+
+				// Increment row offset
+				rowIndex += nRowsPerSpw;
+			}
+
+			// Flush changes
+			syscalTable.flush(True,True);
+    	}
+    	else
+    	{
+    		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
+    	}
+    }
+    else
+    {
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "SYSCAL sub-table not found " << LogIO::POST;
+    }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateFreqOffsetSubtable()
+{
+
+    if (Table::isReadable(outputMs_p->freqOffsetTableName()) and !outputMs_p->freqOffset().isNull())
+    {
+    	// Access SysCal sub-table
+    	MSFreqOffset freqoffsetTable = outputMs_p->freqOffset();
+
+    	if (freqoffsetTable.nrow() > 0)
+    	{
+    		logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    	    					<< " Multiplexing FREQ_OFFSET sub-table to take into account new SPWs " << LogIO::POST;
+
+    		MSFreqOffsetColumns freqoffsetCols(freqoffsetTable);
+
+    		// Get original content from columns
+    		Array<Int> antenna1 = freqoffsetCols.antenna1().getColumn();
+    		Array<Int> antenna2 = freqoffsetCols.antenna2().getColumn();
+    		Array<Int> feedId = freqoffsetCols.feedId().getColumn();
+    		Array<Double> interval = freqoffsetCols.interval().getColumn();
+    		Array<Double> offset = freqoffsetCols.offset().getColumn();
+    		Array<Int> spectralWindowId = freqoffsetCols.spectralWindowId().getColumn();
+    		Array<Double> time = freqoffsetCols.time().getColumn();
+
+    		// NOTE (jagonzal): FreqOffset does not have optional columns
+
+    		uInt nRowsPerSpw = freqoffsetCols.spectralWindowId().nrow();
+    		uInt rowIndex = nRowsPerSpw;
+    		for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+    		{
+    			// Add rows
+    			freqoffsetTable.addRow(nRowsPerSpw);
+
+    			// Prepare row reference object
+    			RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+    			// Re-index SPW col
+    			spectralWindowId = spw_i;
+    			freqoffsetCols.spectralWindowId().putColumnCells(refRow,spectralWindowId);
+
+    			// Columns that can be just copied
+    			freqoffsetCols.antenna1().putColumnCells(refRow,antenna1);
+    			freqoffsetCols.antenna2().putColumnCells(refRow,antenna2);
+    			freqoffsetCols.feedId().putColumnCells(refRow,feedId);
+    			freqoffsetCols.interval().putColumnCells(refRow,interval);
+    			freqoffsetCols.offset().putColumnCells(refRow,offset);
+    			freqoffsetCols.time().putColumnCells(refRow,time);
+
+    			// Increment row offset
+    			rowIndex += nRowsPerSpw;
+    		}
+
+    		// Flush changes
+    		freqoffsetTable.flush(True,True);
+    	}
+    	else
+    	{
+    		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "FREQ_OFFSET sub-table found but has no valid content" << LogIO::POST;
+    	}
+    }
+    else
+    {
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
+    }
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateCalDeviceSubtable()
+{
+	if (Table::isReadable(outputMs_p->tableName() + "/CALDEVICE"))
+	{
+		Table subtable(outputMs_p->tableName() + "/CALDEVICE", Table::Update);
+
+		if (subtable.nrow() > 0)
+		{
+	    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< " Multiplexing CALDEVICE sub-table to take into account new SPWs " << LogIO::POST;
+
+	        // Get RW access to columns
+			ScalarColumn<Int> antennaIdCol(subtable, "ANTENNA_ID");
+			ScalarColumn<Int> feedIdCol(subtable, "FEED_ID");
+			ScalarColumn<Int> spectralWindowIdCol(subtable, "SPECTRAL_WINDOW_ID");
+			ScalarColumn<Double> timeCol(subtable, "TIME");
+			ScalarColumn<Double> intervalCol(subtable, "INTERVAL");
+			ScalarColumn<Int> numCalLoadCol(subtable, "NUM_CAL_LOAD");
+			ArrayColumn<String> calLoadNamesCol(subtable, "CAL_LOAD_NAMES");
+			ScalarColumn<Int> numReceptorCol(subtable, "NUM_RECEPTOR");
+			ArrayColumn<Float> noiseCalCol(subtable, "NOISE_CAL");
+			ArrayColumn<Float> calEffCol(subtable, "CAL_EFF");
+			ArrayColumn<Double> temperatureLoadCol(subtable, "TEMPERATURE_LOAD");
+
+	        // Get original content of columns
+			Array<Int> antennaId;
+			if (MSTransformDataHandler::columnOk(antennaIdCol))
+				antennaId = antennaIdCol.getColumn();
+			Array<Int> feedId;
+			if (MSTransformDataHandler::columnOk(feedIdCol))
+				feedId = feedIdCol.getColumn();
+			Array<Int> spectralWindowId;
+			if (MSTransformDataHandler::columnOk(spectralWindowIdCol))
+				spectralWindowId = spectralWindowIdCol.getColumn();
+			Array<Double> time;
+			if (MSTransformDataHandler::columnOk(timeCol))
+				time = timeCol.getColumn();
+			Array<Double> interval;
+			if (MSTransformDataHandler::columnOk(intervalCol))
+				interval = intervalCol.getColumn();
+
+			Array<Int> numCalLoad;
+			if (MSTransformDataHandler::columnOk(numCalLoadCol))
+				numCalLoad = numCalLoadCol.getColumn();
+			Array<String> calLoadNames;
+			if (MSTransformDataHandler::columnOk(calLoadNamesCol))
+				calLoadNames = calLoadNamesCol.getColumn();
+			Array<Int> numReceptor;
+			if (MSTransformDataHandler::columnOk(numReceptorCol))
+				numReceptor = numReceptorCol.getColumn();
+			Array<Float> noiseCal;
+			if (MSTransformDataHandler::columnOk(noiseCalCol))
+				noiseCal = noiseCalCol.getColumn();
+			Array<Float> calEff;
+			if (MSTransformDataHandler::columnOk(calEffCol))
+				calEff = calEffCol.getColumn();
+			Array<Double> temperatureLoad;
+			if (MSTransformDataHandler::columnOk(temperatureLoadCol))
+				temperatureLoad = temperatureLoadCol.getColumn();
+
+
+	    	uInt nRowsPerSpw = spectralWindowId.nelements();
+	        uInt rowIndex = nRowsPerSpw;
+	        for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+	        {
+	        	// Add rows
+	        	subtable.addRow(nRowsPerSpw);
+
+	        	// Prepare row reference object
+	        	RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+	        	// Re-index SPW col
+	        	spectralWindowId = spw_i;
+	        	spectralWindowIdCol.putColumnCells(refRow,spectralWindowId);
+
+	        	// Columns that can be just copied
+	        	if (MSTransformDataHandler::columnOk(antennaIdCol))
+	        		antennaIdCol.putColumnCells(refRow,antennaId);
+	        	if (MSTransformDataHandler::columnOk(feedIdCol))
+	        		feedIdCol.putColumnCells(refRow,feedId);
+	        	if (MSTransformDataHandler::columnOk(timeCol))
+	        		timeCol.putColumnCells(refRow,time);
+	        	if (MSTransformDataHandler::columnOk(intervalCol))
+	        		intervalCol.putColumnCells(refRow,interval);
+
+	        	if (MSTransformDataHandler::columnOk(numCalLoadCol))
+	        		numCalLoadCol.putColumnCells(refRow,numCalLoad);
+	        	if (MSTransformDataHandler::columnOk(calLoadNamesCol))
+	        		calLoadNamesCol.putColumnCells(refRow,calLoadNames);
+	        	if (MSTransformDataHandler::columnOk(numReceptorCol))
+	        		numReceptorCol.putColumnCells(refRow,numReceptor);
+	        	if (MSTransformDataHandler::columnOk(noiseCalCol))
+	        		noiseCalCol.putColumnCells(refRow,noiseCal);
+	        	if (MSTransformDataHandler::columnOk(calEffCol))
+	        		calEffCol.putColumnCells(refRow,calEff);
+	        	if (MSTransformDataHandler::columnOk(temperatureLoadCol))
+	        		temperatureLoadCol.putColumnCells(refRow,temperatureLoad);
+
+	        	// Increment row offset
+	        	rowIndex += nRowsPerSpw;
+	        }
+
+	    	// Flush changes
+			subtable.flush(True,True);
+		}
+		else
+		{
+	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "CALDEVICE sub-table found but has no valid content" << LogIO::POST;
+		}
+	}
+	else
+	{
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "CALDEVICE sub-table not found." << LogIO::POST;
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::separateSysPowerSubtable()
+{
+	if (Table::isReadable(outputMs_p->tableName() + "/SYSPOWER"))
+	{
+		Table subtable(outputMs_p->tableName() + "/SYSPOWER", Table::Update);
+
+		if (subtable.nrow() > 0)
+		{
+	    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< " Multiplexing SYSPOWER sub-table to take into account new SPWs " << LogIO::POST;
+
+	        // Get RW access to columns
+			ScalarColumn<Int> antennaIdCol(subtable, "ANTENNA_ID");
+			ScalarColumn<Int> feedIdCol(subtable, "FEED_ID");
+			ScalarColumn<Int> spectralWindowIdCol(subtable, "SPECTRAL_WINDOW_ID");
+			ScalarColumn<Double> timeCol(subtable, "TIME");
+			ScalarColumn<Double> intervalCol(subtable, "INTERVAL");
+			ArrayColumn<Float> switchedDiffCol(subtable, "SWITCHED_DIFF");
+			ArrayColumn<Float> switchedSumCol(subtable, "SWITCHED_SUM");
+			ArrayColumn<Float> requantizerGainCol(subtable, "REQUANTIZER_GAIN");
+
+	        // Get original content of columns
+			Array<Int> antennaId;
+			if (MSTransformDataHandler::columnOk(antennaIdCol))
+				antennaId = antennaIdCol.getColumn();
+			Array<Int> feedId;
+			if (MSTransformDataHandler::columnOk(feedIdCol))
+				feedId = feedIdCol.getColumn();
+			Array<Int> spectralWindowId;
+			if (MSTransformDataHandler::columnOk(spectralWindowIdCol))
+				spectralWindowId = spectralWindowIdCol.getColumn();
+			Array<Double> time;
+			if (MSTransformDataHandler::columnOk(timeCol))
+				time = timeCol.getColumn();
+			Array<Double> interval;
+			if (MSTransformDataHandler::columnOk(intervalCol))
+				interval = intervalCol.getColumn();
+
+			Array<Float> switchedDiff;
+			if (MSTransformDataHandler::columnOk(switchedDiffCol))
+				switchedDiff = switchedDiffCol.getColumn();
+			Array<Float> switchedSum;
+			if (MSTransformDataHandler::columnOk(switchedSumCol))
+				switchedSum = switchedSumCol.getColumn();
+			Array<Float> requantizerGain;
+			if (MSTransformDataHandler::columnOk(requantizerGainCol))
+				requantizerGain = requantizerGainCol.getColumn();
+
+	    	uInt nRowsPerSpw = spectralWindowId.nelements();
+	        uInt rowIndex = nRowsPerSpw;
+	        for (uInt spw_i=1; spw_i<nspws_p; spw_i++)
+	        {
+	        	// Add rows
+	        	subtable.addRow(nRowsPerSpw);
+
+	        	// Prepare row reference object
+	        	RefRows refRow(rowIndex,rowIndex+nRowsPerSpw-1);
+
+	        	// Re-index SPW col
+	        	spectralWindowId = spw_i;
+	        	spectralWindowIdCol.putColumnCells(refRow,spectralWindowId);
+
+	        	// Columns that can be just copied
+	        	if (MSTransformDataHandler::columnOk(antennaIdCol))
+	        		antennaIdCol.putColumnCells(refRow,antennaId);
+	        	if (MSTransformDataHandler::columnOk(feedIdCol))
+	        		feedIdCol.putColumnCells(refRow,feedId);
+	        	if (MSTransformDataHandler::columnOk(timeCol))
+	        		timeCol.putColumnCells(refRow,time);
+	        	if (MSTransformDataHandler::columnOk(intervalCol))
+	        		intervalCol.putColumnCells(refRow,interval);
+
+	        	if (MSTransformDataHandler::columnOk(switchedDiffCol))
+					switchedDiffCol.putColumnCells(refRow,switchedDiff);
+	        	if (MSTransformDataHandler::columnOk(switchedSumCol))
+					switchedSumCol.putColumnCells(refRow,switchedSum);
+	        	if (MSTransformDataHandler::columnOk(requantizerGainCol))
+					requantizerGainCol.putColumnCells(refRow,requantizerGain);
+
+	        	// Increment row offset
+	        	rowIndex += nRowsPerSpw;
+	        }
+
+	    	// Flush changes
+			subtable.flush(True,True);
+		}
+		else
+		{
+	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "SYSPOWER sub-table found but has no valid content" << LogIO::POST;
+		}
+	}
+	else
+	{
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "SYSPOWER sub-table not found." << LogIO::POST;
+	}
 
 	return;
 }
@@ -2262,18 +3162,44 @@ void MSTransformManager::reindexSourceSubTable()
 {
     if(Table::isReadable(outputMs_p->sourceTableName()) and !outputMs_p->source().isNull())
     {
-    	MSSource msSubtable = outputMs_p->source();
-    	MSSourceColumns tableCols(msSubtable);
-       	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-        reindexColumn(spwCol,0);
 
-        // Flush changes
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "Re-indexing SOURCE sub-table" << LogIO::POST;
+
+
+    	MSSource sourceSubtable = outputMs_p->source();
+    	MSSourceColumns tableCols(sourceSubtable);
+       	ScalarColumn<Int> spectralWindowId = tableCols.spectralWindowId();
+       	ScalarColumn<Int> sourceId = tableCols.sourceId();
+        reindexColumn(spectralWindowId,0);
+
+    	// Remove duplicates
+    	std::vector<uInt> duplicateIdx;
+    	std::vector< std::pair<uInt,uInt> > sourceIdSpwIdMap;
+
+    	for (uInt idx = 0; idx < spectralWindowId.nrow(); idx++)
+    	{
+    		std::pair<uInt,uInt> sourceIdSpwId = std::make_pair(spectralWindowId(idx),sourceId(idx));
+
+    		if (std::find(sourceIdSpwIdMap.begin(),sourceIdSpwIdMap.end(),sourceIdSpwId) != sourceIdSpwIdMap.end())
+    		{
+    			duplicateIdx.push_back(idx);
+    		}
+    		else
+    		{
+    			sourceIdSpwIdMap.push_back(sourceIdSpwId);
+    		}
+    	}
+
+    	sourceSubtable.removeRow(duplicateIdx);
+
+    	// Flush changes
         outputMs_p->flush(True);
     }
     else
     {
     	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No SOURCE sub-table found " << LogIO::POST;
+    			<< "SOURCE sub-table not found " << LogIO::POST;
     }
 
     return;
@@ -2286,6 +3212,9 @@ void MSTransformManager::reindexDDISubTable()
 {
     if(Table::isReadable(outputMs_p->dataDescriptionTableName()) and !outputMs_p->dataDescription().isNull())
     {
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "Re-indexing DDI sub-table" << LogIO::POST;
+
     	// Access DDI sub-table
     	MSDataDescription ddiTable = outputMs_p->dataDescription();
     	MSDataDescColumns ddiCols(ddiTable);
@@ -2304,6 +3233,12 @@ void MSTransformManager::reindexDDISubTable()
     		// Set SPW id separately
     		ddiCols.spectralWindowId().put(rowIndex,ddiStart_p+spw_i);
 
+    		// Optional columns
+    		if (ddiCols.lagId().isNull()==false and ddiCols.lagId().hasContent()==true)
+    		{
+    			ddiCols.lagId().put(rowIndex,ddiCols.lagId()(0));
+    		}
+
     		rowIndex += 1;
     	}
 
@@ -2321,7 +3256,7 @@ void MSTransformManager::reindexDDISubTable()
     else
     {
     	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No DATA_DESCRIPTION sub-table found " << LogIO::POST;
+    			<< "DATA_DESCRIPTION sub-table not found " << LogIO::POST;
     }
 }
 
@@ -2332,19 +3267,56 @@ void MSTransformManager::reindexFeedSubTable()
 {
     if(Table::isReadable(outputMs_p->feedTableName()) and !outputMs_p->feed().isNull())
     {
-    	MSFeed msSubtable = outputMs_p->feed();
-    	MSFeedColumns tableCols(msSubtable);
-    	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	Vector<Int> newSpw(spwCol.nrow(),0);
-    	spwCol.putColumn(newSpw);
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "Re-indexing FEED sub-table and removing duplicates" << LogIO::POST;
+
+    	MSFeed feedSubtable = outputMs_p->feed();
+    	MSFeedColumns tableCols(feedSubtable);
+    	ScalarColumn<Int> feedId = tableCols.feedId();
+    	ScalarColumn<Int> antennaId = tableCols.antennaId();
+    	ScalarColumn<Int> spectralWindowId = tableCols.spectralWindowId();
+    	ScalarColumn<Double> time = tableCols.time();
+
+    	// Re-index SPWId to be 0
+    	reindexColumn(spectralWindowId,0);
+
+    	// Remove duplicates
+    	std::vector<uInt> duplicateIdx;
+    	std::map< std::pair<uInt,uInt> , Double > antennaFeedTimeMap;
+    	std::map< std::pair<uInt,uInt> , Double >::iterator antennaFeedTimeIter;
+
+    	for (uInt idx = 0; idx < spectralWindowId.nrow(); idx++)
+    	{
+    		std::pair<uInt,uInt> antennaFeedPair = std::make_pair(antennaId(idx),feedId(idx));
+    		antennaFeedTimeIter = antennaFeedTimeMap.find(antennaFeedPair);
+
+    		if (antennaFeedTimeIter != antennaFeedTimeMap.end())
+    		{
+    			if (abs(antennaFeedTimeIter->second - time(idx)) < 2*FLT_MIN)
+    			{
+    				duplicateIdx.push_back(idx);
+    			}
+    			else
+    			{
+    				antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    			}
+    		}
+    		else
+    		{
+    			antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    		}
+    	}
+
+
+    	feedSubtable.removeRow(duplicateIdx);
 
         // Flush changes
         outputMs_p->flush(True);
     }
     else
     {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
-    			 "No FEED sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__) <<
+    			 "FEED sub-table not found " << LogIO::POST;
     }
 
 	return;
@@ -2357,19 +3329,55 @@ void MSTransformManager::reindexSysCalSubTable()
 {
     if(Table::isReadable(outputMs_p->sysCalTableName()) and !outputMs_p->sysCal().isNull())
     {
-    	MSSysCal msSubtable = outputMs_p->sysCal();
-    	MSSysCalColumns tableCols(msSubtable);
-    	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	Vector<Int> newSpw(spwCol.nrow(),0);
-    	spwCol.putColumn(newSpw);
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "Re-indexing SYSCAL sub-table and removing duplicates" << LogIO::POST;
+
+    	MSSysCal syscalSubtable = outputMs_p->sysCal();
+    	MSSysCalColumns tableCols(syscalSubtable);
+    	ScalarColumn<Int> feedId = tableCols.feedId();
+    	ScalarColumn<Int> antennaId = tableCols.antennaId();
+    	ScalarColumn<Int> spectralWindowId = tableCols.spectralWindowId();
+    	ScalarColumn<Double> time = tableCols.time();
+
+    	// Re-index SPWId to be 0
+    	reindexColumn(spectralWindowId,0);
+
+    	// Remove duplicates
+    	std::vector<uInt> duplicateIdx;
+    	std::map< std::pair<uInt,uInt> , Double > antennaFeedTimeMap;
+    	std::map< std::pair<uInt,uInt> , Double >::iterator antennaFeedTimeIter;
+
+    	for (uInt idx = 0; idx < spectralWindowId.nrow(); idx++)
+    	{
+    		std::pair<uInt,uInt> antennaFeedPair = std::make_pair(antennaId(idx),feedId(idx));
+    		antennaFeedTimeIter = antennaFeedTimeMap.find(antennaFeedPair);
+
+    		if (antennaFeedTimeIter != antennaFeedTimeMap.end())
+    		{
+    			if (abs(antennaFeedTimeIter->second - time(idx)) < 2*FLT_MIN)
+    			{
+    				duplicateIdx.push_back(idx);
+    			}
+    			else
+    			{
+    				antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    			}
+    		}
+    		else
+    		{
+    			antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    		}
+    	}
+
+    	syscalSubtable.removeRow(duplicateIdx);
 
         // Flush changes
         outputMs_p->flush(True);
     }
     else
     {
-    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No SYSCAL sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "SYSCAL sub-table not found " << LogIO::POST;
     }
 
 	return;
@@ -2382,22 +3390,129 @@ void MSTransformManager::reindexFreqOffsetSubTable()
 {
     if(Table::isReadable(outputMs_p->freqOffsetTableName()) and !outputMs_p->freqOffset().isNull())
     {
-    	MSFreqOffset msSubtable = outputMs_p->freqOffset();
-    	MSFreqOffsetColumns tableCols(msSubtable);
-    	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	Vector<Int> newSpw(spwCol.nrow(),0);
-    	spwCol.putColumn(newSpw);
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "Re-indexing FREQ_OFFSET sub-table and removing duplicates" << LogIO::POST;
+
+    	MSFreqOffset freqoffsetSubtable = outputMs_p->freqOffset();
+    	MSFreqOffsetColumns tableCols(freqoffsetSubtable);
+    	ScalarColumn<Int> feedId = tableCols.feedId();
+    	ScalarColumn<Int> antenna1 = tableCols.antenna1();
+    	ScalarColumn<Int> antenna2 = tableCols.antenna2();
+    	ScalarColumn<Int> spectralWindowId = tableCols.spectralWindowId();
+    	ScalarColumn<Double> time = tableCols.time();
+
+    	// Re-index SPWId to be 0
+    	reindexColumn(spectralWindowId,0);
+
+    	// Remove duplicates
+    	std::vector<uInt> duplicateIdx;
+    	std::map< std::pair < std::pair<uInt,uInt> , uInt> , Double > antennaFeedTimeMap;
+    	std::map< std::pair < std::pair<uInt,uInt> , uInt> , Double >::iterator antennaFeedTimeIter;
+
+    	for (uInt idx = 0; idx < spectralWindowId.nrow(); idx++)
+    	{
+    		std::pair < std::pair<uInt,uInt> , uInt> antennaFeedPair = std::make_pair(std::make_pair(antenna1(idx),antenna2(idx)),feedId(idx));
+    		antennaFeedTimeIter = antennaFeedTimeMap.find(antennaFeedPair);
+
+    		if (antennaFeedTimeIter != antennaFeedTimeMap.end())
+    		{
+    			if (abs(antennaFeedTimeIter->second - time(idx)) < 2*FLT_MIN)
+    			{
+    				duplicateIdx.push_back(idx);
+    			}
+    			else
+    			{
+    				antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    			}
+    		}
+    		else
+    		{
+    			antennaFeedTimeMap[antennaFeedPair] = time(idx);
+    		}
+    	}
+
+    	freqoffsetSubtable.removeRow(duplicateIdx);
 
         // Flush changes
         outputMs_p->flush(True);
     }
     else
     {
-    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< "No FREQ_OFFSET sub-table found " << LogIO::POST;
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
     }
 
     return;
+}
+
+// -----------------------------------------------------------------------
+// Method to re-index Spectral Window column in a generic sub-table (with feedId, antennaId and time columns)
+// -----------------------------------------------------------------------
+void MSTransformManager::reindexGenericTimeDependentSubTable(const String& subtabname)
+{
+	if (Table::isReadable(outputMs_p->tableName() + "/" + subtabname))
+	{
+		Table subtable(outputMs_p->tableName() + "/" + subtabname, Table::Update);
+
+		if (subtable.nrow() > 0)
+		{
+	    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< "Re-indexing SPW column of " << subtabname
+	    			<< " sub-table and removing duplicates " << LogIO::POST;
+
+			ScalarColumn<Int> feedId(subtable, "FEED_ID");
+			ScalarColumn<Int> antennaId(subtable, "ANTENNA_ID");
+			ScalarColumn<Int> spectralWindowId(subtable, "SPECTRAL_WINDOW_ID");
+			ScalarColumn<Double> time(subtable, "TIME");
+
+	    	// Re-index SPWId to be 0
+	    	reindexColumn(spectralWindowId,0);
+
+	    	// Remove duplicates
+	    	std::vector<uInt> duplicateIdx;
+	    	std::map< std::pair<uInt,uInt> , Double > antennaFeedTimeMap;
+	    	std::map< std::pair<uInt,uInt> , Double >::iterator antennaFeedTimeIter;
+
+	    	for (uInt idx = 0; idx < spectralWindowId.nrow(); idx++)
+	    	{
+	    		std::pair<uInt,uInt> antennaFeedPair = std::make_pair(antennaId(idx),feedId(idx));
+	    		antennaFeedTimeIter = antennaFeedTimeMap.find(antennaFeedPair);
+
+	    		if (antennaFeedTimeIter != antennaFeedTimeMap.end())
+	    		{
+	    			if (abs(antennaFeedTimeIter->second - time(idx)) < 2*FLT_MIN)
+	    			{
+	    				duplicateIdx.push_back(idx);
+	    			}
+	    			else
+	    			{
+	    				antennaFeedTimeMap[antennaFeedPair] = time(idx);
+	    			}
+	    		}
+	    		else
+	    		{
+	    			antennaFeedTimeMap[antennaFeedPair] = time(idx);
+	    		}
+	    	}
+
+	    	subtable.removeRow(duplicateIdx);
+
+	    	// Flush changes
+			subtable.flush(True,True);
+		}
+		else
+		{
+	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< subtabname << " sub-table found but has no valid content" << LogIO::POST;
+		}
+	}
+	else
+	{
+    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    			<< subtabname << " sub-table not found" << LogIO::POST;
+	}
+
+	return;
 }
 
 // -----------------------------------------------------------------------
