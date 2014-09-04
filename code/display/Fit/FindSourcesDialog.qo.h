@@ -109,7 +109,7 @@ namespace casa {
 		void initializeFileManagement();
 		void setTableValue(int row, int col, const String& val );
 		double populateCutOff(bool* valid) const;
-		Record makeRegion( bool * valid ) const;
+		Record makeRegion( bool * valid );
 		void resetSkyOverlay();
 		void clearSkyOverlay();
 		void clearRegions();

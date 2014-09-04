@@ -414,7 +414,7 @@ namespace casa {
 		}
 		int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 		try {
-			Record sources = analysis->findsources(maxEstimates,cutoff,region,"",False );
+			Record sources = analysis->findsources(maxEstimates,cutoff,region,"",True );
 			String errorMsg;
 			bool ok = skyList.fromRecord(errorMsg, sources);
 			if ( !ok ) {
@@ -427,7 +427,7 @@ namespace casa {
 		}
 	}
 
-	Record FindSourcesDialog::makeRegion( bool * valid ) const {
+	Record FindSourcesDialog::makeRegion( bool * valid ){
 		IPosition pos = image->shape();
 		String regionName;
 		String channelStr = String::toString( channel ) + "~" + String::toString( channel );
@@ -441,14 +441,19 @@ namespace casa {
 		String infile = image->name();
 		Record region;
 		if ( pixelBox.length() == 0 ) {
+			populatePixelBox();
+		}
+		if ( pixelBox.length() == 0 ){
 			*valid = false;
-		} else {
+		}
+		else {
 			try {
 				region = crm.fromBCS( diagnostics, channelCount, stokesStr,
 				                      NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
 				                      pixelBox, pos, infile);
 				*valid = true;
-			} catch( AipsError& error ) {
+			}
+			catch( AipsError& error ) {
 				QString errorMsg( error.getMesg().c_str());
 				qDebug() << "Error making region: "<<errorMsg;
 				*valid = false;
