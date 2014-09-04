@@ -33,8 +33,8 @@ public:
   
   bool close();
 
-  // Select data to process
-  void set_selection(Record const& selection);
+  // Select data to process (verbose=T will print summary to logger)
+  void set_selection(Record const& selection, bool const verbose=true);
 
   // Multiply a scale factor to selected spectra
   void scale(float const factor);
@@ -48,6 +48,8 @@ private:
   /////////////////////////
   /// Utility functions ///
   /////////////////////////
+  // initialize member variables
+  void initialize();
   // assert MS is set
   void check_ms();
   // retrieve a field by name from Record as casa::String.
@@ -106,6 +108,8 @@ private:
   MeasurementSet* mssel_;
   // columns to read and save data
   MSMainEnums::PredefinedColumns in_column_, out_column_;
+  // Record of selection
+  Record selection_;
 
 }; // class SingleDishMS -END
 
