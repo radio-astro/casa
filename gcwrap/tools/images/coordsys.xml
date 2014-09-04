@@ -1248,26 +1248,36 @@ values of the velocity.
 </description>
 
 <example>
-
 """
-#
-print "\t----\t frequencytofrequency Ex 1 \t----"
-csys = cs.newcoordsys(spectral=T)
-idx = [1.1,1.2,1.3,1.4,1.5]
-rval = csys.referencevalue()
-rv=rval['numeric'][0]
-freq=[]
-for i in range(len(idx)):
-  freq.append(rv*idx[i])
-print "In = [%.4e %.4e %.4e %.4e %.4e]" % tuple(freq)
-#In = [1.5565e+09 1.6980e+09 1.8395e+09 1.9810e+09 2.1225e+09]
-print cs.frequencytofrequency(freq, velocity='100km/s')
-#[1555980894.0489383, 1697433702.5988414, 1838886511.1487448,
-# 1980339319.698648, 2121792128.2485518]
-#
+A conversion from velocity to absolute frequency or vice versa
+must assume a rest frequency.
+This would be taken from the coordinate system
+which can, e.g., be taken from an image:
+
+  ia.open('M100line.image')
+  mycs = ia.coordsys()
+  ia.close()
+
+In this example, the RESTFREQ of the image is 115271201800.0 Hz.
+
+  mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='0.', doppler='radio')
+
+then results in 
+  array([ 1.15271202e+11])
+i.e. the same as the input frequency since the velocity shift was zero.
+
+mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='1km/s', doppler='radio')
+results in
+array([ 1.15270817e+11])
+
+Let's see if this is correct
+v_radio = c*(f0-f)/f0 => f = -v_radio * f0/c + f0 = -1000 * 115271201800.0 / 299792458.0 + 115271201800.0 = 115270817296.65869
+
+ 115270817296.65869 - mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='1km/s', doppler='radio')
+results in
+  array([-0.64129639])
+i.e. our calculation is correct to 0.6 Hz or 5.5E-10 percent.
 """
-
-
 </example>
 </method>
 
