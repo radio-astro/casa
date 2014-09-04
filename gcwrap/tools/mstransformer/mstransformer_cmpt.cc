@@ -31,7 +31,10 @@ mstransformer::mstransformer()
 		mstransformer_p = new MSTransform();
 
 	} catch (AipsError x) {
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p 	<< LogIO::SEVERE
+					<< "Exception Reported: " << x.getMesg()
+					<< " Stack Trace: " << x.getStackTrace()
+					<< LogIO::POST;
 		RETHROW(x);
 	}
 
@@ -123,8 +126,8 @@ mstransformer::open()
  mstransformer::run()
 {
 	casac::record *rstat(0);
-	try
-	{
+	//try
+	//{
 		if(mstransformer_p){
 			rstat =  fromRecord(mstransformer_p->run());
 		}
@@ -133,10 +136,10 @@ mstransformer::open()
 		}
 
 		return rstat;
-	} catch(AipsError x){
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-		RETHROW(x);
-	}
+	//} catch(AipsError x){
+	//	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	//	RETHROW(x);
+	//}
 }
 
 bool
@@ -152,7 +155,9 @@ mstransformer::mergespwtables(const std::vector<std::string> &filenames)
 		MSTransformDataHandler::mergeSpwSubTables(toVectorString(filenames));
 
 	} catch(AipsError x){
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		*logger_p << LogIO::SEVERE 		<< "Exception Reported: " << x.getMesg()
+										<< " Stack Trace: " << x.getStackTrace()
+										<< LogIO::POST;
 		RETHROW(x);
 	}
 
