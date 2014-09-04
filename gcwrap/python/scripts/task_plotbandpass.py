@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.55 2014/08/20 18:16:07 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.56 2014/09/04 14:51:27 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.55 2014/08/20 18:16:07 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.56 2014/09/04 14:51:27 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -1843,13 +1843,17 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                antlist = []
                removeAntenna = []
                for token in tokens:
-                   if (token in mymsmd.antennanames(range(mymsmd.nantennas()))):
+#                   if (token in mymsmd.antennanames(range(mymsmd.nantennas()))):
+                   if (token in msAnt):
                        antlist = list(antlist)  # needed in case preceding antenna had ! modifier
-                       antlist.append(mymsmd.antennaids(token)[0])
+#                       antlist.append(mymsmd.antennaids(token)[0])
+                       antlist.append(list(msAnt).index(token))
                    elif (token[0] == '!'):
-                       if (token[1:] in mymsmd.antennanames(range(mymsmd.nantennas()))):
-                           antlist = range(mymsmd.nantennas())
-                           removeAntenna.append(mymsmd.antennaids(token[1:])[0])
+#                       if (token[1:] in mymsmd.antennanames(range(mymsmd.nantennas()))):
+                       if (token[1:] in msAnt):
+                           antlist = uniqueAntennaIds # range(mymsmd.nantennas())
+#                           removeAntenna.append(mymsmd.antennaids(token[1:])[0])
+                           removeAntenna.append(list(msAnt).index(token[1:]))                       
                        else:
                            print "Antenna %s is not in the ms. It contains: " % (token), mymsmd.antennanames(range(mymsmd.nantennas()))
                            return()
@@ -1923,7 +1927,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                    if (myloc > 0):
                        casalogPost(debug,"Saw wildcard in the name")
                        for u in uniqueFields:
-                           if (token[0:myloc]==mymsmd.namesforfields(u)[0:myloc]):
+                           myFieldName = GetFieldNamesForFieldId(u, mymsmd, msFields)
+                           if (token[0:myloc]==myFieldName[0:myloc]):
                                if (DEBUG):
                                    print "Found wildcard match = %s" % mymsmd.namesforfields(u)
                                fieldlist.append(u)
@@ -1934,27 +1939,24 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                        casalogPost(debug,"Saw wildcard at start of name")
                        for u in uniqueFields:
                            fieldlist.append(u)
-                   elif (token in mymsmd.namesforfields()):
+                   elif (token in msFields):
                        fieldlist = list(fieldlist)  # needed in case preceding field had ! modifier
-                       fieldlist.append(mymsmd.fieldsforname(token))
+                       fieldlist.append(GetFieldIdsForFieldName(token, mymsmd, msFields))
                    elif (token[0] == '!'):
                        if (fieldlist == []):
-                           for f in mymsmd.namesforfields():
-                               fieldlist.append(mymsmd.fieldsforname(f))
-                       if (token[1:] in mymsmd.namesforfields()):
-                           removeField.append(mymsmd.fieldsforname(token[1:]))
+                           for u in uniqueFields:
+                               fieldlist.append(u)
+                       if (token[1:] in msFields):
+                           removeField.append(GetFieldIdsForFieldName(token[1:], mymsmd, msFields))
                        else:
-                           fieldlist = []
-                           for f in mymsmd.namesforfields():
-                               fieldlist.append(mymsmd.fieldsforname(f))
-                           print "Field %s is not in the ms. It contains: %s, %s" % (token, str(fieldlist), mymsmd.namesforfields())
+                           print "Field %s is not in the ms. It contains: %s, %s" % (token, str(uniqueFields), str(np.unique(msFields)))
                            return()
                    else:
                        casalogPost(debug,"Field not in ms")
                        fieldlist = []
                        for f in mymsmd.namesforfields():
                            fieldlist.append(mymsmd.fieldsforname(f))
-                       print "Field %s is not in the ms. It contains: %s, %s" % (token, str(fieldlist), mymsmd.namesforfields())
+                       print "Field %s is not in the ms. It contains: %s, %s" % (token, str(uniqueFields), str(np.unique(msFields)))
                        return()
                fieldlist = np.array(fieldlist)
                for rm in removeField:
@@ -5052,6 +5054,19 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             mymsmd.close()
         return()
     # end of plotbandpass
+
+def GetFieldIdsForFieldName(token, mymsmd, msFields):
+    if (mymsmd != '' and mymsmd != None):
+        return(mymsmd.fieldsforname(token)[0])
+    else:
+        return(list(msFields).index(token))
+
+def GetFieldNamesForFieldId(u, mymsmd, msFields):
+    if (mymsmd != '' and mymsmd != None):
+        return(mymsmd.namesforfields(u)[0])
+    else:
+        print "B"
+        return(msFields[u])
 
 def getTelescopeNameFromCaltable(caltable):
     mytb = createCasaTool(tbtool)
