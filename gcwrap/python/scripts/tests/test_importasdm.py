@@ -658,10 +658,10 @@ class asdm_import5(test_base):
         
                 
     def test1_lazy1(self):
-        '''Asdm-import: Test good v1.2 input with default filler in lazy mode'''
+        '''Asdm-import: Test good v1.2 input with default filler in lazy mode, with_pointing_correction=True'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
-        self.res = importasdm(myasdm_dataset_name, lazy=True)
+        self.res = importasdm(myasdm_dataset_name, lazy=True, with_pointing_correction=True)
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.f17asdmindex",
@@ -725,23 +725,8 @@ class asdm_import5(test_base):
                                  "FEED",
                                  "FIELD",
                                  "FLAG_CMD",
-                                 "HISTORY",
                                  "OBSERVATION",
-                                 "POINTING",
-                                 "POLARIZATION",
-                                 "PROCESSOR",
-                                 "SOURCE",
-                                 "SPECTRAL_WINDOW",
-                                 "STATE",
-                                 "SYSCAL",
-                                 "ANTENNA",
-                                 "DATA_DESCRIPTION",
-                                 "FEED",
-                                 "FIELD",
-                                 "FLAG_CMD",
-                                 "HISTORY",
-                                 "OBSERVATION",
-                                 "POINTING",
+                                 #"POINTING", # expect difference since with_pointing_correction=True
                                  "POLARIZATION",
                                  "PROCESSOR",
                                  "SOURCE",
@@ -749,7 +734,7 @@ class asdm_import5(test_base):
                                  "STATE",
                                  "SYSCAL"]:
                     
-                    print "Subtable ",subtname
+                    print "\n*** Subtable ",subtname
                     excllist = []
                     if subtname=='SOURCE':
                         excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
@@ -766,9 +751,20 @@ class asdm_import5(test_base):
                     except:
                         retValue['success'] = False
                         print "ERROR for table ", subtname
+
+                print "\n*** Subtable POINTING"
+                try:
+                    retValue['success'] = retValue['success'] and not (th.compTables('reference.ms/POINTING', # expect difference since with_pointing_correction=True
+                                                                                     msname+'/POINTING', [], 0.0))
+                except:
+                    retValue['success'] = False
+                    print "ERROR: POINTING tables should differ in this test."
             
+
+
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
 
 class asdm_import6(test_base):
 
@@ -862,21 +858,6 @@ class asdm_import6(test_base):
                                  "FEED",
                                  "FIELD",
                                  "FLAG_CMD",
-                                 "HISTORY",
-                                 "OBSERVATION",
-                                 "POINTING",
-                                 "POLARIZATION",
-                                 "PROCESSOR",
-                                 "SOURCE",
-                                 "SPECTRAL_WINDOW",
-                                 "STATE",
-                                 "SYSCAL",
-                                 "ANTENNA",
-                                 "DATA_DESCRIPTION",
-                                 "FEED",
-                                 "FIELD",
-                                 "FLAG_CMD",
-                                 "HISTORY",
                                  "OBSERVATION",
                                  "POINTING",
                                  "POLARIZATION",
@@ -886,7 +867,7 @@ class asdm_import6(test_base):
                                  "STATE",
                                  "SYSCAL"]:
                     
-                    print "Subtable ",subtname
+                    print "\n*** Subtable ",subtname
                     excllist = []
                     if subtname=='SOURCE':
                         excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
@@ -1018,20 +999,6 @@ class asdm_import7(test_base):
                                  "FEED",
                                  "FIELD",
                                  "FLAG_CMD",
-                                 "HISTORY",
-                                 "OBSERVATION",
-                                 "POLARIZATION",
-                                 "PROCESSOR",
-                                 "SOURCE",
-                                 "SPECTRAL_WINDOW",
-                                 "STATE",
-                                 "SYSCAL",
-                                 "ANTENNA",
-                                 "DATA_DESCRIPTION",
-                                 "FEED",
-                                 "FIELD",
-                                 "FLAG_CMD",
-                                 "HISTORY",
                                  "OBSERVATION",
                                  "POLARIZATION",
                                  "PROCESSOR",
@@ -1040,7 +1007,7 @@ class asdm_import7(test_base):
                                  "STATE",
                                  "SYSCAL"]:
                     
-                    print "Subtable ",subtname
+                    print "\n*** Subtable ",subtname
                     excllist = []
                     if subtname=='SOURCE':
                         excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']
@@ -1149,20 +1116,6 @@ class asdm_import7(test_base):
                                  "FEED",
                                  "FIELD",
                                  "FLAG_CMD",
-                                 "HISTORY",
-                                 "OBSERVATION",
-                                 "POLARIZATION",
-                                 "PROCESSOR",
-                                 "SOURCE",
-                                 "SPECTRAL_WINDOW",
-                                 "STATE",
-                                 "SYSCAL",
-                                 "ANTENNA",
-                                 "DATA_DESCRIPTION",
-                                 "FEED",
-                                 "FIELD",
-                                 "FLAG_CMD",
-                                 "HISTORY",
                                  "OBSERVATION",
                                  "POLARIZATION",
                                  "PROCESSOR",
@@ -1171,7 +1124,7 @@ class asdm_import7(test_base):
                                  "STATE",
                                  "SYSCAL"]:
                     
-                    print "Subtable ",subtname
+                    print "\n*** Subtable ",subtname
                     excllist = []
                     if subtname=='SOURCE':
                         excllist=['POSITION', 'TRANSITION', 'REST_FREQUENCY', 'SYSVEL']

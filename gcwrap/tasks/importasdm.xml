@@ -187,7 +187,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="with_pointing_correction">
-      <description> add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833))</description>
+      <description> add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction</description>
       <value>False</value>
     </param>
 
@@ -323,7 +323,7 @@ bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
             default: false
 
 with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written 
-                            in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833)) 
+                            in MS::Pointing::direction 
            
   </example>
 

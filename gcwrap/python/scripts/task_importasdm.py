@@ -356,7 +356,6 @@ def importasdm(
         #
         # Populate the HISTORY table of the MS with informations about the context in which it's been created
         #
-        casalog.post("About to update the HISTORY of " + viso)
         try: 
             mslocal = mstool() 
             param_names = importasdm.func_code.co_varnames[:importasdm.func_code.co_argcount] 
@@ -370,7 +369,6 @@ def importasdm(
 
         if mslocal:
             mslocal = None 
-        casalog.post("Finished with the update of HISTORY in " + viso , "INFO")
         
         # Binary Flag processing
         if bdfflags:
