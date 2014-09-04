@@ -1670,8 +1670,12 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 void
 CubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  for (Int model=0; model < sm_->numberOfModels(); ++model)
-          ftm_p[model]->finalizeToVis();
+
+  if( ftm_p[0]->name() != "NewMultiTermFT" ) // Added this filter to prevent seg-fault in widebandmosaic regression that started after r30978.
+    {
+      for (Int model=0; model < sm_->numberOfModels(); ++model)
+	ftm_p[model]->finalizeToVis();
+    }
 }
 
 Bool
