@@ -19,6 +19,8 @@
 
 using namespace std;
 
+#define _ORIGIN LogOrigin("sdms", __func__, WHERE)
+
 namespace casac {
 
 sdms::sdms()
@@ -37,6 +39,7 @@ bool
 sdms::open(string const& ms_name)
 {
   bool rstat(false);
+  *itsLog << _ORIGIN;
   try {
     // In case already open, close it!
     close();
@@ -55,6 +58,7 @@ bool
 sdms::close()
 {
   bool rstat(false);
+  *itsLog << _ORIGIN;
   try {
     if(itsSd != 0) delete itsSd;
     itsSd = 0;
@@ -83,6 +87,7 @@ sdms::assert_valid_ms()
 string
 sdms::name()
 {
+  *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
     return itsSd->name();
@@ -97,6 +102,7 @@ bool
 sdms::scale(float const factor)
 {
   bool rstat(false);
+  *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
     itsSd->scale(factor);
@@ -121,6 +127,7 @@ sdms::set_selection(::casac::variant const& spw,
 		    string const& taql)
 {
   bool rstat(false);
+  *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
 
