@@ -1485,6 +1485,10 @@ class test_regridms_multiple_spws(test_base_compare):
         
         self.mode['WEIGHT'] = "absolute"
         self.tolerance['WEIGHT'] = 1E-5
+        
+        # Exlude FEED from the list of sub-tables to compare because cvel does not remove duplicates
+        self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FIELD','/FLAG_CMD',
+                        '/POINTING','/POLARIZATION','/PROCESSOR','/STATE']
 
         self.post_process()          
         
