@@ -211,6 +211,11 @@ void PlotMSDataSummaryTab::doPlotting(){
 
 void PlotMSDataSummaryTab::completePlotting( bool success ){
 	int dataCount = dataList.size();
+	//Reset the plotIndex, which may not be reset if the person is scripting.
+	//and has not clicked the 'plot' button.  Please see CAS-6813.
+	if ( plotIndex >= dataCount ){
+		plotIndex = 0;
+	}
 	if ( plotIndex < dataCount ){
 		completePlots[dataList[plotIndex]] = success;
 	}

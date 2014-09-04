@@ -170,7 +170,6 @@ PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
 }
 
 void PlotMSApp::clearPlots(){
-	mixedModeFlag = true;
 	return itsPlotManager_.clearPlotsAndCanvases( false );
 }
 
@@ -242,13 +241,8 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 	}
 	 ActionCacheLoad loadCacheAction( itsPlotter_, updatePlots, f);
 	 bool threading = itsPlotter_->isInteractive();
-
-	 //Only use threading if the GUI is shown (threading) AND
-	 //the user is not issuing script commands (mixedModeFlag).
-	 //Please see CAS-6813.
-	 bool threadedOp = threading && !mixedModeFlag;
-	 loadCacheAction.setUseThreading( threadedOp );
-
+	 loadCacheAction.setUseThreading( threading );
+	 
 	 loadCacheAction.setSetupPlot( setupPlot );
 	 bool result = loadCacheAction.doAction( this );
 
@@ -299,7 +293,6 @@ void PlotMSApp::initialize(bool connectToDBus, bool userGui) {
 
 	its_want_avoid_popups=false;
 	operationCompleted = true;
-	mixedModeFlag = false;
 	
     itsParameters_.addWatcher(this);
 
