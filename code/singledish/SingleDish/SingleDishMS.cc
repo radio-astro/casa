@@ -159,7 +159,7 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
 		  arrayExpr,stateExpr,obsExpr)) { // no valid selection
     reset_selection();
     os << "Selection is reset." << LogIO::POST;
-  } else {
+  } else if (verbose) {
     // selection Summary
     os << "[Selection Summary]" << LogIO::POST;
     if (obsExpr != "")
