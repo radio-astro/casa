@@ -211,6 +211,11 @@ void PlotMSDataSummaryTab::doPlotting(){
 
 void PlotMSDataSummaryTab::completePlotting( bool success ){
 	int dataCount = dataList.size();
+	//Reset the plotIndex, which may not be reset if the person is scripting.
+	//and has not clicked the 'plot' button.  Please see CAS-6813.
+	if ( plotIndex >= dataCount ){
+		plotIndex = 0;
+	}
 	if ( plotIndex < dataCount ){
 		completePlots[dataList[plotIndex]] = success;
 	}
@@ -270,6 +275,18 @@ void PlotMSDataSummaryTab::observeModKeys()   {
 	bool always_replot_checked = ui.forceReplotChk->isChecked();
 	its_force_reload = using_shift_key  ||  always_replot_checked;
 }
+
+  /*vector<String> PlotMSDataSummaryTab::getFiles() const {
+	vector<String> loadedFiles;
+	for ( int i = 0; i < dataList.size(); i++ ){
+		String fileName = dataList[i]->getFile();
+		if ( fileName.length() > 0 ){
+			loadedFiles.push_back( fileName );
+		}
+	}
+	return loadedFiles;
+	}*/
+
 
 void PlotMSDataSummaryTab::resizeEvent( QResizeEvent* /*event*/ ){
 	QSize currentSize = size();

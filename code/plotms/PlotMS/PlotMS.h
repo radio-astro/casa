@@ -203,14 +203,6 @@ private:
 	//in an unsuccessful update.
     bool operationCompleted;
 
-    //Added for CAS-6813.  When this flag is set through a command
-    //to clearPlots it alerts the code to the fact that the user is
-    //using "mixed mode", i.e., bringing up the GUI but issuing script
-    //commands through casapy.  It turns off threaded operation of
-    //cache loading to ensure that the plot gets updated.
-    bool mixedModeFlag;
-
-    
     // Initializes a new PlotMS object, to be called from constructor.
     void initialize(bool connectToDBus, bool userGui );
     
