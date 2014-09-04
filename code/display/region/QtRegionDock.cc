@@ -37,6 +37,8 @@
 #include <display/DisplayErrors.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
+extern int qInitResources_QtRegionDock();
+
 namespace casa {
 	namespace viewer {
 
@@ -46,7 +48,7 @@ namespace casa {
 			current_color_index(6 /*** magenta ***/ ), dismissed(false),
 			mouse_in_dock(false) {
 			setupUi(this);
-
+			qInitResources_QtRegionDock();
 			// there are two standard Qt, dismiss icons...
 			// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 			// dismissRegion->setIcon(style()->standardIcon(QStyle::SP_DockWidgetCloseButton));
@@ -178,6 +180,7 @@ namespace casa {
 			// emit regionChange( r, "created" );
 
 			connect( r, SIGNAL(regionChange(viewer::Region*,std::string)), this, SIGNAL(regionChange(viewer::Region*,std::string)));
+			connect( r, SIGNAL(showHistogramTool()), this, SIGNAL(showHistogramTool()));
 			connect( state, SIGNAL(outputRegions(const QString &,const QString &,const QString&,const QString&)), SLOT(output_region_event(const QString &,const QString &,const QString&,const QString&)) );
 			connect( state, SIGNAL(loadRegions(const QString &,const QString &)), SIGNAL(loadRegions(const QString &,const QString&)) );
 			connect( this, SIGNAL(region_stack_change(QWidget*)), state, SLOT(stackChange(QWidget*)) );

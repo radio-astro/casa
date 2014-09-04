@@ -57,6 +57,9 @@ namespace casa {
 		void showGraph( int index );
 		~HistogramTab();
 
+	signals:
+		void showHistogramTool();
+
 	private slots:
 		/**
 		 * When the 'next' button is pressed on the histogram.

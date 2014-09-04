@@ -49,6 +49,17 @@
       </spacer>
      </item>
      <item>
+      <widget class="QToolButton" name="toolButton">
+       <property name="text">
+        <string>...</string>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>:/images/hist.png</normaloff>../QtViewer/icons/hist.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="nextButton">
        <property name="enabled">
         <bool>false</bool>

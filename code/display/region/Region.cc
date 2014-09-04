@@ -3018,6 +3018,7 @@ namespace casa {
 		void Region::initHistogram() {
 			if ( histogram == NULL ) {
 				histogram = new HistogramTab(state());
+				connect( histogram, SIGNAL(showHistogramTool()), this, SIGNAL(showHistogramTool()));
                 histogram->setContentsMargins(0, 0, 0, 0);
 				state()->addHistogram( histogram );
 			}

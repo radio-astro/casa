@@ -436,6 +436,7 @@ namespace casa {
 			                           const QList<double> &world_x, const QList<double> &world_y,
 			                           const QList<int> &pixel_x, const QList<int> &pixel_y,
 			                           const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+			void showHistogramTool();
 
 		protected slots:
 			void refresh_canvas_event( );

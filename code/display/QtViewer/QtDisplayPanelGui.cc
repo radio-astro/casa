@@ -285,6 +285,7 @@ void QtDisplayPanelGui::construct_( QtDisplayPanel *newpanel, const std::list<st
 		regionDock_  = new viewer::QtRegionDock(this, qdp_);
 		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));
 		connect( regionDock_, SIGNAL(loadRegions(const QString&, const QString &)), SLOT(loadRegions(const QString&, const QString &)) );
+		connect( regionDock_, SIGNAL(showHistogramTool()), this, SLOT(showHistogram()));
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regions");
 		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);

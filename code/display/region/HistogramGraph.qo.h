@@ -59,6 +59,7 @@ namespace casa {
 
 	signals:
 		void showGraph( int nextIndex );
+		void showHistogramTool();
 
 	private slots:
 		void nextGraph();

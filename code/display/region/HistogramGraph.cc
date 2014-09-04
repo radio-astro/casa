@@ -35,6 +35,7 @@ namespace casa {
 		: QWidget(parent) {
 		ui.setupUi(this);
 		initPlot();
+		connect( ui.toolButton, SIGNAL(clicked()), this, SIGNAL(showHistogramTool()));
 		connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(nextGraph()));
 	}
 

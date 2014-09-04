@@ -145,6 +145,7 @@ namespace casa {
 			void loadRegions( const QString &path, const QString &type );
 
 			void region_stack_change(QWidget*);
+			void showHistogramTool();
 
 		public slots:
 			void updateRegionState(QtDisplayData*);

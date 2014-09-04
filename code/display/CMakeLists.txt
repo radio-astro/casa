@@ -231,6 +231,7 @@ casa_qt4_add_resources( outfiles_qrc QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAut
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtPlotter.qrc OPTIONS -name QtPlotter )
 casa_qt4_add_resources( outfiles_qrc QtPlotter/QtDrawer.qrc OPTIONS -name QtDrawer )
 casa_qt4_add_resources( outfiles_qrc QtViewer/QtViewer.qrc OPTIONS -name QtViewer )
+casa_qt4_add_resources( outfiles_qrc region/QtRegionDock.qrc OPTIONS -name QtRegionDock )
 casa_qt4_add_resources( outfiles_qrc Slicer/Slicer.qrc OPTIONS -name Slicer )
 
 include_directories( ${CMAKE_CURRENT_BINARY_DIR}/QtAutoGui ) # for generated code

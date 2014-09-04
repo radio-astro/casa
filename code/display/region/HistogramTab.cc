@@ -56,6 +56,7 @@ namespace casa {
 				HistogramGraph* histogramGraph = new HistogramGraph( this );
 				histogramGraph->setImage( image );
 				connect( histogramGraph, SIGNAL(showGraph(int)), this, SLOT(showNextGraph(int)));
+				connect( histogramGraph, SIGNAL(showHistogramTool()), this, SIGNAL(showHistogramTool()));
 				graphs.insert( graphName, histogramGraph );
 				int addIndex = ui.stackedWidget->addWidget( histogramGraph );
 				if ( initialStackIndex < 0 ) {
