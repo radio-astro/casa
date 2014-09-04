@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+<!-- This is the param set for sdscale -->
+
+<task type="function" name="sdmsscale" startup="false" category="single dish">
+
+  <shortdescription>Scale the sd spectra</shortdescription>
+
+  <description>
+Task sdscale performs scaling of single-dish spectra by scaling
+factor given by parameter named factor.
+By setting scaletsys = True, associated Tsys is also scaled.
+  </description>
+
+  <input>
+
+    <param type="string" name="infile"  mustexist="true">
+    <description>name of input SD dataset</description>
+    <value></value>
+    </param>
+
+    <param type="string" name="antenna">
+      <description>select an antenna name or ID, e.g. \'PM03\'</description>
+      <value></value>
+    </param> 
+
+    <param type="string" name="field">
+      <description>select data by field IDs and names, e.g. \'3C2*\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="spw">
+      <description>select data by IF IDs (spectral windows), e.g. \'3,5,7\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="timerange">
+	    <description>select data by time range, e.g, \'09:14:0~09:54:0\' (\'\' = all) (see examples in help)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="scan">
+      <description>select data by scan numbers, e.g. \'21~23\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="pol">
+      <description>select data by polarization IDs, e.g. \'0,1\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
+    <param type="double" name="factor">
+        <description>scaling factor float</description>
+	<value type="double">1.0</value>
+    </param>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+------------------
+Keyword arguments
+------------------
+infile -- name of input SD dataset
+antenna -- select an antenna name or ID
+        default: '' (use all antennas)
+        example: 'PM03'
+field -- select data by field IDs and names
+        default: '' (use all fields)
+        example: field='3C2*' (all names starting with 3C2)
+                 field='0,4,5~7' (field IDs 0,4,5,6,7)
+                 field='0,3C273' (field ID 0 or field named 3C273)
+        this selection is in addition to the other selections to data
+spw -- select data by IF IDs (spectral windows)/channels
+        NOTE channel range selection is valid only in mode='manual'
+        default: '' (use all IFs and channels)
+        example: spw='3,5,7' (IF IDs 3,5,7; all channels)
+                 spw='&lt;2' (IF IDs less than 2, i.e., 0,1; all channels)
+                 spw='115GHz' (IFs that overlaps 115Hz; all channels)
+                 spw='0:5~61' (IF ID 0; channels 5 to 61)
+                 spw='3:10~20;50~60' (select multiple channel ranges within IF ID 3)
+                 spw='3:10~20,4:0~30' (select different channel ranges for IF IDs 3 and 4)
+                 spw='1~4;6:15~48' (for channels 15 through 48 for IF IDs 1,2,3,4 and 6)
+        this selection is in addition to the other selections to data
+timerange -- select data by time range
+        default: '' (use all)
+        example: timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                 Note: YYYY/MM/DD can be dropped as needed:
+                 timerange='09:14:00~09:54:00' # this time range
+                 timerange='09:44:00' # data within one integration of time
+                 timerange='&gt;10:24:00' # data after this time
+                 timerange='09:44:00+00:13:00' #data 13 minutes after time
+        this selection is in addition to the other selections to data
+scan -- select data by scan numbers
+        default: '' (use all scans)
+        example: scan='21~23' (scan IDs 21,22,23)
+        this selection is in addition to the other selections to data
+pol -- select data by polarization IDs
+        default: '' (use all polarizations)
+        example: pol='0,1' (polarization IDs 0,1)
+        this selection is in addition to the other selections to data
+factor -- scaling factor. float
+       default: 1.0 (no scaling)
+
+-----------
+DESCRIPTION
+-----------
+Task sdscale performs scaling of single-dish spectra.
+  </example>
+
+</task>
+
+</casaxml>

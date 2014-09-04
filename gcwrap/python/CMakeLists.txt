@@ -61,6 +61,7 @@ scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
 scripts/sdutil.py
+scripts/sdmsutil.py
 scripts/setjy_helper.py
 scripts/simutil.py
 scripts/solar_system_setjy.py
@@ -186,6 +187,7 @@ scripts/task_tsdplot.py
 scripts/task_tsdreduce.py
 scripts/task_tsdsave.py
 scripts/task_tsdstat.py
+scripts/task_sdmsscale.py
 scripts/task_setjy.py
 scripts/task_ssoflux.py
 scripts/task_simalma.py

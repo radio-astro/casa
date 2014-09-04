@@ -117,6 +117,7 @@ tsdplot.xml
 tsdreduce.xml
 tsdsave.xml
 tsdstat.xml
+sdmsscale.xml
 setjy.xml
 ssoflux.xml
 simalma.xml
