@@ -346,7 +346,7 @@ coordinate system
 
 \item <link anchor="images:coordsys.frequencytovelocity.function">frequencytovelocity</link> - Convert from frequency to velocity
 
-\item <link anchor="images:coordsys.frequencytofrequency.function">frequencytofrequency</link> - Convert from frequency to frequency via a velocity offset
+\item <link anchor="images:coordsys.frequencytofrequency.function">frequencytofrequency</link> - Apply a relativistic Doppler shift to a list of frequencies
 
 \item <link anchor="images:coordsys.velocitytofrequency.function">velocitytofrequency</link> - Convert from velocity to frequency
 
@@ -1192,12 +1192,12 @@ print 'pixel, world axes =', rtn['pixel'], rtn['world']
 
  
    <method type="function" name="frequencytofrequency">
-   <shortdescription>Convert frequency to frequency with an offset</shortdescription>
+   <shortdescription>Apply relativistic Doppler shift to a list of frequencies</shortdescription>
    
 <input>  
   
      <param type="doubleArray" direction="in" name="value">
-     <description>Frequency to convert</description>
+     <description>Frequencies to convert</description>
      </param>
   
      <param type="string" direction="in" name="frequnit">
@@ -1208,21 +1208,17 @@ print 'pixel, world axes =', rtn['pixel'], rtn['world']
   
      <param type="any" direction="in" name="velocity">
 	     <any type="variant"/>
-     <description>Velocity offset</description>
+     <description>Velocity</description>
      <value></value>
      </param>  
   
-     <param type="string" direction="in" name="doppler">
-     <description>Velocity doppler definition</description>
-     <value>radio</value>
-     </param>   
 </input>
 <returns type="doubleArray"/>
   
 <description>
-
-This function <!--(short-hand name {\stf ftf})--> converts frequencies to
-frequencies by applying (subtracting) a velocity offset. 
+This function converts frequencies to frequencies by applying a 
+relativistic Doppler shift: 
+f_out = f_in * sqrt((1.-v/c)/(1.+v/c)) . 
 
 The input frequencies are specified via a vector of numeric values and
 a specified unit ({\stfaf frequnit}).  If you don't give a frequency
@@ -1230,54 +1226,25 @@ unit, it is assumed that the units are those given by function <link
 anchor="images:coordsys.units.function">coordsys units()</link> for
 the spectral coordinate.
 
-This function does not make any frame conversions (e.g.  LSR to BARY)
-but you can specifiy the velocity doppler definition for the velocity
-via the {\stfaf doppler} argument (see <link
-anchor="images:image.summary.function">image summary()</link> for
-possible values).
+This function does not make any frame conversions (e.g.  LSR to BARY).
 
 This function fails if there is no spectral coordinate
 in the Coordinate System. See also function
 <link anchor="images:coordsys.frequencytovelocity.function">frequencytovelocity</link>.
-
-This function presently uses an approximation only valid for velocities
-less than the speed of light.  The correction tends to zero as the
-velocity appraches the speed of light. You will get NaNs for larger
-values of the velocity.
-
 </description>
 
 <example>
-"""
-A conversion from velocity to absolute frequency or vice versa
-must assume a rest frequency.
-This would be taken from the coordinate system
-which can, e.g., be taken from an image:
-
   ia.open('M100line.image')
   mycs = ia.coordsys()
   ia.close()
 
-In this example, the RESTFREQ of the image is 115271201800.0 Hz.
-
-  mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='0.', doppler='radio')
-
-then results in 
-  array([ 1.15271202e+11])
-i.e. the same as the input frequency since the velocity shift was zero.
-
-mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='1km/s', doppler='radio')
+  mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='1000km/s')
 results in
-array([ 1.15270817e+11])
+  array([114887337607.0])
 
 Let's see if this is correct
-v_radio = c*(f0-f)/f0 => f = -v_radio * f0/c + f0 = -1000 * 115271201800.0 / 299792458.0 + 115271201800.0 = 115270817296.65869
-
- 115270817296.65869 - mycs.frequencytofrequency(value=[115271201800.0], frequnit='Hz', velocity='1km/s', doppler='radio')
-results in
-  array([-0.64129639])
-i.e. our calculation is correct to 0.6 Hz or 5.5E-10 percent.
-"""
+  print 115271201800.0*sqrt((1.-1000000./299792458.0)/(1.+1000000./299792458.0))
+Result: 1.14887337607e+11
 </example>
 </method>
 

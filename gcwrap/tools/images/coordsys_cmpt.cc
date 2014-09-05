@@ -641,8 +641,7 @@ record* coordsys::findcoordinate(
 std::vector<double>
 coordsys::frequencytofrequency(const std::vector<double>& value,
 			       const std::string& frqUnit,
-			       const ::casac::variant& q_velocity,
-			       const std::string& doppler)
+			       const ::casac::variant& q_velocity)
 {
   std::vector<double> rstat;
   _setup(__func__);
@@ -656,14 +655,7 @@ coordsys::frequencytofrequency(const std::vector<double>& value,
   }
   Quantum<Double> velocity = casaQuantity(q_velocity);
 
-  //
-  casa::MDoppler::Types dopplerType;
-  if (!casa::MDoppler::getType(dopplerType, doppler)) {
-    *_log << LogIO::WARN << "Illegal velocity doppler, using RADIO" << LogIO::POST;
-    dopplerType = casa::MDoppler::RADIO;
-  }
-  //
-  casa::MDoppler dop (velocity, dopplerType);
+  casa::MDoppler dop (velocity, casa::MDoppler::RADIO); // Doppler type does not make a difference here
   Quantum<Vector<Double> > tmp(frequency, Unit(freqUnit));
   (dop.shiftFrequency(tmp).getValue()).tovector(rstat);
 
