@@ -244,8 +244,44 @@ public:
 	static Bool mergeFreqOffsetTables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
 	static Bool mergeCalDeviceSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
 	static Bool mergeSysPowerSubtables(Vector<String> filenames, Vector<uInt> mapSubmsSpwid);
-	template <class T>  static Bool columnOk(ArrayColumn<T> column);
-	template <class T>  static Bool columnOk(ScalarColumn<T> column);
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+	//template <class T>  Bool MSTransformDataHandler::columnOk (ArrayColumn<T> column)
+	template <class T>  static Bool columnOk(ArrayColumn<T> column)
+        {
+	     Bool ret;
+	     if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
+	       {
+		 ret = True;
+	       }
+	     else
+	       {
+		 ret = False;
+	       }
+
+	     return ret;
+	}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+	//  template <class T>  Bool MSTransformDataHandler::columnOk (ScalarColumn<T> column)
+	template <class T>  static Bool columnOk(ScalarColumn<T> column)
+        {
+	      Bool ret;
+	      if (column.isNull()==false and column.hasContent()==true)
+		{
+		  ret = True;
+		}
+	      else
+		{
+		  ret = False;
+		}
+	      
+	      return ret;
+	}
+
 
 
 	// Accesors for the MS objects

@@ -4113,38 +4113,38 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-template <class T>  Bool MSTransformDataHandler::columnOk (ArrayColumn<T> column)
-{
-	Bool ret;
-	if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
-	{
-		ret = True;
-	}
-	else
-	{
-		ret = False;
-	}
+// template <class T>  Bool MSTransformDataHandler::columnOk (ArrayColumn<T> column)
+// {
+// 	Bool ret;
+// 	if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
+// 	{
+// 		ret = True;
+// 	}
+// 	else
+// 	{
+// 		ret = False;
+// 	}
 
-	return ret;
-}
+// 	return ret;
+// }
 
-// -----------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------
-template <class T>  Bool MSTransformDataHandler::columnOk (ScalarColumn<T> column)
-{
-	Bool ret;
-	if (column.isNull()==false and column.hasContent()==true)
-	{
-		ret = True;
-	}
-	else
-	{
-		ret = False;
-	}
+// // -----------------------------------------------------------------------
+// //
+// // -----------------------------------------------------------------------
+// template <class T>  Bool MSTransformDataHandler::columnOk (ScalarColumn<T> column)
+// {
+// 	Bool ret;
+// 	if (column.isNull()==false and column.hasContent()==true)
+// 	{
+// 		ret = True;
+// 	}
+// 	else
+// 	{
+// 		ret = False;
+// 	}
 
-	return ret;
-}
+// 	return ret;
+// }
 
 
 // -----------------------------------------------------------------------
