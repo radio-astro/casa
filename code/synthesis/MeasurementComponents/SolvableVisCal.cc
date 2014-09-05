@@ -3360,15 +3360,8 @@ void SolvableVisCal::normSolnArray(Array<Complex>& sol,
       factor/=abs(factor);
     }
 
-#define NEWWTSCALE True
-
     // Determine amplitude normalization factor
-    if (NEWWTSCALE) 
       factor*=calcPowerNorm(amp,solOK);
-    else {
-      amp(!solOK)=0.0f;
-      factor*=Complex(sum(amp)/Float(ntrue(solOK)));
-    }
     
     // Apply the normalization factor, if non-zero
     if (abs(factor) > 0.0)

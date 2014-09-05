@@ -956,55 +956,6 @@ void BJones::fillChanGapArray(Array<Complex>& sol,
 
 }
 
-void BJones::syncWtScale() {
-
-  if (True || cpp_) {
-    VisJones::syncWtScale();
-    //cout << "currWtScale().shape() = " << currWtScale().shape() << endl;
-    cout << "BJones by VisJones: currWtScale() = " << currWtScale() << endl;
-    return;
-  }
-
-  Cube<Float> amps;
-  amps=Cube<Float>(ci_->tresultF(currObs(),currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
-  Cube<Bool> ampfl;
-  ampfl=ci_->tresultFlag(currObs(),currField(),currSpw());
-  IPosition ash=amps.shape();
-
-  // Calculate 1/square(mean(1/amp(ch))) for all B channels
-  //  (even if we are calibrating a subset of channels)
-  Matrix<Float> newWtSc(ash(0),ash(2));
-  newWtSc.set(Float(1.0));
-  Vector<Float> thisamp;
-  Vector<Bool> thisfl;
-  for (Int iant=0;iant<ash(2);++iant) {
-    for (Int ipol=0;ipol<ash(0);++ipol) {
-      thisfl.reference(ampfl.xyPlane(iant).row(ipol));
-      thisamp.reference(amps.xyPlane(iant).row(ipol));
-      thisfl(thisamp<FLT_EPSILON)=True;  // flag any zeros
-      Int ngoodch=nfalse(thisfl);
-      if (ngoodch>0) {
-	Float thisWtSc(0.0);
-	for (Int ich=0;ich<ash(1);++ich)
-	  if (!thisfl(ich)) 
-	    thisWtSc+=Float(1.0)/thisamp(ich);
-	thisWtSc/=Float(ngoodch);
-	newWtSc(ipol,iant)=Float(1.0)/thisWtSc/thisWtSc;
-      }
-    }
-  }
-
-  //  cout << "newWtSc.shape() = " << newWtSc.shape() << endl;
-  //  cout << "newWtSc="<< newWtSc << endl;
-  //  cout << "Ratio: " << newWtSc/currWtScale() << endl;
-
-  // Assign to currWtScale
-  currWtScale().assign(newWtSc);
-
-  cout << "BJones local: currWtScale() = " << currWtScale() << endl;
-
-}
-
 void BJones::calcWtScale() {
 
   //  cout << "BJones::calcWtScale()" << endl;

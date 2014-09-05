@@ -308,7 +308,6 @@ public:
 protected:
 
   // B-specific weight scaling factors
-  virtual void syncWtScale();
   virtual void calcWtScale(); // B-specific channel-collapsing weight scale calc
 
 private:

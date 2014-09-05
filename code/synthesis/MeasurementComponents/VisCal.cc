@@ -833,7 +833,7 @@ void VisMueller::syncMueller(const Bool& doInv) {
   }
 
   // weight calibration
-  if (calWt()) syncWtScale2();
+  if (calWt()) syncWtScale();
 
   // Ensure Mueller matrix renderer is correct
   createMueller();
@@ -975,35 +975,6 @@ void VisMueller::createMueller() {
 }
 
 void VisMueller::syncWtScale() {
-
-  // Ensure proper size
-  currWtScale().resize(nPar(),nBln());
-  currWtScale()=0.0;
-
-  IPosition blc(3,0,0,0);
-  IPosition trc(3,nPar()-1,0,nBln()-1);
-
-  Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(currMElem()(blc,trc).shape()));
-
-  // Accumulate channels to form freq-INdep wt scale 
-  for (Int ich=0;ich<nChanMat();++ich) {
-    blc(1)=trc(1)=ich;
-    cWS += amplitude(currMElem()(blc,trc));
-  }
-  currWtScale()/=Float(nChanMat());
-
-  // Square it
-  currWtScale()=square(currWtScale());
-
-  // Invert non-zero elements
-  LogicalArray mask((currWtScale()>0.0f));
-  MaskedArray<Float> nz(currWtScale(),mask);
-  nz=Float(1.0)/nz;
-
-}
-
-void VisMueller::syncWtScale2() {
 
 
   // Ensure proper size according to Mueller matrix type
@@ -1336,10 +1307,8 @@ void VisJones::syncJones(const Bool& doInv) {
 
   }
 
-#define NEWWTSCALE True
-
-  // New pre-inv syncWtScale:
-  if (NEWWTSCALE && calWt()) syncWtScale2();
+  // Pre-inv syncWtScale:
+  if (calWt()) syncWtScale();
 
   // Ensure Jones Matrix renders are ok
   this->createJones();
@@ -1349,9 +1318,6 @@ void VisJones::syncJones(const Bool& doInv) {
 
   // Set matrix elements according to OK flags
   setMatByOk();
-
-  // Form weight update factors, if necessary
-  if (!NEWWTSCALE && calWt()) syncWtScale();
 
   // Jones matrices now valid
   validateJ();
@@ -1496,70 +1462,7 @@ void VisJones::createJones() {
 
 void VisJones::syncWtScale() {
 
-  Int nWtScale=jonesNPar(jonesType());
-
-  // Ensure proper size according to Jones matrix type
-  switch (this->jonesType()) {
-  case Jones::Scalar: 
-  case Jones::Diagonal: {
-    currWtScale().resize(nWtScale,nAnt());
-    break;
-  }
-  default: {
-    // Only diag and scalar versions can adjust weights
-    //    cout<< "Turning off calWt()" << endl;
-    calWt()=False;
-    return;
-    break;
-  }
-  }
-
-  currWtScale()=0.0;
-
-  IPosition blc(3,0,0,0);
-  IPosition trc(3,nWtScale-1,0,nAnt()-1);
-
-  Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
-  Cube<Float> cWSswt(cWS.shape(),0.0);
-  Cube<Float> cWSi(cWS.shape(),0.0);
-  Cube<Float> cWSiwt(cWS.shape(),0.0);
-
-  // Accumulate channels to form freq-INdep wt scale 
-  //  (handle flagged channels properly)
-  for (Int ich=0;ich<nChanMat();++ich) {
-    blc(1)=trc(1)=ich;
-    //    cout << "amps = " << amplitude(currJElem()(blc,trc));
-
-    //    cWSi=amplitude(currCPar()(blc,trc));
-    cWSi=amplitude(currJElem()(blc,trc));
-    cWSi(!currJElemOK()(blc,trc))=0.0;     // zero flagged amps
-
-    cWSiwt=0.0;
-    cWSiwt(currJElemOK()(blc,trc))=1.0;
-
-    // Add them in
-    cWS += cWSi;
-    cWSswt += cWSiwt;
-  }
-
-  cWS(cWSswt<FLT_EPSILON)=1.0;
-  cWSswt(cWSswt<FLT_EPSILON)=1.0;  // avoid /0 below
-  cWS/=cWSswt;
-
-  // Square it
-  currWtScale()=square(currWtScale());
-
-  // Invert non-zero elements
-  LogicalArray mask((currWtScale()>0.0f));
-  MaskedArray<Float> nz(currWtScale(),mask);
-  nz=Float(1.0)/nz;
-
-}
-
-void VisJones::syncWtScale2() {
-
-  //  cout << "VJ::syncWtScale2 (" << typeName() << ")" << endl;
+  //  cout << "VJ::syncWtScale (" << typeName() << ")" << endl;
 
 
   // Ensure proper size according to Jones matrix type
@@ -1583,7 +1486,7 @@ void VisJones::syncWtScale2() {
   calcWtScale();
 
 
-  //  cout << "VJ::syncWtScale2: currWtScale() = " << currWtScale() << endl;
+  //  cout << "VJ::syncWtScale: currWtScale() = " << currWtScale() << endl;
 
 }
 

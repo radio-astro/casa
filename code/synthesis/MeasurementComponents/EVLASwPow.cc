@@ -461,22 +461,6 @@ void EVLASwPow::fillTcals() {
 
 }
 
-// Local version to extract integration time and bandwidth
-void EVLASwPow::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial) {
-
-  // Calculate Nyquist factor so we get weights right
-  //  (sqrt because it will be applied in antenna-based manner)
-  nyquist_=Float(sqrt(2.0*vb.exposure()(0)*effChBW_(currSpw())));
-		 
-  //  cout << "currSpw() = " << currSpw() << " nyquist_= " << nyquist_ << endl;
-
-  // Call parent to get the rest done as usual
-  GJones::applyCal(vb,Vout,trial);
-
-}
-  
-
-
 void EVLASwPow::calcAllJones() {
 
   // 0th and 2nd pars are the gains
@@ -496,7 +480,6 @@ void EVLASwPow::syncWtScale() {
 
   currWtScale() = 1.0f/Tsys;
   currWtScale()*=correff_; // reduce by correlator efficiency (per ant)
-  currWtScale()*=nyquist_;
 
   //  cout << "Tsys = " << Tsys << endl;
   //  cout << "currWtScale() = " << currWtScale() << endl;

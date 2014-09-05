@@ -89,14 +89,11 @@ protected:
   // The parameter array is not (just) the Jones matrix element array
   virtual Bool trivialJonesElem() { return False; };
 
-  // Local version to extract integration time and bandwidth
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
-  
   // Calculate Jones matrix elements (slice out the gains)
   virtual void calcAllJones();
 
   // Synchronize the weight-scaling factors
-  //  Weights are multiplied by G*G/Tsys per antenna
+  //  Weights are multiplied by 1/Tsys(K) per antenna
   virtual void syncWtScale();
 
   // Experimenting with updateWt
