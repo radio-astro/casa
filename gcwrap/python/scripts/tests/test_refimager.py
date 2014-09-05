@@ -17,7 +17,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      #restoringbeam='30.0arcsec'
 
      # Interaction ON or OFF
-     interactive=False
+     interactive=True
      #mask='ttt.mask'
      mask=''
      #mask = 'circle[[50pix,50pix],10pix]'

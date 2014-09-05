@@ -2511,6 +2511,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      }
 	  }// if isdefined(restoringbeam)
+
+	
+	err += readVal( inrec, String("interactive"), interactive );
 	
 	err += verify();
 	
@@ -2541,7 +2544,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nTaylorTerms=1;
     scales.resize(1); scales[0]=0.0;
     maskString="";
-    
+    interactive=False;
   }
 
   Record SynthesisParamsDeconv::toRecord()
@@ -2555,6 +2558,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     decpar.define("ntaylorterms",nTaylorTerms);
     decpar.define("scales",scales);
     decpar.define("mask",maskString);
+    decpar.define("interactive",interactive);
 
     return decpar;
   }

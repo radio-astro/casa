@@ -297,6 +297,7 @@ public:
   Int nTaylorTerms; 
   Vector<Float> scales;
   String maskString;
+  Bool interactive;
 
   GaussianBeam restoringbeam;
   String usebeam;

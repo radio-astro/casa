@@ -31,8 +31,8 @@ namespace casac {
   synthesisiterbot::synthesisiterbot():
     itsIterBot(NULL)
 {
-  itsIterBot = new SynthesisIterBot() ;
-  ////  itsIterBot->openDBus( );
+  //  itsIterBot = new SynthesisIterBot() ;
+  itsIterBot = new SynthesisIterBotWithOldGUI() ;
 }
 
 synthesisiterbot::~synthesisiterbot()
@@ -77,6 +77,40 @@ casac::record* synthesisiterbot::getiterationdetails()
   return rstat;
 }
 
+casac::record* synthesisiterbot::pauseforinteraction()
+{
+  casac::record* rstat;
+
+  try 
+    {
+      rstat = fromRecord( itsIterBot->pauseForUserInteractionOld() );
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+/*
+std::vector<int> synthesisiterbot::pauseforinteraction()
+{
+  std::vector<int> rstat;
+
+  try 
+    {
+      Vector<Int> retcode = itsIterBot->pauseForUserInteraction() ;
+      rstat.resize( retcode.nelements() );
+      for (uInt i=0;i<retcode.nelements();i++) rstat[i]=retcode[i];
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+*/
 casac::record* synthesisiterbot::getiterationsummary()
 {
   casac::record* rstat(0);

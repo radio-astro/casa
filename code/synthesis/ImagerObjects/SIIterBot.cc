@@ -174,7 +174,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		/* If autocalc, compute cyclethresh from peak res, cyclefactor and psf sidelobe 
 		   Otherwise, the user has explicitly set it (interactively) for this minor cycle */
-		if( itsIsCycleThresholdAuto == True )  updateCycleThreshold();
+		if( itsIsCycleThresholdAuto == True ) { 
+		  updateCycleThreshold(); 
+		  //cout << "Updating cyc thresh" << endl; 
+		}
+		//		else { 
+		//		  cout << "NOT updating cyc thresh" << endl; 
+		//		}
 		itsIsCycleThresholdAuto = True; /* Reset this, for the next round */
 
 		/* Now that we have set the threshold, zero the peak residual 
@@ -435,6 +441,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		returnRecord.define( RecordFieldId("threshold"),  itsThreshold);    
 		if( itsIsCycleThresholdAuto == True )  updateCycleThreshold();
+		itsIsCycleThresholdAuto = True; /* Reset this, for the next round */
+
 		returnRecord.define( RecordFieldId("cyclethreshold"),itsCycleThreshold);
 		returnRecord.define( RecordFieldId("interactivethreshold"), itsInteractiveThreshold);  
 
@@ -536,7 +544,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			changeInteractiveNiter( recordIn.asInt(RecordFieldId("interactiveniter")) );
     
 		if (recordIn.isDefined("threshold")) 
-		    changeCycleThreshold( readThreshold( recordIn, "threshold" ) );
+		    changeThreshold( readThreshold( recordIn, "threshold" ) );
 		
 		if (recordIn.isDefined("cyclethreshold")) 
 		    changeCycleThreshold( readThreshold( recordIn, "cyclethreshold" ) );
@@ -582,6 +590,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// If neither valid datatype, print a warning and use zero.
 		else {os << LogIO::WARN << id << " is neither a number nor a string Quantity. Setting to zero." << LogIO::POST;
 		  fthresh=0.0; }
+
 		return fthresh;
 	}
   

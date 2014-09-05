@@ -132,6 +132,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	itsDeconvolver->setMaskOptions( decpars.maskType );
 	itsMaskHandler = new SDMaskHandler();
 	itsMaskString = decpars.maskString;
+	itsIsInteractive = decpars.interactive;
 	
       }
     catch(AipsError &x)
@@ -162,16 +163,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
       setStartingModel();
+
+      // Set up the mask too.
+      if( itsIsMaskLoaded==False ) {
+	if(  itsMaskString.length()>0  ) {
+	  itsMaskHandler->fillMask( itsImages, itsMaskString );
+	} else {
+
+	  //	  cout << "Setting mask to 1.0 everywhere to start with.... FIX THIS for interactive masking" << endl;
+	  //	  itsMaskHandler->resetMask( itsImages );
+	  
+	  if( itsIsInteractive ) itsImages->mask()->set(0.0);
+	  else itsImages->mask()->set(1.0);
+	  
+	}
+	
+	itsIsMaskLoaded=True;
+      }
  
       // Normalize by the weight image.
       ///divideResidualByWeight();
 
+      Bool validMask = ( itsImages->getMaskSum() > 0 );
+
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
-      itsLoopController.setPeakResidual( itsImages->getPeakResidual() );
+      itsLoopController.setPeakResidual( validMask ? itsImages->getPeakResidualWithinMask() : itsImages->getPeakResidual() );
       itsLoopController.setMaxPsfSidelobe( itsImages->getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
 
       itsImages->printImageStats();
+      itsImages->mask()->unlock();
 
       os << LogIO::DEBUG2 << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
 
@@ -186,9 +207,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","interactiveGUI",WHERE) );
     Record returnRecord;
-
+    
     try {
-
+      
       // Check that required parameters are present in the iterRec.
       Int niter=0,cycleniter=0,iterdone;
       Float threshold=0.0, cyclethreshold=0.0;
@@ -205,20 +226,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  iterRec.get("iterdone",iterdone);
 	}
       else throw(AipsError("SD::interactiveGui() needs valid niter, cycleniter, threshold to start up."));
-
+      
       if( itsImages.null() ) itsImages = makeImageStore( itsImageName );
-
+      
       //      SDMaskHandler masker;
       String strthresh = String::toString(threshold)+"Jy";
       String strcycthresh = String::toString(cyclethreshold)+"Jy";
       if( itsMaskString.length()>0 ) {
 	itsMaskHandler->fillMask( itsImages, itsMaskString );
       }
-	  
-	  Int iterleft = niter - iterdone;
-
-	  Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, iterleft, cycleniter, strthresh, strcycthresh );
-
+      
+      Int iterleft = niter - iterdone;
+      if( iterleft<0 ) iterleft=0;
+      
+      Int stopcode = itsMaskHandler->makeInteractiveMask( itsImages, iterleft, cycleniter, strthresh, strcycthresh );
+      
       Quantity qa;
       casa::Quantity::read(qa,strthresh);
       threshold = qa.getValue(Unit("Jy"));
@@ -248,16 +270,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       itsLoopController.setCycleControls(minorCycleControlRec);
-
-
-      if( itsIsMaskLoaded == False ) {
-	if( itsMaskString.length()==0 ) {
-	  itsMaskHandler->resetMask( itsImages );
-	}
-	else {
-	  itsMaskHandler->fillMask( itsImages, itsMaskString );
-	}
-      }
 
       itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
       returnRecord = itsLoopController.getCycleExecutionRecord();

@@ -92,12 +92,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
 
-    os << "Run " << itsAlgorithmName << " minor-cycle on " ;
+    os << "[" << imagestore->getName() << "]";
+    os << " Run " << itsAlgorithmName << " minor-cycle on " ;
     if( nSubChans >1 ) os << nSubChans << " chans " ;
     if( nSubPols >1 ) os << nSubPols << " pols ";
-    if( nSubChans>1 || nSubPols>1) os << "of ";
-    os << "[" << imagestore->getName() << "]"
-       << " CycleThreshold=" << loopcontrols.getCycleThreshold()
+    os << "| CycleThreshold=" << loopcontrols.getCycleThreshold()
        << ", CycleNiter=" << loopcontrols.getCycleNiter() 
        << ", Gain=" << loopcontrols.getLoopGain()
        << LogIO::POST;

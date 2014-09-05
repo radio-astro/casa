@@ -63,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
 					       itsLoopController(new SIIterBot_state(actionRequestSync)),
-                                               dbus_thread(NULL) {
+                                               dbus_thread(NULL) { 
 	  //		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%p)\n", this );
 	  //		fflush( stderr );
 	}
@@ -93,8 +93,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void SynthesisIterBot::setIterationDetails(Record iterpars) {
 		LogIO os( LogOrigin("SynthesisIterBot","setIterationDetails",WHERE) );
 		try {
-			//itsLoopController.reset( new SIIterBot("SynthesisImage_"));
-			if ( itsLoopController ) itsLoopController->setControlsFromRecord(iterpars);
+
+		  //itsLoopController.reset( new SIIterBot("SynthesisImage_"));
+		  if ( itsLoopController ) itsLoopController->setControlsFromRecord(iterpars);
+		  
 		} catch(AipsError &x) {
 			throw( AipsError("Error in updating iteration parameters : " + x.getMesg()) );
 		}
@@ -181,8 +183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 			if ( itsLoopController ) {
 				if (itsLoopController->interactiveInputRequired()) {
-				  //cout << "SynthesisIterBot.cc : Not pausing for interaction via original code" <<  endl;
-				  //pauseForUserInteraction();
+				  				  pauseForUserInteraction();
 				}
 				returnRecord = itsLoopController->getMinorCycleControls();
 			}
@@ -214,22 +215,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void SynthesisIterBot::pauseForUserInteraction() {
-		LogIO os( LogOrigin("SISkyModel","pauseForUserInteraction",WHERE) );
-		os << "Waiting for interactive clean feedback" << LogIO::POST;
 
+          void SynthesisIterBot::pauseForUserInteraction() {
 		/* This call will make sure that the current values of loop control are
 		   available in the GUI and will not return until the user hits the
 		   button */
-		/*
+
 		if ( itsLoopController ) {
 			itsLoopController->waitForInteractiveInput();
 		}// end of pauseForUserInteraction
-		*/
-
-		
-
 	}
+
+
 
         void SynthesisIterBot::changeStopFlag( Bool stopflag ) {
 	  if ( itsLoopController ) {
@@ -238,8 +235,136 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ////    Internal Functions start here.  These are not visible to the tool layer.
+  ////    SynthesisIterBotWithOldGUI code starts.
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	SynthesisIterBotWithOldGUI::SynthesisIterBotWithOldGUI() : 
+	  SynthesisIterBot(), itsInteractiveMasker(NULL) {
+	}
+	void SynthesisIterBotWithOldGUI::setIterationDetails(Record iterpars) {
+		LogIO os( LogOrigin("SynthesisIterBot","setIterationDetails",WHERE) );
+		try {
+
+		  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+		  ///// START : code to get a list of image names for interactive masking
+
+		  // Setup interactive masking : list of image names.
+		  if( itsImageList.nelements()==0 ) {
+		    if( iterpars.isDefined("allimages") ) {
+		      Record allnames = iterpars.subRecord(RecordFieldId("allimages"));
+		      uInt nfields = allnames.nfields();
+		      itsImageList.resize( nfields );
+		      itsNTermList.resize( nfields );
+		      for ( uInt fld=0; fld<nfields; fld++ )
+			{
+			  Record onename = allnames.subRecord( RecordFieldId(String::toString(fld)) );
+			  if( onename.isDefined("imagename") && onename.isDefined("ntaylorterms") )
+			    {
+			      onename.get( RecordFieldId("imagename"), itsImageList[fld] );
+			      onename.get( RecordFieldId("ntaylorterms"), itsNTermList[fld] );
+			    }
+			}
+		      //cout << "Image List : " << itsImageList << " nterms : " << itsNTermList << endl;
+		    } else {
+		      throw( AipsError("Need image names and nterms in iteration parameter list") );
+		    }
+		  }
+		  ///// END : code to get a list of image names for interactive masking
+		  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		  //itsLoopController.reset( new SIIterBot("SynthesisImage_"));
+		  if ( itsLoopController ) itsLoopController->setControlsFromRecord(iterpars);
+		  
+		} catch(AipsError &x) {
+			throw( AipsError("Error in updating iteration parameters : " + x.getMesg()) );
+		}
+	}
+
+        Record SynthesisIterBotWithOldGUI::pauseForUserInteractionOld() {
+		LogIO os( LogOrigin("SynthesisIterBot","pauseForUserInteraction",WHERE) );
+
+		if (itsLoopController->interactiveInputRequired()) {
+
+		  // This will launch it only once. 
+		  if( itsInteractiveMasker.null() ) itsInteractiveMasker = new InteractiveMasking();
+		  
+		  // Get parameters to change. 
+		  Record iterRec = getIterationDetails();
+		  
+		  Int niter=0,cycleniter=0,iterdone;
+		  Float threshold=0.0, cyclethreshold=0.0;
+		  if( iterRec.isDefined("niter") &&  
+		      iterRec.isDefined("cycleniter") &&  
+		      iterRec.isDefined("threshold") && 
+		      iterRec.isDefined("cyclethreshold") &&
+		      iterRec.isDefined("iterdone") )
+		    {
+		      iterRec.get("niter", niter);
+		      iterRec.get("cycleniter", cycleniter);
+		      iterRec.get("threshold", threshold);
+		      iterRec.get("cyclethreshold", cyclethreshold);
+		      iterRec.get("iterdone",iterdone);
+		    }
+		  else throw(AipsError("SI::interactiveGui() needs valid niter, cycleniter, threshold to start up."));
+
+		  String strthresh = String::toString(threshold)+"Jy";
+		  String strcycthresh = String::toString(cyclethreshold)+"Jy";
+		  
+		  Int iterleft = niter - iterdone;
+		  if( iterleft<0 ) iterleft=0;
+      
+		  
+		  uInt nIm = itsImageList.nelements();
+		  if( itsActionCodes.nelements() != nIm ) { itsActionCodes.resize(nIm); itsActionCodes.set(0); }
+		  
+		  for (uInt ind=0;ind<nIm;ind++)
+		    {
+		      if ( itsActionCodes[ind] ==0 )
+			{
+			  String imageName = itsImageList[ind]+".residual"+(itsNTermList[ind]>1?".tt0":"");
+			  String maskName = itsImageList[ind] + ".mask";
+			  //cout << "Before interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << strthresh << "  cyclethresh : " << strcycthresh << endl;
+			  itsActionCodes[ind] = itsInteractiveMasker->interactivemask(imageName, maskName,
+										      iterleft, cycleniter, strthresh, strcycthresh);
+			  //cout << "After interaction : niter : " << niter << " cycleniter : " << cycleniter << " thresh : " << strthresh << " cyclethresh : " << strcycthresh << "  ------ ret : " << itsActionCodes[ind] << endl;
+			}
+		    }
+		  
+		  //cout << "ActionCodes : " << itsActionCodes << endl;
+		  
+		  Quantity qa;
+		  casa::Quantity::read(qa,strthresh);
+		  threshold = qa.getValue(Unit("Jy"));
+		  casa::Quantity::read(qa,strcycthresh);
+		  cyclethreshold = qa.getValue(Unit("Jy"));
+
+		  if( itsLoopController ){
+		    itsLoopController->changeNiter( iterdone+iterleft );
+		    itsLoopController->changeCycleNiter( cycleniter );
+		    itsLoopController->changeThreshold( threshold );
+		    itsLoopController->changeCycleThreshold( cyclethreshold );
+		    }
+
+		  Bool alldone=True;
+		  for(uInt ind=0;ind<nIm;ind++)
+		    {
+		      alldone = alldone & ( itsActionCodes[ind]==2 );
+		    }
+		  if( alldone==True ) changeStopFlag( True );
+
+		}// If interaction required
+
+		//		return itsActionCodes;
+
+		Record returnRec;
+		for(uInt ind=0;ind<itsImageList.nelements();ind++){
+		  returnRec.define(RecordFieldId(String::toString(ind)), itsActionCodes[ind]);
+		}
+
+		return returnRec;
+	}// end of pauseForUserInteractionOld
+
+
 
 } //# NAMESPACE CASA - END
 

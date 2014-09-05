@@ -38,7 +38,7 @@
 #include <boost/thread/thread.hpp>
 
 //#include<casa/random.h>
-//#include<synthesis/ImagerObjects/SDMaskHandler.h>
+#include<synthesis/ImagerObjects/InteractiveMasking.h>
 
 #include <boost/scoped_ptr.hpp>
 
@@ -57,7 +57,7 @@ class SynthesisIterBot
   // Default constructor
 
   SynthesisIterBot();
-  ~SynthesisIterBot();
+ virtual  ~SynthesisIterBot();
 
   // Copy constructor and assignment operator
 
@@ -68,7 +68,7 @@ class SynthesisIterBot
   void setupIteration(Record iterpars);
 
   void setInteractiveMode(Bool interactiveMode);
-  void   setIterationDetails(Record iterpars);
+  virtual void   setIterationDetails(Record iterpars);
   Record getIterationDetails();
   Record getIterationSummary();
 
@@ -83,22 +83,53 @@ class SynthesisIterBot
 
   void changeStopFlag( Bool stopflag );
 
+  virtual Record pauseForUserInteractionOld(){return Record();};
+
 protected:
 
-  void pauseForUserInteraction();
-
+  virtual void pauseForUserInteraction();
   /////////////// Member Objects
 
-	std::tr1::shared_ptr<SIIterBot_callback> actionRequestSync;
-	std::tr1::shared_ptr<SIIterBot_state> itsLoopController;
+  std::tr1::shared_ptr<SIIterBot_callback> actionRequestSync;
+  std::tr1::shared_ptr<SIIterBot_state> itsLoopController;
 
-  //    CountedPtr<SDMaskHandler> itsMaskHandler;
     /////////////// All input parameters
 
  private:
   boost::thread  *dbus_thread;
   void dbus_thread_launch_pad( );
+
+  /// Parameters to control the old interactive GUI. Can be moved somewhere more appropriate...
+  /*  Vector<String> itsImageList;
+  Vector<Int> itsNTermList;
+  Vector<Int> itsActionCodes;
+  CountedPtr<InteractiveMasking> itsInteractiveMasker;
+  */
 };
+
+
+  class SynthesisIterBotWithOldGUI : public SynthesisIterBot
+{
+ public:
+  // Default constructor
+
+  SynthesisIterBotWithOldGUI();
+  ~SynthesisIterBotWithOldGUI(){};
+
+  void   setIterationDetails(Record iterpars);
+  Record pauseForUserInteractionOld();
+
+protected:
+
+  void pauseForUserInteraction(){};
+
+ private:
+  Vector<String> itsImageList;
+  Vector<Int> itsNTermList;
+  Vector<Int> itsActionCodes;
+  CountedPtr<InteractiveMasking> itsInteractiveMasker;
+
+  };
 
 
 } //# NAMESPACE CASA - END

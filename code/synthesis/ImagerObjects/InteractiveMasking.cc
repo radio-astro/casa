@@ -58,7 +58,8 @@ namespace casa{
     }
     return true;
   }
-  
+
+  /*  
   Int InteractiveMasking::interactivemask(const String& image, const String& mask, 
 					  Int& niter, Int& ncycles, String& thresh, 
 					  const Bool forceReload)
@@ -227,6 +228,7 @@ namespace casa{
     // return 2 if "stop"
     return result;
   }
+  */
 
   Int InteractiveMasking::interactivemask(const String& image, const String& mask, 
 					  Int& niter, Int& cycleniter, 
@@ -246,7 +248,7 @@ namespace casa{
       clone(image, mask);
     }
     
-    os << "Loading image: " << image << " mask: " << mask << LogIO::POST;
+    //os << "Loading image: " << image << " mask: " << mask << LogIO::POST;
 
     if ( viewer_p == 0 ) {
       std::list<std::string> args;
@@ -384,6 +386,8 @@ namespace casa{
       image_id_p=0;
       mask_id_p=0;
     }
+
+    /*
     if(result==2){
       //clean up
       //viewer_p->close(clean_panel_p);
@@ -401,6 +405,12 @@ namespace casa{
       image_id_p=0;
       mask_id_p=0;
     }
+    */
+
+    //    viewer_p->unload(image_id_p);
+    //    viewer_p->unload(mask_id_p);
+    image_id_p=0;
+    mask_id_p=0;
     
     // return 0 if "continue"
     // return 1 if "no more interaction"

@@ -380,7 +380,8 @@ namespace casa {
 
 	EXIT_FUNC(exitDone,"continue",)
 	EXIT_FUNC(exitNoMore,"no more",)
-	EXIT_FUNC(exitStop,"stop",hide( );)
+	EXIT_FUNC(exitStop,"stop",)
+	//	EXIT_FUNC(exitStop,"stop",hide( );)
 
 	bool QtCleanPanelGui2::supports( SCRIPTING_OPTION option ) const {
 		return option == INTERACT || option == SETOPTIONS ? true : false;

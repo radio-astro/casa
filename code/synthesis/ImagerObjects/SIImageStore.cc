@@ -1907,7 +1907,7 @@ Float SIImageStore::getPeakResidualWithinMask()
     Float minresmask, maxresmask, minres, maxres;
     findMinMax( residual()->get(), mask()->get(), minres, maxres, minresmask, maxresmask );
 
-    os << "[" << itsImageName << "]:" ;
+    os << "[" << itsImageName << "]" ;
     os << " Peak residual (max,min) " ;
     if( minresmask!=0.0 || maxresmask!=0.0 )
       { os << "within mask : (" << maxresmask << "," << minresmask << ") "; }

@@ -66,9 +66,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  delete viewer_p;
 	}
     };
+    /*
     Int interactivemask(const String& image, const String& mask, 
 			Int& niter, Int& ncycles, String& thresh, 
 			const Bool forceReload=False);
+    */
     Int interactivemask(const String& image, const String& mask, 
 			Int& niter, Int& cycleniter, String& thresh, String& cyclethresh, 
 			const Bool forceReload=False);

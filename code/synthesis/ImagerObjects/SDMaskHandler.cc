@@ -80,68 +80,80 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SDMaskHandler::resetMask(CountedPtr<SIImageStore> imstore)
   {
     imstore->mask()->set(1.0);
+    imstore->mask()->unlock();
   }
 
   void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, String maskString)
   {
 
-    //// imstore->mask() will return a pointer to an ImageInterface (allocation happens on first access). 
+    try {
+      
+      //// imstore->mask() will return a pointer to an ImageInterface (allocation happens on first access). 
+      
+      //    cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
+      
+      //interpret maskString 
+      if (maskString !="") {
+	if ( Table::isReadable(maskString) ) {
+	  Table imtab = Table(maskString, Table::Old);
+	  Vector<String> colnames = imtab.tableDesc().columnNames();
+	  if ( colnames[0]=="map" ) {
+	    
+	    // looks like a CASA image ... probably should check coord exists in the keyword also...
+	    //          cout << "copy this input mask...."<<endl;
+	    PagedImage<Float> inmask(maskString); 
+	    IPosition inShape = inmask.shape();
+	    IPosition outShape = imstore->mask()->shape();
+	    Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
+	    Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
+	    if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
+	      expandMask(inmask, *(imstore->mask()));
+	    }
+	    else {
+	      copyMask(inmask, *(imstore->mask()));
+	    }
+	  }// end of ''map''
+	}// end of readable table
+	else {
+	  //cout << maskString << " is not image..."<<endl;
+	  ImageRegion* imageRegion=0;
+	  SDMaskHandler::regionTextToImageRegion(maskString, *(imstore->mask()), imageRegion);
+	  if (imageRegion!=0)
+	    SDMaskHandler::regionToMask(*(imstore->mask()),*imageRegion, Float(1.0));
+	}// end of region string
+      }
+      else { 
+	/////// Temporary code to set a mask in the inner quarter.
+	/////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
+	IPosition imshp = imstore->mask()->shape();
+	AlwaysAssert( imshp.nelements() >=2 , AipsError );
+	
+	Slicer themask;
+	IPosition blc(imshp.nelements(), 0);
+	IPosition trc = imshp-1;
+	IPosition inc(imshp.nelements(), 1);
+	
+	blc(0)=int(imshp[0]*0.25);
+	blc(1)=int(imshp[1]*0.25);
+	trc(0)=int(imshp[0]*0.75);
+	trc(1)=int(imshp[1]*0.75);
+	
+	LCBox::verify(blc, trc, inc, imshp);
+	Slicer imslice(blc, trc, inc, Slicer::endIsLast);
+	
+	CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*(imstore->mask()), imslice, True);
+	referenceImage->set(1.0);
+      }
 
-    //    cout << "Call makeMask here to fill in " << imstore->mask()->name() << " from " << maskString <<  ". For now, set mask to 1 inside a central box" << endl;
+      imstore->mask()->unlock();
+   
+    } catch( AipsError &x )
+      {
+	throw(AipsError("Error in constructing "+ imstore->getName() +".mask from " + maskString + " : " + x.getMesg()));
+      }
     
-    //interpret maskString 
-    if (maskString !="") {
-      if ( Table::isReadable(maskString) ) {
-        Table imtab = Table(maskString, Table::Old);
-        Vector<String> colnames = imtab.tableDesc().columnNames();
-        if ( colnames[0]=="map" ) {
-          // looks like a CASA image ... probably should check coord exists in the keyword also...
-	  //          cout << "copy this input mask...."<<endl;
-          PagedImage<Float> inmask(maskString); 
-          IPosition inShape = inmask.shape();
-          IPosition outShape = imstore->mask()->shape();
-          Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
-          Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
-          if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
-            expandMask(inmask, *(imstore->mask()));
-          }
-          else {
-            copyMask(inmask, *(imstore->mask()));
-          }
-        }
-      }
-      else {
-        //cout << maskString << " is not image..."<<endl;
-        ImageRegion* imageRegion=0;
-        SDMaskHandler::regionTextToImageRegion(maskString, *(imstore->mask()), imageRegion);
-        if (imageRegion!=0)
-           SDMaskHandler::regionToMask(*(imstore->mask()),*imageRegion, Float(1.0));
-      }
-    }
-    else { 
-/////// Temporary code to set a mask in the inner quarter.
-    /////// This is only for testing... should go when 'maskString' can be used to fill it in properly. 
-    IPosition imshp = imstore->mask()->shape();
-    AlwaysAssert( imshp.nelements() >=2 , AipsError );
-
-    Slicer themask;
-    IPosition blc(imshp.nelements(), 0);
-    IPosition trc = imshp-1;
-    IPosition inc(imshp.nelements(), 1);
-
-    blc(0)=int(imshp[0]*0.25);
-    blc(1)=int(imshp[1]*0.25);
-    trc(0)=int(imshp[0]*0.75);
-    trc(1)=int(imshp[1]*0.75);
-
-    LCBox::verify(blc, trc, inc, imshp);
-    Slicer imslice(blc, trc, inc, Slicer::endIsLast);
-
-    CountedPtr<ImageInterface<Float> >  referenceImage = new SubImage<Float>(*(imstore->mask()), imslice, True);
-    referenceImage->set(1.0);
-    }
   }
-
+  
   //void SDMaskHandler::makeMask()
    CountedPtr<ImageInterface<Float> > SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
    //void SDMaskHandler::makeMask(const String& maskName, const Quantity threshold,
@@ -373,9 +385,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     axes(0) = dirAxes(0); 
     axes(1) = dirAxes(1);
     axes(2) = CoordinateUtil::findSpectralAxis(incsys);
-   
-    ImageRegrid<Float> imregrid;
-    imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
+    try {
+      ImageRegrid<Float> imregrid;
+      imregrid.regrid(outImageMask, Interpolate2D::LINEAR, axes, inImageMask); 
+    } catch (AipsError &x) {
+	throw(AipsError("ImageRegrid error : "+ x.getMesg()));
+      }
   } 
 
   void SDMaskHandler::expandMask(const ImageInterface<Float>& inImageMask, ImageInterface<Float>& outImageMask)

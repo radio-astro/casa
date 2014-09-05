@@ -43,7 +43,9 @@ class PySynthesisImager:
 
         ## Number of fields ( main + outliers )
         self.NF = len(self.allimpars.keys())
-        self.stopMinor = [0]*self.NF
+        self.stopMinor = {}  ##[0]*self.NF
+        for immod in range(0,self.NF):
+            self.stopMinor[str(immod)]=0
         ## Number of nodes. This gets set for parallel runs
         ## It can also be used serially to process the major cycle in pieces.
         self.NN = 1 
@@ -144,7 +146,7 @@ class PySynthesisImager:
     def initDefaults(self):
         # Reset globals/members
          self.NF=1
-         self.stopMinor=[0]  # Flag to call minor cycle for this field or not.
+         self.stopMinor={'0':0}  # Flag to call minor cycle for this field or not.
          self.NN=1
          self.SItool=None
          self.SDtools=[]
@@ -171,7 +173,7 @@ class PySynthesisImager:
               print "Peak res of field ",immod, " : " ,initrec['peakresidual']
 #              casalog.post("["+self.allimpars[str(immod)]['imagename']+"] : Peak residual : %5.5f"%(initrec['peakresidual']), "INFO")
 
-         self.runInteractiveGUI()
+         self.runInteractiveGUI2()
 
         # Check with the iteration controller about convergence.
          stopflag = self.IBtool.cleanComplete()
@@ -182,11 +184,17 @@ class PySynthesisImager:
          return (stopflag>0)
 
 #############################################
+    def runInteractiveGUI2(self):
+        if self.iterpars['interactive'] == True:
+            self.stopMinor = self.IBtool.pauseforinteraction()
+            #print "Actioncodes in python : " , self.stopMinor
+
+#############################################
     def runInteractiveGUI(self):
         if self.iterpars['interactive'] == True:
             iterdetails = self.IBtool.getiterationdetails()
             for immod in range(0,self.NF):
-                if self.stopMinor[immod]==0 :
+                if self.stopMinor[str(immod)]==0 :
                     iterparsmod =  self.SDtools[immod].interactivegui( iterdetails ) 
                     #print 'Input iterpars : ', iterdetails['niter'], iterdetails['cycleniter'], iterdetails['threshold']
                     self.iterpars.update(iterparsmod) 
@@ -194,10 +202,15 @@ class PySynthesisImager:
                     itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
 
                     if iterparsmod.has_key('actioncode') :
-                        self.stopMinor[immod] = iterparsmod['actioncode']  # 0 or 1 or 2 ( old interactive viewer )
+                        self.stopMinor[str(immod)] = iterparsmod['actioncode']  # 0 or 1 or 2 ( old interactive viewer )
 
-            if self.stopMinor==[2]*self.NF:
+            alldone=True
+            for immod in range(0,self.NF):
+                alldone = alldone and (self.stopMinor[str(immod)]==2)
+            if alldone==True:
                 self.IBtool.changestopflag( True )
+#            if self.stopMinor==[2]*self.NF:
+#                self.IBtool.changestopflag( True )
              #itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
 
 #############################################
@@ -253,7 +266,7 @@ class PySynthesisImager:
         ##print "Minor Cycle controls : ", iterbotrec
         # Run minor cycle
         for immod in range(0,self.NF):  
-            if self.stopMinor[immod]<2 :
+            if self.stopMinor[str(immod)]<2 :
                 exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
                 #print '.... iterdone for ', immod, ' : ' , exrec['iterdone']
                 self.IBtool.mergeexecrecord( exrec )
@@ -867,7 +880,8 @@ class ImagerParameters():
 
         ######### Deconvolution
         self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
-                                    'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask } }
+                                    'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask,
+                                    'interactive':interactive } }
 
         ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
@@ -936,9 +950,13 @@ class ImagerParameters():
         errs += self.checkAndFixNormPars()
 
         ### Copy them from 'impars' to 'normpars' and 'decpars'
+        self.iterpars['allimages']={}
+        self.iterpars['allntaylorterms']={}
         for immod in self.allimpars.keys() :
             self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
+            self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
+#            self.iterpars['allntaylorterms'].append( self.allimpars[immod]['ntaylorterms'] )
             if len(self.allnormpars[immod]['workdir'])==0:
                 self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
 

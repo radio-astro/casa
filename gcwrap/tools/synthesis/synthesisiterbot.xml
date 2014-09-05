@@ -164,6 +164,18 @@ This is used to construct {\tt synthesisiterbot} tool.
 <!-- ===================================== -->
 
 
+   <method type="function" name="pauseforinteraction">
+   <shortdescription>Pause for interaction</shortdescription>
+
+<description>
+</description>
+<input/>
+<returns type="record"/>
+</method>
+
+<!-- ===================================== -->
+
+
    <method type="function" name="getiterationsummary">
    <shortdescription>Return a record with a summary of the iteration</shortdescription>
 
