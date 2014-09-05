@@ -1062,7 +1062,7 @@ class test_setpol(SetjyUnitTestBase):
                       spix = [-0.62],
                       polindex=[0],
                       polangle=[pang],
-                      rm=10.0,
+                      rotmeas=10.0,
                       reffreq='4536.0MHz',
                       usescratch=True)
         ret = True
@@ -1085,7 +1085,7 @@ class test_setpol(SetjyUnitTestBase):
         # U flux
         # polindex = 0.11190024,
         # polangle = 0.57595865
-        # rm = 10.0 => angle = 2*rm*c^2*(fref^2-f^2)/ (f^2*f0^2) 
+        # rotmeas = 10.0 => angle = 2*rotmeas*c^2*(fref^2-f^2)/ (f^2*f0^2) 
         qfexpend = 0.353443
         ufexpend = 0.783996
         retrecQ = ms.statistics(field='0', baseline='1&2', correlation='rl', column='model', complex_value='real')
@@ -1098,7 +1098,7 @@ class test_setpol(SetjyUnitTestBase):
         self.check_eq(retrecU['MODEL']['min'],ufexpend,0.0001)
 
     def testr6(self):
-        """ Test for spectral index with curvature and frequnecy-dependent polindex and polangle with rm """
+        """ Test for spectral index with curvature and frequnecy-dependent polindex and polangle with rotmeas """
         # the constant terms (polindex[0] and polangle[0] is ignored..
         pang = 0.5*66.*numpy.pi/180
         sjran = setjy(vis=self.inpms,
@@ -1108,7 +1108,7 @@ class test_setpol(SetjyUnitTestBase):
                       spix = [-0.62, -0.1],
                       polindex=[0, -0.5, 0.1],
                       polangle=[pang, -0.5],
-                      rm=10.0,
+                      rotmeas=10.0,
                       reffreq='4536.0MHz',
                       usescratch=True)
         ret = True
@@ -1132,7 +1132,7 @@ class test_setpol(SetjyUnitTestBase):
         # polindex0 = 0.11190024, polindex= polindex0 +(-0.5)*(f-fref)/fref +(-0.1)*((f-fref)/fref)^2
         # polindex(f=fmax) = 
         # polangle0 = 0.57595865
-        # rm = 10.0 => angle = 2*rm*c^2*(fref^2-f^2)/ (f^2*f0^2)
+        # rotmeas = 10.0 => angle = 2*rotmeas*c^2*(fref^2-f^2)/ (f^2*f0^2)
         qfexpmin = 0.328774
         ufexpmin = 0.678335
         anglemin = 1.119481
