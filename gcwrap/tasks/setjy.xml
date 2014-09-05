@@ -146,7 +146,7 @@
 			<description>Coefficients of an expansion of frequency-dependent polarization angle expression</description>
 			<value></value>
 		</param>
-		<param type="double" name="rm" subparam="true">
+		<param type="double" name="rotmeas" subparam="true">
 			<description>Rotation measure (in rad/m^2)</description>
 			<value>0.0</value>
 		</param>
@@ -240,7 +240,7 @@
                       <default param="reffreq"><value type="string">1GHz</value></default> 
                       <default param="polindex"><value type="doubleArray"></value></default>
                       <default param="polangle"><value type="doubleArray"></value></default>
-                      <default param="rm"><value type="double">0.0</value></default>
+                      <default param="rotmeas"><value type="double">0.0</value></default>
                   </equals>
                   <equals type="string" value="fluxscale">
                     <default param="fluxdict"><value type="record"></value></default>
@@ -626,7 +626,7 @@
                 Default: []
                 Example: [0.57, 0.2] (=[d0,d1])
 
-            rm -- rotation measure (in rad/m^2)
+            rotmeas -- rotation measure (in rad/m^2)
 
        &gt;&gt;&gt; standard="fluxscale" expandable parameters
 	    fluxdict -- Output dictionary from fluxscale
