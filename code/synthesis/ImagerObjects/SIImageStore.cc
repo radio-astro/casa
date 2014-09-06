@@ -467,8 +467,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      imPtr=new PagedImage<Float>( imagenamefull );
 	    }
 	    catch (AipsError &x){
-	      cerr << "Writable table exists, but cannot open. Overwriting." << endl;
-	      imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
+	      cerr << "Writable table exists, but cannot open. Creating temp image. : " << x.getMesg() << endl;
+	      imPtr=new TempImage<Float> (useShape, itsCoordSys);
+	      //  imPtr=new PagedImage<Float> (useShape, itsCoordSys, imagenamefull);
 	      imPtr->set(0.0);
 	    }
 	  }
