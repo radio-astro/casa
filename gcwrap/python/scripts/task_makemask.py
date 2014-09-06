@@ -173,7 +173,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
            if type(inpmask)!=list: 
               inpmask=[inpmask]
            
-           # check if contains region file or region specification
+           # check if inpmask contains region file or region specification
            rgfiles=[]
            imgfiles=[]
            rglist=[]
@@ -232,7 +232,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                    (parentimexist,maskexist)=checkinmask(outparentim,outbmask)    
                    if parentimexist and maskexist and not overwrite:
                        raise Exception, "output=%s exists. If you want to overwrite it, please set overwrite=True" % output
-                   if parentimexist and not maskexist:
+                   #if parentimexist and not maskexist:
+                   if not maskexist:
                        storeinmask=True
                else:
                   outparentim=output
@@ -494,7 +495,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    # closing current output image
                     if ia.isopen():
 		        ia.close()
-                    #print "tmp_maskimage=",tmp_maskimage, " is exist?", os.path.isdir(tmp_maskimage)
 		    ia.open(tmp_maskimage)
 		    #os.system('cp -r %s beforeregrid.im' % tmp_maskimage)
                     if os.path.isdir(tmp_outmaskimage):
@@ -514,6 +514,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    ia.calcmask(mask='%s!=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
 
                 if storeinmask:
+		    if not os.path.isdir(outparentim):
+                      makeEmptyimage(inpimage,outparentim)
                     ia.open(outparentim)
                     ia.maskhandler('copy',[tmp_outmaskimage+':'+outbmask, outbmask])
                     ia.maskhandler('set',outbmask)
@@ -561,7 +563,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 
 	#was: if mode=='merge':
 	if mode=='copy':
-            #print "new copy mode..."
 	    sum_tmp_outfile='__tmp_outputmask'
             tmp_inmask='__tmp_frominmask'
             usedimfiles=[]
@@ -612,7 +613,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 
 		if len(imgfiles)>0:
 		    # summing all the images
-                    casalog.post('Summing all mask images in inpimage and  normalized to 1 for mask','INFO')
+                    casalog.post('Summing all mask images in inpmask and  normalized to 1 for mask','INFO')
 		    for img in imgfiles:
                         tmpregrid='__tmp_regrid.'+img
                         # regrid to output image coords
@@ -749,6 +750,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		# so rename it with overwrite=T all the cases
                 #print "open sum_tmp_outfile=",sum_tmp_outfile
                 if storeinmask:
+		    if not os.path.isdir(outparentim):
+                      makeEmptyimage(inpimage,outparentim)
                     ia.open(outparentim)
                     ia.maskhandler('copy',[sum_tmp_outfile+':'+outbmask, outbmask])    
                     ia.maskhandler('set',outbmask)
@@ -860,7 +863,7 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     # to ensure to create 1/0 mask image
     #ir.calc('iif (%s>0.0 && %s<1.0,1,%s)'%(outputmask,outputmask,outputmask))
     # treat everything not = 0.0 to be mask
-    ir.calc('iif (abs(%s)>0.0,1,%s)'%(outputmask,outputmask))
+    ir.calc('iif (abs(%s)>0.0,1,%s)'%(outputmask,outputmask),False)
     ir.done()
 
 def addimagemask(sumimage, imagetoadd, threshold=0.0):
@@ -870,7 +873,7 @@ def addimagemask(sumimage, imagetoadd, threshold=0.0):
     (ia,) = gentools(['ia']) 
     #print "addimagemask: sumimage=",sumimage," imagetoadd=",imagetoadd
     ia.open(sumimage)
-    ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'+'+imagetoadd+')/('+sumimage+'+'+imagetoadd+'),'+sumimage+')')
+    ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'+'+imagetoadd+')/('+sumimage+'+'+imagetoadd+'),'+sumimage+')',False)
     # actually should be AND?
     #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+','+sumimage+'*'+imagetoadd+','+sumimage+')')
     #ia.calc('iif ('+imagetoadd+'>'+str(threshold)+',('+sumimage+'*'+imagetoadd+')/('+sumimage+'*'+imagetoadd+'),'+sumimage+')')

@@ -112,7 +112,21 @@ class test_copy(makemaskTestBase):
             raise e
 
         self.assertTrue(os.path.exists(self.outimage3))
-        
+
+    def test4_copyimagemask(self):
+        """ (copy mode) testcopy4: copying a region txt to a new image whose coordinates is defined by inpimage"""
+        try:
+            makemask(mode='copy',inpimage=self.inimage2,inpmask='ellipse [[13:30:15.79110, +030.13.51.8986], [340.4877arcsec, 299.4327arcsec], 0.00000000deg]', output=self.outimage3+':newmask')
+        except Exception, e:
+            print "\nError running makemask"
+            raise e
+           
+        self.assertTrue(os.path.exists(self.outimage3))
+        if os.path.exists(self.outimage3):
+          ia.open(self.outimage3)
+          outmask = ia.maskhandler('get')
+          self.assertTrue(outmask[0]=='newmask')
+
 class test_merge(makemaskTestBase):
     """test merging of multiple masks in copy mode"""
 
