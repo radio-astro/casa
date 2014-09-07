@@ -33,8 +33,11 @@ class RawflagchansResults(basetask.Results):
 
     def add_flag_reason_plane(self, flag_reason_plane, flag_reason_key):
         for description in self.descriptions():
-            self.view[description][-1].flag_reason_plane = \
-              flag_reason_plane[description]
+            # merge the new flag reason plane with the current one
+            merged_plane = self.view[description][-1].flag_reason_plane
+            print type(merged_plane), type(flag_reason_plane[description])
+            merged_plane[merged_plane==0] = flag_reason_plane[description][merged_plane==0]
+            self.view[description][-1].flag_reason_plane = merged_plane
             self.view[description][-1].flag_reason_key = \
               flag_reason_key
 
