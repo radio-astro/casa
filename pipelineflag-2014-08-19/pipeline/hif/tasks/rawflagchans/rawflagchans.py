@@ -522,14 +522,14 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
         # the current view will be very similar to the last, if available.
         # For now approximate as being identical which will save having to
         # recalculate
-        prev_descriptions = self.result.descriptions()
-        if prev_descriptions:
-            for description in prev_descriptions:
-                prev_result = self.result.last(description)
-                self.result.addview(description, prev_result)
+#        prev_descriptions = self.result.descriptions()
+#        if prev_descriptions:
+#            for description in prev_descriptions:
+#                prev_result = self.result.last(description)
+#                self.result.addview(description, prev_result)
 
             # EARLY RETURN
-            return
+#            return
 
         ants = np.array(self.antenna_ids)
 
