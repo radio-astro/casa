@@ -60,7 +60,7 @@ PlotMSPlotParameters PlotMSPlotSubtab::currentlySetParameters() const {
 // PLOTMSPLOTTAB DEFINITIONS //
 ///////////////////////////////
 
-PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
+PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent, int plotIndex) :  PlotMSTab(parent),
         itsPlotManager_(parent->getParent()->getPlotManager()),
         itsCurrentPlot_(NULL), itsCurrentParameters_(NULL),
         itsUpdateFlag_(true),forceReloadCounter_(0){
@@ -70,10 +70,13 @@ PlotMSPlotTab::PlotMSPlotTab(PlotMSPlotter* parent) :  PlotMSTab(parent),
     // Setup tab widget.
     tabWidget->removeTab(0);
     
-    // Create the plot for this tab.
-    plotIndex = itsPlotManager_.numPlots();
+    //The plotmanager does not already know about the plot
+    if ( plotIndex < 0 ){
+    	// Create the plot for this tab.
+    	plotIndex = itsPlotManager_.numPlots();
    
-    itsPlotManager_.addOverPlot();
+    	itsPlotManager_.addOverPlot();
+    }
     plotsChanged(itsPlotManager_, plotIndex);
 }
 
@@ -232,6 +235,7 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
 	}
 
     if(itsCurrentParameters_ != NULL) {
+
         PlotMSPlotParameters params = currentlySetParameters();
         PMS_PP_MSData* d = params.typedGroup<PMS_PP_MSData>(),
                      *cd = itsCurrentParameters_->typedGroup<PMS_PP_MSData>();
@@ -346,6 +350,14 @@ void PlotMSPlotTab::insertSubtab(int index, PlotMSPlotSubtab* tab) {
     
     itsSubtabs_.insert(index, tab);
     tabWidget->insertTab(index, tab, tab->tabName());
+}
+
+bool PlotMSPlotTab::managesPlot( PlotMSPlot* plot ) const {
+	bool managesPlot = false;
+	if ( itsCurrentPlot_ != NULL && plot == itsCurrentPlot_ ){
+		managesPlot = true;
+	}
+	return managesPlot;
 }
 
 
@@ -612,7 +624,6 @@ void PlotMSPlotTab::setupForPlot() {
     PlotMSPlotParameters& params = itsCurrentPlot_->parameters();
     params.addWatcher(this);
     itsCurrentParameters_ = &params;
-  
     insertData(0);
     insertAxes(1);
     insertIterate(2);

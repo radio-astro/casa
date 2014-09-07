@@ -49,7 +49,7 @@ class PlotMSDataCollapsible : public QWidget{
     Q_OBJECT
 
 public:
-    PlotMSDataCollapsible(PlotMSPlotter* plotter, QWidget* parent);
+    PlotMSDataCollapsible(PlotMSPlotter* plotter, QWidget* parent, int plotIndex = -1);
     ~PlotMSDataCollapsible();
 
     //Return the plot tab.
@@ -84,6 +84,9 @@ public:
 
     //Force (or not) the plots to update their displays.
     bool plot( bool forceReload );
+
+    //Returns whether or not the plot is displayed by this Collapsible.
+    bool managesPlot(PlotMSPlot* plot ) const;
 
     vector<PMS::Axis> getSelectedLoadAxes() const;
     vector<PMS::Axis> getSelectedReleaseAxes() const;

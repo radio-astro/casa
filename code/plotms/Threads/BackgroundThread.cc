@@ -56,6 +56,10 @@ void BackgroundThread::cancelWork(){
 
 }
 
+PlotMSPlot* BackgroundThread::getPlot(){
+	return NULL;
+}
+
 BackgroundThread::~BackgroundThread() {
 	// TODO Auto-generated destructor stub
 }

@@ -31,6 +31,7 @@
 namespace casa {
 
 class ThreadCommunication;
+class PlotMSPlot;
 
 /**
  * Manages a thread to do a background operation and communicates
@@ -41,6 +42,7 @@ public:
 	BackgroundThread();
 	void setClientCommunication( ThreadCommunication* threadController );
 	bool getResult() const;
+	virtual PlotMSPlot* getPlot();
 	void* run();
 	void cancel();
 	virtual ~BackgroundThread();

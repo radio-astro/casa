@@ -34,7 +34,7 @@
 namespace casa {
 
 PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
-		QWidget *parent )
+		QWidget *parent, int plotIndex )
     : QWidget(parent),
       minimizeAction( "Minimize", this ),
       maximizeAction( "Maximize", this ),
@@ -53,7 +53,7 @@ PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
 	setPalette( pal );
 	setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Fixed );
 	ui.widgetLayout->setContentsMargins(2,2,2,2);
-	plotTab = new PlotMSPlotTab( plotter );
+	plotTab = new PlotMSPlotTab( plotter, plotIndex );
 
 	maximizeDisplay();
 
@@ -221,7 +221,13 @@ void PlotMSDataCollapsible::clearData(){
 	}
 }
 
-
+bool PlotMSDataCollapsible::managesPlot(PlotMSPlot* plot ) const {
+	bool managesPlot = false;
+	if ( plotTab != NULL ){
+		managesPlot = plotTab->managesPlot( plot );
+	}
+	return managesPlot;
+}
 
 void PlotMSDataCollapsible::setGridSize( int rowCount, int colCount ){
 	if ( plotTab != NULL ){

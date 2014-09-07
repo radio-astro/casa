@@ -148,6 +148,14 @@ void ThreadController::setError( const String& errorMessage ){
 	error = errorMessage;
 }
 
+PlotMSPlot* ThreadController::getPlot(){
+	PlotMSPlot* plot = NULL;
+	if ( bgThread != NULL ){
+		plot = bgThread->getPlot();
+	}
+	return plot;
+}
+
 ThreadController::~ThreadController() {
 	delete bgThread;
 }

@@ -82,6 +82,10 @@ void CacheThread::setPlot( PlotMSPlot* plot ){
 	itsPlot = plot;
 }
 
+PlotMSPlot* CacheThread::getPlot(){
+	return itsPlot;
+}
+
 bool CacheThread::doWork(){
 	bool success = true;
 

@@ -33,6 +33,7 @@ namespace casa {
 //# Forward declarations.
 class ProgressMonitor;
 class BackgroundThread;
+class PlotMSPlot;
 
 // Typedefs for using post-thread methods.
 // <group>
@@ -108,7 +109,7 @@ public:
 	String getError() const;
 	bool isErrorWarning() const;
 	String getErrorTitle() const;
-
+	PlotMSPlot* getPlot();
 protected:
 
 	//Starts the thread

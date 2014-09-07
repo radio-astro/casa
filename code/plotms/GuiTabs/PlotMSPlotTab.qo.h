@@ -109,7 +109,7 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab /*,
     
 public:
     // Constructor which takes the parent plotter.
-    PlotMSPlotTab(PlotMSPlotter* parent);
+    PlotMSPlotTab(PlotMSPlotter* parent, int plotIndex = -1);
     
     // Destructor.
     ~PlotMSPlotTab();
@@ -176,6 +176,8 @@ public:
 
     //Remove old data from the plot.
     void clearData();
+
+    bool managesPlot( PlotMSPlot* plot ) const;
 
 public slots:
     // Slot for doing the plot, using the parameters set on the GUI for the

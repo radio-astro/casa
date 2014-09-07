@@ -88,8 +88,6 @@ PlotMSDataSummaryTab::PlotMSDataSummaryTab(PlotMSPlotter* parent) :
 
      // Synchronize plot button.  This makes the reload/replot happen.
      itsPlotter_->synchronizeAction(PlotMSAction::PLOT, ui.plotButton);
-
-     plotIndex = 0;
 }
 
 PlotMSDataSummaryTab::~PlotMSDataSummaryTab() {
@@ -129,14 +127,14 @@ void PlotMSDataSummaryTab::fillLayout(){
 }
 
 
-void PlotMSDataSummaryTab::addSinglePlot(){
+void PlotMSDataSummaryTab::addSinglePlot( int existingIndex){
 	//Minimize any open plots so the new one will be seen.
 
 	int dataCount = dataList.size();
 	for ( int i = 0; i < dataCount; i++ ){
 		dataList[i]->minimizeDisplay();
 	}
-	insertData( -1 );
+	insertData( existingIndex );
 }
 
 
@@ -154,7 +152,7 @@ void PlotMSDataSummaryTab::insertData( int index ){
 	else {
 		QLayout* scrollLayout = scrollWidget->layout();
 		scrollLayout->removeItem( bottomSpacer );
-		plotTab = new PlotMSDataCollapsible( itsPlotter_, scrollWidget );
+		plotTab = new PlotMSDataCollapsible( itsPlotter_, scrollWidget, index );
 		connect(  plotTab, SIGNAL( close(PlotMSDataCollapsible*)),
 				this, SLOT( close(PlotMSDataCollapsible*)));
 		plotTab->setGridSize( rowLimit, colLimit );
@@ -173,9 +171,19 @@ void PlotMSDataSummaryTab::parametersHaveChanged(const PlotMSWatchedParameters& 
 
 // Implements PlotMSPlotManagerWatcher::plotsChanged().
 void PlotMSDataSummaryTab::plotsChanged(const PlotMSPlotManager& manager){
-	for ( int i = 0; i < dataList.size(); i++ ){
+	int dataCount = dataList.size();
+	int managerPlotCount = manager.numPlots();
+	//Make sure scriptors have not added some plots through DBUS that we
+	//don't know about while showing the GUI.
+	if ( managerPlotCount > dataCount ){
+		for ( int i = dataCount; i < managerPlotCount; i++ ){
+			this->addSinglePlot(i);
+		}
+	}
+	for ( int i = 0; i < dataCount; i++ ){
 		dataList[i]->plotsChanged( manager, i );
 	}
+
 }
 
 void PlotMSDataSummaryTab::singleDataChanged(PlotMSDataCollapsible* collapsible){
@@ -194,51 +202,34 @@ void PlotMSDataSummaryTab::close( PlotMSDataCollapsible* collapsible ){
 }
 
 void PlotMSDataSummaryTab::plot(){
-	plotIndex = 0;
-	completePlots.clear();
-	doPlotting();
+	int dataCount = dataList.size();
+	for ( int i = 0; i < dataCount; i++ ){
+		dataList[i]->plot( its_force_reload );
+	}
 }
 
-void PlotMSDataSummaryTab::doPlotting(){
-	for ( int i = plotIndex; i < dataList.size(); i++ ){
-		bool plotCompleted = dataList[i]->plot( its_force_reload );
-		if ( !plotCompleted ){
-			plotIndex = i;
+void PlotMSDataSummaryTab::completePlotting( bool success, PlotMSPlot* plot ){
+
+	//Reset the plotIndex, which may not be reset if the person is scripting.
+	//and has not clicked the 'plot' button.  Please see CAS-6813.
+	int completedIndex = -1;
+
+	int dataCount = dataList.size();
+	for ( int i = 0; i < dataCount; i++ ){
+		if ( dataList[i]->managesPlot( plot ) ){
+			completedIndex = i;
 			break;
 		}
 	}
+	if ( completedIndex >= 0 ){
+		completePlotting( success, completedIndex );
+
+	}
 }
 
-void PlotMSDataSummaryTab::completePlotting( bool success ){
-	int dataCount = dataList.size();
-	//Reset the plotIndex, which may not be reset if the person is scripting.
-	//and has not clicked the 'plot' button.  Please see CAS-6813.
-	if ( plotIndex >= dataCount ){
-		plotIndex = 0;
-	}
-	if ( plotIndex < dataCount ){
-		completePlots[dataList[plotIndex]] = success;
-	}
-	plotIndex = plotIndex + 1;
-	if ( plotIndex < dataCount){
-		//We haven't finished telling all the threads to update their data.
-		doPlotting();
-	}
-	if ( plotIndex == dataCount){
-		//All the threads have finished updating their data.
-		QList<PlotMSDataCollapsible*> plotKeys = completePlots.keys();
-		int plotKeyCount = plotKeys.size();
-
-		//Clear out any old data in case one canvas has two sets of data (overplot)
-		//and a redraw of the first plot has old data from the second plot.
-		for ( int i = 0; i < plotKeyCount; i++ ){
-			plotKeys[i]->clearData();
-		}
-		//Trigger redraws
-		for ( int i = 0; i < plotKeyCount; i++ ){
-			plotKeys[i]->completePlotting( completePlots[ plotKeys[i] ]);
-		}
-	}
+void PlotMSDataSummaryTab::completePlotting( bool success, int plotIndex ){
+	dataList[plotIndex]->clearData();
+	dataList[plotIndex]->completePlotting( success);
 }
 
 vector<vector<PMS::Axis> > PlotMSDataSummaryTab::selectedLoadAxes() const {

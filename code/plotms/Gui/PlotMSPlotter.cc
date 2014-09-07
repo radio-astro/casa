@@ -758,7 +758,8 @@ void PlotMSPlotter::currentThreadFinished() {
 
 		//Notify that the data has been loaded.
 		if ( itsCurrentThread_->isCacheThread() ){
-			itsPlotTab_->completePlotting( !cancelled );
+			PlotMSPlot* plot = itsCurrentThread_->getPlot();
+			itsPlotTab_->completePlotting( !cancelled, plot );
 		}
 	}
 

@@ -42,6 +42,7 @@ public:
 	void setLoad( bool load );
 	void setSetupPlot( bool usePlot );
 	void setPlot( PlotMSPlot* plot );
+	virtual PlotMSPlot* getPlot();
 	void setCacheBase( PlotMSCacheBase* cacheBase );
 	void setAxes( vector<PMS::Axis> axes );
 	void setAxesData( int size  );
