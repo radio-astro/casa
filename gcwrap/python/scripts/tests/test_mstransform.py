@@ -172,7 +172,25 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)                     
+        default(mstransform)            
+        
+    def setUp_sub_tables_evla(self):
+
+        self.vis = 'test-subtables-evla.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)    
+        
+    def setUp_sub_tables_alma(self):
+
+        self.vis = 'test-subtables-alma.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)                             
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -1785,6 +1803,209 @@ class testFlags(test_base):
         
         print 'Expected Error!'
         
+class test_subtables_evla(test_base):
+    '''Test effect of SPW combination/separation on EVLA sub-tables'''
+    
+    def setUp(self):
+        
+        self.vis = ''
+        self.tmpms = ''
+        self.outputms = ''
+                
+        self.setUp_sub_tables_evla()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.tmpms)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_remove_duplicates_after_combine_evla(self):
+        '''mstransform: Check that sub-tables have no duplicates after SPW combination'''
+        
+        self.outputms = 'combined.ms'
+        
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='data', combinespws=True)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SOURCE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 1)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/FEED')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 27)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/CALDEVICE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 27)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSPOWER')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 193590)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSPOWER')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 193590)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        nrows = mytb.nrows()
+        bbcNo = mytb.getcol('BBC_NO')
+        mytb.close()
+        self.assertEqual(nrows, 1)   
+        self.assertEqual(bbcNo[0], 12)               
+        
+    def test_multiplex_after_separation_evla(self):
+        '''mstransform: Check that sub-tables are multiplexed after separating SPWs'''
+        
+        self.tmpms = 'combined.ms'
+        self.outputms = 'separated.ms'
+        
+        mstransform(self.vis, outputvis=self.tmpms, datacolumn='data', combinespws=True) 
+        mstransform(self.tmpms, outputvis=self.outputms, datacolumn='data',regridms=True,mode='channel',nchan=64,nspw=2)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SOURCE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 1*2)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/FEED')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 27*2)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/CALDEVICE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 27*2)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSPOWER')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 193590*2)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSPOWER')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 193590*2)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        nrows = mytb.nrows()
+        bbcNo = mytb.getcol('BBC_NO')
+        mytb.close()
+        self.assertEqual(nrows, 1*2)   
+        self.assertEqual(bbcNo[0], 12)          
+        
+class test_subtables_alma(test_base):
+    '''Test effect of SPW combination/separation on ALMA sub-tables'''
+    
+    def setUp(self):
+        
+        self.vis = ''
+        self.tmpms = ''
+        self.outputms = ''
+                
+        self.setUp_sub_tables_alma()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.tmpms)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_remove_duplicates_after_combine_alma(self):
+        '''mstransform: Check that sub-tables have no duplicates after SPW combination'''
+        
+        self.outputms = 'combined.ms'
+        
+        mstransform(self.vis, outputvis=self.outputms, datacolumn='data', combinespws=True)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SOURCE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 7)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/FEED')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 32)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/CALDEVICE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 32)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSCAL')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 288)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        nrows = mytb.nrows()
+        bbcNo = mytb.getcol('BBC_NO')
+        mytb.close()
+        self.assertEqual(nrows, 1)   
+        self.assertEqual(bbcNo[0], 1)               
+        
+    def test_multiplex_after_separation_alma(self):
+        '''mstransform: Check that sub-tables are multiplexed after separating SPWs'''
+        
+        self.tmpms = 'combined.ms'
+        self.outputms = 'separated.ms'
+        
+        mstransform(self.vis, outputvis=self.tmpms, datacolumn='data', combinespws=True) 
+        mstransform(self.tmpms, outputvis=self.outputms, datacolumn='data',regridms=True,mode='channel',nchan=64,nspw=2)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SOURCE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 7*4)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/FEED')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 32*4)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/CALDEVICE')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 32*4)      
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SYSCAL')
+        nrows = mytb.nrows()
+        mytb.close()
+        self.assertEqual(nrows, 288*4)
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/SPECTRAL_WINDOW')
+        nrows = mytb.nrows()
+        bbcNo = mytb.getcol('BBC_NO')
+        mytb.close()
+        self.assertEqual(nrows, 1*4)   
+        self.assertEqual(bbcNo[0], 1)                   
         
 # Cleanup class
 class Cleanup(test_base):
@@ -1824,4 +2045,6 @@ def suite():
             test_spw_poln,
             test_regridms_spw_with_different_number_of_channels,
             testFlags,
+            test_subtables_evla,
+            test_subtables_alma,
             Cleanup]
