@@ -44,7 +44,7 @@ class PlotMSPlotManager;
 class PlotMSPage {
     
     //# Friend class declarations.
-    friend class PlotMSOverPlot;
+    friend class PlotMSPlot;
     friend class PlotMSPages;
     
 public:    

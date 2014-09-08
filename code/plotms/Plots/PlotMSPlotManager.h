@@ -39,7 +39,6 @@ class PlotMSApp;
 class PlotMSPlot;
 class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
-class PlotMSOverPlot;
 
 
 // Class which manages PlotMSPlots for plotms.  Mainly handles adding new plots
@@ -50,7 +49,6 @@ class PlotMSPlotManager {
     
     //# Friend class declarations.
     friend class PlotMSPlot;
-    friend class PlotMSOverPlot;
     
 public:
     // Constructor.  Parent must be set using setParent() before manager can be
@@ -100,10 +98,11 @@ public:
     PlotMSPlotParameters* plotParameters(unsigned int index);
     // </group>
     
-    // Creates a new PlotMSOverPlot, initializes it properly, adds it to the
-    // plotter, and returns a pointer to it.  If parameters are given, they are
-    // used; otherwise the defaults are used.
-    PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
+    // Creates a new PlotMSPlot, initializes it properly,
+    // adds it to the plotter, and returns a pointer to it.
+    // If parameters are given, they are used; otherwise the 
+    // defaults are used.
+    PlotMSPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
     //Remove a plot from the display.
     void removePlot( PlotMSPlot* plot );

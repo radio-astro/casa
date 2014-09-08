@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/test/tUtil.h>
 
 
@@ -61,7 +61,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     for ( int i = 0; i < 4; i++ ){
 
     	// Set up parameters for the plot.
-    	PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    	PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     	//Plots use the same data.
     	PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();

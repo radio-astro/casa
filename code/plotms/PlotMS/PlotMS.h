@@ -136,7 +136,7 @@ public:
     
 
     // See PlotMSPlotManager::addOverPlot();
-    virtual PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
     virtual bool isDrawing() const;
     bool isClosed() const;

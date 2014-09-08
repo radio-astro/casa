@@ -26,7 +26,7 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlotManager.h>
 #include <plotms/PlotMS/PlotMS.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <QDebug>
 
@@ -112,9 +112,9 @@ PlotMSPlotParameters* PlotMSPlotManager::plotParameters(unsigned int index) {
     else return itsPlotParameters_[index];
 }
 
-PlotMSOverPlot* PlotMSPlotManager::addOverPlot(const PlotMSPlotParameters* params) {
+PlotMSPlot* PlotMSPlotManager::addOverPlot(const PlotMSPlotParameters* params) {
     if(itsParent_ == NULL) return NULL;
-    PlotMSOverPlot *plot = new PlotMSOverPlot(itsParent_);
+    PlotMSPlot *plot = new PlotMSPlot(itsParent_);
     addPlot(plot, params);
     return plot;
 }
@@ -220,6 +220,7 @@ void PlotMSPlotManager::addPlot(PlotMSPlot* plot,
     bool locationFound = isPlottable( plot );
     if ( locationFound ){
     	plot->initializePlot(itsPages_);
+        
     }
 
 	notifyWatchers();

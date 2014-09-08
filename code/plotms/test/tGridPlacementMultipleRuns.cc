@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPlotManager.h>
 #include <plotms/test/tUtil.h>
 
@@ -59,7 +59,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     params.setColCount( 3 );
 
     // Set up parameters for plot.
-    PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     // Put the data into the plot.
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
@@ -85,7 +85,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 
     //Make a second plot
-    PlotMSPlotParameters plotParams2 = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams2 = PlotMSPlot::makeParameters(&app);
 
     PMS_PP_MSData* ppdata2 = plotParams2.typedGroup<PMS_PP_MSData>();
 	if (ppdata2 == NULL) {
@@ -103,7 +103,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	app.addOverPlot( &plotParams2 );
 
 	 //Make a third plot
-	 PlotMSPlotParameters plotParams3 = PlotMSOverPlot::makeParameters(&app);
+	 PlotMSPlotParameters plotParams3 = PlotMSPlot::makeParameters(&app);
 
 	 PMS_PP_MSData* ppdata3 = plotParams3.typedGroup<PMS_PP_MSData>();
 	 if (ppdata3 == NULL) {
@@ -121,7 +121,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	app.addOverPlot( &plotParams3 );
 
 	 //Make a fourth plot
-	PlotMSPlotParameters plotParams4 = PlotMSOverPlot::makeParameters(&app);
+	PlotMSPlotParameters plotParams4 = PlotMSPlot::makeParameters(&app);
 
 	PMS_PP_MSData* ppdata4 = plotParams4.typedGroup<PMS_PP_MSData>();
 	if (ppdata4 == NULL) {
@@ -139,7 +139,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	app.addOverPlot( &plotParams4 );
 
 	 //Make a fifth plot
-	PlotMSPlotParameters plotParams5 = PlotMSOverPlot::makeParameters(&app);
+	PlotMSPlotParameters plotParams5 = PlotMSPlot::makeParameters(&app);
 
 	PMS_PP_MSData* ppdata5 = plotParams5.typedGroup<PMS_PP_MSData>();
 	if (ppdata5 == NULL) {
@@ -157,7 +157,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	app.addOverPlot( &plotParams5 );
 
 	 //Make a sixth plot
-	PlotMSPlotParameters plotParams6 = PlotMSOverPlot::makeParameters(&app);
+	PlotMSPlotParameters plotParams6 = PlotMSPlot::makeParameters(&app);
 
 	PMS_PP_MSData* ppdata6 = plotParams6.typedGroup<PMS_PP_MSData>();
 	if (ppdata6 == NULL) {
@@ -187,7 +187,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save="<<ok;
     
-	ok = tUtil::checkFile( outFile, 311000, 312000, -1 );
+	ok = tUtil::checkFile( outFile, 200000, 210000, -1 );
 	qDebug() << "tGridPlacementMultipleRuns 1:: Result of save file check="<<ok;
 
 	 //Now neck down the grid size
@@ -195,7 +195,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 app.setParameters( params );
 
 	 //Make a third plot
-	 PlotMSPlotParameters plotParams7 = PlotMSOverPlot::makeParameters(&app);
+	 PlotMSPlotParameters plotParams7 = PlotMSPlot::makeParameters(&app);
 
 	 PMS_PP_MSData* ppdata7 = plotParams7.typedGroup<PMS_PP_MSData>();
 	 if (ppdata7 == NULL) {
@@ -220,7 +220,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	 ok = app.save(format2);
 	 qDebug() << "tGridPlacementMultipleRuns 2:: Result of save="<<ok;
 
-	ok = tUtil::checkFile( outFile2, 231000, 232000, -1 );
+	ok = tUtil::checkFile( outFile2, 233000, 234000, -1 );
 	qDebug() << "tGridPlacementMultipleRuns 2:: Result of save file check="<<ok;
 
 	tUtil::exitMain( false );

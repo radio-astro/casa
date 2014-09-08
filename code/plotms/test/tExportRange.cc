@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/test/tUtil.h>
 
 
@@ -82,7 +82,7 @@ void exportAsPS( PlotMSApp& app ){
     String outFile2( "/tmp/plotMSExportRangePSTest2");
 
     PlotExportFormat::Type type = PlotExportFormat::PS;
-    exportPlot(  app, outFile, outFile2, type, "PS", 20000, 30000);
+    exportPlot(  app, outFile, outFile2, type, "PS", 700000, 920000);
 
 }
 
@@ -93,7 +93,7 @@ void exportAsPDF( PlotMSApp& app ){
 
     PlotExportFormat::Type type = PlotExportFormat::PDF;
     cout << "Exporting PDF"<<endl;
-    exportPlot(  app, outFile, outFile2, type, "PDF", 20000, 30000);
+    exportPlot(  app, outFile, outFile2, type, "PDF", 60000, 75000);
 
 }
 
@@ -127,7 +127,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     overallParams.setColCount( 2 );
 
     // Set up parameters for plot.
-    PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     if (ppdata == NULL) {

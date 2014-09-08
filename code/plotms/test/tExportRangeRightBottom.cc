@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/test/tUtil.h>
 
 
@@ -55,7 +55,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
     overallParams.setColCount( 3 );
 
     // Set up parameters for plot.
-    PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     if (ppdata == NULL) {
@@ -104,12 +104,12 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	cout << "tExportRangeRightBottom:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile, 80000, 110000, -1 );
+	ok = tUtil::checkFile( outFile, 80000, 120000, -1 );
 	cout << "tExportRangeRightBottom:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
 	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 80000, 110000, -1 );
+		ok = tUtil::checkFile( outFile2, 50000, 60000, -1 );
 		cout << "tExportRangeRightBottom:  Result of second save file check="<<ok<<endl;
 	}
 	return tUtil::exitMain( false );

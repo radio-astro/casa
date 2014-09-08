@@ -30,7 +30,7 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/PlotMS/PlotMSDBusApp.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <casadbus/utilities/Diagnostic.h>
 
 #include <signal.h>
@@ -275,7 +275,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
       plotmsapp.its_want_avoid_popups = true;
     
     // Set up parameters for plot.
-    PlotMSPlotParameters plotparams = PlotMSOverPlot::makeParameters(&plotmsapp);
+    PlotMSPlotParameters plotparams = PlotMSPlot::makeParameters(&plotmsapp);
 
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)

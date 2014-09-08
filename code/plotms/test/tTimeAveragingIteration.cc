@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/test/tUtil.h>
 
 
@@ -50,7 +50,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
 
     // Set up parameters for plot.
-    PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
     if (ppdata == NULL) {
@@ -100,7 +100,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tTimeAveragingIteration:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 160000, 170000, -1 );
+	ok = tUtil::checkFile( outFile, 100000, 102000, -1 );
 	cout << "tTimeAveragingIteration:: Result of  save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

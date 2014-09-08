@@ -35,7 +35,7 @@
 
 namespace casa {
 
-class PlotMSOverPlot;
+class PlotMSPlot;
 
 /**
  * Abstracts the interface DBUS uses to talk to the main PlotMS
@@ -59,7 +59,7 @@ public:
 	    		Int size, const String& color,
 	        	const String& fillPattern, bool outline ) = 0;
 
-	virtual PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL) = 0;
+	virtual PlotMSPlot* addOverPlot(const PlotMSPlotParameters* p = NULL) = 0;
 
 
 	//Show/hide

@@ -27,7 +27,7 @@
 
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
-#include <plotms/Plots/PlotMSOverPlot.h>
+#include <plotms/Plots/PlotMSPlot.h>
 #include <graphics/GenericPlotter/PlotOptions.h>
 #include <plotms/test/tUtil.h>
 
@@ -62,7 +62,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
      */
 
     // Set up parameters for plot.
-    PlotMSPlotParameters plotParams = PlotMSOverPlot::makeParameters(&app);
+    PlotMSPlotParameters plotParams = PlotMSPlot::makeParameters(&app);
 
     // Data
     PMS_PP_MSData* ppdata = plotParams.typedGroup<PMS_PP_MSData>();
@@ -115,7 +115,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
      /**
       * Normal Plot
       */
-     PlotMSPlotParameters plotParams2 = PlotMSOverPlot::makeParameters(&app);
+     PlotMSPlotParameters plotParams2 = PlotMSPlot::makeParameters(&app);
 
      PMS_PP_MSData* ppdata2 = plotParams2.typedGroup<PMS_PP_MSData>();
      if (ppdata2 == NULL) {
@@ -138,7 +138,7 @@ int main(int /*argc*/, char** /*argv[]*/) {
      /**
       * Iteration Plot
       */
-     PlotMSPlotParameters plotParams3 = PlotMSOverPlot::makeParameters(&app);
+     PlotMSPlotParameters plotParams3 = PlotMSPlot::makeParameters(&app);
 
      PMS_PP_MSData* ppdata3 = plotParams3.typedGroup<PMS_PP_MSData>();
      if (ppdata3 == NULL) {
@@ -180,13 +180,13 @@ int main(int /*argc*/, char** /*argv[]*/) {
 	bool ok = app.save(format);
 	cout << "tMultiplePlotTypes:: Result of save="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile, 214000, 215000, -1 );
+	ok = tUtil::checkFile( outFile, 223000, 224000, -1 );
 	cout << "tMultiplePlotTypes:: Result of first save file check="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile2, 212000, 213000, -1 );
+	ok = tUtil::checkFile( outFile2, 224000, 225000, -1 );
 	cout << "tMultiplePlotTypes:: Result of second save file check="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile3, 56000, 57000, -1 );
+	ok = tUtil::checkFile( outFile3, 54000, 55000, -1 );
 	cout << "tMultiplePlotTypes:: Result of third save file check="<<ok<<endl;
 
 	return tUtil::exitMain( false );

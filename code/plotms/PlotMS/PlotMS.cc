@@ -165,7 +165,7 @@ PlotLoggerPtr PlotMSApp::getLogger() { return itsLogger_; }
 PlotMSPlotManager& PlotMSApp::getPlotManager() { return itsPlotManager_; }
 
 
-PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
+PlotMSPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addOverPlot(p);
 }
 

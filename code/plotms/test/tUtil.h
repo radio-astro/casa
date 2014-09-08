@@ -95,11 +95,11 @@ public:
 			stat( fileName.c_str(), &filestatus );
 			qDebug() << "Output file size is "<<filestatus.st_size;
 			if ( filestatus.st_size < minBytes ){
-				qDebug() << "FAIL output file size was two small min="<<minBytes;
+				qDebug() << "FAIL output file size was too small min="<<minBytes;
 				fileOK = false;
 			}
 			else if ( filestatus.st_size > maxBytes ){
-				qDebug() << "FAIL output file size was two large max="<<maxBytes;
+				qDebug() << "FAIL output file size was too large max="<<maxBytes;
 				fileOK = false;
 			}
 			else if ( digest > 0 ){
