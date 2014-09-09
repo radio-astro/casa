@@ -1218,7 +1218,7 @@ print 'pixel, world axes =', rtn['pixel'], rtn['world']
 <description>
 This function converts frequencies to frequencies by applying a 
 relativistic Doppler shift: 
-f_out = f_in * sqrt((1.-v/c)/(1.+v/c)) . 
+fout = fin * sqrt((1.-v/c)/(1.+v/c)) . 
 
 The input frequencies are specified via a vector of numeric values and
 a specified unit ({\stfaf frequnit}).  If you don't give a frequency
@@ -1234,6 +1234,7 @@ in the Coordinate System. See also function
 </description>
 
 <example>
+"""
   ia.open('M100line.image')
   mycs = ia.coordsys()
   ia.close()
@@ -1245,6 +1246,7 @@ results in
 Let's see if this is correct
   print 115271201800.0*sqrt((1.-1000000./299792458.0)/(1.+1000000./299792458.0))
 Result: 1.14887337607e+11
+"""
 </example>
 </method>
 
