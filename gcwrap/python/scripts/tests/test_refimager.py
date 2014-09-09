@@ -22,6 +22,34 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      mask=''
      #mask = 'circle[[50pix,50pix],10pix]'
 
+     if(testnum==23):  ## Cube with AWP (and mosft)
+          casalog.post("==================================");
+          casalog.post("Test 23 Cube with AWP (and mosft)");
+          casalog.post("==================================");
+          paramList = ImagerParameters(msname='DataTest/reg_mawproject.ms', #_offcenter.ms',
+                                       field='*',scan='',
+                                       spw='*',\
+                                       usescratch=True,readonly=True,\
+                                       mode='cube',\
+                                       imagename='mytest0', nchan=-1,\
+                                       imsize=[512,512],\
+                                       cellsize=['10.0arcsec','10.0arcsec'],\
+                                       phasecenter="J2000 19:59:28.500 +40.44.01.50",\
+                                       ftmachine='awprojectft', 
+                                       startmodel='', weighting='natural',\
+                                       aterm=True, psterm=False, mterm=True,\
+                                       wbawp = False, 
+                                       cfcache = "perm.mytest0.cube.cfcache.mos",
+                                       dopointing = False, dopbcorr = True, conjbeams = True, 
+                                       computepastep =360.0, rotatepastep =5.0,\
+                                       deconvolver='hogbom',\
+                                       #pblimit=0.1,normtype='flatsky',
+                                       niter=niter,cycleniter=cycleniter,\
+                                       threshold=threshold,loopgain=loopgain,\
+                                       restoringbeam=restoringbeam,
+                                       interactive=interactive,mask=mask)
+
+
      if(testnum==22):  ## 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.
           casalog.post("==================================");
           casalog.post("Test 22 image-field, mfs --- readonly/savevirtualmodel/savemodelcolumn.");
@@ -108,7 +136,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        #phasecenter="J2000 19:59:23.591 +40.44.01.50",\
                                        phasecenter=0,
                                        ftmachine='gridft', startmodel='', weighting='natural',\
-                                       deconvolver='multiscale',scales=[0,20,40],\
+                                       deconvolver='multiscale',scales=[0,20,40,100],\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
@@ -506,6 +534,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("Test 7 : 1 image-field, mfs, With ntaylorterms=2 ");
           casalog.post("==================================");
           
+#          paramList = ImagerParameters(msname='DataTest/eptwochan.ms',field='0',spw='*',\
           paramList = ImagerParameters(msname='DataTest/twopoints_twochan.ms',field='0',spw='0',\
                                        usescratch=True,readonly=True,\
                                        mode='mfs',\
@@ -515,9 +544,10 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        #restfreq=['1.5GHz'],\
                                        imsize=[200,200],\
                                        cellsize=['8.0arcsec','8.0arcsec'],\
-                                       phasecenter="J2000 19:59:00.2 +40.50.15.50",\
+                                       #phasecenter="J2000 19:59:00.2 +40.50.15.50",\
                                        ftmachine='gridft', startmodel='', weighting='natural',\
                                        deconvolver='mtmfs',\
+#                                       scales=[0,20,40,100],\
                                        niter=niter,cycleniter=cycleniter,\
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,

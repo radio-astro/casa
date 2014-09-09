@@ -420,6 +420,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="bool">True</value>
     </param>
 
+    <param type="bool" name="recalcpsf" subparam="true">
+	    <description>Recalculate PSF before starting deconvolution</description>
+	    <value type="bool">True</value>
+    </param>
+
 
 
 <!--============================================== -->
@@ -607,7 +612,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="mask"><value>""</value></default>
 	 <default param="savemodel"><value>"none"</value></default>
 	 <default param="recalcres"><value>True</value></default>
+	 <default param="recalcpsf"><value>True</value></default>
        </notequals>
+<!--       <equals type="int" value="0">
+	 <default param="recalcpsf"><value>True</value></default>
+       </equals> -->
      </when>
 
      <when param="parallel">

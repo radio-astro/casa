@@ -96,6 +96,7 @@ def tclean(
     mask='',
     savemodel="none",
     recalcres=True,
+    recalcpsf=True,
 
     ####### State parameters
     parallel=False,
@@ -285,7 +286,7 @@ def tclean(
         imager.initializeIterationControl()
 
     ## Make PSF
-    if recalcres==True:
+    if recalcpsf==True:
         imager.makePSF()
 
     if niter >=0 : 
