@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.56 2014/09/04 14:51:27 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.57 2014/09/09 17:27:23 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.56 2014/09/04 14:51:27 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.57 2014/09/09 17:27:23 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -4835,7 +4835,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                         or (scanTest and scanTest2 and overlaySpws and overlayAntennas==False and overlayTimes==False)
                         or ((spwctr==len(spwsToPlot)-1) and (overlayBasebands or overlaySpws) and overlayAntennas==False and overlayTimes==False)
                         # following case is needed for scans parameter with overlay='time'
-                        or (overlayTimes and scanTest)
+                        or (overlayTimes and scanTest and overlayAntennas==False)
                         # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time' :  'phase'
                         or (xframe == lastFrame and overlayTimes and overlayAntennas and
                             xctr+1==len(antennasToPlot) and
