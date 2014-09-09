@@ -7,6 +7,7 @@ from .gaincal import TimeGaincal
 from .fluxcalflag import FluxcalFlag
 from .fluxscale import GcorFluxscale
 from .linpolcal import Linpolcal
+from .spwphaseup import SpwPhaseup
 from .tsyscal import Tsyscal
 from .tsysflag import Tsysflag
 from .tsysflagchans import Tsysflagchans
