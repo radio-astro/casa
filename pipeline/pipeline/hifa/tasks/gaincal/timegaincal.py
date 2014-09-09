@@ -15,12 +15,10 @@ LOG = infrastructure.get_logger(__name__)
 
 class TimeGaincalInputs(gaincalmode.GaincalModeInputs):
     @basetask.log_equivalent_CASA_call
-#    def __init__(self, context, mode='gtype', calamptable=None,
     def __init__(self, context, mode=None, calamptable=None,
             calphasetable=None, amptable=None, targetphasetable=None,
 	    calsolint=None, targetsolint=None, calminsnr=None,
 	    targetminsnr=None, **parameters):
-#        super(TimeGaincalInputs, self).__init__(context, mode=mode,
         super(TimeGaincalInputs, self).__init__(context, mode='gtype',
             calamptable=calamptable, calphasetable=calphasetable,
 	    amptable=amptable, targetphasetable=targetphasetable,
@@ -141,23 +139,34 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
     def prepare(self, **parameters):
 
+	# Simplify
+	inputs = self.inputs
+
         # Create a results object.
         result = common.GaincalResults() 
 
-        # Produce the diagnostic table for displaying
-        # amplitude vs time plots. 
+	# Get the phaseup spwmap
+	phaseupspwmap = inputs.ms.phaseup_spwmap
+
+        # Produce the diagnostic table for displaying amplitude vs time plots. 
+	# Not special mapping required here.
         calampresult = self._do_caltarget_ampcal()
         result.calampresult = calampresult
 
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
+
         # Readjust to the true calto.intent
         targetphaseresult.pool[0].calto.intent = 'PHASE,CHECK,TARGET'
         targetphaseresult.final[0].calto.intent = 'PHASE,CHECK,TARGET'        
+
         # CalFroms are immutable, so we must replace them with a new 
         # object rather than editing them directly
         self._mod_last_calwt(targetphaseresult.pool[0], False)
         self._mod_last_calwt(targetphaseresult.final[0], False)
+	if phaseupspwmap is not None:
+            self._mod_last_spwmap(targetphaseresult.pool[0], phaseupspwmap)
+            self._mod_last_spwmap(targetphaseresult.final[0], phaseupspwmap)
 
         # Adopt the target phase result
         result.pool.extend(targetphaseresult.pool)
@@ -166,11 +175,20 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # Compute the calibrator target phase solution
         # A local merge to context is done here.
         calphaseresult = self._do_caltarget_phasecal()
+
         # Readjust to the true calto.intent
         calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
         calphaseresult.final[0].calto.intent = 'AMPLITUDE,BANDPASS'
+
+        # CalFroms are immutable, so we must replace them with a new 
         self._mod_last_calwt(calphaseresult.pool[0], False)
         self._mod_last_calwt(calphaseresult.final[0], False)
+	if phaseupspwmap is not None:
+            self._mod_last_spwmap(calphaseresult.pool[0], phaseupspwmap)
+            self._mod_last_spwmap(calphaseresult.final[0], phaseupspwmap)
+
+	# Do a local merge of this result.
+	calphaseresult.accept(inputs.context)
 
         # Accept calphase result as is.
         result.pool.extend(calphaseresult.pool)
@@ -178,11 +196,13 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the amplitude calibration
         ampresult = self._do_target_ampcal()
+	if phaseupspwmap is not None:
+            self._mod_last_spwmap(ampresult.pool[0], phaseupspwmap)
+            self._mod_last_spwmap(ampresult.final[0], phaseupspwmap)
 
         # Accept the amplitude result as is.
         result.pool.extend(ampresult.pool)
         result.final.extend(ampresult.final)
-
 
         return result
 
@@ -228,7 +248,8 @@ class TimeGaincal(gaincalworker.GaincalWorker):
                                                       **task_args)
 
         gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
-        result = self._executor.execute(gaincal_task, merge=True)
+        #result = self._executor.execute(gaincal_task, merge=True)
+        result = self._executor.execute(gaincal_task)
         
         return result
 
@@ -319,6 +340,17 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         result =  self._executor.execute(gaincal_task)
 
         return result
+
+    def _mod_last_spwmap(self, l, spwmap):
+        l.calfrom[-1] = self._copy_with_spwmap(l.calfrom[-1], spwmap)
+
+    def _copy_with_spwmap(self, old_calfrom, spwmap):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=old_calfrom.interp,
+                                  spwmap=spwmap,
+                                  caltype=old_calfrom.caltype,
+                                  calwt=old_calfrom.calwt)
 
     def _mod_last_calwt(self, l, calwt):
         l.calfrom[-1] = self._copy_with_calwt(l.calfrom[-1], calwt)
