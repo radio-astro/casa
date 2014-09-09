@@ -161,6 +161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
 	    itsImages->addImages( itsPartImages[part], /*psf*/dopsf, /*residual*/doresidual, /*weight*/doweight );
+	    itsPartImages[part]->releaseLocks();
 	  }
 
       }// end of image gathering.

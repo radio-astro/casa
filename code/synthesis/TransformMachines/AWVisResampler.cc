@@ -612,7 +612,7 @@ namespace casa{
 					  
 					  convOrigin=cfShape/2;
 					  Bool psfOnly=((dopsf==True) && (accumCFs==False));
-					  if (finitePointingOffsets && !psfOnly)
+					  if (finitePointingOffsets )
 					    cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
 							     ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
 					  

@@ -711,7 +711,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
       }
 
-    os << "Setting " << modelname << " as model " << LogIO::POST;
+    //os << "Setting " << modelname << " as model " << LogIO::POST;
     // Then, add its contents to itsModel.
     //itsModel->put( itsModel->get() + model->get() );
     itsModel->put( newmodel->get() );
@@ -1049,14 +1049,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //LatticeExprNode pbmax( max ( sqrt( *weight() ) ) );
     //return pbmax.getDouble();
 
+    /*
     Array<Float> pbmat;
     ( weight(0) )->get( pbmat, True );
-    //    Float minval, maxval;
-    //    IPosition posmin,posmax;
-    //    minMax(minval, maxval, posmin, posmax);
-    //    return maxval;
 
     return max(sqrt(fabs(pbmat)));
+    */
+
+    IPosition shp = weight(0)->shape();
+    IPosition center(4, shp[0]/2, shp[1]/2,0,0);
+
+    return sqrt(   weight(0)->getAt( center )   );
 
   }
 
@@ -1067,6 +1070,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Normalize by the sumwt, per plane. 
     divideImageByWeightVal( *psf() );
+
+    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
     if( itsUseWeight ) 
       { 
 	divideImageByWeightVal( *weight() ); 
@@ -1076,7 +1081,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// It will let the minor cycle see as close to the 'principal solution' as possible.
 	//	itsPBScaleFactor = getPbMax();
 	//	cout << " PB Scale factor : " << itsPBScaleFactor << endl;
+
+	itsPBScaleFactor = getPbMax();
+	//	cout << " pbscale : " << itsPBScaleFactor << endl;
+
+	LatticeExpr<Float> ratio(  (*(psf())) / ( itsPBScaleFactor*itsPBScaleFactor ) );
+	
+	psf()->copyData(ratio);
       }
+
 
     /// Calculate and print point source sensitivity (per plane).
     //    calcSensitivity();

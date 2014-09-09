@@ -63,8 +63,9 @@
 
             norm = norm + (wt)
 
-            if ((finitePointingOffset .eq. 1) .and.
-     $              (doPSFOnly .eq. 0)) then
+c$$$            if ((finitePointingOffset .eq. 1) .and.
+c$$$     $              (doPSFOnly .eq. 0)) then
+            if (finitePointingOffset .eq. 1) then
                wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
      $              iloc(2) + l_phaseGradOriginY)
             endif
@@ -120,8 +121,9 @@
          
          norm = norm + (wt)
          
-         if ((finitePointingOffset .eq. 1) .and.
-     $        (doPSFOnly .eq. 0)) then
+c$$$         if ((finitePointingOffset .eq. 1) .and.
+c$$$     $        (doPSFOnly .eq. 0)) then
+         if (finitePointingOffset .eq. 1) then
             wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
      $           iloc(2) + l_phaseGradOriginY)
          endif
@@ -219,8 +221,9 @@ c$$$     $        finitePointingOffset, doPSFOnly,norm)
             
             norm = norm + (wt)
             
-            if ((finitePointingOffset .eq. 1) .and.
-     $           (doPSFOnly .eq. 0)) then
+c$$$            if ((finitePointingOffset .eq. 1) .and.
+c$$$     $           (doPSFOnly .eq. 0)) then
+            if (finitePointingOffset .eq. 1) then
                wt = wt * phaseGrad(iloc(1) + l_phaseGradOriginX,
      $              iloc(2) + l_phaseGradOriginY)
             endif

@@ -498,7 +498,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		throw( AipsError( "Input model image "+modelname+".model.tt"+String::toString(tix)+" is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
 	      }
 	    
-	    os << "Setting " << modelname << " as model for term " << tix << LogIO::POST;
+	    //os << "Setting " << modelname << " as model for term " << tix << LogIO::POST;
 	    // Then, add its contents to itsModel.
 	    //itsModel->put( itsModel->get() + model->get() );
 	    ( model(tix) )->put( newmodel->get() );
@@ -736,7 +736,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt tix=0;tix<2*itsNTerms-1;tix++)
       {
 	divideImageByWeightVal( *psf(tix) );
-	if( itsUseWeight ) { divideImageByWeightVal( *weight(tix) ); }
+	if( itsUseWeight ) 
+	  { 
+	    divideImageByWeightVal( *weight(tix) ); 
+	    itsPBScaleFactor = getPbMax();
+	    //	cout << " pbscale : " << itsPBScaleFactor << endl;
+
+	    LatticeExpr<Float> ratio(  (*(psf(tix))) / ( itsPBScaleFactor*itsPBScaleFactor ) );
+	    
+	    psf(tix)->copyData(ratio);
+	  }
       }
 
     //    calcSensitivity();
