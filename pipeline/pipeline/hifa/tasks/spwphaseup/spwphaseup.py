@@ -9,6 +9,7 @@ from pipeline.hifa.heuristics.phasespwmap import simple_w2nspwmap
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.callibrary as callibrary
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -49,8 +50,10 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 	LOG.info('The phaseup spw map for %s is %s' % \
             (inputs.ms.basename, phaseupspwmap))
 
-	# Compute the phaseup table
+	# Compute the phaseup table and set calwt to False
 	phaseupresult = self._do_phaseup()
+	self._mod_last_calwt (phaseupresult.pool[0], False)
+	self._mod_last_calwt (phaseupresult.final[0], False)
 
         # Create the results object.
 	result = SpwPhaseupResults(vis=inputs.vis,
@@ -108,6 +111,19 @@ class SpwPhaseup(gaincalworker.GaincalWorker):
 
         return result
 
+    def _mod_last_calwt(self, l, calwt):
+        l.calfrom[-1] = self._copy_with_calwt(l.calfrom[-1], calwt)
+
+    def _copy_with_calwt(self, old_calfrom, calwt):
+        return callibrary.CalFrom(gaintable=old_calfrom.gaintable,
+                                  gainfield=old_calfrom.gainfield,
+                                  interp=old_calfrom.interp,
+                                  spwmap=list(old_calfrom.spwmap),
+                                  caltype=old_calfrom.caltype,
+                                  calwt=calwt)
+
+
+
 class SpwPhaseupResults(basetask.Results):
     def __init__(self, vis=None, phaseup_result=None, phaseup_spwmap=[]):
         """
@@ -116,7 +132,10 @@ class SpwPhaseupResults(basetask.Results):
         super(SpwPhaseupResults, self).__init__()
         self.vis=vis
         self.phaseup_result = phaseup_result
-        self.phaseup_spwmap = phaseup_spwmap
+	if not phaseup_spwmap:
+            self.phaseup_spwmap = None
+	else:
+            self.phaseup_spwmap = phaseup_spwmap
 
     def merge_with_context(self, context):
 
