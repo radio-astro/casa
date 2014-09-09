@@ -217,6 +217,8 @@ def plotms(vis=None,
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if type(yaxis) is str:
             if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
+        if type(coloraxis) is str:
+            if(synonyms.has_key(coloraxis)): coloraxis = synonyms[coloraxis]
         
         
         # synonyms for data columns (only one, so just hardcode it)

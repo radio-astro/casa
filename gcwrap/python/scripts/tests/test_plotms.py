@@ -345,7 +345,25 @@ class plotms_test1(test_base):
                           gridrows=1, gridcols=1)
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)        
-        
+       
+    def test012a(self):
+        '''Plotms 12a: Test that we can colorize by synonym see CAS-6921.'''
+        self.plotfile_jpg = self.outputDir + "testPlot012a.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Colorize by chan.'''
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+                          overwrite=True, showgui=False,
+                          xaxis='elevation', yaxis='amp',
+                          coloraxis='chan',
+                          gridrows=1, gridcols=1)
+        self.assertTrue(self.res)
+        # Note that if coloraxis arg reverts to default the plot will be ~180000
+        self._checkPlotFile(200000, self.plotfile_jpg)
+ 
     def stest013(self):
         '''Plotms 13: Test that we can colorize by averaged time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot013.jpg"
