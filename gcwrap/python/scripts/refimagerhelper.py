@@ -424,6 +424,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 #############################################
 
     def runMajorCycleCore(self, lastcycle):
+        casalog.post("-----------------------------  Running Parallel Major Cycle ----------------------------","INFO")
         ### Run major cycle
         joblist=[]
         for node in range(0,self.PH.NN):
