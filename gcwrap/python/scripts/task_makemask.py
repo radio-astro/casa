@@ -783,6 +783,11 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    shutil.rmtree(sum_tmp_outfile)
 		if os.path.exists(tmp_inmask):
 		    shutil.rmtree(tmp_inmask)
+		if os.path.exists(tmp_allrgmaskim):
+		    shutil.rmtree(tmp_allrgmaskim)
+		if os.path.exists(tmp_rgmaskim):
+		    shutil.rmtree(tmp_rgmaskim)
+
                 if type(inpimage)==list:
                    for im in inpimage:
                        if os.path.isdir('__tmp_regrid.'+im):
@@ -841,6 +846,15 @@ def regridmask(inputmask,template,outputmask,axes=[3,0,1],method='linear',chanra
     # assumed order of axes 
     reforder=['Right Ascension', 'Declination', 'Stokes', 'Frequency']
     axisorder=ia.summary(list=False)['axisnames'].tolist()
+    # check if all 4 axes exist
+    errmsg = ""
+    for axname in reforder:
+      if axisorder.count(axname) == 0:
+        errmsg += axname+" "
+    if len(errmsg) != 0:
+      errmsg = "There is no "+errmsg+" axes inpimage. ia.adddegaxis or importfits with defaultaxes=True can solve this problem"    
+      raise Exception, errmsg
+
     tmp_axes=[]
     for axi in axes:
         tmp_axes.append(axisorder.index(reforder[axi]))        
