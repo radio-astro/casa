@@ -141,10 +141,6 @@
 		<Keyword xmlns="">intent</Keyword>
 		    <Value xmlns="">PHASE,BANDPASS</Value>
 	    </Parameter>
-	    <Parameter>
-		<Keyword xmlns="">imsize</Keyword>
-		    <Value xmlns="">300</Value>
-	    </Parameter>
 	</ParameterSet>
     </ProcessingCommand>
 
