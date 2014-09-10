@@ -45,6 +45,7 @@ PlotMSDataSummaryTab::PlotMSDataSummaryTab(PlotMSPlotter* parent) :
 	ui.setupUi(this);
 
 	its_force_reload = false;
+	makingPlot = false;
 	rowLimit = 1;
 	colLimit = 1;
 
@@ -150,13 +151,16 @@ void PlotMSDataSummaryTab::insertData( int index ){
 		plotTab = dataList[index];
 	}
 	else {
+		makingPlot = true;
 		QLayout* scrollLayout = scrollWidget->layout();
 		scrollLayout->removeItem( bottomSpacer );
 		plotTab = new PlotMSDataCollapsible( itsPlotter_, scrollWidget, index );
+		dataList.append( plotTab );
+		makingPlot = false;
 		connect(  plotTab, SIGNAL( close(PlotMSDataCollapsible*)),
 				this, SLOT( close(PlotMSDataCollapsible*)));
 		plotTab->setGridSize( rowLimit, colLimit );
-		dataList.append( plotTab );
+
 		scrollLayout->addWidget( plotTab );
 		scrollLayout->addItem( bottomSpacer );
 	}
@@ -175,7 +179,7 @@ void PlotMSDataSummaryTab::plotsChanged(const PlotMSPlotManager& manager){
 	int managerPlotCount = manager.numPlots();
 	//Make sure scriptors have not added some plots through DBUS that we
 	//don't know about while showing the GUI.
-	if ( managerPlotCount > dataCount ){
+	if ( managerPlotCount > dataCount && !makingPlot ){
 		for ( int i = dataCount; i < managerPlotCount; i++ ){
 			this->addSinglePlot(i);
 		}

@@ -112,6 +112,7 @@ private:
 
     // Flag set if user uses shift+plot or otherwise requests reload&replot
     bool its_force_reload;
+    bool makingPlot;
     Ui::PlotMSDataSummaryTabClass ui;
 };
 
