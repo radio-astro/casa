@@ -2503,7 +2503,9 @@ namespace casa {
 
 		std::list<std::tr1::shared_ptr<RegionInfo> > *Region::generate_dds_statistics(  ) {
 			std::list<std::tr1::shared_ptr<RegionInfo> > *region_statistics = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
-			if( wc_==0 ) return region_statistics;
+			if( wc_==0 ){
+				return region_statistics;
+			}
 
 			Int zindex = 0;
 			if (wc_->restrictionBuffer()->exists("zIndex")) {
@@ -2512,7 +2514,6 @@ namespace casa {
 
 			DisplayData *dd = 0;
 			const std::list<DisplayData*> &dds = wc_->displaylist( );
-
 			ImageRegion_state imageregion_state = get_image_selected_region( wc_->csMaster( ) );
 			std::tr1::shared_ptr<ImageRegion> imageregion = imageregion_state;
 			char region_component_count[128];
@@ -2531,12 +2532,15 @@ namespace casa {
 				try {
 
 					std::tr1::shared_ptr<ImageInterface<Float> > image ( padd->imageinterface( ));
-
-					if ( ! image ) continue;
+					if ( ! image ){
+						continue;
+					}
 
 					String full_image_name = image->name(false);
 					std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-					if (repeat != processed.end()) continue;
+					if (repeat != processed.end()){
+						continue;
+					}
 					processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 					if ( name_ == "polyline" ) {
 						RegionInfo *info = newInfoObject( image.get(), padd );
@@ -2551,7 +2555,9 @@ namespace casa {
 
 					} else {
 
-						if ( imageregion.get( ) == NULL  ) continue;
+						if ( imageregion.get( ) == NULL  ){
+							continue;
+						}
 
 						RegionInfo::stats_t *dd_stats = getLayerStats(padd,image.get(),*imageregion);
 						if ( dd_stats ) {
@@ -2583,7 +2589,9 @@ namespace casa {
 			//(4) pass layer index to LatticeStatistcis
 			//(5) do single plane statistic right here
 
-			if( image==0 || padd == 0 ) return 0;
+			if( image==0 || padd == 0 ){
+				return 0;
+			}
 
 			try {
 				SubImage<Float> subImg(*image, imgReg);
@@ -2661,10 +2669,8 @@ namespace casa {
 						}
 					}
 				}
-
 				if (hPos > -1) {
 					tPix(hPos) = hIndex;
-
 					if (!cs.toWorld(tWrld,tPix)) {
 					} else {
 						hLabel = ((DisplayCoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(hPos), hPos);
@@ -2696,15 +2702,14 @@ namespace casa {
 					}
 
 					if (downcase(haxis).contains("freq")) {
-						if (spCoord.pixelToVelocity(vel, hIndex)) {
-							if (restFreq >0)
-								layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
-							else
-								layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
-
-							layerstats->push_back(RegionInfo::stats_t::value_type("Frame",MFrequency::showType(spCoord.frequencySystem())));
-							layerstats->push_back(RegionInfo::stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
+						if (restFreq > 0 && spCoord.pixelToVelocity(vel, hIndex)) {
+							layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
 						}
+						else {
+							layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
+						}
+						layerstats->push_back(RegionInfo::stats_t::value_type("Frame",MFrequency::showType(spCoord.frequencySystem())));
+						layerstats->push_back(RegionInfo::stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
 					}
 				}
 
