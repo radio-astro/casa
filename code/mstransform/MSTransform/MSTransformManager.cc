@@ -2793,13 +2793,13 @@ void MSTransformManager::separateSyscalSubtable()
     	}
     	else
     	{
-    		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    		logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
 	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
     	}
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "SYSCAL sub-table not found " << LogIO::POST;
     }
 
@@ -2866,13 +2866,13 @@ void MSTransformManager::separateFreqOffsetSubtable()
     	}
     	else
     	{
-    		logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    		logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
 	    			<< "FREQ_OFFSET sub-table found but has no valid content" << LogIO::POST;
     	}
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
     }
 
@@ -2989,13 +2989,13 @@ void MSTransformManager::separateCalDeviceSubtable()
 		}
 		else
 		{
-	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
 	    			<< "CALDEVICE sub-table found but has no valid content" << LogIO::POST;
 		}
 	}
 	else
 	{
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "CALDEVICE sub-table not found." << LogIO::POST;
 	}
 
@@ -3093,13 +3093,13 @@ void MSTransformManager::separateSysPowerSubtable()
 		}
 		else
 		{
-	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+	    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
 	    			<< "SYSPOWER sub-table found but has no valid content" << LogIO::POST;
 		}
 	}
 	else
 	{
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "SYSPOWER sub-table not found." << LogIO::POST;
 	}
 
@@ -3198,7 +3198,7 @@ void MSTransformManager::reindexSourceSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "SOURCE sub-table not found " << LogIO::POST;
     }
 
@@ -3255,7 +3255,7 @@ void MSTransformManager::reindexDDISubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "DATA_DESCRIPTION sub-table not found " << LogIO::POST;
     }
 }
@@ -3315,7 +3315,7 @@ void MSTransformManager::reindexFeedSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__) <<
+    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__) <<
     			 "FEED sub-table not found " << LogIO::POST;
     }
 
@@ -3376,7 +3376,7 @@ void MSTransformManager::reindexSysCalSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "SYSCAL sub-table not found " << LogIO::POST;
     }
 
@@ -3438,7 +3438,7 @@ void MSTransformManager::reindexFreqOffsetSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
     			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
     }
 
@@ -3502,14 +3502,30 @@ void MSTransformManager::reindexGenericTimeDependentSubTable(const String& subta
 		}
 		else
 		{
-	    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-	    			<< subtabname << " sub-table found but has no valid content" << LogIO::POST;
+			if (subtabname == casa::String("FEED"))
+			{
+		    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+		    			<< subtabname << " sub-table found but has no valid content" << LogIO::POST;
+			}
+			else
+			{
+		    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+		    			<< subtabname << " sub-table found but has no valid content" << LogIO::POST;
+			}
 		}
 	}
 	else
 	{
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformManager", __FUNCTION__)
-    			<< subtabname << " sub-table not found" << LogIO::POST;
+		if (subtabname == casa::String("FEED"))
+		{
+	    	logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< subtabname << " sub-table not found" << LogIO::POST;
+		}
+		else
+		{
+	    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformManager", __FUNCTION__)
+	    			<< subtabname << " sub-table not found" << LogIO::POST;
+		}
 	}
 
 	return;

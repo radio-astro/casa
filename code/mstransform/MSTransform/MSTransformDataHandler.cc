@@ -3642,14 +3642,14 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 		}
 		else
 		{
-	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
 	}
 	else
 	{
-		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SYSCAL sub-table not found " << LogIO::POST;
     	return False;
 	}
@@ -3726,7 +3726,7 @@ Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vec
 		}
 		else
 		{
-	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "FREQ_OFFSET sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
@@ -3734,7 +3734,7 @@ Bool MSTransformDataHandler::mergeFreqOffsetTables(Vector<String> filenames, Vec
 	}
 	else
 	{
-		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "FREQ_OFFSET sub-table not found " << LogIO::POST;
     	return False;
 	}
@@ -3927,14 +3927,14 @@ Bool MSTransformDataHandler::mergeCalDeviceSubtables(Vector<String> filenames, V
 		}
 		else
 		{
-	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "CALDEVICE sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
 	}
 	else
 	{
-		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "CALDEVICE sub-table not found " << LogIO::POST;
     	return False;
 	}
@@ -4095,14 +4095,14 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 		}
 		else
 		{
-	    	os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    	os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "SYSPOWER sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
 	}
 	else
 	{
-		os << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+		os << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "SYSPOWER sub-table not found " << LogIO::POST;
     	return False;
 	}
