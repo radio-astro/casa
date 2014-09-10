@@ -1973,7 +1973,7 @@ class test_subtables_alma(test_base):
         self.outputms = 'separated.ms'
         
         mstransform(self.vis, outputvis=self.tmpms, datacolumn='data', combinespws=True) 
-        mstransform(self.tmpms, outputvis=self.outputms, datacolumn='data',regridms=True,mode='channel',nchan=64,nspw=2)      
+        mstransform(self.tmpms, outputvis=self.outputms, datacolumn='data',regridms=True,nspw=4)      
         
         mytb = tbtool()
         mytb.open(self.outputms + '/SOURCE')
@@ -2004,7 +2004,7 @@ class test_subtables_alma(test_base):
         nrows = mytb.nrows()
         bbcNo = mytb.getcol('BBC_NO')
         mytb.close()
-        self.assertEqual(nrows, 1*4)   
+        self.assertEqual(nrows, 1*4)
         self.assertEqual(bbcNo[0], 1)                   
         
 # Cleanup class
