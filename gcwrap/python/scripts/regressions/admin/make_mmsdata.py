@@ -21,6 +21,7 @@ import partitionhelper as ph
 # These tasks have been verified to work on MMS. 
 TASKLIST = [
             'bandpass',
+            'cvel',
             'flagdata',
             'fluxscale',
             'gaincal',
@@ -55,7 +56,6 @@ def usage():
     print '   --all             run the script for all tasks in TASKLIST.'
     print '   --ignore          do no create MMS for the given <tasks>.'
     print '   --list            print the list of tasks from TASKLIST and exit.'
-    print '   --parallel        create MMSs in parallel using simple_cluster.'
     print '   --axis            separationaxis to use (spw, scan, both); default:both'
     print 'NOTE: it will look for MS data in the data repository under unittest.\r'
     print '=========================================================================='
@@ -74,14 +74,14 @@ def selectList(nolist):
     
     
 # Function to call partitionhelper.convertToMMS()
-def mmstest(mytask, parallel, axis):
+def mmstest(mytask, axis):
 
     TESTPATH = DATAPATH + 'unittest/'
     INPPATH = TESTPATH + mytask
     MMSPATH = './unittest_mms/'+mytask
 
     print '--------- Will create MMS data for test_'+mytask
-    ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, parallel=parallel, 
+    ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, 
                     axis=axis, createmslink=True, cleanup=True)
 
       
@@ -91,7 +91,7 @@ if not os.environ.has_key('CASAPATH'):
     os._exit(2)
     
 
-def main(thislist, parallel=False, axis='both'):
+def main(thislist, axis='auto'):
     
     if thislist == []:
         print 'Need list of tasks to run.'
@@ -107,9 +107,9 @@ def main(thislist, parallel=False, axis='both'):
  #       if t == 'flagdata':
 #            axis='scan'
             
-        mmstest(t, parallel, axis)
+        mmstest(t, axis)
 
-    from tasks import partition
+    from tasks import partition,importuvfits
 
     if 'listvis' in thislist:
         # NOTE for test_listvis data:
@@ -118,8 +118,7 @@ def main(thislist, parallel=False, axis='both'):
         SDMMS = './unittest_mms/listvis/'
     
         partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', 
-                  datacolumn='float_data', createmms=True, flagbackup=False,
-                  parallel=parallel)
+                  datacolumn='float_data', createmms=True, flagbackup=False)
 
     if 'split' in thislist:
         # some additional MMSs
@@ -130,8 +129,7 @@ def main(thislist, parallel=False, axis='both'):
         for myms in specialcase:
             shutil.rmtree(SPLITMMSPATH+os.path.basename(myms), ignore_errors=True)
             partition(vis=DATAPATH+myms, outputvis=SPLITMMSPATH+os.path.basename(myms), 
-                      datacolumn='all', flagbackup=False,
-                      parallel=parallel)
+                      datacolumn='all', flagbackup=False)
 
         # workaround for a partition shortcoming: column keywords not copied
         tb.open(SPLITMMSPATH+'hasfc.mms/SUBMSS/hasfc.0000.ms/', nomodify=False)
@@ -152,7 +150,7 @@ def main(thislist, parallel=False, axis='both'):
             print d
             if  os.path.splitext(d)[1]=='.ms':
                 partition(vis=WVRGCALPATH+d, outputvis=d, datacolumn='all', numsubms=5,
-                          flagbackup=False, parallel=parallel)
+                          flagbackup=False)
             else:
                 os.symlink(WVRGCALPATH+d, d)
         os.chdir(origwd)
@@ -170,10 +168,34 @@ def main(thislist, parallel=False, axis='both'):
             print d
             if os.path.splitext(d)[1]=='.ms':
                 partition(vis=CONCATPATH+d, outputvis=d, datacolumn='all', numsubms=6,
-                          flagbackup=False, parallel=parallel)
+                          flagbackup=False)
             else:
                 os.symlink(CONCATPATH+d, d)
         os.chdir(origwd)
+        
+    if ('cvel' in thislist):
+
+        CVELPATH = DATAPATH + 'ngc4826/fitsfiles/'
+        MMSPATH = './unittest_mms/cvel/'
+        mmsdir = MMSPATH+'ngc4826.mms'
+        tempdir = '/tmp/'
+        importuvfits(fitsfile=CVELPATH+'ngc4826.ll.fits5',vis=tempdir+'ngc4826.ms') 
+        tempdir = 'makemmsdirtemp'
+        os.system('mkdir '+tempdir)
+        ph.convertToMMS(inpdir=tempdir, mmsdir=MMSPATH, axis='scan', createmslink=True, cleanup=True)  
+        os.system('rm -rf '+tempdir)      
+        
+        CVELPATH = DATAPATH + 'cvel/input/'
+        MMSPATH = './unittest_mms/cvel/'
+        ph.convertToMMS(inpdir=CVELPATH, mmsdir=MMSPATH, axis='scan', createmslink=True, cleanup=True)  
+        
+        CVELMS = DATAPATH + 'fits-import-export/input/test.ms'
+        MMSPATH = './unittest_mms/cvel/'
+        thisdir = os.getcwd()
+        partition(vis=CVELMS, mmsdir=MMSPATH+'test.mms', separationaxis='scan',flagbackup=False)
+        os.chdir(MMSPATH)
+        os.system('ln -s test.mms test.ms')
+        os.chdir(thisdir)
         
     
 if __name__ == "__main__":
@@ -187,7 +209,7 @@ if __name__ == "__main__":
                     
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "ailpx:", ["all", "ignore","list","parallel","axis="])
+                opts,args=getopt.getopt(sys.argv[i+2:], "ailx:", ["all", "ignore","list","axis="])
                 
             except getopt.GetoptError, err:
                 # Print help information and exit:
@@ -198,8 +220,8 @@ if __name__ == "__main__":
             # List of tests to run
             tasknames = []
             
-            axis = 'both'
-            parallel = False            
+            axis = 'auto'
+#            parallel = False            
             ignore = False
             all = False
             
@@ -210,9 +232,6 @@ if __name__ == "__main__":
             
             elif opts != []:
                 for o, a in opts:
-                    if o in ("-p", "--parallel"):
-                        parallel = True
-                        continue
 
                     if o in ("x", "--axis"):
                         axis = a
@@ -248,7 +267,7 @@ if __name__ == "__main__":
                     tasknames = selectList(args)
                 
     try:                 
-        main(tasknames, parallel, axis)
+        main(tasknames, axis)
     except:
         traceback.print_exc()
     

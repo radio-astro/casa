@@ -14,7 +14,7 @@ class convertToMMS():
     def __init__(self,\
                  inpdir=None, \
                  mmsdir=None, \
-                 parallel=False, \
+#                 parallel=False, \
                  axis='auto', \
                  createmslink=False, \
                  cleanup=False):
@@ -24,7 +24,7 @@ class convertToMMS():
 
         self.inpdir = inpdir
         self.outdir = mmsdir
-        self.parallel = parallel
+#        self.parallel = parallel
         self.axis = axis
         self. createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
@@ -94,7 +94,7 @@ class convertToMMS():
         # Create an MMS for each MS in list
         for ms in mslist:
             casalog.post('Will create an MMS for '+ms)
-            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.parallel, self.axis)
+            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.axis)
             if not ret:
                 sys.exit(2)
             
@@ -225,13 +225,12 @@ class convertToMMS():
         return fileslist
 
 
-    def runPartition(self, ms, mmsdir, createlink, runmode, axis):
+    def runPartition(self, ms, mmsdir, createlink, axis):
         '''Run partition with default values to create an MMS.
            ms         --> full pathname of the MS
            mmsdir     --> directory to save the MMS to
            createlink --> when True, it will create a symbolic link to the
                          just created MMS in the same directory with extension .ms  
-           runmode   --> run partition in parallel or sequential
            axis      --> separationaxis to use (spw, scan, auto)
         '''
         from tasks import partition
@@ -260,7 +259,7 @@ class convertToMMS():
         # Run partition   
         default('partition')
         partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', flagbackup=False,
-                  parallel=runmode, separationaxis=axis)
+                  separationaxis=axis)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created
@@ -715,6 +714,8 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
         omitsubtables    -- List of sub-tables to omit when copying to output MMS. They will be linked instead
         parallelasxis    -- Optionally, set the value to be written to AxisType in table.info of the output MMS
                             Usually this value comes from the separationaxis keyword of partition or mstransform.
+                            
+          Be AWARE that this function will remove the tables listed in submslist.
     """
 
     if os.path.exists(outputvis):
@@ -770,10 +771,19 @@ def makeMMS(outputvis, submslist, copysubtables=False, omitsubtables=[], paralle
 
         # AND put links for those subtables omitted
         os.chdir('SUBMSS/'+mastersubms)
+        
+        # Check if firtst subMS has POINTING and SYSCAL
+        hasPointing = os.path.exists('POINTING')
+        hasSyscal = os.path.exists('SYSCAL')
+
         for i in xrange(1,len(submslist)):
             thesubms = os.path.basename(submslist[i].rstrip('/'))
             os.chdir('../'+thesubms)
             for s in omitsubtables:
+                if s == 'POINTING' and hasPointing == False:
+                    continue
+                if s == 'SYSCAL' and hasSyscal == False:
+                    continue
                 os.system('rm -rf '+s) # shutil does not work in the general case
                 os.symlink('../'+mastersubms+'/'+s, s)
                 
