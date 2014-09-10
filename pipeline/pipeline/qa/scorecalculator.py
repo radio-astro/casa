@@ -19,6 +19,7 @@ __all__ = ['score_polintents',                                # ALMA specific
 	   'score_tsysspwmap',                                # ALMA specific
 	   'score_missing_derived_fluxes',                    # ALMA specific
 	   'score_derived_fluxes_snr',                        # ALMA specific
+	   'score_phaseup_mapping_fraction',                  # ALMA specific
 	   'score_setjy_measurements',         
            'score_missing_intents',
            'score_ephemeris_coordinates',
@@ -671,6 +672,46 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
 	score = 0.0
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
+    '''
+    Compute the fraction of science spws that have not been
+    mapped to other probably  wider windows.
+    '''
+
+    if phaseup_spwmap is None or not phaseup_spwmap:
+        score = 1.0
+        longmsg = 'No mapped science spws for %s ' % ms.basename
+        shortmsg = 'No mapped science spws'
+    else:
+        # Expected fields
+        scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+
+        # Expected science windows
+        scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+
+        # Loop over the expected fields
+        nexpected = 0
+        for scifield in scifields:
+	    validspws = set([spw.id for spw in scifield.valid_spws])
+	    nexpected = nexpected + len(validspws.intersection(scispws))
+
+        nunmapped = 0
+	for spwid in validspws:
+	    if spwid == phaseup_spwmap[spwid]: 
+	        nunmapped = nunmapped + 1
+	
+	if nunmapped >= nexpected:
+            score = 1.0
+            longmsg = 'No mapped science spws for %s ' % ms.basename
+            shortmsg = 'No mapped science spws'
+	else:
+	    score =  float(nunmapped) / float(nexpected) 
+            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
+            shortmsg = 'There are mapped science spws'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
