@@ -143,6 +143,9 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default('partition')   
 
+    def cleanup(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.vis +'.flagversions')
  
 class partition_test1(test_base):
     
@@ -819,7 +822,7 @@ class test_partiton_subtables_alma(test_base):
         
         self.outputms = "parted.ms"
         
-        partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4)
+        partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4,flagbackup=False)
         
         subtable = "/FEED"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
