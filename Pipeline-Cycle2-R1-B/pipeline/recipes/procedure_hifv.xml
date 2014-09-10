@@ -140,7 +140,7 @@
 	    <Parameter>
 		<Keyword xmlns="">intent</Keyword>
 		    <Value xmlns="">PHASE,BANDPASS</Value>
-	    </Parameter>>
+	    </Parameter>
 	</ParameterSet>
     </ProcessingCommand>
 
