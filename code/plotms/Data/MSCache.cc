@@ -424,6 +424,14 @@ void MSCache::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
 		// catch detected volume excess, clear the existing cache, and rethrow
 		logLoad(log.getMesg());
 		clear();
+
+		//Close any open tables.
+		if (rvi_p)
+				delete rvi_p;
+		wvi_p=NULL;
+		rvi_p=NULL;
+
+
 		stringstream ss;
 		ss << "Please try selecting less data or averaging and/or" << endl
 				<< " 'force reload' (to clear unneeded cache items) and/or" << endl
