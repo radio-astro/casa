@@ -72,6 +72,11 @@ PlotMSExportParam PlotMSExportTab::getExportParams() const {
 	return params;
 }
 
+void PlotMSExportTab::setExportFormat(PlotExportFormat format)
+{
+    itsFileWidget_->setFile(format.location);
+}
+
 PlotExportFormat PlotMSExportTab::currentlySetExportFormat() const {
     String file = itsFileWidget_->getFile();
     PlotExportFormat::Type t = (ui.format->currentIndex() == 0) ?

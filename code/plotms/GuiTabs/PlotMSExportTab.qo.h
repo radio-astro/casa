@@ -50,6 +50,7 @@ public:
     
     // See PlotMSTab::currentlySetExportFormat().
     PlotExportFormat currentlySetExportFormat() const;
+    void setExportFormat(PlotExportFormat format);
     
     //Returns the export range (All, Current, etc).
     PlotMSExportParam getExportParams() const;

@@ -45,6 +45,8 @@ ActionExportDialog::ActionExportDialog(Client* client)
 bool ActionExportDialog::doActionSpecific( PlotMSApp* plotms){
 	if ( exportDialog == NULL ){
 		exportDialog = new PlotMSExportTab();
+                PlotExportFormat oldFormat = plotms->getExportFormat();
+                exportDialog->setExportFormat(oldFormat);
 	}
 
 	int result = exportDialog->exec();
