@@ -406,6 +406,7 @@ class PlotbandpassAntSpwPolComposite(AntSpwPolComposite):
 class CaltableWrapper(object):
     @staticmethod
     def from_caltable(filename):
+        LOG.trace('CaltableWrapper.from_caltable(%r)', filename)
         with casatools.TableReader(filename) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')

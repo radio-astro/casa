@@ -2,9 +2,6 @@
 import os
 import types
 
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.logging as logging
-
 agent_description = {
 	'before'   : 'Before Task',
 	'online'   : 'Online Flags',

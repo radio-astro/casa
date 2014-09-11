@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 
 from ..tsysflagspectra import TsysflagspectraInputs, Tsysflagspectra

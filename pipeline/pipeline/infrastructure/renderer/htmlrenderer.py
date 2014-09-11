@@ -1,5 +1,4 @@
 from __future__ import absolute_import, division
-import atexit
 import collections
 import contextlib
 import datetime
@@ -11,14 +10,10 @@ import os
 import pydoc
 import re
 import shutil
-import StringIO
-import sys
-import tempfile
 import zipfile
 
 import casadef
 import mako
-import mako.lookup as lookup
 import numpy as np
 
 import pipeline as pipeline
@@ -36,8 +31,6 @@ import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.gaincal as gaincal
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.slice as slicedisplay
-import pipeline.infrastructure.displays.tsys as tsys
 import pipeline.infrastructure.displays.wvr as wvr
 import pipeline.infrastructure.displays.singledish as sddisplay
 import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
@@ -50,17 +43,17 @@ import pipeline.infrastructure.displays.vla.opacitiesdisplay as opacitiesdisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
-from pipeline.infrastructure.renderer import templates
 from pipeline.infrastructure.renderer.templates import resources
 from . import logger
 from . import qaadapter
 from .. import utils
+from . import weblog
 import pipeline.hif as hif
 import pipeline.hsd as hsd
 import pipeline.hifa as hifa
 import pipeline.hifv as hifv
-from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -81,15 +74,20 @@ def get_task_description(result_obj):
         LOG.warning(msg)
         return msg
 
-    d = {'description' : _get_task_description_for_class(task_cls),
+    # TODO remove once refactor is complete
+    renderer = renderer_map[T2_4MDetailsRenderer].get(task_cls, None)
+    if renderer:
+        description = getattr(renderer, 'description', None)
+
+    if description is None:
+        description = _get_task_description_for_class(task_cls)    
+
+    d = {'description' : description,
          'task_name'   : get_task_name(result_obj, include_stage=False),
          'stage'       : get_stage_number(result_obj)}
     return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
 
 def _get_task_description_for_class(task_cls):
-    if task_cls is hif.tasks.AgentFlagger:
-        return 'Deterministic Flagging'
-
     if task_cls is hif.tasks.Applycal:
         return 'Apply calibrations from context'
 
@@ -111,20 +109,13 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.Rawflagchans:
         return 'Flag channels in raw data'
 
-    if task_cls in (hifa.tasks.FlagDeterALMA, hifa.tasks.ALMAAgentFlagger):
-        return 'ALMA deterministic flagging'
-
-    if task_cls is hifa.tasks.FluxcalFlag:
-        return 'Flag spectral features in solar system flux calibrators'
-
     if task_cls is hifa.tasks.GcorFluxscale:
         return 'Transfer fluxscale from amplitude calibrator'
 
     if task_cls is hif.tasks.GTypeGaincal:
         return 'G-type gain calibration'
 
-    if task_cls in (hifa.tasks.ALMAImportData, hif.tasks.ImportData, 
-                    hsd.tasks.SDImportData, hsd.tasks.SDImportData2,
+    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportData2,
                     hifv.tasks.importdata.importdata.VLAImportData):
         return 'Register measurement sets with the pipeline'
 
@@ -143,9 +134,6 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.PhcorBandpass:
         return 'Bandpass calibration'
 
-    if task_cls is hif.tasks.RefAnt:
-        return 'Select reference antennas'
-
     if task_cls is hif.tasks.Setjy:
         return 'Set calibrator model visibilities'
 
@@ -162,23 +150,8 @@ def _get_task_description_for_class(task_cls):
                     hif.tasks.GTypeGaincal, hif.tasks.GSplineGaincal):
         return 'Gain calibration'
 
-    if task_cls is hifa.tasks.Tsyscal:
-        return 'Calculate Tsys calibration'
-
-    if task_cls is hifa.tasks.Tsysflag:
-        return 'Flag Tsys calibration'
-
-    if task_cls is hifa.tasks.Tsysflagchans:
-        return 'Flag channels of Tsys calibration'
-
-    if task_cls is hifa.tasks.Tsysflagspectra:
-        return 'Flag spectra in Tsys calibration'
-
     if task_cls is hifa.tasks.Wvrgcal:
         return 'Calculate WVR calibration'
-
-    if task_cls is hifa.tasks.Wvrgcalflag:
-        return 'Calculate and flag WVR calibration'
 
     if task_cls is hsd.tasks.SDInspectData:
         return 'Inspect data'
@@ -317,15 +290,9 @@ def get_plot_dir(context, stage_number):
     return plots_dir
 
 
-class StdOutFile(StringIO.StringIO):
-    def close(self):
-        sys.stdout.write(self.getvalue())
-        StringIO.StringIO.close(self)
-
-
 class Session(object):
-    def __init__(self, mses=[], name='Unnamed Session'):
-        self.mses = mses
+    def __init__(self, mses=None, name='Unnamed Session'):
+        self.mses = [] if mses is None else mses
         self.name = name
 
     @staticmethod
@@ -351,13 +318,13 @@ class RendererBase(object):
         return os.path.join(context.report_dir, cls.output_file)
 
     @classmethod
-    def get_file(cls, context, hardcopy):
+    def get_file(cls, context):
         path = cls.get_path(context)
-        file_obj = open(path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(path, 'w')
         return contextlib.closing(file_obj)
 
     @classmethod
-    def render(cls, context, hardcopy=False):
+    def render(cls, context):
         # give the implementing class a chance to bypass rendering. This is
         # useful when the page has not changed, eg. MS description pages when
         # no subsequent ImportData has been performed
@@ -365,25 +332,10 @@ class RendererBase(object):
         if os.path.exists(path) and not cls.rerender(context):
             return
 
-        with cls.get_file(context, hardcopy) as fileobj:
-            template = TemplateFinder.get_template(cls.template)
+        with cls.get_file(context) as fileobj:
+            template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
             display_context = cls.get_display_context(context)
             fileobj.write(template.render(**display_context))
-
-
-class TemplateFinder(object):
-    _templates_dir = os.path.dirname(templates.__file__)
-    _tmp_directory = tempfile.mkdtemp()
-    LOG.trace('Mako working directory: %s' % _tmp_directory)
-    # Remove temporary Mako codegen directory on termination of Python process
-    atexit.register(lambda: shutil.rmtree(TemplateFinder._tmp_directory,
-                                          ignore_errors=True))
-    _lookup = lookup.TemplateLookup(directories=[_templates_dir],
-                                    module_directory=_tmp_directory)
-
-    @staticmethod
-    def get_template(filename, **kwargs):
-        return TemplateFinder._lookup.get_template(filename)
 
 
 class T1_1Renderer(RendererBase):
@@ -481,8 +433,6 @@ class T1_1Renderer(RendererBase):
                                         baseline_rms=baseline_rms)
         
             ms_summary_rows.append(row)
-        
-        
         
         return {'pcontext'          : context,
                 'casa_version'      : casadef.casa_version,
@@ -716,14 +666,14 @@ class T2_1DetailsRenderer(object):
     template = 't2-1_details.html'
 
     @classmethod
-    def get_file(cls, context, session, ms, hardcopy):
+    def get_file(cls, context, session, ms):
         ms_dir = os.path.join(context.report_dir, 
                               'session%s' % session.name,
                               ms.basename)
-        if hardcopy and not os.path.exists(ms_dir):
+        if not os.path.exists(ms_dir):
             os.makedirs(ms_dir)
         filename = os.path.join(ms_dir, cls.output_file)
-        file_obj = open(filename, 'w') if hardcopy else StdOutFile()
+        file_obj = open(filename, 'w')
         return contextlib.closing(file_obj)
 
     @staticmethod
@@ -802,11 +752,11 @@ class T2_1DetailsRenderer(object):
         }
 
     @classmethod
-    def render(cls, context, hardcopy=False):
+    def render(cls, context):
         for session in Session.get_sessions(context):
             for ms in session.mses:
-                with cls.get_file(context, session, ms, hardcopy) as fileobj:
-                    template = TemplateFinder.get_template(cls.template)
+                with cls.get_file(context, session, ms) as fileobj:
+                    template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
                     display_context = cls.get_display_context(context, ms)
                     fileobj.write(template.render(**display_context))
 
@@ -843,7 +793,7 @@ class T2_2_XRendererBase(object):
                             cls.output_file)
 
     @classmethod
-    def render(cls, context, hardcopy=False):
+    def render(cls, context):
         for ms in context.observing_run.measurement_sets:
             filename = cls.get_filename(context, ms)
             # now that the details pages are written per MS rather than having
@@ -851,7 +801,7 @@ class T2_2_XRendererBase(object):
             # importdata will not affect their content.
             if not os.path.exists(filename):
                 with cls.get_file(filename) as fileobj:
-                    template = TemplateFinder.get_template(cls.template)
+                    template = weblog.TEMPLATE_LOOKUP.get_template(cls.template)
                     display_context = cls.get_display_context(context, ms)
                     fileobj.write(template.render(**display_context))
 
@@ -1168,7 +1118,7 @@ class T2_3MDetailsDefaultRenderer(object):
 
     def render(self, context, result):
         display_context = self.get_display_context(context, result)
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
@@ -1185,33 +1135,26 @@ class T2_3MDetailsRenderer(object):
     """
     Get the file object for this renderer.
 
-    The returned file object will be either direct output to a file or to
-    stdout, depending on whether hardcopy is set to true or false
-    respectively. 
-
     :param context: the pipeline Context
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
     :param result: the task results object to render
     :type result: :class:`~pipeline.infrastructure.api.Result`
-    :param hardcopy: render to disk (true) or to stdout (false). Default is
-        true
-    :type hardcopy: boolean
     :rtype: a file object
     """
     @classmethod
-    def get_file(cls, context, result, hardcopy):
+    def get_file(cls, context, result):
         # construct the relative filename, eg. 'stageX/t2-3m_details.html'
         path = cls.get_path(context, result)
 
         # to avoid any subsequent file not found errors, create the directory
         # if a hard copy is requested and the directory is missing
         stage_dir = os.path.dirname(path)
-        if hardcopy and not os.path.exists(stage_dir):
+        if not os.path.exists(stage_dir):
             os.makedirs(stage_dir)
         
         # create a file object that writes to a file if a hard copy is 
         # requested, otherwise return a file object that flushes to stdout
-        file_obj = open(path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(path, 'w')
         
         # return the file object wrapped in a context manager, so we can use
         # it with the autoclosing 'with fileobj as f:' construct
@@ -1244,11 +1187,9 @@ class T2_3MDetailsRenderer(object):
     
     :param context: the pipeline Context
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param hardcopy: render to disk (true) or to stdout (false). Default is true.
-    :type hardcopy: boolean
     """
     @classmethod
-    def render(cls, context, hardcopy=False):
+    def render(cls, context):
         # get the map of t2_3m renderers from the dictionary
         t2_3m_renderers = renderer_map[T2_3MDetailsRenderer]
         
@@ -1277,7 +1218,7 @@ class T2_3MDetailsRenderer(object):
                 continue
             
             # .. get the file object to which we'll render the result
-            with cls.get_file(context, result, hardcopy) as fileobj:
+            with cls.get_file(context, result) as fileobj:
                 # .. and write the renderer's interpretation of this result to
                 # the file object  
                 fileobj.write(renderer.render(context, result))
@@ -1331,8 +1272,8 @@ class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         for plot_group in plot_groups:
             # Write the thumbnail pages for each plot grouping to disk 
-            renderer = PlotGroupRenderer(context, results, plot_group, 'qa')
-            plot_group.filename = renderer.filename
+            renderer = sharedrenderer.PlotGroupRenderer(context, results, plot_group, 'qa')
+            plot_group.filename = renderer.basename
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
 
@@ -1395,8 +1336,8 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         # Write the thumbnail pages for each plot grouping to disk 
         for plot_group in plot_groups:
-            renderer = QAPlotRenderer(context, results, plot_group, 'qa')
-            plot_group.filename = renderer.filename 
+            renderer = sharedrenderer.QAPlotRenderer(context, results, plot_group, 'qa')
+            plot_group.filename = renderer.basename 
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
 
@@ -1430,16 +1371,25 @@ class T2_4MDetailsDefaultRenderer(object):
         self.always_rerender = always_rerender
 
     def get_display_context(self, context, result):
-        return {'pcontext' : context,
-                'result'   : result,
-                'stagelog' : self._get_stagelog(context, result),
-                'taskhelp' : self._get_help(context, result),
-                'dirname'  : 'stage%s' % result.stage_number}
+        mako_context = {'pcontext' : context,
+                        'result'   : result,
+                        'stagelog' : self._get_stagelog(context, result),
+                        'taskhelp' : self._get_help(context, result),
+                        'dirname'  : 'stage%s' % result.stage_number}
+        self.update_mako_context(mako_context, context, result)
+        return mako_context
 
+    def update_mako_context(self, mako_context, pipeline_context, result):
+        LOG.trace('No-op update_mako_context for %s', self.__class__.__name__)
+        
     def render(self, context, result):
         display_context = self.get_display_context(context, result)
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
+        # TODO remove fallback access once all templates are converted 
+        uri = getattr(self, 'uri', None)
+        if uri is None:
+            uri = self.template
+        template = weblog.TEMPLATE_LOOKUP.get_template(uri)
+        return template.render(**display_context)
 
     def _get_stagelog(self, context, result):
         """
@@ -1498,10 +1448,10 @@ class CleanPlotsRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w') 
         return contextlib.closing(file_obj)
     
     def _get_display_context(self):
@@ -1514,469 +1464,77 @@ class CleanPlotsRenderer(object):
 
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
-class PlotGroupRenderer(object):
-    template = 'plotgroup.html'
-
-    def __init__(self, context, result, plot_group, prefix=''):
-        self.context = context
-        self.result = result
-        self.plot_group = plot_group
-        self.prefix = prefix
-        if self.prefix != '':
-            self.prefix = '%s-' % prefix
-        
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):
-        filename = '%s%s-%s-thumbnails.html' % (self.plot_group.x_axis, 
-                                                self.plot_group.y_axis,
-                                                self.prefix)
-        filename = filenamer.sanitize(filename)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plot_group' : self.plot_group,
-                'dirname'    : self.dirname}
-
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
-
-
-class QAPlotRenderer(PlotGroupRenderer):
-    template = 'qa.html'
-
-    def __init__(self, context, result, plot_group, prefix=''):
-        super(QAPlotRenderer, self).__init__(context, result, plot_group, 
-                                                   prefix)
-        json_path = os.path.join(context.report_dir, 
-                                 'stage%s' % result.stage_number, 
-                                 'qa.json')
-        
-        if os.path.exists(json_path):
-            with open(json_path, 'r') as json_file:
-                self.json = json_file.readlines()[0]
-        else:
-            self.json = '{}'
-         
-    def _get_display_context(self):
-        ctx = super(QAPlotRenderer, self)._get_display_context()
-        ctx.update({'json' : self.json});
-        return ctx
+# class PlotGroupRenderer(object):
+#     template = 'plotgroup.html'
+# 
+#     def __init__(self, context, result, plot_group, prefix=''):
+#         self.context = context
+#         self.result = result
+#         self.plot_group = plot_group
+#         self.prefix = prefix
+#         if self.prefix != '':
+#             self.prefix = '%s-' % prefix
+#         
+#     @property
+#     def dirname(self):
+#         stage = 'stage%s' % self.result.stage_number
+#         return os.path.join(self.context.report_dir, stage)
+#     
+#     @property
+#     def filename(self):
+#         filename = '%s%s-%s-thumbnails.html' % (self.plot_group.x_axis, 
+#                                                 self.plot_group.y_axis,
+#                                                 self.prefix)
+#         filename = filenamer.sanitize(filename)
+#         return filename
+#     
+#     @property
+#     def path(self):
+#         return os.path.join(self.dirname, self.filename)
+#     
+#     def get_file(self):
+#         if not os.path.exists(self.dirname):
+#             os.makedirs(self.dirname)
+#             
+#         file_obj = open(self.path, 'w')
+#         return contextlib.closing(file_obj)
+#     
+#     def _get_display_context(self):
+#         return {'pcontext'   : self.context,
+#                 'result'     : self.result,
+#                 'plot_group' : self.plot_group,
+#                 'dirname'    : self.dirname}
+# 
+#     def render(self):
+#         display_context = self._get_display_context()
+#         t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
+#         return t.render(**display_context)
 
 
-class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
-    """
-    T2_4MDetailsWvrgcalflagRenderer generates the detailed T2_4M-level plots
-    and output specific to the wvrgcalflag task.
-    """
-    
-    WvrApplication = collections.namedtuple('WvrApplication', 
-                                            'ms gaintable interpolated applied') 
-    
-    def __init__(self, template='t2-4m_details-hif_wvrgcalflag.html', 
-                 always_rerender=False):
-        # set the name of our specialised Mako template via the superclass
-        # constructor 
-        super(T2_4MDetailsWvrgcalflagRenderer, self).__init__(template,
-                                                              always_rerender)
-
-    """
-    Get the Mako context appropriate to the results created by a Wvrgcalflag
-    task.
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param results: the bandpass results to describe
-    :type results: 
-        :class:`~pipeline.infrastructure.tasks.wvrgcalflag.resultobjects.WvrgcalflagResults`
-    :rtype a dictionary that can be passed to the matching Mako template
-    """
-    def get_display_context(self, context, results):
-        # get the standard Mako context from the superclass implementation 
-        super_cls = super(T2_4MDetailsWvrgcalflagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        plots_dir = os.path.join(context.report_dir, 
-                                 'stage%d' % results.stage_number)
-        if not os.path.exists(plots_dir):
-            os.mkdir(plots_dir)
-
-        applications = []
-        flag_plots = {}
-        metric_plots = {}
-        phase_offset_summary_plots = {}
-        baseline_summary_plots = {}
-        wvrinfos = {}
-        ms_non12 = []
-        for result in results:
-            vis = os.path.basename(result.inputs['vis'])
-            ms = context.observing_run.get_ms(vis)
-
-            # if there's no WVR data, the pool will be empty
-            if not result.pool:
-                # check if this MS is all 7m data. 
-                if all([a for a in ms.antennas if a.diameter != 12.0]):
-                    ms_non12.append(os.path.basename(vis))
-                continue
-
-            applications.extend(self.get_wvr_applications(result))
-            try:
-                wvrinfos[vis] = result.wvr_infos
-            except:
-                pass
-
-            # collect flagging metric plots from result
-            if result.qa_wvr.view:
-                plotter = image.ImageDisplay()
-                plots = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
-                                     prefix='qa', change='WVR')
-                plots = sorted(plots, key=lambda p: int(p.parameters['spw']))
-                
-                # render flagging metric plots to their own HTML page
-                renderer = WvrcalflagMetricPlotsRenderer(context, result, plots)
-                with renderer.get_file() as fileobj:
-                    fileobj.write(renderer.render())        
-    
-                metric_plots[vis] = plots[0]
-
-            if result.view:
-                flag_plotter = image.ImageDisplay()
-                plots = flag_plotter.plot(context, result, reportdir=plots_dir, 
-                                          prefix='flag', change='Flagging')
-                # sort plots by spw
-                flag_plots[vis] = sorted(plots, 
-                                         key=lambda p: int(p.parameters['spw']))
-
-            # generate the phase offset summary plots
-            phase_offset_summary_plotter = wvr.WVRPhaseOffsetSummaryPlot(context, result)
-            phase_offset_summary_plots[vis] = phase_offset_summary_plotter.plot()
-
-            # generate the per-antenna phase offset plots
-            phase_offset_plotter = wvr.WVRPhaseOffsetPlot(context, result)            
-            phase_offset_plots = phase_offset_plotter.plot() 
-            # write the html for each MS to disk
-            renderer = WvrgcalflagPhaseOffsetPlotRenderer(context, result, 
-                                                          phase_offset_plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
-
-            baseline_plotter = wvr.WVRPhaseVsBaselineChart(context, result)
-            baseline_plots = baseline_plotter.plot()
-            # write the html for each MS to disk
-            renderer = WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(context, result, 
-                                                                    baseline_plots)
-
-            # get the first scan for the QA intent(s)
-            qa_intent = set(result.inputs['qa_intent'].split(','))
-            qa_scan = sorted([scan.id for scan in ms.scans 
-                               if not qa_intent.isdisjoint(scan.intents)])[0]                               
-            # scan parameter on plot is comma-separated string 
-            qa_scan = str(qa_scan)            
-            LOG.trace('Using scan %s for phase vs baseline summary '
-                      'plots' % qa_scan)
-            baseline_summary_plots[vis] = [p for p in baseline_plots
-                                           if qa_scan in set(p.parameters['scan'].split(','))]
-            
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        # add the PlotGroups to the Mako context. The Mako template will parse
-        # these objects in order to create links to the thumbnail pages we
-        # just created
-        ctx.update({'applications' : applications,
-                    'wvrinfos'     : wvrinfos,
-                    'flag_plots' : flag_plots,
-                    'metric_plots' : metric_plots,
-                    'phase_offset_summary_plots' : phase_offset_summary_plots,
-                    'baseline_summary_plots' : baseline_summary_plots,
-                    'dirname' : weblog_dir})
-
-        # tell the user not to panic for non-12m dishes missing WVR 
-        if ms_non12:
-            msg = ('WVR data are not expected for %s, which %s not observed '
-                   'using 12m antennas.'
-                   '' % (utils.commafy(ms_non12, quotes=False, conjunction='or'),
-                         'was' if len(ms_non12) is 1 else 'were'))
-            ctx['alerts_info'] = [msg,]
-
-        return ctx
-
-        # Phase vs time for the overview plot should be for the widest window
-        # at the highest frequency
-#         spws = sorted(ms.spectral_windows, 
-#                       key=operator.attrgetter('bandwidth', 'centre_frequency'))
-#         overview_spw = spws[-1]
-
-    def get_wvr_applications(self, result):
-        applications = []
-
-        interpolated = utils.commafy(result.wvrflag, False)
-
-        # define a closure that adds a wvrapplication for each calapplication
-        # unless the applications list already contains one for that 
-        # ms/caltable combination
-        def collect(calapps, accept):
-            for calapp in calapps:
-                ms = os.path.basename(calapp.vis)
-                gaintable = os.path.basename(calapp.gaintable)
-    
-                a = T2_4MDetailsWvrgcalflagRenderer.WvrApplication(ms, 
-                                                                   gaintable, 
-                                                                   interpolated,
-                                                                   accept)            
-    
-                if not any([r for r in applications 
-                            if r.ms == ms and r.gaintable == gaintable]):
-                    applications.append(a)
-
-        collect(result.final, True)
-        collect(result.pool, False)
-
-        return applications
-
-
-class WvrcalflagMetricPlotsRenderer(object):
-    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
-    # scores and histograms to generate. there should be a common base class. 
-    template = 't2-4m_details-hif_wvrgcalflag-metric_view.html'
-
-    def __init__(self, context, result, plots):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            field = plot.parameters['field']
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
-
-            d[image_relpath] = {'spw'       : str(spw_id),
-                                'field'     : field,
-                                'thumbnail' : thumbnail_relpath}
-
-        # Javascript parser requires \" -> \\" conversion 
-        self.json = json.dumps(d).replace('\"', '\\"')
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'WVR flagging metric view for %s' % self.ms}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('flagging_metric-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
-
-
-class WvrgcalflagPhaseOffsetPlotRenderer(object):
-    template = 'wvr_phase_offset_plots.html'
-
-    def __init__(self, context, result, plots):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        # put this code here to save overcomplicating the template
-        antenna_names = set()
-        for plot in plots:
-            antenna_names.update(set(plot.parameters['ant']))
-        antenna_names = sorted(list(antenna_names))
-        self.antenna_names = antenna_names
-        
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            antenna_name = plot.parameters['ant']
-            spw_id = plot.parameters['spw']
-
-            ratio = 1.0 / plot.qa_score
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-            if math.isnan(ratio) or math.isinf(ratio):
-                ratio = 'null'
-
-            d[image_relpath] = {'antenna'   : antenna_name,
-                                'spw'       : spw_id,
-                                'ratio'     : ratio,
-                                'thumbnail' : thumbnail_relpath}
-
-        self.json = json.dumps(d)
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'antennas'   : self.antenna_names,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'WVR Phase Offset Plots for %s' % self.ms}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('phase_offsets-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
-
-
-class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(object):
-    template = 'wvr_phase_offset_vs_baseline_plots.html'
-
-    def __init__(self, context, result, plots):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            scan_id = plot.parameters['scan']
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
-
-            d[image_relpath] = {'spw'       : spw_id,
-                                'scan'      : scan_id,
-                                'thumbnail' : thumbnail_relpath}
-
-        self.json = json.dumps(d)
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'Phase offset vs average baseline for %s' % self.ms}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
+# class QAPlotRenderer(PlotGroupRenderer):
+#     template = 'qa.html'
+# 
+#     def __init__(self, context, result, plot_group, prefix=''):
+#         super(QAPlotRenderer, self).__init__(context, result, plot_group, 
+#                                                    prefix)
+#         json_path = os.path.join(context.report_dir, 
+#                                  'stage%s' % result.stage_number, 
+#                                  'qa.json')
+#         
+#         if os.path.exists(json_path):
+#             with open(json_path, 'r') as json_file:
+#                 self.json = json_file.readlines()[0]
+#         else:
+#             self.json = '{}'
+#          
+#     def _get_display_context(self):
+#         ctx = super(QAPlotRenderer, self)._get_display_context()
+#         ctx.update({'json' : self.json});
+#         return ctx
 
 
 class T2_4MDetailsGaincalRenderer(T2_4MDetailsDefaultRenderer):
@@ -2207,16 +1765,16 @@ class GenericPlotsRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
@@ -2550,16 +2108,16 @@ class BaseJsonPlotRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
@@ -3503,16 +3061,16 @@ class GenericFieldSpwAntPlotsRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
@@ -3704,530 +3262,6 @@ class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
 
         rendererutils.renderflagcmds(result.flagcmds(), filename)
         return filename
-
-
-class T2_4MDetailsTsysflagchansRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Tsysflagchans task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_tsysflagchans.html',
-                 always_rerender=False):
-        super(T2_4MDetailsTsysflagchansRenderer, self).__init__(template,
-                                                                   always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsysflagchansRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = self.get_html_reports(context, results)
-        plot_groups = self.get_plots(context, results)
-
-        summary_plots = {}
-        subpages = {}
-        slplots = []
-        for result in results:
-            if result.view:
-                plotter = slicedisplay.SliceDisplay()
-                slplots.append(plotter.plot(context, result, weblog_dir, 
-                                            plotbad=False,
-                                            plot_only_flagged=True))
-            
-            if result.flagged() is False:
-                continue
-
-            plotter = tsys.TsysSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-
-            # generate the per-antenna charts and JSON file
-            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
-
-
-        # add the PlotGroups to the Mako context. The Mako template will parse
-        # these objects in order to create links to the thumbnail pages we
-        # just created
-        ctx.update({'plot_groups'     : plot_groups,
-                    'summary_plots'   : summary_plots,
-                    'summary_subpage' : subpages,
-                    'dirname'         : weblog_dir,
-                    'htmlreports'     : htmlreports})
-
-        return ctx
-
-    def get_plots(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        plots = []
-        for result in results:
-            if result.view:
-                plots.append(slicedisplay.SliceDisplay().plot(
-                    context=context, results=result, reportdir=weblog_dir,
-                    plotbad=False, plot_only_flagged=True))
-
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        # Write the thumbnail pages for each plot grouping to disk
-        for plot_group in plot_groups:
-            renderer = PlotGroupRenderer(context, results, plot_group)
-            plot_group.filename = renderer.filename
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                
-        return plot_groups
-
-
-    def get_html_reports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = {}
-        for result in results:
-#            if not hasattr(result, 'flagcmdfile'):
-#                continue
-
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            report_abspath = self.write_report_to_disk(weblog_dir, result)
-
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            report_relpath = os.path.relpath(report_abspath, report_dir)
-
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result):
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
-
-    def write_report_to_disk(self, weblog_dir, result):
-        # now write printTsysFlags output to a report file
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.printTsysFlags(result.table, filename)
-        return filename
-
-
-class T2_4MDetailsTsysflagRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Tsysflag task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_tsysflag.html',
-                 always_rerender=False):
-        super(T2_4MDetailsTsysflagRenderer, self).__init__(template,
-                                                              always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsysflagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        flag_totals = {}
-        components = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
-        for msresult in results:
-            table = os.path.basename(msresult.inputs['caltable'])
-            flag_totals[table] = {}
-
-            # summarise flag state on entry
-            flag_totals[table]['before'] = self.flags_for_result(msresult, context,
-              summary='first')
-
-            # summarise flagging by each step
-            for component in components:
-                if component not in msresult.components.keys():
-                    flag_totals[table][component] = None
-                else:
-                    flag_totals[table][component] = self.flags_for_result(
-                      msresult.components[component], context)
-
-            # summarise flag state on exit
-            flag_totals[table]['after'] = self.flags_for_result(msresult, context,
-              summary='last')
-
-        htmlreports = self.get_htmlreports(context, results)
-        
-        summary_plots = {}
-        subpages = {}
-        for msresult in results:
-            # summary plots at end of flagging sequence, beware empty
-            # sequence
-            lastflag = msresult.components.keys()
-            if lastflag:
-                lastflag = lastflag[-1]
-            lastresult = msresult.components[lastflag]
-
-            plotter = tsys.TsysSummaryChart(context, lastresult)
-            plots = plotter.plot()
-            ms = os.path.basename(lastresult.inputs['vis'])
-            summary_plots[ms] = plots
-
-            # generate the per-antenna charts and JSON file
-            plotter = tsys.ScoringTsysPerAntennaChart(context, lastresult)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, lastresult, plots, 
-              json_path)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
-
-        ctx.update({'flags'           : flag_totals,
-                    'components'      : components,
-                    'summary_plots'   : summary_plots,
-                    'summary_subpage' : subpages,
-                    'dirname'         : weblog_dir,
-                    'htmlreports'     : htmlreports})
-
-        return ctx
-
-    def get_htmlreports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        r = results[0]
-        components = r.components.keys()
-
-        htmlreports = {}
-
-        for component in components:
-            htmlreports[component] = {}
-
-            for msresult in results:
-                flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, 
-                  msresult.components[component], component)
-                report_abspath = self.write_report_to_disk(weblog_dir, 
-                  msresult.components[component], component)
-
-                flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-                report_relpath = os.path.relpath(report_abspath, report_dir)
-
-                table_basename = os.path.basename(
-                  msresult.components[component].table)
-                htmlreports[component][table_basename] = \
-                  (flagcmd_relpath, report_relpath)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result, component=None):
-        tablename = os.path.basename(result.table)
-        if component:
-            filename = os.path.join(weblog_dir, '%s%s.html' % (tablename, component))
-        else:
-            filename = os.path.join(weblog_dir, '%s.html' % (tablename))
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
-
-    def write_report_to_disk(self, weblog_dir, result, component=None):
-        # now write printTsysFlags output to a report file
-        tablename = os.path.basename(result.table)
-        if component:
-            filename = os.path.join(weblog_dir, '%s%s.report.html' % (tablename, 
-              component))
-        else:
-            filename = os.path.join(weblog_dir, '%s.report.html' % (tablename))
-        if os.path.exists(filename):
-            return filename
-        
-        rendererutils.printTsysFlags(result.table, filename)
-        return filename
-
-    def flags_for_result(self, result, context, summary=None):
-        name = result.inputs['caltable']
-        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
-        ms = context.observing_run.get_ms(name=tsystable.vis) 
-
-        summaries = result.summaries
-        if summary=='first':
-            summaries = summaries[:1]
-        elif summary=='last':
-            summaries = summaries[-1:]
-
-        by_intent = self.flags_by_intent(ms, summaries)
-        by_spw = self.flags_by_spws(ms, summaries)
-
-        return utils.dict_merge(by_intent, by_spw)
-
-    def flags_by_intent(self, ms, summaries):
-        # create a dictionary of fields per observing intent, eg. 'PHASE':['3C273']
-        intent_fields = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET', 'ATMOSPHERE'):
-            # use _name from field as we do want the raw name here as used
-            # in the summaries dict (not sometimes enclosed in "..."). Better
-            # perhaps to fix the summaries dict.
-            intent_fields[intent] = [f._name for f in ms.fields
-                                    if intent in f.intents]
-
-        # while we're looping, get the total flagged by looking in all scans 
-        intent_fields['TOTAL'] = [f._name for f in ms.fields]
-
-        total = collections.defaultdict(dict)
-
-        previous_summary = None
-        for summary in summaries:
-
-            for intent, fields in intent_fields.items():
-                flagcount = 0
-                totalcount = 0
-    
-                for field in fields:
-                    if field in summary['field'].keys():
-                        flagcount += int(summary['field'][field]['flagged'])
-                        totalcount += int(summary['field'][field]['total'])
-        
-                    if previous_summary:
-                        if field in previous_summary['field'].keys():
-                            flagcount -= int(previous_summary['field'][field]['flagged'])
-
-                ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount,
-                                                                totalcount)
-                total[summary['name']][intent] = ft
-    
-            previous_summary = summary
-                
-        return total 
-    
-    def flags_by_spws(self, ms, summaries):
-        total = collections.defaultdict(dict)
-    
-        previous_summary = None
-        for summary in summaries:
-            tsys_spws = summary['spw'].keys()
-    
-            flagcount = 0
-            totalcount = 0
-    
-            for spw in tsys_spws:
-                try:
-                    flagcount += int(summary['spw'][spw]['flagged'])
-                    totalcount += int(summary['spw'][spw]['total'])
-                except:
-                    print spw, summary['spw'].keys()
-
-                if previous_summary:
-                    flagcount -= int(previous_summary['spw'][spw]['flagged'])
-
-            ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount,
-                                                            totalcount)
-            total[summary['name']]['TSYS SPWS'] = ft
-
-            previous_summary = summary
-                
-        return total
-
-
-class T2_4MDetailsTsysflagspectraRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Tsysflagspectra task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_tsysflagspectra.html',
-                 always_rerender=False):
-        super(T2_4MDetailsTsysflagspectraRenderer, self).__init__(template,
-                                                              always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsysflagspectraRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = self.get_htmlreports(context, results)
-        
-        summary_plots = {}
-        subpages = {}
-        for result in results:
-            if result.flagged() is False:
-                continue
-            
-            plotter = tsys.TsysSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-
-            # generate the per-antenna charts and JSON file
-            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
-
-        ctx.update({'summary_plots'   : summary_plots,
-                    'summary_subpage' : subpages,
-                    'dirname'         : weblog_dir,
-                    'htmlreports'     : htmlreports})
-
-        return ctx
-
-    def get_htmlreports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = {}
-        for result in results:
-#            if not hasattr(result, 'flagcmdfile'):
-#                continue
-
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            report_abspath = self.write_report_to_disk(weblog_dir, result)
-
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            report_relpath = os.path.relpath(report_abspath, report_dir)
-
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result):
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
-
-    def write_report_to_disk(self, weblog_dir, result):
-        # now write printTsysFlags output to a report file
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-        
-        rendererutils.printTsysFlags(result.table, filename)
-        return filename
-
-
-class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hif_tsyscal.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsTsyscalRenderer, self).__init__(template,
-                                                          always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsTsyscalRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        summary_plots = {}
-        subpages = {}
-        for result in results:
-            plotter = tsys.TsysSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-
-            # generate the per-antenna charts and JSON file
-            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
-
-        ctx.update({'summary_plots'   : summary_plots,
-                    'summary_subpage' : subpages,
-                    'dirname'         : weblog_dir})
-
-        return ctx
-
-
-class TsyscalPlotRenderer(object):
-    template = 'tsyscal_plots.html'
-
-    def __init__(self, context, result, plots, json_path):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        if os.path.exists(json_path):
-            with open(json_path, 'r') as json_file:
-                self.json = json_file.readlines()[0]
-        else:
-            self.json = '{}'
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'T<sub>sys</sub> plots for %s' % self.ms}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('tsys-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
-        return t.render(**display_context)
 
 #-----------------------------------------------------------------------
 
@@ -4862,16 +3896,16 @@ class VLASubPlotRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 
@@ -5130,157 +4164,6 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
                 
         return total
 
-
-
-
-
-
-
-
-
-
-class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
-    FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
-
-    def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
-                                                               always_rerender)
-
-    def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsAgentFlaggerRenderer, self)
-        ctx = super_cls.get_display_context(context, result)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % result.stage_number)
-
-        flag_totals = {}
-        for r in result:
-            flag_totals = utils.dict_merge(flag_totals, 
-                                           self.flags_for_result(r, context))
-
-            # copy template files across to weblog directory
-            toggle_to_filenames = {'online'   : 'fileonline',
-                                   'template' : 'filetemplate'}
-            inputs = r.inputs
-            for toggle, filenames in toggle_to_filenames.items():
-                src = inputs[filenames]
-                if inputs[toggle] and os.path.exists(src):
-                    LOG.trace('Copying %s to %s' % (src, weblog_dir))
-                    shutil.copy(src, weblog_dir)
-
-        flagcmd_files = {}
-        for r in result:
-            # write final flagcmds to a file
-            ms = context.observing_run.get_ms(r.inputs['vis'])
-            flagcmds_filename = '%s-agent_flagcmds.txt' % ms.basename
-            flagcmds_path = os.path.join(weblog_dir, flagcmds_filename)
-            with open(flagcmds_path, 'w') as flagcmds_file:
-                terminated = '\n'.join(r.flagcmds())
-                flagcmds_file.write(terminated)
-
-            flagcmd_files[ms.basename] = flagcmds_path
-
-#         # collect the agent names
-#         agent_names = set()
-#         for r in result:
-#             agent_names.update([s['name'] for s in r.summaries])
-# 
-#         # get agent names in execution order
-#         order = ['before', 'online', 'template', 'autocorr', 'shadow', 
-#                  'intents', 'edgespw']
-#         agents = [s for s in order if s in agent_names]
-
-        # return all agents so we get ticks and crosses against each one
-        agents = ['before', 'online', 'template', 'autocorr', 'shadow', 
-                  'intents', 'edgespw']
-
-        flagplots = [self.flagplot(r, context) for r in result]
-        # plot object may be None if plot failed to generate
-        flagplots = [f for f in flagplots if f is not None]
-
-        ctx.update({'flags'     : flag_totals,
-                    'agents'    : agents,
-                    'dirname'   : weblog_dir,
-                    'flagcmds'  : flagcmd_files,
-                    'flagplots' : flagplots})
-
-        return ctx
-
-    def flagplot(self, result, context):
-        plotter = flagging.PlotAntsChart(context, result)
-        return plotter.plot()
-
-    def flags_for_result(self, result, context):
-        ms = context.observing_run.get_ms(result.inputs['vis'])
-        summaries = result.summaries
-
-        by_intent = self.flags_by_intent(ms, summaries)
-        by_spw = self.flags_by_science_spws(ms, summaries)
-
-        return {ms.basename : utils.dict_merge(by_intent, by_spw)}
-
-    def flags_by_intent(self, ms, summaries):
-        # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
-        intent_scans = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
-            # convert IDs to strings as they're used as summary dictionary keys
-            intent_scans[intent] = [str(s.id) for s in ms.scans
-                                    if intent in s.intents]
-
-        # while we're looping, get the total flagged by looking in all scans 
-        intent_scans['TOTAL'] = [str(s.id) for s in ms.scans]
-
-        total = collections.defaultdict(dict)
-
-        previous_summary = None
-        for summary in summaries:
-
-            for intent, scan_ids in intent_scans.items():
-                flagcount = 0
-                totalcount = 0
-    
-                for i in scan_ids:
-                    flagcount += int(summary['scan'][i]['flagged'])
-                    totalcount += int(summary['scan'][i]['total'])
-        
-                    if previous_summary:
-                        flagcount -= int(previous_summary['scan'][i]['flagged'])
-    
-                ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount, 
-                                                                totalcount)
-                total[summary['name']][intent] = ft
-                
-            previous_summary = summary
-                
-        return total 
-    
-    def flags_by_science_spws(self, ms, summaries):
-        science_spws = ms.get_spectral_windows(science_windows_only=True)
-    
-        total = collections.defaultdict(dict)
-    
-        previous_summary = None
-        for summary in summaries:
-    
-            flagcount = 0
-            totalcount = 0
-    
-            for spw in science_spws:
-                spw_id = str(spw.id)
-                flagcount += int(summary['spw'][spw_id]['flagged'])
-                totalcount += int(summary['spw'][spw_id]['total'])
-        
-                if previous_summary:
-                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
-
-            ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount, 
-                                                            totalcount)
-            total[summary['name']]['SCIENCE SPWS'] = ft
-                
-            previous_summary = summary
-                
-        return total
       
 class T2_4MDetailsSingleDishInspectDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hsd_inspectdata.html',
@@ -5782,16 +4665,16 @@ class SingleDishGenericPlotsRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
     
 class SingleDishInspectDataPlotsRenderer(SingleDishGenericPlotsRenderer):
@@ -5944,16 +4827,16 @@ class SingleDishClusterPlotsRenderer(object):
     def path(self):
         return os.path.join(self.dirname, self.filename)
     
-    def get_file(self, hardcopy=True):
-        if hardcopy and not os.path.exists(self.dirname):
+    def get_file(self):
+        if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
             
-        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
     
     def render(self):
         display_context = self._get_display_context()
-        t = TemplateFinder.get_template(self.template)
+        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
         return t.render(**display_context)
 
 class T2_4MDetailsSingleDishFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
@@ -5986,8 +4869,8 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(T2_4MDetailsDefaultRenderer):
     
             plot_groups = logger.PlotGroup.create_plot_groups(plots)
             for plot_group in plot_groups:
-                renderer = PlotGroupRenderer(context, results, plot_group)
-                plot_group.filename = renderer.filename
+                renderer = sharedrenderer.PlotGroupRenderer(context, results, plot_group)
+                plot_group.filename = renderer.basename
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
             plot_groups_list.append(plot_groups)
@@ -6027,33 +4910,26 @@ class T2_4MDetailsRenderer(object):
     """
     Get the file object for this renderer.
 
-    The returned file object will be either direct output to a file or to
-    stdout, depending on whether hardcopy is set to true or false
-    respectively. 
-
     :param context: the pipeline Context
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
     :param result: the task results object to render
     :type result: :class:`~pipeline.infrastructure.api.Result`
-    :param hardcopy: render to disk (true) or to stdout (false). Default is
-        true
-    :type hardcopy: boolean
     :rtype: a file object
     """
     @classmethod
-    def get_file(cls, context, result, hardcopy):
+    def get_file(cls, context, result):
         # construct the relative filename, eg. 'stageX/t2-4m_details.html'
         path = cls.get_path(context, result)
 
         # to avoid any subsequent file not found errors, create the directory
         # if a hard copy is requested and the directory is missing
         stage_dir = os.path.dirname(path)
-        if hardcopy and not os.path.exists(stage_dir):
+        if not os.path.exists(stage_dir):
             os.makedirs(stage_dir)
         
         # create a file object that writes to a file if a hard copy is 
         # requested, otherwise return a file object that flushes to stdout
-        file_obj = open(path, 'w') if hardcopy else StdOutFile()
+        file_obj = open(path, 'w')
         
         # return the file object wrapped in a context manager, so we can use
         # it with the autoclosing 'with fileobj as f:' construct
@@ -6087,11 +4963,9 @@ class T2_4MDetailsRenderer(object):
     
     :param context: the pipeline Context
     :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param hardcopy: render to disk (true) or to stdout (false). Default is true.
-    :type hardcopy: boolean
     """
     @classmethod
-    def render(cls, context, hardcopy=False):
+    def render(cls, context):
         # get the map of t2_4m renderers from the dictionary
         t2_4m_renderers = renderer_map[T2_4MDetailsRenderer]
 
@@ -6119,11 +4993,15 @@ class T2_4MDetailsRenderer(object):
             # renderer specifies that an update is required
             path = cls.get_path(context, result)
             force_rerender = getattr(renderer, 'always_rerender', False)
+            debug_cls = renderer.__class__ in DEBUG_CLASSES
+            force_rerender = force_rerender or debug_cls
+            if force_rerender:
+                LOG.trace('Forcing rerendering for %s' % renderer.__class__.__name__)
             if os.path.exists(path) and not force_rerender:
                 continue
             
             # .. get the file object to which we'll render the result
-            with cls.get_file(context, result, hardcopy) as fileobj:
+            with cls.get_file(context, result) as fileobj:
                 # .. and write the renderer's interpretation of this result to
                 # the file object  
                 try:
@@ -6184,7 +5062,10 @@ class WebLogGenerator(object):
         z.extractall(outdir)
 
     @staticmethod
-    def render(context, hardcopy=True):
+    def render(context):
+        # TODO remove this once all task imports have been removed
+        update_with_temp_renderers()
+        
         # copy CSS, javascript etc. to weblog directory
         WebLogGenerator.copy_resources(context)
 
@@ -6200,7 +5081,7 @@ class WebLogGenerator(object):
             for renderer in WebLogGenerator.renderers:
                 try:
                     LOG.trace('%s rendering...' % renderer.__name__)
-                    renderer.render(context, hardcopy)
+                    renderer.render(context)
                 except Exception as e:
                     LOG.exception('Error generating weblog: %s', e)
 
@@ -6444,9 +5325,6 @@ renderer_map = {
     },
     T2_4MDetailsRenderer : {
         hif.tasks.Applycal       : T2_4MDetailsApplycalRenderer(),                        
-        hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
-        hifa.tasks.ALMAAgentFlagger : T2_4MDetailsAgentFlaggerRenderer(),
-        hifa.tasks.FlagDeterALMA : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
@@ -6454,24 +5332,15 @@ renderer_map = {
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.ExportData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_exportdata.html'),
         hif.tasks.Rawflagchans   : T2_4MDetailsRawflagchansRenderer(),
-        hifa.tasks.FluxcalFlag   : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.GcorFluxscale : T2_4MDetailsGFluxscaleRenderer('t2-4m_details-hif_gfluxscale.html'),
-        hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
-        hifa.tasks.ALMAImportData   : T2_4MDetailsImportDataRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
-        hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html'),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
-        hifa.tasks.Tsyscal       : T2_4MDetailsTsyscalRenderer(),
-        hifa.tasks.Tsysflag      : T2_4MDetailsTsysflagRenderer(),
-        hifa.tasks.Tsysflagchans : T2_4MDetailsTsysflagchansRenderer(),
-        hifa.tasks.Tsysflagspectra: T2_4MDetailsTsysflagspectraRenderer(),
         hifa.tasks.Wvrgcal       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
-        hifa.tasks.Wvrgcalflag   : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDImportData   : T2_4MDetailsSingleDishImportDataRenderer(always_rerender=False),
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=False),
@@ -6514,6 +5383,14 @@ renderer_map = {
 # adding classes to this tuple always rerenders their content, bypassing the
 # cache or 'existing file' checks. This is useful for developing and debugging
 # as you can just call WebLogGenerator.render(context) 
-DEBUG_CLASSES = ()
+DEBUG_CLASSES = []
 
     
+def update_with_temp_renderers():
+    """
+    This is a temporary function built to decouple task import in this 
+    (deprecated) module from weblog functionality. It should be factored out
+    once templates and renderers have been migrated to task packages.
+    """  
+    from . import weblog
+    renderer_map[T2_4MDetailsRenderer].update(weblog.TEMP_RENDERER_MAP)

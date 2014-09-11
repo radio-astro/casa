@@ -1,8 +1,6 @@
 <%!
 rsc_path = ""
-#css_file = "plotgroup.css"
 import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>

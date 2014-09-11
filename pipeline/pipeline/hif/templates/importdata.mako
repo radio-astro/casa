@@ -1,9 +1,5 @@
 <%!
-import operator
 import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
