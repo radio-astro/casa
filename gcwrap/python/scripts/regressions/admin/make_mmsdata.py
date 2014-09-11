@@ -178,21 +178,27 @@ def main(thislist, axis='auto'):
         CVELPATH = DATAPATH + 'ngc4826/fitsfiles/'
         MMSPATH = './unittest_mms/cvel/'
         mmsdir = MMSPATH+'ngc4826.mms'
-        tempdir = '/tmp/'
-        importuvfits(fitsfile=CVELPATH+'ngc4826.ll.fits5',vis=tempdir+'ngc4826.ms') 
         tempdir = 'makemmsdirtemp'
         os.system('mkdir '+tempdir)
-        ph.convertToMMS(inpdir=tempdir, mmsdir=MMSPATH, axis='scan', createmslink=True, cleanup=True)  
+        importuvfits(fitsfile=CVELPATH+'ngc4826.ll.fits5',vis=tempdir+'/ngc4826.ms') 
+        partition(vis=tempdir+'/ngc4826.ms',outputvis='ngc4826.mms',separationaxis='scan',flagbackup=false,datacolumn='all')
         os.system('rm -rf '+tempdir)      
         
         CVELPATH = DATAPATH + 'cvel/input/'
+        cvelfiles =['jupiter6cm.demo-thinned.ms','g19_d2usb_targets_line-shortened-thinned.ms','evla-highres-sample-thinned.ms']
         MMSPATH = './unittest_mms/cvel/'
-        ph.convertToMMS(inpdir=CVELPATH, mmsdir=MMSPATH, axis='scan', createmslink=True, cleanup=True)  
-        
+        thisdir = os.getcwd()
+        for cvelms in cvelfiles:
+            mmsname = cvelms.replace('.ms','.mms')
+            partition(vis=CVELPATH+cvelms,outputvis=MMSPATH+mmsname,separationaxis='scan',flagbackup=False,datacolumn='all')
+            os.chdir(MMSPATH)
+            os.system('ln -s '+ mmsname + ' ' + cvelms)
+            os.chdir(thisdir)
+            
         CVELMS = DATAPATH + 'fits-import-export/input/test.ms'
         MMSPATH = './unittest_mms/cvel/'
         thisdir = os.getcwd()
-        partition(vis=CVELMS, mmsdir=MMSPATH+'test.mms', separationaxis='scan',flagbackup=False)
+        partition(vis=CVELMS, outputvis=MMSPATH+'test.mms', separationaxis='scan',flagbackup=False,datacolumn='all')
         os.chdir(MMSPATH)
         os.system('ln -s test.mms test.ms')
         os.chdir(thisdir)
