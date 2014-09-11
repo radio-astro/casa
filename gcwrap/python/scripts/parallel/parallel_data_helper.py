@@ -109,7 +109,6 @@ See examples in task_mstransform, task_partition.py, task_split2 or task_hanning
 class ParallelDataHelper(ParallelTaskHelper):
 
     def __init__(self, thistask, args={}):
-        
         self.__args = args
         self.__taskname = thistask
         
@@ -203,7 +202,6 @@ class ParallelDataHelper(ParallelTaskHelper):
                 for subms in subMSList:
                     subms_spwids = ph.getSubMSSpwIds(subms, spwdict)
                     slist = map(str,subms_spwids)
-                    print 'subms=%s, slist=%s'%(subms,slist)
                     # Check if the subms contains all the selected spws
                     if not self.__isSpwContained(spwsel, slist):
                         casalog.post('Cannot combine or separate spws in parallel because the subMSs do not contain all the selected spws',\
@@ -267,6 +265,23 @@ class ParallelDataHelper(ParallelTaskHelper):
                         retval['status'] = False
                         retval['axis'] = ''
                         break
+
+        elif self.__taskname == "cvel2" and sepaxis != 'scan':
+            spwsel = self.__getSpwIds(self.__args['vis'], self.__args['spw'])  
+            spwdict = ph.getScanSpwSummary(subMSList)                
+            for subms in subMSList:
+                subms_spwids = ph.getSubMSSpwIds(subms, spwdict)
+                slist = map(str,subms_spwids)
+                # Check if the subms contains all the selected spws
+                if not self.__isSpwContained(spwsel, slist):
+                    casalog.post('Cannot combine spws in parallel because the subMSs do not contain all the selected spws',\
+                          'WARN')
+                    casalog.post("Please set keepmms to False or use task mstransform in this case.",'ERROR')
+                    # Set the new separation axis for the output
+                    retval['status'] = False
+                    retval['axis'] = ''
+                    break
+                              
 
         return retval
 
@@ -1351,10 +1366,10 @@ class ParallelDataHelper(ParallelTaskHelper):
                 except Exception, instance:
                     mtlocal1.done()
                     casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
-                    raise
+                    return False
 
         if len(nFailures) > 0:
-            casalog.post('%s subMSs failed to be created'%nFailures)
+            casalog.post('%s subMSs failed to be created'%len(nFailures))
             # need to rename/re-index the subMSs
             newList = copy.deepcopy(subMSList)
             idx = 0

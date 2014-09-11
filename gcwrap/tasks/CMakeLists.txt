@@ -18,6 +18,7 @@ conjugatevis.xml
 csvclean.xml
 pclean.xml
 cvel.xml
+cvel2.xml
 deconvolve.xml
 delmod.xml
 exportasdm.xml

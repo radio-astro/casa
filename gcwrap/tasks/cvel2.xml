@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="cvel2" category="manipulation" visibility="experimental">
+     <shortdescription>Regrid an MS or MMS to a new spectral window, channel structure or frame</shortdescription>
+
+<description>
+The intent of cvel2 is to transform channel labels and the 
+visibilities to a spectral reference frame which is appropriate
+for the science analysis, e.g. from TOPO to LSRK to correct for 
+Doppler shifts throughout the time of the observation. Naturally, 
+this will change the shape of the spectral feature to some extent. 
+According to the Nyquist theorem you should oversample a spectrum 
+with twice the numbers of channels to retain the shape. Based on 
+some tests, however, we recommend to observe with at least 
+3-4 times the number of channels for each significant spectral 
+feature (like 3-4 times the linewidth). This will minimize 
+regridding artifacts in cvel2.
+
+If cvel2 has already established the grid that is desired for the
+imaging, clean should be run with exactly the same frequency/velocity 
+parameters as used in cvel2 in order to avoid additional regridding in 
+clean.
+
+Hanning smoothing is optionally offered in cvel2, but tests have 
+shown that already the regridding process itself, if it involved 
+a transformation from TOPO to a non-terrestrial reference frame, 
+implies some smoothing (due to channel interpolation) such that 
+Hanning smoothing may not be necessary.
+    
+This version of cvel2 also supports Multi-MS input, in which case it
+will create an output Multi-MS too.
+    
+NOTE:
+    The parameter passall is not supported in cvel2. The user may achieve
+    the same results of passall=True by splitting out the data that will not
+    be regridded with cvel2 and concatenate regridded and non-regridded sets 
+    at the end. In the case of Multi-MS input, the user should use virtualconcat 
+    to achieve a concatenated MMS.
+    
+    
+</description>
+
+<input>
+        <param type="string" name="vis" mustexist="true">
+	     <description>Name of input Measurement set or Multi-MS.</description>
+	     <value></value>
+        </param>	
+
+	<param type="string" name="outputvis">
+	     <description>Name of output Measurement Set or Multi-MS.</description>
+	     <value></value>
+	</param>
+
+	<!-- MMS-CASE parameters -->
+    <param type="bool" name="keepmms">
+        <description>If the input is a Multi-MS the output will also be a Multi-MS.</description>
+    <value>True</value>
+    </param>        
+	
+	<param type="bool" name="passall" subparam="true" visibility="hidden">
+	     <description>HIDDEN parameter. Pass through (write to output MS) non-selected data with no change</description>
+	     <value>False</value>
+	</param>
+
+	<!-- SELECTION parameters -->    
+    <param type="any" name="field">
+        <description>Select field using ID(s) or name(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="spw">
+        <description>Select spectral window/channels.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="scan" >
+        <description>Select data by scan numbers.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="antenna">
+        <description>Select data based on antenna/baseline.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="correlation">
+        <description>Correlation: \'\' ==> all, correlation=\'XX,YY\'.</description>
+        <any type="variant" limittypes="string stringArray" />
+        <value type="string" />
+    </param>
+
+    <param type="any" name="timerange" >
+        <description>Select data by time range.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="intent" >
+        <description>Select data by scan intent.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="array">
+        <description>Select (sub)array(s) by array ID number.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="uvrange" >
+        <description>Select data by baseline length.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+    
+    <param type="any" name="observation">
+        <description>Select by observation ID(s).</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="any" name="feed">
+        <description>Multi-feed numbers: Not yet implemented.</description>
+        <any type="variant" limittypes="string stringArray int intArray"/>
+        <value type="string"></value>
+    </param>
+
+    <param type="string" name="datacolumn" ignorecase="True">
+    <description>Which data column(s) to process.</description>
+    <value>all</value>
+    <allowed kind="enum" ignorecase="True">
+        <value>all</value>
+        <value>data</value>
+        <value>corrected</value>
+        <value>model</value>
+        <value>data,model,corrected</value>
+        <value>float_data</value>
+        <value>lag_data</value>
+        <value>float_data,data</value>
+        <value>lag_data,data</value>
+    </allowed>
+    </param>
+        	
+        <param type="string" name="mode">
+	    <description>Regridding mode (channel/velocity/frequency/channel_b).</description>
+	    <value>channel</value>
+	    <allowed kind="enum">
+	    <value>channel</value>
+	    <value>velocity</value>
+	    <value>frequency</value>
+	    <value>channel_b</value>
+        </allowed>
+        </param>
+
+        <param type="int" name="nchan" subparam="true">
+	    <description>Number of channels in the output spw (-1=all).</description>
+	    <value>-1</value>
+        </param>
+
+        <param type="any" name="start" subparam="true">
+	    <description>First channel to use in the output spw (mode-dependant).</description>
+	    <any type="variant"/>
+	    <value type="int">0</value>
+        </param>
+
+        <param type="any" name="width" subparam="true">
+	    <description>Number of input channels that are used to create an output channel.</description>
+	    <any type="variant"/>
+	    <value type="int">1</value>
+        </param>
+
+        <param type="string" name="interpolation" subparam="true" ignorecase="True">
+	    <description>Spectral interpolation method</description>
+	    <value>linear</value>
+	    <allowed kind="enum">
+	       <value>nearest</value>
+	       <value>linear</value>
+	       <value>cubic</value>
+	       <value>spline</value>
+	       <value>fftshift</value>
+            </allowed>
+        </param>
+
+        <param type="any" name="phasecenter">
+	    <description>Image phase center: position or field index</description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+        </param>
+
+        <param type="string" name="restfreq">
+	    <description>Rest frequency to use for output.</description>
+	    <value></value>
+        </param>
+	
+	<param type="string" name="outframe" ignorecase="True">
+		<description>Output reference frame (\'\'=keep input frame).</description>
+		<value></value>
+		<allowed kind="enum">
+			<value>topo</value>
+			<value>geo</value>
+			<value>lsrk</value>
+			<value>lsrd</value>
+			<value>bary</value>
+            <value>galacto</value>
+            <value>lgroup</value>
+            <value>cmb</value>
+            <value>source</value>
+			<value></value>
+		</allowed>
+	</param>
+
+        <param type="string" name="veltype" ignorecase="True">
+	    <description>Velocity definition.</description>
+	    <value>radio</value>
+	    <allowed kind="enum">
+	       <value>optical</value>
+	       <value>radio</value>
+            </allowed>
+        </param>
+
+
+	<param type="bool" name="hanning">
+	    <description>Hanning smooth data to remove Gibbs ringing.</description>
+	    <value>False</value>
+        </param>
+
+    <constraints>
+	    <when param="mode">
+		<equals value="channel">
+			<default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="int">0</value>
+			    <description>First input channel to use</description>
+			</default>
+			<default param="width"><value type="int">1</value></default>
+			<default param="interpolation"><value type="string">linear</value></default>
+		</equals>
+		<equals value="channel_b">
+			<default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="int">0</value>
+			    <description>First input channel to use</description>
+			</default>
+			<default param="width"><value type="int">1</value></default>
+			<default param="interpolation"><value type="string">linear</value></default>
+		</equals>
+	        <equals value="velocity">
+		        <default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="string"></value>
+			    <description>Velocity of first image channel: e.g \'0.0km/s\'</description>
+		        </default>
+		        <default param="width"><value type="string"></value>
+			    <description>Image channel width in velocity units: e.g \'-1.0km/s\'</description>
+		        </default>
+		        <default param="interpolation"><value type="string">linear</value></default>
+	        </equals>
+	        <equals value="frequency">
+			<default param="nchan"><value type="int">-1</value></default>
+			<default param="start"><value type="string"></value>
+			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
+		    </default>
+		    <default param="width"><value type="string"></value>
+			    <description>Image channel width in frequency units: e.g \'1.0kHz\'</description>
+		    </default>
+		    <default param="interpolation"><value type="string">linear</value></default>
+	        </equals>
+	    </when>
+	    
+    </constraints>
+
+
+</input>
+
+ <returns type="void"/>
+
+<example>
+
+    Detailed description of keyword arguments:
+
+--- Input/Output parameters ---
+    
+    vis -- Name of input visibility file
+        default: ''; example: vis='ngc5921.ms'
+
+    outputvis -- Name of output visibility file or Multi-MS
+        default: ''; example: outputvis='ngc5921.mms'
+
+    keepmms -- Create a Multi-MS as the output if the input is a Multi-MS.
+        default: True
+
+    By default it will create a Multi-MS when the input is a Multi-MS.
+    The output Multi-MS will have the same partition axis of the input MMS.
+    See 'help partition' for more information on the MMS format.
+    
+    NOTE: It is not possible to combine the spws if the input MMS was partitioned with 
+          separationaxis='spw'. In this case, the task will abort with an error.
+                   
+
+--- Data selection parameters ---
+    field -- Select field using field id(s) or field name(s).
+             [run listobs to obtain the list iof d's or names]
+        default: ''=all fields If field string is a non-negative
+           integer, it is assumed to be a field index
+           otherwise, it is assumed to be a field name
+           field='0~2'; field ids 0,1,2
+           field='0,4,5~7'; field ids 0,4,5,6,7
+           field='3C286,3C295'; fields named 3C286 and 3C295
+           field = '3,4C*'; field id 3, all names starting with 4C
+
+    spw -- Select spectral window/channels
+        default: ''=all spectral windows and channels
+           spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+           spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+           spw='0:5~61'; spw 0, channels 5 to 61
+           spw='0,10,3:3~45'; spw 0,10 all channels, spw 3 - chans 3 to 45.
+           spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+           spw = '*:3~64'  channels 3 through 64 for all sp id's
+                   spw = ' :3~64' will NOT work.
+
+               NOTE: mstransform does not support multiple channel ranges per
+                     spectral window (';').
+
+    scan -- Scan number range
+        default: ''=all
+
+    antenna -- Select data based on antenna/baseline
+        default: '' (all)
+            Non-negative integers are assumed to be antenna indices, and
+            anything else is taken as an antenna name.
+
+        examples:
+            antenna='5&amp;6': baseline between antenna index 5 and index 6.
+            antenna='VA05&amp;VA06': baseline between VLA antenna 5 and 6.
+            antenna='5&amp;6;7&amp;8': baselines 5-6 and 7-8
+            antenna='5': all baselines with antenna 5
+            antenna='5,6,10': all baselines including antennas 5, 6, or 10
+            antenna='5,6,10&amp;': all baselines with *only* antennas 5, 6, or
+                                   10.  (cross-correlations only.  Use &amp;&amp;
+                                   to include autocorrelations, and &amp;&amp;&amp;
+                                   to get only autocorrelations.)
+            antenna='!ea03,ea12,ea17': all baselines except those that
+                                       include EVLA antennas ea03, ea12, or
+                                       ea17.
+
+    correlation -- Correlation types or expression.
+        default: '' (all correlations)
+        example: correlation='XX,YY' 
+
+    timerange -- Select data based on time range:
+        default: '' (all); examples,
+           timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+           Note: if YYYY/MM/DD is missing date, timerange defaults to the
+           first day in the dataset
+           timerange='09:14:0~09:54:0' picks 40 min on first day
+           timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 30min
+           on next day
+           timerange='09:44:00' data within one integration of time
+           timerange='&gt;10:24:00' data after this time
+
+    array -- (Sub)array number range
+        default: ''=all
+
+    uvrange -- Select data within uvrange (default units meters)
+        default: ''=all; example:
+            uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
+            uvrange='&gt;4klambda';uvranges greater than 4 kilo-lambda
+            uvrange='0~1000km'; uvrange in kilometers
+
+    observation -- Select by observation ID(s)
+        default: ''=all
+
+    feed -- Selection based on the feed - NOT IMPLEMENTED YET
+        default: ''=all
+
+    datacolumn -- Which data column to use for processing (case-insensitive).
+        default: 'all'; 
+        options: 'data', 'model', 'corrected', 'all','float_data', 'lag_data', 
+                 'float_data,data', 'lag_data,data'.
+        example: datacolumn='data'
+
+        NOTE: 'all' = whichever of the above that are present. If the requested
+                      column does not exist, the task will exit with an error.
+            
+    mode -- Frequency Specification:
+               NOTE: See examples below:
+               default: 'channel'
+                 mode = 'channel'; Use with nchan, start, width to specify
+                         output spw. Produces equidistant grid based on first
+                         selected channel. See examples below.
+                 mode = 'velocity', means channels are specified in 
+ 		      velocity.
+                 mode = 'frequency', means channels are specified in 
+ 		      frequency.
+                 mode = 'channel_b', alternative 'channel' mode.
+		         Does not force an equidistant grid. Faster.
+
+  &gt;&gt;&gt; mode expandable parameters 
+               Start, width are given in units of channels, frequency 
+ 		  or velocity as indicated by mode 
+               nchan -- Number of channels in output spw
+                 default: -1 = all channels; example: nchan=3
+               start -- Start or end input channel (zero-based) depending on the sign of the width parameter
+                 default=0; example: start=5
+               width -- Output channel width in units of the input
+ 		     channel width (sign indicates whether the start parameter is lower(+) or upper(-) end of the range)
+                 default=1; example: width=4
+               interpolation -- Interpolation method (linear, nearest, cubic, spline, fftshift)
+                 default = 'linear'
+           examples:
+               spw = '0,1'; mode = 'channel'
+                  will produce a single spw containing all channels in spw 
+ 		       0 and 1
+               spw='0:5~28^2'; mode = 'channel'
+                  will produce a single spw made with channels 
+ 		       (5,7,9,...,25,27)
+               spw = '0'; mode = 'channel': nchan=3; start=5; width=4
+                  will produce an spw with 3 output channels
+                  new channel 1 contains data from channels (5+6+7+8)
+                  new channel 2 contains data from channels (9+10+11+12)
+                  new channel 3 contains data from channels (13+14+15+16)
+               spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; 
+ 		   width = 1
+                  will produce an spw with 21 channels
+                  new channel 1 contains data from channel 0
+                  new channel 2 contains data from channel 2
+                  new channel 21 contains data from channel 61
+               spw = '0:0~40^2'; mode = 'channel'; nchan = 3; start = 
+ 		   5; width = 4
+                  will produce an spw with three output channels
+                  new channel 1 contains channels (5,7)
+                  new channel 2 contains channels (13,15)
+                  new channel 3 contains channels (21,23)
+
+    phasecenter -- direction measure  or fieldid for the mosaic center
+               default: '' =&gt; first field selected ; example: phasecenter=6
+               or phasecenter='J2000 19h30m00 -40d00m00'
+
+    restfreq -- Specify rest frequency to use for output image
+               default='' Occasionally it is necessary to set this (for
+               example some VLA spectral line data).  For example for
+               NH_3 (1,1) put restfreq='23.694496GHz'
+
+    outframe -- output reference frame (not case-sensitive)
+               possible values: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or SOURCE
+               (SOURCE is meant for solar system work and corresponds to GEO + radial velocity
+               correction for ephemeris objects).
+               default='' (keep original reference frame) ; example: outframe='BARY'     
+
+    veltype -- definition of velocity (in mode)
+               default = 'radio'
+
+    hanning -- if true, Hanning smooth frequency channel data to remove Gibbs ringing
+
+==================================================================
+
+The intent of cvel2 is to transform channel labels and the 
+visibilities to a spectral reference frame which is appropriate
+for the science analysis, e.g. from TOPO to LSRK to correct for 
+Doppler shifts throughout the time of the observation. Naturally, 
+this will change the shape of the spectral feature to some extent. 
+According to the Nyquist theorem you should oversample a spectrum 
+with twice the numbers of channels to retain the shape. Based on 
+some tests, however, we recommend to observe with at least 
+3-4 times the number of channels for each significant spectral 
+feature (like 3-4 times the linewidth). This will minimize 
+regridding artifacts in cvel2.
+
+If cvel2 has already established the grid that is desired for the
+imaging, clean should be run with exactly the same frequency/velocity 
+parameters as used in cvel2 in order to avoid additional regridding in 
+clean.
+
+Hanning smoothing is optionally offered in cvel2, but tests have 
+shown that already the regridding process itself, if it involved 
+a transformation from TOPO to a non-terrestrial reference frame, 
+implies some smoothing (due to channel interpolation) such that 
+Hanning smoothing may not be necessary.
+</example> 
+</task>
+</casaxml>

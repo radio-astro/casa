@@ -94,6 +94,7 @@ from clearplot import  clearplot
 from clearstat import  clearstat
 #from concat import  concat
 from cvel import  cvel
+from cvel2 import  cvel2
 from deconvolve import  deconvolve
 from exportfits import  exportfits
 from exportuvfits import  exportuvfits

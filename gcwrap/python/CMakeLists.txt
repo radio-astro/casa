@@ -86,6 +86,7 @@ scripts/task_conjugatevis.py
 scripts/task_csvclean.py
 scripts/task_pclean.py
 scripts/task_cvel.py
+scripts/task_cvel2.py
 scripts/task_deconvolve.py
 scripts/task_delmod.py
 scripts/task_exportasdm.py

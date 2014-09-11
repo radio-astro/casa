@@ -35,6 +35,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_createmultims.py
   test_csvclean.py
   test_cvel.py
+  test_cvel2.py
   test_cvelfreqs.py
   test_exportasdm.py
   test_fixplanets.py
