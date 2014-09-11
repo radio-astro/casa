@@ -811,13 +811,24 @@ class cvel2_test(test_base):
     def test34(self):
         '''cvel2 34: EVLA high-res input MS, 2 spws to combine'''
         self.setUp_vis_e()
-        os.system('ls -l '+vis_e)
-        os.path.exists(vis_e+'/SORTED_TABLE')
-
-#        myvis = vis_e
-#        os.system('ln -sf ' + myvis + ' myinput.ms')
+#         os.system('ls -l '+vis_e)
+#         os.path.exists(vis_e+'/SORTED_TABLE')
+# 
+# #        myvis = vis_e
+# #        os.system('ln -sf ' + myvis + ' myinput.ms')
+#         rval = cvel2(
+#             vis = vis_e,
+#             outputvis = outfile,
+#             mode = 'velocity',
+#             restfreq  = '6035.092MHz'
+#             )
+#         self.assertNotEqual(rval,False)
+#         ret = verify_ms(outfile, 1, 260, 0)
+#         self.assertTrue(ret[0],ret[1])
+        myvis = vis_e
+        os.system('ln -sf ' + myvis + ' myinput.ms')
         rval = cvel2(
-            vis = vis_e,
+            vis = 'myinput.ms',
             outputvis = outfile,
             mode = 'velocity',
             restfreq  = '6035.092MHz'
