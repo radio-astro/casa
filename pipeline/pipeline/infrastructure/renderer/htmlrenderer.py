@@ -23,15 +23,12 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.applycal as applycal
-import pipeline.infrastructure.displays.setjy as setjy
 import pipeline.infrastructure.displays.gfluxscale as gfluxscale
-import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.gaincal as gaincal
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.wvr as wvr
 import pipeline.infrastructure.displays.singledish as sddisplay
 import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
 import pipeline.infrastructure.displays.vla.testBPdcalsdisplay as testBPdcalsdisplay
@@ -59,7 +56,6 @@ LOG = infrastructure.get_logger(__name__)
 
 
 def get_task_description(result_obj):
-    
     if not isinstance(result_obj, (list, basetask.ResultsList)):
         return get_task_description([result_obj, ])
 
@@ -67,7 +63,7 @@ def get_task_description(result_obj):
         msg = 'Cannot get description for zero-length results list'
         LOG.error(msg)
         return msg
-
+ 
     task_cls = getattr(result_obj[0], 'task', None)
     if task_cls is None:
         results_cls = result_obj[0].__class__.__name__
@@ -79,6 +75,9 @@ def get_task_description(result_obj):
     renderer = renderer_map[T2_4MDetailsRenderer].get(task_cls, None)
     if renderer:
         description = getattr(renderer, 'description', None)
+    else:
+        LOG.error('No renderer registered for task %s' % task_cls.__name__)
+        raise TypeError()
 
     if description is None:
         description = _get_task_description_for_class(task_cls)    
@@ -94,9 +93,6 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hif.tasks.Atmflag:
         return 'Flag on atmospheric transmission'
-
-    if task_cls is hif.tasks.Bandpassflagchans:
-        return 'Flag channels of bandpass calibration'
 
     if task_cls is hif.tasks.Clean:
         return 'Produce a cleaned image'
@@ -123,20 +119,11 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hifa.tasks.Linpolcal:
         return 'Linear polarization calibration'
 
-    if task_cls is hif.tasks.Lowgainflag:
-        return 'Flag antennas with low gain'
-
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
 
     if task_cls is hif.tasks.NormaliseFlux:
         return 'Calculate mean fluxes of calibrators'
-
-    if task_cls is hif.tasks.PhcorBandpass:
-        return 'Bandpass calibration'
-
-    if task_cls is hif.tasks.Setjy:
-        return 'Set calibrator model visibilities'
 
     if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MS to Scantables'
@@ -150,9 +137,6 @@ def _get_task_description_for_class(task_cls):
     if task_cls in (hifa.tasks.TimeGaincal, hif.tasks.GaincalMode,
                     hif.tasks.GTypeGaincal, hif.tasks.GSplineGaincal):
         return 'Gain calibration'
-
-    if task_cls is hifa.tasks.Wvrgcal:
-        return 'Calculate WVR calibration'
 
     if task_cls is hsd.tasks.SDInspectData:
         return 'Inspect data'
@@ -1866,342 +1850,6 @@ class GaincalAmpVsTimeDiagnosticPlotRenderer(GaincalAmpVsTimePlotRenderer):
         return filename
 
 
-class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
-    """
-    T2_4MDetailsBandpassRenderer generates the detailed T2_4M-level plots and
-    output specific to the bandpass calibration task.
-    """
-    BandpassApplication = collections.namedtuple('BandpassApplication', 
-                                                 'ms gaintable bandtype solint intent spw') 
-    PhaseupApplication = collections.namedtuple('PhaseupApplication', 
-                                                'ms calmode solint minblperant minsnr flagged phaseupbw') 
-    
-    def __init__(self, template='t2-4m_details-bandpass.html', 
-                 always_rerender=False):
-        # set the name of our specialised Mako template via the superclass
-        # constructor 
-        super(T2_4MDetailsBandpassRenderer, self).__init__(template, 
-                                                           always_rerender)
-
-    """
-    Get the Mako context appropriate to the results created by a Bandpass
-    task.
-    
-    This routine triggers the creation of the plots specific to the bandpass
-    task, creating thumbnail pages as necessary. The returned dictionary  
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param results: the bandpass results to describe
-    :type results: 
-        :class:`~pipeline.infrastructure.tasks.bandpass.common.BandpassResults`
-    :rtype a dictionary that can be passed to the matching bandpass Mako 
-        template
-    """
-    def get_display_context(self, context, results):
-        # get the standard Mako context from the superclass implementation 
-        super_cls = super(T2_4MDetailsBandpassRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        stage_dir = os.path.join(context.report_dir, 
-                                 'stage%d' % results.stage_number)
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-
-        # generate the bandpass-specific plots, collecting the Plot objects
-        # returned by the plot generator 
-        applications = []
-        phaseup_applications = []
-        amp_refant = {}
-        amp_mode = {}
-        amp_details = {}
-        amp_vs_time_subpages = {}
-
-        phase_refant = {}
-        phase_mode = {}
-        phase_details = {}
-        phase_vs_time_subpages = {}
-
-        for result in results:
-            vis = os.path.basename(result.inputs['vis'])
-            ms = context.observing_run.get_ms(vis)
-            applications.extend(self.get_bandpass_applications(context, result, ms))
-            phaseup_applications.extend(self.get_phaseup_applications(context, result, ms))
-            ms_refant = ms.reference_antenna.split(',')[0]
-
-            # need two summary plots: one for the refant, one for the mode
-            plotter = bandpass.BandpassAmpVsFreqSummaryChart(context, result)
-            summaries = plotter.plot()
-            for_refant = [p for p in summaries 
-                          if p.parameters['ant'] == ms_refant]
-            amp_refant[vis] = for_refant[0] if for_refant else None
-
-            # replace mode with first non-refant plot until we have scores
-            LOG.todo('Replace bp summary plot with mode when scores are in place')
-            non_refants = [p for p in summaries
-                           if p.parameters['ant'] != ms_refant]
-            amp_mode[vis] = non_refants[0] if non_refants else None
-
-            # need two summary plots: one for the refant, one for the mode
-            plotter = bandpass.BandpassPhaseVsFreqSummaryChart(context, result)
-            summaries = plotter.plot()
-            for_refant = [p for p in summaries 
-                          if p.parameters['ant'] == ms_refant]
-            phase_refant[vis] = for_refant[0] if for_refant else None
-            
-            non_refants = [p for p in summaries
-                           if p.parameters['ant'] != ms_refant]
-            phase_mode[vis] = non_refants[0] if non_refants else None
-
-            # make phase vs freq plots for all data 
-            plotter = bandpass.BandpassPhaseVsFreqDetailChart(context, result)
-            phase_details[vis] = plotter.plot()
-            renderer = BandpassPhaseVsFreqPlotRenderer(context, result, 
-                                                       phase_details[vis])            
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())    
-                phase_vs_time_subpages[ms.basename] = renderer.filename
-
-            plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
-            amp_details[vis] = plotter.plot()            
-            renderer = BandpassAmpVsFreqPlotRenderer(context, result, 
-                                                     amp_details[vis])            
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())    
-                # the filename is sanitised - the MS name is not. We need to
-                # map MS to sanitised filename for link construction.
-                amp_vs_time_subpages[ms.basename] = renderer.filename
-
-        # add the PlotGroups to the Mako context. The Mako template will parse
-        # these objects in order to create links to the thumbnail pages we
-        # just created
-        ctx.update({'applications'         : applications,
-                    'phaseup_applications' : phaseup_applications,
-                    'amp_mode'             : amp_mode,
-                    'amp_refant'           : amp_refant,
-                    'phase_mode'           : phase_mode,
-                    'phase_refant'         : phase_refant,
-                    'amp_subpages'         : amp_vs_time_subpages,
-                    'phase_subpages'       : phase_vs_time_subpages,
-                    'dirname'              : stage_dir})
-
-        return ctx
-
-    def get_phaseup_applications(self, context, result, ms):
-        # return early if phase-up was not activated
-        if result.inputs.get('phaseup', False) != True:
-            return []
-        
-        calmode_map = {'p':'Phase only',
-                       'a':'Amplitude only',
-                       'ap':'Phase and amplitude'}
-        
-        # identify phaseup from 'preceding' list attached to result
-        phaseup_calapps = [] 
-        for previous_result in result.preceding:
-            for calapp in previous_result:
-                l = [cf for cf in calapp.calfrom if cf.caltype == 'gaincal']
-                if l and calapp not in phaseup_calapps:
-                    phaseup_calapps.append(calapp)
-                
-        applications = []
-        for calapp in phaseup_calapps:
-            solint = calapp.origin.inputs['solint']
-
-            if solint == 'inf':
-                solint = 'Infinite'
-            
-            # Convert solint=int to a real integration time. 
-            # solint is spw dependent; science windows usually have the same
-            # integration time, though that's not guaranteed by the MS.
-            if solint == 'int':
-                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in utils.get_intervals(context, calapp)]
-                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
-            
-            calmode = calapp.origin.inputs.get('calmode', 'N/A')
-            calmode = calmode_map.get(calmode, calmode)
-            minblperant = calapp.origin.inputs.get('minblperant', 'N/A')
-            minsnr = calapp.origin.inputs.get('minsnr', 'N/A')
-            flagged = 'TODO'
-            phaseupbw = result.inputs.get('phaseupbw', 'N/A')
-
-            a = T2_4MDetailsBandpassRenderer.PhaseupApplication(ms.basename,
-                                                                calmode,
-                                                                solint,
-                                                                minblperant,
-                                                                minsnr,
-                                                                flagged,
-                                                                phaseupbw)
-            applications.append(a)
-
-        return applications
-    
-    def get_bandpass_applications(self, context, result, ms):
-        applications = []
-        
-        bandtype_map = {'B'    :'Channel',
-                        'BPOLY':'Polynomial'}                       
-        
-        for calapp in result.final:
-            solint = calapp.origin.inputs['solint']
-
-            if solint == 'inf':
-                solint = 'Infinite'
-            
-            # Convert solint=int to a real integration time. 
-            # solint is spw dependent; science windows usually have the same
-            # integration time, though that's not guaranteed by the MS.
-            if solint == 'int':
-                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in utils.get_intervals(context, calapp)]
-                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
-            
-            gaintable = os.path.basename(calapp.gaintable)
-            spw = ', '.join(calapp.spw.split(','))
-
-            to_intent = ', '.join(calapp.intent.split(','))
-            if to_intent == '':
-                to_intent = 'ALL'
-
-            # TODO get this from the calapp rather than the top-level inputs?
-            bandtype = calapp.origin.inputs['bandtype']
-            bandtype = bandtype_map.get(bandtype, bandtype)
-            a = T2_4MDetailsBandpassRenderer.BandpassApplication(ms.basename,
-                                                                 gaintable,
-                                                                 bandtype,
-                                                                 solint,
-                                                                 to_intent,
-                                                                 spw)
-            applications.append(a)
-
-        return applications
-
-
-class BaseJsonPlotRenderer(object):
-    template = None
-
-    def __init__(self, context, result, plots, scores):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.vis = os.path.basename(self.result.inputs['vis']) 
-        self.json = json.dumps(scores)
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'vis'        : self.vis,
-                'json'       : self.json}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        raise NotImplementedError
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self):
-        if not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w')
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
-        return t.render(**display_context)
-
-
-class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
-    template = 't2-4m_details-bandpass-amp_vs_freq_plots.html'
-
-    def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis']) 
-        ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_amp_qa_scores(ms, result, plots,
-                                             context.report_dir)
-                
-        super(BandpassAmpVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
-         
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('amp_vs_freq-%s.html' % self.vis)
-        return filename
-
-
-class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
-    template = 't2-4m_details-bandpass-phase_vs_freq_plots.html'
-
-    def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis']) 
-        ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_phase_qa_scores(ms, result, plots,
-                                               context.report_dir)
-
-        super(BandpassPhaseVsFreqPlotRenderer, self).__init__(context, result, plots, scores) 
-
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('phase_vs_freq-%s.html' % self.vis)
-        return filename
-        
-
-class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Tsysflag task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_bandpassflagchans.html',
-            always_rerender=False):
-        super(T2_4MDetailsBandpassFlagRenderer, self).__init__(template,
-                always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsBandpassFlagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        htmlreports = self.get_htmlreports(context, results)
-        
-        ctx.update({'htmlreports' : htmlreports})
-        return ctx
-
-    def get_htmlreports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = {}
-        for result in results:
-            if not hasattr(result, 'table'):
-                # empty result
-                continue
-
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath,)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result):
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
-
-
 class T2_4MDetailsRawflagchansRenderer(T2_4MDetailsDefaultRenderer):
     '''
     Renders detailed HTML output for the Rawflagchans task.
@@ -2247,32 +1895,6 @@ class T2_4MDetailsRawflagchansRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hif_importdata.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsImportDataRenderer, self).__init__(template,
-                                                             always_rerender)
-        
-    def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsImportDataRenderer, self)        
-        ctx = super_cls.get_display_context(context, result)
-
-        setjy_results = []
-        for r in result:
-            setjy_results.extend(r.setjy_results)
-
-        measurements = []        
-        for r in setjy_results:
-            measurements.extend(r.measurements)
-
-        num_mses = reduce(operator.add, [len(r.mses) for r in result])
-
-        ctx.update({'flux_imported' : True if measurements else False,
-                    'setjy_results' : setjy_results,
-                    'num_mses'      : num_mses})
-
-        return ctx
-
 class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_importdata.html', 
                  always_rerender=False):
@@ -2298,79 +1920,6 @@ class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
                     'num_mses'      : num_mses})
 
         return ctx
-
-
-class T2_4MDetailsSetjyRenderer(T2_4MDetailsDefaultRenderer):
-
-    def __init__(self, template='t2-4m_details-hif_setjy.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsSetjyRenderer, self).__init__(template,
-                                                           always_rerender)
-
-    def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsSetjyRenderer, self)
-        ctx = super_cls.get_display_context(context, result)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % result.stage_number)
-                                  
-        ctx.update({'dirname'  : weblog_dir})
-        
-        '''
-        amp_vs_uv_summary_plots = self.create_plots(context, 
-                                                    result, 
-                                                    setjy.AmpVsUVSummaryChart, 
-                                                    'AMPLITUDE')
-        '''
-        
-        amp_vs_uv_summary_plots = collections.defaultdict(dict)
-        for intents in ['AMPLITUDE']:
-            plots = self.create_plots(context, 
-                                      result, 
-                                      setjy.AmpVsUVSummaryChart, 
-                                      intents)
-            self.sort_plots_by_baseband(plots)
-
-            key = intents
-            for vis, vis_plots in plots.items():
-                amp_vs_uv_summary_plots[vis][key] = vis_plots
-
-        ctx.update({'amp_vs_uv_plots'     : amp_vs_uv_summary_plots})
-        
-        return ctx
-
-    def sort_plots_by_baseband(self, d):
-        for vis, plots in d.items():
-            plots = sorted(plots, 
-                           key=lambda plot: plot.parameters['baseband'])
-            d[vis] = plots
-
-    def create_plots(self, context, results, plotter_cls, intents, renderer_cls=None):
-        """
-        Create plots and return a dictionary of vis:[Plots].
-        """
-        d = {}
-        for result in results:
-            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls)
-            d = utils.dict_merge(d, plots)
-        return d
-
-    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None):
-        vis = os.path.basename(result.inputs['vis'])
-        
-        plotter = plotter_cls(context, result, intents)
-        plots = plotter.plot()
-
-        d = collections.defaultdict(dict)
-        d[vis] = plots
-
-        if renderer_cls is not None:
-            renderer = renderer_cls(context, result, plots)
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())        
-
-        return d
-
 
 
 class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
@@ -3218,51 +2767,6 @@ class ApplycalPhaseVsTimePlotRenderer(GenericFieldSpwAntPlotsRenderer):
         d = super(ApplycalPhaseVsTimePlotRenderer, self)._get_display_context()
         d['plot_title'] = 'Calibrated phase vs time for %s' % self.ms
         return d
-
-
-class T2_4MDetailsLowgainFlagRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Lowgainflag task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_lowgainflag.html',
-            always_rerender=False):
-        super(T2_4MDetailsLowgainFlagRenderer, self).__init__(template,
-                always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsLowgainFlagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        htmlreports = self.get_htmlreports(context, results)
-        
-        ctx.update({'htmlreports' : htmlreports})
-        return ctx
-
-    def get_htmlreports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = {}
-        for result in results:
-#            if not hasattr(result, 'flagcmdfile'):
-#                continue
-
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath,)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result):
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
 
 #-----------------------------------------------------------------------
 
@@ -5245,75 +4749,6 @@ class LogCopier(object):
 #                break
 #
 #        return rows[start_idx:end_idx]
-          
-          
-def get_bandpass_amp_qa_scores(ms, result, plots, rootdir):
-    # .. and because the caltable name is a heuristic and resolved at child 
-    # taske execution time, the stage number doesn't map to the input! 
-    #caltable = result.inputs['caltable']
-    caltable = result.final[0].gaintable
-    num_pols = utils.get_num_caltable_polarizations(caltable)
-    score_types = ['AMPLITUDE_SCORE_DD',
-                   'AMPLITUDE_SCORE_FN',
-                   'AMPLITUDE_SCORE_SNR']
-    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)
-
-
-def get_bandpass_phase_qa_scores(ms, result, plots, rootdir):
-    # .. and because the caltable name is a heuristic and resolved at child 
-    # taske execution time, the stage number doesn't map to the input! 
-    #caltable = result.inputs['caltable']
-    caltable = result.final[0].gaintable
-    num_pols = utils.get_num_caltable_polarizations(caltable)
-    score_types = ['PHASE_SCORE_DD',
-                   'PHASE_SCORE_FN',
-                   'PHASE_SCORE_RMS']
-    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)    
-
-def get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_polarizations):
-    qa_data = result.qa.rawdata
-    
-    scores = {}
-    for plot in plots:
-        spw = ms.get_spectral_window(plot.parameters['spw'])
-        spw_str = str(spw.id)        
-        dd = ms.get_data_description(spw=spw)
-        if dd is None:
-            continue
-
-        antennas = ms.get_antenna(plot.parameters['ant'])
-        assert len(antennas) is 1, 'plot antennas != 1'
-        antenna = antennas[0]
-
-        pol = plot.parameters['pol']
-        pol_id = dd.get_polarization_id(pol)
-
-        png = os.path.relpath(plot.abspath, rootdir)
-        thumbnail = os.path.relpath(plot.thumbnail, rootdir)
-        
-        png_scores = {'antenna'   : antenna.name,
-                      'spw'       : spw.id,
-                      'pol'       : pol,
-                      'thumbnail' : thumbnail}
-        scores[png] = png_scores
-
-        # QA dictionary keys are peculiar, in that their index is a
-        # function of both antenna and feed.
-        qa_id = int(antenna.id) * num_polarizations + pol_id
-        qa_str = str(qa_id)
-
-        for score_type in score_types:            
-            if 'QASCORES' in qa_data:
-                try:
-                    score = qa_data['QASCORES'][score_type][spw_str][qa_str]
-                except KeyError:
-                    LOG.error('Could not get %s score for %s (%s) spw %s pol %s (id=%s)' % (score_type, antenna.name, antenna.id, spw_str, pol, qa_str))
-                    score = None 
-            else:
-                score = 1.0
-            png_scores[score_type] = score
-        
-    return scores
 
 
 # renderer_map holds the mapping of tasks to result renderers for
@@ -5327,8 +4762,6 @@ renderer_map = {
     T2_4MDetailsRenderer : {
         hif.tasks.Applycal       : T2_4MDetailsApplycalRenderer(),                        
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
-        hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
-        hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.ExportData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_exportdata.html'),
@@ -5336,12 +4769,9 @@ renderer_map = {
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.GcorFluxscale : T2_4MDetailsGFluxscaleRenderer('t2-4m_details-hif_gfluxscale.html'),
-        hif.tasks.Lowgainflag    : T2_4MDetailsLowgainFlagRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
-        hif.tasks.Setjy          : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html'),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
-        hifa.tasks.Wvrgcal       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDImportData   : T2_4MDetailsSingleDishImportDataRenderer(always_rerender=False),
         hsd.tasks.SDInspectData  : T2_4MDetailsSingleDishInspectDataRenderer(always_rerender=False),
@@ -5355,12 +4785,10 @@ renderer_map = {
         hsd.tasks.SDImagingOld   : T2_4MDetailsSingleDishImagingRenderer(always_rerender=False),
         hsd.tasks.SDFlagBaseline : T2_4MDetailsSingleDishFlagBaselineRenderer(always_rerender=False),
         hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsSingleDishPlotFlagBaselineRenderer(always_rerender=False),
-        hsd.tasks.SDImportData2  : T2_4MDetailsImportDataRenderer(),
         hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=False),
         hifv.tasks.flagging.flagdetervla.FlagDeterVLA : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=False),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=False),
-        hifv.tasks.setmodel.VLASetjy : T2_4MDetailsSetjyRenderer('t2-4m_details-hif_setjy.html', always_rerender=False),
         hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=False),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=False),
         hifv.tasks.testBPdcals                   : T2_4MDetailstestBPdcalsRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=False),

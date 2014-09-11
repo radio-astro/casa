@@ -1,7 +1,6 @@
 <%!
 rsc_path = ""
 import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
