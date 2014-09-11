@@ -59,7 +59,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 def get_task_description(result_obj):
-    if not isinstance(result_obj, collections.Iterable):
+    
+    if not isinstance(result_obj, (list, basetask.ResultsList)):
         return get_task_description([result_obj, ])
 
     if len(result_obj) is 0:
