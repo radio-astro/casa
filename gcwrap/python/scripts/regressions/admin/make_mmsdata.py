@@ -181,7 +181,7 @@ def main(thislist, axis='auto'):
         tempdir = 'makemmsdirtemp'
         os.system('mkdir '+tempdir)
         importuvfits(fitsfile=CVELPATH+'ngc4826.ll.fits5',vis=tempdir+'/ngc4826.ms') 
-        partition(vis=tempdir+'/ngc4826.ms',outputvis='ngc4826.mms',separationaxis='scan',flagbackup=false,datacolumn='all')
+        partition(vis=tempdir+'/ngc4826.ms',outputvis=MMSPATH+'ngc4826.mms',separationaxis='scan',flagbackup=false,datacolumn='all')
         os.system('rm -rf '+tempdir)      
         
         CVELPATH = DATAPATH + 'cvel/input/'
