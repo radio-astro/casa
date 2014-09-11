@@ -773,7 +773,7 @@ class test_partiton_subtables_evla(test_base):
         
         self.outputms = "parted.ms"
         
-        partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4)
+        partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4,flagbackup=False)
         
         subtable = "/FEED"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
