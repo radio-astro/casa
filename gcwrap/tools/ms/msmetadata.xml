@@ -1317,7 +1317,7 @@ windows in the dataset and close the tool.
             <example>
     msmd.open("my.ms")
     # get the state IDs associated with scan number 251
-    states = msmd.timesforscans(251)
+    states = msmd.statesforscan(251)
     msmd.done()
             </example>
         </method>
@@ -1353,6 +1353,26 @@ windows in the dataset and close the tool.
     msmd.open("my.ms")
     # get the times associated with field 3
     times = msmd.timesforfields(3)
+    msmd.done()
+            </example>
+        </method>
+        
+        <method type="function" name="timesforintent">
+            <shortdescription>Get an array of the unique times for the specified intent.</shortdescription>
+             <input>
+                <param type="string" direction="in" name="intent">
+                    <description>Intent for which to return the times.</description>
+                    <value/>
+                </param>
+            </input>
+            <returns type="doubleArray"/>
+            <description>
+                Get an array of the unique times for the specified intent.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the times associated with intent "myintent"
+    times = msmd.timesforintent("myintent")
     msmd.done()
             </example>
         </method>

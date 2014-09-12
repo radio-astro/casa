@@ -1069,7 +1069,40 @@ class msmd_test(unittest.TestCase):
         """Test name(), CAS-6817"""
         md = self.md
         name = md.name()
-        self.assertTrue(name == os.path.abspath(fixture))      
+        self.assertTrue(name == os.path.abspath(fixture))   
+        
+    def test_timesforintent(self):
+        """Test timesforintent(), CAS-6919"""
+        md = self.md
+        intents = md.intents()
+        for intent in intents:
+            times = md.timesforintent(intent)
+            ntimes = len(times)
+            expec = 0
+            if intent == "CALIBRATE_AMPLI#ON_SOURCE":
+                expec = 234
+            elif intent == "CALIBRATE_ATMOSPHERE#OFF_SOURCE":
+                expec = 46
+            elif intent == "CALIBRATE_ATMOSPHERE#ON_SOURCE":
+                expec = 93
+            elif intent == "CALIBRATE_BANDPASS#ON_SOURCE":
+                expec = 623
+            elif intent == "CALIBRATE_PHASE#ON_SOURCE":
+                expec = 1128
+            elif intent == "CALIBRATE_POINTING#ON_SOURCE":
+                expec = 244
+            elif (
+                intent == "CALIBRATE_SIDEBAND_RATIO#OFF_SOURCE"
+                or intent == "CALIBRATE_SIDEBAND_RATIO#ON_SOURCE"
+            ):
+                expec = 49
+            elif intent == "CALIBRATE_WVR#OFF_SOURCE":
+                expec = 95
+            elif intent == "CALIBRATE_WVR#ON_SOURCE":
+                expec = 1514
+            elif intent == "OBSERVE_TARGET#ON_SOURCE":
+                expec = 1868
+            self.assertTrue(ntimes == expec)
         
 def suite():
     return [msmd_test]

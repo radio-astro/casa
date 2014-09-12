@@ -1177,6 +1177,13 @@ vector<double> msmetadata::timesforfield(const int field) {
 	return vector<double>();
 }
 
+vector<double> msmetadata::timesforintent(const string& intent) {
+	_FUNC(
+		return _setDoubleToVectorDouble(_msmd->getTimesForIntent(intent));
+	)
+	return vector<double>();
+}
+
 vector<double> msmetadata::timesforscan(const int scan) {
 	_FUNC(
 		if (scan < 0) {
