@@ -53,6 +53,7 @@ public:
 
   void resetMask(CountedPtr<SIImageStore> imstore);
 
+  void fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings);
   void fillMask(CountedPtr<SIImageStore> imstore, String maskString);
 
   // Collection of methods translate mask description (text, record, threshold, etc) to
@@ -67,7 +68,8 @@ public:
   // and Matrix of (ncircles, 3) with the specified 'value'. Each row of circles are radius, x_center, y_center in pixels.
   // blctrcs and circles are applied to all the spectral and stokes while regions specified in record can specify selections 
   // in spectral and stokes axes.
-  static Bool regionToImageMask(const String& maskimage, Record* regionRec, Matrix<Quantity> & blctrcs,
+  //static Bool regionToImageMask(const String& maskimage, Record* regionRec, Matrix<Quantity> & blctrcs,
+  static Bool regionToImageMask(ImageInterface<Float>&  maskImage, Record* regionRec, Matrix<Quantity> & blctrcs,
                     Matrix<Float>& circles, const Float& value=1.0);
   
   // Convert boxes defined with blcs and trcs to ImageRegion

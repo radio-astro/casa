@@ -83,6 +83,105 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->unlock();
   }
 
+/***
+  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings)
+  {
+      String maskString;
+      if (maskStrings.nelements()) {
+        for (uInt imsk = 0; imsk < maskStrings.nelements(); imsk++) {
+          maskString = maskStrings[imsk];
+          fillMask(imstore, maskString);
+        }
+      }
+      else {
+        fillMask(imstore, String(""));
+      }
+  }
+***/
+
+  void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, Vector<String> maskStrings)
+  {
+    LogIO os( LogOrigin("SDMaskHandler","fillMask",WHERE) );
+    String maskString;
+    try {
+      TempImage<Float> tempAllMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
+      if (maskStrings.nelements()) {
+        //working temp mask image
+        TempImage<Float> tempMaskImage(imstore->mask()->shape(), imstore->mask()->coordinates());
+        copyMask(*(imstore->mask()), tempMaskImage);
+        for (uInt imsk = 0; imsk < maskStrings.nelements(); imsk++) {
+          maskString = maskStrings[imsk];
+          if ( Table::isReadable(maskString) ) {
+            Table imtab = Table(maskString, Table::Old);
+            Vector<String> colnames = imtab.tableDesc().columnNames();
+            if ( colnames[0]=="map" ) {
+              // looks like a CASA image ... probably should check coord exists in the keyword also...
+              //          cout << "copy this input mask...."<<endl;
+              PagedImage<Float> inmask(maskString);
+              IPosition inShape = inmask.shape();
+              IPosition outShape = imstore->mask()->shape();
+              Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
+              Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
+              if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
+                os << "Expanding mask image: " << maskString << LogIO::POST;
+                expandMask(inmask, tempMaskImage);
+              }
+              else {
+                os << "Copying mask image: " << maskString << LogIO::POST;
+                copyMask(inmask, tempMaskImage);
+              }
+            }// end of ''map''
+            else {
+              throw(AipsError(maskString+" does not appear to be valid image mask"));
+            }
+          }// end of readable table
+          else {
+            //
+            Record* myrec = 0;
+            try {
+            myrec = RegionManager::readImageFile(maskString,String("temprgrec"));
+            if (myrec!=0) {
+              Bool ret(false);
+              Matrix<Quantity> dummyqmat;
+              Matrix<Float> dummyfmat;
+              ret=SDMaskHandler::regionToImageMask(tempMaskImage, myrec, dummyqmat, dummyfmat);
+              if (!ret) cout<<"regionToImageMask failed..."<<endl;
+              os << "Reading region record mask: " << maskString << LogIO::POST;
+
+              //debug
+              //PagedImage<Float> testtempim(tempMaskImage.shape(), tempMaskImage.coordinates(), "_testTempim");
+              //ret=SDMaskHandler::regionToImageMask(testtempim, myrec, dummyqmat, dummyfmat);
+              //if (!ret) cout<<"regionToImageMask 2nd failed..."<<endl;
+            }
+            }
+            catch (...) {
+              try {
+              ImageRegion* imageRegion=0;
+              os << "Reading text mask: " << maskString << LogIO::POST;
+              SDMaskHandler::regionTextToImageRegion(maskString, tempMaskImage, imageRegion);
+              if (imageRegion!=0)
+                SDMaskHandler::regionToMask(tempMaskImage,*imageRegion, Float(1.0));
+              }
+              catch (...) {
+              os << LogIO::WARN << maskString << "is invalid mask. Skipping this mask..." << LogIO::POST;
+              }
+             }
+          }// end of region string
+         
+          LatticeExpr<Float> addedmask(tempMaskImage+tempAllMaskImage); 
+          tempAllMaskImage.copyData( LatticeExpr<Float>( iif(addedmask > 0.0, 1.0, 0.0) ) );
+        }
+        imstore->mask()->copyData(tempAllMaskImage);
+        imstore->mask()->unlock();
+      }
+    } catch( AipsError &x )
+      {
+	throw(AipsError("Error in constructing "+ imstore->getName() +".mask from " + maskString + " : " + x.getMesg()));
+      }
+  }
+
+
+  
   void SDMaskHandler::fillMask(CountedPtr<SIImageStore> imstore, String maskString)
   {
 
@@ -151,7 +250,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw(AipsError("Error in constructing "+ imstore->getName() +".mask from " + maskString + " : " + x.getMesg()));
       }
-    
   }
   
   //void SDMaskHandler::makeMask()
@@ -179,25 +277,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return newMaskImage;
   }
 
-  Bool SDMaskHandler::regionToImageMask(const String& maskName, Record* regionRec, Matrix<Quantity>& blctrcs,
-  //Bool SDMaskHandler::regionToImageMask(const String& maskName, Record& regionRec, Matrix<Quantity>& blctrcs,
+  //Bool SDMaskHandler::regionToImageMask(const String& maskName, Record* regionRec, Matrix<Quantity>& blctrcs,
+  Bool SDMaskHandler::regionToImageMask(ImageInterface<Float>& maskImage, Record* regionRec, Matrix<Quantity>& blctrcs,
             Matrix<Float>& circles, const Float& value) {
 
     LogIO os(LogOrigin("imager", "regionToImageMask", WHERE));
 
     try {
-      PagedImage<Float> maskImage(maskName);
-      CoordinateSystem cSys=maskImage.coordinates();
-      maskImage.table().markForDelete();
+      //PagedImage<Float> tempmask(TiledShape(maskImage->shape(),
+      //                                    maskImage->niceCursorShape()), maskImage->coordinates(), tempfname);
+      CountedPtr<ImageInterface<Float> > tempmask;
+      tempmask = new TempImage<Float>(TiledShape(maskImage.shape(),maskImage.niceCursorShape()), maskImage.coordinates());
+      //tempmask = new PagedImage<Float>(maskImage.shape(), maskImage.coordinates(),"__tmp_rgmask");
+      tempmask->copyData(maskImage);
+
+      CoordinateSystem cSys=tempmask->coordinates();
+      //maskImage.table().markForDelete();
       ImageRegion *boxregions=0;
       ImageRegion *circleregions=0;
       RegionManager regMan;
       regMan.setcoordsys(cSys);
       if (blctrcs.nelements()!=0){
-        boxRegionToImageRegion(maskImage, blctrcs, boxregions);
+        boxRegionToImageRegion(*tempmask, blctrcs, boxregions);
       }
       if (circles.nelements()!=0) {
-        circleRegionToImageRegion(maskImage, circles, circleregions);
+        circleRegionToImageRegion(*tempmask, circles, circleregions);
       } 
       ImageRegion* recordRegion=0;
       if(regionRec !=0){
@@ -219,16 +323,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       } 
 
       if(unionReg !=0){
-        regionToMask(maskImage, *unionReg, value);
+        regionToMask(*tempmask, *unionReg, value);
         delete unionReg; unionReg=0;
       }
       //As i can't unionize LCRegions and WCRegions;  do circles seperately
       if(circleregions !=0){
-        regionToMask(maskImage, *circleregions, value);
+        regionToMask(*tempmask, *circleregions, value);
         delete circleregions;
         circleregions=0;
       }
-      maskImage.table().unmarkForDelete();
+      //maskImage.table().unmarkForDelete();
+      maskImage.copyData(*tempmask); 
+      //PagedImage<Float> mytest1(tempmask->shape(), tempmask->coordinates(), "mytempmaskcopy");
+      //mytest1.copyData(*tempmask);
+      //PagedImage<Float> mytest2(maskImage->shape(), maskImage->coordinates(), "mymaskimagecopy");
+      //PagedImage<Float> mytest2(maskImage.shape(), maskImage.coordinates(), "mymaskimagecopy");
+      //mytest2.copyData(*maskImage);
+      //mytest2.copyData(LatticeExpr<Float>(maskImage));
+      //cerr<<"copying DONE..."<<endl;
     }
     catch (AipsError& x) {
       os << "Error in regionToMaskImage() : " << x.getMesg() << LogIO::EXCEPTION;
