@@ -104,6 +104,20 @@ See the cookbook for details of its capability.
       <value></value>
     </param>
 
+    <param type="string" name="rastermode">
+      <description>mode of raster selection [\'row\', \'raster\']</description>
+      <value>row</value>
+      <allowed kind="enum">
+        <value>row</value>
+        <value>raster</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="raster" subparam="true">
+      <description>select data by raster scan row or map iteration e.g. \'0~2\' (\'\'=all)</description>
+      <value></value>
+    </param>
+
     <param type="bool" name="timeaverage">
       <description>average spectra over time [True, False] (see examples in help)</description>
       <value>False</value>
@@ -313,6 +327,14 @@ See the cookbook for details of its capability.
         <equals value="kHz"/>
         <equals value="Hz"/>
       </when>
+      <when param="rastermode">
+        <equals value="row">
+          <default param="raster"><value type='string'></value></default>
+        </equals>
+        <equals value="raster">
+          <default param="raster"><value type='string'></value></default>
+        </equals>
+      </when>
       <when param="kernel">
         <equals value=""/>
         <equals value="hanning"/>
@@ -471,6 +493,13 @@ beam -- select data by beam IDs
         default: '' (use all beams)
         example: beam='0,1' (beam IDs 0,1)
         this selection is in addition to the other selections to data
+rastermode -- mode of raster selection
+        options: 'row', 'raster'
+        default: 'row'
+    &gt;&gt;&gt; rasterrow expandable parameter
+        raster -- select data by raster scan row or map iteration
+        default: '' (use all data)
+        example: raster='0~2'
 timeaverage -- average spectra over time
         options: (bool) True, False
         default: False
