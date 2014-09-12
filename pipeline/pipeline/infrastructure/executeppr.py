@@ -8,9 +8,10 @@
 # imports
 import sys
 import string
-import inspect
+#import inspect
 import traceback
 import os
+
 import pipeline
 import pipeline.extern.XmlObjectifier as XmlObjectifier
 from pipeline.infrastructure.casataskdict import CasaTaskDict
@@ -19,16 +20,15 @@ import pipeline.infrastructure.project as project
 import argmapper
 
 # Make sure CASA exceptions are rethrown
-myf=sys._getframe(len(inspect.stack())-1).f_globals
 try:
-    default__rethrow_casa_exceptions = myf['__rethrow_casa_exceptions']
+    default__rethrow_casa_exceptions = __rethrow_casa_exceptions=True
 except Exception, e:
     default__rethrow_casa_exceptions = False
-myf['__rethrow_casa_exceptions'] = True
-#__rethrow_casa_exceptions=True
+__rethrow_casa_exceptions=True
 
 # Setup path
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+# Should not need this anymore
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     plotlevel='default', interactive=True):
@@ -240,7 +240,7 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     casatools.post_to_log ("Terminating procedure execution ...", 
         echo_to_screen=echo_to_screen)
 
-    myf['__rethrow_casa_exceptions'] = default__rethrow_casa_exceptions
+    __rethrow_casa_exceptions = default__rethrow_casa_exceptions
     casatools.set_log_origin(fromwhere='')
 
     return
