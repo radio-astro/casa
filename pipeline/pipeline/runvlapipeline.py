@@ -8,7 +8,7 @@
 # The system module
 import sys
 
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 # Import the module which executes the pipeline processing request.
 import pipeline.infrastructure.executevlappr as eppr
