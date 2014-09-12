@@ -17,10 +17,33 @@ except:
 __rethrow_casa_exceptions = True
 
 # Setup paths
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
+# Should no longer be needed
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
+
+# CASA imports
+#     Clunky but import casa does not work for pipeline tasks
+from h_init_cli import h_init_cli as h_init
+from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
+from hifa_flagdata_cli import hifa_flagdata_cli as hifa_flagdata
+from hifa_fluxcalflag_cli import hifa_fluxcalflag_cli as hifa_fluxcalflag
+from hif_refant_cli import hif_refant_cli as hif_refant
+from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
+from hifa_tsysflag_cli import hifa_tsysflag_cli as hifa_tsysflag
+from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
+from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
+from hif_setjy_cli import hif_setjy_cli as hif_setjy
+from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
+from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
+from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
+from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
+from hif_applycal_cli import hif_applycal_cli as hif_applycal
+from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
+from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
+from h_save_cli import h_save_cli as h_save
 
 # Pipeline imports
 import pipeline.infrastructure.casatools as casatools
