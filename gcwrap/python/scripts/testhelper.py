@@ -6,7 +6,7 @@ import math
 import shutil
 import string
 import time
-from taskinit import casalog,tb
+from taskinit import casalog,tb, tbtool
 import numpy as np
 
 '''
@@ -470,3 +470,38 @@ def compmsmainboolcol(vis1, vis2, colname1='FLAG', colname2='FLAG'):
         print "Error: "+str(instance)
 
     return rval
+
+def compareSubTables(input,reference,order=None,excluded_cols=[]):
+    
+    tbinput = tbtool()
+    tbinput.open(input)
+    if order is not None:
+        tbinput_sorted = tbinput.taql("SELECT * from " + input + " order by " + order)
+    else:
+        tbinput_sorted = tbinput
+    
+    tbreference = tbtool()
+    tbreference.open(reference)
+    if order is not None:
+        tbreference_sorted = tbreference.taql("SELECT * from " + reference + " order by " + order)
+    else:
+        tbreference_sorted = tbreference
+    
+    columns = tbinput.colnames()
+    for col in columns:
+        if not col in excluded_cols:
+            col_input = tbinput_sorted.getcol(col)
+            col_reference = tbreference_sorted.getcol(col)
+            if not (col_input == col_reference).all():
+                tbinput.close()
+                tbreference.close()
+                del tbinput
+                del tbreference
+                return (False,col)
+    
+    tbinput.close()
+    tbreference.close()
+    del tbinput
+    del tbreference
+    
+    return (True,"OK")

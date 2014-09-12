@@ -15,38 +15,6 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
 if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
-   
-    
-def compareSubTables(input,reference,order=None,excluded_cols=[]):
-    
-    tbinput = tbtool()
-    tbinput.open(input)
-    if order is not None:
-        tbinput_sorted = tbinput.taql("SELECT * from " + input + " order by " + order)
-    else:
-        tbinput_sorted = tbinput
-    
-    tbreference = tbtool()
-    tbreference.open(reference)
-    if order is not None:
-        tbreference_sorted = tbreference.taql("SELECT * from " + reference + " order by " + order)
-    else:
-        tbreference_sorted = tbreference
-    
-    columns = tbinput.colnames()
-    for col in columns:
-        if not col in excluded_cols:
-            col_input = tbinput_sorted.getcol(col)
-            col_reference = tbreference_sorted.getcol(col)
-            if not (col_input == col_reference).all():
-                tbinput.close()
-                tbreference.close()
-                return (False,col)
-    
-    tbinput.close()
-    tbreference.close()
-    return (True,"OK")
-    
 
     
 class test_base(unittest.TestCase):
@@ -771,36 +739,36 @@ class test_partiton_subtables_evla(test_base):
     def test_merge_subtables_after_partiton_evla(self):
         '''mstransform: Check that sub-tables are properly merged after partiton'''
         
-        self.outputms = "parted.ms"
+        self.outputms = "parted-evla.ms"
         
         partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4,flagbackup=False)
         
         subtable = "/FEED"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")
         
         subtable = "/CALDEVICE"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
         excluded_cols = ['CAL_LOAD_NAMES','NOISE_CAL','CAL_EFF','TEMPERATURE_LOAD']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")       
         
         subtable = "/SYSPOWER"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
         excluded_cols = ['SWITCHED_DIFF','SWITCHED_SUM','REQUANTIZER_GAIN','TANT_SPECTRUM']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")   
         
         subtable = "/SOURCE"
         sort_order = "SPECTRAL_WINDOW_ID, TIME, SOURCE_ID"
         excluded_cols = ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL']        
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")         
         
         subtable = "/SPECTRAL_WINDOW"
         excluded_cols = ['ASSOC_SPW_ID','ASSOC_NATURE']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,None,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,None,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")   
         
 class test_partiton_subtables_alma(test_base):
@@ -820,36 +788,36 @@ class test_partiton_subtables_alma(test_base):
     def test_merge_subtables_after_partiton_alma(self):
         '''mstransform: Check that sub-tables are properly merged after partiton'''
         
-        self.outputms = "parted.ms"
+        self.outputms = "parted-alma.ms"
         
         partition(self.vis, outputvis=self.outputms,separationaxis='spw',numsubms=4,flagbackup=False)
         
         subtable = "/FEED"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")
         
         subtable = "/CALDEVICE"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
         excluded_cols = ['CAL_LOAD_NAMES','NOISE_CAL','CAL_EFF','TEMPERATURE_LOAD']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")       
         
         subtable = "/SYSCAL"
         sort_order = "SPECTRAL_WINDOW_ID, ANTENNA_ID, FEED_ID, TIME"
         excluded_cols = ['TCAL_SPECTRUM','TRX_SPECTRUM','TSKY_SPECTRUM','TSYS_SPECTRUM','TANT_SPECTRUM','TANT_TSYS_SPECTRUM']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")   
         
         subtable = "/SOURCE"
         sort_order = "SPECTRAL_WINDOW_ID, TIME, SOURCE_ID"
         excluded_cols = ['POSITION','TRANSITION','REST_FREQUENCY','SYSVEL']        
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,sort_order,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")         
         
         subtable = "/SPECTRAL_WINDOW"
         excluded_cols = ['ASSOC_SPW_ID','ASSOC_NATURE']
-        res = compareSubTables(self.outputms+subtable,self.vis+subtable,None,excluded_cols)
+        res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,None,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")           
         
 
