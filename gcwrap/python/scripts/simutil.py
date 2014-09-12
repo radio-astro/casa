@@ -1,5 +1,6 @@
 # geodesy and pointing and other helper functions that are useful
 # to be available outside of the simdata task
+# geodesy from NGS: http://www.ngs.noaa.gov/TOOLS/program_descriptions.html
 import casac
 import os
 import shutil
@@ -13,7 +14,7 @@ import pylab as pl
 #qatool = casac.homefinder.find_home_by_name('quantaHome')
 #qa = qatool.create()
 
-im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
+im, cb, ms, tb, fl, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
 
 # functions defined outside of the simutil class
@@ -1980,7 +1981,8 @@ class simutil:
 
     
     def long2xyz(self,long,lat,elevation,datum):
-        
+        # geodesy/NGS/XYZWIN/
+        # http://www.oc.nps.edu/oc2902w/coord/llhxyz.htm
         dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
 
         f=1./rf
@@ -1995,6 +1997,57 @@ class simutil:
     
     
     def xyz2long(self,x,y,z,datum):
+        # http://www.iausofa.org/
+        # http://www.iausofa.org/2013_1202_C/sofa/gc2gde.html
+
+        dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)        
+        f=1./rf
+
+        # Validate ellipsoid parameters.
+        if ( f < 0.0 or f >= 1.0 ): return -1,-1,-1
+        if ( a <= 0.0 ): return -1,-1,-1
+
+        #Functions of ellipsoid parameters (with further validation of f). 
+        e2 = (2.0 - f) * f
+        e4t = e2*e2 * 1.5
+        ec2 = 1.0 - e2 # = 1-esq = (1-f)**2
+        if ( ec2 <= 0.0 ): return -1,-1,-1
+        ec = pl.sqrt(ec2) # =1-f
+        b = er * ec
+
+        # Distance from polar axis
+        r = pl.sqrt( (x-dx)**2 + (y-dy)**2 )
+
+        # Longitude.
+        if r>0.:
+            lon = pl.arctan2(y-dx, x-dx)
+        else:
+            lon = 0.
+            
+        # Prepare Newton correction factors.
+        s0 = abs(z-dz) / er
+        c0 = ec * r / er
+
+        a0 = sqrt( c0**2 + s0**2 )
+        d0 = ec* s0* a0**3 + e2* s0**3
+        f0 = r/er* a0**3 - e2* c0**3
+
+        # Prepare Halley correction factor.
+        b0 = e4t * s0**2 * c0**2 * r/er * (a0 - ec)
+        s1 = d0*f0 - b0*s0
+        cc = ec * (f0*f0 - b0*c0)
+
+        # Evaluate latitude and height. */
+        lat = pl.arctan2(s1,cc)
+        height = (r*cc + abs(z-dz)*s1 - er*pl.sqrt(ec2*s1**2 + cc**2))/pl.sqrt(s1**2 + cc**2)
+
+        # Restore sign of latitude. 
+        if (z-dz) < 0:  lat = -lat
+
+        return lon,lat,height
+
+
+    def xyz2long_old(self,x,y,z,datum):
         
         dx,dy,dz,er,rf = self.getdatum(datum,verbose=False)
         
