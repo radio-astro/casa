@@ -3119,7 +3119,7 @@ def compressSelectionList(vis='',dicpars={}):
     from numpy import unique;
     
 #    mslocal = casac.ms()
-    ms.open(vis, nomodify=False)
+    ms.open(vis) #, nomodify=False)
     try:
         indices = ms.msseltoindex(vis=vis,field=dicpars['field'], spw=dicpars['spw'],baseline=dicpars['antenna']);
     finally:
