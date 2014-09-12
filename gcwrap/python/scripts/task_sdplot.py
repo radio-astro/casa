@@ -109,7 +109,10 @@ class sdplot_worker(sdutil.sdtask_template):
         self.__print_header(asaplot=False)
 
     def plot_totalpower(self):
-        sd.plotter.plottp(self.scan)
+        colbydict = {"t": "type", "s": "scan", "i": "if",
+                     "p": "pol", "b": "beam"}
+        colorby = colbydict[self.stack[0].lower()]
+        sd.plotter.plottp(self.scan, colorby)
 
         self.__print_header(asaplot=False)
 

@@ -371,7 +371,9 @@ See the cookbook for details of its capability.
           <default param="linewidth"><value>1</value></default>
           <!-- <default param="histogram"><value>False</value></default> -->
         </equals>
-        <equals value="totalpower"/>
+        <equals value="totalpower">
+          <default param="stack"><value type="string">p</value></default>
+        </equals>
         <equals value="pointing">
           <default param="stack"><value type="string">t</value></default>
           <default param="colormap"><value type="string">none</value></default>
