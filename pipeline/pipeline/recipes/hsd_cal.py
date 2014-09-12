@@ -24,11 +24,23 @@ __rethrow_casa_exceptions = True
     #myf['__rethrow_casa_exceptions'] = True
 
 # Setup paths
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/mytasks.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/mytasks.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/mytasks.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hsd/cli/mytasks.py"))
+#    Should no longer be necessary
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/mytasks.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/mytasks.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/mytasks.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hsd/cli/mytasks.py"))
+
+# CASA imports
+from h_init_cli import h_init_cli as h_init
+from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
+from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
+from hsd_caltsys_cli import hsd_caltsys_cli as hsd_caltsys
+from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
+from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
+from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
+from hsd_exportdata_cli import hsd_exportdata_cli as hsd_exportdata
+from h_save_cli import h_save_cli as h_save
 
 # Pipeline imports
 import pipeline.infrastructure.casatools as casatools
