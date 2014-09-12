@@ -30,7 +30,7 @@ __rethrow_casa_exceptions=True
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
-    plotlevel='default', interactive=True):
+    plotlevel='summary', interactive=True):
 
     # Useful mode parameters
     echo_to_screen = interactive
