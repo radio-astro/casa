@@ -19,11 +19,36 @@ __rethrow_casa_exceptions = True
 
 
 # Setup paths
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
-execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifv/cli/hifv.py"))
+# Should no longer be needed
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/h/cli/h.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hif/cli/hif.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifa/cli/hifa.py"))
+#execfile(os.path.join( os.path.expandvars("$SCIPIPE_HEURISTICS"), "pipeline/hifv/cli/hifv.py"))
+
+# CASA imports
+from h_init_cli import h_init_cli as h_init
+from hifv_importdata_cli import hifv_importdata_cli as hifv_importdata
+from hifv_flagdata_cli import hifv_flagdata_cli as hifv_flagdata
+from hifv_vlasetjy_cli import hifv_vlasetjy_cli as hifv_vlasetjy
+from hifv_priorcals_cli import hifv_priorcals_cli as hifv_priorcals
+from hif_refant_cli import hif_refant_cli as hif_refant
+from hifv_testBPdcals_cli import hifv_testBPdcals_cli as hifv_testBPdcals
+from hifv_flagbaddef_cli import hifv_flagbaddef_cli as hifv_flagbaddef
+from hifv_uncalspw_cli import hifv_uncalspw_cli as hifv_uncalspw
+from hifv_checkflag_cli import hifv_checkflag_cli as hifv_checkflag
+from hifv_semiFinalBPdcals_cli import hifv_semiFinalBPdcals_cli as hifv_semiFinalBPdcals
+from hifv_solint_cli import hifv_solint_cli as hifv_solint
+from hifv_fluxboot_cli import hifv_fluxboot_cli as hifv_fluxboot
+from hifv_finalcals_cli import hifv_finalcals_cli as hifv_finalcals
+from hifv_applycals_cli import hifv_applycals_cli as hifv_applycals
+from hifv_targetflag_cli import hifv_targetflag_cli as hifv_targetflag
+from hifv_statwt_cli import hifv_statwt_cli as hifv_statwt
+from hif_makecleanlist_cli import hif_makecleanlist_cli as hif_makecleanlist
+from hif_cleanlist_cli import hif_cleanlist_cli as hif_cleanlist
+from hif_exportdata_cli import hif_exportdata_cli as hif_exportdata
+from h_save_cli import h_save_cli as h_save
+
 
 # Pipeline imports
 import pipeline.infrastructure.casatools as casatools
