@@ -27,7 +27,7 @@ except Exception, e:
 __rethrow_casa_exceptions=True
 
 # Setup path
-sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
+#sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
 def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     plotlevel='summary', interactive=True):
