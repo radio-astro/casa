@@ -8,7 +8,7 @@ import sdutil
 
 @sdutil.sdtask_decorator
 def sdplot(infile, antenna, fluxunit, telescopeparam, specunit, restfreq, frame,
-            doppler, field, spw, scan, pol, beam, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
+            doppler, field, spw, scan, pol, beam, rastermode, raster, timeaverage, tweight, scanaverage, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, center, cell, scanpattern, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
     with sdutil.sdtask_manager(sdplot_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -36,6 +36,8 @@ class sdplot_worker(sdutil.sdtask_template):
         
         # A scantable selection
         sel = self.get_selector(sorg)
+        if len(self.raster) > 0:
+            sel = self.select_by_raster(sel, sorg)
         sorg.set_selection(sel)
         self.ssel=sel.__str__()
         del sel
