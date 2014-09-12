@@ -189,6 +189,13 @@ class sdtask_template(sdtask_interface):
 
         # task specific parameter check
         self.parameter_check()
+
+        # raster setting
+        if hasattr(self, 'rastermode') and hasattr(self, 'raster'):
+            if self.rastermode.upper() == "ROW":
+                self.rasterrow = self.raster
+            else:
+                self.rasteriter = self.raster
         
         # set self.scan
         self.initialize_scan()
@@ -316,7 +323,7 @@ class sdtask_template(sdtask_interface):
 
         return selector
 
-    def select_by_rasterrow(self, base_selector, scantb=None):
+    def select_by_raster(self, base_selector, scantb=None):
         if not scantb:
             if hasattr(self,'scan') and isinstance(self.scan, scantable):
                 scantb = self.scan
@@ -328,8 +335,12 @@ class sdtask_template(sdtask_interface):
         else:
             selector = sd.selector(base_selector)
 
+        row_selection = (hasattr(self, 'rasterrow') and len(self.rasterrow) > 0)
+        any_selection = row_selection or \
+                        (hasattr(self, 'rasteriter') and len(self.rasteriter) > 0)
+
         # CAS-6702 selection by raster row
-        if hasattr(self, 'rasterrow') and len(self.rasterrow) > 0:
+        if any_selection:
             if hasattr(self, 'infile'):
                 # nominal pair of science spw and existing polarization
                 sel_org = scantb.get_selection()
@@ -338,11 +349,11 @@ class sdtask_template(sdtask_interface):
                 ifnos = scantb.getifnos()
                 nominal_spw = -1
                 for ifno in ifnos:
-                    # ignore channel-averaged spw and WVR
-                    if scantb.nchan(ifno) > 4:
-                        nominal_spw = ifno
-                        break
-                if nominal_spw > 0:
+                    ## ignore channel-averaged spw and WVR
+                    #if scantb.nchan(ifno) > 4:
+                    nominal_spw = ifno
+                    break
+                if nominal_spw > -1:
                     sel.set_ifs(nominal_spw)
                     scantb.set_selection(sel)
                     nominal_pol = scantb.getpolnos()[0]
@@ -351,11 +362,20 @@ class sdtask_template(sdtask_interface):
                     casalog.post('nominal spw and pol = (%s,%s)'%(nominal_spw,nominal_pol))
                     r = rasterutil.Raster(self.infile)
                     r.detect(spw=nominal_spw, pol=nominal_pol)
-                    casalog.post('rasterrow=%s (type %s)'%(self.rasterrow,type(self.rasterrow)))
-                    raster_list = parse_idx_selection(self.rasterrow, 0, r.ngap-1)
-                    casalog.post('raster_list=%s'%(raster_list))
+                    if row_selection:
+                        casalog.post('raster row=%s (type %s)'%(self.rasterrow,type(self.rasterrow)))
+                        raster_list = parse_idx_selection(self.rasterrow, 0, r.ngap-1)
+                        if len(raster_list) > 0:
+                            query_list = (r.astaql(i,None) for i in raster_list if i >= 0 and i < r.ngap)
+                    else:
+                        casalog.post('map iteration=%s (type %s)'%(self.rasteriter,type(self.rasteriter)))
+                        raster_list = parse_idx_selection(self.rasteriter, 0, r.ngap_raster-1)
+                        if len(raster_list) > 0:
+                            query_list = (r.astaql(None,i) for i in raster_list if i >= 0 and i < r.ngap_raster)
+                    #raster_list = parse_idx_selection(self.rasterrow, 0, r.ngap-1)
+                    #casalog.post('raster_list=%s'%(raster_list))
                     if len(raster_list) > 0:
-                        query_list = (r.astaql(i) for i in raster_list if i >= 0 and i < r.ngap)
+                        #query_list = (r.astaql(i) for i in raster_list if i >= 0 and i < r.ngap)
                         in_parenthesis = lambda x: '('+x+')'
                         taql_for_raster = ' || '.join(map(in_parenthesis, query_list))
                         casalog.post('taql_for_raster=\'%s\''%(taql_for_raster))

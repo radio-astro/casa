@@ -88,7 +88,7 @@ class sdflag_worker(sdutil.sdtask_template):
         #self.scan.set_selection(self.get_selector())
         selector = self.get_selector()
         if len(self.rasterrow) > 0:
-            selector = self.select_by_rasterrow(selector)
+            selector = self.select_by_raster(selector)
         self.scan.set_selection(selector)
         
     def execute(self):

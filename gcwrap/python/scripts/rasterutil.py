@@ -133,8 +133,8 @@ class Raster(object):
             daterangestring = astimerange(*self.mjd_range_raster)
             casalog.post(formatline(i, daterangestring))
 
-            
-        
+
+
     def select(self, rowid=None, rasterid=None):
         if not ((rowid is None) ^ (rasterid is None)):
             raise RuntimeError('one of rowid or rasterid must be specified')
@@ -195,7 +195,7 @@ class Raster(object):
             rasters = self.select(rasterid=rasterid)
             taql = 'TIME > %s && TIME < %s'%(self.mjd_range_raster)
         return taql
-    
+
     def asselector(self, rowid=None, rasterid=None, input_selector=None):
         taql = self.astaql(rowid=rowid, rasterid=rasterid)
         
@@ -211,8 +211,18 @@ class Raster(object):
                 sel.set_query(new_query)
         return sel
 
-    def plot_row(self, rowid):
-        taql = self.astaql(rowid=rowid)
+    def plot_row(self, idx, rastermode='row'):
+        """
+        Plot detected raster or scan row points.
+        Parameters
+            idx        : index of raster row or visit to plot
+            rastermode : detect either a raster vist ('raster') or
+                         raster scan row ('row')
+        """
+        if rastermode.upper() == 'RASTER': (rowid, rasterid) = (None, idx) 
+        elif rastermode.upper() == 'ROW': (rowid, rasterid) = (idx, None)
+        else: raise ValueError("Invalid rastermode (should be 'row' or 'raster'")
+        taql = self.astaql(rowid=rowid,rasterid=rasterid)
 
         tb.open(self.infile)
         tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
@@ -227,15 +237,16 @@ class Raster(object):
    
         pl.clf()
         pl.plot(alldir[0], alldir[1], 'o', color='#aaaaaa', markeredgewidth=0)
-        pl.plot(dirs[0], dirs[1], 'o', color='g')        
-                
+        pl.plot(dirs[0], dirs[1], 'o', color='g')
+        pl.xlabel('RA [rad]')
+        pl.ylabel('Declination [rad]')
+        pl.gca().set_aspect('equal')
+
 def detect_gap(infile, spw, pol):
     tb.open(infile)
     tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(spw,pol))
     alldir = tsel.getcol('DIRECTION')
     timestamp = tsel.getcol('TIME')
-    interval = tsel.getcol('INTERVAL')
-    rows = tsel.rownumbers()
     tsel.close()
     tb.close()
 
