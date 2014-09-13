@@ -877,6 +877,7 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	if ( i < pageCount - 1 ){
     		nextIter();
     	}
+    	waitOnCanvases();
     }
 
     //Restore the current page
