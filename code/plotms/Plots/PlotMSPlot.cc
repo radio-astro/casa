@@ -1298,7 +1298,7 @@ void PlotMSPlot::recalculateIteration( ) {
 
 
 	detachFromCanvases();
-	if(itsTCLParams_.updateIteration ) {
+	if(itsTCLParams_.updateIteration  || isIteration()) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		assignCanvases(pages);
 	}
