@@ -243,6 +243,8 @@ class cvel2_test(test_base):
 
     def test6(self):
         '''cvel2 6: I/O vis set, more complex input vis, one field selected, one spw selected, passall = True'''
+        if testmms:
+            return
         self.setUp_vis_a()
         myvis = vis_a
         os.system('ln -sf ' + myvis + ' myinput.ms')
@@ -262,7 +264,7 @@ class cvel2_test(test_base):
         split2(vis='myinput.ms',outputvis=desel,field='0,2,3,4,5,6',spw='0',datacolumn='all')
         mslocal = mstool()
         mslocal.open(outfile, nomodify=False)
-        mslocal.concatenate(msfile=desel)
+        mslocal.concatenate(msfile=desel)            
         mslocal.close()
         ret = (verify_ms(outfile, 2, 32, 0))
         self.assertTrue(ret[0],ret[1])
