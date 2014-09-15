@@ -233,7 +233,8 @@ class Calibrater
 		  const String& spw,
 		  const String& antenna,
 		  const String& pol,
-		  const Vector<Double>& parameter);
+		  const Vector<Double>& parameter,
+		  const String& infile);
 
   // Smooth  calibration (using MSSelection syntax
   Bool smooth(const String& infile,

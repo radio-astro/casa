@@ -52,8 +52,8 @@ public:
   virtual Type type() { return VisCal::F; };
 
   // Return type name as string
-  virtual String typeName()     { return "FJones"; };
-  virtual String longTypeName() { return "FJones (Ionosphere)"; };
+  virtual String typeName()     { return "F Jones"; };
+  virtual String longTypeName() { return "F Jones (Ionosphere)"; };
 
   // Report current Jones type (circ=diag, lin=general)
   Jones::JonesType jonesType() { return pjonestype_; };
@@ -107,6 +107,9 @@ private:
 
   // Fiducial ionosphere height
   Quantity ionhgt_;
+
+  // TEC image filename
+  String tecimname_;
 
   // zenith angle per antenna
   Vector<Double> za_;

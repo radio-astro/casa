@@ -67,6 +67,7 @@ FJones::FJones(VisSet& vs) :
   mframe_(),
   emm_(NULL),
   ionhgt_(450.,"km"),
+  tecimname_("unspecified"),
   za_(),
   radper_(2.3649)   // rad*Hz2/G
 {
@@ -117,7 +118,7 @@ void FJones::setApply(const Record& apply) {
     if (tr.isDefined("IonosphereHeight(km)"))
       ionhgt_=Quantity(tr.asDouble("IonosphereHeight(km)"),"km");
   }
-  cout << "Using ionosphere height = " << ionhgt_ << endl;
+  logSink() << "Using ionosphere height = " << ionhgt_ << LogIO::POST;
 
 
   // Enforce no weight calibration (this is a phase-like correction)
@@ -141,14 +142,25 @@ void FJones::setSpecify(const Record& specify) {
   // extract TEC retrieval mode... (madrigal, ionics, etc.)
   if (specify.isDefined("caltype")) {
     tectype_=upcase(specify.asString("caltype"));
-    //tectype_.upcase();
-    cout << "tectype_=" << tectype_ << endl;
   }
  
-  // Trap simple ZTEC mode and call generic setSpecify
-  if (tectype_=="ZTEC")
-    return SolvableVisCal::setSpecify(specify);
- 
+  // We are importing from a TEC image:
+  if (tectype_!="TECIM") 
+    throw(AipsError("Unrecognized TEC mode: "+tectype_));
+
+  // Extract TEC image name from infile
+  //  TBD: move this to private data and setSpecify
+  if (specify.isDefined("infile")) 
+    tecimname_=specify.asString("infile");
+    
+  if (tecimname_=="")
+    throw(AipsError("A valid TEC image file must be specified!"));
+
+  if ( !Table::isReadable(tecimname_) )
+    throw(AipsError("Cannot find expected TEC image: "+tecimname_));
+  else
+    logSink() << "Found required TEC image: "+tecimname_ << LogIO::POST;
+
   // extract intended cal table name...
   if (specify.isDefined("caltable")) {
     calTableName()=specify.asString("caltable");
@@ -163,25 +175,19 @@ void FJones::setSpecify(const Record& specify) {
             << " table."
             << LogIO::POST;
 
-  // tectype_-specific default ionosphere heights
-  if (tectype_=="ITEC")
-    ionhgt_ = Quantity(450.,"km");
-  else if (tectype_=="MTEC")
-    ionhgt_ = Quantity(350.,"km");
-
   // Extract user's ionhgt_, if specified
   Vector<Double> parameters;
   if (specify.isDefined("parameter")) {
     parameters=specify.asArrayDouble("parameter");
     if (parameters.nelements()==1) {
       ionhgt_=Quantity(parameters[0],"km");
-      cout << "Using user-specified ionosphere height = " << ionhgt_ << endl;
+      logSink() << "Using user-specified ionosphere height = " << ionhgt_ << LogIO::POST;
     }
     else
-      cout << "Using default ionosphere height ("+tectype_+") = " << ionhgt_ << endl;
+      logSink() << "Using default ionosphere height ("+tectype_+") = " << ionhgt_ << LogIO::POST;
   }
   else
-    cout << "Using default ionosphere height ("+tectype_+") = " << ionhgt_ << endl;
+    logSink() << "Using default ionosphere height ("+tectype_+") = " << ionhgt_ << LogIO::POST;
 
   // Create a new caltable to fill up
   createMemCalTable();
@@ -208,27 +214,11 @@ void FJones::setSpecify(const Record& specify) {
 
 void FJones::specify(const Record& specify) {
 
-  // Trap simple ZTEC mode and call generic setSpecify
-  if (tectype_=="ZTEC")
-    return SolvableVisCal::specify(specify);
+  //cout << "FJones-specific specify: " << tectype_ << endl;
 
-  cout << "FJones-specific specify: " << tectype_ << endl;
+  logSink() << "Deriving evolving line-of-sight TEC for whole dataset (this may take a little while)" << LogIO::POST;
 
-  String tecimname;
-  tecimname=msName();
-  if (tectype_=="ITEC") 
-    tecimname+=".IGS_TEC.im";
-  else if (tectype_=="MTEC")
-    tecimname+=".MAPGPS_TEC.im";
-  else
-    throw(AipsError("Unrecognized TEC mode: "+tectype_));
-
-  if ( !Table::isReadable(tecimname) )
-    throw(AipsError("Cannot find expected TEC image: "+tecimname));
-  else
-    cout << "Found required TEC image: "+tecimname << endl;
-
-  PagedImage<Float> tecim(tecimname);
+  PagedImage<Float> tecim(tecimname_);
   CoordinateSystem teccs(tecim.coordinates());
 
   // Specific sort columns for FJones
@@ -287,7 +277,7 @@ void FJones::specify(const Record& specify) {
   Float &b0(tecube(0,0,1)), &b1(tecube(1,0,1)), &b2(tecube(1,1,1)), &b3(tecube(0,1,1));
 
   Float t0(0.0), u0(0.0), v0(0.0);
-  Float teca(0.0), tecb(0.0), tec(4e18);
+  Float teca(0.0), tecb(0.0), ztec(4e18), tec(4e18);
 
   Double lasttime(-1);
   Int lastscan(-999);
@@ -312,6 +302,14 @@ void FJones::specify(const Record& specify) {
 	currObs()=vb->observationId()(0);
 	currScan()=vb->scan()(0);
 	currField()=vb->fieldId()(0);
+
+	// Calculate zenith angle for current time/direction
+	za().resize(nAnt());
+	Vector<MDirection> antazel(vb->azel(refTime()));
+	Double* a=za().data();
+	for (Int iant=0;iant<nAnt();++iant,++a) 
+	  (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
+
 
 	// This vb's direction measure...
 	md=vb->phaseCenter();
@@ -367,16 +365,21 @@ void FJones::specify(const Record& specify) {
 	    cout << dtime << " " << dtime0 << " " << v0 << endl;
 	  }
 
+	  // Zenith TEC at pierce point
 	  teca=(1.-t0)*(1.-u0)*a0 + t0*(1.-u0)*a1 + t0*u0*a2 + (1.-t0)*u0*a3;
 	  tecb=(1.-t0)*(1.-u0)*b0 + t0*(1.-u0)*b1 + t0*u0*b2 + (1.-t0)*u0*b3;
-	  tec=(1.-v0)*teca + v0*tecb;
-	  
+	  ztec=(1.-v0)*teca + v0*tecb;
+
+	  // LOS tecat pierce point:
+	  tec=ztec/cos(za()(iant));
+
 	  // retrieve time-, direction-, and antenna- specific vertical TEC...
 	  solveAllRPar()(0,0,iant)=tec*1.e16;   // in e-/m2
 
 	  if (iant==0 && currScan()!=lastscan) {
 	    lastscan=currScan();
 
+	 /*
 	    MVDirection azel=vb->azel0(refTime()).getValue();
 	    cout.precision(12);
 	    cout << isol << " "
@@ -385,12 +388,15 @@ void FJones::specify(const Record& specify) {
 		 << " fld="  << currField()
 		 << " time=" << wc(2)
 		 << " ant=" << antcol.name()(iant)+":"+antcol.station()(iant)
-	      //<< " az/el="   << azel.getLong("deg").getValue() << "/" << azel.getLat("deg").getValue()
 		 << " long/lat=" << lng << "/" << lat
 	      //<< " pixel=" << cf << " " << c
-		 << " tec=" // << teca << " " << tecb << " " 
-		 << tec
+		 << " za=" << za()(iant)*180/C::pi
+		 << " ztec=" // << teca << " " << tecb << " " 
+		 << ztec
+		 << " --> lostec=" << tec
 		 << endl;
+	 */
+
 	  }
 	}
 
@@ -426,14 +432,6 @@ void FJones::syncJones(const Bool& doInv) {
 void FJones::calcPar() {
 
   if (prtlev()>6) cout << "      FJones::calcPar()" << endl;
-
-  // Calculate zenith angle for current time/direction
-  za().resize(nAnt());
-  Vector<MDirection> antazel(vb().azel(currTime()));
-  Double* a=za().data();
-  for (Int iant=0;iant<nAnt();++iant,++a) 
-    (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
-
 
   // set time in mframe_
   MEpoch epoch(Quantity(currTime(),"s"));
@@ -471,8 +469,6 @@ void FJones::calcPar() {
 
   }
 
-
-
   //  cout.precision(16);
   //  cout << "BlosG_ = " << BlosG_ << endl;
  
@@ -484,7 +480,7 @@ void FJones::calcPar() {
 
   // Pars now valid, matrices not yet
   validateP();
-  invalidateJ();  // Force new calculation of za-dep matrix elements
+  invalidateJ();  // Force new calculation of matrix elements
 
 }
 
@@ -502,15 +498,14 @@ void FJones::calcAllJones() {
   //       << "currJElem().shape() = " << currJElem().shape() << endl;
 
   Complex* J=currJElem().data();
-  Float*  ztec=currRPar().data();
-  Bool*   ztecok=currParOK().data();
-  Double* a=za().data();
+  Float*  lostec=currRPar().data();
+  Bool*   lostecok=currParOK().data();
   Double f,rotpers2,tec,del,rot;
   Complex cdel;
   
-  for (Int iant=0; iant<nAnt(); ++iant,++ztec,++ztecok,++a) {
-    if ((*ztecok) && (*a)<C::pi_2) {
-      tec = Double(*ztec)/cos(*a);
+  for (Int iant=0; iant<nAnt(); ++iant,++lostec,++lostecok) {
+    if ((*lostecok)) { 
+      tec = Double(*lostec); 
       rotpers2 = radper_*tec*BlosG_(iant);
 
       for (Int ich=0;ich<vb().nChannel();++ich) {
