@@ -240,8 +240,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Vector<Double> chanwid=spwCol.chanWidth()(spw[ispw]);
       Vector<Int> ddOfSpw=mddin.matchSpwId(spw[ispw]);
       for (Int ichan=start[ispw]; ichan<start[ispw]+nchan[ispw]; ++ichan){ 
-	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan]))) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan]);
-	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan]))) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan]);    
+	if(freqStartObs > (chanfreq[ichan]-fabs(chanwid[ichan])/2.0)) freqStartObs=chanfreq[ichan]-fabs(chanwid[ichan])/2.0;
+	if(freqEndObs < (chanfreq[ichan]+fabs(chanwid[ichan])/2.0)) freqEndObs=chanfreq[ichan]+fabs(chanwid[ichan])/2.0;    
       }
       obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(spw[ispw]));
       if((obsMFreqType==MFrequency::REST) || (obsMFreqType==freqframe && obsMFreqType != MFrequency::TOPO)){
