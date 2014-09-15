@@ -1856,6 +1856,11 @@ of various types</shortdescription>
      <value>1.0</value>
      </param>
 
+     <param type="string" direction="in" name="infile">
+     <description>Ancillary input file</description>
+     <value></value>
+     </param>
+
 </input>
 <returns type="bool"/>
 

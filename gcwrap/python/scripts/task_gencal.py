@@ -2,7 +2,7 @@ import sys
 import os
 from taskinit import *
 (cb,) = gentools(['cb'])
-def gencal(vis=None,caltable=None,caltype=None,
+def gencal(vis=None,caltable=None,caltype=None,infile=None,
            spw=None,antenna=None,pol=None,
            parameter=None):
 
@@ -20,6 +20,9 @@ def gencal(vis=None,caltable=None,caltype=None,
 
               if (caltable==''):
                      raise Exception, 'A caltable name must be specified'
+
+              if caltype=='tecim' and not (type(infile)==str and os.path.exists(infile)):
+                     raise Exception, 'An existing tec map must be specified in infile'
 
               # call a Python function to retreive ant position offsets automatically (currently EVLA only)
               if (caltype=='antpos' and antenna==''):
@@ -39,7 +42,7 @@ def gencal(vis=None,caltable=None,caltype=None,
                    warnings.warn('No offsets found. No caltable created.')
 
               cb.specifycal(caltable=caltable,time="",spw=spw,antenna=antenna,pol=pol,
-                            caltype=caltype,parameter=parameter)
+                            caltype=caltype,parameter=parameter,infile=infile)
 
               #cb.close()
        

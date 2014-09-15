@@ -474,7 +474,8 @@ Bool PlotCal::plot(String xaxis, String yaxis) {
   if(calType_p=="G" || calType_p=="T" || calType_p=="GSPLINE" || 
      calType_p=="B" || calType_p=="BPOLY"  ||
      calType_p=="M" || calType_p=="MF" || calType_p=="A" || 
-     calType_p=="D" || calType_p=="X" || calType_p=="EVLASWPOW" || calType_p=="TSYS")
+     calType_p=="D" || calType_p=="X" || 
+     calType_p=="EVLASWPOW" || calType_p=="TSYS" || calType_p=="F")
     return doPlot();
 
   else if(calType_p=="K")
@@ -626,7 +627,7 @@ void PlotCal::getAxisTaQL(const String& axis,
     
     if ( polType_p.contains("/") ) {
       // Ratio plots
-      if (calType_p == "T" || calType_p == "BPOLY") {
+      if (calType_p == "T" || calType_p == "BPOLY" || calType_p=="F") {
 	String errmsg="Polarization ratio plots not supported for "+calType_p+" tables.";
 	throw(AipsError(errmsg));
       }
@@ -685,7 +686,7 @@ void PlotCal::getAxisTaQL(const String& axis,
 	    calType_p=="MF" || 
 	    calType_p=="BPOLY" || 
 	    calType_p=="GSPLINE" ||
-	    calType_p=="EVLASWPOW" || calType_p.contains("TSYS"))
+	    calType_p=="EVLASWPOW" || calType_p.contains("TSYS") || calType_p=="F")
 	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR[1,]/SNR[2,])";
 	label = "Solution SNR POLN Ratio";
@@ -751,8 +752,13 @@ void PlotCal::getAxisTaQL(const String& axis,
 	  taql = "(REAL(GAIN["+polsel+","+chansel+"]))";
 	label = "Delay (nsec)";
       }
+      else if (axis.contains("TEC")) {
+	polsel="1";
+	taql = "(FPARAM["+polsel+","+chansel+"])/1.e16";
+	label = "TEC ";
+      }
       else if (axis.contains("SNR") ) {
-	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLASWPOW" || calType_p.contains("TSYS"))
+	if (calType_p=="M" || calType_p=="MF" || calType_p=="A" || calType_p=="EVLASWPOW" || calType_p.contains("TSYS") || calType_p=="F")
 	  throw(AipsError("Specified table doesn't support SNR plots."));
 	taql = "(SNR["+polsel+",])";
 	label = "Solution SNR";
@@ -772,6 +778,8 @@ Bool PlotCal::doPlot(){
 
   LogIO os(LogOrigin("PlotCal", "doPlot", WHERE));
 
+  //  cout << calType_p << " " << xAxis_p << " " << yAxis_p << endl;
+
   // Catch bad y-axis  
   if (yAxis_p.contains("TIME"))
     throw(AipsError("Plotting time on y-axis if forbidden."));
@@ -781,7 +789,7 @@ Bool PlotCal::doPlot(){
     if(calType_p=="G" || 
        calType_p=="T" || 
        calType_p=="M" || calType_p=="A" || 
-       calType_p=="GSPLINE" || calType_p=="EVLASWPOW") 
+       calType_p=="GSPLINE" || calType_p=="EVLASWPOW" || calType_p=="F") 
       xAxis_p="TIME";
     else if (calType_p=="D")
       xAxis_p="ANTENNA";
@@ -795,6 +803,8 @@ Bool PlotCal::doPlot(){
       yAxis_p="SPGAIN";
     else if (calType_p=="TSYS")
       yAxis_p="TSYS";
+    else if (calType_p=="F")
+      yAxis_p="TEC";
     else
       yAxis_p="AMP";
   }
@@ -1269,6 +1279,9 @@ Int PlotCal::multiTables(const Table& tablein,
     }
     else if(subType[0].contains("A")){
       calType_p="A";
+    }
+    else if(subType[0].contains("F Jones")){
+      calType_p="F";
     }
     else {
       os << LogIO::POST << "Cal table type " << subType[0] << " unknown." << LogIO::POST;

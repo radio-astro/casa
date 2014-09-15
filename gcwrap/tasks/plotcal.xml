@@ -39,13 +39,14 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>imag</value>
 			<value>snr</value>
 			<value>tsys</value>
+			<value>tec</value>
 			<value>delay</value>
 			<value>spgain</value>
 			</allowed>
 		</param>
 
 		<param type="string" name="yaxis">
-			<description>Value to plot along y axis (amp,phase,real,imag,snr, antenna,antenna1,antenna2,scan, tsys,delay,spgain)</description>
+			<description>Value to plot along y axis (amp,phase,real,imag,snr, antenna,antenna1,antenna2,scan, tsys,delay,spgain,tec)</description>
 			<value></value>
 			<allowed kind="enum">
 			<value></value>
@@ -59,6 +60,7 @@ solutions may be iterated through antennas/spw/fields during one execution.
 			<value>antenna2</value>
 			<value>scan</value>
 			<value>tsys</value>
+			<value>tec</value>
 			<value>delay</value>
 			<value>spgain</value>
 			</allowed>

@@ -24,7 +24,7 @@
 		</param>
 
 		<param type="string" name="caltype">
-			<description>The calibration type: \'amp\',\'ph\',\'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\',\'ztec\',\'itec\',\'mtec\'</description>
+			<description>The calibration type: \'amp\',\'ph\',\'sbd\',\'mbd\',\'antpos\',\'antposvla\',\'tsys\',\'evlagain\',\'opac\',\'gc\',\'gceff\',\'eff\',\'tecim\'</description>
 			<value></value>
                         <allowed kind="enum">
                             <value>amp</value>
@@ -42,10 +42,13 @@
                             <value>gc</value>
                             <value>gceff</value>
                             <value>eff</value>
-                            <value>ztec</value>
-                            <value>itec</value>
-                            <value>mtec</value>
+                            <value>tecim</value>
                         </allowed>
+		</param>
+
+		<param type="string" name="infile" subparam="true">
+			<description>Input ancilliary file</description>
+			<value></value>
 		</param>
 
 		<param type="string" name="spw">
@@ -66,6 +69,13 @@
 			<description>The calibration values</description>
 			<value></value>
 		</param>
+            <constraints>
+              <when param="caltype">
+                <equals value="tecim">
+                   <default param="infile"><value type="string"></value></default>
+                </equals>
+              </when>
+            </constraints>     
 
 	</input>
 <returns type="void"/>
@@ -93,7 +103,7 @@
         'gc' = Gain curve (zenith-angle-dependent gain) (VLA only)
         'eff' = Antenna efficiency (sqrt(K/Jy)) (VLA only)
         'gceff' = Gain curve and efficiency (VLA only)
-
+        'tecim' = Time-dep TEC image specified in infile
 
      Generic calibration parameters should be specified in the 'parameter'
      argument as a list.  The length of the list must correspond
