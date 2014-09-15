@@ -197,7 +197,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		print execute_string
 
 		templogfile = 'wvrgcal_tmp_'+str(numpy.random.randint(1E6,1E8))
-
+		if not os.access(".", os.W_OK):
+			import tempfile
+			templogfile = tempfile.gettempdir()+"/"+templogfile
+			
         	rval = os.system(execute_string + " > "+ templogfile)
 
 		fp = file(templogfile)
