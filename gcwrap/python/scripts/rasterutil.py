@@ -331,15 +331,17 @@ def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, thre
             if (i > 0) and (i < row_gaplist[-1]):
                 ppgap.append(dd[0][i-1])
         med_ppgap = numpy.median(numpy.array(ppgap))
-        factor = -1.0 if med_ppgap > 0.0 else 1.0
+        if med_ppgap < 0.0:
+            dd = -dd
+        factor = -1.0
         if threshold_raster is None:
-            ddm = factor * med_ppgap
+            ddm = factor * abs(med_ppgap)
         else:
-            ddm = factor * threshold_raster
+            ddm = factor * abs(threshold_raster)
 
         raster_gaplist=[0]
         for i in row_gaplist[1:-1]:
-            if (i > 0) and (((med_ppgap>0.0)and(dd[0][i-1]<ddm))or((med_ppgap<0.0)and(dd[0][i-1]>ddm))):
+            if (i > 0) and (dd[0][i-1]<ddm):
                 raster_gaplist.append(i)
         if raster_gaplist[-1] != nrow:
             raster_gaplist.append(nrow)
