@@ -60,7 +60,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>multifit=True</example>
      </param>
      <param type="string" direction="in" name="spxtype">
-        <description>Type of function to fit. "plp" => power logarithmic polynomial, "ltp" => logarithmic transformed polynomial.</description>
+        <description>Type of function to fit. "plp" = power logarithmic polynomial, "ltp" = logarithmic transformed polynomial.</description>
         <value>plp</value>
      </param>
      <param type="doubleArray" name="spxest">
@@ -68,12 +68,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value/>
     </param>
     <param type="boolArray" name="spxfix">
-        <description>Fix the corresponding spectral index function coefficients during the fit. True=>hold fixed.</description>
+        <description>Fix the corresponding spectral index function coefficients during the fit. True means hold fixed.</description>
         <value/>
     </param>
     <param type="any" name="div">
         <any type="variant"/>
-        <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 => calculate a useful value on the fly.</description>
+        <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp or ltp function. 0 means calculate a useful value on the fly.</description>
         <value>0</value>
     </param>
     <param type="string" name="spxsol" subparam="true">
@@ -167,7 +167,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 This task fits a power logarithmic polynomial or a logarithmic tranformed polynomial to one dimensional profiles for determination of spectral indices.
 
-ARAMETER SUMMARY
+PARAMETER SUMMARY
 imagename       Name of the input image(s). More than one image name can be given as an
                 array, in which case the images are concatenated along the specified axis
                 and the resultant image is what is used by the fitter. In this case,
@@ -323,9 +323,21 @@ masked as bad. The last axis of these images is a linear axis and repesents coef
 if one fits a function for two coefficients, c0 and c1, the solution and error images will each have length 2 along the component number
 axis. The first plane corresponds to the solution/error for c0, the second corresponds to the solution/error for c1.
 
+LPT vs PLP
+Ultimately, the choice of which functional form to use in determining the spectral index is up to the user and should be based
+on the scientific goals. However, below is a summary of one user's experience and preferences as an example:
+
+If the weights are known or can be determined from the images (eg. the source-free image rms and a fractional calibration error) then I
+favor a weighted fit using the non-linear (power-law) model. An unweighted fit using the non-linear model will, in general, give far
+too much leverage to large flux values.
+
+If the weights are unknown or will not be considered by the fitting algorithm, then I prefer the log-transformed polynomial model. However,
+this does not work well in low signal-to-noise regions. A conservative mask could be created such that only high s/n areas are fit,
+but this could hinder many science objectives. 
+
 EXAMPLES
 
-res = spxfit(imagename="myspectrum.im", multifit=true, spxtype="plp", spxest=[0.5,2], div="1GHz", spxsol="myplpsolutions.im")
+res = spxfit(imagename=["im0.im","im1.im"], multifit=true, spxtype="plp", spxest=[0.5,2,0.1], div="1GHz", spxsol="myplpsolutions.im")
 
 </example>
     
