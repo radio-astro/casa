@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.57 2014/09/09 17:27:23 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.58 2014/09/16 14:54:09 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.57 2014/09/09 17:27:23 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.58 2014/09/16 14:54:09 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -811,6 +811,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         cmd += ',' + writeArgument(lastfile, "pdftk", pdftk) + ')'
         lastfile.write('#%s\n'%(cmd))
         lastfile.close()
+
     if (showimage == False):
         LO1 = lo1 = ''
     elif (lo1 != ''):
@@ -6328,8 +6329,16 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
           mytb.close()
           success = True
           if (len(pwv) < 1):
-              print "Found no data in ASDM_CALWVR table"
-              return(0,-1)
+              if (os.path.exists("%s/ASDM_CALATMOSPHERE" % vis)):
+                  pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
+                  success = True
+                  if (len(pwv) < 1):
+                      print "Found no data in ASDM_CALWVR nor ASDM_CALATMOSPHERE table"
+                      return(0,-1)
+              else:
+                  if (verbose):
+                      print "Did not find ASDM_CALATMOSPHERE in the ms"
+                  return(0,-1)
           if (verbose):
               print "Opened ASDM_CALWVR table, len(pwvtime)=%s" % (str(len(pwvtime)))
       else:
