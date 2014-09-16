@@ -312,6 +312,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>galacto</value>
             <value>lgroup</value>
             <value>cmb</value>
+            <value>source</value>            
             <value></value>
             </allowed>
         </param>

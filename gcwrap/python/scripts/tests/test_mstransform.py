@@ -190,7 +190,17 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)                           
+        
+    def setUp_titan(self):
+
+        self.vis = 'titan-one-baseline-one-timestamp.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)                             
+          
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
         '''Create MMSs for tests with input MMS'''
@@ -1471,6 +1481,9 @@ class test_regridms_single_spw(test_base_compare):
              field='Vy_CMa',spw='3',mode='frequency',nchan=3830,start='310427.353MHz',width='-244.149kHz',outframe='lsrk')
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5        
 
         self.post_process()
         
@@ -2005,8 +2018,32 @@ class test_subtables_alma(test_base):
         bbcNo = mytb.getcol('BBC_NO')
         mytb.close()
         self.assertEqual(nrows, 1*4)
-        self.assertEqual(bbcNo[0], 1)                   
+        self.assertEqual(bbcNo[0], 1)
         
+               
+class test_radial_velocity_correction(test_base_compare):
+
+    def setUp(self):
+        super(test_radial_velocity_correction,self).setUp()
+        self.setUp_titan()
+        self.outvis = "test_radial_velocity_correction-mst.ms"
+        self.refvis = "test_radial_velocity_correction-cvel.ms"
+        self.outvis_sorted = "test_radial_velocity_correction-mst-sorted.ms"
+        self.refvis_sorted = "test_radial_velocity_correction-cvel-sorted.ms"
+        os.system("rm -rf test_radial_velocity_correction*")
+
+    def tearDown(self):
+        super(test_radial_velocity_correction,self).tearDown()
+
+    def test_radial_velocity_correction_without_channel_average(self):
+        
+        cvel(vis=self.vis,outputvis=self.refvis,outframe='SOURCE',mode = 'velocity', width = '0.1km/s',restfreq = '354.50547GHz')
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,datacolumn='DATA',outframe='SOURCE',
+                    mode = 'velocity', width = '0.1km/s',restfreq = '354.50547GHz')        
+
+        self.generate_tolerance_map()
+        self.post_process()        
+                
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2047,4 +2084,5 @@ def suite():
             testFlags,
             test_subtables_evla,
             test_subtables_alma,
+            test_radial_velocity_correction,
             Cleanup]
