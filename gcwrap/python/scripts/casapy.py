@@ -133,7 +133,8 @@ casa = { 'build': {
              'rc': homedir + '/.casa',
              'data': None,
              'recipes': casadef.python_library_directory+'/recipes',
-             'root': None
+             'root': None,
+             'pipeline': None
          },
          'flags': { },
          'files': { 
@@ -168,6 +169,13 @@ else :
     else :
         casa['dirs']['root'] = __casapath__
         casa['dirs']['data'] = __casapath__ + "/data"
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## setup pipeline path (if it exists)
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists(casa['dirs']['root']+"/pipeline"):
+    casa['dirs']['pipeline'] = casa['dirs']['root']+"/pipeline"
+
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## setup helper paths...
@@ -292,6 +300,7 @@ if casa['flags'].has_key('--help') :
 	print "   --nogui"
         print "   --colors=[NoColor|Linux|LightBG]"
 	print "   --noipython"
+        print "   --pipeline"
 	print "   -c filename-or-expression"
 	print "   --help, print this text and exit"
 	print
@@ -395,6 +404,12 @@ if matplotlib.get_backend() == "MacOSX" :
 #
 if not os.environ.has_key('DISPLAY') and matplotlib.get_backend() == "TkAgg" :
    matplotlib.use('Agg')
+
+#
+# If the user has requested pipeline through a command line option set
+# to use AGG
+if casa['flags'].has_key('--pipeline'):
+    matplotlib.use('Agg')
 
 #
 # We put in all the task declarations here...
@@ -1211,6 +1226,18 @@ import publish_summary
 import runUnitTest
 #
 home=os.environ['HOME']
+
+#
+# If the pipeline is there and the user requested it, load the pipeline tasks
+#
+if casa['flags'].has_key('--pipeline'):
+    if casa['dirs']['pipeline'] is not None:
+        sys.path.insert(0,casa['dirs']['pipeline'])
+        import pipeline
+        pipeline.initcli()
+    else:
+        print "Unable to locate pipeline installation, exiting"
+        sys.exit(1)
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##
