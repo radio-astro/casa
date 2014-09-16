@@ -1089,6 +1089,7 @@ protected:
 	casac::variant *phaseCenterPar_p;
 	String restFrequency_p;
 	String outputReferenceFramePar_p;
+	Bool radialVelocityCorrection_p;
 
 	// Frequency specification parameters
 	String mode_p;
@@ -1118,6 +1119,7 @@ protected:
 	MeasurementSet *outputMs_p;
 	ROMSColumns *selectedInputMsCols_p;
 	MSColumns *outputMsCols_p;
+	MSFieldColumns *inputMSFieldCols_p;
 
 	// VI/VB related members
 	Block<Int> sortColumns_p;
@@ -1156,6 +1158,7 @@ protected:
 	MPosition observatoryPosition_p;
 	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;
+	MRadialVelocity radialVelocity_p;
 	MFrequency::Convert freqTransEngine_p;
 	MFrequency::Convert refTimeFreqTransEngine_p;
     FFTServer<Float, Complex> fFFTServer_p;

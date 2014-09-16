@@ -132,6 +132,7 @@ void MSTransformManager::initialize()
 	phaseCenterPar_p = new casac::variant("");
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
+	radialVelocityCorrection_p = False;
 
 	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
@@ -1646,9 +1647,16 @@ void MSTransformManager::initRefFrameTransParams()
     inputReferenceFrame_p = MFrequency::castType(spwCols.measFreqRef()(0));
 
     // Parse output reference frame
+    radialVelocityCorrection_p = False;
     if(outputReferenceFramePar_p.empty())
     {
     	outputReferenceFrame_p = inputReferenceFrame_p;
+    }
+    // CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+    else if (outputReferenceFramePar_p == "SOURCE")
+    {
+    	outputReferenceFrame_p = MFrequency::GEO;
+    	radialVelocityCorrection_p = True;
     }
     else if(!MFrequency::getType(outputReferenceFrame_p, outputReferenceFramePar_p))
     {
@@ -1656,28 +1664,44 @@ void MSTransformManager::initRefFrameTransParams()
     			<< "Problem parsing output reference frame:" << outputReferenceFramePar_p  << LogIO::POST;
     }
 
+
     // Determine observatory position from the first row in the observation sub-table of the output (selected) MS
     MSObservation observationTable = outputMs_p->observation();
     MSObservationColumns observationCols(observationTable);
     String observatoryName = observationCols.telescopeName()(0);
     MeasTable::Observatory(observatoryPosition_p,observatoryName);
-    observatoryPosition_p=MPosition::Convert(observatoryPosition_p, MPosition::ITRF)();
+
+    // jagonzal: This conversion is needed only for cosmetic reasons
+    // observatoryPosition_p=MPosition::Convert(observatoryPosition_p, MPosition::ITRF)();
+
+    // Determine observation time from the first row in the selected MS
+    referenceTime_p = selectedInputMsCols_p->timeMeas()(0);
+
+    // Access FIELD cols to get phase center and radial velocity
+    inputMSFieldCols_p = new MSFieldColumns(selectedInputMs_p->field());
 
 	// Determine phase center
     if (phaseCenterPar_p->type() == casac::variant::INT)
     {
     	Int fieldIdForPhaseCenter = phaseCenterPar_p->toInt();
 
-    	MSField fieldTable = selectedInputMs_p->field();
-    	if (fieldIdForPhaseCenter >= (Int)fieldTable.nrow() || fieldIdForPhaseCenter < 0)
+    	if (fieldIdForPhaseCenter >= (Int)inputMSFieldCols_p->nrow() || fieldIdForPhaseCenter < 0)
     	{
     		logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
     				<< "Selected FIELD_ID to determine phase center does not exist " << LogIO::POST;
     	}
     	else
     	{
-    		MSFieldColumns fieldCols(fieldTable);
-    		phaseCenter_p = fieldCols.phaseDirMeasCol()(fieldIdForPhaseCenter)(IPosition(1,0));
+    		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+    		if (radialVelocityCorrection_p)
+    		{
+    			radialVelocity_p = inputMSFieldCols_p->radVelMeas(fieldIdForPhaseCenter, referenceTime_p.get("s").getValue());
+    			phaseCenter_p = inputMSFieldCols_p->phaseDirMeas(fieldIdForPhaseCenter,referenceTime_p.get("s").getValue());
+    		}
+    		else
+    		{
+    			phaseCenter_p = inputMSFieldCols_p->phaseDirMeasCol()(fieldIdForPhaseCenter)(IPosition(1,0));
+    		}
     	}
     }
     else
@@ -1687,9 +1711,20 @@ void MSTransformManager::initRefFrameTransParams()
     	// Determine phase center from the first row in the FIELD sub-table of the output (selected) MS
     	if (phaseCenter.empty())
     	{
+
     		MSField fieldTable = outputMs_p->field();
     		MSFieldColumns fieldCols(fieldTable);
-    		phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
+
+    		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+    		if (radialVelocityCorrection_p)
+    		{
+    			radialVelocity_p = fieldCols.radVelMeas(0, referenceTime_p.get("s").getValue());
+    			phaseCenter_p = fieldCols.phaseDirMeas(0,referenceTime_p.get("s").getValue());
+    		}
+    		else
+    		{
+    			phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
+    		}
     	}
     	// Parse phase center
     	else
@@ -1702,9 +1737,6 @@ void MSTransformManager::initRefFrameTransParams()
         	}
     	}
     }
-
-    // Determine observation time from the first row in the selected MS
-    referenceTime_p = selectedInputMsCols_p->timeMeas()(0);
 
 	return;
 }
@@ -1766,7 +1798,16 @@ void MSTransformManager::regridSpwSubTable()
         resolutionCol.put(spw_idx, outputSpw.RESOLUTION);
         refFrequencyCol.put(spw_idx,outputSpw.REF_FREQUENCY);
         totalBandwidthCol.put(spw_idx,outputSpw.TOTAL_BANDWIDTH);
-        measFreqRefCol.put(spw_idx,outputReferenceFrame_p);
+
+        // CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+	    if(outputReferenceFrame_p==MFrequency::GEO) // i.e. outframe was GEO or SOURCE
+	    {
+	    	measFreqRefCol.put(spw_idx, (Int)MFrequency::REST);
+	    }
+	    else
+	    {
+	    	measFreqRefCol.put(spw_idx, (Int)outputReferenceFrame_p);
+	    }
 
         // Add input-output SPW pair to map
     	inputOutputSpwMap_p[spwId] = std::make_pair(inputSpw,outputSpw);
@@ -2029,8 +2070,25 @@ void MSTransformManager::regridSpwAux(	Int spwId,
 											restFrequency_p,
 											outputReferenceFramePar_p,
 											velocityType_p,
-											True // verbose
+											True, // verbose
+											radialVelocity_p
 											);
+	/*
+	ostringstream oss_debug;
+    oss_debug 	<< " phaseCenter_p=" << phaseCenter_p << endl
+				<< " inputReferenceFrame_p=" << inputReferenceFrame_p << endl
+				<< " referenceTime_p=" << referenceTime_p << endl
+				<< " observatoryPosition_p=" << observatoryPosition_p << endl
+				<< " mode_p=" << mode_p << endl
+				<< " nChan_p=" << nChan_p << endl
+				<< " start_p=" << start_p << endl
+				<< " width_p=" << width_p << endl
+				<< " restFrequency_p=" << restFrequency_p << endl
+				<< " outputReferenceFramePar_p=" << outputReferenceFramePar_p << endl
+				<< " velocityType_p=" << velocityType_p << endl
+				<< " radialVelocity_p=" << radialVelocity_p;
+    logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << oss_debug.str() << LogIO::POST;
+	*/
 
     // jagonzal (new WEIGHT/SIGMA convention in CASA 4.2.2)
 	if (newWeightFactorMap_p.find(spwId) == newWeightFactorMap_p.end())
@@ -4334,8 +4392,26 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	ScalarMeasColumn<MEpoch> mainTimeMeasCol = selectedInputMsCols_p->timeMeas();
 	MEpoch currentRowTime = mainTimeMeasCol(vb->rowIds()(0));
 
+	// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+	MDoppler radVelCorr;
+	MDirection inputFieldDirection;
+	Bool radVelSignificant = False;
+	if (radialVelocityCorrection_p && inputMSFieldCols_p->needInterTime(vb->fieldId()(0)))
+	{
+		MRadialVelocity mRV = inputMSFieldCols_p->radVelMeas(vb->fieldId()(0),vb->time()(0));
+		Quantity mrv = mRV.get("m/s");
+		radVelCorr =  MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+		if (fabs(mrv.getValue()) > 1E-6) radVelSignificant = True;
+
+		inputFieldDirection = inputMSFieldCols_p->phaseDirMeas(vb->fieldId()(0), vb->time()(0));
+	}
+	else
+	{
+		inputFieldDirection = vb->phaseCenter();
+	}
+
 	MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p,
-													MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
+													MeasFrame(inputFieldDirection, observatoryPosition_p, currentRowTime));
 
 	MFrequency::Ref outputFrameRef;
 	outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
@@ -4359,6 +4435,14 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 		Double oldCentralFrequencyBeforeRegridding = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[centralChan];
 		Double newCentralFrequencyBeforeRegriddingAtCurrentTime =
 				freqTransEngine_p(oldCentralFrequencyBeforeRegridding).get(MSTransformations::Hz).getValue();
+
+		// CAS-6778: Support for new ref. frame SOURCE that requires radial velocity correction
+		if (radVelSignificant)
+		{
+			Vector<Double> tmp(1,newCentralFrequencyBeforeRegriddingAtCurrentTime);
+			newCentralFrequencyBeforeRegriddingAtCurrentTime = radVelCorr.shiftFrequency(tmp)(0);
+		}
+
 		Double newCentralFrequencyBeforeRegriddingAtReferenceTime = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[centralChan];
 		Double absoluteShift = newCentralFrequencyBeforeRegriddingAtCurrentTime - newCentralFrequencyBeforeRegriddingAtReferenceTime;
 
@@ -4375,6 +4459,32 @@ void MSTransformManager::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] =
 	    	freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
 	    }
+
+	    /*
+		ostringstream oss;
+		oss.precision(30);
+		oss << " field direction input frame=" << inputFieldDirection << endl;
+		oss << " input frame=" << inputFrameRef << endl;
+		oss << " field direction output frame=" << phaseCenter_p << endl;
+		oss << " output frame=" << outputFrameRef << endl;
+		oss << " transformation engine=" << freqTransEngine_p << endl;
+		oss << " before transformation=" << inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[0] << endl;
+		oss << " after transformation=" << inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[0] << endl;
+		*/
+
+
+    	if (radVelSignificant)
+    	{
+    		inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux =
+    				radVelCorr.shiftFrequency(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux);
+
+    		/*
+    		oss << " correction engine=" << radVelCorr << endl;
+    		oss << " after radial velocity correction=" << inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[0] << endl;
+			*/
+    	}
+
+		//logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) << oss.str() << LogIO::POST;
 	}
 
 	return;
