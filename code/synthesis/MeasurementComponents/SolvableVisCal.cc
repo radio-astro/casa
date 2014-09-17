@@ -5646,7 +5646,6 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
       // Have data for this field?
       if (MGOK[iFld]!=NULL) {
-
         // References to PBs for syntactical convenience
         Cube<Bool>   mgok;   mgok.reference(*(MGOK[iFld]));
         Cube<Double> mg;  mg.reference(*(MG[iFld]));
@@ -5683,8 +5682,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
           }
         }
 
-      }
-    }
+      } //if-MGOK end
+    } 
 
 
     //    cout << "done." << endl;
@@ -5699,6 +5698,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
     mgrefok.reference(*MGOK[refField(0)]);
 
     if (nRef>1) {
+      //Store no. of fields that is not flagged per pol,ant,and spw
+      Cube<Double> nokref(nPar(),nElem(),nSpw(),0);
       // Add on additional ref fields
       for (Int iref=1;iref<nRef;++iref) {
 
@@ -5708,18 +5709,47 @@ void SolvableVisJones::fluxscale(const String& outfile,
 	for (Int ispw=0;ispw<nSpw();++ispw) {
 	  for (Int iant=0;iant<nAnt();++iant) {
 	    for (Int ipar=0;ipar<nPar();++ipar) {
-	      if (mgrefok(ipar,iant,ispw) && mgokR(ipar,iant,ispw))
-		mgref(ipar,iant,ispw)+=mgR(ipar,iant,ispw);
-	      else {
-		mgrefok(ipar,iant,ispw)=False;
-		mgref(ipar,iant,ispw)=0.0;
-	      } // ok
+              if (iref==1) {
+	        if (mgrefok(ipar,iant,ispw)) {
+                  nokref(ipar,iant,ispw)+=1.0;   
+                }
+                else {// the first ref field of this gain is flagged
+                  mgref(ipar,iant,ispw)=0.0;
+                }
+              }
+
+              if (mgokR(ipar,iant,ispw)) {
+	        mgref(ipar,iant,ispw)+=mgR(ipar,iant,ispw);
+                nokref(ipar,iant,ispw)+=1.0;   
+              }
+
+              // at the last ref field...
+              if(iref==nRef-1 ) {
+                if (nokref(ipar,iant,ispw)==0.0) {
+	          mgrefok(ipar,iant,ispw)=False;
+                  mgref(ipar,iant,ispw)=0.0;
+                } 
+                else {
+                  // overwrite to turn to True for the case of mgrefok=False for refField(0)
+                  mgrefok(ipar,iant,ispw)=True;
+                }
+              }
+
+              // Replaced this with above to support flagged ref field case(CAS-4758) - TT
+	      //if (mgrefok(ipar,iant,ispw) && mgokR(ipar,iant,ispw))
+	      //  mgref(ipar,iant,ispw)+=mgR(ipar,iant,ispw);
+	      // else {
+	      //  mgrefok(ipar,iant,ispw)=False;
+              //  mgref(ipar,iant,ispw)=0.0;
+	      //} 
+
 	    } // ipar
 	  } // iant
 	} // ispw
       } // iref
       // Complete the average:
-      mgref/=Double(nRef);
+      //mgref/=Double(nRef);
+      mgref/=nokref; // only count unflagged ones
     } // nRef > 1
 
     // Scale factor calculation, per trans fld, per spw
@@ -5755,7 +5785,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
       for (Int ispw=0; ispw<nSpw(); ispw++) {
         // Reference spw may be different
         Int refSpw(refSpwMap(ispw));
-
+        
         // Only if anything good for this spw
         if (ntrue(mgokT.xyPlane(ispw)) > 0) {
 

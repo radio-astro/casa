@@ -295,7 +295,115 @@ class fluxscale2_test(unittest.TestCase):
         diff_fluxd=abs(refdict['1']['1']['fluxd'][0]-thisdict['1']['1']['fluxd'][0])/refdict['1']['1']['fluxd'][0]
 
         self.assertTrue(diff_fluxd<1.e-8)
+
+
+class fluxscale3_test(unittest.TestCase):
+
+    def setUp(self):
+        # Input names
+        # ngc2403.tutorial.ms reduced in size
+        prefix = 'n2403.short'
+        self.prefix = prefix
+        self.msfile = prefix + '.ms'
+        if testmms:
+            self.msfile = prefix + '.mms'
+
+        self.gtable = prefix + '.flagFld1.gcal'
+        self.reffile = prefix + '.flagFld1.ref.fcal'
+        self.gtable2 = prefix + '.flagPartFld3.gcal'
+        self.reffile2 = prefix + '.flagPartFld3.ref.fcal'
+
+        fpath = os.path.join(datapath,self.msfile)
+        if os.path.lexists(fpath):
+            shutil.copytree(fpath, self.msfile, symlinks=True)
+            fpath = os.path.join(datapath,self.gtable)
+            shutil.copytree(fpath, self.gtable, symlinks=True)
+            fpath = os.path.join(datapath,self.reffile)
+            shutil.copytree(fpath, self.reffile, symlinks=True)
+            fpath = os.path.join(datapath,self.gtable2)
+            shutil.copytree(fpath, self.gtable2, symlinks=True)
+            fpath = os.path.join(datapath,self.reffile2)
+            shutil.copytree(fpath, self.reffile2, symlinks=True)
+        else:
+            self.fail('Data does not exist -> '+fpath)
+
+        default('fluxscale')
+
+    def tearDown(self):
+        shutil.rmtree(self.msfile, ignore_errors=True)
+        os.system('rm -rf n2403*.gcal')
+        os.system('rm -rf n2403*.fcal')
+
+    def test_flaggedref1(self):
+        '''Fluxscale test3: Ref field 1 in caltable is all flagged'''
+        # Input
+        gtable = self.gtable
+
+        # Output
+        outtable = self.prefix + '.flagFld1.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1,3,4',
+                             transfer='2')
+        self.assertTrue(os.path.exists(outtable))
+
+        # File to compare with
+        reference = self.reffile
+
+        # Compare the calibration table with a reference
+        self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+        # compare some determined values returned in the dict (tested on RHEL6)
+        refdict={'freq': np.array([  1.41825202e+09]), 
+                 '2': {'fitRefFreq': 0.0, 
+                       'spidxerr': np.array([ 0.,  0.,  0.]),
+                       'spidx': np.array([ 0.,  0.,  0.]),
+                       '0': {'fluxdErr': np.array([ 0.00189683,  0.,  0.,  0.]), 
+                             'numSol': np.array([ 54.,   0.,   0.,   0.]),
+                             'fluxd': np.array([ 3.20832802,  0.,  0.,  0.])}, 
+                 'fitFluxd': 0.0, 'fieldName': '0841+708', 'fitFluxdErr': 0.0}, 
+                 'spwName': np.array(['127*24.4 kHz channels @ 1.42 GHz (BARY)'],dtype='|S40'),
+                 'spwID': np.array([0], dtype=np.int32)} 
+
+        diff_fluxd=abs(refdict['2']['0']['fluxd'][0]-thisdict['2']['0']['fluxd'][0])/refdict['2']['0']['fluxd'][0]
+
+        self.assertTrue(diff_fluxd<1.e-8)
+
  
+    def test_flaggedref2(self):
+        '''Fluxscale test3: Ref field 3 in caltable is partially flagged'''
+
+        # Input
+        gtable = self.gtable2
+
+        # Output
+        outtable = self.prefix + '.flagPartFld3.fcal'
+
+        thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1,3,4',
+                             transfer='2')
+        self.assertTrue(os.path.exists(outtable))
+
+        # File to compare with
+        reference = self.reffile2
+
+        # Compare the calibration table with a reference
+        self.assertTrue(th.compTables(outtable, reference, ['WEIGHT']))
+
+        # compare some determined values returned in the dict (tested on RHEL6)
+        refdict={'freq': np.array([  1.41825202e+09]), 
+                 '2': {'fitRefFreq': 0.0, 'spidxerr': np.array([ 0.,  0.,  0.]), 
+                       'spidx': np.array([ 0.,  0.,  0.]), 
+                       '0': {'fluxdErr': np.array([ 0.0022236,  0.,  0.,  0.]), 
+                             'numSol': np.array([ 54.,   0.,   0.,   0.]), 
+                             'fluxd': np.array([ 3.19455455,  0.,  0.,  0.])}, 
+                             'fitFluxd': 0.0, 'fieldName': '0841+708', 'fitFluxdErr': 0.0}, 
+                       'spwName': np.array(['127*24.4 kHz channels @ 1.42 GHz (BARY)'], dtype='|S40'), 
+                       'spwID': np.array([0], dtype=np.int32)} 
+
+
+        diff_fluxd=abs(refdict['2']['0']['fluxd'][0]-thisdict['2']['0']['fluxd'][0])/refdict['2']['0']['fluxd'][0]
+
+        self.assertTrue(diff_fluxd<1.e-8)
+
 def suite():
-    return [fluxscale1_test, fluxscale2_test]
+    return [fluxscale1_test, fluxscale2_test, fluxscale3_test]
 
