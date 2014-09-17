@@ -14,8 +14,10 @@ import pylab as pl
 #qatool = casac.homefinder.find_home_by_name('quantaHome')
 #qa = qatool.create()
 
-im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
+im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
+# 4.2.2:
+#im, cb, ms, tb, fl, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 
 # functions defined outside of the simutil class
 def is_array_type(value):
@@ -2005,7 +2007,7 @@ class simutil:
 
         # Validate ellipsoid parameters.
         if ( f < 0.0 or f >= 1.0 ): return -1,-1,-1
-        if ( a <= 0.0 ): return -1,-1,-1
+        if ( er <= 0.0 ): return -1,-1,-1
 
         #Functions of ellipsoid parameters (with further validation of f). 
         e2 = (2.0 - f) * f
@@ -2028,7 +2030,7 @@ class simutil:
         s0 = abs(z-dz) / er
         c0 = ec * r / er
 
-        a0 = sqrt( c0**2 + s0**2 )
+        a0 = pl.sqrt( c0**2 + s0**2 )
         d0 = ec* s0* a0**3 + e2* s0**3
         f0 = r/er* a0**3 - e2* c0**3
 
@@ -2135,7 +2137,7 @@ class simutil:
         """
         itrf xyz and COFA cx,cy,cz -> lat lon el WGS84
         """
-        clon,clat = self.xyz2long(cx,cy,cz,'WGS84')
+        clon,clat,h = self.xyz2long(cx,cy,cz,'WGS84')
         ccoslon=pl.cos(clon)
         csinlon=pl.sin(clon)        
         csinlat=pl.sin(clat)
@@ -3354,7 +3356,7 @@ class simutil:
     # adapted from aU.getBaselineStats
     def baselineLengths(self, configfile):
         stnx, stny, stnz, stnd, padnames, nAntennas, telescopename = self.readantenna(configfile)
-        
+
         cx=pl.mean(stnx)
         cy=pl.mean(stny)
         cz=pl.mean(stnz)
