@@ -164,12 +164,15 @@ public:
   // Initialize transform to Sky plane: initializes the image
   void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
 		       const VisBuffer& vb);
-
+  //////
+ 
   // Finalize transform to Sky plane: flushes the image
   // cache and shows statistics if it is being used. DOES NOT
   // DO THE FINAL TRANSFORM!
   void finalizeToSky();
-
+  virtual void finalizeToSkyNew(Bool dopsf, 
+				   const VisBuffer& vb,
+			CountedPtr<SIImageStore> imstore  );	
   // Get actual coherence from grid by degridding
   void get(VisBuffer& vb, Int row=-1);
 
@@ -212,6 +215,8 @@ public:
   // Return name of this machine
 
   virtual String name() const;
+  virtual Bool useWeightImage(){return True;}; 
+  
 
   // Copy convolution function etc to another FT machine
   // necessary if ft and ift are distinct but can share convfunctions

@@ -120,7 +120,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int diamIndex=antDiam2IndexMap_p.ndefined();
       Vector<Double> dishDiam=ac.dishDiameter().getColumn();
       Vector<String>dishName=ac.name().getColumn();
-      if(vpTable_p == ""){
+      if(pbClass_p== PBMathInterface::AIRY){
       ////////We'll be using dish diameter as key
       for (uInt k=0; k < dishDiam.nelements(); ++k){
 	if((diamIndex !=0) && antDiam2IndexMap_p.isDefined(String::toString(dishDiam(k)))){
@@ -148,7 +148,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
 	      
 	    }
-	    else if(pbClass_p== PBMathInterface::IMAGE){
+
+	    //////Will no longer support this
+	    /*else if(pbClass_p== PBMathInterface::IMAGE){
 	      //Get the image name by calling code for the antenna name and array name
 	      //For now hard wired to ALMA as this part of the code will not be accessed for non-ALMA 
 	      //see Imager::setMosaicFTMachine 
@@ -186,6 +188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	      throw(AipsError("Do not  deal with non airy dishes or images of VP yet "));
 	    }
+	    */
 	    ++diamIndex;
 	  } 
 	}
@@ -194,10 +197,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       }
-      else{// vptable specified 
+      else if(pbClass_p== PBMathInterface::IMAGE) { 
 
 	VPManager *vpman=VPManager::Instance();
-	vpman->loadfromtable(vpTable_p);
+	if(vpTable_p != String(""))
+	  vpman->loadfromtable(vpTable_p);
+	///else it is already loaded in the static object
 	Vector<Record> recs;
 	Vector<Vector<String> > antnames;
 
@@ -248,6 +253,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	//Get rid of the static class
 	vpman->reset();
+      }
+      else{
+
+	throw(AipsError("Mosaic  supports image based or Airy voltage patterns only for now"));
+
       }
 
       //cerr << "antIndexTodiamIndex " << antIndexToDiamIndex_p << endl;

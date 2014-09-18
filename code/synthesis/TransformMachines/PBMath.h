@@ -142,7 +142,7 @@ public:
   };
 
   enum {
-    NumberOfCommonPB=36
+    NumberOfCommonPB=37
   };
 
   // Default constructor, required for Block<PBMath>

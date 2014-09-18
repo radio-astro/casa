@@ -62,6 +62,7 @@
 #include <synthesis/ImagerObjects/SIImageStoreMultiTerm.h>
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
+#include <synthesis/MeasurementEquations/VPManager.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
 
@@ -70,6 +71,8 @@
 #include <synthesis/TransformMachines/WProjectFT.h>
 #include <synthesis/TransformMachines/VisModelData.h>
 #include <synthesis/TransformMachines/AWProjectFT.h>
+#include <synthesis/TransformMachines/HetArrayConvFunc.h>
+#include <synthesis/TransformMachines/MosaicFT.h>
 #include <synthesis/TransformMachines/MultiTermFTNew.h>
 #include <synthesis/TransformMachines/AWProjectWBFTNew.h>
 #include <synthesis/TransformMachines/AWConvFunc.h>
@@ -493,7 +496,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			gridpars.wbAWP,gridpars.cfCache,gridpars.doPointing,
 			gridpars.doPBCorr,gridpars.conjBeams,
 			gridpars.computePAStep,gridpars.rotatePAStep,
-			gridpars.interpolation, impars.freqFrameValid);
+			gridpars.interpolation, impars.freqFrameValid, 1000000000,  16, impars.stokes);
 
       }
     catch(AipsError &x)
@@ -1108,7 +1111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					const String interpolation,  //="linear"
 					const Bool freqFrameValid, //=True
 					const Int cache,             //=1000000000,
-					const Int tile               //=16
+					const Int tile,               //=16
+					const String stokes //=I
 					)
 
   {
@@ -1140,6 +1144,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			 aTermOn, psTermOn, mTermOn, wbAWP, cfCache, 
 			 doPointing, doPBCorr, conjBeams, computePAStep,
 			 rotatePAStep, cache,tile);
+    }
+    else if ( ftname == "mosaic" || ftname== "mosft" || ftname == "mosaicft" || ftname== "MosaicFT"){
+
+      createMosFTMachine(theFT, theIFT, padding, useAutocorr, useDoublePrec, rotatePAStep, stokes);
     }
     else
       {
@@ -1338,7 +1346,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager:: createMosFTMachine(CountedPtr<FTMachine>& theFT,CountedPtr<FTMachine>&  theIFT, const Float padding, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String stokes){
+    
+   
+    ROMSColumns msc(rvi_p->ms());
+    String telescop=msc.observation().telescopeName()(0);
+    VPManager *vpman=VPManager::Instance();
+    PBMath::CommonPB kpb;
+    PBMath::enumerateCommonPB(telescop, kpb);
+    Record rec;
+    vpman->getvp(rec, telescop);
+    VPSkyJones* vps=NULL;
+    if(rec.asString("name")=="COMMONPB" && kpb !=PBMath::UNKNOWN ){
+      vps= new VPSkyJones(msc, True, Quantity(rotatePAStep, "deg"), BeamSquint::GOFIGURE, Quantity(360.0, "deg"));
+      /////Don't know which parameter has pb threshold cutoff that the user want 
+      ////leaving at default
+      ////vps.setThreshold(minPB);
+      
+    }
+    
+    theFT = new MosaicFT(vps, mLocation_p, stokes, 1000000000, 16, useAutoCorr, 
+		      useDoublePrec);
+    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    if(rec.asString("name")=="IMAGE")
+       pbtype=PBMathInterface::IMAGE;
+    ///Use Heterogenous array mode for the following
+    if((kpb == PBMath::UNKNOWN) || (kpb==PBMath::OVRO) || (kpb==PBMath::ACA)
+       || (kpb==PBMath::ALMA)){
+      CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype, "");
+      static_cast<MosaicFT &>(*theFT).setConvFunc(mospb);
+    }
+    ///////////////////make sure both FTMachine share the same conv functions.
+    theIFT= new MosaicFT(static_cast<MosaicFT &>(*theFT));
 
+    
+  }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Do MS-Selection and set up vi/vb. 
   // Only this functions needs to know anything about the MS 

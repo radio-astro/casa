@@ -196,7 +196,10 @@ protected:
 		       const String interpolation = String("linear"),
 		       const Bool freqFrameValid = True,
 		       const Int cache=1000000000,
-		       const Int tile=16);
+		       const Int tile=16,
+		       const String stokes="I");
+
+  void createMosFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>&  theIFT, const Float  padding, const Bool useAutoCorr, const Bool useDoublePrec, const Float rotatePAStep, const String Stokes="I");
 
   // Choose between different types of ImageStore types (single term, multiterm, faceted)
   CountedPtr<SIImageStore> createIMStore(String imageName, 

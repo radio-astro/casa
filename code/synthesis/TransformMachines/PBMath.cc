@@ -1369,7 +1369,18 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
     }
     break;
   case ATCA_L3:
-    os  << "ATCA_L3 not yet implemented" << LogIO::EXCEPTION;    
+    {
+      os  << "ATCA_L3 not yet implemented defaulting to L2 version" << LogIO::WARN << LogIO::POST;
+      Vector<Double> coef(7);
+      coef(0)= 1.0;
+      coef(1)= -1.0781341990755E-03;
+      coef(2)= 4.6179146405726E-07;
+      coef(3)= -1.0108079576125E-10;
+      coef(4)= 1.2073518438662E-14;
+      coef(5)= -7.5132629268134E-19;
+      coef(6)= 1.9083641820123E-23;      
+      pb_pointer_p = new PBMath1DPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"));
+    }
     break;
   case ATCA_S:
     {
