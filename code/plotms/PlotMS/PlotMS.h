@@ -99,6 +99,10 @@ public:
     
     // Enable/disable annotations in the client
     void setAnnotationModeActive( PlotMSAction::Type type, bool active );
+
+    //Enables/disables hover settings on the canvases based
+    //on GUI settings.
+    void resetHover();
     
     // Parameter Methods //
     

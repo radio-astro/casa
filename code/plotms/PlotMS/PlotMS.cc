@@ -257,6 +257,13 @@ bool PlotMSApp::isCommonAxisX() const {
 	return itsPlotter_->isCommonAxisX();
 }
 
+void PlotMSApp::resetHover(){
+	if ( guiShown()){
+		CountedPtr<PlotMSAction> hoverAction = ActionFactory::getAction( PlotMSAction::TRACKER_ENABLE_HOVER, itsPlotter_ );
+		hoverAction->doAction( this );
+	}
+}
+
 bool PlotMSApp::isCommonAxisY() const {
 	return itsPlotter_->isCommonAxisY();
 }

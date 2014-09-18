@@ -1304,6 +1304,9 @@ void PlotMSPlot::recalculateIteration( ) {
 		assignCanvases(pages);
 	}
 
+	//Add for CAS-6928.  Hover was not being reset when
+	//the iteration plot page changed.
+	itsParent_->resetHover();
 
 
 	//Put the data into the plot
