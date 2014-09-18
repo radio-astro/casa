@@ -803,11 +803,32 @@ endif()
 
 # ALMAWVR
 if( USE_ALMAWVR )
+  message(STATUS "Looking for centrally installed build of ALMAWVR.")
   casa_find( ALMAWVR
              VERSION 1.2.0
              PREFIX_HINTS ${ALMWVR_ROOT_DIR}
              LIBS almawvr
            )
+elseif( EXISTS ${CMAKE_INSTALL_PREFIX}/lib/libalmawvr.so AND
+        EXISTS ${CMAKE_INSTALL_PREFIX}/include/almawvr/arraydata.hpp )
+   message(STATUS "Found local build of ALMAWVR. Will try to use it ...")
+   casa_find( GSLCBLAS	  
+              LIBS gslcblas )
+   casa_find( GSL 
+              LIBS gsl
+	      DEPENDS GSLCBLAS
+            )
+   casa_find( ALMAWVR
+	      VERSION 1
+	      INCLUDES_SUFFIXES almawvr
+              PREFIX_HINTS ${CMAKE_INSTALL_PREFIX}
+              LIBS almawvr
+	      DEPENDS GSL GSLCBLAS
+              IGNORE /usr/include/almawvr
+            )
+    if( ALMAWVR_FOUND )
+      set( USE_ALMAWVR True )
+    endif()
 endif()
 
 # Java
