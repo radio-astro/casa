@@ -4001,6 +4001,99 @@ void MSTransformManager::checkDataColumnsToFill()
 			// timeAvgOptions_p |= vi::AveragingOptions::AverageLagData;
 		}
 	}
+	else if (datacolumn_p.contains("DATA,MODEL,CORRECTED"))
+	{
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+		{
+			if (!mainColSet)
+			{
+				mainColumn_p = MS::DATA;
+				mainColSet = True;
+			}
+			dataColMap_p[MS::DATA] = MS::DATA;
+
+			if (not bufferMode_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"Adding DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+			}
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageObserved;
+			timeAvgOptions_p |= vi::AveragingOptions::ObservedFlagWeightAvgFromSIGMA;
+		}
+
+		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+		{
+			if (!mainColSet)
+			{
+				mainColumn_p = MS::CORRECTED_DATA;
+				mainColSet = True;
+			}
+			dataColMap_p[MS::CORRECTED_DATA] = MS::CORRECTED_DATA;
+
+			if (not bufferMode_p)
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+									"CORRECTED_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+			}
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageCorrected;
+			timeAvgOptions_p |= vi::AveragingOptions::CorrectedFlagWeightAvgFromWEIGHT;
+		}
+
+		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
+		{
+			modelDataChecked = True;
+			if (!mainColSet)
+			{
+				mainColumn_p = MS::MODEL_DATA;
+				mainColSet = True;
+			}
+			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				if (not bufferMode_p)
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+				}
+			}
+			else
+			{
+				if (not bufferMode_p)
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
+				}
+			}
+
+			timeAvgOptions_p |= vi::AveragingOptions::AverageModel;
+
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA)))
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromWEIGHT;
+			}
+			else if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelFlagWeightAvgFromSIGMA;
+			}
+			else
+			{
+				timeAvgOptions_p |= vi::AveragingOptions::ModelPlainAvg;
+			}
+		}
+	}
 	else if (datacolumn_p.contains("FLOAT_DATA,DATA"))
 	{
 		Bool mainColSet=False;

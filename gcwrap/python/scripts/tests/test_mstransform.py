@@ -782,7 +782,7 @@ class test_Columns(test_base):
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
         os.system('rm -rf '+ self.outputms)
-        os.system('rm -rf ngc5921Jy.ms')
+        os.system('rm -rf ngc5921Jy.ms allcols.ms')
         
     def test_col1(self):
           """mstransform: try to make real a non-existing virtual MODEL column"""
@@ -834,6 +834,17 @@ class test_Columns(test_base):
 
         th.compVarColTables('split3.ms','col3.ms','DATA')
 
+    def test_col4(self):
+        '''mstransform: split out the DATA,MODEL,CORRECTED columns'''
+        self.setUp_4ants()
+        self.outputms = 'col4.ms'
+        mstransform(vis=self.vis, outputvis=self.outputms,spw='0',
+                    datacolumn='data,model,corrected')
+        mstransform(vis=self.vis, outputvis='allcols.ms',spw='0',
+                    datacolumn='all')
+        
+        self.assertTrue(th.compTables('allcols.ms', self.outputms,['FLAG_CATEGORY','WEIGHT_SPECTRUM'],0.000001,"absolute"))
+                
 
 class test_SeparateSPWs(test_base):
     '''Test the nspw parameter to separate spws'''

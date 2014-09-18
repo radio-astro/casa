@@ -489,8 +489,8 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         ret = False
         
-        dc = self.__args['datacolumn'].upper()
-        if dc=='MODEL' or dc=='ALL' or dc=='DATA,MODEL,CORRECTED':
+        dc = self.__args['datacolumn'].upper()            
+        if "MODEL" in dc or dc == 'ALL':
             ret = True
 
         return ret

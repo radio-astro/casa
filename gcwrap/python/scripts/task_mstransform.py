@@ -170,10 +170,11 @@ def mstransform(
         config['ddistart'] = ddistart
         
         config['datacolumn'] = datacolumn
-        if pdh.validateModelCol():        
-            # Make real a virtual MODEL column in the output MS
+        dc = datacolumn.upper()            
+        # Make real a virtual MODEL column in the output MS
+        if "MODEL" in dc or dc == 'ALL':
             config['realmodelcol'] = realmodelcol
-        
+
         config['usewtspectrum'] = usewtspectrum
         
         # Add the tile shape parameter
