@@ -545,6 +545,7 @@ class ss_setjy_helper:
         """
         nelm = -1
         ncl = len(clrecs.keys())
+        #print "clrecs=",clrecs
         if ncl == 1:
             clname = clrecs.keys()[0] 
             comprec = clrecs[clname]
@@ -564,18 +565,25 @@ class ss_setjy_helper:
                      (float('%.6g' % comp['shape']['direction']['m0']['value']),
                       float('%.6g' % comp['shape']['direction']['m1']['value']))
                 casalog.post(msg,'INFO2')
+            freq0=''
+            if comp.has_key('spectrum'):
+                freqv = float('%.5g' % comp['spectrum']['frequency']['m0']['value'])
+                freq0 = str(freqv)+comp['spectrum']['frequency']['m0']['unit']
             if nelm==1:
                 for i in range(len(comprec['spwids'])):
                     ispw=comprec['spwids'][i]
                     iflux = comprec['allfluxinfo'][i][0][0]
                     # currently only I flux is reported and no flux error is reported
-                    msg=" %s: spw%s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" %\
+                    msg=" %s: spw%s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy @ %s" %\
                          (srcn, ispw, float('%.5g' % iflux),0.0,0.0,0.0,
-                          0.0,0.0,0.0,0.0)
+                          0.0,0.0,0.0,0.0, freq0)
                     casalog.post(msg, 'INFO')
             else:
                 ispw = complab.split('_')[1]
-                msg=" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy" %\
+                #if comp.has_key('spectrum'):
+                #  freqv = float('%.5g' % comp['spectrum']['frequency']['m0']['value'])
+                #  freq0 = str(freqv)+comp['spectrum']['frequency']['m0']['unit']
+                msg=" %s: %s Flux:[I=%s,Q=%s,U=%s,V=%s] +/- [I=%s,Q=%s,U=%s,V=%s] Jy @ %s" %\
                      (srcn, ispw, float('%.5g' % comp['flux']['value'][0]),
                       float('%.5g' % comp['flux']['value'][1]),
                       float('%.5g' % comp['flux']['value'][2]),
@@ -583,7 +591,7 @@ class ss_setjy_helper:
                       float('%.5g' % comp['flux']['error'][0]),
                       float('%.5g' % comp['flux']['error'][1]),
                       float('%.5g' % comp['flux']['error'][2]),
-                      float('%.5g' % comp['flux']['error'][3]))
+                      float('%.5g' % comp['flux']['error'][3]), freq0)
                 casalog.post(msg, 'INFO')
 
     def _updateHistory(self,clrecs,vis):

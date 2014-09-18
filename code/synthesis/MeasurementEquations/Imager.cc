@@ -5464,8 +5464,8 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     os << LogIO::NORMAL << "[I=" << fluxUsed(0)(0) << ", "; // Loglevel INFO
     os << "Q=" << fluxUsed(0)(1) << ", ";
     os << "U=" << fluxUsed(0)(2) << ", ";
-    os << "V=" << fluxUsed(0)(3) << "] Jy @ ch0 (";
-    os << mfreqs(0)(0).getValue()<<"Hz), ";
+    os << "V=" << fluxUsed(0)(3) << "] Jy @ ";
+    os << mfreqs(0)(0).getValue()<<"Hz, ";
     os << ("(" + fluxScaleName + ")") << LogIO::POST;
     writeHistory(os);
   }  // End of if(!foundSrc).
@@ -5484,8 +5484,8 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
       os << LogIO::NORMAL << "[I=" << fluxUsed(selspw)(0) << ", "; // Loglevel INFO
       os << "Q=" << fluxUsed(selspw)(1) << ", ";
       os << "U=" << fluxUsed(selspw)(2) << ", ";
-      os << "V=" << fluxUsed(selspw)(3) << "] Jy @ ch0 (";
-      os << mfreqs(selspw)(0).getValue()<<"Hz), ";
+      os << "V=" << fluxUsed(selspw)(3) << "] Jy @ ";
+      os << mfreqs(selspw)(0).getValue()<<"Hz, ";
       os << ("(" + fluxScaleName + ")") << LogIO::POST;
       writeHistory(os);
     } 
@@ -5714,7 +5714,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     selSpwsStr += String::toString(rawspwids(ispw));
   }
   adviseChanSelex(freqMin, freqMax, 0.0, MFrequency::LSRK, dummy, dummy, dummy, msname, fieldId, True, selSpwsStr);
-  cerr<<" freqMin="<<freqMin<<" freqMax="<<freqMax<<endl;
 
   // Find min channel width to increment to construct freqsofScale 
   Double freqWidth = 0;
@@ -5731,8 +5730,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   //Int nchan=freqArray.shape()[0]   ;
   //Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
   Int nchan = Int(fabs(freqMax - freqMin)/freqWidth);
-  cerr<<"freqWidth="<<freqWidth<<endl;
-  cerr<<"nchan="<<nchan<<endl;
 
   //Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
   //Filling it with the LSRK values
@@ -5931,7 +5928,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
       if(modimage.shape()(freqAxis) == 1){
 	//     IPosition blc(imshape.nelements(), 0);
         //IPosition trc = imshape - 1;
-        cerr<< " fluxUsedPerChan shape="<<fluxUsedPerChan.shape()<<endl;
         os << LogIO::NORMAL
            //<< "Scaling spw " << selspw << "'s model image by channel to I = " 
            << "Scaling spw(s) " << String::toString(rawspwids) << "'s model image by channel to  I = " 
@@ -5965,7 +5961,9 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
      //    << "Scaling spw " << selspw << "'s model image to I = "
          << "Scaling spw(s) " << String::toString(rawspwids) << "'s model image to I = "
          << fluxUsed[0] // Loglevel INFO
-         << " Jy for visibility prediction."
+         << " Jy @ "
+         << mfreqs[0][0].getValue()
+         << "Hz for visibility prediction."
          << LogIO::POST;
       writeHistory(os);
     }
