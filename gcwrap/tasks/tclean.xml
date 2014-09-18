@@ -123,6 +123,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string">SIN</value>
     </param>
 
+    <param type="string" name="startmodel" subparam="true">
+      <description>Name of starting model image </description>
+      <value type="string"></value>
+    </param>
+
 <!--============================================== -->
 
     <param type="string" name="outlierfile">
@@ -405,7 +410,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="string"></value>
     </param>
 
-    <param type="string" name="savemodel" subparam="true">
+    <param type="string" name="savemodel">                >
 	    <description>Options to save model at the end (none, virtual, modelcolumn)</description>
 	    <value type="string">"none"</value>
 <!--	    <allowed kind="enum">
@@ -415,13 +420,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    </allowed> -->
     </param>
 
-    <param type="bool" name="recalcres" subparam="true">
-	    <description>(Re)calculate residual image before starting deconvolution</description>
+    <param type="bool" name="recalcres">
+	    <description>(Re)calculate residual image</description>
 	    <value type="bool">True</value>
     </param>
 
-    <param type="bool" name="recalcpsf" subparam="true">
-	    <description>Recalculate PSF before starting deconvolution</description>
+    <param type="bool" name="recalcpsf">
+	    <description>Recalculate PSF</description>
 	    <value type="bool">True</value>
     </param>
 
@@ -436,16 +441,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="bool">False</value>
     </param>
 
-    <param type="string" name="clusterdef" subparam="true">
+<!--    <param type="string" name="clusterdef" subparam="true">
             <description>Name of a file that contains the cluster definition</description>
 	    <value type="string"></value>
     </param>
-
+-->
+<!--
     <param type="string" name="workdir" subparam="true">
             <description>Directory name for per-node products (default=imagename.workdir)</description>
 	    <value type="string"></value>
     </param>
-
+-->
 
 <!--=============================================== -->
 <!--===============  Constraints                        ============== -->
@@ -490,6 +496,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="phasecenter"><value>""</value></default>
 	 <default param="stokes"><value>"I"</value></default>
 	 <default param="projection"><value>"SIN"</value></default>
+	 <default param="startmodel"><value>""</value></default>
        </notequals>
       </when> 
 
@@ -586,6 +593,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="hogbom">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
+       <equals type="string" value="clark ">
+	 <default param="restoringbeam"><value type="stringArray"></value></default>
+       </equals>
        <equals type="string" value="multiscale">
 	 <default param="scales"><value type="intArray"></value></default>
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
@@ -610,23 +620,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="maxpsffraction"><value>0.8</value></default>
 	 <default param="interactive"><value>False</value></default>
 	 <default param="mask"><value>""</value></default>
-	 <default param="savemodel"><value>"none"</value></default>
-	 <default param="recalcres"><value>True</value></default>
-	 <default param="recalcpsf"><value>True</value></default>
+<!--	 <default param="savemodel"><value>"none"</value></default>
+ 	 <default param="recalcres"><value>True</value></default>
+	 <default param="recalcpsf"><value>True</value></default>  -->
        </notequals>
 <!--       <equals type="int" value="0">
 	 <default param="recalcpsf"><value>True</value></default>
        </equals> -->
      </when>
 
+<!--
      <when param="parallel">
        <equals type="bool" value="False">
        </equals>
        <equals type="bool" value="True">
-	 <default param="clusterdef"><value>""</value></default>
-	 <default param="workdir"><value>""</value></default>
+ 	 <default param="clusterdef"><value>""</value></default> 
+	 <default param="workdir"><value>""</value></default> 
        </equals>
-     </when>
+     </when>  
+-->
 
    </constraints>
 

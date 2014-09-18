@@ -17,7 +17,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
      #restoringbeam='30.0arcsec'
 
      # Interaction ON or OFF
-     interactive=True
+     interactive=False
      #mask='ttt.mask'
      mask=''
      #mask = 'circle[[50pix,50pix],10pix]'
@@ -709,8 +709,13 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
         with open(clusterdef, 'w') as f:
             f.write(defstr)
         f.close()
-     else:
-        clusterdef=""
+
+        ### Open/init a cluster.
+        #from simple_cluster import simple_cluster
+        #sc = simple_cluster()  
+        #sc.init_cluster("cfgfile.txt", "mycluster") 
+        if not clustermanager.isClusterRunning():
+             clustermanager.init_cluster("cfgfile.txt", "mycluster") 
 
      ### Check input parameters, and parse outlier files.
      #if paramList.checkParameters() == False:
@@ -718,7 +723,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 
      #paramList.printParameters()
 
-     return [ paramList , clusterdef, parallelmajor, parallelminor, parallelcube ]
+     return [ paramList , parallelmajor, parallelminor, parallelcube ]
 
 #####################################################
 
@@ -726,19 +731,19 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
 #######################################
 ###    Function to run the Imaging.
 #######################################
-def doClean( params = [None,"",False,False,False] , doplot=True ):
+def doClean( params = [None,False,False,False] , doplot=True ):
 
     os.system('rm -rf mytest*')
 
-    pmajor = params[2]
-    pcube = params[4]
+    pmajor = params[1]
+    pcube = params[3]
 
     if pmajor==False and pcube==False:
          imager = PySynthesisImager(params[0])
     elif pmajor==True:
-         imager = PyParallelContSynthesisImager(params[0],params[1])
+         imager = PyParallelContSynthesisImager(params[0])
     elif pcube==True:
-         imager = PyParallelCubeSynthesisImager(params[0],params[1])
+         imager = PyParallelCubeSynthesisImager(params[0])
     else:
          print 'Invalid parallel combination in doClean.'
          return
@@ -766,19 +771,19 @@ def doClean( params = [None,"",False,False,False] , doplot=True ):
 ########################################
 #  Run only Major Cycle
 ########################################
-def doMajor( params = [None,"",False,False,False] , doplot=True , tomake='both'):
+def doMajor( params = [None,False,False,False] , doplot=True , tomake='both'):
 
     os.system('rm -rf mytest*')
 
-    pmajor=params[2]
-    pcube = params[4]
+    pmajor=params[1]
+    pcube = params[3]
 
     if pmajor==False and pcube==False:
          imager = PySynthesisImager(params[0])
     elif pmajor==True:
-         imager = PyParallelContSynthesisImager(params[0],params[1])
+         imager = PyParallelContSynthesisImager(params[0])
     elif pcube==True:
-         imager = PyParallelCubeSynthesisImager(params[0],params[1])
+         imager = PyParallelCubeSynthesisImager(params[0])
     else:
          print 'Invalid parallel combination in doClean.'
          return
@@ -800,16 +805,16 @@ def doMajor( params = [None,"",False,False,False] , doplot=True , tomake='both')
 ########################################
 ###   Run only the minor cycle....
 ########################################
-def doMinor( params = [None,"",False,False,False] , doplot=True ):
+def doMinor( params = [None,False,False,False] , doplot=True ):
 
 ##    os.system('rm -rf mytest*')
 
-    pminor=params[3]
+    pminor=params[2]
 
     if pminor==False:
          imager = PySynthesisImager(params[0]) 
     else:
-         imager = PyParallelDeconvolver(params[0],params[1])
+         imager = PyParallelDeconvolver(params[0])
 
     ### Set up Deconvolvers and IterControl
     imager.initializeDeconvolvers()
@@ -837,18 +842,18 @@ def doMinor( params = [None,"",False,False,False] , doplot=True ):
 #   Restore model image, Inputs : model, residual, psf.
 #
 ########################################
-def doRestore( params = [None,"",False,False,False] ):
+def doRestore( params = [None,False,False,False] ):
 
-    pminor=params[3]
+    pminor=params[2]
     imager = PySynthesisImager(params[0]) 
     imager.initializeDeconvolvers()
     imager.restoreImages()
     imager.deleteTools()
 
 ########################################
-def doSetjy( params = [None,"",False,False,False] ):
+def doSetjy( params = [None,False,False,False] ):
 
-    pminor=params[3]
+    pminor=params[2]
     imager = PySynthesisImager(params[0]) 
     imager.initializeDeconvolvers()
 
@@ -961,7 +966,6 @@ def checkDataPartitioningCode():
 
      params = getparams( testnum=2 ,parallelmajor=True )
      paramList = params[0]
-     clusterdeffile = params[1]
 
      selpars = paramList.getSelPars()
      impars = paramList.getImagePars()
@@ -975,7 +979,7 @@ def checkDataPartitioningCode():
 
      synu.done()
 
-#     ppar = PyParallelImagerHelper(clusterdef=clusterdeffile)
+#     ppar = PyParallelImagerHelper()
 #
 #     print 'Selpars : ', selpars
 #     newselpars = ppar.partitionCubeDataSelection( selpars )

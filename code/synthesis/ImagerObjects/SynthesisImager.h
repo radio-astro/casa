@@ -207,14 +207,15 @@ protected:
 					 uInt ntaylorterms=1,
 					 Quantity distance=Quantity(0.0, "m"),
 					 uInt facets=1,
-					 Bool useweightimage=False);
+					 Bool useweightimage=False,
+					 String startmodel="");
   
   // Choose between different types of Mappers (single term, multiterm, imagemosaic, faceted)
   CountedPtr<SIMapper> createSIMapper(String mappertype,  
 					  CountedPtr<SIImageStore> imagestore, //// make this inside !!!!!
 				      CountedPtr<FTMachine> ftmachine,
 				      CountedPtr<FTMachine> iftmachine,
-					  uInt ntaylorterms=1);
+				      uInt ntaylorterms=1);
 
   Block<CountedPtr<SIImageStore> > createFacetImageStoreList(
 							     CountedPtr<SIImageStore> imagestore,
@@ -267,7 +268,8 @@ protected:
 			  Int facets=1, 
 			  const Bool overwrite=False,
 			  String mappertype=String("default"),
-			  uInt ntaylorterms=1);
+			  uInt ntaylorterms=1,
+			  String startmodel="");
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;

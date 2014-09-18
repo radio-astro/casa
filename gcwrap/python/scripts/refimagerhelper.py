@@ -6,7 +6,7 @@ import string
 import time
 from taskinit import *
 import copy
-from simple_cluster import simple_cluster
+#from simple_cluster import simple_cluster
 
 '''
 A set of helper functions for the tasks  tclean, xxxx
@@ -246,7 +246,7 @@ class PySynthesisImager:
 
 #############################################
     def predictModel(self):
-        self.SItool.predictcalmodel();
+        self.SItool.predictmodel();
         
 #############################################
 ## Overloaded for parallel runs
@@ -342,11 +342,11 @@ class PySynthesisImager:
 #############################################
 class PyParallelContSynthesisImager(PySynthesisImager):
 
-    def __init__(self,params=None,clusterdef=''):
+    def __init__(self,params=None):
 
          PySynthesisImager.__init__(self,params)
 
-         self.PH = PyParallelImagerHelper( clusterdef )
+         self.PH = PyParallelImagerHelper()
          self.NN = self.PH.NN
          self.allselpars = self.PH.partitionContDataSelection(self.allselpars)
 
@@ -367,7 +367,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
-                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+                    nimpars[str(fld)]['imagename'] = self.PH.getpath(node) + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
+###                    nimpars[str(fld)]['imagename'] = self.allnormpars[str(fld)]['workdir'] + '/' + nimpars[str(fld)]['imagename']+'.n'+str(node)
 ###                    nimpars[str(fld)]['imagename'] = nimpars[str(fld)]['imagename']+'.n'+str(node)
                     ngridpars[str(fld)]['cfcache'] = ngridpars[str(fld)]['cfcache']+'.n'+str(node)
 
@@ -388,19 +389,17 @@ class PyParallelContSynthesisImager(PySynthesisImager):
     def initializeNormalizers(self):
         for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisnormalizer())
-            #normpars = {'imagename':self.allimpars[str(immod)]['imagename']}
-            #normpars['mtype'] = self.allgridpars[str(immod)]['mtype']
-            #normpars['weightlimit'] = self.allgridpars[str(immod)]['weightlimit']
-            #normpars['ntaylorterms'] = self.allimpars[str(immod)]['ntaylorterms']
-            #normpars['facets'] = self.allgridpars[str(immod)]['facets']
             normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
                 if not shutil.os.path.exists(normpars['workdir']):
                     shutil.os.system('mkdir '+normpars['workdir'])
                 for node in range(0,self.NN):
-                    partnames.append( normpars['workdir'] + '/' + self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
-##                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
+                    onename = self.allimpars[str(immod)]['imagename']+'.n'+str(node)
+                    partnames.append( self.PH.getpath(node) + '/' + onename  )
+##                    partnames.append( normpars['workdir'] + '/' + onename  )
+##                    partnames.append( onename  )
+                    self.PH.deletepartimages( self.PH.getpath(node), onename ) # To ensure restarts work properly.
                 normpars['partimagenames'] = partnames
             self.PStools[immod].setupnormalizer(normpars=normpars)
 
@@ -435,7 +434,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
     def predictModel(self):
         joblist=[]
         for node in range(0,self.PH.NN):
-             joblist.append( self.PH.runcmd("toolsi.predictcalmodel()",node) )
+             joblist.append( self.PH.runcmd("toolsi.predictmodel()",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
@@ -446,7 +445,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
 #############################################
 class PyParallelCubeSynthesisImager():
 
-    def __init__(self,params=None,clusterdef=''):
+    def __init__(self,params=None):
 
         self.params=params
 
@@ -458,7 +457,7 @@ class PyParallelCubeSynthesisImager():
         self.decpars = params.getDecPars()
         self.iterpars = params.getIterPars()
         
-        self.PH = PyParallelImagerHelper( clusterdef )
+        self.PH = PyParallelImagerHelper()
         self.NN = self.PH.NN
         ## Partition both data and image coords the same way.
         self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
@@ -526,7 +525,7 @@ class PyParallelCubeSynthesisImager():
     def predictModel(self):
         joblist=[]
         for node in range(0,self.NN):
-            joblist.append( self.PH.runcmd("imager.predictcalmodel()", node) )
+            joblist.append( self.PH.runcmd("imager.predictmodel()", node) )
         self.PH.checkJobs( joblist )
 
     def restoreImages(self):
@@ -553,11 +552,11 @@ class PyParallelCubeSynthesisImager():
 
 class PyParallelDeconvolver(PySynthesisImager):
 
-    def __init__(self,params,clusterdef=''):
+    def __init__(self,params):
 
         PySynthesisImager.__init__(self,params)
 
-        self.PH = PyParallelImagerHelper( clusterdef )
+        self.PH = PyParallelImagerHelper()
         self.NN = self.PH.NN
         self.NF = len( allimpars.keys() )
         if self.NF != self.NN:
@@ -627,19 +626,15 @@ class PyParallelDeconvolver(PySynthesisImager):
 #############################################
 class PyParallelImagerHelper():
 
-    def __init__(self,clusterdef=''):
+    def __init__(self):
 
         ############### Cluster Info
-         self.clusterdef=clusterdef
          self.CL=None
          self.sc=None
 
          # Initialize cluster, and partitioning.
         ############### Number of nodes to parallelize on
-         if len(self.clusterdef) != 0:
-              self.NN = self.setupCluster()
-         else:
-              self.NN = 1
+         self.NN = self.setupCluster()
 
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
@@ -677,12 +672,14 @@ class PyParallelImagerHelper():
 #############################################
     def setupCluster(self):
         # Initialize cluster
-        if((self.clusterdef != '') and os.path.exists(self.clusterdef)):
-            self.sc=simple_cluster()
-            if(self.sc.get_status()==None):
-                self.sc.init_cluster(self.clusterdef, 'cluster_project')
+#        if((self.clusterdef != '') and os.path.exists(self.clusterdef)):
+#            self.sc=simple_cluster()
+#            if(self.sc.get_status()==None):
+#                self.sc.init_cluster(self.clusterdef, 'cluster_project')
+
+        self.sc=clustermanager.getCluster()
                 
-        self.CL=simple_cluster.getCluster()._cluster
+        self.CL=self.sc._cluster
         numproc=len(self.CL.get_engines())
         numprocperhost=len(self.CL.get_engines())/len(self.CL.get_nodes()) if (len(self.CL.get_nodes()) >0 ) else 1
 
@@ -698,8 +695,8 @@ class PyParallelImagerHelper():
     def takedownCluster(self):
         # Check that all nodes have returned, before stopping the cluster
          self.checkJobs()
-         print 'Stopping cluster'
-         self.sc.stop_cluster()
+         print 'Ending use of cluster, but not closing it. Call clustermanager.stop_cluster() to close it if needed.'
+#         self.sc.stop_cluster()
          self.CL=None
          self.sc=None
 
@@ -741,10 +738,22 @@ class PyParallelImagerHelper():
          self.checkJobs( joblist )
 
 #############################################
-#############################################
     def pullval(self, varname="", node=0):
          return self.CL.pull( varname , node )
 
+#############################################
+    def getpath(self, node=0):
+        enginepath = self.sc.get_engine_store(node)
+        if enginepath==None:
+            return ""
+        else:
+            return enginepath
+#############################################
+    def deletepartimages(self, dirname, imname):
+        namelist = shutil.fnmatch.filter( os.listdir(dirname), imname+".*" )
+        #print "Deleting : ", namelist, ' from ', dirname, ' starting with ', imname
+        for aname in namelist:
+            shutil.rmtree( dirname + "/" + aname )
 ##########################################################################################
 
 
@@ -776,6 +785,7 @@ class ImagerParameters():
                  phasecenter='',
                  stokes='I',
                  projection='SIN',
+                 startmodel='', 
 
                  ## Spectral Parameters
                  mode='mfs', 
@@ -811,7 +821,6 @@ class ImagerParameters():
 
                  outlierfile='',
                  overwrite=True,
-                 startmodel='', 
 
                  weighting='natural', 
                  robust=0.5,
@@ -882,7 +891,7 @@ class ImagerParameters():
         ######### Deconvolution
         self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
                                     'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask,
-                                    'interactive':interactive } }
+                                    'interactive':interactive, 'startmodel':startmodel} }
 
         ######### Iteration control. 
         self.iterpars = { 'niter':niter, 'cycleniter':cycleniter, 'threshold':threshold, 
@@ -957,12 +966,9 @@ class ImagerParameters():
             self.allnormpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
-#            self.iterpars['allntaylorterms'].append( self.allimpars[immod]['ntaylorterms'] )
+
             if len(self.allnormpars[immod]['workdir'])==0:
                 self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
-
-#        for modelid in self.allnormpars.keys():
-
 
         
         ## If there are errors, print a message and exit.

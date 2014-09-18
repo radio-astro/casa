@@ -98,14 +98,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      useScratch_p=False;
      readOnly_p=True;
 
-#ifdef USEVI2VB2
-     mss_p=0;
-     vi_p=0;
-#else
      mss4vi_p.resize(0);
      wvi_p=0;
      rvi_p=0;
-#endif
 
      facetsStore_p=-1;
      unFacettedImStore_p=NULL;
@@ -120,14 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","destructor",WHERE) );
     os << LogIO::DEBUG1 << "SynthesisImager destroyed" << LogIO::POST;
 
-#ifdef USEVI2VB2
-    for (uInt k=0; k < mss_p.nelements(); ++k){
-      delete mss_p[k];
-    }
-#else
     if(rvi_p) delete rvi_p;
     rvi_p=NULL;
-#endif
     //    cerr << "IN DESTR"<< endl;
     //    VisModelData::listModel(mss4vi_p[0]);
   }
@@ -517,7 +506,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	appendToMapperList(impars.imageName,  csys,  impars.shp(),
 			   ftm, iftm,
 			   gridpars.distance, gridpars.facets, impars.overwrite,
-			   gridpars.mType, impars.nTaylorTerms);
+			   gridpars.mType, impars.nTaylorTerms, impars.startModel);
 	imageDefined_p=True;
       }
     catch(AipsError &x)
@@ -623,7 +612,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "----------------------------------------------------------- Run ";
     if (lastcycle) os << "(Last) " ;
     os << "Major Cycle -------------------------------------" << LogIO::POST;
-    
+
     try
       {    
 	runMajorCycle(False, lastcycle);
@@ -670,27 +659,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void SynthesisImager::predictModel(){
     LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
     
-#ifdef USEVI2VB2
-    {
-      vi_p->originChunks();
-      vi_p->origin();
-      vi::VisBuffer2* vb=vi_p->getVisBuffer();
-      itsMappers.initializeDegrid(*vb);
-      for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
-	{
-	  
-	  for (vi_p->origin(); vi_p->more();vi_p->next())
-	    {
-	      
-	      vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-	      itsMappers.degrid(*vb, !useScratch_p);
-	      if(vi_p->isWritable() && useScratch_p)
-		vi_p->writeVisModel(vb->visCubeModel());
-	    }
-	}
-      itsMappers.finalizeDegrid(*vb);
-    }
-#else
     {
       VisBufferAutoPtr vb(rvi_p);
       rvi_p->originChunks();
@@ -712,7 +680,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       itsMappers.finalizeDegrid(*vb);
     }
-#endif
     
   }// end of predictModel
 
@@ -880,7 +847,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							  uInt ntaylorterms,
 							  Quantity distance,
 							  uInt facets,
-							  Bool useweightimage)
+							  Bool useweightimage,
+							  String startmodel)
   {
     LogIO os( LogOrigin("SynthesisImager","createIMStore",WHERE) );
 
@@ -905,11 +873,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	
 	// Fill in miscellaneous information needed by FITS
-#ifdef USEVI2VB2
-	ROMSColumns msc(*mss_p[0]);
-#else
 	ROMSColumns msc(mss4vi_p[0]);
-#endif
 	Record info;
 	String objectName=msc.field().name()(msc.fieldId()(0));
 	String telescop=msc.observation().telescopeName()(0);
@@ -941,6 +905,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	///////// Send this info into ImageStore.
 	imstor->setDataPolFrame(polRep);
+
+	///////// Set Starting model if it exists.
+	if( startmodel.length()>0 ) 
+	  {
+	    imstor->setModelImage( startmodel );
+	  }
 
       }
     catch(AipsError &x)
@@ -1058,7 +1028,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					   Int facets, 
 					   const Bool overwrite,
 					   String mappertype,
-					   uInt ntaylorterms  )
+					   uInt ntaylorterms,
+					   String startmodel)
     {
       LogIO log_l(LogOrigin("SynthesisImager", "appendToMapperList(ftm)"));
       //---------------------------------------------
@@ -1073,7 +1044,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       // Create the ImageStore object
       CountedPtr<SIImageStore> imstor;
-      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage() );
+      imstor = createIMStore(imagename, csys, imshape, overwrite,mappertype, ntaylorterms, distance,facets, iftm->useWeightImage(), startmodel );
 
       // Create the Mappers
       if( facets<2 ) // One facet. Just add the above imagestore to the mapper list.
@@ -1271,11 +1242,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
       }
 
-#ifdef USEVI2VB2
-    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*mss_p[0], aTermOn);
-#else
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(mss4vi_p[0], aTermOn);
-#endif
     CountedPtr<PSTerm> psTerm = new PSTerm();
     CountedPtr<WTerm> wTerm = new WTerm();
     
@@ -1379,15 +1346,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
 
-#ifdef USEVI2VB2
-    if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
-      throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
-    }
-    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), writeAccess);
-    if(fselections_p.size() !=0)
-      vi_p->setFrequencySelection (fselections_p);
-    //return *vi_p;
-#else
     ////////////Temporary revert to vi/vb
     Block<Int> sort(0);
     Block<MeasurementSet> msblock(mss4vi_p.nelements());
@@ -1416,7 +1374,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     			  blockStep_p, blockSpw_p);
     rvi_p->useImagingWeight(VisImagingWeight("natural"));
     ////////////////////end of revert vi/vb
-#endif
   }// end of createVisSet
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1438,30 +1395,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMappers.checkOverlappingModels("blank");
 
-#ifdef USEVI2VB2
-    {
-    	vi_p->originChunks();
-    	vi_p->origin();
-    	vi::VisBuffer2* vb=vi_p->getVisBuffer();
-    	if(!dopsf) itsMappers.initializeDegrid(*vb);
-    	itsMappers.initializeGrid(*vb,dopsf);
-    	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
-    	{
-    		for (vi_p->origin(); vi_p->more();vi_p->next())
-    		{
-    			if(!dopsf){
-    				vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
-    				itsMappers.degrid(*vb, savevirtualmodel );
-    				if( savemodelcolumn && vi_p->isWritable())
-    					vi_p->writeVisModel(vb->visCubeModel());
-    			}
-    			itsMappers.grid(*vb, dopsf, datacol_p);
-    		}
-    	}
-    	if(!dopsf) itsMappers.finalizeDegrid(*vb);
-    	itsMappers.finalizeGrid(*vb, dopsf);
-    }
-#else
     {
     	VisBufferAutoPtr vb(rvi_p);
     	rvi_p->originChunks();
@@ -1497,7 +1430,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	itsMappers.finalizeGrid(*vb, dopsf);
 
     }
-#endif
 
     itsMappers.checkOverlappingModels("restore");
 

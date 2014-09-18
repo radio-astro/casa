@@ -52,6 +52,7 @@
 #include <synthesis/ImagerObjects/SIImageStore.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
+#include <images/Images/ImageRegrid.h>
 
 
 #include <sys/types.h>
@@ -695,26 +696,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );
 
-    Directory immodel( modelname+String(".model") );
+    Directory immodel( modelname +String(".model") );
     if( !immodel.exists() ) 
       {
 	os << "Starting model image does not exist. No initial prediction will be done" << LogIO::POST;
 	return;
       }
 
-    CountedPtr<PagedImage<Float> > newmodel = new PagedImage<Float>( modelname+String(".model") );
+    CountedPtr<PagedImage<Float> > newmodel = new PagedImage<Float>( modelname +String(".model") );
     // Check shapes, coordsys with those of other images.  If different, try to re-grid here.
 
-    if( newmodel->shape() != model()->shape() )
+    if( (newmodel->shape() != model()->shape()) ||  (! itsCoordSys.near(newmodel->coordinates() )) )
       {
-	// For now, throw an exception.
-	throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
-      }
+	os << "Regridding input model to target csys" << LogIO::POST;
+	regridToModelImage( *newmodel );
 
-    //os << "Setting " << modelname << " as model " << LogIO::POST;
-    // Then, add its contents to itsModel.
-    //itsModel->put( itsModel->get() + model->get() );
-    itsModel->put( newmodel->get() );
+	// For now, throw an exception.
+	//throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
+      }
+    else
+      {
+	os << "Setting " << modelname << " as model " << LogIO::POST;
+	// Then, add its contents to itsModel.
+	//itsModel->put( itsModel->get() + model->get() );
+	itsModel->put( newmodel->get() );
+      }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1071,7 +1077,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Normalize by the sumwt, per plane. 
     divideImageByWeightVal( *psf() );
 
-    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
+    //    cout << "In dividePSFByWeight : itsUseWeight : " << itsUseWeight << endl;
     if( itsUseWeight ) 
       { 
 	divideImageByWeightVal( *weight() ); 
@@ -1980,6 +1986,45 @@ Float SIImageStore::getPeakResidualWithinMask()
 
  
   }
+
+
+void SIImageStore::regridToModelImage( ImageInterface<Float> &inputimage )
+  {
+    try 
+      {
+
+    //output coords
+	IPosition outshape = itsImageShape;
+	CoordinateSystem outcsys = itsCoordSys;
+	DirectionCoordinate outDirCsys = outcsys.directionCoordinate();
+	SpectralCoordinate outSpecCsys = outcsys.spectralCoordinate();
+     
+	// do regrid   
+	IPosition axes(3,0, 1, 2);
+	IPosition inshape = inputimage.shape();
+	CoordinateSystem incsys = inputimage.coordinates(); 
+	DirectionCoordinate inDirCsys = incsys.directionCoordinate();
+	SpectralCoordinate inSpecCsys = incsys.spectralCoordinate();
+
+	Vector<Int> dirAxes = CoordinateUtil::findDirectionAxes(incsys);
+	axes(0) = dirAxes(0); 
+	axes(1) = dirAxes(1);
+	axes(2) = CoordinateUtil::findSpectralAxis(incsys);
+	try {
+	  ImageRegrid<Float> imregrid;
+	  imregrid.regrid( *(model()), Interpolate2D::LINEAR, axes, inputimage ); 
+	} catch (AipsError &x) {
+	  throw(AipsError("ImageRegrid error : "+ x.getMesg()));
+	}
+	
+      }catch(AipsError &x)
+      {
+	throw("Error in regridding input model image to target coordsys : " + x.getMesg());
+      }
+  }
+
+
+
   //
   //---------------------------------------------------------------
   //

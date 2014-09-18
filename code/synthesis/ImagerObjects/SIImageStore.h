@@ -186,6 +186,8 @@ protected:
   Double memoryBeforeLattice();
   IPosition tileShape();
 
+  void regridToModelImage( ImageInterface<Float> &inputimage );
+
   Matrix<Float> getSumWt(ImageInterface<Float>& target);
   void setSumWt(ImageInterface<Float>& target, Matrix<Float>& sumwt);
   void setUseWeightImage(ImageInterface<Float>& target, Bool useweightimage);

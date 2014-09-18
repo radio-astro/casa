@@ -37,6 +37,7 @@ def tclean(
     phasecenter='J2000 19:59:28.500 +40.44.01.50',
     stokes='I',
     projection='SIN',
+    startmodel='',
 
     outlierfile='',
     overwrite=True,
@@ -99,9 +100,9 @@ def tclean(
     recalcpsf=True,
 
     ####### State parameters
-    parallel=False,
-    clusterdef='',
-    workdir=''):
+    parallel=False):
+#    parallel=False,
+#    workdir=''):
 
     #####################################################
     #### Sanity checks and controls
@@ -189,6 +190,7 @@ def tclean(
         phasecenter=phasecenter,
         stokes=stokes,
         projection=projection,
+        startmodel=startmodel,
 
         ### Spectral Image Coords
         mode=specmode,
@@ -223,7 +225,6 @@ def tclean(
 
         outlierfile=outlierfile,
         overwrite=overwrite,
-        # startmodel=startmodel
 
         weighting=weighting,
         robust=robust,
@@ -249,7 +250,7 @@ def tclean(
 
         usescratch=usescratch,
         readonly=readonly,
-        workdir=workdir
+#        workdir=workdir
         )
     
     ## Do some type-checking, parse outlier files, and modify image name if needed.
@@ -267,9 +268,9 @@ def tclean(
     if parallel==False and pcube==False:
          imager = PySynthesisImager(params=paramList)
     elif parallel==True:
-         imager = PyParallelContSynthesisImager(params=paramList,clusterdef=clusterdef)
+         imager = PyParallelContSynthesisImager(params=paramList)
     elif pcube==True:
-         imager = PyParallelCubeSynthesisImager(params=paramList,clusterdef=clusterdef)
+         imager = PyParallelCubeSynthesisImager(params=paramList)
     else:
          print 'Invalid parallel combination in doClean.'
          return False
