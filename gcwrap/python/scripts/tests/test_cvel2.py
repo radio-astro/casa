@@ -1301,7 +1301,6 @@ class cvel2_test(test_base):
         ret = verify_ms(outfile, 1, 150, 0, b)
         self.assertTrue(ret[0],ret[1])
 
-    @unittest.skip('Skip until SOURCE is fixed in CAS-6778.')
     def test53(self):
         '''cvel2 53: cvel2 of a field with ephemeris attached and outframe SOURCE'''
         self.setUp_vis_g()
