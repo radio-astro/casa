@@ -508,7 +508,6 @@ bool msmetadata::done() {
 	_FUNC2(
 		_msmd.reset(0);
 		_ms.reset(0);
-		_log.reset(0);
 		return true;
 	)
 	return false;
