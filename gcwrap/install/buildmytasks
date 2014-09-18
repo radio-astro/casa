@@ -117,10 +117,13 @@ verbose "Casa architecture: $CASAARCH"
 
 SAXONJAR="$CASAARCH/lib/saxon8.jar"
 if [[ ! -e ${SAXONJAR} ]]; then
-   SAXONJAR=${CASAROOT}/java/saxon8.jar
+   SAXONJAR=${CASAROOT}/Frameworks/saxon8.jar
    if [[ ! -e ${SAXONJAR} ]] ; then
-      SAXONJAR=${CASAROOT}/lib/saxon8.jar
-   fi
+       SAXONJAR=${CASAROOT}/java/saxon8.jar
+       if [[ ! -e ${SAXONJAR} ]] ; then
+          SAXONJAR=${CASAROOT}/lib/saxon8.jar
+       fi
+    fi
 fi
 
 [ ! -e "$SAXONJAR" ] && error "can't find the Saxon processor $SAXONJAR!"
