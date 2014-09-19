@@ -1935,7 +1935,7 @@ VisibilityIteratorImpl2::getSpectralWindowChannels (Int msId, Int spectralWindow
     Assert (frequencies.size() == widths.size());
 
     // Use the frequencies and widths to fill out a vector of SpectralWindowChannel
-    // objects. This array needs to be in order of increasing frequency.  N.B.: If
+    // objects. (No: This array needs to be in order of increasing frequency.)  N.B.: If
     // frequencies are in random order (i.e., rather than reverse order) then all
     // sorts of things will break elsewhere.
 
@@ -1947,9 +1947,12 @@ VisibilityIteratorImpl2::getSpectralWindowChannels (Int msId, Int spectralWindow
         inOrder = inOrder && (i == 0 || frequencies [i] > frequencies [i - 1]);
     }
 
-    if (! inOrder){
-        sort (result->begin(), result->end());
-    }
+//    Don't try and do this; although it would be nice if the data was always ordered
+//    with increaing frequency, it causes lots of problems to try to transform the data.
+//
+//    if (! inOrder){
+//        sort (result->begin(), result->end());
+//    }
 
     // Sanity check for frequencies that aren't monotonically increasing/decreasing.
 
