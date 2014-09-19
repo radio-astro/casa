@@ -164,7 +164,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # object rather than editing them directly
         self._mod_last_calwt(targetphaseresult.pool[0], False)
         self._mod_last_calwt(targetphaseresult.final[0], False)
-	if phaseupspwmap is not None:
+	if phaseupspwmap:
             self._mod_last_spwmap(targetphaseresult.pool[0], phaseupspwmap)
             self._mod_last_spwmap(targetphaseresult.final[0], phaseupspwmap)
 
@@ -183,7 +183,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
         # CalFroms are immutable, so we must replace them with a new 
         self._mod_last_calwt(calphaseresult.pool[0], False)
         self._mod_last_calwt(calphaseresult.final[0], False)
-	if phaseupspwmap is not None:
+	if phaseupspwmap:
             self._mod_last_spwmap(calphaseresult.pool[0], phaseupspwmap)
             self._mod_last_spwmap(calphaseresult.final[0], phaseupspwmap)
 
@@ -196,7 +196,7 @@ class TimeGaincal(gaincalworker.GaincalWorker):
 
         # Compute the amplitude calibration
         ampresult = self._do_target_ampcal()
-	if phaseupspwmap is not None:
+	if phaseupspwmap:
             self._mod_last_spwmap(ampresult.pool[0], phaseupspwmap)
             self._mod_last_spwmap(ampresult.final[0], phaseupspwmap)
 
