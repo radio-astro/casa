@@ -934,9 +934,13 @@ class clean_multims_test(unittest.TestCase):
         #refimfreq=1.49e+09
         #refimmax=1.198562
         # expected reference values for r19307+  (change to defineimage bandwidth and reffreq)
-        refimbandw=1.019991294e+09
-        refimfreq=1.489984788e+09
+        #refimbandw=1.019991294e+09
+        #refimfreq=1.489984788e+09
         refimmax=1.19856226444
+        # Change due to a bug fix r31110 
+        # new ref bandw, freq values based on independent calculation using the toolkit
+        refimbandw=9.99991502948e+08 
+        refimfreq=1.489984782176e+09
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
@@ -959,8 +963,12 @@ class clean_multims_test(unittest.TestCase):
         #refimfreq=1.45e+09
         #refimmax=1.25990
         # expected reference values for r19307+  (change to defineimage bandwidth and reffreq)
-        refimbandw=9.59991881e+08
-        refimfreq=1.459985082e+09
+        #refimbandw=9.59991881e+08
+        #refimfreq=1.459985082e+09
+        # Change due to a bug fix r31110 
+        # new ref bandw, freq values based on independent calculation using the toolkit
+        refimbandw=9.39992089867e+08
+        refimfreq=1.459985075636e+09
         refimmax=1.2438338995
 
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
