@@ -11,8 +11,8 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 		default: none; example: imagename='3C273XC1.image'
 	whichrep -- If fits image has multiple coordinate reps, choose one.
 		default: 0 means first; example: whichrep=1
-	whichhdu -- If fits file contains multiple images, choose this one
-		default=0 means first; example: whichhdu=1
+	whichhdu -- If its file contains multiple images, choose one (0 = first HDU, -1 = first valid image)
+		default=-1 ; example: whichhdu=1
 	zeroblanks -- Set blanked pixels to zero (not NaN)
 		default=True; example: zeroblanks=True
 	overwrite -- Overwrite pre-existing imagename
