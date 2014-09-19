@@ -146,8 +146,7 @@ Bool ImageFITSConverter::FITSToImage(
 	}
 	else{
 	       for (Int i=0; i<whichHDU; i++) {
-		 infile.skip_hdu();
-		 if (infile.err()) {
+		 if (infile.skip_hdu() || infile.err()) {
 		   error = "Error advancing to image in file: " + fitsName;
 		   return False;
 		 }
@@ -266,23 +265,25 @@ Bool ImageFITSConverter::FITSToImage(
 	      success = False;
 	    }
 	  }
-	  if(whichHDU>=0){
+	  if(whichHDU>=0 || success){
 	    break;
 	  }
 	  else if(!success){
 	    // skip to next useful HDU 
 	    while(theHDU<numHDU){
 	      os << LogIO::WARN << "This HDU (" << theHDU << ") did not contain a legible image." << LogIO::POST;  
-	      infile.skip_hdu();
 	      theHDU++;
-	      if (!(infile.err() ||
-		    infile.rectype() != FITS::HDURecord ||
-		    (infile.hdutype() != FITS::PrimaryArrayHDU &&
-		     infile.hdutype() != FITS::ImageExtensionHDU))) {
-		os << LogIO::WARN << "Next candidate image HDU is #" << theHDU 
-		   << " (use the whichhdu parameter to address HDUs directly)" << LogIO::POST;  
-		break;
+	      while (theHDU<numHDU && (infile.err() ||
+				       infile.rectype() != FITS::HDURecord ||
+				       (infile.hdutype() != FITS::PrimaryArrayHDU &&
+					infile.hdutype() != FITS::ImageExtensionHDU))
+		     ) {
+		infile.skip_hdu();
+		theHDU++;
 	      }
+	      os << LogIO::WARN << "Next candidate image HDU is #" << theHDU 
+		 << "\n (note: use the whichhdu parameter to address HDUs directly)" << LogIO::POST;  
+	      break;
 	    }
 	  }
 	}
