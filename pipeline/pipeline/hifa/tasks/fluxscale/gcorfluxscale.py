@@ -5,6 +5,7 @@ import os.path
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.callibrary as callibrary
 
 from pipeline.hif.tasks import importdata
 from pipeline.hif.tasks import gaincal
@@ -347,7 +348,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 	# Merge
 	if merge:
 	    # Adjust the spwmap
-	    if phaseupspwmap is not None: 
+	    if phaseupspwmap: 
                 self._mod_last_spwmap(result.pool[0], phaseupspwmap)
 	        self._mod_last_spwmap(result.final[0], phaseupspwmap)
 	    # Merge result to the local context
