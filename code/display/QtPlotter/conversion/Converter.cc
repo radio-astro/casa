@@ -93,7 +93,7 @@ namespace casa {
 			unitType = WAVELENGTH_UNIT;
 		} else if ( VELOCITY_UNITS.contains( unit )) {
 			unitType = VELOCITY_UNIT;
-		} else if ( unit.isEmpty() ) {
+		} else if ( unit.isEmpty() || unit == "pixel" ) {
 			unitType = CHANNEL_UNIT;
 		}
 		return unitType;
