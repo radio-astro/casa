@@ -61,8 +61,8 @@ bool ActionTracker::doActionSpecific(PlotMSApp* plotms){
 		canv = plots[i]->canvases();
 		for(unsigned int j = 0; j < canv.size(); j++) {
 			if(canv[j].null()) continue;
-			canv[i]->standardMouseTools()->turnTracker(hover | display);
-			canv[i]->standardMouseTools()->turnTrackerDrawText(hover);
+			canv[j]->standardMouseTools()->turnTracker(hover | display);
+			canv[j]->standardMouseTools()->turnTrackerDrawText(hover);
 		}
 	}
 
