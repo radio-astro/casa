@@ -682,25 +682,26 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
     mapped to other probably  wider windows.
     '''
 
-    if phaseup_spwmap is None or not phaseup_spwmap:
+    if not phaseup_spwmap:
         score = 1.0
-        longmsg = 'No mapped science spws for %s ' % ms.basename
-        shortmsg = 'No mapped science spws'
+        longmsg = 'No mapped narrow science spws for %s ' % ms.basename
+        shortmsg = 'No mapped narrow science spws'
     else:
         # Expected fields
-        scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
+        #scifields = set ([field for field in ms.get_fields (reqfields, intent=reqintents)])
 
         # Expected science windows
         scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
+	nexpected = len (scispws)
 
         # Loop over the expected fields
-        nexpected = 0
-        for scifield in scifields:
-	    validspws = set([spw.id for spw in scifield.valid_spws])
-	    nexpected = nexpected + len(validspws.intersection(scispws))
+        #nexpected = 0
+        #for scifield in scifields:
+	    #validspws = set([spw.id for spw in scifield.valid_spws])
+	    #nexpected = nexpected + len(validspws.intersection(scispws))
 
         nunmapped = 0
-	for spwid in validspws:
+	for spwid in scispws:
 	    if spwid == phaseup_spwmap[spwid]: 
 	        nunmapped = nunmapped + 1
 	
@@ -710,8 +711,8 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
             shortmsg = 'No mapped science spws'
 	else:
 	    score =  float(nunmapped) / float(nexpected) 
-            longmsg = 'There are %d mapped science spws for %s ' % (nexpected - nunmapped, ms.basename)
-            shortmsg = 'There are mapped science spws'
+            longmsg = 'There are %d mapped narrow science spws for %s ' % (nexpected - nunmapped, ms.basename)
+            shortmsg = 'There are mapped narrow science spws'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
