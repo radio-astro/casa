@@ -661,6 +661,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void SynthesisImager::predictModel(){
     LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+
+      os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
     
     {
       VisBufferAutoPtr vb(rvi_p);
@@ -910,6 +912,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	imstor->setDataPolFrame(polRep);
 
 	///////// Set Starting model if it exists.
+	//cout << "In SI, set starting model to : " << startmodel << endl;
 	if( startmodel.length()>0 ) 
 	  {
 	    imstor->setModelImage( startmodel );

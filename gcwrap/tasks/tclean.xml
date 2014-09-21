@@ -366,7 +366,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     <param type="int" name="niter">
-      <description>Maximum number of iterations (0=psf,dirty -1=psf)</description>
+      <description>Maximum number of iterations</description>
       <value type="int">500</value>
     </param>
 

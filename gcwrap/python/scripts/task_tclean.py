@@ -84,7 +84,10 @@ def tclean(
     scales=[],
     ntaylorterms=1,
     restoringbeam=[],
-    
+
+    ##### Action control
+#    action="csclean",
+
     ##### Iteration control
     niter=0, 
     gain=0.1,
@@ -101,8 +104,6 @@ def tclean(
 
     ####### State parameters
     parallel=False):
-#    parallel=False,
-#    workdir=''):
 
     #####################################################
     #### Sanity checks and controls
@@ -295,6 +296,11 @@ def tclean(
         ## Make dirty image
         if recalcres==True:
             imager.runMajorCycle()
+
+        ## In case of no deconvolution iterations....
+        if niter==0 and recalcres==False:
+            if savemodel != "none":
+                imager.predictModel()
         
         ## Do deconvolution and iterations
         if niter>0 :

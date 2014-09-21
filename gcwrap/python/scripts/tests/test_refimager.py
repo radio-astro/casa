@@ -56,9 +56,11 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
           casalog.post("==================================");
 
           msname = 'DataTest/point_twospws.ms'
-          clearcal(msname)  ## Set model column to unity
+          resetmodelcol(msname)  ## Set model column to zero
           delmod(msname)  ## Get rid of OTF model
           delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+
+          print "At start : ", checkmodel(msname)
 
           testList = {
                ## readonly
@@ -68,7 +70,6 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                ## save model column in last major cycle
                2:{'readonly':False,  'usescratch':True, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
                ## save virtual model in last major cycleexit
-
                3:{'readonly':False,  'usescratch':False, 'deconvolver':'hogbom', 'ntaylorterms':1, 'mtype':'default'}, 
                ## Multi-term test : save model column in last major cycle
                4:{'readonly':False,  'usescratch':True, 'deconvolver':'mtmfs', 'ntaylorterms':2, 'mtype':'multiterm'}, 
@@ -97,7 +98,7 @@ def getparams(testnum=1,testid=0, parallelmajor=False,parallelminor=False,parall
                                        threshold=threshold,loopgain=loopgain,\
                                        restoringbeam=restoringbeam,
                                        interactive=interactive,mask=mask)
-
+          print 'Run to check model  :  checkmodel("' + msname + '")'
 
      if(testnum==21):  ## 21 image-field, mfs --- Multiple Stokes planes -- Clark
           casalog.post("==================================");
@@ -1274,8 +1275,38 @@ def vfconv(velorfreqstr, frame, restfstr, veltype):
 
 
 def delmodkeywords(msname=""):
+     delmod(msname)
      tb.open( msname+'/SOURCE', nomodify=False )
      keys = tb.getkeywords()
      for key in keys:
           tb.removekeyword( key )
      tb.close()
+
+def resetmodelcol(msname=""):
+     tb.open( msname, nomodify=False )
+     dat = tb.getcol('MODEL_DATA')
+     dat.fill( complex(0.0,0.0) )
+     tb.putcol('MODEL_DATA', dat)
+     tb.close();
+
+def delmodels(msname=""):
+     resetmodelcol(msname)  ## Set model column to zero
+     delmod(msname)  ## Get rid of OTF model
+     delmodkeywords(msname) ## Get rid of extra OTF model keywords that sometimes persist...
+
+def checkmodel(msname=""):
+     tb.open( msname )
+     hasmodcol = (  (tb.colnames()).count('MODEL_DATA')>0 )
+     modsum=0.0
+     if hasmodcol:
+          dat = tb.getcol('MODEL_DATA')
+          modsum=dat.sum()
+     tb.close()
+     tb.open( msname+'/SOURCE' )
+     keys = tb.getkeywords()
+     if len(keys)>0:
+          hasvirmod=T
+     else:
+          hasvirmod=F
+     tb.close()
+     print msname , ": modelcol=", hasmodcol, " modsum=", modsum, " virmod=", hasvirmod

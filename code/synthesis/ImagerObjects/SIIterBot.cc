@@ -139,7 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//		printOut("FromcleanComplete ", False);
 
-		if ( itsMajorDone==0 && itsIterDone==0 ) return false;
+		//	if ( itsMajorDone==0 && itsIterDone==0 ) return false;
 
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 
