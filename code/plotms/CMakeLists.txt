@@ -269,6 +269,7 @@ INSTALL (FILES
 casa_add_executable( plotms casaplotms apps/casaplotms/casaplotms.cc )
 
 #TESTING
+casa_add_executable( plotms tAveragingChannel test/tAveragingChannel.cc )
 casa_add_executable( plotms tExportPlot test/tExportPlot.cc )
 casa_add_executable( plotms tDataSelection test/tDataSelection.cc )
 casa_add_executable( plotms tSymbol test/tSymbol.cc )

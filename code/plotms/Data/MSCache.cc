@@ -114,7 +114,13 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	ROVisIterator& viter(*rvi_p);
 
 	if (averaging_.channel()){
-		viter.setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
+                // averaging 1 channel is really not averaging any channels
+                if (averaging_.channelValue() == 1.0) {
+		    viter.setChanAveBounds(0.0, chanAveBounds_p);
+                }
+                else {
+		    viter.setChanAveBounds(averaging_.channelValue(),chanAveBounds_p);
+                }
 	}
 	else {
 		viter.setChanAveBounds(-1.0,chanAveBounds_p);
