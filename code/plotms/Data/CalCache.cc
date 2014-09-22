@@ -332,7 +332,7 @@ void CalCache::loadCalChunks(ROCTIter& ci,
 	break;
   */
   case PMS::SPW:
-    spw_(chunk) = cti.thisSpw(); 
+    spw_(chunk) = cti.thisSpw();
     break;
   case PMS::CHANNEL: {
     cti.chan(*chan_[chunk]);
@@ -446,7 +446,12 @@ void CalCache::loadCalChunks(ROCTIter& ci,
     break;
   }
   case PMS::SWP: {
-    *par_[chunk] = cti.fparam()(Slice(0,2,2),Slice(),Slice());
+	  if ( !parsAreComplex()){
+		  *par_[chunk] = cti.fparam()(Slice(0,2,2),Slice(),Slice());
+	  }
+	  else {
+		  throw( AipsError( "SwPower has no meaning for this table"));
+	  }
     break;
   }
   case PMS::TSYS: {
