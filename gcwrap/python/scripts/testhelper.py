@@ -505,3 +505,45 @@ def compareSubTables(input,reference,order=None,excluded_cols=[]):
     del tbreference
     
     return (True,"OK")
+
+def getColShape(table,col,start_row=0,nrow=1,row_inc=1):
+    """ Get the shape of the given column.
+    Keyword arguments:
+        table      --    input table or MS
+        col        --    column to get the shape
+        start_row  --    start row (default 0)
+        nrow       --    number of rows to read (default 1)
+        row_inc    --    increment of rows to read (default 1)
+        
+        Return a list of strings with the shape of each row in the column.
+    
+    """
+
+    col_shape = []
+    try:
+        try:
+            tblocal = tbtool()
+            tblocal.open(table)
+            col_shape = tblocal.getcolshapestring(col,start_row,nrow,row_inc)
+        except:
+            print 'Cannot get shape of col %s from table %s '%(col,table)
+
+    finally:
+        tblocal.close()
+            
+    return col_shape
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

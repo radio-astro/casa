@@ -907,6 +907,43 @@ class test_mms_input(test_base):
         except Exception, instance:
             print 'Expected error: %s'%instance
 
+    @unittest.skip('Skip until CAS-6946 is fixed')
+    def test_split_MMS_weight_corr_sel(self):
+        '''mstransform: Split MMS in parallel. Check WEIGHT shape when selecting correlation'''
+        # Create an MMS in the setup. It creates self.testmms
+        self.createMMS(self.vis, axis='scan', spws='0,1')
+        
+        self.outputms = 'corrRR_LL.mms'
+        mstransform(vis=self.testmms, outputvis=self.outputms, datacolumn='data', correlation='RR,LL',spw='0')
+        
+        self.assertTrue(ParallelTaskHelper.isParallelMS(self.outputms),'Output is not an MMS')
+        
+        mslocal = mstool()
+        mslocal.open(self.outputms)
+        sublist = mslocal.getreferencedtables()
+        self.assertEqual(len(sublist), 2)
+        
+        # Test DD table
+        msmdt = msmdtool()
+        msmdt.open(self.outputms)
+        out_dds = msmdt.datadescids()
+        msmdt.done()
+        
+        ref = [0]
+        for i in out_dds:
+            self.assertEqual(out_dds[i], ref[i])
+
+        # The separation axis should be copied to the output MMS
+        in_sepaxis = ph.axisType(self.testmms)
+        out_sepaxis = ph.axisType(self.outputms)
+        self.assertEqual(in_sepaxis, out_sepaxis, 'AxisTypes from input and output MMS do not match')
+
+        # Check the dimensions of the WEIGHT and SIGMA columns. CAS-6946
+        out_ws = th.getColShape(self.outputms,'WEIGHT')
+        out_ss = th.getColShape(self.outputms,'SIGMA')
+        self.assertEqual(out_ws[0],'[2]','WEIGHT shape is not correct')
+        self.assertEqual(out_ss[0],'[2]','SIGMA shape is not correct')
+
 
 class test_mms_output(test_base):
     '''Tests for outputMMS and transformations'''

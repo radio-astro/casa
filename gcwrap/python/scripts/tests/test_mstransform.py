@@ -411,6 +411,15 @@ class test_Regridms1(test_base):
         listobs(self.outputms)
         listobs(self.outputms, listfile='list.obs')
         self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
+        
+        # Check the shape of WEIGHT and SIGMA
+        inp_ws = th.getColShape(self.vis,'WEIGHT')
+        inp_ss = th.getColShape(self.vis,'SIGMA')
+        out_ws = th.getColShape(self.outputms,'WEIGHT')
+        out_ss = th.getColShape(self.outputms,'SIGMA')
+        self.assertListEqual(inp_ws, out_ws, 'WEIGHT shape differ in input and output')
+        self.assertListEqual(inp_ss, out_ss, 'SIGMA shape differ in input and output')
+
 
     def test_regrid1_2(self):
         '''mstransform: Default regridms with spw selection'''
@@ -845,6 +854,34 @@ class test_Columns(test_base):
         
         self.assertTrue(th.compTables('allcols.ms', self.outputms,['FLAG_CATEGORY','WEIGHT_SPECTRUM'],0.000001,"absolute"))
                 
+    @unittest.skip('Skip until CAS-6946 is fixed')
+    def test_weight_corr_sel(self):
+        '''mstransform: check WEIGHT shape after correlation selection'''
+        self.setUp_4ants()
+        self.outputms = 'colweight1.ms'
+        mstransform(vis=self.vis, outputvis=self.outputms,correlation='RR,LL',spw='1',
+                    datacolumn='data')
+        
+        # Check the dimensions of the WEIGHT and SIGMA columns. CAS-6946
+        out_ws = th.getColShape(self.outputms,'WEIGHT')
+        out_ss = th.getColShape(self.outputms,'SIGMA')
+        self.assertEqual(out_ws[0],'[2]','WEIGHT shape is not correct')
+        self.assertEqual(out_ss[0],'[2]','SIGMA shape is not correct')
+        
+    @unittest.skip('Skip until CAS-6946 is fixed')
+    def test_weight_ws_corr_sel(self):
+        '''mstransform: check WEIGHT shape after correlation selection. WEIGHT_SPECTRUM exists'''
+        self.setUp_4ants()
+        self.outputms = 'colweight2.ms'
+        mstransform(vis=self.vis, outputvis=self.outputms,correlation='RL,LR',spw='2:1~10',
+                    datacolumn='corrected',usewtspectrum=True)
+        
+        # Check the dimensions of the WEIGHT and SIGMA columns. CAS-6946
+        out_ws = th.getColShape(self.outputms,'WEIGHT')
+        out_ss = th.getColShape(self.outputms,'SIGMA')
+        self.assertEqual(out_ws[0],'[2]','WEIGHT shape is not correct')
+        self.assertEqual(out_ss[0],'[2]','SIGMA shape is not correct')
+        
 
 class test_SeparateSPWs(test_base):
     '''Test the nspw parameter to separate spws'''
@@ -1247,6 +1284,14 @@ class test_timeaverage(test_base_compare):
         self.tolerance['WEIGHT'] = 1E-5
 
         self.post_process()   
+        
+        # Check the dimenstions of the WEIGHT and SIGMA columns. CAS-6946
+        inp_ws = th.getColShape(self.vis,'WEIGHT')
+        inp_ss = th.getColShape(self.vis,'SIGMA')
+        out_ws = th.getColShape(self.outvis,'WEIGHT')
+        out_ss = th.getColShape(self.outvis,'SIGMA')
+        self.assertListEqual(inp_ws, out_ws, 'WEIGHT shape differ in input and output')
+        self.assertListEqual(inp_ss, out_ss, 'SIGMA shape differ in input and output')
         
     def test_timeaverage_model_unflagged(self):  
         
@@ -2053,7 +2098,8 @@ class test_radial_velocity_correction(test_base_compare):
                     mode = 'velocity', width = '0.1km/s',restfreq = '354.50547GHz')        
 
         self.generate_tolerance_map()
-        self.post_process()        
+        self.post_process()     
+        
                 
 # Cleanup class
 class Cleanup(test_base):
