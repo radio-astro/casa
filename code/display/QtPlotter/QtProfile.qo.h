@@ -165,7 +165,7 @@ namespace casa {
 		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
 		void processTrackRecord( const String& dataName, const String& positionInfo );
 		virtual MFrequency::Types getReferenceFrame() const;
-
+		QString getBrightnessUnit( std::tr1::shared_ptr<ImageInterface<Float> > img ) const;
 		typedef std::pair<QString, std::tr1::shared_ptr<ImageInterface<float> > > OverplotInterface;
 		//typedef pair<QString,ImageAnalysis*> OverplotAnalysis;
 
@@ -281,6 +281,11 @@ namespace casa {
 					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 					String restFreq="", const String& frame="");
+
+		pair<Vector<float>, Vector<float> > convertIntensity( const Vector<float>& sourceXVals, const Vector<float>& sourceYVals,
+							std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const QString& xUnits,
+							const QString& yUnitsOld, const QString& yUnitsNew );
+
 		/**
 		 * Returns false if first vector value is greater than the last
 		 * vector value; otherwise returns true.

@@ -115,6 +115,25 @@ namespace casa {
 	QtProfile::~QtProfile() {
 	}
 
+	QString QtProfile::getBrightnessUnit( std::tr1::shared_ptr<ImageInterface<Float> > img ) const {
+		QString yUnit("");
+		if ( img ){
+			//Convert 'K' units to Kelvin
+			yUnit = QString(img->units().getName().chars());
+			if ( yUnit.endsWith( "K" )){
+				yUnit.replace("K", ConverterIntensity::KELVIN );
+			}
+			//Images created with immoments seem to have units of the form
+			//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
+			//to have units recognized by the profiler.
+			int periodIndex = yUnit.indexOf( ".");
+			if ( periodIndex > 0 ){
+				yUnit = yUnit.left( periodIndex);
+			}
+		}
+		return yUnit;
+	}
+
 	QtProfile::QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
 		:QMainWindow(parent),
 //pc(0),
@@ -204,10 +223,7 @@ namespace casa {
 		pixelCanvas->setXLabel(lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xBottom );
 		lbl = topAxisCType->currentText();
 		pixelCanvas->setXLabel( lbl, 12, QtCanvas::FONT_NAME, QtPlotSettings::xTop);
-		yUnit = "";
-		if ( img ){
-			yUnit = QString(img->units().getName().chars());
-		}
+		yUnit = getBrightnessUnit( img );
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
 		adjustPlotUnits();
 		yAxisCombo->setCurrentIndex( 0 );
@@ -738,6 +754,7 @@ namespace casa {
 
 	void QtProfile::resetProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name) {
 		image = img;
+
 		try {
 			specFitSettingsWidget->reset( );
 			momentSettingsWidget->reset();
@@ -754,6 +771,15 @@ namespace casa {
 			String message = "Error when re-setting the profiler:\n" + x.getMesg();
 			*itsLog << LogIO::WARN << message << LogIO::POST;
 		}
+
+
+		//YUnits
+		yUnit = getBrightnessUnit( image );
+
+		yUnitPrefix = "";
+		adjustPlotUnits();
+		setPixelCanvasYUnits( yUnitPrefix, yUnit );
+		setDisplayYUnits( yAxisCombo->currentText());
 
 		newOverplots = false;
 		fileName = name;
@@ -796,19 +822,6 @@ namespace casa {
 		updateSpectralReferenceFrame();
 
 
-		//YUnits
-		yUnit = QString(img->units().getName().chars());
-		//Images created with immoments seem to have units of the form
-		//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
-		//to have units recognized by the profiler.
-		int periodIndex = yUnit.indexOf( ".");
-		if ( periodIndex > 0 ){
-			yUnit = yUnit.left( periodIndex);
-		}
-		yUnitPrefix = "";
-		adjustPlotUnits();
-		setPixelCanvasYUnits( yUnitPrefix, yUnit );
-		setDisplayYUnits( yAxisCombo->currentText());
 
 		xpos = "";
 		ypos = "";
@@ -1005,7 +1018,7 @@ namespace casa {
 
 		// get the coo-sys
 		DisplayCoordinateSystem cSys = image->coordinates();
-		yUnit = QString(image->units().getName().chars());
+		yUnit = getBrightnessUnit( image );
 
 		switch (itsPlotType) {
 		case QtProfile::PMEAN:
@@ -1491,7 +1504,6 @@ namespace casa {
 		pixelCanvas->clearCurve();
 		delete over;
 		over = NULL;
-
 	}
 
 
@@ -1599,7 +1611,7 @@ namespace casa {
 
 	void QtProfile::resetYUnits( const QString& units ) {
 		int unitIndex = yAxisCombo->findText( units );
-		if ( unitIndex >= 0 ) {
+		if ( unitIndex >= 0 && yAxisCombo->currentIndex() != unitIndex) {
 			yAxisCombo->setCurrentIndex( unitIndex );
 		}
 	}
@@ -2702,6 +2714,9 @@ namespace casa {
 
 	void QtProfile::setDisplayYUnits( const QString& unitStr ) {
 		//Called with the left axis combo box changes its units.
+		if ( unitStr.length() == 0 ){
+			return;
+		}
 		QString displayUnit = unitStr;
 		//Right now optical units are not being supported as far as changing
 		//them on the y-axis.
@@ -2727,7 +2742,7 @@ namespace casa {
 			yAxisCombo->setCurrentIndex( 0 );
 		}
 		specFitSettingsWidget->setImageYUnits( yUnitPrefix + yUnit );
-		pixelCanvas->setDisplayYUnits( "" );
+		//pixelCanvas->setDisplayYUnits( yAxisCombo->currentText() );
 		pixelCanvas->setImageYUnits( yUnitPrefix + yUnit );
 	}
 
@@ -2873,12 +2888,23 @@ namespace casa {
 			Vector<Float>& yVals, const QString& ky ){
 		Double beamAngle = 0;
 		Double beamArea = 0;
-		//std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = ana->getImage();
 		getBeamInfo( imagePtr, beamAngle, beamArea );
 		Bool validSpectrum;
 		SpectralCoordinate coord = getSpectralAxis( imagePtr, validSpectrum );
 		if ( validSpectrum ){
-			addCanvasMainCurve( xVals, yVals, ky, beamAngle, beamArea, coord );
+			//If the overgplot image units are not what the main image is using, convert.
+			QString overplotUnits = getBrightnessUnit( imagePtr );
+			if ( overplotUnits != yUnit ){
+				pair<Vector<float>, Vector<float> > values = convertIntensity( xVals, yVals,
+									imagePtr, xaxisUnit.c_str(), overplotUnits, /*yUnitPrefix +*/ yUnit );
+
+
+				addCanvasMainCurve( xVals, values.second, ky, beamAngle, beamArea, coord );
+			}
+
+			else {
+				addCanvasMainCurve( xVals, yVals, ky, beamAngle, beamArea, coord );
+			}
 		}
 	}
 
@@ -3393,19 +3419,20 @@ namespace casa {
 		}
 	}
 
-	pair<double,double> QtProfile::getMaximumTemperature() {
+	pair<Vector<float>, Vector<float> > QtProfile::convertIntensity( const Vector<float>& sourceXVals, const Vector<float>& sourceYVals,
+			std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const QString& xUnits,
+			const QString& yUnitsOld, const QString& yUnitsNew ){
 		//Convert xValues to Hz
-		int zxCount = z_xval.size();
+		int zxCount = sourceXVals.size();
 		Vector<float> xValues(zxCount);
 		for ( int i = 0; i < zxCount; i++ ) {
-			xValues[i] = z_xval[i];
+			xValues[i] = sourceXVals[i];
 		}
 		const QString HERTZ = "Hz";
-		QString xAxisUnit(xaxisUnit.c_str());
 		Bool valid;
-		SpectralCoordinate coord = getSpectralAxis( image, valid );
-		if ( xAxisUnit != HERTZ ) {
-			Converter* converter = Converter::getConverter( xAxisUnit, HERTZ );
+		SpectralCoordinate coord = getSpectralAxis( imagePtr, valid );
+		if ( xUnits != HERTZ ) {
+			Converter* converter = Converter::getConverter( xUnits, HERTZ );
 			for ( int i = 0; i < static_cast<int>(xValues.size()); i++ ) {
 				xValues[i] = converter->convert( xValues[i], coord );
 			}
@@ -3413,26 +3440,33 @@ namespace casa {
 		}
 
 		//Convert the y values
-
 		Vector<float> yValues(zxCount);
 		for ( int i = 0; i < zxCount; i++ ){
-			yValues[i] = z_yval[i];
+			yValues[i] = sourceYVals[i];
 		}
 		Double beamAngle;
 		Double beamArea;
-		getBeamInfo( image, beamAngle, beamArea );
+		getBeamInfo( imagePtr, beamAngle, beamArea );
 
-		ConverterIntensity::convert( yValues, xValues, yUnitPrefix + yUnit,
-				ConverterIntensity::KELVIN, 0, "", beamAngle, beamArea, coord );
+		ConverterIntensity::convert( yValues, xValues, yUnitsOld,
+						yUnitsNew, 0, "", beamAngle, beamArea, coord );
+		pair< Vector<float>, Vector<float> > values( xValues, yValues );
+		return values;
+	}
+
+	pair<double,double> QtProfile::getMaximumTemperature() {
+		QString xAxisUnit(xaxisUnit.c_str());
+		pair< Vector<float>, Vector<float> > values = convertIntensity( z_xval, z_yval,
+				image, xAxisUnit, yUnitPrefix + yUnit, ConverterIntensity::KELVIN );
 		int maxIndex = 0;
 		double max = numeric_limits<double>::min();
-		for( int i = 0; i < static_cast<int>(yValues.size()); i++ ) {
-			if ( yValues[i] > max ) {
-				max = yValues[i];
+		for( int i = 0; i < static_cast<int>(values.second.size()); i++ ) {
+			if ( values.second[i] > max ) {
+				max = values.second[i];
 				maxIndex = i;
 			}
 		}
-		pair<double,double> results( xValues[maxIndex], max);
+		pair<double,double> results( values.first[maxIndex], max);
 		return results;
 	}
 

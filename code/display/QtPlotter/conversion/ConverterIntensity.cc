@@ -344,7 +344,7 @@ namespace casa {
 			} else {
 				qDebug() << "Could not convert from Kelvin because the beam solid angle was 0";
 			}
-		} else {
+		} else if ( oldUnits != KELVIN && newUnits == KELVIN ){
 			//oldUnits != KELVIN && newUnits == KELVIN
 			if ( beamSolidAngle > 0 ) {
 				//First convert the value to Jy/Beam
