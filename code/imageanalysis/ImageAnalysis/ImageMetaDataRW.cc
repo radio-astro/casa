@@ -39,8 +39,8 @@
 
 #include <tr1/memory>
 
-#define _LOCATEA "ImageMetaDataRW" << __FUNCTION__ << " "
-#define _ORIGINA LogOrigin("ImageMetaDataRW", __FUNCTION__)
+#define _LOCATEA "ImageMetaDataRW" << __func__ << " "
+#define _ORIGINA LogOrigin("ImageMetaDataRW", __func__)
 
 namespace casa {
 
@@ -60,6 +60,11 @@ Record ImageMetaDataRW::toRecord(Bool verbose) const {
 		_toLog(_header);
 	}
 	return _header;
+}
+
+Bool ImageMetaDataRW::_isWritable() const {
+	return (_floatImage && _floatImage->isWritable())
+		|| (_complexImage && _complexImage->isWritable());
 }
 
 Bool ImageMetaDataRW::_setUnit(const String& unit) {
@@ -92,6 +97,10 @@ void ImageMetaDataRW::_setMiscInfo(const TableRecord& rec) {
 
 
 Bool ImageMetaDataRW::add(const String& key, const ValueHolder& value) {
+	ThrowIf(
+		! _isWritable(),
+		"This image is not writable; metadata may not be added to it"
+	);
 	String c = key;
 	c.downcase();
 	ThrowIf(
@@ -245,6 +254,10 @@ Bool ImageMetaDataRW::add(const String& key, const ValueHolder& value) {
 }
 
 Bool ImageMetaDataRW::remove(const String& key) {
+	ThrowIf(
+		! _isWritable(),
+		"This image is not writable; metadata may not be removed from it"
+	);
 	String c = key;
 	LogIO log = _getLog();
 	log << _ORIGINA;
@@ -395,6 +408,10 @@ Bool ImageMetaDataRW::_hasRegion(const String& maskName) const {
 }
 
 Bool ImageMetaDataRW::removeMask(const String& maskName) {
+	ThrowIf(
+		! _isWritable(),
+		"This image is not writable; a mask(s) may not be removed from it"
+	);
 	LogIO log = _getLog();
 	log << _ORIGINA;
 	if (maskName.empty()) {
@@ -487,6 +504,10 @@ Quantity ImageMetaDataRW::_getQuantity(const ValueHolder& v) {
 Bool ImageMetaDataRW::set(
 	const String& key, const ValueHolder& value
 ) {
+	ThrowIf(
+		! _isWritable(),
+		"This image is not writable; metadata may not be modified in it"
+	);
 	String c = key;
 	c.downcase();
 	if (c == ImageMetaDataBase::_BUNIT) {

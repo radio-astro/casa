@@ -186,6 +186,8 @@ private:
 	Bool _hasRegion(const String& maskName) const;
 
 	static Quantity _getQuantity(const ValueHolder& v);
+
+	Bool _isWritable() const;
 };
 
 } //# NAMESPACE CASA - END
