@@ -110,7 +110,7 @@ class sdplot_worker(sdutil.sdtask_template):
 
     def plot_totalpower(self):
         colbydict = {"t": "type", "s": "scan", "i": "if",
-                     "p": "pol", "b": "beam"}
+                     "p": "pol", "b": "beam", "r": ""}
         colorby = colbydict[self.stack[0].lower()]
         sd.plotter.plottp(self.scan, colorby)
 

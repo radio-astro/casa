@@ -404,7 +404,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         plottype = 'totalpower'
         header = False
         result = sdplot(infile=infile,plottype=plottype,header=header,
-                        outfile=outfile)
+                        outfile=outfile, stack='r')
         locinfo = {'npanel': 1, 'nstack': 1,
                    'xlabel': 'row number',
                    'ylabel': 'Brightness Temperature (K)'}
@@ -2176,7 +2176,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         data = [ sp.mean() for sp in self.masked_spec ]
         mask = [ 0, 1, 0, 0 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower')
+        self.run_test(refdata, 'totalpower', stack='r')
         
     def test_totalpowerCflag(self):
         """test channel flag in plottype='totalpower'"""
@@ -2191,7 +2191,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         data = [ sp.mean() for sp in self.masked_spec ]
         mask = [ 0, 0, 1, 0 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower')
+        self.run_test(refdata, 'totalpower', stack='r')
 
     ####################
     # Helper functions
