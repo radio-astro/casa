@@ -344,7 +344,7 @@ class sdtask_template(sdtask_interface):
             if hasattr(self, 'infile'):
                 # nominal pair of science spw and existing polarization
                 sel_org = scantb.get_selection()
-                sel = sd.selector(types=[0]) # select pson data
+                sel = sd.selector(types=[0]) + selector # select pson data
                 scantb.set_selection(sel)
                 ifnos = scantb.getifnos()
                 nominal_spw = -1
