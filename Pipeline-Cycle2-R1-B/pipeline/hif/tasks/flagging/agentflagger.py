@@ -218,7 +218,9 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
             # If the twice the number of flagged channels is greater than the
             # number of channels for a given spectral window, skip it.
-            frac_chan = int(round(fracspw * spw.num_channels + 0.5))
+            #frac_chan = int(round(fracspw * spw.num_channels + 0.5))
+	    # Less agressive rounding errors
+            frac_chan = int(round(fracspw * spw.num_channels))
             if 2*frac_chan >= spw.num_channels:
                 LOG.debug('Too many flagged channels %s for spw %s '
                           '' % (spw.num_channels, spw.id))
@@ -227,7 +229,9 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             # calculate the channel ranges to flag. No need to calculate the
             # left minimum as it is always channel 0.
             l_max = frac_chan - 1
-            r_min = spw.num_channels - frac_chan - 1
+            #r_min = spw.num_channels - frac_chan - 1
+	    # Fix left / right asymmetry bug
+            r_min = spw.num_channels - frac_chan
             r_max = spw.num_channels - 1
 
             # state the spw and channels to flag in flagdata format, adding
