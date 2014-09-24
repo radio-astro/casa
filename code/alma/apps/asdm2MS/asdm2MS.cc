@@ -6,6 +6,10 @@
 //  #define omp_get_thread_num() 0
 //#endif
 
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #define DDPRIORITY 1
 #include <algorithm>
 #include <assert.h>
@@ -33,10 +37,10 @@ using namespace boost::filesystem;
 
 #include <boost/regex.hpp> 
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/lambda/casts.hpp>
-using namespace boost::lambda;
+//#include <boost/lambda/lambda.hpp>
+//#include <boost/lambda/bind.hpp>
+//#include <boost/lambda/casts.hpp>
+//using namespace boost::lambda;
 
 #include <boost/foreach.hpp>
 
@@ -96,6 +100,25 @@ using namespace SubscanIntentMod;
 extern	void	ftime( struct timeb * );	/* this is the funtion */
 #else
 #endif
+
+void
+print_trace (void)
+{
+  void *array[10];
+  size_t size;
+  char **strings;
+  size_t i;
+
+  size = backtrace (array, 10);
+  strings = backtrace_symbols (array, size);
+
+  printf ("Obtained %zd stack frames.\n", size);
+
+  for (i = 0; i < size; i++)
+     printf ("%s\n", strings[i]);
+
+  free (strings);
+}
 
 
 void	myTimer( double *cpu_time ,		/* cpu timer */
@@ -576,6 +599,7 @@ public:
 
 private:
   vector<float *> storage; 
+  vector<float> storage_v;
 };
 
 ComplexDataFilter::ComplexDataFilter() {
@@ -591,12 +615,11 @@ float *ComplexDataFilter::to4Pol(int numCorr, int numChan, float* cdata) {
   // Do nothing if numCorr != 3
   if (numCorr != 3) return cdata;
 
-  
-  // Increase the storage size by appending nul chars.
+  // Allocate storage for 2 * numCorr * numChan with numCorr changed from 3 to 4.
   float* filtered = new float[ 2 * 4 * numChan ];
 
   storage.push_back(filtered);
-  
+
   for (int i = 0; i < numChan; i++) {
     // The 1st row goes to the first row.
     filtered[ 8 * i ]     = cdata[ 6 * i ] ;
@@ -614,7 +637,6 @@ float *ComplexDataFilter::to4Pol(int numCorr, int numChan, float* cdata) {
     filtered [ 8 * i + 6 ] = cdata[ 6 * i + 4 ] ;
     filtered [ 8 * i + 7 ] = cdata[ 6 * i + 5 ] ;    
   }
-
   return filtered;
 }
 
@@ -3058,23 +3080,24 @@ void fillMain(int		rowNum,
   vector<double>	correctedUvw ;
   vector<unsigned int>	correctedFlag;
 
-  // Do we have to fill an MS with uncorrected data + radiometric data (radiometric data are considered as uncorrected data)  ?
-  if (msFillers.find(AP_UNCORRECTED) != msFillers.end()) {
-    for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
-      if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
-	uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					     vmsData_p->vv_dataShape.at(iData).at(1),
-					     iter->second));
-      }
-    }
-  }
-	    
-  // Have we asked to write an MS with corrected data + radiometric data ?
-  if (msFillers.find(AP_CORRECTED) != msFillers.end() ) {
+  Tag configDescriptionId = r_p -> getConfigDescriptionId();
+  ConfigDescriptionTable & cfgDescT = r_p -> getTable() . getContainer() . getConfigDescription();
+  ConfigDescriptionRow * cfgDescR_p = cfgDescT.getRowByKey(configDescriptionId);
+  const vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >& apc_v = cfgDescR_p->getAtmPhaseCorrection();
+  bool subscanHasCorrectedData = std::find(apc_v.begin(), apc_v.end(), AtmPhaseCorrectionMod::AP_CORRECTED)!=apc_v.end();
 
+  // Do we have to fill an MS with uncorrected data + radiometric data (radiometric data are considered as uncorrected data)  ?
+  for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
+    if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+      uncorrectedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+					   vmsData_p->vv_dataShape.at(iData).at(1),
+					   iter->second));
+    }
+	    
+    // Have we asked to write an MS with corrected data + radiometric data ?
+    
     // Are we with radiometric data ? Then we assume that the data are labelled AP_UNCORRECTED.
     if (sdmBinData.processorType(r_p) == RADIOMETER) {
-      for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
 	if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
 	  correctedTime.push_back(vmsData_p->v_time.at(iData));
 	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
@@ -3089,73 +3112,65 @@ void fillMain(int		rowNum,
 	  correctedUvw.push_back(vv_uvw.at(iData)(0));
 	  correctedUvw.push_back(vv_uvw.at(iData)(1));
 	  correctedUvw.push_back(vv_uvw.at(iData)(2));
-	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0), // Force radiometric data to go
-					     vmsData_p->vv_dataShape.at(iData).at(1), // into correctedData.
-					     iter->second));
+	  //	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0), // Force radiometric data to go
+	    //				     vmsData_p->vv_dataShape.at(iData).at(1), // into correctedData.
+					       //				     iter->second));
+	  correctedData.push_back(uncorrectedData.at(iData));
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+	}
+    }
+    else {  // We assume that we are in front of CORRELATOR data, but do we have corrected data on that specific subscan ?
+      if (subscanHasCorrectedData) {
+	// Then we know that we have  AP_CORRECTED data.
+	if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
+	  /*
+	  ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
+	  ** corrected data.
+	  */
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  correctedData.push_back(uncorrectedData.at(iData)); // <-------- Here we re-use the autodata already present in the uncorrected data.
+	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+	}
+	else {
+	  /*
+	  ** And now finally the correlation corrected data.
+	  */
+	  correctedTime.push_back(vmsData_p->v_time.at(iData));
+	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	  correctedFilteredDD.push_back(filteredDD.at(iData));
+	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	  correctedUvw.push_back(vv_uvw.at(iData)(0));
+	  correctedUvw.push_back(vv_uvw.at(iData)(1));
+	  correctedUvw.push_back(vv_uvw.at(iData)(2));
+	  iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
+	  float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
+				      vmsData_p->vv_dataShape.at(iData).at(1),
+				      iter->second);
+	  correctedData.push_back(theData);
 	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
 	}
       }
     }
-    
-    else {  // We assume that we are in front of CORRELATOR data, but do we have uncorrected data on that specific subscan ?
-      Tag configDescriptionId = r_p -> getConfigDescriptionId();
-      ConfigDescriptionTable & cfgDescT = r_p -> getTable() . getContainer() . getConfigDescription();
-      ConfigDescriptionRow * cfgDescR_p = cfgDescT.getRowByKey(configDescriptionId);
-      const vector<AtmPhaseCorrectionMod::AtmPhaseCorrection >& apc_v = cfgDescR_p->getAtmPhaseCorrection();
-      bool subscanHasCorrectedData = std::find(apc_v.begin(), apc_v.end(), AtmPhaseCorrectionMod::AP_CORRECTED)!=apc_v.end();
-      if (subscanHasCorrectedData) {
-	// Then we know that we have  AP_CORRECTED data.
-	for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size() ; iData++) {
-	  if  (vmsData_p->v_antennaId1.at(iData) == vmsData_p->v_antennaId2.at(iData) ) {
-	    /*
-	    ** do not forget to prepend the autodata copied from the uncorrected data, because the lower layers of the software do not put the (uncorrected) autodata in the
-	    ** corrected data.
-	    */
-	    correctedTime.push_back(vmsData_p->v_time.at(iData));
-	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	    correctedFilteredDD.push_back(filteredDD.at(iData));
-	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	    correctedUvw.push_back(vv_uvw.at(iData)(0));
-	    correctedUvw.push_back(vv_uvw.at(iData)(1));
-	    correctedUvw.push_back(vv_uvw.at(iData)(2));
-	    correctedData.push_back(uncorrectedData.at(iData));    // <-------- Here we re-use the autodata already present in the uncorrected data.
-	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));	    
-	  }
-	  else {
-	    /*
-	    ** And now finally the correlation corrected data.
-	    */
-	    correctedTime.push_back(vmsData_p->v_time.at(iData));
-	    correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	    correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	    correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	    correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	    correctedFilteredDD.push_back(filteredDD.at(iData));
-	    correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	    correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	    correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	    correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	    correctedUvw.push_back(vv_uvw.at(iData)(0));
-	    correctedUvw.push_back(vv_uvw.at(iData)(1));
-	    correctedUvw.push_back(vv_uvw.at(iData)(2));
-	    iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_CORRECTED);
-	    float* theData = cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0),
-					vmsData_p->vv_dataShape.at(iData).at(1),
-					iter->second);
-	    correctedData.push_back(theData);
-	    correctedFlag.push_back(vmsData_p->v_flag.at(iData));
-	  }
-	}
-      }
-    }
   }
-	  
+ 
   if (uncorrectedData.size() > 0 && (msFillers.find(AP_UNCORRECTED) != msFillers.end())) {
     if (! mute) { // Here we make the assumption that we have always uncorrected data. This realistic even if not totally rigorous.
       msFillers[AP_UNCORRECTED]->addData(complexData,
@@ -3808,7 +3823,7 @@ int main(int argc, char *argv[]) {
 				    " asdm-directory : the pathname to the ASDM dataset to be converted \n"
 				    " ms-directory-prefix : the prefix of the pathname(s) of the measurement set(s ) to be created,\n"
 				    " this prefis is completed by a suffix to form the name(s) of the resulting measurement set(s), \n"
-				    " this suffix depends on the selected options (see options compression and wvr-correction) \n"
+				    " this suffix depends on the selected options (see options compression and wvr-corrected-data) \n"
 				    ".\n\n"
 				    "Allowed options:");
     generic.add_options()
@@ -4160,8 +4175,10 @@ int main(int argc, char *argv[]) {
   // Define the SDM Main table subset of rows to be accepted
   sdmBinData.select( es_cm, es_srt, es_ts);   
   
-  // Define the subset of data to be extracted from the BLOBs
-  sdmBinData.selectDataSubset(e_query_cm, es_query_apc);
+  // From now we decide to extract the data with all atmospheric phase corrections. The selection will be done on output. Michel Caillat Thur 18 Sept 2014 - CAS-6935
+  EnumSet<AtmPhaseCorrection> allAPCs;
+  allAPCs.fromString("AP_CORRECTED AP_UNCORRECTED");
+  sdmBinData.selectDataSubset(e_query_cm, allAPCs);
   
   //
   // Selection of the scans to consider.
@@ -4198,13 +4215,14 @@ int main(int argc, char *argv[]) {
 	  selected_eb_scan_m[iterr_m->first] = SetAndSet<int>(iter_m->second, iterr_m->second);
 
     for (map<int, set<int> >::iterator iterr_m = all_eb_scan_m.begin(); iterr_m != all_eb_scan_m.end(); iterr_m++)
-      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end())
+      if ((iter_m=eb_scan_m.find(iterr_m->first)) != eb_scan_m.end()) {
 	if ((iter_m->second).empty())
 	  selected_eb_scan_m[iterr_m->first].insert((iterr_m->second).begin(), (iterr_m->second).end());
 	else {
 	  set<int> s = SetAndSet<int>(iter_m->second, iterr_m->second);
 	  selected_eb_scan_m[iterr_m->first].insert(s.begin(), s.end());
 	}
+      }
 
     ostringstream	oss;
     oss << "The following scans will be processed : " << endl;
@@ -4333,7 +4351,7 @@ int main(int argc, char *argv[]) {
   int maxNumCorr =1;
   PolarizationTable& temp_polT = ds->getPolarization();
   PolarizationRow* temp_poltrow;
-  for (int i=0; i<temp_polT.size(); i++) {
+  for (unsigned int i=0; i<temp_polT.size(); i++) {
     temp_poltrow = temp_polT.get()[i];
     maxNumCorr=max(maxNumCorr, temp_poltrow->getNumCorr());
   }
@@ -5960,20 +5978,23 @@ int main(int argc, char *argv[]) {
     fillMainLazily(dsName, ds, selected_eb_scan_m, msFillers.begin()->second->ms(),effectiveBwPerDD_m);
   }
   else {
-    const MainTable& mainT = ds->getMain();
-    const StateTable& stateT = ds->getState();
+    ConfigDescriptionTable&	cfgT   = ds->getConfigDescription();
+    const MainTable&		mainT  = ds->getMain();
+    const StateTable&		stateT = ds->getState();
     
-    MainRow* r = 0;
-    MainRow* temp_r = 0;
-    vector<MainRow*> v;
-    vector<int32_t> mainRowIndex; 
+    MainRow*				r							  = 0;
+    MainRow*				temp_r							  = 0;
+    vector<MainRow*>			v;
+    vector<int32_t>			mainRowIndex; 
     //
     //
     // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
+    // (execBlockId, scanNumber, wvr-corrected-data option)
     //
-    const vector<MainRow *>& temp = mainT.get();
-    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
-      map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
+    vector<AtmPhaseCorrection>		queriedAPC_v						  = es_apc.toEnumType();
+    const vector<MainRow *>&		temp							  = mainT.get();
+    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v			 != temp.end(); iter_v++) {
+      map<int, set<int> >::iterator	iter_m							  = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
       if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() ) {
 	mainRowIndex.push_back(iter_v - temp.begin());
 	v.push_back(*iter_v);
@@ -5984,7 +6005,7 @@ int main(int argc, char *argv[]) {
     infostream << "The dataset has " << mainT.size() << " main(s)...";
     infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
     info(infostream.str());
-    uint32_t nMain = v.size();
+    unsigned int  nMain = v.size();
 
     const VMSData *vmsDataPtr = 0;
     // Initialize an UVW coordinates engine.
@@ -5996,7 +6017,7 @@ int main(int argc, char *argv[]) {
 
     MSMainRowsInSubscanChecker msMainRowsInSubscanChecker;
     // For each selected main row.
-    for (int32_t i = 0; i < nMain; i++) {
+    for (unsigned int i = 0; i < nMain; i++) {
       try {
 	// What's the processor for this Main row ?
 	Tag cdId = v[i]->getConfigDescriptionId();
@@ -6164,11 +6185,11 @@ int main(int argc, char *argv[]) {
 	infostream << e.getMessage();
 	info(infostream.str());
       }
-      catch ( std::exception & e) {
-	infostream.str("");
-	infostream << e.what();
-	info(infostream.str());      
-      }
+      // catch ( std::exception & e) {
+      // 	infostream.str("");
+      // 	infostream << e.what();
+      // 	info(infostream.str());      
+      // }
       catch (Error & e) {
 	infostream.str("");
 	infostream << e.getErrorMessage();
