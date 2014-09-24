@@ -108,6 +108,9 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 	
 	
         '''
+
+	# This is obsolete code. Remove after a suitable interval
+
         def _get_autocorr_cmd (self):
                 inputs = self.inputs
 	        spwlist = inputs.ms.get_spectral_windows(science_windows_only=False)
