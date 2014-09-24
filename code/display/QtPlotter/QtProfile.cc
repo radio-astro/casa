@@ -115,24 +115,6 @@ namespace casa {
 	QtProfile::~QtProfile() {
 	}
 
-	QString QtProfile::getBrightnessUnit( std::tr1::shared_ptr<ImageInterface<Float> > img ) const {
-		QString yUnit("");
-		if ( img ){
-			//Convert 'K' units to Kelvin
-			yUnit = QString(img->units().getName().chars());
-			if ( yUnit.endsWith( "K" )){
-				yUnit.replace("K", ConverterIntensity::KELVIN );
-			}
-			//Images created with immoments seem to have units of the form
-			//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
-			//to have units recognized by the profiler.
-			int periodIndex = yUnit.indexOf( ".");
-			if ( periodIndex > 0 ){
-				yUnit = yUnit.left( periodIndex);
-			}
-		}
-		return yUnit;
-	}
 
 	QtProfile::QtProfile(std::tr1::shared_ptr<ImageInterface<Float> > img, const char *name, QWidget *parent, std::string rcstr)
 		:QMainWindow(parent),
@@ -382,6 +364,25 @@ namespace casa {
 		specFitSettingsWidget->setUnits( unitLabel );
 		momentSettingsWidget->setUnits( unitLabel );
 		lineOverlaysHolder->unitsChanged( unitStrQ );
+	}
+
+	QString QtProfile::getBrightnessUnit( std::tr1::shared_ptr<ImageInterface<Float> > img ) const {
+		QString yUnit("");
+		if ( img ){
+			//Convert 'K' units to Kelvin
+			yUnit = QString(img->units().getName().chars());
+			if ( yUnit.endsWith( "K" )){
+				yUnit.replace("K", ConverterIntensity::KELVIN );
+			}
+			//Images created with immoments seem to have units of the form
+			//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
+			//to have units recognized by the profiler.
+			int periodIndex = yUnit.indexOf( ".");
+			if ( periodIndex > 0 ){
+				yUnit = yUnit.left( periodIndex);
+			}
+		}
+		return yUnit;
 	}
 
 
@@ -1310,7 +1311,7 @@ namespace casa {
 						                             lastShape);*/
 
 			bool ok = generateProfile(xValues,yValues, maxChannelImage, lastWX, lastWY,
-					lastShape, QtProfile::MEAN,cTypeUnit, coordinateType, cSysRval, spcRefFrame);
+					lastShape, QtProfile::MEAN,cTypeUnit, coordinateType, 0, cSysRval, spcRefFrame);
 
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
@@ -1331,7 +1332,7 @@ namespace casa {
 			std::tr1::shared_ptr<casa::ImageInterface<Float> > img,
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
-			String restFreq, const String& frame){
+			int qualityAxis, String restFreq, const String& frame){
 
 		const DisplayCoordinateSystem& cSys = img->coordinates();
 		Bool stokesCoordinate = cSys.hasPolarizationCoordinate();
@@ -1340,6 +1341,8 @@ namespace casa {
 		Int stokesPixelAxis = -1;
 		Bool ok = false;
 		IPosition imShape = img->shape();
+		IPosition blc(img->ndim(), 0);
+		IPosition trc = imShape - 1;
 		if ( stokesCoordinate ){
 			stokesPixelAxis = cSys.polarizationAxisNumber();
 			// Now create box region to select only on the Stokes axis
@@ -1349,31 +1352,34 @@ namespace casa {
 		//make a subimage with a single stokes for all functions. Otherwise, the function
 		//will be applied across all stokes, which is probably not what most users want.
 		if ( stokesCount > 1 ){
-			IPosition blc(img->ndim(), 0);
-			IPosition trc = imShape - 1;
 			blc[stokesPixelAxis] = 0;
 			trc[stokesPixelAxis] = 0;
-			LCBox leregion(blc, trc, imShape);
-			Record	stokesRegion = Record(leregion.toRecord(""));
-			String empty("");
-			SubImage<Float> result = SubImageFactory<Float>::createSubImage(*img, stokesRegion, empty, NULL, False);
-			std::tr1::shared_ptr<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
-			ok = _generateProfile(resultXValues, resultYValues, subImage, regionX, regionY,
+		}
+
+		//For images containing both [DATA,ERROR], if you want the data, specify a region that selects only plane 0 along the
+		//quality axis.  If you want the error, just plane one should be selected.
+		Int qualAx = cSys.findCoordinate(Coordinate::QUALITY);
+		if (qualAx>-1){
+			Int pixQualAx = cSys.pixelAxes(qualAx)[0];
+			blc(pixQualAx) = qualityAxis;
+			trc(pixQualAx) = qualityAxis;
+		}
+		LCBox leregion(blc, trc, imShape);
+		Record	stokesRegion = Record(leregion.toRecord(""));
+		String empty("");
+		SubImage<Float> result = SubImageFactory<Float>::createSubImage(*img, stokesRegion, empty, NULL, False);
+		std::tr1::shared_ptr<ImageInterface<Float> > subImage( new SubImage<Float>(result) );
+		ok = _generateProfile(resultXValues, resultYValues, subImage, regionX, regionY,
 									shape, combineType, unit, coordinateType,
 									restFreq, frame);
-			//If we are using an image with multiple Stokes planes, then
-			//we need to post a warning that we are doing the flux calculation with the
-			//first one.
-			if ( itsPlotType == QtProfile::PFLUX && stokesCount > 1 ){
-				ostringstream oss;
-				oss << "Calculation was performed using the first Stokes plane.";
-				postStatus( oss.str() );
-			}
 
-		}
-		else {
-			ok = _generateProfile(resultXValues, resultYValues, img, regionX, regionY,
-					shape, combineType, unit, coordinateType, restFreq, frame);
+		//If we are using an image with multiple Stokes planes, then
+		//we need to post a warning that we are doing the flux calculation with the
+		//first one.
+		if ( itsPlotType == QtProfile::PFLUX && stokesCount > 1 ){
+			ostringstream oss;
+			oss << "Calculation was performed using the first Stokes plane.";
+			postStatus( oss.str() );
 		}
 		return ok;
 	}
@@ -1396,7 +1402,7 @@ namespace casa {
 		ImageCollapserData::AggregateType function = static_cast<ImageCollapserData::AggregateType>(combineType);
 		pair<Vector<Float>,Vector<Float> >  plotData = Util::getProfile( imagePtr, regionX, regionY,
 			shape, tabularIndex, function, unit,
-			coordinateType, restQuantityPtr, frame );
+			coordinateType,restQuantityPtr, frame );
 		bool success = false;
 		int resultXCount = plotData.first.size();
 		int resultYCount = plotData.second.size();
@@ -2479,33 +2485,33 @@ namespace casa {
 
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 					shape, QtProfile::MEAN, xaxisUnit, coordinateType,
-					restValue, spcRefFrame);
+					0, restValue, spcRefFrame);
 
 			break;
 		case QtProfile::PMEDIAN:
 
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::MEDIAN, xaxisUnit, coordinateType,
-								restValue, spcRefFrame);
+								0, restValue, spcRefFrame);
 			break;
 		case QtProfile::PSUM:
 
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::SUM, xaxisUnit, coordinateType,
-								restValue, spcRefFrame);
+								0, restValue, spcRefFrame);
 			break;
 		case QtProfile::PFLUX:
 
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 					shape, QtProfile::FLUX, xaxisUnit, coordinateType,
-					restValue, spcRefFrame);
+					0, restValue, spcRefFrame);
 			break;
 
 		default:
 
 			ok = generateProfile(z_xval, z_yval, image, wxv, wyv,
 								shape, QtProfile::MEAN, xaxisUnit, coordinateType,
-								restValue, spcRefFrame);
+								0, restValue, spcRefFrame);
 			break;
 		}
 
@@ -2565,7 +2571,7 @@ namespace casa {
 				default:
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 										shape, QtProfile::RMSE, xaxisUnit, coordinateType,
-										cSysRval, spcRefFrame);
+										1, cSysRval, spcRefFrame);
 
 					break;
 				}
@@ -2584,7 +2590,7 @@ namespace casa {
 					                             (Int)QtProfile::NSQRTSUM, 1, cSysRval, -1, shape);*/
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 							shape, QtProfile::NSQRTSUM, xaxisUnit, coordinateType,
-							cSysRval, spcRefFrame);
+							1, cSysRval, spcRefFrame);
 					break;
 				case QtProfile::PMEDIAN:
 					*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
@@ -2597,7 +2603,7 @@ namespace casa {
 					                             (Int)QtProfile::SQRTSUM, 1, cSysRval, -1, shape);*/
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 							shape, QtProfile::SQRTSUM, xaxisUnit, coordinateType,
-							cSysRval, spcRefFrame);
+							1, cSysRval, spcRefFrame);
 					break;
 				case QtProfile::PFLUX:
 					/*ok=getFrequencyProfileWrapper( image, wxv, wyv, z_xval, z_eval,
@@ -2606,7 +2612,7 @@ namespace casa {
 					                               QtProfile::EFLUX, 1, cSysRval, shape);*/
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 												shape, QtProfile::EFLUX, xaxisUnit, coordinateType,
-												cSysRval, spcRefFrame);
+												1, cSysRval, spcRefFrame);
 					break;
 				default:
 					if (z_eval.size()> 0)
@@ -2775,7 +2781,7 @@ namespace casa {
 					                        (Int)QtProfile::MEAN, 0, "", -1, shape);*/
 					ok = generateProfile(xval, yval, ana, wxv, wyv,
 							shape, QtProfile::MEAN, xaxisUnit,
-							coordinateType, "", spcRefFrame);
+							coordinateType, 0, "", spcRefFrame);
 
 					break;
 				case QtProfile::PMEDIAN:
@@ -2784,7 +2790,7 @@ namespace casa {
 					                        (Int)QtProfile::MEDIAN, 0, "", -1, shape);*/
 					ok = generateProfile(xval, yval, ana, wxv, wyv,
 										shape, QtProfile::MEDIAN, xaxisUnit,
-										coordinateType, "", spcRefFrame);
+										coordinateType, 0, "", spcRefFrame);
 					break;
 				case QtProfile::PSUM:
 					/*ok=ana->getFreqProfile( wxv, wyv, xval, yval,
@@ -2792,7 +2798,7 @@ namespace casa {
 					                        (Int)QtProfile::PSUM, 0, "", -1, shape);*/
 					ok = generateProfile(xval, yval, ana, wxv, wyv,
 							shape, QtProfile::SUM, xaxisUnit,
-							coordinateType, "", spcRefFrame);
+							coordinateType, 0, "", spcRefFrame);
 					break;
 				case QtProfile::PFLUX:
 					/*ok=getFrequencyProfileWrapper( ana, wxv, wyv, xval, yval,
@@ -2802,7 +2808,7 @@ namespace casa {
 
 					ok = generateProfile(xval, yval, ana, wxv, wyv,
 															shape, QtProfile::FLUX, xaxisUnit,
-															coordinateType, "", spcRefFrame);
+															coordinateType, 0, "", spcRefFrame);
 
 					break;
 
@@ -2813,7 +2819,7 @@ namespace casa {
 					*/
 					ok = generateProfile(xval, yval, ana, wxv, wyv,
 										shape, QtProfile::MEAN, xaxisUnit,
-										coordinateType, "", spcRefFrame);
+										coordinateType, 0, "", spcRefFrame);
 
 					break;
 				}
@@ -2935,7 +2941,7 @@ namespace casa {
 							(Int)QtProfile::MEAN, 0, "", -1, getRegionShape());*/
 			*ok = generateProfile(xval,yval, img, lastWX, lastWY,
 								getRegionShape(), QtProfile::MEAN,
-								cTypeUnit, coordinateType, "", spcRefFrame);
+								cTypeUnit, coordinateType, 0, "", spcRefFrame);
 			if ( *ok ){
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
 			}

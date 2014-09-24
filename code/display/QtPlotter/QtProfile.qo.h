@@ -280,7 +280,7 @@ namespace casa {
 					std::tr1::shared_ptr<casa::ImageInterface<Float> > imagePtr,
 					const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 					QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
-					String restFreq="", const String& frame="");
+					int qualityAxis, String restFreq="", const String& frame="");
 
 		pair<Vector<float>, Vector<float> > convertIntensity( const Vector<float>& sourceXVals, const Vector<float>& sourceYVals,
 							std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const QString& xUnits,
