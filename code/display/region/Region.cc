@@ -2074,6 +2074,7 @@ namespace casa {
 
 		RegionInfo::center_t *Region::getLayerCenter( PrincipalAxesDD *padd, std::tr1::shared_ptr<ImageInterface<Float> > image, ImageRegion& imgReg) {
 			if( image==0 || padd == 0 ) return 0;
+
 			try {
 				// store the coordinate system and the axis names
 				const DisplayCoordinateSystem& cs = image->coordinates();
@@ -2101,15 +2102,24 @@ namespace casa {
 				Int hPos = -1;
 				// identify the display axes in the
 				// coordinate systems of the image
+				xaxis.downcase();
+				yaxis.downcase();
+				zaxis.downcase();
+				yaxis.downcase();
 				for (uInt k = 0; k < nm.nelements(); k++) {
-					if (nm(k) == xaxis)
+					nm(k).downcase();
+					if (nm(k) == xaxis){
 						xPos = k;
-					if (nm(k) == yaxis)
+					}
+					if (nm(k) == yaxis){
 						yPos = k;
-					if (nm(k) == zaxis)
+					}
+					if (nm(k) == zaxis){
 						zPos = k;
-					if (nm(k) == haxis)
+					}
+					if (nm(k) == haxis){
 						hPos = k;
+					}
 				}
 
 				RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
@@ -2159,8 +2169,9 @@ namespace casa {
 						//cout << "no idea" << endl;
 						return 0;
 					}
-					if (medVals.size()>0)
+					if (medVals.size()>0){
 						fitter.setZeroLevelEstimate(Double(medVals(IPosition(1,0))), False);
+					}
 				}
 
 				// do the fit
@@ -2227,7 +2238,6 @@ namespace casa {
 					// for a Gauss, the vals are xcen, ycen, major_ax, minor_ax in [pix] and posang in [deg]
 					pVals = cShapeShape->toPixel(image->coordinates().directionCoordinate(0));
 					if (pVals.size()>4) {
-
 						// make sure the x- and y-positions can be assigned correctly
 						AlwaysAssert((xPos==0&&yPos==1)|| (xPos==1&&yPos==0), AipsError);
 
