@@ -208,7 +208,7 @@ for info in [ (['dbus-daemon'],'dbus'),
         else:
             casa['helpers'][entry] = None
 
-        for srchdir in ['/usr/lib64/casa/01/bin', '/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
+        for srchdir in [ __casapath__ + '/MacOS', '/usr/lib64/casa/01/bin', '/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
             dd = srchdir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
                 casa['helpers'][entry] = dd
@@ -237,6 +237,9 @@ a.reverse( )
 ## A session configuration 'casa.conf' now included in casa tree...
 ##
 dbus_conf = __casapath__ + "/etc/dbus/casa.conf"
+if not os.path.exists(dbus_conf):
+    dbus_conf = __casapath__ + "/Resources/dbus/casa.conf"
+
 __ipython_colors = 'LightBG'
 while len(a) > 0:
     c = a.pop()
