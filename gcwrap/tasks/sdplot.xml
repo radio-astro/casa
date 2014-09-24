@@ -190,7 +190,7 @@ See the cookbook for details of its capability.
     </param>
 
     <param type="string" name="stack" subparam="true">
-      <shortdescription>overplot setting [\'b\'(beam), \'i\'(spw), \'p\'(pol), \'r\'(row), \'s\'(scan), \'t\'(time or src type)]</shortdescription>
+      <shortdescription>setting of plot overlay [\'b\'(beam), \'i\'(spw), \'p\'(pol), \'r\'(row), \'s\'(scan), \'t\'(time or src type)]</shortdescription>
       <description>code for stacking on single plot for spectral plotting</description>
       <value>p</value>
     </param>
@@ -375,12 +375,12 @@ See the cookbook for details of its capability.
         </equals>
         <equals value="totalpower">
           <default param="stack"><value type="string">p</value>
-            <description>setting of plot overlay[\'b\'(beam), \'i\'(spw), \'p\'(pol), \'r\'(row), \'s\'(scan), \'t\'(src type)]</description>
+            <description>setting of plot overlay [\'b\'(beam), \'i\'(spw), \'p\'(pol), \'r\'(row), \'s\'(scan), \'t\'(src type)]</description>
           </default>
         </equals>
         <equals value="pointing">
           <default param="stack"><value type="string">t</value>
-            <description>setting of plot overlay[\'b\'(beam), \'i\'(spw), \'p\'(pol), \'s\'(scan), \'t\'(src type)]</description>
+            <description>setting of plot overlay [\'b\'(beam), \'i\'(spw), \'p\'(pol), \'s\'(scan), \'t\'(src type)]</description>
           </default>
           <default param="colormap"><value type="string">none</value></default>
           <default param="scanpattern"><value>False</value></default>
