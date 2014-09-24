@@ -229,7 +229,9 @@ class AgentFlagger(basetask.StandardTaskTemplate):
             # calculate the channel ranges to flag. No need to calculate the
             # left minimum as it is always channel 0.
             l_max = frac_chan - 1
-            r_min = spw.num_channels - frac_chan - 1
+            #r_min = spw.num_channels - frac_chan - 1
+	    # Fix high / low assymetry.
+            r_min = spw.num_channels - frac_chan 
             r_max = spw.num_channels - 1
 
             # state the spw and channels to flag in flagdata format, adding
