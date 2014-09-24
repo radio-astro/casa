@@ -65,7 +65,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mode" >
-	<description>Mode of operation: add, del, get, history, list, put, or summary </description>
+	<description>Mode of operation: "add", "del", "get", "history", "list", "put", or "summary". Modes "add", "del", and "put" will not work if the image is read-only (eg a FITS image). </description>
 	<allowed kind="enum">
 	    <value>list</value>
         <value>history</value>
@@ -78,7 +78,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>summary</value>
     </param>
     <param type="string" name="hdkey" subparam="yes">
-    	<description>The associated keyword for modes add, del, get, or put. </description>
+    	<description>The associated keyword for modes "add", "del", "get", or "put". Only "get" will work if the image is read-only (eg, a FITS image). </description>
         <value></value>
         <example>hdkey'telescope'</example>
     </param>
@@ -132,7 +132,8 @@ PARAMETER SUMMARY
 imagename   Input image name. example: imagename='ngc5921_task.image'
 mode        Mode of operation. Supoorted values: 'list', 'summary', 'history',
             'get', 'put', 'add',  'del'.
-            NOTE:  'add', 'del', and 'put' should be used with caution.
+            NOTE:  'add', 'del', and 'put' should be used with caution, and will not work if the image is
+            read-only (eg FITS images are read-only in CASA).
 hdkey       Keyword to use with get, put, add, or del. example: hdkey='telescope'
 hdvalue     keyword value used for modes "put" and "add". Also used for mode="del" when
             hdvalue="masks. example: hdvalue='VLA'
