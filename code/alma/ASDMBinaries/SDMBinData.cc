@@ -2079,6 +2079,7 @@ namespace sdmbin {
     msDataPtr_->numData =  baselinesSet_->numAutoData(ndd)/numBin;  // number of measurements (NOT nb values)
     msDataPtr_->v_data.resize(1);                                   // autoData have always an APC axis of 1
 
+    
     if(verbose_)cout << "About to retrieve " <<  msDataPtr_->numData
 		    << " auto-correlation measurements (auto correlations) encoded in floats" << endl;
     if(verbose_)cout<<"SDMBinaryData::getData: Query for na="<<na<<" nfe="<<nfe<<" ndd="<<ndd<<" nbin="<<nbin<<endl;
@@ -2086,18 +2087,27 @@ namespace sdmbin {
     // ff    const float* autoData =  &floatDataDumpPtr_[baselinesSet_->transferId(na,ndd,nbin)/sizeof(float)];
     const float* autoData =  &floatDataDumpPtr_[baselinesSet_->transferId(na,ndd,nbin)];
     if(verbose_)cout <<"transferId(na,ndd,nbin)="<<baselinesSet_->transferId(na,ndd,nbin);
-    if(baselinesSet_->numAutoData(ndd)>2){
-      if(verbose_)
-	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+(4*msDataPtr_->numData)/3<<" float values"<<endl;
-    }else{
-      if(verbose_)
-	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+msDataPtr_->numData<<" float values"<<endl;
-    }
+    //if(baselinesSet_->numAutoData(ndd)>2){
+      
+    //   if(verbose_)
+    // 	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+(4*msDataPtr_->numData)/3<<" float values"<<endl;
+    // }else{
+    //   if(verbose_)
+    // 	cout <<" up to "<<baselinesSet_->transferId(na,ndd,nbin)+msDataPtr_->numData<<" float values"<<endl;
+    // }
 //     if(baselinesSet_->transferId(na,ndd,nbin)+msDataPtr_->numData*sizeof(float)>autoCorrContainerSize_){
 //       Error(FATAL,"TOO MANY DATA for the Container");
 //       return 0;
 //     }
 
+    if (baselinesSet_->numSdPol(ndd)>2)  msDataPtr_->numData =  (msDataPtr_->numData / 3 ) * 4; // Attention !!! the value of numData returned by baselinesSet_->numAutoData
+                                                                                                // is equal to the size of sdPolProducts, e.g. 3 in the case of "XX XY YX",
+                                                                                                // But the number of values to be retrieved in that specific case is 4
+                                                                                                // since XX and YY are encoded as simple reals while XY is encoded as a complex.
+                                                                                                // Hence this calculation. This tricky detail was discovered while I was working
+                                                                                                // on CAS-6935 and ICT-3617.
+                                                                                                // Michel Caillat - 24/09/2014
+                                                               
     if(verbose_)cout << "numData=" << msDataPtr_->numData << endl;
     if(verbose_)cout << "numSdPol("<<ndd<<")="<<baselinesSet_->numSdPol(ndd)<<endl;
     if(baselinesSet_->numSdPol(ndd)>2){        // shape in complex to have the same shape as the visibilities
@@ -2118,10 +2128,9 @@ namespace sdmbin {
 	cout << "1st auto: r " << msDataPtr_->v_data[0][0] << " i " << msDataPtr_->v_data[0][1] << endl;
 	cout << "2nd auto: r " << msDataPtr_->v_data[0][2] << " i " << msDataPtr_->v_data[0][3] << endl;
 	cout << "3rd auto: r " << msDataPtr_->v_data[0][4] << " i " << msDataPtr_->v_data[0][5] << endl;
-	cout << "4th auto: r " << msDataPtr_->v_data[0][6] << " i " << msDataPtr_->v_data[0][7] << endl;
-	cout << "5th auto: r " << msDataPtr_->v_data[0][8] << " i " << msDataPtr_->v_data[0][9] << endl;
-	cout << "6th auto: r " << msDataPtr_->v_data[0][10]<< " i " << msDataPtr_->v_data[0][11]<< endl;
       }
+
+      msDataPtr_->numData = nmax;
       if(verbose_)cout << "k=" << k << endl;
     }else if(forceComplex_){                  // original was 100% real data, transform shape in complex to have shape of visibilities
       msDataPtr_->v_data[0] = new float[2*msDataPtr_->numData];
