@@ -1322,6 +1322,14 @@ cb.close()
    <shortdescription>Initialize sigmas and weights according to
    bandwidth and integration time</shortdescription>
 
+<input>
+     <param type="bool" direction="in" name="dowtspec">
+     <description>Initialize WEIGHT_SPECTRUM column</description>
+     <value>false</value>
+     </param>
+</input>
+
+
 <returns type="bool"/>
 
 <description>

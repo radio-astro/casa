@@ -638,7 +638,8 @@ calibrater::correct(const std::string& applymode)
      itsCalibrater->writeHistory(os);
 
      // Apply the calibration solutions to the uv-data
-     retval = itsCalibrater->correct(appmode);
+     retval = itsCalibrater->correct2(appmode);
+
      //     AlwaysAssert (retval, AipsError);
 
      os << "Finished correcting." << LogIO::POST;
@@ -710,7 +711,7 @@ uniqueIntV(std::vector<int> &ulist, const Vector<Int> &list) {
 }
 
 bool
-calibrater::initweights()
+calibrater::initweights(const bool dowtspec)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -728,8 +729,8 @@ calibrater::initweights()
     // Update HISTORY table
     itsCalibrater->writeHistory(os);
     
-    // Apply the calibration solutions to the uv-data
-    retval = itsCalibrater->initWeights();
+    // Initialize the SIGMA, WEIGHT, and (optionally) WEIGHT_SPECTRUM columns
+    retval = itsCalibrater->initWeights(dowtspec);
     AlwaysAssert (retval, AipsError);
     
     os << "Finished initializing sigmas/weights." << LogIO::POST;
