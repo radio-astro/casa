@@ -564,6 +564,9 @@ public:
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp) = 0;
 
+    // Initialize the weightSpectrum
+    virtual void initWeightSpectrum (const Cube<Float> & /* wtsp */) {};
+
     // Write/modify the sigmaSpectrum
     virtual void writeSigmaSpectrum (const Cube<Float> & sigsp) = 0;
 

@@ -2207,22 +2207,32 @@ VisBufferImpl::fillImagingWeight (Matrix<Float> & value) const
 
     value.resize (flag().shape ());
 
+    // Extract data weights correctly [nchan,nrow]
+    //   NB:  VB::weight() yields corr-,chan-indep row weights
+    Matrix<Float> wtm;
+    if (weightSpectrum().nelements()==0) 
+      wtm.reference(weight().reform(1,nRow_p));        // add degenerate chan axis
+    else 
+      weightGenerator.unPolChanWeight(wtm,weightSpectrum());  
+
+
+
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (value, flag (), uvwMat (), frequency(), weight (), msId (), fieldId ());
+        weightGenerator.weightUniform (value, flag (), uvwMat (), frequency(), wtm, msId (), fieldId ());
 
     } else if (weightGenerator.getType () == "radial") {
 
-        weightGenerator.weightRadial (value, flag (), uvwMat (), frequency (), weight ());
+        weightGenerator.weightRadial (value, flag (), uvwMat (), frequency (), wtm);
 
     } else {
 
-        weightGenerator.weightNatural (value, flag (), weight ());
+        weightGenerator.weightNatural (value, flag (), wtm);
     }
 
     if (weightGenerator.doFilter ()) {
 
-        weightGenerator.filter (value, flag (), uvwMat (), frequency(), weight ());
+        weightGenerator.filter (value, flag (), uvwMat (), frequency(), wtm);
     }
 }
 
