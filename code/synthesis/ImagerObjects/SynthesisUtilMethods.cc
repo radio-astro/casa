@@ -723,7 +723,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	err += readVal( inrec, String("freqend"), freqend);
 
 	String freqframestr( MFrequency::showType(freqframe) );
-	err += readVal( inrec, String("frame"), freqframestr);
+	err += readVal( inrec, String("outframe"), freqframestr);
 	if( ! MFrequency::getType(freqframe, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
 	/// -------------------------------------------------------------------------------------
@@ -866,16 +866,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }//imsize
 	
 	//// cellsize
-	if( inrec.isDefined("cellsize") ) 
+	if( inrec.isDefined("cell") ) 
 	  {
 	    try
 	      {
-		DataType tp = inrec.dataType("cellsize");
+		DataType tp = inrec.dataType("cell");
 		if( tp == TpInt ||  
 		    tp == TpFloat || 
 		    tp == TpDouble )
 		  {
-		    Double cell = inrec.asDouble("cellsize");
+		    Double cell = inrec.asDouble("cell");
 		    cellsize.set( Quantity( cell , "arcsec" ) );
 		  }
 		else if ( tp == TpArrayInt ||  
@@ -883,7 +883,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  tp == TpArrayDouble )
 		  {
 		    Vector<Double> cells;
-		    inrec.get("cellsize", cells);
+		    inrec.get("cell", cells);
 		    if(cells.nelements()==1) // [ cellx ]
 		      {cellsize.set( Quantity( cells[0], "arcsec" ) ); }
 		    else if( cells.nelements()==2 ) // [ cellx, celly ]
@@ -894,7 +894,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		else if( tp == TpString )
 		  {
 		    String cell;
-		    inrec.get("cellsize",cell);
+		    inrec.get("cell",cell);
 		    Quantity qcell;
 		    err += stringToQuantity( cell, qcell );
 		    cellsize.set( qcell );
@@ -902,7 +902,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		else if( tp == TpArrayString )
 		  {
 		    Array<String> cells;
-		    inrec.get("cellsize", cells);
+		    inrec.get("cell", cells);
 		    Vector<String> vcells(cells);
 		    if(cells.nelements()==1) // [ cellx ]
 		      { 
@@ -995,7 +995,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	// Frequency frame stuff. 
 	err += readVal( inrec, String("mode"), mode);
-        err += readVal( inrec, String("frame"), frame);
+        err += readVal( inrec, String("outframe"), frame);
         qmframe="";
         // mveltype is only set when start/step is given in mdoppler
         mveltype=""; 
@@ -1076,16 +1076,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            }
 
         //step
-        if( inrec.isDefined("step") ) 
+        if( inrec.isDefined("width") ) 
           {
-            if( inrec.dataType("step") == TpInt )
+            if( inrec.dataType("width") == TpInt )
               {           
-	        err += readVal( inrec, String("step"), chanStep);
+	        err += readVal( inrec, String("width"), chanStep);
                 step = String::toString(chanStep);
               }
-            else if( inrec.dataType("step") == TpString ) 
+            else if( inrec.dataType("width") == TpString ) 
               {
-	        err += readVal( inrec, String("step"), step);
+	        err += readVal( inrec, String("width"), step);
                 if( step.contains("Hz") ) 
                   {
                     stringToQuantity(step,freqStep);
@@ -1095,12 +1095,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                     stringToQuantity(step,velStep); 
                   } 
               }
-            else if ( inrec.dataType("step") == TpRecord ) 
+            else if ( inrec.dataType("width") == TpRecord ) 
               {
                 //record can be freq in Quantity or MFreaquency or vel in Quantity or
                 //MRadialVelocity or Doppler (by me.todoppler())
                 // ** doppler => converted to radialvel with frame 
-                stepRecord = inrec.subRecord("step");
+                stepRecord = inrec.subRecord("width");
                 if(stepRecord.isDefined("m0") )
                   { 
                     //must be a measure
@@ -1236,7 +1236,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             } 
 	
 	//String freqframestr( MFrequency::showType(freqFrame) );
-	//err += readVal( inrec, String("frame"), freqframestr);
+	//err += readVal( inrec, String("outframe"), freqframestr);
 	//if( ! MFrequency::getType(freqFrame, freqframestr) )
 	//  { err += "Invalid Frequency Frame " + freqframestr ; }
 
@@ -1375,7 +1375,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<String> cells(2);
     cells[0] = QuantityToString( cellsize[0] );
     cells[1] = QuantityToString( cellsize[1] );
-    impar.define("cellsize", cells );
+    impar.define("cell", cells );
     impar.define("stokes", stokes);
     impar.define("nchan", nchan);
     impar.define("ntaylorterms", nTaylorTerms);
@@ -1409,20 +1409,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         if( !step.contains("Hz") && !step.contains("m/s") && 
            String::toInt(step) == chanStep )
           {
-            impar.define("step", chanStep);
+            impar.define("width", chanStep);
           }
         else if( stepRecord.nfields() > 0 )
           { 
-            impar.defineRecord("step",stepRecord);
+            impar.defineRecord("width",stepRecord);
           }
         else
           {
-            impar.define("step",step);
+            impar.define("width",step);
           }
       }
     else 
       { 
-        impar.define("step", step);
+        impar.define("width", step);
       }
     //impar.define("chanstart", chanStart );
     //impar.define("chanstep", chanStep );
@@ -1448,8 +1448,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       { impar.define("reffreq",reffreq); }
     //impar.define("reffreq", reffreq );
-    //impar.define("frame", MFrequency::showType(freqFrame) );
-    impar.define("frame", frame );
+    //impar.define("outframe", MFrequency::showType(freqFrame) );
+    impar.define("outframe", frame );
     //sysvel
     if( sysvelRecord.nfields() != 0 )
       { impar.defineRecord("sysvel",sysvelRecord); } 
@@ -2489,7 +2489,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  Vector<String> bpars;
 		  err += readVal( inrec, String("restoringbeam"), bpars );
 
-		  for (uInt i=0;i<bpars.nelements();bpars++) { errinfo += bpars[i] + " "; }
+		  for (uInt i=0;i<bpars.nelements();i++) { errinfo += bpars[i] + " "; }
 
 		  if( bpars.nelements()==1 && bpars[0].length()>0 ) { 
 		    if( bpars[0]=="common") { usebeam="common"; }

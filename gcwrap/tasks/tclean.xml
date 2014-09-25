@@ -165,13 +165,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="any" name="step" subparam="true">
-      <description>Channel width (e.g. step=2,step=\'0.1MHz\',step=\'10km/s\')</description>
+    <param type="any" name="width" subparam="true">
+      <description>Channel width (e.g. width=2,width=\'0.1MHz\',width=\'10km/s\')</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="outframe" subparam="true">
-      <description>Spectral reference frame in which to interpret \'start\' and \'step\'</description>
+      <description>Spectral reference frame in which to interpret \'start\' and \'width\'</description>
       <value type="string">LSRK</value>
     </param>
 
@@ -510,7 +510,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="cube">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
-	 <default param="step"><value>""</value></default>
+	 <default param="width"><value>""</value></default>
 	 <default param="outframe"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
@@ -519,7 +519,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="cubesrc">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
-	 <default param="step"><value>""</value></default>
+	 <default param="width"><value>""</value></default>
 	 <default param="outframe"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
@@ -530,7 +530,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        <equals type="string" value="cubedata">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
-	 <default param="step"><value>""</value></default>
+	 <default param="width"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>

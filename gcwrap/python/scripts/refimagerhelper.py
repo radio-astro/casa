@@ -781,7 +781,7 @@ class ImagerParameters():
                  ## Image Definition
                  imagename='', 
                  imsize=[1,1], 
-                 cellsize=[10.0,10.0],
+                 cell=[10.0,10.0],
                  phasecenter='',
                  stokes='I',
                  projection='SIN',
@@ -792,8 +792,8 @@ class ImagerParameters():
                  reffreq='',
                  nchan=1, 
                  start='', 
-                 step='',
-                 frame='LSRK', 
+                 width='',
+                 outframe='LSRK', 
                  veltype='radio', 
                  restfreq=[''],
                  sysvel='', 
@@ -864,13 +864,13 @@ class ImagerParameters():
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         ######### Image definition
         self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
-                                 'cellsize':cellsize, 'phasecenter':phasecenter, 'stokes': stokes,
+                                 'cell':cell, 'phasecenter':phasecenter, 'stokes': stokes,
                                  #'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
                                  #'freqstart':freqstart, 'freqstep':freqstep,
                                  #'velstart':velstart, 'velstep':velstep, 'veltype':veltype,
-                                 'mode':mode, 'start':start, 'step':step, 'veltype':veltype,
+                                 'mode':mode, 'start':start, 'width':width, 'veltype':veltype,
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
-                                 'frame':frame, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
+                                 'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
                                  'overwrite':overwrite }    }
         ######### Gridding
@@ -902,8 +902,8 @@ class ImagerParameters():
 
         ## List of supported parameters in outlier files.
         ## All other parameters will default to the global values.
-        self.outimparlist = ['imagename','nchan','imsize','cellsize','phasecenter','startmodel',
-                             'start','step',
+        self.outimparlist = ['imagename','nchan','imsize','cell','phasecenter','startmodel',
+                             'start','width',
                              'ntaylorterms','reffreq','mode']
         self.outgridparlist = ['ftmachine','mtype']
         self.outweightparlist=[]
@@ -1182,7 +1182,7 @@ class ImagerParameters():
         ## Extra parsing for a few parameters.
         returnlist = self.evalToTarget( returnlist, 'impars', 'imsize', 'intvec' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'nchan', 'int' )
-        returnlist = self.evalToTarget( returnlist, 'impars', 'cellsize', 'strvec' )
+        returnlist = self.evalToTarget( returnlist, 'impars', 'cell', 'strvec' )
         returnlist = self.evalToTarget( returnlist, 'impars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'decpars', 'ntaylorterms', 'int' )
         returnlist = self.evalToTarget( returnlist, 'normpars', 'ntaylorterms', 'int' )
@@ -1205,19 +1205,19 @@ class ImagerParameters():
 #                    returnlist[ fld ]['impars']['nchan'] = nchan_e
 #        except:
 #            print 'Cannot evaluate outlier field parameter "nchan"'
-#        ## cellsize
+#        ## cell
 #        try:
 #            for fld in range(0, len( returnlist ) ):
-#                if returnlist[ fld ]['impars'].has_key('cellsize'):
-#                    tcell =  returnlist[ fld ]['impars']['cellsize']
+#                if returnlist[ fld ]['impars'].has_key('cell'):
+#                    tcell =  returnlist[ fld ]['impars']['cell']
 #                    tcell = tcell.replace(' ','').replace('[','').replace(']','').replace("'","")
 #                    tcells = tcell.split(',')
-#                    cellsize_e = []
+#                    cell_e = []
 #                    for cell in tcells:
-#                        cellsize_e.append( cell )
-#                    returnlist[ fld ]['impars']['cellsize'] = cellsize_e
+#                        cell_e.append( cell )
+#                    returnlist[ fld ]['impars']['cell'] = cell_e
 #        except:
-#            print 'Cannot evaluate outlier field parameter "cellsize"'
+#            print 'Cannot evaluate outlier field parameter "cell"'
 #        ## ntaylorterms (like nchan)
 #        try:
 #            for fld in range(0, len( returnlist ) ):
@@ -1226,7 +1226,7 @@ class ImagerParameters():
 #                    returnlist[ fld ]['impars']['ntaylorterms'] = nterms_e
 #        except:
 #            print 'Cannot evaluate outlier field parameter "ntaylorterms"'
-#        ## restfreq (like cellsize)
+#        ## restfreq (like cell)
 #        try:
 #            for fld in range(0, len( returnlist ) ):
 #                if returnlist[ fld ]['impars'].has_key('restfreq'):
