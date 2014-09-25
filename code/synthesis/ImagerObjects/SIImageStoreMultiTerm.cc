@@ -444,19 +444,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     for(uInt tix=0; tix<2*itsNTerms-1; tix++)
       {
-	if( ! itsPsfs[tix].null() ) itsPsfs[tix]->unlock();
-	if( ! itsWeights[tix].null() ) itsWeights[tix]->unlock();
-	if( ! itsSumWts[tix].null() ) itsSumWts[tix]->unlock();
+	if( ! itsPsfs[tix].null() ) releaseImage( itsPsfs[tix] );
+	if( ! itsWeights[tix].null() ) releaseImage( itsWeights[tix] );
+	if( ! itsSumWts[tix].null() ) releaseImage( itsSumWts[tix] );
 	if( tix < itsNTerms )
 	  {
-	    if( ! itsModels[tix].null() ) itsModels[tix]->unlock();
-	    if( ! itsResiduals[tix].null() ) itsResiduals[tix]->unlock();
-	    if( ! itsImages[tix].null() ) itsImages[tix]->unlock();
+	    if( ! itsModels[tix].null() ) releaseImage( itsModels[tix] );
+	    if( ! itsResiduals[tix].null() ) releaseImage( itsResiduals[tix] );
+	    if( ! itsImages[tix].null() ) releaseImage( itsImages[tix] );
 	  }
       }
-    if( !itsMask.null() ) itsMask->unlock();
-    if( !itsAlpha.null() ) itsAlpha->unlock();
-    if( !itsBeta.null() ) itsBeta->unlock();
+    if( !itsMask.null() ) releaseImage( itsMask );
+    if( !itsAlpha.null() ) releaseImage( itsAlpha );
+    if( !itsBeta.null() ) releaseImage( itsBeta );
     
     return True; // do something more intelligent here.
   }

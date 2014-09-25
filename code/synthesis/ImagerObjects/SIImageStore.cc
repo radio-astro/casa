@@ -678,15 +678,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    String fname( itsImageName+String(".info") );
     //    makePersistent( fname );
 
-    if( ! itsPsf.null() ) itsPsf->unlock();
-    if( ! itsModel.null() ) itsModel->unlock();
-    if( ! itsResidual.null() ) itsResidual->unlock();
-    if( ! itsImage.null() ) itsImage->unlock();
-    if( ! itsWeight.null() ) itsWeight->unlock();
-    if( ! itsMask.null() ) itsMask->unlock();
-    if( ! itsSumWt.null() ) itsSumWt->unlock();
+    if( ! itsPsf.null() ) releaseImage( itsPsf );
+    if( ! itsModel.null() ) releaseImage( itsModel );
+    if( ! itsResidual.null() ) releaseImage( itsResidual );
+    if( ! itsImage.null() ) releaseImage( itsImage );
+    if( ! itsWeight.null() ) releaseImage( itsWeight );
+    if( ! itsMask.null() ) releaseImage( itsMask );
+    if( ! itsSumWt.null() ) releaseImage( itsSumWt );
 
     return True; // do something more intelligent here.
+  }
+
+  void SIImageStore::releaseImage( CountedPtr<ImageInterface<Float> > im )
+  {
+    im->unlock();
+    im->tempClose();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

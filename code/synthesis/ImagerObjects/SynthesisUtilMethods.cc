@@ -2469,22 +2469,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
         if( inrec.isDefined("restoringbeam") )     
 	  {
-            if( inrec.dataType("restoringbeam")==TpString )     
-	      {
-	        err += readVal( inrec, String("restoringbeam"), usebeam); 
-		if( ! usebeam.matches("common") && ! usebeam.length()==0 )  
-		  {
-		    Quantity bsize;
-		    err += readVal( inrec, String("restoringbeam"), bsize );
-		    restoringbeam.setMajorMinor( bsize, bsize );
-		    usebeam = String("");
-		  }
-              }
-            else if( inrec.dataType("restoringbeam")==TpArrayString )
-	      {
-		Vector<String> bpars;
-		err += readVal( inrec, String("restoringbeam"), bpars );
-		try {
+	    String errinfo("");
+	    try {
+	      
+	      if( inrec.dataType("restoringbeam")==TpString )     
+		{
+		  err += readVal( inrec, String("restoringbeam"), usebeam); 
+		  if( ! usebeam.matches("common") && ! usebeam.length()==0 )  
+		    {
+		      Quantity bsize;
+		      err += readVal( inrec, String("restoringbeam"), bsize );
+		      restoringbeam.setMajorMinor( bsize, bsize );
+		      usebeam = String("");
+		    }
+		  errinfo = usebeam;
+		}
+	      else if( inrec.dataType("restoringbeam")==TpArrayString )
+		{
+		  Vector<String> bpars;
+		  err += readVal( inrec, String("restoringbeam"), bpars );
+
+		  for (uInt i=0;i<bpars.nelements();bpars++) { errinfo += bpars[i] + " "; }
+
 		  if( bpars.nelements()==1 && bpars[0].length()>0 ) { 
 		    if( bpars[0]=="common") { usebeam="common"; }
 		    else {
@@ -2504,12 +2510,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    restoringbeam = GaussianBeam();
 		    usebeam = String("");
 		  }
-		} catch( AipsError &x) {
-		  err += "Cannot construct a restoringbeam from supplied parameters. Please check that majoraxis >= minoraxis and all entries are strings.";
-		  restoringbeam = GaussianBeam();
-		  usebeam = String("");
 		}
-	      }
+	    } catch( AipsError &x) {
+	      err += "Cannot construct a restoringbeam from supplied parameters " + errinfo + ". Please check that majoraxis >= minoraxis and all entries are strings.";
+	      restoringbeam = GaussianBeam();
+	      usebeam = String("");
+	    }
+	    
 	  }// if isdefined(restoringbeam)
 
 	

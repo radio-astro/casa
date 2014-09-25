@@ -98,10 +98,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="imsize" subparam="true">
       <description>Number of pixels</description>
       <any type="variant" limittypes="int intArray"/>
-      <value type="intArray">1,1</value>
+      <value type="intArray">100</value>
     </param>
 
-    <param type="any" name="cellsize" subparam="true">
+    <param type="any" name="cell" subparam="true">
       <description>Cell size</description>
       <any type="variant" limittypes="int double intArray doubleArray string stringArray"/>
       <value type="stringArray">"1arcsec"</value>
@@ -170,7 +170,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="string"></value>
     </param>
 
-    <param type="string" name="frame" subparam="true">
+    <param type="string" name="outframe" subparam="true">
       <description>Spectral reference frame in which to interpret \'start\' and \'step\'</description>
       <value type="string">LSRK</value>
     </param>
@@ -325,7 +325,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="deconvolver">
             <description>Name of minor cycle algorithm</description>
-	    <value type="string">hogbom</value>
+	    <value type="string">clark</value>
 	    <allowed kind="enum">
 	      <value>hogbom</value>
               <value>clark</value>
@@ -348,9 +348,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="int">1</value>
     </param>
 
-    <param type="stringArray" name="restoringbeam" subparam="true">
+    <param type="any" name="restoringbeam" subparam="true">
             <description>Restoring beam shape to use. Default is the PSF main lobe width. </description>
-	    <value type="stringArray">['','','']</value>
+	    <any type="variant" limittypes="string stringArray"/>
+	    <value type="stringArray"></value>
     </param>
 
 <!--
@@ -491,8 +492,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
      <when param="imagename">
        <notequals type="string" value=""> 
-	 <default param="imsize"><value>[100,100]</value></default>
-	 <default param="cellsize"><value>"1arcsec"</value></default>
+	 <default param="imsize"><value>100</value></default>
+	 <default param="cell"><value>"1arcsec"</value></default>
 	 <default param="phasecenter"><value>""</value></default>
 	 <default param="stokes"><value>"I"</value></default>
 	 <default param="projection"><value>"SIN"</value></default>
@@ -510,7 +511,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
 	 <default param="step"><value>""</value></default>
-	 <default param="frame"><value>""</value></default>
+	 <default param="outframe"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="interpolation"><value>"linear"</value></default>
@@ -519,7 +520,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	 <default param="nchan"><value>-1</value></default>
 	 <default param="start"><value>""</value></default>
 	 <default param="step"><value>""</value></default>
-	 <default param="frame"><value>""</value></default>
+	 <default param="outframe"><value>""</value></default>
 	 <default param="veltype"><value>"radio"</value></default>
 	 <default param="restfreq"><value>[]</value></default>
 	 <default param="sysvel"><value>""</value></default>
@@ -590,10 +591,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 -->
 
      <when param="deconvolver">
-       <equals type="string" value="hogbom">
+       <equals type="string" value="clark">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
-       <equals type="string" value="clark ">
+       <equals type="string" value="hogbom">
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="multiscale">

@@ -120,6 +120,7 @@ class SIImageStore
 
   /// Other
   virtual Bool releaseLocks();
+  void releaseImage( CountedPtr<ImageInterface<Float> > im );
   virtual Double getReferenceFrequency(){return 0.0;}
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
   GaussianBeam getPSFGaussian();
