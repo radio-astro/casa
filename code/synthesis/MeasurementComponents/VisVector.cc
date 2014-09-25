@@ -41,17 +41,22 @@ VisVector::VisVector(const VisType& vistype, const Bool& owner) :
   vistype_(vistype),
   owner_(owner),
   v0_(NULL),
-  v_(NULL)
+  f0_(NULL),
+  v_(NULL),
+  f_(NULL)
 {
   if (owner_) {
     v0_ = new Complex[vistype];
+    f0_ = new Bool[vistype];
     origin();
   }
 }
 
 VisVector::~VisVector() {
-  if (owner_ && v0_) 
-    delete[] v0_;
+  if (owner_) {
+    if (v0_) delete[] v0_;
+    if (f0_) delete[] f0_;
+  }
 }
 
 void VisVector::setType(const VisVector::VisType& type) {
@@ -60,7 +65,9 @@ void VisVector::setType(const VisVector::VisType& type) {
 
   if (owner_) {
     delete[] v0_;
+    delete[] f0_;
     v0_ = new Complex[vistype_];
+    f0_ = new Bool[vistype_];
   }
 
   origin();
@@ -72,6 +79,12 @@ void VisVector::polznMap() {
   v_[1]=v_[2];
   v_[2]=v_[3];
   v_[3]=vswap;
+  if (f0_) {
+    Bool fswap(f_[1]);
+    f_[1]=f_[2];
+    f_[2]=f_[3];
+    f_[3]=fswap;
+  }
 }
 
 void VisVector::polznUnMap() {
@@ -79,6 +92,12 @@ void VisVector::polznUnMap() {
   v_[3]=v_[2];
   v_[2]=v_[1];
   v_[1]=vswap;
+  if (f0_) {
+    Bool fswap(f_[3]);
+    f_[3]=f_[2];
+    f_[2]=f_[1];
+    f_[1]=fswap;
+  }
 }
 
 
@@ -106,8 +125,13 @@ ostream& operator<<(ostream& os, const VisVector& vec) {
   cout << "[" << *vi;
   ++vi;
   for (Int i=1;i<vec.vistype_;++i,++vi) cout << ", " << *vi;
+  if (vec.f0_) {
+    cout << " fl=";
+    Bool *fi;
+    fi=vec.f_;
+    for (Int i=0;i<vec.vistype_;++i,++fi) cout << (*fi ? "T" : "F");
+  }
   cout << "]";
-
   return os;
 }
 

@@ -38,6 +38,7 @@
 #include <synthesis/CalTables/VisCalEnum.h>
 #include <synthesis/MeasurementComponents/VisVector.h>
 #include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisBuffer2.h>
 
 #include <msvis/MSVis/VisBuffGroupAcc.h>
 
@@ -118,6 +119,9 @@ public:
   // Frequency-dependent Matrices?  Nominally same as freqDepPar.
   virtual Bool freqDepMat() { return freqDepPar(); };
 
+  // Freq-dep Weight scaling?  // almost always false
+  virtual Bool freqDepCalWt() { return False; };
+
   // Matrices time-dependent per parameter set (nominally no)
   virtual Bool timeDepMat() { return False; };
 
@@ -148,8 +152,9 @@ public:
   // Apply calibration to data in VisBuffer (correct Data or corrupt Model)
   //  (in-place versions)
   virtual void correct(VisBuffer& vb, Bool trial=False);
-  //  virtual void corrupt(VisBuffer& vb);
+  virtual void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
   virtual void corrupt(VisBuffer& vb);
+
   // Apply calibration to data in VisBuffer; 
   //  (alternate output versions)
   virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
@@ -234,22 +239,30 @@ protected:
   virtual void invalidateCalMat()=0;
 
   // Access to weight-scaling factors
-  inline Matrix<Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
+  inline Cube<Float>& currWtScale() { return (*currWtScale_[currSpw()]); };
 
   // Flag counting
   virtual void countInFlag(const VisBuffer& vb);
+  virtual void countInFlag2(const vi::VisBuffer2& vb);
   virtual void countOutFlag(const VisBuffer& vb);
+  virtual void countOutFlag2(const vi::VisBuffer2& vb);
 
   // Row-by-row apply to a Cube<Complex> (generic)
   virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False)=0;
+  virtual void applyCal2(vi::VisBuffer2& vb, 
+			 Cube<Complex>& Vout,Cube<Float>& Wout,
+			 Bool trial=False)=0;
 
   // Synchronize "gains" with a VisBuffer or another VisCal
   virtual void syncCal(const VisBuffer& vb,
+		       const Bool& doInv=False);
+  virtual void syncCal2(const vi::VisBuffer2& vb,
 		       const Bool& doInv=False);
   virtual void syncCal(VisCal& vc);
 
   // Set internal meta data from a VisBuffer or another VisCal
   void syncMeta(const VisBuffer& vb);
+  void syncMeta2(const vi::VisBuffer2& vb);
   void syncMeta(VisCal& vc);
 
   void syncMeta(const Int& spw,
@@ -349,7 +362,7 @@ private:
   Bool calWt_;
 
   // Weight scale factors
-  PtrBlock<Matrix<Float>*> currWtScale_;  // [nSpw](nPar,nElm)
+  PtrBlock<Cube<Float>*> currWtScale_;  // [nSpw](nPar,nChan,nElm)
 
   // Flag counting
   Int64 ndataIn_, nflagIn_, nflagOut_;
@@ -422,6 +435,10 @@ protected:
 
   // Row-by-row apply to a Cube<Complex> (applyByMueller override)
   virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
+  virtual void applyCal2(vi::VisBuffer2& vb, 
+			 Cube<Complex>& Vout,Cube<Float>& Wout,
+			 Bool trial=False);
+  //  { throw(AipsError("VisMueller::applyCal2 NYI!!!!!!!!!!!!!")); };
 
   // Sync matrices for current meta data (Mueller override)
   virtual void syncCalMat(const Bool& doInv=False);
@@ -552,6 +569,9 @@ protected:
 
   // Row-by-row apply to a Cube<Complex> (applyByJones override)
   virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
+  virtual void applyCal2(vi::VisBuffer2& vb, 
+			 Cube<Complex>& Vout,Cube<Float>& Wout,
+			 Bool trial=False);
 
   // Sync matrices for current meta data (VisJones override)
   virtual void syncCalMat(const Bool& doInv=False);
@@ -589,6 +609,7 @@ protected:
 
   // Update the wt vector for a baseline
   virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
+  virtual void updateWt2(Matrix<Float>& wt,const Int& a1,const Int& a2);
 
 private:
 

@@ -93,6 +93,8 @@ public:
 
   // Set flags according to solution flags
   virtual void applyFlag(Bool& vflag) const;
+  virtual void flagRight(VisVector& v) const;
+  virtual void flagLeft(VisVector& v) const;
 
   // print it out
   friend ostream& operator<<(ostream& os, const Jones& mat);
@@ -170,6 +172,8 @@ public:
 
   // Set flags according to solution flags
   virtual void applyFlag(Bool& vflag) const;
+  virtual void flagRight(VisVector& v) const;
+  virtual void flagLeft(VisVector& v) const;
 
   // Give access to Mueller formation methods
   friend class MuellerDiag;
@@ -222,6 +226,8 @@ public:
 
   // Set flags according to solution flags
   virtual void applyFlag(Bool& vflag) const;
+  virtual void flagRight(VisVector& v) const;
+  virtual void flagLeft(VisVector& v) const;
 
   // Give access to Mueller formation methods
   friend class MuellerDiag;
@@ -274,6 +280,8 @@ public:
 
   // Set flags according to solution flags
   virtual void applyFlag(Bool& vflag) const;
+  virtual void flagRight(VisVector& v) const;
+  virtual void flagLeft(VisVector& v) const { flagRight(v); };  // flagging commutes
 
   // Give access to Mueller formation methods
   friend class MuellerScal;

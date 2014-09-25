@@ -2955,6 +2955,17 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 }
 
 void
+VisibilityIteratorImpl2::initWeightSpectrum (const Cube<Float> & weightSpectrum)
+{
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
+    if (! columns_p.weightSpectrum_p.isNull ()) {
+      RefRows & rows = rowBounds_p.subchunkRows_p;
+      columns_p.weightSpectrum_p.putColumnCells (rows, weightSpectrum);
+    }
+}
+
+void
 VisibilityIteratorImpl2::writeSigmaSpectrum (const Cube<Float> & sigmaSpectrum)
 {
     ThrowIf (! isWritable (), "This visibility iterator is not writable");

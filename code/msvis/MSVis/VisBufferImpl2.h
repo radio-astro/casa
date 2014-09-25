@@ -178,6 +178,7 @@ public:
     virtual void validateShapes () const;
 
     virtual void writeChangesBack ();
+    virtual void initWeightSpectrum (const Cube<Float>& wtspec);
 
     //--> This needs to be removed: virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
 

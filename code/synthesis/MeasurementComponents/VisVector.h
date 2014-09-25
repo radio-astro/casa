@@ -50,7 +50,10 @@ public:
 
   // Assignment (data copy)
   inline VisVector& operator=(const VisVector& vv) {
-    for (Int i=0;i<vistype_;i++) v_[i]=vv.v_[i];
+    for (Int i=0;i<vistype_;i++) {
+      v_[i]=vv.v_[i];
+      if (f0_ && vv.f0_) f_[i]=vv.f_[i];
+    }
     return *this;
   };
 
@@ -62,36 +65,44 @@ public:
   
   // Reassign origin
   inline void sync(Complex& vis) { 
-    if (!owner_)  {v0_=&vis; origin();}
+    if (!owner_)  {v0_=&vis; f0_=NULL; origin();}
     else          {throw(AipsError("Illegal VisVector sync")); }
   };
   
+  // Reassign origin
+  inline void sync(Complex& vis, Bool& flag) { 
+    if (!owner_)  {v0_=&vis; f0_=&flag; origin();}
+    else          {throw(AipsError("Illegal VisVector sync")); }
+  };
+  
+
   // Go to origin
-  inline void origin() {v_=v0_;};
+  inline void origin() {v_=v0_;f_=f0_;};
   
   // Increment to next vector
   //  (use function pointers in ctor to handle owner_ case?)
   inline void operator++() { 
-    if (!owner_)  v_+=vistype_;
+    if (!owner_)  {v_+=vistype_; if (f0_) f_+=vistype_;}
     else          throw(AipsError("Illegal VisVector ++")); 
   };
   inline void operator++(int) { 
-    if (!owner_)  v_+=vistype_;
+    if (!owner_)  {v_+=vistype_; if (f0_) f_+=vistype_;}
     else          throw(AipsError("Illegal VisVector ++")); 
   };
 
   // Advance step vectors forward
   inline void advance(const Int& step) { 
-    if (!owner_)  v_+=(step*vistype_);
+    if (!owner_)  {v_+=(step*vistype_); if (f0_) f_+=(step*vistype_);}
     else          throw(AipsError("Illegal VisVector advance")); 
   };
-
 
   // Re-order elements
   void polznMap();
   void polznUnMap();
 
-  inline void zero() { for (Int i=0;i<vistype_;i++) v_[i]=Complex(0.0); };
+  inline void zero() { 
+    for (Int i=0;i<vistype_;i++) {v_[i]=Complex(0.0);if (f0_) f_[i]=True;} 
+  };
 
   // Print it out
   friend ostream& operator<<(ostream& os, const VisVector& vec);
@@ -118,13 +129,18 @@ private:
   // VisVector length (4, 2, or 1)
   VisType vistype_;
   
+  // Does the VisVector own the storage, or are
+  //  we pointing to something external
   Bool owner_;
 
   // Pointer to origin
   Complex *v0_;
-  
+  Bool *f0_;
+
   // Moving pointer
   Complex *v_;
+  Bool *f_;
+
   
 };
 

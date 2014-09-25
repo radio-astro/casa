@@ -163,13 +163,14 @@ class Calibrater
   // Apply all setapply'd calibration components to DATA and
   //  deposit in the CORRECTED_DATA column
   Bool correct(String mode="calflag");
+  Bool correct2(String mode="calflag");
 
   // Apply all setapply'd calibration components to MODEL_DATA and
   //  deposit in the MODEL_DATA column
   Bool corrupt();
 
   // Initialize sigma/weight according to bandwidth/exposure
-  Bool initWeights();
+  Bool initWeights(Bool dowtsp=False);
 
   // Solve for a given calibration component
   Bool solve();

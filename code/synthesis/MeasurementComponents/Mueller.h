@@ -89,6 +89,7 @@ public:
 
   // Apply only flags according to cal flags
   virtual void applyFlag(Bool& vflag);
+  virtual void flag(VisVector& v);
 
   // Multiply onto a vis VisVector, preserving input (copy then in-place apply)
   virtual void apply(VisVector& out, const VisVector& in);
@@ -157,6 +158,7 @@ public:
 
   // Apply only flags according to cal flags
   virtual void applyFlag(Bool& vflag);
+  virtual void flag(VisVector& v);
 
 protected:
   
@@ -201,6 +203,7 @@ public:
 
   // Apply only flags according to cal flags
   virtual void applyFlag(Bool& vflag);
+  virtual void flag(VisVector& v);
 
 protected:
   
@@ -246,6 +249,7 @@ public:
 
   // Apply only flags according to cal flags
   virtual void applyFlag(Bool& vflag);
+  virtual void flag(VisVector& v);
 
 protected:
   

@@ -1131,6 +1131,13 @@ VisibilityIterator2::writeWeightSpectrum (const Cube<Float>& wtsp)
 }
 
 void
+VisibilityIterator2::initWeightSpectrum (const Cube<Float>& wtsp)
+{
+    CheckImplementationPointerW ();
+    impl_p->initWeightSpectrum (wtsp);
+}
+
+void
 VisibilityIterator2::writeModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental){
   CheckImplementationPointerW ();
   impl_p->writeModel(rec, iscomponentlist, incremental);

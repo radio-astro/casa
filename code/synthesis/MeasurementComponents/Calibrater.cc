@@ -30,10 +30,13 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableParse.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/TiledShapeStMan.h>
 
 #include <casa/System/AipsrcValue.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/Arrays/ArrayPartMath.h>
 //#include <casa/Arrays/ArrayMath.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSFieldIndex.h>
@@ -1129,6 +1132,149 @@ Calibrater::correct(String mode)
     }
     return retval;
  }
+Bool
+Calibrater::correct2(String mode)
+{
+    logSink() << LogOrigin("Calibrater","correct2 (VI2/VB2)") << LogIO::NORMAL;
+
+    Bool retval = true;
+
+    try {
+
+      // Ensure apply list non-zero and properly sorted
+      ve_p->setapply(vc_p);
+
+      // Trap uvcontsub case, since it does not yet handlg VB2
+      if (anyEQ(ve_p->listTypes(),VisCal::A)) {
+
+	// Only uvcontsub, nothing else
+	if (ve_p->nTerms()==1) {
+	  // Use old method (which doesn't need WEIGHT_SPECTRUM support in this context)
+	  return this->correct(mode);
+	}
+	else
+	  throw(AipsError("Cannot handle AMueller (uvcontsub) and other types simultaneously."));
+      }
+
+      
+      // Report the types that will be applied
+      applystate();
+
+      // make mode all-caps
+      String upmode=mode;
+      upmode.upcase();
+
+      // If trialmode=T, only the flags will be set
+      //   (and only written if not TRIAL)
+      Bool trialmode=(upmode.contains("TRIAL") || 
+		      upmode.contains("FLAGONLY"));
+
+
+      // TBD:  configureForCorrection/Vpf in VI2/VB2 framework???
+      // Arrange for iteration over data
+      Block<Int> columns;
+      // include scan iteration
+      columns.resize(5);
+      columns[0]=MS::ARRAY_ID;
+      columns[1]=MS::SCAN_NUMBER;
+      columns[2]=MS::FIELD_ID;
+      columns[3]=MS::DATA_DESC_ID;
+      columns[4]=MS::TIME;
+
+      vi::SortColumns sc(columns);
+      vi::VisibilityIterator2 vi(*mssel_p,sc,True);
+      vi::VisBuffer2 *vb = vi.getVisBuffer();
+
+      // Detect if we will be setting WEIGHT_SPECTRUM, and arrange for this
+      vi.originChunks();    // required for wSExists() in next line to work
+      vi.origin();
+      Bool doWtSp=vi.weightSpectrumExists();  // Exists non-trivially
+
+      if (doWtSp && calWt()) 
+	logSink() << "Found valid WEIGHT_SPECTRUM, correcting it." << LogIO::POST;
+
+      // Pass each timestamp (VisBuffer) to VisEquation for correction
+      
+      Vector<Bool> uncalspw(vi.nSpectralWindows());  // Used to accumulate error messages
+      uncalspw.set(False);		             // instead of bombing the user
+
+        for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+
+	  for (vi.origin(); vi.more(); vi.next()) {
+
+	    uInt spw = vb->spectralWindows()(0);
+	    if (ve_p->spwOK(spw)){
+
+	      // Re-initialize weight info from sigma info
+	      //   This is smart wrt spectral weights, etc.
+	      vb->resetWeightsUsingSigma();
+
+	      // Arrange for _in-place_ apply on CORRECTED_DATA
+	      vb->setVisCubeCorrected(vb->visCube());
+
+	      // throws exception if nothing to apply
+	      ve_p->correct2(*vb,trialmode,doWtSp);
+		    
+	      // Only if not a trial run, trigger write to disk
+
+	      /* TBD: need to discard one or another dirty vb components using VB's dirty comp methods
+	      if (upmode!="TRIAL") {
+		
+		if (upmode.contains("CAL")) {
+		  vb->setVisCubeCorrected(vb->visCube());
+		  vb->setWeight(vb->weight()); 
+		}
+		  
+		// TBD flagCube!!
+		//if (upmode.contains("FLAG"))
+		//		  vb->setFlag (vb->flag());
+		
+	      }
+	      */
+
+	      // If WS was calibrated, set W to its channel-axis median
+	      if (doWtSp)
+		vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
+
+
+	      vb->writeChangesBack();
+	    }
+	    else{
+	      uncalspw[spw] = true;
+	      if (! vi.isAsynchronous()){
+
+		// Asynchronous I/O doesn't have a way to skip
+		// VisBuffers, so only break out when not using
+		// async i/o.
+		
+		break; // Only proceed if spw can be calibrated
+	      }
+	    }
+	  }
+        }
+
+
+        // Now that we're out of the loop, summarize any errors.
+
+        retval = summarize_uncalspws(uncalspw, "correct");
+	
+	actRec_=Record();
+	actRec_.define("origin","Calibrater::correct");
+	actRec_.defineRecord("VisEquation",ve_p->actionRec());
+	
+    }
+    catch (AipsError x) {
+        logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+	              << LogIO::POST;
+
+        logSink() << "Resetting all calibration application settings." << LogIO::POST;
+        unsetapply();
+
+        throw(AipsError("Error in Calibrater::correct."));
+        retval = False;         // Not that it ever gets here...
+    }
+    return retval;
+ }
 
 
 VisibilityIterator::DataColumn
@@ -1313,9 +1459,9 @@ Bool Calibrater::corrupt() {
 }
 
 
-Bool Calibrater::initWeights() {
+Bool Calibrater::initWeights(Bool dowtsp) {
 
-  logSink() << LogOrigin("Calibrater","initWeights2") << LogIO::NORMAL;
+  logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
   Bool retval = true;
 
   try {
@@ -1324,6 +1470,39 @@ Bool Calibrater::initWeights() {
       throw(AipsError("Calibrater not prepared for initWeights!"));
 
     // Log that we are beginning...
+    logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." << LogIO::POST;
+    if (dowtsp) {
+      logSink() << "Also initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)." << LogIO::POST;
+
+      // Ensure WEIGHT_SPECTRUM really exists at all 
+      //   (often it exists but is empty)
+      TableDesc mstd = ms_p->actualTableDesc();
+      if (!mstd.isColumn("WEIGHT_SPECTRUM")) {
+	cout << "Creating WEIGHT_SPECTRUM!" << endl;
+
+	// Nominal defaulttileshape
+	IPosition dts(3,4,32,1024); 
+
+	// Discern DATA's default tile shape and use it
+	const Record dminfo=ms_p->dataManagerInfo();
+	for (uInt i=0;i<dminfo.nfields();++i) {
+	  Record col=dminfo.asRecord(i);
+	  //if (upcase(col.asString("NAME"))=="TILEDDATA") {
+	  if (anyEQ(col.asArrayString("COLUMNS"),String("DATA"))) {
+	    dts=IPosition(col.asRecord("SPEC").asArrayInt("DEFAULTTILESHAPE"));
+	    cout << "Found DATA's default tile: " << dts << endl;
+	    break;
+	  }
+	}
+
+	// Add the column
+	String colWtSp=MS::columnName(MS::WEIGHT_SPECTRUM);
+	TableDesc tdWtSp;
+	tdWtSp.addColumn(ArrayColumnDesc<Float>(colWtSp,"weight spectrum", 2));
+	TiledShapeStMan wtSpStMan("TiledWgtSpectrum",dts);
+	ms_p->addColumn(tdWtSp,wtSpStMan);
+      }
+    }
 
     // Arrange for iteration over data
     Block<Int> columns;
@@ -1355,6 +1534,7 @@ Bool Calibrater::initWeights() {
        Int spw = vb->spectralWindows()(0);
 
        Int nrow=vb->nRows();
+       Int nchan=vb->nChannels();
        Int ncor=vb->nCorrelations();
 
        // Detect ACs
@@ -1373,6 +1553,11 @@ Bool Calibrater::initWeights() {
        Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
        newsig.set(1.0);
 
+       Cube<Float> newwtsp(0,0,0);
+       if (dowtsp)
+	 newwtsp.resize(ncor,nchan,nrow);
+
+
        // Set weights to channel bandwidth first.
        newwt.set(Float(effChBw(spw)));
 
@@ -1381,6 +1566,13 @@ Bool Calibrater::initWeights() {
          Vector<Float> wt(newwt.row(icor));
          wt*=expo;
 	 wt*=xcfactor;
+	 if (dowtsp) {
+	   for (Int ich=0;ich<nchan;++ich) {
+	     Vector<Float> wtsp(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()));
+	     wtsp=wt;
+	   }
+	 }
+	   
        }
 
        // sig from wt is inverse sqrt
@@ -1400,8 +1592,13 @@ Bool Calibrater::initWeights() {
        vb->setSigma(newsig);
        vb->writeChangesBack();
 
+       if (dowtsp)
+	 vb->initWeightSpectrum(newwtsp);
+
+
       }
     }
+
   }
   catch (AipsError x) {
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()

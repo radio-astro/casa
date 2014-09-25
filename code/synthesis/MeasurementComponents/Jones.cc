@@ -34,7 +34,7 @@
 #include <casa/namespace.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+  
 
 // Constructor
 Jones::Jones() : 
@@ -93,7 +93,7 @@ void Jones::setMatByOk() {
 
 }
 
-
+  
 
 // In-place multipication with another Jones
 void Jones::operator*=(const Jones& other) {
@@ -110,6 +110,15 @@ void Jones::operator*=(const Jones& other) {
 
 // Apply rightward to a VisVector
 void Jones::applyRight(VisVector& v) const {
+
+  // full general right-ward apply
+  //
+  //  [w x][A B] = [wA+xC wB+xD]  [00+12 01+13]
+  //  [y z][C D]   [yA+zC yB+ZD]  [20+32 21+23]
+
+
+  // flag
+  if (v.f_) flagRight(v);
 
   switch(v.type()) {
   case VisVector::Four: {
@@ -130,6 +139,7 @@ void Jones::applyRight(VisVector& v) const {
     
     for (Int i=0;i<4;++i)
       v.v_[i] += vtmp_.v_[i];
+
     break;
   }
   default:
@@ -146,9 +156,18 @@ void Jones::applyRight(VisVector& v, Bool& vflag) const {
   applyRight(v);
   
 }
-
+  
 // Apply leftward (transposed) to a VisVector 
 void Jones::applyLeft(VisVector& v) const {
+
+  // full general left-ward (conjugate transpose) apply
+  //
+  //  [A B][w y*] = [Aw+Bx* Ay*+Bz]  [00+11 02+13]
+  //  [C D][x* z]   [Cw+Dx* Cy*+Dz]  [20+31 22+33]
+
+
+  // flag
+  if (v.f_) flagLeft(v);
 
   switch(v.type()) {
   case VisVector::Four: {
@@ -174,6 +193,7 @@ void Jones::applyLeft(VisVector& v) const {
   
     for (Int i=0;i<4;++i)
       v.v_[i] += vtmp_.v_[i];
+
     break;
   }
   default:
@@ -196,6 +216,44 @@ void Jones::applyLeft(VisVector& v, Bool& vflag) const {
 void Jones::applyFlag(Bool& vflag) const {
   vflag|=(!(ok_[0]&&ok_[1]&&ok_[2]&&ok_[3]));
 }
+// Corr-dep flag rightward onto a VisVector
+void Jones::flagRight(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
+
+    vtmp_.f_[0]=(v.f_[0]||v.f_[2]||(!ok_[0])||(!ok_[1]));
+    vtmp_.f_[1]=(v.f_[1]||v.f_[3]||(!ok_[0])||(!ok_[1]));
+    vtmp_.f_[2]=(v.f_[0]||v.f_[2]||(!ok_[2])||(!ok_[3]));
+    vtmp_.f_[3]=(v.f_[1]||v.f_[3]||(!ok_[2])||(!ok_[3]));
+    
+    for (Int i=0;i<4;++i)
+      v.f_[i] |= vtmp_.f_[i];
+
+    break;
+  }
+  default:
+    throw(AipsError("Jones matrix apply (J::fR) incompatible with VisVector."));
+  }
+}
+// Corr-dep flag leftward onto a VisVector
+void Jones::flagLeft(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
+
+    vtmp_.f_[0]=(v.f_[0]||v.f_[1]||(!ok_[0])||(!ok_[1]));
+    vtmp_.f_[1]=(v.f_[0]||v.f_[1]||(!ok_[2])||(!ok_[3]));
+    vtmp_.f_[2]=(v.f_[2]||v.f_[3]||(!ok_[0])||(!ok_[1]));
+    vtmp_.f_[3]=(v.f_[2]||v.f_[3]||(!ok_[2])||(!ok_[3]));
+    
+    for (Int i=0;i<4;++i)
+      v.f_[i] |= vtmp_.f_[i];
+
+    break;
+  }
+  default:
+    throw(AipsError("Jones matrix apply (J::fR) incompatible with VisVector."));
+  }
+}
 
 
 void Jones::zero() {
@@ -203,18 +261,19 @@ void Jones::zero() {
   for (Int i=0;i<4;++i,++ji_)
     (*ji_)=0.0;
 }
-
-
+  
+  
 // Constructor
-  JonesGenLin::JonesGenLin() : Jones() {}
+JonesGenLin::JonesGenLin() : Jones() {}
 
 // In place invert
 void JonesGenLin::invert() {
-
+  
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::invert()"));
 
   // In linear approx, we merely negate the off-diag terms!
 
+  /*
   if (ok_[0]&&ok_[1]) {
     j_[0]*=-1.0;
     j_[1]*=-1.0;
@@ -222,9 +281,20 @@ void JonesGenLin::invert() {
     zero();
     ok_[0]=ok_[1]=False;
   }
+  */
+
+  if (ok_[0])
+    j_[0]*=-1.0;
+  else
+    j_[0]=0.0;
+
+  if (ok_[1]) 
+    j_[1]*=-1.0;
+  else
+    j_[1]=0.0;
 
 }
-
+  
 // Set matrix elements according to ok flag
 //   (so we don't have to check ok flags atomically in apply)
 void JonesGenLin::setMatByOk() {
@@ -253,14 +323,20 @@ void JonesGenLin::operator*=(const Jones& other) {
     break;
   }
 }
-
+  
 // Apply rightward to a VisVector
 void JonesGenLin::applyRight(VisVector& v) const {
-
   switch(v.type()) {
   case VisVector::Four: {
-
+    
     // Only adjust cross-hands by pars times parallel hands
+    //
+    //  [1 X][A B] =  [A    B+XD]
+    //  [Y 1][C D]    [YA+C D   ]
+
+    // flag
+    if (v.f_) flagRight(v);
+
     v.v_[1]+=(j_[0]*v.v_[3]);
     v.v_[2]+=(j_[1]*v.v_[0]);
 
@@ -270,10 +346,10 @@ void JonesGenLin::applyRight(VisVector& v) const {
     throw(AipsError("JonesGenLin matrix apply (J::aR) incompatible with VisVector."));
   }
 }
-
+  
 // Apply rightward to a VisVector
 void JonesGenLin::applyRight(VisVector& v, Bool& vflag) const {
-
+  
   if (!ok_) throw(AipsError("Illegal use of JonesGenLin::applyRight(v,vflag)"));
 
   applyFlag(vflag);
@@ -281,9 +357,8 @@ void JonesGenLin::applyRight(VisVector& v, Bool& vflag) const {
   
 }
 
-// Apply leftward (transposed) to a VisVector 
+// Apply leftward (conjugate transposed) to a VisVector 
 void JonesGenLin::applyLeft(VisVector& v) const {
-
   switch(v.type()) {
   case VisVector::Four: {
     
@@ -292,10 +367,12 @@ void JonesGenLin::applyLeft(VisVector& v) const {
     //  [A B] [1  Y*]  =  [A      B+AY*]
     //  [C D] [X* 1 ]     [C+DX*  D    ]
 
+    // flag
+    if (v.f_) flagLeft(v);
 
     v.v_[1]+=(conj(j_[1])*v.v_[0]);
     v.v_[2]+=(conj(j_[0])*v.v_[3]);
-
+    
     break;
   }
   default:
@@ -319,7 +396,34 @@ void JonesGenLin::applyFlag(Bool& vflag) const {
   vflag|=(!(ok_[0]&&ok_[1]));
 }
 
+// Corr-dep flag rightward to a VisVector
+void JonesGenLin::flagRight(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
 
+    v.f_[1] |= ((!ok_[0])||v.f_[3]);
+    v.f_[2] |= ((!ok_[1])||v.f_[0]);
+
+    break;
+  }
+  default:
+    throw(AipsError("JonesGenLin matrix apply (JGL::fR) incompatible with VisVector."));
+  }
+}
+// Corr-dep flag leftward to a VisVector 
+void JonesGenLin::flagLeft(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
+    
+    v.f_[1] |= ((!ok_[1])||v.f_[0]);
+    v.f_[2] |= ((!ok_[0])||v.f_[3]);
+    
+    break;
+  }
+  default:
+    throw(AipsError("JonesGenLin matrix apply (JGL::fL) incompatible with VisVector."));
+  }
+}
 
 void JonesGenLin::zero() {
   ji_=j_;
@@ -386,7 +490,7 @@ void JonesDiag::operator*=(const Jones& other) {
 
 // Apply rightward to a VisVector
 void JonesDiag::applyRight(VisVector& v) const {
-
+  if (v.f_) flagRight(v);
   switch(v.type()) {
   case VisVector::Four: {
     v.v_[0]*=j_[0];
@@ -420,7 +524,7 @@ void JonesDiag::applyRight(VisVector& v, Bool& vflag) const {
 
 // Apply leftward (transposed) to a VisVector 
 void JonesDiag::applyLeft(VisVector& v) const {
-
+  if (v.f_) flagLeft(v);
   switch(v.type()) {
   case VisVector::Four: {
     Complex c;
@@ -462,6 +566,53 @@ void JonesDiag::applyFlag(Bool& vflag) const {
     vflag|=(!ok_[0]);
   else
     vflag|=(!(ok_[0]&&ok_[1]));
+}
+//  Corr-dep flag right-ward onto a VisVector
+void JonesDiag::flagRight(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
+    v.f_[0]|=(!ok_[0]);
+    v.f_[1]|=(!ok_[0]);
+    v.f_[2]|=(!ok_[1]);
+    v.f_[3]|=(!ok_[1]);
+    break;
+  }
+  case VisVector::Two: {
+    v.f_[0]|=(!ok_[0]);
+    v.f_[1]|=(!ok_[1]);
+    break;
+  }
+  case VisVector::One: {
+    v.f_[0]|=(!ok_[0]);
+    break;
+  }
+  default:
+    throw(AipsError("Jones matrix apply (JD::aF) incompatible with VisVector."));
+  }    
+}
+
+//  Corr-dep flag left-ward onto a VisVector
+void JonesDiag::flagLeft(VisVector& v) const {
+  switch(v.type()) {
+  case VisVector::Four: {
+    v.f_[0]|=(!ok_[0]);
+    v.f_[1]|=(!ok_[1]);
+    v.f_[2]|=(!ok_[0]);
+    v.f_[3]|=(!ok_[1]);
+    break;
+  }
+  case VisVector::Two: {
+    v.f_[0]|=(!ok_[0]);
+    v.f_[1]|=(!ok_[1]);
+    break;
+  }
+  case VisVector::One: {
+    v.f_[0]|=(!ok_[0]);
+    break;
+  }
+  default:
+    throw(AipsError("Jones matrix apply (JD::aF) incompatible with VisVector."));
+  }    
 }
 
 
@@ -526,6 +677,7 @@ void JonesScal::operator*=(const Jones& other) {
 
 // Apply rightward to a VisVector
 void JonesScal::applyRight(VisVector& v) const {
+  if (v.f_) flagRight(v);
   for (Int i=0;i<v.vistype_;++i) 
     v.v_[i] *= (*j_);
 }
@@ -540,6 +692,7 @@ void JonesScal::applyRight(VisVector& v, Bool& vflag) const {
 
 // Apply leftward (transposed) to a VisVector 
 void JonesScal::applyLeft(VisVector& v) const {
+  if (v.f_) flagLeft(v);
   Complex c;
   c=conj(*j_);
   for (Int i=0;i<v.vistype_;++i) 
@@ -559,6 +712,11 @@ void JonesScal::applyLeft(VisVector& v, Bool& vflag) const {
 //  (non-corr-dep flag version)
 void JonesScal::applyFlag(Bool& vflag) const {
   vflag|=(!*ok_);
+}
+//  Corr-dep flag rightward onto a VisVector
+//  (NB: flagLeft call this since flagging commutes for scalars)
+void JonesScal::flagRight(VisVector& v) const {
+  for (Int i=0;i<v.vistype_;++i) v.f_[i]|=(!*ok_);
 }
 
 

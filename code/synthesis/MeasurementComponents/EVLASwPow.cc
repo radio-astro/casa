@@ -473,9 +473,9 @@ void EVLASwPow::calcAllJones() {
 void EVLASwPow::syncWtScale() {
 
   Int nPolWt=currRPar().shape()(0)/2;
-  currWtScale().resize(nPolWt,nAnt());
+  currWtScale().resize(nPolWt,1,nAnt());
 
-  Matrix<Float> Tsys(currRPar()(Slice(1,2,2),Slice(),Slice()).nonDegenerate(1));
+  Cube<Float> Tsys(currRPar()(Slice(1,2,2),Slice(),Slice()));
   Tsys(Tsys<FLT_MIN)=1.0;  // OK?
 
   currWtScale() = 1.0f/Tsys;

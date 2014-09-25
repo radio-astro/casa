@@ -219,6 +219,40 @@ void VisCal::correct(VisBuffer& vb, Bool trial) {
 
 }
 
+void VisCal::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
+
+  if (prtlev()>3) cout << "VC::correct2(vb)" << endl;
+
+  // Count pre-cal flags
+  countInFlag2(vb);
+
+  // Bring calibration up-to-date w/ the vb
+  syncCal2(vb,True);
+
+  // Organize for weight calibration
+  Cube<Float> wtcube;
+  if (doWtSp) {
+    // refer directly to weightSpectrum
+    wtcube.reference(vb.weightSpectrum());
+  }
+  else {
+    // refer to unchan'd weight matrix, rendered as Cube
+    IPosition sh2=vb.weight().shape();
+    IPosition sh3(3,sh2[0],1,sh2[1]);
+    wtcube.reference(vb.weight().reform(sh3));
+  }
+
+  // Refer to corrected data
+  Cube<Complex> vCC;
+  vCC.reference(vb.visCubeCorrected());
+
+  // Apply the calibration
+  applyCal2(vb,vCC,wtcube,trial);
+
+  // Count post-cal flags
+  countOutFlag2(vb);
+
+}
 
 // void VisCal::corrupt(VisBuffer& vb) {
 void VisCal::corrupt(VisBuffer& vb) {
@@ -348,11 +382,19 @@ void VisCal::countInFlag(const VisBuffer& vb) {
   ndataIn_+=(vb.flag().nelements()*ncorr);
   nflagIn_+=(ntrue(vb.flag())*ncorr);
 }
+void VisCal::countInFlag2(const vi::VisBuffer2& vb) {
+  ndataIn_+=(vb.flagCube().nelements());
+  nflagIn_+=(ntrue(vb.flagCube()));
+}
 
 void VisCal::countOutFlag(const VisBuffer& vb){
   nflagOut_+=ntrue(vb.flag())*vb.nCorr(); 
 }
-  
+
+void VisCal::countOutFlag2(const vi::VisBuffer2& vb){
+  nflagOut_+=ntrue(vb.flagCube());
+}
+
 void VisCal::syncCal(const VisBuffer& vb,
 		     const Bool& doInv) {
   
@@ -366,6 +408,23 @@ void VisCal::syncCal(const VisBuffer& vb,
 
   // Procede with generalized sync of calibration
   syncCal(doInv);
+
+}
+
+void VisCal::syncCal2(const vi::VisBuffer2& vb,
+		      const Bool& doInv) {
+  
+  if (prtlev()>4) cout << "   VC::syncCal2(vb)" << endl;
+
+  // Set current meta date from the VisBuffer
+  syncMeta2(vb);
+
+  // Check the current calibration for validity
+  checkCurrCal();
+
+  // Procede with generalized sync of calibration
+  syncCal(doInv);
+
 
 }
 
@@ -410,6 +469,29 @@ void VisCal::syncMeta(const VisBuffer& vb) {
 
   // Ensure VisVector for data acces has correct form
   Int ncorr(vb.corrType().nelements());
+  if (V().type() != ncorr)
+    V().setType(visType(ncorr));
+
+}
+
+void VisCal::syncMeta2(const vi::VisBuffer2& vb) {
+  
+  if (prtlev()>4) cout << "    VC::syncMeta2(vb)" << endl;
+
+  // Keep pointer to this vb, in case parameter calc needs it
+  //  vb_=&vb;
+ 
+  syncMeta(vb.spectralWindows()(0),
+	   vb.time()(0),
+	   vb.fieldId()(0),
+	   vb.getFrequencies(0),
+	   vb.nChannels());
+
+  currObs()=vb.observationId()(0);
+
+
+  // Ensure VisVector for data acces has correct form
+  Int ncorr(vb.nCorrelations());
   if (V().type() != ncorr)
     V().setType(visType(ncorr));
 
@@ -612,7 +694,7 @@ void VisCal::initVisCal() {
     currRPar_[ispw] = new Cube<Float>();
     currParOK_[ispw] = new Cube<Bool>();
     V_[ispw] = new VisVector(VisVector::Four);
-    currWtScale_[ispw] = new Matrix<Float>();
+    currWtScale_[ispw] = new Cube<Float>();
   }
 
 }
@@ -783,6 +865,96 @@ void VisMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
     if (calWt() && !trial)
       wt.next();
 
+  }
+
+}
+
+// Apply this calibration to VisBuffer visibilities
+void VisMueller::applyCal2(vi::VisBuffer2& vb, 
+			   Cube<Complex>& Vout, Cube<Float>& Wout,
+			   Bool trial) {
+
+  if (prtlev()>3) cout << "  VM::applyCal()" << endl;
+
+  // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
+  /*
+  cout << "VM::applyCal: type= " << typeName() << "  trial = " 
+       << boolalpha << trial << " calWt = " << calWt() 
+       << "  freqDepPar() = " << freqDepPar()
+       << "  freqDepMat() = " << freqDepMat()
+       << endl;
+  */
+
+  Vector<Bool> flagRv(vb.flagRow());
+  Vector<Int>  a1v(vb.antenna1());
+  Vector<Int>  a2v(vb.antenna2());
+  Cube<Bool> flagCube(vb.flagCube());
+  Cube<Complex> visCube(Vout);
+  ArrayIterator<Float> wt(Wout,2);
+  Matrix<Float> wtmat;
+
+  // Data info/indices
+  Int* dataChan;
+  Bool* flagR=&flagRv(0);
+  Int* a1=&a1v(0);
+  Int* a2=&a2v(0);
+
+
+  if (V().type()==VisVector::One) {
+    M().setScalarData(True);
+  }
+  else
+    M().setScalarData(False);
+
+  // iterate rows
+  Int nRow=vb.nRows();
+  Int nChanDat=vb.nChannels();
+  Int ibln;
+  Vector<Int> dataChanv(vb.getChannelNumbers(0));  // All rows have same chans
+  for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
+    
+    // The basline number
+    ibln=blnidx(*a1,*a2);
+    
+    // Solution channel registration
+    Int solCh0(0);
+    dataChan=&dataChanv(0);
+    
+    // If cal _parameters_ are not freqDep (e.g., a delay)
+    //  the startChan() should be the same as the first data channel
+    if (freqDepMat() && !freqDepPar())
+      startChan()=(*dataChan);
+    
+    // Solution and data array registration
+    M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
+    if (!trial)
+      V().sync(visCube(0,0,row),flagCube(0,0,row));
+    
+    
+    for (Int chn=0; chn<nChanDat; chn++,V()++,dataChan++) {
+      
+      if (trial) 
+	M().flag(V());
+      else 
+	// data and solution ok, do the apply
+	M().apply(V());
+
+      // inc soln ch axis if freq-dependent 
+      if (freqDepMat()) 
+	M()++; 
+
+    } // chn
+
+    // If requested update the weights
+    /*
+    if (calWt() && !trial) {
+      wtvec.reference(wt.array());
+      updateWt(wtvec,*a1,*a2);
+    }
+
+    if (calWt() && !trial)
+      wt.next();
+    */
   }
 
 }
@@ -976,13 +1148,12 @@ void VisMueller::createMueller() {
 
 void VisMueller::syncWtScale() {
 
-
   // Ensure proper size according to Mueller matrix type
   switch (this->muellerType()) {
   case Mueller::Scalar: 
   case Mueller::Diagonal: {
-    Int nWtScale=muellerNPar(muellerType());
-    currWtScale().resize(nWtScale,nBln());
+    Int nWtCorr=muellerNPar(muellerType());
+    currWtScale().resize(nWtCorr,1,nBln());
     break;
   }
   default: {
@@ -1007,7 +1178,7 @@ void VisMueller::calcWtScale() {
   AlwaysAssert( (nChanMat()==1), AipsError );
 
   Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(currMElem().shape()));
+  cWS.reference(currWtScale());
 
   // Simple pre-inversion square of currMElem
   cWS=real(currMElem()*conj(currMElem()));
@@ -1017,7 +1188,8 @@ void VisMueller::calcWtScale() {
 
 void VisMueller::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
 
-  Vector<Float> ws(currWtScale().column(blnidx(a1,a2)));
+  // Assumes single channel
+  Vector<Float> ws(currWtScale().xyPlane(blnidx(a1,a2)).column(0));
 
   switch (V().type()) {
   case VisVector::One: {
@@ -1243,6 +1415,117 @@ void VisJones::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
 
 }
 
+// Apply this calibration to VisBuffer visibilities
+void VisJones::applyCal2(vi::VisBuffer2& vb, 
+			 Cube<Complex>& Vout, Cube<Float>& Wout,
+			 Bool trial) {
+
+  if (prtlev()>3) cout << "  VJ::applyCal()" << endl;
+
+  // CURRENTLY ASSUMES ONLY *ONE* TIMESTAMP IN VISBUFFER
+
+  /*
+  cout << "VJ::applyCal: type= " << typeName() << "  trial = " 
+       << boolalpha << trial << " calWt = " << calWt() 
+       << "  freqDepPar() = " << freqDepPar()
+       << "  freqDepMat() = " << freqDepMat()
+       << endl;
+  */
+
+  if (applyByMueller()) 
+    throw(AipsError("applyByMueller call from VisJones::applyCal2 NYI."));
+  //    VisMueller::applyCal(vb,Vout);
+  else {
+
+    // TBD: applyByJones()=True necessarily
+
+    // References to VB2's contents' _data_
+    Vector<Bool> flagRv(vb.flagRow());
+    Vector<Int>  a1v(vb.antenna1());
+    Vector<Int>  a2v(vb.antenna2());
+    Cube<Bool> flagCube(vb.flagCube());
+    Cube<Complex> visCube(Vout);
+    ArrayIterator<Float> wt(Wout,2);
+    Matrix<Float> wtmat;
+
+    // Data info/indices
+    Int* dataChan;
+    Bool* flagR=&flagRv(0);
+    Int* a1=&a1v(0);
+    Int* a2=&a2v(0);
+
+    // Alert Jones matrices to whether data is scalar or not
+    //  (this is relevant only for proper handling of flags
+    //   in case of scalar data, for now)
+    if (V().type()==VisVector::One) {
+      J1().setScalarData(True);
+      J2().setScalarData(True);
+    }
+    else {
+      J1().setScalarData(False);
+      J2().setScalarData(False);
+    }
+
+    // iterate rows
+    Int nRow=vb.nRows();
+    Int nChanDat=vb.nChannels();
+    Vector<Int> dataChanv(vb.getChannelNumbers(0));  // All rows have same chans
+    //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
+    for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
+      
+      // Solution channel registration
+      Int solCh0(0);
+      dataChan=&dataChanv(0);
+      
+      // If cal _parameters_ are not freqDep (e.g., a delay)
+      //  the startChan() should be the same as the first data channel
+      if (freqDepMat() && !freqDepPar())
+	startChan()=(*dataChan);
+
+      // Solution and data array registration
+      J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
+      J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
+      if (!trial)
+	V().sync(visCube(0,0,row),flagCube(0,0,row));
+
+
+      for (Int chn=0; chn<nChanDat; chn++,V()++,dataChan++) {
+	  
+	if (trial) {
+	  // only update flag info
+	  J1().flagRight(V());
+	  J2().flagLeft(V());
+	}
+	else {
+	  // if this data channel unflagged
+	  J1().applyRight(V());
+	  J2().applyLeft(V());
+	}
+	  
+	// inc soln ch axis if freq-dependent (and next dataChan within soln)
+	if (freqDepMat()) {
+	  J1()++; 
+	  J2()++; 
+	}
+	  
+      } // chn
+	
+
+      // If requested, update the weights
+      if (!trial && calWt()) {
+	wtmat.reference(wt.array());
+	updateWt2(wtmat,*a1,*a2);
+      }
+
+      if (!trial)
+	wt.next();
+
+    }
+    
+  }
+
+}
+
 
 void VisJones::syncCalMat(const Bool& doInv) {
 
@@ -1306,6 +1589,15 @@ void VisJones::syncJones(const Bool& doInv) {
     calcAllJones();
 
   }
+
+  /*
+  if (type()==VisCal::B) {
+    cout << typeName() << ": currJElem().shape() = " << currJElem().shape() << endl;
+    cout << "currJElem() = " << currJElem() << endl;
+    cout << "currJElemOK() = " << currJElemOK() << endl;
+    cout << "freqDepMat() = " << boolalpha << freqDepMat() << endl;
+  }
+  */
 
   // Pre-inv syncWtScale:
   if (calWt()) syncWtScale();
@@ -1470,7 +1762,7 @@ void VisJones::syncWtScale() {
   case Jones::Scalar: 
   case Jones::Diagonal: {
     Int nWtScale=jonesNPar(jonesType());
-    currWtScale().resize(nWtScale,nAnt());
+    currWtScale().resize(nWtScale,1,nAnt());
     break;
   }
   default: {
@@ -1497,13 +1789,8 @@ void VisJones::calcWtScale() {
   // Insist on single channel operation
   AlwaysAssert( (nChanMat()==1), AipsError );
 
-  // Realize currWtScale w/ degenerate channel axis
-  Cube<Float> cWS;
-  //  IPosition blc(3,0,0,0);
-  //  Int nWtScale=jonesNPar(jonesType());
-  //  IPosition trc(3,nWtScale-1,0,nAnt()-1);
-  //  cWS.reference(currWtScale().reform(currJElem()(blc,trc).shape()));
-  cWS.reference(currWtScale().reform(currJElem().shape()));
+  // Just a reference
+  Cube<Float> cWS(currWtScale());
 
   // We use simple (pre-inversion) square of currJElem
   cWS=real(currJElem()*conj(currJElem()));
@@ -1513,8 +1800,8 @@ void VisJones::calcWtScale() {
 
 void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
 
-  Vector<Float> ws1(currWtScale().column(a1));
-  Vector<Float> ws2(currWtScale().column(a2));
+  Vector<Float> ws1(currWtScale().xyPlane(a1).column(0));
+  Vector<Float> ws2(currWtScale().xyPlane(a2).column(0));
 
 /*
   if (a1==0 && a2==1) {
@@ -1568,6 +1855,50 @@ void VisJones::updateWt(Vector<Float>& wt,const Int& a1,const Int& a2) {
   if (a1==0 && a2==1)
     cout << " ---> " << wt << endl;
   */
+}
+
+// WEIGHT_SPECTRUM-capable version
+void VisJones::updateWt2(Matrix<Float>& wt,const Int& a1,const Int& a2) {
+
+  Int nVco=wt.shape()[0];  // ==nChanDat()?
+  Int nVch=wt.shape()[1];  // ==nCorrDat()?
+
+  Matrix<Float> ws1(currWtScale().xyPlane(a1));
+  Matrix<Float> ws2(currWtScale().xyPlane(a2));
+
+  Int nCch=ws1.shape()[1];  //  ==nChanMat()?
+
+  // Channel counts either idential, or single-chan calibration
+  //  alwaysAssert( nVch==nCch || nCch==1, AipsError);
+
+  switch(jonesType()) {
+  case Jones::Scalar: {
+    // pol-indep corrections very simple; all correlations
+    //  corrected by same value, per channel
+    for (Int ich=0;ich<nVch;++ich) {
+      Int iCch=ich%nCch;  // 0 or ich
+      Float ws=(ws1(0,iCch)*ws2(0,iCch));
+      Matrix<Float> wtm(wt(Slice(),Slice(ich,1,1)));
+      wtm*=ws;
+    }
+    break;
+  }
+  case Jones::Diagonal: {
+
+    Int nCorrPerPol=max(nVco/2,1);  // >=1
+    for (Int ich=0;ich<nVch;++ich) {
+      Int iCch=ich%nCch;  // 0 or ich
+      for (Int ico=0;ico<nVco;++ico) 
+	wt(ico,ich) *= ( ws1(ico/nCorrPerPol,iCch) *
+			 ws2(ico%2,iCch) );
+    }
+    break;
+  }
+  default:
+    // We don't calibrate weights for General Jones matrices (yet)
+    break;
+  }
+
 }
 
 void VisJones::initVisJones() {

@@ -934,38 +934,58 @@ VisBufferImpl2::registerCacheItem (VbCacheItemBase * item)
 void
 VisBufferImpl2::resetWeightsUsingSigma ()
 {
-    const Matrix <Float> & sigma = this->sigma ();
 
-    IPosition ip (sigma.shape());
+  if (getViP()->weightSpectrumExists()) {   // Exists and contains actual values
+    // We are doing spectral weights
 
-    Matrix <Float> & weight = cache_p->weight_p.getRef ();
-    weight.resize(ip);
+    if (getViP()->sigmaSpectrumExists()) {
+      // Init WS from SS for calibration
+      Cube<Float> wtsp(nCorrelations(),nChannels(),nRows(),0.0);
+      const Cube <Float> & sigmaSpec = this->sigmaSpectrum ();
 
-    Int nPol(ip(0));
-    Int nRow(ip(1));
+      for (Int irow=0;irow<nRows();++irow) {
+	for (Int ichan=0;ichan<nChannels();++ichan) {
+	  for (Int icorr=0;icorr<nCorrelations();++icorr) {
+	    const Float &s=sigmaSpec(icorr,ichan,irow);
+	    wtsp(icorr,ichan,irow) = (s>0.0 ? 1.0f/square(s) : 0.0);
+	  }
+	}
+      }
+      // Set it in the VB
+      setWeightSpectrum(wtsp);
 
-    // Weight is inverse square of sigma (or zero[?])
-
-    Float * w = weight.data();
-    const Float * s = sigma.data();
-
-    for (Int row = 0; row < nRow; ++row){
-        for (Int pol = 0; pol < nPol; ++pol, ++w, ++s){
-            if (*s > 0.0f) {
-                *w = 1.0f / square(*s);
-            } else {
-                *w = 0.0f;
-            }
-        }
     }
+    else {
+      // Init WS from S, broadcast on chan axis
+      Cube<Float> wtsp(nCorrelations(),nChannels(),nRows(),0.0);
+      const Matrix <Float> & sigma = this->sigma ();
 
-    // Scale by (unselected!) # of channels (to stay aligned with original nominal weights)
+      for (Int irow=0;irow<nRows();++irow) {
+	for (Int icorr=0;icorr<nCorrelations();++icorr) {
+	  const Float &s=sigma(icorr,irow);
+	  wtsp(Slice(icorr,1,1),Slice(),Slice(irow,1,1)) =
+	    (s>0.0 ? 1.0f/square(s) : 0.0);
+	}
+      }
+      // Set it in the VB
+      setWeightSpectrum(wtsp);
+    }
+  }
+  else {
+    // Not using WS, fill W from S
+    Matrix<Float> wtm(nCorrelations(),nRows(),0.0);
+    const Matrix <Float> & sigma = this->sigma ();
+    
+    for (Int irow=0;irow<nRows();++irow) {
+      for (Int icorr=0;icorr<nCorrelations();++icorr) {
+	const Float &s=sigma(icorr,irow);
+	wtm(icorr,irow) = (s>0.0 ? 1.0f/square(s) : 0.0);
+      }
+    }
+    // Set it in the VB
+    setWeight(wtm);
+  }
 
-    Int nchan = getViP()->subtableColumns().spectralWindow().numChan()(spectralWindows()(0));
-
-    weight *= Float(nchan);
-
-    cache_p->weight_p.setAsPresent ();
 }
 
 void
@@ -1219,6 +1239,21 @@ VisBufferImpl2::writeChangesBack ()
     }
 
     rwvi->writeBackChanges (this);
+}
+
+void
+VisBufferImpl2::initWeightSpectrum(const Cube<Float>& wtspec) 
+{
+    ThrowIf (! state_p->isAttached_p,
+             "Call to writeChangesBack on unattached VisBuffer.");
+
+    VisibilityIterator2 * rwvi = dynamic_cast <VisibilityIterator2 *> (getViP());
+
+    ThrowIf (rwvi == 0, "Can't write to a read-only VisibilityIterator.");
+
+    // TBD:  Should verify that shape is correct!
+
+    rwvi->initWeightSpectrum(wtspec);
 }
 
 //      +---------------+
@@ -2306,11 +2341,24 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     Matrix<Bool> flagMat = flagCube().yzPlane(0);
     std::logical_and<Bool> andOp;
 
+    /*
     Vector<Float> wts (nRows (), 0);
-
     wts = weight().row(0);
     wts += weight().row(nCorrelations() - 1);
     wts *= 0.5f;
+    */
+
+    // Extract weights correctly
+    Matrix<Float> wtm;  // [nchan,nrow]
+    Cube<Float> wtc;  //  [ncorr,nchan,nrow]
+    if (getViP()->weightSpectrumExists())
+      wtc.reference(weightSpectrum());
+    else 
+      wtc.reference(weight().reform(IPosition(3,nCorrelations(),1,nRows())));
+
+    // Collapse on correlation axis
+    weightGenerator.unPolChanWeight(wtm,wtc);
+
 
     for (Int i = 1; i < nCorrelations(); ++ i){
 
@@ -2320,20 +2368,20 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
 
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (value, flagMat, uvw (), getFrequencies (0), wts, msId (), fieldId ()(0));
+        weightGenerator.weightUniform (value, flagMat, uvw (), getFrequencies (0), wtm, msId (), fieldId ()(0));
 
     } else if (weightGenerator.getType () == "radial") {
 
-        weightGenerator.weightRadial (value, flagMat, uvw (), getFrequencies (0), wts);
+        weightGenerator.weightRadial (value, flagMat, uvw (), getFrequencies (0), wtm);
 
     } else {
 
-        weightGenerator.weightNatural (value, flagMat, wts);
+        weightGenerator.weightNatural (value, flagMat, wtm);
     }
 
     if (weightGenerator.doFilter ()) {
 
-        weightGenerator.filter (value, flagMat, uvw (), getFrequencies (0), wts);
+        weightGenerator.filter (value, flagMat, uvw (), getFrequencies (0), wtm);
     }
 }
 

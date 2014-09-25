@@ -99,21 +99,24 @@ template<class T> class Vector;
      // imagingWeight should be sized by (nchan, row) already
      // The fieldid and msid parameters must correspond to what VisBuffer  or VisIter fieldId() and msId() returns
      virtual void weightUniform(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
-                                const Vector<Double>& frequency, const Vector<Float>& weight, const Int msid, const Int fieldid ) const;
+                                const Vector<Double>& frequency, const Matrix<Float>& weight, const Int msid, const Int fieldid ) const;
 
      //Natural weighting scheme
      //imagingWeight should be sized by (nchan, row) already
      virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
-                                const Vector<Float>& weight) const;
+                                const Matrix<Float>& weight) const;
 
+   /*  unused version?
      //weight as Matrix version
      virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
                                 const Matrix<Float>& weight) const;
+
+   */
      //Radial weighting
      //imagingWeight should be sized by (nchan, row) already
      virtual void weightRadial(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
                                const Matrix<Double>& uvw, const Vector<Double>& frequency,
-                               const Vector<Float>& weight) const;
+                               const Matrix<Float>& weight) const;
 
      //Get the type of weighting this object is on..will return one of "natural", "uniform", "radial"
      virtual String getType() const;
@@ -128,13 +131,16 @@ template<class T> class Vector;
      //do uvfiltering...to be called after imaging weight is calculated
      virtual void filter(Matrix<Float>& imWeight, const Matrix<Bool>& flag, 
 			 const Matrix<Double>& uvw,
-			 const Vector<Double>& frequency, const Vector<Float>& weight) const;
+			 const Vector<Double>& frequency, const Matrix<Float>& weight) const;
 
      // This is to  get/set uniform style weight density...e.g if the caller wants to
      // add densities from different pieces of data distributed via different 
      // VisibilityIterators
      virtual Bool getWeightDensity (Block<Matrix<Float> >& density);
      virtual void setWeightDensity(const Block<Matrix<Float> >& density);
+
+     // Form corr-indep weight by averaging parallel-hand weights
+     void unPolChanWeight(Matrix<Float>& chanRowWt, const Cube<Float>& corrChanRowWt) const;
 
     private:
      void cube2Matrix(const Cube<Bool>& fcube, Matrix<Bool>& fMat);

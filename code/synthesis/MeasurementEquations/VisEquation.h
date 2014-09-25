@@ -33,6 +33,7 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Cube.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBuffer2.h>
 #include <synthesis/MeasurementComponents/VisCal.h>
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
 
@@ -113,6 +114,12 @@ public:
   // Arrange the model to use for calibration
   void setModel(const Vector<Float>& stokes);
   inline void unSetModel() { useInternalModel_=False; };
+
+  // How many terms are arranged for apply?
+  inline Int nTerms() const { return napp_; };
+
+  // List the terms
+  Vector<VisCal::Type> listTypes() const;
   
   // Report if spw has solutions available from all applied tables
   Bool spwOK(const Int& spw);
@@ -120,6 +127,7 @@ public:
   // Correct in place the OBSERVED visibilities in a VisBuffer
   //  with the apply-able VisCals
   void correct(VisBuffer& vb, Bool trial=False);
+  void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
 
   // Report flag-by-cal statistics
   Record actionRec();

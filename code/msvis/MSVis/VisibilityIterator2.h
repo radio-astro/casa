@@ -731,6 +731,10 @@ public:
 
   virtual void writeWeightSpectrum(const Cube<Float>& wtsp);
 
+
+  // Initialize the weightSpectrum
+  virtual void initWeightSpectrum(const Cube<Float>& wtsp);
+
   // Write/modify the Sigma
 
   void writeSigma(const Matrix<Float>& sig);

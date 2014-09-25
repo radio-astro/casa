@@ -179,6 +179,19 @@ void VisEquation::setModel(const Vector<Float>& stokes) {
 }
 
 //----------------------------------------------------------------------
+// List the terms
+Vector<VisCal::Type> VisEquation::listTypes() const {
+
+  Vector<VisCal::Type> typelist(nTerms());
+  for (Int i=0;i<napp_;++i)
+    typelist(i)=(*vcpb_)[i]->type();
+
+  return typelist;
+
+}
+
+
+//----------------------------------------------------------------------
 // Get spwOK for a single spw by aggregating from the vc's
 Bool VisEquation::spwOK(const Int& spw) {
   if (napp_<1) return True;  // if there are none, all is ok
@@ -211,6 +224,21 @@ void VisEquation::correct(VisBuffer& vb, Bool trial) {
   // (this is a no-op if no sort necessary)
   vb.unSortCorr();
   
+}
+//----------------------------------------------------------------------
+// Correct in place the OBSERVED visibilities in a VisBuffer
+void VisEquation::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
+
+  if (prtlev()>0) cout << "VE::correct2()" << endl;
+
+  AlwaysAssert(ok(),AipsError);
+
+  if (napp_==0) throw(AipsError("Nothing to Apply"));
+
+  // Apply each VisCal in left-to-right order 
+  for (Int iapp=0;iapp<napp_;iapp++)
+    vc()[iapp]->correct2(vb,trial,doWtSp);
+
 }
 
 //----------------------------------------------------------------------

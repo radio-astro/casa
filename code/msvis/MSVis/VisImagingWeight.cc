@@ -61,8 +61,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
 
-
-
       VisBufferAutoPtr vb (vi);
       wgtType_p="uniform";
       // Float uscale, vscale;
@@ -80,6 +78,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       multiFieldMap_p.clear();
       vi.originChunks();
       vi.origin();
+      
+      // Detect usable WEIGHT_SPECTRUM
+      Bool doWtSp=(vb->weightSpectrum().nelements()>0);
+
       String mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId());
       multiFieldMap_p.define(mapid, 0);
       gwt_p[0].resize(nx, ny);
@@ -116,9 +118,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               fid=multiFieldMap_p(mapid);
               Int nRow=vb->nRow();
               Int nChan=vb->nChannel();
+
+	      // Extract weights correctly (use WEIGHT_SPECTRUM, if available)
+	      Matrix<Float> wtm;
+	      if (doWtSp)                        
+		// WS available, 
+		unPolChanWeight(wtm,vb->weightSpectrum());               // collapse corr axis (parallel-hand average)
+	      else                                          
+		// WS UNavailable
+		wtm.reference(vb->weight().reform(IPosition(2,1,nRow))); // use vb.weight() (corr-collapsed, w/ 1 channel)
+
+	      // Use this to mod the channel indexing below
+	      Int nChanWt=wtm.shape()(0);
+
               for (Int row=0; row<nRow; row++) {
                   for (Int chn=0; chn<nChan; chn++) {
                       if(!vb->flag()(chn,row)) {
+			  Float currwt=wtm(chn%nChanWt,row);  // the weight for this chan,row
                           Float f=vb->frequency()(chn)/C::c;
                           u=vb->uvw()(row)(0)*f;
                           v=vb->uvw()(row)(1)*f;
@@ -127,8 +143,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                               for (Int iv=-vBox;iv<=vBox;iv++) {
                                   for (Int iu=-uBox;iu<=uBox;iu++) {
-                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(row);
-                                      sumwt[fid]+=vb->weight()(row);
+				      gwt_p[fid](ucell+iu,vcell+iv)+=currwt;
+                                      sumwt[fid]+=currwt;
                                   }
                               }
                           }
@@ -137,8 +153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                               for (Int iv=-vBox;iv<=vBox;iv++) {
                                   for (Int iu=-uBox;iu<=uBox;iu++) {
-                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(row);
-                                      sumwt[fid]+=vb->weight()(row);
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=currwt;
+                                      sumwt[fid]+=currwt;
                                   }
                               }
                           }
@@ -214,6 +230,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gwt_p[0].resize(nx, ny);
       gwt_p[0].set(0.0);
 
+      // Discover if weightSpectrum non-trivially available
+      Bool doWtSp=visIter.weightSpectrumExists();
+
       Int fields=0;
       for (visIter.originChunks();visIter.moreChunks();visIter.nextChunk()) {
           for (visIter.origin();visIter.more();visIter.next()) {
@@ -245,12 +264,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
               fid=multiFieldMap_p(mapid);
               Int nRow=vb->nRows();
               Int nChan=vb->nChannels();
+
+	      // Extract weights correctly (use WEIGHT_SPECTRUM, if available)
+	      Matrix<Float> wtm;
+	      Cube<Float> wtc;
+	      if (doWtSp)
+		// WS available [nCorr,nChan,nRow]
+		wtc.reference(vb->weightSpectrum());       
+	      else {
+		Int nCorr=vb->nCorrelations();
+		// WS UNavailable weight()[nCorr,nRow] --> [nCorr,nChan,nRow]
+	        wtc.reference(vb->weight().reform(IPosition(3,nCorr,1,nRow)));  // unchan'd weight as single-chan
+	      }
+	      unPolChanWeight(wtm,wtc);   // Collapse on corr axis
+
+	      // Used for mod of chn index below
+	      Int nChanWt=wtm.shape()(0);
+
 	      //Oww !!! temporary implementation of old vb.flag just to see if things work
 	      Matrix<Bool> flag;
 	      cube2Matrix(vb->flagCube(), flag);
               for (Int row=0; row<nRow; row++) {
                   for (Int chn=0; chn<nChan; chn++) {
                 	  
+		    Float currwt=wtm(chn%nChanWt,row);  // the weight for this chan,row
 			
                       if(!flag(chn,row)) {
                           Float f=vb->getFrequency(row, chn)/C::c;
@@ -261,8 +298,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                               for (Int iv=-vBox;iv<=vBox;iv++) {
                                   for (Int iu=-uBox;iu<=uBox;iu++) {
-                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(0,row);
-                                      sumwt[fid]+=vb->weight()(0,row);
+				      gwt_p[fid](ucell+iu,vcell+iv)+=currwt;
+                                      sumwt[fid]+=currwt;
                                   }
                               }
                           }
@@ -271,8 +308,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                           if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
                               for (Int iv=-vBox;iv<=vBox;iv++) {
                                   for (Int iu=-uBox;iu<=uBox;iu++) {
-                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(0,row);
-                                      sumwt[fid]+=vb->weight()(0,row);
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=currwt;
+                                      sumwt[fid]+=currwt;
                                   }
                               }
                           }
@@ -378,17 +415,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void VisImagingWeight::filter(Matrix<Float>& imWeight, const Matrix<Bool>& flag, 
 				const Matrix<Double>& uvw,
-				const Vector<Double>& frequency, const Vector<Float>& weight) const{
+				const Vector<Double>& frequency, const Matrix<Float>& weight) const{
+
+    // Expecting weight[nchan,nrow], where nchan=1 or nChan (data)
+    // If nchan=1 (i.e., WEIGHT_SPECTRUM unavailable), then the
+    //  following will be handle the channel degeneracy correctly, using %.
 
 
     Int nRow=imWeight.shape()(1);
     Int nChan=imWeight.shape()(0);
+    Int nChanWt=weight.shape()(0);
     for (Int row=0; row<nRow; row++) {
       for (Int chn=0; chn<nChan; chn++) {
 	Double invLambdaC=frequency(chn)/C::c;
 	Double u = uvw(0,row);
 	Double v = uvw(1,row);
-	if(!flag(chn,row) && (weight(row)>0.0) ) {
+	if(!flag(chn,row) && (weight(chn%nChanWt,row)>0.0) ) {
 	  Double ru = invLambdaC*(  cospa_p * u + sinpa_p * v);
 	  Double rv = invLambdaC*(- sinpa_p * u + cospa_p * v);
 	  Double filter = exp(-rbmaj_p*square(ru) - rbmin_p*square(rv));
@@ -406,9 +448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void VisImagingWeight::weightUniform(Matrix<Float>& imWeight, const Matrix<Bool>& flag, const Matrix<Double>& uvw,
                                          const Vector<Double>& frequency,
-                                         const Vector<Float>& weight, const Int msId, const Int fieldId) const{
-
-
+                                         const Matrix<Float>& weight, const Int msId, const Int fieldId) const{
 
 
       // cout << " WEIG " << nx_p << "  " << ny_p << "   " << gwt_p.shape() << endl;
@@ -424,7 +464,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Double sumwt=0.0;
       Int nRow=imWeight.shape()(1);
       Int nChannel=imWeight.shape()(0);
-
+      Int nChanWt=weight.shape()(0);
       Float u, v;
       for (Int row=0; row<nRow; row++) {
 	for (Int chn=0; chn<nChannel; chn++) {
@@ -434,7 +474,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    v=uvw(1, row)*f;
 	    Int ucell=Int(uscale_p*u+uorigin_p);
 	    Int vcell=Int(vscale_p*v+vorigin_p);
-	    imWeight(chn,row)=weight(row);
+	    imWeight(chn,row)=weight(chn%nChanWt,row);
 	    if((ucell>0)&&(ucell<nx_p)&&(vcell>0)&&(vcell<ny_p)) {
 	      if(gwt_p[fid](ucell,vcell)>0.0) {
 		imWeight(chn,row)/=gwt_p[fid](ucell,vcell)*f2_p[fid]+d2_p[fid];
@@ -452,10 +492,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
 
-
-
     }
 
+  /*  unused version?
 void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
                                          const Matrix<Float>& weight) const{
 
@@ -470,18 +509,19 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 	weightNatural(imagingWeight, flag, wgtRow);
 
     }
-
+  */
     void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
-                                         const Vector<Float>& weight) const{
+                                         const Matrix<Float>& weight) const{
 
         Double sumwt=0.0;
 
         Int nRow=imagingWeight.shape()(1);
         Int nChan=imagingWeight.shape()(0);
+        Int nChanWt=weight.shape()(0);
         for (Int row=0; row<nRow; row++) {
             for (Int chn=0; chn<nChan; chn++) {
                 if( !flag(chn,row) ) {
-                    imagingWeight(chn,row)=weight(row);
+ 		    imagingWeight(chn,row)=weight(chn%nChanWt,row);
                     sumwt+=imagingWeight(chn,row);
                 }
                 else {
@@ -498,11 +538,12 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
                                         const Matrix<Bool>& flag,
                                         const Matrix<Double>& uvw,
                                         const Vector<Double>& frequency,
-                                        const Vector<Float>& weight) const{
+                                        const Matrix<Float>& weight) const{
 
         Double sumwt=0.0;
         Int nRow=imagingWeight.shape()(1);
         Int nChan=imagingWeight.shape()(0);
+	Int nChanWt=weight.shape()(0);
 
         for (Int row=0; row<nRow; row++) {
             for (Int chn=0; chn< nChan; chn++) {
@@ -510,7 +551,7 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
                 if( !flag(chn,row) ) {
                     imagingWeight(chn,row)=
 		      f*sqrt(square(uvw(0, row))+square(uvw(1, row)))
-                            *weight(row);
+		            *weight(chn%nChanWt,row);
                     sumwt+=imagingWeight(chn,row);
                 }
                 else {
@@ -615,6 +656,28 @@ void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<
 	  fcube.freeStorage (pcube, deleteIt1);
 	  fMat.putStorage (pflags, deleteIt2);
   }
+
+
+  void VisImagingWeight::unPolChanWeight(Matrix<Float>& chanRowWt, const Cube<Float>& corrChanRowWt) const {
+
+    //cout << "VIW::uPCW" << endl;
+
+    IPosition sh3=corrChanRowWt.shape();
+    IPosition sh2=sh3.getLast(2);
+    //cout << sh3 << sh2 << endl;
+    chanRowWt.resize(sh2);
+    //cout << "assign..." << endl;
+    chanRowWt=corrChanRowWt(Slice(0,1,1),Slice(),Slice()).reform(sh2);
+    const Int& nPol=sh3[0];
+    if (nPol>1) {
+      chanRowWt += corrChanRowWt(Slice(nPol-1,1,1),Slice(),Slice()).reform(sh2);
+      chanRowWt /= 2.0f;
+    }
+
+    //    cout << "VIW::uPCW" << endl;
+
+  }
+
 
 }//# NAMESPACE CASA - END
 

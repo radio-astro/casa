@@ -986,9 +986,7 @@ void BJones::calcWtScale() {
   
   IPosition ash(amps.shape());
   ash(1)=1;  // only one channel in the weights
-  Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(ash));
-  cWS.set(1.0);
+  Cube<Float> cWS(currWtScale());
 
   IPosition it3(2,0,2);
   ArrayIterator<Float> A(amps,it3,False);

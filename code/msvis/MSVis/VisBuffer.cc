@@ -343,7 +343,14 @@ VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
         throw (AipsError ("Programmer Error... imaging weights not set"));
     }
 
-    Vector<Float> weightvec = weight ();
+    // Extract data weights correctly [nchan,nrow]
+    //   NB:  VB::weight() yields corr-,chan-indep row weights
+    Matrix<Float> wtm;
+    if (weightSpectrum().nelements()==0) 
+      wtm.reference(weight().reform(IPosition(2,1,nRow_p))); // add degenerate chan axis
+    else 
+      weightGenerator.unPolChanWeight(wtm,weightSpectrum());  
+
     Matrix<Bool> flagmat = flag ();
     imagingWeight_p.resize (flagmat.shape ());
 
@@ -358,20 +365,20 @@ VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
 
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (imagingWeight_p, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
+        weightGenerator.weightUniform (imagingWeight_p, flagmat, uvwmat, fvec, wtm, msId (), fieldId ());
 
     } else if (weightGenerator.getType () == "radial") {
 
-        weightGenerator.weightRadial (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
+        weightGenerator.weightRadial (imagingWeight_p, flagmat, uvwmat, fvec, wtm);
 
     } else {
 
-        weightGenerator.weightNatural (imagingWeight_p, flagmat, weightvec);
+        weightGenerator.weightNatural (imagingWeight_p, flagmat, wtm);
     }
 
     if (weightGenerator.doFilter ()) {
 
-        weightGenerator.filter (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
+        weightGenerator.filter (imagingWeight_p, flagmat, uvwmat, fvec, wtm);
     }
 
     This->imagingWeightOK_p = True;

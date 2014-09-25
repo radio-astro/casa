@@ -76,6 +76,8 @@ public:
   // In general, we are freq-dep
   virtual Bool freqDepPar() { return True; };
 
+  // Specialized to turn on spectral weight calibration
+  virtual void correct2(vi::VisBuffer2& vb, Bool trial=False, Bool doWtSp=False);
 
 protected:
 
@@ -92,13 +94,20 @@ protected:
   // Calculate Jones matrix elements from Tsys (j = sqrt(p) )
   virtual void calcAllJones();
 
+  // Local version that arrange channelized correction
+  virtual void syncWtScale();
+
   // Calculate weight scale
   virtual void calcWtScale();
+  virtual void calcWtScale2();  // called by local syncWtScale only
 
 private:
 
   // The name of the SYSCAL table
   String sysCalTabName_;
+
+  // Signal formation of channelized weight calibration
+  Bool freqDepCalWt_;
 
   // <nothing>
 

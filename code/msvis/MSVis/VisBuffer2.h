@@ -226,6 +226,7 @@ public:
     //    in the future.
 
     virtual void writeChangesBack () = 0;
+    virtual void initWeightSpectrum (const Cube<Float>& wtspec) = 0;
 
     virtual void dirtyComponentsAdd (const VisBufferComponents2 & additionalDirtyComponents) = 0;
     virtual void dirtyComponentsAdd (VisBufferComponent2 component) = 0;

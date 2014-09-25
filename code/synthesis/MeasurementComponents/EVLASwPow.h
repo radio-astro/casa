@@ -97,7 +97,7 @@ protected:
   virtual void syncWtScale();
 
   // Experimenting with updateWt
-  //  virtual void updateWt(Vector<Float>& wt,const Int& a1,const Int& a2);
+  //virtual void updateWt(Matrix<Float>& wt,const Int& a1,const Int& a2);
 
 private:
 

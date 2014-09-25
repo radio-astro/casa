@@ -57,7 +57,8 @@ StandardTsys::StandardTsys(VisSet& vs) :
   VisCal(vs),             // virtual base
   VisMueller(vs),         // virtual base
   BJones(vs),              // immediate parent
-  sysCalTabName_(vs.sysCalTableName())
+  sysCalTabName_(vs.sysCalTableName()),
+  freqDepCalWt_(False)
 {
   if (prtlev()>2) cout << "StandardTsys::StandardTsys(vs)" << endl;
 
@@ -253,6 +254,16 @@ void StandardTsys::specify(const Record&) {
 
 }
 
+void StandardTsys::correct2(vi::VisBuffer2& vb, Bool trial, Bool doWtSp) {
+
+  // Signal channelized weight calibration downstream
+  freqDepCalWt_=doWtSp;
+
+  // Call parent:
+  BJones::correct2(vb,trial,doWtSp);
+}
+
+
 // Specialized calcPar that does some sanity checking
 void StandardTsys::calcPar() {
 
@@ -277,6 +288,47 @@ void StandardTsys::calcAllJones() {
 
 }
 
+void StandardTsys::syncWtScale() {
+
+  //  cout << "VJ::syncWtScale (" << typeName() << ")" << endl;
+
+  if (freqDepCalWt_) {
+
+    // We _will_ do a channelized weight calibration, so shape currWtScale() appropriately
+
+    // Ensure proper size according to Jones matrix type
+    switch (this->jonesType()) {
+    case Jones::Scalar: 
+    case Jones::Diagonal: {
+      currWtScale().resize(currRPar().shape());  // same as Tsys cube
+      currWtScale()=0.0;
+      break;
+    }
+    default: {
+      // Only diag and scalar versions can adjust weights
+      //    cout<< "Turning off calWt()" << endl;
+      calWt()=False;
+      return;
+      break;
+    }
+    }
+
+    // Calculate the weight scale factors spectrally
+    calcWtScale2();
+
+
+  //  cout << "VJ::syncWtScale: currWtScale() = " << currWtScale() << endl;
+
+
+  }
+  else
+
+    // Just do the single-chan thing
+    BJones::syncWtScale();
+
+}
+
+
 // Calculate weight update
 void StandardTsys::calcWtScale() {
 
@@ -286,9 +338,7 @@ void StandardTsys::calcWtScale() {
 
   IPosition ash(currRPar().shape());
   ash(1)=1;  // only on channel weight (so far)
-  Cube<Float> cWS;
-  cWS.reference(currWtScale().reform(ash));
-
+  Cube<Float> cWS(currWtScale());
 
   // For each pol and antenna, form 1/mean(Tsys(f))
   IPosition it3(2,0,2);
@@ -312,6 +362,14 @@ void StandardTsys::calcWtScale() {
     Tok.next();
     cWSi.next();
   }
+
+}
+
+// Calculate weight update
+void StandardTsys::calcWtScale2() {
+
+  // 1/Tsys (only where ok)
+  currWtScale()(currParOK())=1.f/currRPar()(currParOK());
 
 }
 
