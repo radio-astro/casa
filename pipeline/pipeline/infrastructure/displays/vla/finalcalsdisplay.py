@@ -665,7 +665,7 @@ class finalAmpTimeCalPerAntennaChart(object):
 	    filename='finalamptimecal'+str(ii)+'.png'
 	    ####syscommand='rm -rf '+filename
 	     ####os.system(syscommand)
-	    antPlot=str(ii*3)+'~'+str(ii*3+2)
+	    #antPlot=str(ii*3)+'~'+str(ii*3+2)
 	    antPlot=str(ii)
             
             stage = 'stage%s' % result.stage_number
@@ -686,11 +686,20 @@ class finalAmpTimeCalPerAntennaChart(object):
                 LOG.debug('Using existing ' + filename + ' plot.')
             
             try:
+            
+                #Get antenna name
+                antName = antPlot
+                if antPlot != '':
+                    domain_antennas = self.ms.get_antenna(antPlot)
+                    idents = [a.name if a.name else a.id for a in domain_antennas]
+                    antName = ','.join(idents)
+                    
+                    
                 plot = logger.Plot(figfile, x_axis='Time', y_axis='Amp',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
-                        'ant': antPlot,
+                        'ant': antName,
                         'type': 'finalamptimecal',
                         'file': os.path.basename(figfile)})
                 plots.append(plot)
