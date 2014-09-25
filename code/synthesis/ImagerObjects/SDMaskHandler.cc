@@ -451,8 +451,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          myrec = CRTFList.regionAsRecord();
        }
        else { // direct text input....
-         RegionTextList CRTFList(csys, text, imshape);
-         myrec = CRTFList.regionAsRecord();
+         Regex rx (Regex::fromPattern("*\\[*\\]*"));
+         if (text.matches(rx)) {
+           RegionTextList CRTFList(csys, text, imshape);
+           myrec = CRTFList.regionAsRecord();
+           //cerr<<"myrec.nfields()="<<myrec.nfields()<<endl;
+         }
+         else {
+           throw(AipsError("Input mask, '"+text+"' does not exist if it is inteded as a mask file name."+
+                 "Or invalid CRTF syntax if it is intended as a direct region specification."));
+         }
        }
        imageRegRec = new Record();
        imageRegRec->assign(myrec);
