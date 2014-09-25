@@ -21,8 +21,8 @@ class CleanInputs(cleanbase.CleanBaseInputs):
        phasecenter=None, nchan=None, start=None, width=None,
        weighting=None, robust=None, noise=None, npixels=None,
        restoringbeam=None, iter=None, mask=None, niter=None, threshold=None,
-       hm_masking=None, hm_cleaning=None, tlimit=None, masklimit=None,
-       maxncleans=None):
+       noiseimage=None, hm_masking=None, hm_cleaning=None, tlimit=None,
+       masklimit=None, maxncleans=None):
 
        super(CleanInputs, self ).__init__( context,
            output_dir=output_dir, vis=vis, imagename=imagename, intent=intent,
@@ -35,6 +35,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
 
        # Define addon properties here
 
+       self.noiseimage = noiseimage
        self.hm_masking = hm_masking
        self.hm_cleaning = hm_cleaning
        self.tlimit = tlimit
@@ -42,6 +43,21 @@ class CleanInputs(cleanbase.CleanBaseInputs):
        self.maxncleans = maxncleans
 
     # Add extra getters and setters here
+
+    @property
+    def noiseimage(self):
+        if self._noiseimage is None:
+            ms = self.context.observing_run.get_ms(name=self.vis[0])
+            observatory=ms.antenna_array.name
+            if 'VLA' in observatory:
+                return 'V'
+            else:
+                return 'Q'
+        return self._noiseimage
+
+    @noiseimage.setter
+    def noiseimage(self, value):
+         self._noiseimage = value
 
     @property
     def hm_masking(self):
@@ -118,7 +134,7 @@ class Clean(cleanbase.CleanBase):
                 self._empty_pointing_table()
 	        LOG.info('Temporarily remove pointing table')
 	    else:
-                # Get an empirical noise estimate by generating Q image.
+                # Get an empirical noise estimate by generating Q or V image.
 		#    This heuristics is ALMA specific
 	        #    Assumes presence of XX and YY correlations
 	        #    Assumes source is unpolarized
@@ -126,9 +142,10 @@ class Clean(cleanbase.CleanBase):
 	        #    Update / replace  code when sensitity function is working.
 	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
 	            residual_min, rms2d, image_max = \
-		    self._do_noise_estimate (iter=0)
+		    self._do_noise_estimate(stokes=inputs.noiseimage, iter=0)
 	        bestrms = non_cleaned_rms
-	        LOG.info('Best rms estimate from Q image is %s' % bestrms)
+	        LOG.info('Best rms estimate from %s image is %s' % 
+                  (inputs.noiseimage, bestrms))
 	    LOG.info('Best rms estimate for cleaning is %s' % bestrms)
 
             # Compute the dirty image.
@@ -344,8 +361,8 @@ class Clean(cleanbase.CleanBase):
 
         return result
 
-    # Compute a noise estimage from the Q image
-    def _do_noise_estimate (self, iter=0):
+    # Compute a noise estimage from the Q or V image
+    def _do_noise_estimate (self, stokes, iter=0):
 
         model_sum = None,
         cleaned_rms = None
@@ -355,15 +372,15 @@ class Clean(cleanbase.CleanBase):
         rms2d = None
         image_max = None
 
-        # Compute the dirty Q image.
+        # Compute the dirty Q or V image.
 	try:
-            result = self._do_clean (iter=0, stokes='Q', cleanmask='', niter=0,
+            result = self._do_clean (iter=0, stokes=stokes, cleanmask='', niter=0,
                 threshold='0.0mJy', result=None) 
 	    if result.empty():
                 return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
 	            residual_min, rms2d, image_max 
 	except Exception, e:
-            LOG.error('Error creating stokes Q noise image: %s' % (str(e)))
+            LOG.error('Error creating stokes %s noise image: %s' % (stokes, str(e)))
             return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
 	        residual_min, rms2d, image_max 
 
