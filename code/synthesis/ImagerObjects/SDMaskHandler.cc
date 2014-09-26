@@ -111,62 +111,64 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         copyMask(*(imstore->mask()), tempMaskImage);
         for (uInt imsk = 0; imsk < maskStrings.nelements(); imsk++) {
           maskString = maskStrings[imsk];
-          if ( Table::isReadable(maskString) ) {
-            Table imtab = Table(maskString, Table::Old);
-            Vector<String> colnames = imtab.tableDesc().columnNames();
-            if ( colnames[0]=="map" ) {
-              // looks like a CASA image ... probably should check coord exists in the keyword also...
-              //          cout << "copy this input mask...."<<endl;
-              PagedImage<Float> inmask(maskString);
-              IPosition inShape = inmask.shape();
-              IPosition outShape = imstore->mask()->shape();
-              Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
-              Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
-              if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
-                os << "Expanding mask image: " << maskString << LogIO::POST;
-                expandMask(inmask, tempMaskImage);
-              }
+          if (maskString!="") {
+            if ( Table::isReadable(maskString) ) {
+              Table imtab = Table(maskString, Table::Old);
+              Vector<String> colnames = imtab.tableDesc().columnNames();
+              if ( colnames[0]=="map" ) {
+                // looks like a CASA image ... probably should check coord exists in the keyword also...
+                //          cout << "copy this input mask...."<<endl;
+                PagedImage<Float> inmask(maskString);
+                IPosition inShape = inmask.shape();
+                IPosition outShape = imstore->mask()->shape();
+                Int specAxis = CoordinateUtil::findSpectralAxis(inmask.coordinates());
+                Int outSpecAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
+                if (inShape(specAxis) == 1 && outShape(outSpecAxis)>1) {
+                  os << "Expanding mask image: " << maskString << LogIO::POST;
+                  expandMask(inmask, tempMaskImage);
+                }
+                else {
+                  os << "Copying mask image: " << maskString << LogIO::POST;
+                  copyMask(inmask, tempMaskImage);
+               }
+              }// end of ''map''
               else {
-                os << "Copying mask image: " << maskString << LogIO::POST;
-                copyMask(inmask, tempMaskImage);
+                throw(AipsError(maskString+" does not appear to be valid image mask"));
               }
-            }// end of ''map''
+            }// end of readable table
             else {
-              throw(AipsError(maskString+" does not appear to be valid image mask"));
-            }
-          }// end of readable table
-          else {
-            //
-            Record* myrec = 0;
-            try {
-            myrec = RegionManager::readImageFile(maskString,String("temprgrec"));
-            if (myrec!=0) {
-              Bool ret(false);
-              Matrix<Quantity> dummyqmat;
-              Matrix<Float> dummyfmat;
-              ret=SDMaskHandler::regionToImageMask(tempMaskImage, myrec, dummyqmat, dummyfmat);
-              if (!ret) cout<<"regionToImageMask failed..."<<endl;
-              os << "Reading region record mask: " << maskString << LogIO::POST;
-
-              //debug
-              //PagedImage<Float> testtempim(tempMaskImage.shape(), tempMaskImage.coordinates(), "_testTempim");
-              //ret=SDMaskHandler::regionToImageMask(testtempim, myrec, dummyqmat, dummyfmat);
-              //if (!ret) cout<<"regionToImageMask 2nd failed..."<<endl;
-            }
-            }
-            catch (...) {
+              //
+              Record* myrec = 0;
               try {
-              ImageRegion* imageRegion=0;
-              os << "Reading text mask: " << maskString << LogIO::POST;
-              SDMaskHandler::regionTextToImageRegion(maskString, tempMaskImage, imageRegion);
-              if (imageRegion!=0)
-                SDMaskHandler::regionToMask(tempMaskImage,*imageRegion, Float(1.0));
+                myrec = RegionManager::readImageFile(maskString,String("temprgrec"));
+                if (myrec!=0) {
+                  Bool ret(false);
+                  Matrix<Quantity> dummyqmat;
+                  Matrix<Float> dummyfmat;
+                  ret=SDMaskHandler::regionToImageMask(tempMaskImage, myrec, dummyqmat, dummyfmat);
+                  if (!ret) cout<<"regionToImageMask failed..."<<endl;
+                    os << "Reading region record mask: " << maskString << LogIO::POST;
+
+                  //debug
+                  //PagedImage<Float> testtempim(tempMaskImage.shape(), tempMaskImage.coordinates(), "_testTempim");
+                  //ret=SDMaskHandler::regionToImageMask(testtempim, myrec, dummyqmat, dummyfmat);
+                  //if (!ret) cout<<"regionToImageMask 2nd failed..."<<endl;
+                }
               }
               catch (...) {
-              os << LogIO::WARN << maskString << "is invalid mask. Skipping this mask..." << LogIO::POST;
+                try {
+                  ImageRegion* imageRegion=0;
+                  os << "Reading text mask: " << maskString << LogIO::POST;
+                  SDMaskHandler::regionTextToImageRegion(maskString, tempMaskImage, imageRegion);
+                  if (imageRegion!=0)
+                   SDMaskHandler::regionToMask(tempMaskImage,*imageRegion, Float(1.0));
+                }
+                catch (...) {
+                  os << LogIO::WARN << maskString << "is invalid mask. Skipping this mask..." << LogIO::POST;
+                }
               }
-             }
-          }// end of region string
+            }// end of region string
+          }// end of non-emtpy maskstring
          
           LatticeExpr<Float> addedmask(tempMaskImage+tempAllMaskImage); 
           tempAllMaskImage.copyData( LatticeExpr<Float>( iif(addedmask > 0.0, 1.0, 0.0) ) );
