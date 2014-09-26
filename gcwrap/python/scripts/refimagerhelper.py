@@ -872,9 +872,9 @@ class ImagerParameters():
                                  'ntaylorterms':ntaylorterms,'restfreq':restfreq, 
                                  'outframe':outframe, 'reffreq':reffreq, 'sysvel':sysvel, 'sysvelframe':sysvelframe,
                                  'projection':projection,
-                                 'overwrite':overwrite }    }
+                                 'overwrite':overwrite, 'startmodel':startmodel,}    }
         ######### Gridding
-        self.allgridpars = { '0' :{'ftmachine':ftmachine, 'startmodel':startmodel,
+        self.allgridpars = { '0' :{'ftmachine':ftmachine, 
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,

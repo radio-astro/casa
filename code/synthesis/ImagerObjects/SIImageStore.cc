@@ -702,7 +702,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );
 
-    Directory immodel( modelname +String(".model") );
+    Directory immodel( modelname  +String(".model") );
     if( !immodel.exists() ) 
       {
 	os << "Starting model image does not exist. No initial prediction will be done" << LogIO::POST;
@@ -1664,7 +1664,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
 
 
 
-
+/*
   GaussianBeam SIImageStore::restorePlane()
   {
 
@@ -1715,6 +1715,7 @@ Float SIImageStore :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mea
     return beam;
 
   }
+*/
 
   void SIImageStore::pbcorPlane()
   {
@@ -1886,13 +1887,20 @@ Float SIImageStore::getPeakResidualWithinMask()
   }
 
   // Calculate the total model flux
-  Float SIImageStore::getModelFlux()
+Float SIImageStore::getModelFlux()
   {
-    LogIO os( LogOrigin("SIImageStore","getModelFlux",WHERE) );
+    //    LogIO os( LogOrigin("SIImageStore","getModelFlux",WHERE) );
 
     Float modelflux = sum( model()->get() );
 
     return modelflux;
+  }
+
+  // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
+Bool SIImageStore::isModelEmpty()
+  {
+    /// There MUST be a more efficient way to do this !!!!!  I hope. 
+    return  ( fabs( sum( model()->get() ) ) < 1e-08 );
   }
 
   // Calculate the PSF sidelobe level...

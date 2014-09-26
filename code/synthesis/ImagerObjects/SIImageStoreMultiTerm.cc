@@ -964,6 +964,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		LatticeExpr<Bool> lemask(iif(((*(image(0))) > specthreshold) , True, False));
 		
 		createMask( lemask, (alpha()) );
+
 	      }
 	    
       }
@@ -974,7 +975,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  
   }
 
-
+  /*
   GaussianBeam SIImageStoreMultiTerm::restorePlane()
   {
 
@@ -1006,18 +1007,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "With " << itsNTerms << " Taylor coefficient(s), spectral index " 
 	       << ((itsNTerms>2)?String("and curvature"):String("")) << " will "
 	       << ((itsNTerms>1)?String(""):String("not")) << " be computed." << LogIO::POST;
-	    
-	    /*	
-	    // Compute principal solution ( if it hasn't already been done to this ImageStore......  )
-	    itsMTCleaner.computeprincipalsolution();
-	    for(uInt tix=0; tix<itsNTerms; tix++)
-	    {
-	    Matrix<Float> tempRes;
-	    itsMTCleaner.getresidual(tix,tempRes);
-	    (itsImages->residual(tix))->put( tempRes );
-	    }
-	    */
-	    
 	    
 	    // Restore all terms
 	    ImageInfo ii = image(0)->imageInfo();
@@ -1067,12 +1056,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return beam;
   }
+*/
+
 
   Bool SIImageStoreMultiTerm::createMask(LatticeExpr<Bool> &lemask, 
 					 CountedPtr<ImageInterface<Float> > outimage)
 {
+  if( (outimage->getDefaultMask()).matches("mask0") ) { outimage->removeRegion("mask0");}
   ImageRegion outreg = outimage->makeMask("mask0",False,True);
-  //ImageRegion outreg = ((PagedImage<Float> *)(&*outimage))->makeMask("mask0",False,True);
   LCRegion& outmask=outreg.asMask();
   outmask.copyData(lemask);
   outimage->defineRegion("mask0",outreg, RegionHandler::Masks, True);
@@ -1170,6 +1161,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
   
+  // Check for non-zero model (this is different from getting model flux, for derived SIIMMT)
+  Bool SIImageStoreMultiTerm::isModelEmpty()
+  {
+    /// There MUST be a more efficient way to do this !!!!!  I hope. 
+    /// Maybe save this info and change it anytime model() is accessed.... 
+    Bool emptymodel=True;
+    for(uInt tix=0;tix<itsNTerms;tix++)
+      {
+	if( fabs( sum(model(tix)->get()) ) > 1e-08  ) emptymodel=False;
+      } 
+    return  emptymodel;
+  }
 
   
   /*  

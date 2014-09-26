@@ -84,12 +84,16 @@ class SIMapperCollection
 
   void checkOverlappingModels(String action); // action='blank' or 'restore'
 
+  Bool anyNonZeroModels();
+
 protected:
 
   ///////////////////// Member Objects
 
   Block<CountedPtr<SIMapper> >  itsMappers;
   Int oldMsId_p;
+
+  Bool itsIsNonZeroModel;
 
 };
 

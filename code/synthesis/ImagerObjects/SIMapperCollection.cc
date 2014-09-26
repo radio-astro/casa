@@ -69,6 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     itsMappers.resize(0);
     oldMsId_p=-1;
+    itsIsNonZeroModel=False;
 
   }
   
@@ -178,6 +179,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
   void SIMapperCollection::grid(VisBuffer& vb, Bool dopsf, FTMachine::Type col)
   {
+    if( itsIsNonZeroModel == True ) // Try to subtract model visibilities only if a model exists.
+	{
 	  if(col==FTMachine::CORRECTED){
 		  if(vb.msColumns().correctedData().isNull()){
 			  col=FTMachine::OBSERVED;
@@ -191,6 +194,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  else if (col==FTMachine::OBSERVED) {
 			  vb.visCube()-=vb.modelVisCube();
 	    }
+	}// if non zero model
+
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 		  (itsMappers[k])->grid(vb, dopsf, col);
@@ -216,24 +221,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 ///////////////////////////////////////OLD VI/VB ///////////////////////////////////////////////////
   void SIMapperCollection::initializeDegrid(VisBuffer& vb)
     {
+
+      itsIsNonZeroModel = anyNonZeroModels();
+
+      if( itsIsNonZeroModel == True )
+	{
+	  vb.setModelVisCube( Complex(0.0,0.0) );
+	  
+
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
     	  {
     		  (itsMappers[k])->initializeDegrid(vb);
 
     	  }
+	}// if non zero model 
     }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
   void SIMapperCollection::degrid(VisBuffer& vb, Bool saveVirtualMod)
     {
+      if( itsIsNonZeroModel == True )
+	{
 	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	    				(itsMappers[k])->degrid(vb);
 
   		  if(saveVirtualMod){
 		    saveVirtualModel(vb);
   		  }
-
+	}// if non zero model
     }
 
 
@@ -295,11 +311,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////////////////////////////////////////////////////////
   void SIMapperCollection::finalizeDegrid(VisBuffer& /*vb*/)
     {
+      if( itsIsNonZeroModel == True )
+	{
   	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
   		  (itsMappers[k])->finalizeDegrid();
 
   	  }
+	}// if non zero model
     }
 
 
@@ -430,7 +449,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  Bool SIMapperCollection::anyNonZeroModels()
+  {
+    Bool validmodel=False;
+    // If any one Mapper has a valid and nonzero model, return True.
+    for (Int model=0;model<nMappers(); ++model) 
+      { 
+	//	validmodel = ((itsMappers[model])->imageStore())->hasModel() && 
+	//	                        ( ! ( ((itsMappers[model])->imageStore())->isModelEmpty() ));
+	validmodel =  ! ( ((itsMappers[model])->imageStore())->isModelEmpty() );
+      }
+    //cout << "anyNonZeroModel : " << validmodel << endl;
+    return validmodel;
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 } //# NAMESPACE CASA - END

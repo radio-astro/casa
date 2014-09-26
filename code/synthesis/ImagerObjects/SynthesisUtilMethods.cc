@@ -1244,6 +1244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if( frame!="" && ! MFrequency::getType(freqFrame, freqframestr) )
 	  { err += "Invalid Frequency Frame " + freqframestr ; }
 	err += readVal( inrec, String("overwrite"), overwrite );
+	err += readVal( inrec, String("startmodel"), startModel );
 
 	err += readVal( inrec, String("ntaylorterms"), nTaylorTerms );
 

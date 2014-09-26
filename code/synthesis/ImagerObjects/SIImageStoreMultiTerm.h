@@ -133,7 +133,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   uInt getNTaylorTerms(Bool dopsf=False);  // {return dopsf ? (2*itsNTerms-1) : itsNTerms;};
 
   void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
-  GaussianBeam restorePlane();
+  //  GaussianBeam restorePlane();
   void pbcorPlane();
 
   /*
@@ -157,6 +157,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  {return ( itsParentSumWts.nelements()==0 || itsParentSumWts[0].null() ) ? False : getUseWeightImage( *(itsParentSumWts[0]) ); };
 
   void calcSensitivity();
+  virtual Bool isModelEmpty();
 
 protected:
 

@@ -124,7 +124,7 @@ class SIImageStore
   virtual Double getReferenceFrequency(){return 0.0;}
   virtual uInt getNTaylorTerms(Bool dopsf=False); //{return 1;};
   GaussianBeam getPSFGaussian();
-  virtual GaussianBeam restorePlane();
+  //  virtual GaussianBeam restorePlane();
   virtual void restore(GaussianBeam& rbeam, String& usebeam,uInt term=0 );
   virtual void pbcorPlane();
 
@@ -158,6 +158,7 @@ class SIImageStore
   Float getPeakResidual();
   Float getPeakResidualWithinMask();
   Float getModelFlux();
+  virtual Bool isModelEmpty();
   Float getPSFSidelobeLevel();
   void findMinMax(const Array<Float>& lattice,
 		  const Array<Float>& mask,
