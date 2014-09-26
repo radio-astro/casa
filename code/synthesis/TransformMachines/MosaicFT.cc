@@ -181,12 +181,13 @@ MosaicFT& MosaicFT::operator=(const MosaicFT& other)
 //}
 void MosaicFT::init() {
   
-  if((image->shape().product())>cachesize) {
+  /* if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
   }
+  */
   //For now only isTiled False works.
   isTiled=False;
   nx    = image->shape()(0);
@@ -222,7 +223,7 @@ void MosaicFT::init() {
 
   // Set up image cache needed for gridding. 
   if(imageCache) delete imageCache; imageCache=0;
-  
+  /*
   if(isTiled) {
     Float tileOverlap=0.5;
     tilesize=min(256,tilesize);
@@ -237,6 +238,7 @@ void MosaicFT::init() {
 					   (tileOverlap>0.0));
     
   }
+  */
 }
 
 // This is nasty, we should use CountedPointers here.
@@ -307,7 +309,8 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
   prepGridForDegrid();
-   
+  cerr << "initializeToVis lastfield " << lastFieldId_p << endl; 
+
 }
 
 
@@ -364,6 +367,7 @@ void MosaicFT::prepGridForDegrid(){
 
 void MosaicFT::finalizeToVis()
 {
+  /*
   if(isTiled) {
     
     logIO() << LogOrigin("MosaicFT", "finalizeToVis")  << LogIO::NORMAL;
@@ -375,6 +379,7 @@ void MosaicFT::finalizeToVis()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
+  */
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
@@ -405,12 +410,13 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   lastFieldId_p=-1;
   phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
-  if((image->shape().product())>cachesize) {
+  /*if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
   }
+  */
   //For now isTiled has to be false
   isTiled=False;
   nx    = image->shape()(0);
@@ -426,7 +432,7 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize for in memory or to disk gridding. lattice will
   // point to the appropriate Lattice, either the ArrayLattice for
   // in memory gridding or to the image for to disk gridding.
-  if(isTiled) {
+  /*if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
     lattice=CountedPtr<Lattice<Complex> >(image, False);
@@ -442,8 +448,9 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
       weightLattice=convWeightImage_p;
 
     }
-  }
-  else {
+    }
+    else*/ 
+  {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
@@ -483,6 +490,8 @@ void MosaicFT::initializeToSky(ImageInterface<Complex>& iimage,
     }
 
   }
+
+  //cerr << "initializetosky lastfield " << lastFieldId_p << endl;
   // AlwaysAssert(lattice, AipsError);
   
 }
@@ -499,7 +508,7 @@ void MosaicFT::finalizeToSky()
   
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
-  if(isTiled) {
+  /*if(isTiled) {
     logIO() << LogOrigin("MosaicFT", "finalizeToSky")  << LogIO::NORMAL;
     
     AlwaysAssert(image, AipsError);
@@ -509,7 +518,7 @@ void MosaicFT::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
-
+  */
   
   
   if(!doneWeightImage_p){
@@ -1589,7 +1598,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   Int nPolConv=convFunc.shape()[2];
   Int nChanConv=convFunc.shape()[3];
   Int nConvFunc=convFunc.shape()(4);
-  if(isTiled) {
+  /*if(isTiled) {
     Double invLambdaC=vb.frequency()(0)/C::c;
     Vector<Double> uvLambda(2);
     Vector<Int> centerLoc2D(2);
@@ -1653,7 +1662,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
       }
     }
   }
-  else {
+
+  else */
+  {
     Bool del;
      Bool uvwcopy; 
      const Double *uvwstor=uvw.getStorage(uvwcopy);
@@ -1795,7 +1806,8 @@ ImageInterface<Complex>& MosaicFT::getImage(Matrix<Float>& weights,
       }
     }
 
-    if(!isTiled) {
+    //if(!isTiled) 
+    {
       // Check the section from the image BEFORE converting to a lattice 
       IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
 		    (ny-image->shape()(1)+(ny%2==0))/2, 0, 0);
@@ -2198,6 +2210,7 @@ void  MosaicFT::girarUVW(Matrix<Double>& uvw, Vector<Double>& dphase,
     //image center is different from the phasecenter
     // UVrotation is False only if field never changes
   
+
    if((vb.fieldId()!=lastFieldId_p) || (vb.msId()!=lastMSId_p))
       doUVWRotation_p=True;
     if(doUVWRotation_p ||  fixMovingSource_p){

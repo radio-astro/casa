@@ -1,5 +1,5 @@
 //# FTMachine.cc: Implementation of FTMachine class
-//# Copyright (C) 1997,1998,1999,2001,2002,2003
+//# Copyright (C) 1997-2014
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -311,7 +311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     AlwaysAssert(uvwMachine_p, AipsError);
     
-    lastFieldId_p=vb.fieldId();
+    lastFieldId_p=-1;
     lastMSId_p=vb.msId();
     
     // Set up maps
