@@ -29,6 +29,7 @@ usage( ) {
     cat <<EOF
 Usage: casa-config [OPTION]
 
+   --help               print this message
    --version            print CASA version information
    --prefix             print CASA's install root
    --revision           print CASA source revision information
@@ -134,6 +135,9 @@ fi
 
 while [ $# -gt 0 ]; do
     case "$1" in
+    --help)
+            usage 0
+            ;;
     --version)
             echo ${version}
             ;;
@@ -155,6 +159,9 @@ while [ $# -gt 0 ]; do
             fi
             execute "$2"
             shift
+            ;;
+    *)
+            usage 1
             ;;
     esac
     shift
