@@ -220,8 +220,8 @@ else:
 # Set full polarization model for 0518+165 (pol is 11.1% @ -11 deg  [RL = -22]) 
 #  NB: neglecting source structure here) 
 print "--Setjy (X)--"
-setjy(vis=msnameB,field='0518+165',spw='0',scalebychan=False,fluxdensity=[3.688, 0.380, -0.153, 0.0]); 
-setjy(vis=msnameB,field='0518+165',spw='1',scalebychan=False,fluxdensity=[3.862, 0.397, -0.161, 0.0]); 
+setjy(vis=msnameB,field='0518+165',spw='0',scalebychan=False,standard='manual',fluxdensity=[3.688, 0.380, -0.153, 0.0]); 
+setjy(vis=msnameB,field='0518+165',spw='1',scalebychan=False,standard='manual',fluxdensity=[3.862, 0.397, -0.161, 0.0]); 
  
 #=====================================================================
 # Solve for polarization position angle on 0518+165 
@@ -386,8 +386,8 @@ else:
 # Set full polarization model for 0518+165 (pol is 11.1% @ -11 deg  [RL = -22]) 
 #  NB: neglecting source structure here) 
 print "--Setjy (X)--"
-setjy(vis=msnameC,field='0518+165',spw='0',scalebychan=False,fluxdensity=[3.688, 0.380, -0.153, 0.0]); 
-setjy(vis=msnameC,field='0518+165',spw='1',scalebychan=False,fluxdensity=[3.862, 0.397, -0.161, 0.0]); 
+setjy(vis=msnameC,field='0518+165',spw='0',scalebychan=False,standard='manual',fluxdensity=[3.688, 0.380, -0.153, 0.0]); 
+setjy(vis=msnameC,field='0518+165',spw='1',scalebychan=False,standard='manual',fluxdensity=[3.862, 0.397, -0.161, 0.0]); 
  
 #=====================================================================
 # Solve for polarization position angle on 0518+165 
