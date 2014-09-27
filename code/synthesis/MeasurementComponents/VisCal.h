@@ -261,8 +261,8 @@ protected:
   virtual void syncCal(VisCal& vc);
 
   // Set internal meta data from a VisBuffer or another VisCal
-  void syncMeta(const VisBuffer& vb);
-  void syncMeta2(const vi::VisBuffer2& vb);
+  virtual void syncMeta(const VisBuffer& vb);
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
   void syncMeta(VisCal& vc);
 
   void syncMeta(const Int& spw,

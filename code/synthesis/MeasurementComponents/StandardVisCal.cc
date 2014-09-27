@@ -81,31 +81,45 @@ PJones::~PJones() {
   if (prtlev()>2) cout << "P::~P()" << endl;
 }
 
-// We need to locally form the Jones according to 
-//  the correlations we have
+// PJones needs to know pol basis and feed pa
+void PJones::syncMeta(const VisBuffer& vb) {
 
-void PJones::syncJones(const Bool& doInv) {
+  // Call parent (sets currTime())
+  VisJones::syncMeta(vb);
 
-  // Circulars
-  if (vb().corrType()(0)==5)
+  // Basis
+  if (vb.corrType()(0)==5)         // Circulars
     pjonestype_=Jones::Diagonal;
-
-  // Linears
-  else if (vb().corrType()(0)==9)
+  else if (vb.corrType()(0)==9)    // Linears
     pjonestype_=Jones::General;
 
-  VisJones::syncJones(doInv);
+  // Get parallactic angle from the vb:
+  pa().resize(nAnt());
+  pa() = vb.feed_pa(currTime());
 
 }
 
+// PJones needs to know pol basis and feed pa
+void PJones::syncMeta2(const vi::VisBuffer2& vb) {
+
+  // Call parent (sets currTime())
+  VisJones::syncMeta2(vb);
+
+  // Basis
+  if (vb.correlationTypes()(0)==5)         // Circulars
+    pjonestype_=Jones::Diagonal;
+  else if (vb.correlationTypes()(0)==9)    // Linears
+    pjonestype_=Jones::General;
+
+  // Get parallactic angle from the vb:
+  pa().resize(nAnt());
+  pa() = vb.feedPa(currTime());
+
+}
 
 void PJones::calcPar() {
 
   if (prtlev()>6) cout << "      VC::calcPar()" << endl;
-
-  // Get parallactic angle from the vb:
-  pa().resize(nAnt());
-  pa() = vb().feed_pa(currTime());
 
   // Initialize parameter arrays
   currCPar().resize(1,1,nAnt());

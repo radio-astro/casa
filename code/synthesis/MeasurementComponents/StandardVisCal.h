@@ -78,9 +78,9 @@ protected:
   // Calculate parallactic angle
   virtual void calcPar();
 
-  // We need to locally form the Jones according to 
-  //  the correlations we have
-  virtual void syncJones(const Bool& doInv);
+  // Detect basis and feed_pa for this vb
+  virtual void syncMeta(const VisBuffer& vb);
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
 
   // Calculate a single PJones matrix 
   virtual void calcOneJones(Vector<Complex>& mat, Vector<Bool>& mOk,
