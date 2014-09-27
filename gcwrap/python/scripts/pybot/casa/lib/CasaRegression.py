@@ -51,8 +51,13 @@ class CasaRegression:
         
     # regression suite
     def clean_casaroot( self ):
+
         if self._rerun:
             return
+
+        if os.environ.has_key('__PYBOT_CASA_PRECONFIG__'):
+            return
+
         for k, v in self._path.iteritems( ):
             print str(k) + " -> " + str(v)
         if ( not self._path['casa'].startswith(self._path['top']) or self._path['casa'] == self._path['top'] ) :
