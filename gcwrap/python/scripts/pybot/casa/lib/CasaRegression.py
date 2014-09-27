@@ -85,7 +85,11 @@ class CasaRegression:
 
     # regression suite
     def fetch_build( self, url, checksum_url ):
+
         if self._rerun:
+            return
+
+        if os.environ.has_key('__PYBOT_CASA_PRECONFIG__'):
             return
 
         cleanup = [ ]
@@ -151,9 +155,22 @@ class CasaRegression:
 
     # regression suite
     def setup_build_state(self,datadir):
+
         if self._rerun:
             return
+
         casaroot = self._path['casa'] + '/build'
+        if os.environ.has_key('__PYBOT_CASA_PRECONFIG__'):
+            print "creating " + casaroot + "/init.sh"
+            f = open(casaroot + "/init.sh",'w')
+            f.write( "export __PYBOT_CASA_PRECONFIG__=\"" + os.environ['__PYBOT_CASA_PRECONFIG__'] + "\"\n" )
+            f.close( )
+            print "creating " + casaroot + "/init.pl"
+            f = open(casaroot + "/init.pl",'w')
+            f.write( "$ENV{'__PYBOT_CASA_PRECONFIG__'} = '" + os.environ['__PYBOT_CASA_PRECONFIG__'] + "';\n" )
+            f.close( )
+            return
+
         datalink = casaroot + '/data'
         if os.path.exists(datalink):
             if os.path.islink(datalink) or os.path.isfile(datalink):
@@ -184,16 +201,20 @@ class CasaRegression:
         f.close( )
 
     def initialize_version( self ):
-        casainit = self._path['casa'] + '/build/init.pl'
         versions = [ ]
-        if not os.path.isfile(casainit):
-            raise RuntimeError("no initialization file")
-        p = subprocess.Popen( [ self._path['bin'] + "/casapy-version", casainit ], stdout=subprocess.PIPE )
-        for line in p.stdout:
-            if line.startswith('VERSION>'):
-                versions = line.split( )[1:]
-                break
-        p.wait( )
+        if os.environ.has_key('__PYBOT_CASA_PRECONFIG__'):
+            versions = os.environ['__PYBOT_CASA_PRECONFIG__'].split( )
+        else:
+            casainit = self._path['casa'] + '/build/init.pl'
+            if not os.path.isfile(casainit):
+                raise RuntimeError("no initialization file")
+            p = subprocess.Popen( [ self._path['bin'] + "/casapy-version", casainit ], stdout=subprocess.PIPE )
+            for line in p.stdout:
+                if line.startswith('VERSION>'):
+                    versions = line.split( )[1:]
+                    break
+            p.wait( )
+
         if len(versions) != 2:
             raise RuntimeError("could not find casapy version number")
         print "version: " + str(versions[0]) + " revision: " + str(versions[1])
