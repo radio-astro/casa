@@ -347,7 +347,7 @@ VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
     //   NB:  VB::weight() yields corr-,chan-indep row weights
     Matrix<Float> wtm;
     if (weightSpectrum().nelements()==0) 
-      wtm.reference(weight().reform(IPosition(2,1,nRow_p))); // add degenerate chan axis
+      wtm.reference(weight().reform(IPosition(2,1,nRow()))); // add degenerate chan axis
     else 
       weightGenerator.unPolChanWeight(wtm,weightSpectrum());  
 
