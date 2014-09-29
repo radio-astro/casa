@@ -15,6 +15,10 @@
     <ProcessingCommand>
         <Command xmlns="">hifv_flagdata</Command>
         <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">hm_tbuff</Keyword>
+                <Value xmlns="">1.5int</Value>
+            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
