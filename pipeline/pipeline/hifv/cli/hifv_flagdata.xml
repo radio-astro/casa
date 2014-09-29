@@ -87,7 +87,7 @@
 	
 	<param type="string" name="hm_tbuff">
 	    <description>The time buffer computation heuristic</description>
-	    <value>halfint</value>
+	    <value>1.5int</value>
 	    <allowed kind="enum">
 		<value>halfint</value>
 		<value>1.5int</value>
