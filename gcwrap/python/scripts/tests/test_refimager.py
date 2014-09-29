@@ -1125,12 +1125,18 @@ def checkimcoord(csys,selpars,impars):
 
     # from output image --------------------------------
     # freqframe
-    specCoord = csys['spectral2']
+    if csys.has_key('spectral2'):
+      specCoord = csys['spectral2']
+      if specCoord.has_key('tabular'):
+        imch0=specCoord['tabular']['crval'][0]
+        iminc=specCoord['tabular']['cdelt'][0]
+      else:
+        imch0=specCoord['wcs']['crval']
+        iminc=specCoord['wcs']['cdelt']
+
     imframe=specCoord['system']
     # conversion layer- this should be LSRK by default
     convframe=specCoord['conversion']['system']
-    imch0=specCoord['wcs']['crval']
-    iminc=specCoord['wcs']['cdelt']
     obsdate=csys['obsdate']
     # if image channel reversed, check last channel 
     if reversechanorder:
