@@ -84,6 +84,22 @@
 	    <description>File that contains the flagging template</description>
 	    <value></value>
 	</param>
+	
+	<param type="string" name="hm_tbuff">
+	    <description>The time buffer computation heuristic</description>
+	    <value>halfint</value>
+	    <allowed kind="enum">
+		<value>halfint</value>
+		<value>1.5int</value>
+		<value>manual</value>
+	    </allowed>
+	</param>
+
+        <param type="any" name="tbuff" subparam="true">
+            <description>List of time buffers (sec) to pad timerange in flag commands</description>
+            <any type="variant" limittypes="double doubleArray" />
+            <value type="double">0.0</value>
+        </param>
 
 	<param type="string" name="pipelinemode">
 	    <description>The pipeline operating mode</description>
@@ -155,6 +171,16 @@
 	        <equals type="bool" value="False" />
 	        <equals type="bool" value="True">
 		    <default param="filetemplate"><value type="stringArray"></value></default>
+	        </equals>
+	    </when>
+	    
+	    <when param="hm_tbuff">
+	        <equals type="string" value="halfint">
+	        </equals>
+	        <equals type="string" value="1.5int">
+	        </equals>
+	        <equals type="string" value="manual">
+		    <default param="tbuff"><value type="double">0.0</value></default>
 	        </equals>
 	    </when>
 

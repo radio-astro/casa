@@ -3,12 +3,11 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-
 def hifv_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
                  scannumber=None, quack=None, clip=None, baseband=None,
                  intents=None, edgespw=None, fracspw=None,
                  online=None, fileonline=None, template=None,
-                 filetemplate=None, pipelinemode=None, flagbackup=None, 
+                 filetemplate=None, hm_tbuff=None, tbuff=None, pipelinemode=None, flagbackup=None, 
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

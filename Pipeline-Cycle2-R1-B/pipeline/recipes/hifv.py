@@ -75,7 +75,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_hanning (vis=vislist, pipelinemode=pipelinemode)
     
         # Flag known bad data
-        hifv_flagdata (pipelinemode=pipelinemode, scan=True)
+        hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int')
     
         # Fill model columns for primary calibrators
         hifv_vlasetjy (pipelinemode=pipelinemode)
