@@ -499,6 +499,12 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             tbuff = 0.5 * tbuff
         elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
+            
+            #Check for VLA usage of max integration time
+            if self.inputs.context.__dict__.has_key('evla'):
+                tbuff = 1.5 * inputs.ms.get_vla_max_integration_time()
+                LOG.info("Using VLA 1.5 * int_time")
+            
         else:
             tbuff = inputs._tbuff
         LOG.info("Using tbuff = "+str(tbuff))

@@ -272,6 +272,76 @@ class MeasurementSet(object):
                    key=lambda scan: scan.end_time['m0'],
                    cmp=lambda x,y: 1 if qt.gt(x,y) else 0 if qt.eq(x,y) else -1)
         return s[-1].start_time
+        
+    
+    def get_vla_max_integration_time(self):
+        """Get the integration time used by the original VLA scripts
+       
+           Returns -- The max integration time used
+        """
+        
+        vis = self.name
+        
+        with utils.open_table(vis + '/FIELD') as table:
+            #casatools.table.open(vis+'/FIELD')
+            numFields = table.nrows()
+            field_positions = table.getcol('PHASE_DIR')
+            field_ids = range(numFields)
+            field_names = table.getcol('NAME')
+            #casatools.table.close()
+        
+        with utils.open_table(vis) as table:
+            #casatools.table.open(vis)
+            scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
+            field_scans = []
+            for ii in range(0,numFields):
+                subtable = table.query('FIELD_ID==%s'%ii)
+                field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
+            #casatools.table.close()
+        
+        ## field_scans is now a list of lists containing the scans for each field.
+        ## so, to access all the scans for the fields, you'd:
+        #
+        #for ii in range(0,len(field_scans)):
+        #   for jj in range(0,len(field_scans[ii]))
+        #
+        ## the jj'th scan of the ii'th field is in field_scans[ii][jj]
+        
+        # Identify intents
+        
+        with utils.open_table(vis + '/STATE') as table:
+            #casatools.table.open(vis+'/STATE')
+            intents = table.getcol('OBS_MODE')
+            #casatools.table.close()
+        
+        """Figure out integration time used"""
+        
+        casatools.ms.open(vis)
+        scan_summary = casatools.ms.getscansummary()
+        ms_summary = casatools.ms.summary()
+        casatools.ms.close()
+        startdate=float(ms_summary['BeginTime'])
+    
+        integ_scan_list = []
+        for scan in scan_summary:
+            integ_scan_list.append(int(scan))
+        sorted_scan_list = sorted(integ_scan_list)
+        
+        # find max and median integration times
+        #
+        integration_times = []
+        for ii in sorted_scan_list:
+            integration_times.append(scan_summary[str(ii)]['0']['IntegrationTime'])
+            
+        maximum_integration_time = max(integration_times)
+        median_integration_time = numpy.median(integration_times)
+        
+        int_time = maximum_integration_time
+        
+        return int_time
+       
+       
+       
     
     def get_median_integration_time(self, intent=None):
         """Get the median integration time used to get data for the given
