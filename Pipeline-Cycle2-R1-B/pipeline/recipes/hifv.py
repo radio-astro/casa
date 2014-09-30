@@ -99,7 +99,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         hifv_flagbaddef (pipelinemode=pipelinemode)
 
 	# Flag spws that have no calibration at this point
-        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='testdelay.k', bpcaltable='testBPcal.b')
+        ##hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='testdelay.k', bpcaltable='testBPcal.b')
 
 	# Flag possible RFI on BP calibrator using rflag
         hifv_checkflag(pipelinemode=pipelinemode)
@@ -118,7 +118,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
         #semifinalBPdcals_plots2()
         
         # Flag spws that have no calibration at this point
-        hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='delay.k', bpcaltable='BPcal.b')
+        ##hifv_uncalspw(pipelinemode=pipelinemode, delaycaltable='delay.k', bpcaltable='BPcal.b')
         
         # Determine solint for scan-average equivalent
         hifv_solint(pipelinemode=pipelinemode)

@@ -51,20 +51,7 @@
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
-    
-    <ProcessingCommand>
-        <Command xmlns="">hifv_uncalspw</Command>
-        <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">delaycaltable</Keyword>
-                <Value xmlns="">testdelay.k</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">bpcaltable</Keyword>
-                <Value xmlns="">testBPcal.b</Value>
-            </Parameter>
-        </ParameterSet>
-    </ProcessingCommand>
+
     
     <ProcessingCommand>
         <Command xmlns="">hifv_checkflag</Command>
@@ -92,21 +79,7 @@
         <Command xmlns="">hifv_semiFinalBPdcals</Command>
         <ParameterSet>
         </ParameterSet>
-    </ProcessingCommand>
-    
-    <ProcessingCommand>
-        <Command xmlns="">hifv_uncalspw</Command>
-        <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">delaycaltable</Keyword>
-                <Value xmlns="">delay.k</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">bpcaltable</Keyword>
-                <Value xmlns="">BPcal.b</Value>
-            </Parameter>
-        </ParameterSet>
-    </ProcessingCommand>    
+    </ProcessingCommand>  
 
     <ProcessingCommand>
         <Command xmlns="">hifv_solint</Command>

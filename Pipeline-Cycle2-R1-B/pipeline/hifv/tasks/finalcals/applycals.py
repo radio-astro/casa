@@ -70,9 +70,9 @@ class Applycals(basetask.StandardTaskTemplate):
         #Run applycal
         applycal_results = self._do_applycal(self.inputs.context)
    
-        inputs = Uncalspw.Inputs(self.inputs.context, bpcaltable='finalBPcal.b', delaycaltable='finaldelay.k')
-        task = Uncalspw(inputs)
-        result = self._executor.execute(task)
+        ##inputs = Uncalspw.Inputs(self.inputs.context, bpcaltable='finalBPcal.b', delaycaltable='finaldelay.k')
+        ##task = Uncalspw(inputs)
+        ##result = self._executor.execute(task)
         
         
         return applycal_results
