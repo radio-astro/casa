@@ -145,7 +145,7 @@ class Fluxgains(basetask.StandardTaskTemplate):
                          'listmodels'     : False,
                          'scalebychan'    : True,
                          'fluxdensity'    : -1,
-                         'standard'       : 'Perley-Butler 2010',
+                         'standard'       : 'Perley-Butler 2013',
                          'usescratch'     : True,
                          'async'          : False}
         
