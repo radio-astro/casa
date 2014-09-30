@@ -88,6 +88,10 @@ protected:
   // Access to z.a. data
   Vector<Double>& za() { return za_; };
 
+  // Detect zenith angle for this vb
+  virtual void syncMeta(const VisBuffer& vb);
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
+
   // Calculate parameters (in this case, the z.a.)
   virtual void calcPar();
 

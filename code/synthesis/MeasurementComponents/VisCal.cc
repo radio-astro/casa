@@ -63,7 +63,6 @@ VisCal::VisCal(VisSet& vs) :
   nSpw_(vs.numberSpw()),
   nAnt_(vs.numberAnt()),
   nBln_(0),
-  vb_(NULL),
   currSpw_(0),
   currTime_(vs.numberSpw(),0.0),
   currScan_(vs.numberSpw(),-1),
@@ -99,7 +98,6 @@ VisCal::VisCal(const Int& nAnt) :
   nSpw_(1),
   nAnt_(nAnt),
   nBln_(0),
-  vb_(NULL),
   currSpw_(0),
   currTime_(1,0.0),
   currField_(1,-1),
@@ -454,9 +452,6 @@ void VisCal::syncCal(VisCal& vc) {
 void VisCal::syncMeta(const VisBuffer& vb) {
   
   if (prtlev()>4) cout << "    VC::syncMeta(vb)" << endl;
-
-  // Keep pointer to this vb, in case parameter calc needs it
-  vb_=&vb;
  
   syncMeta(vb.spectralWindow(),
 	   vb.time()(0),
@@ -477,9 +472,6 @@ void VisCal::syncMeta(const VisBuffer& vb) {
 void VisCal::syncMeta2(const vi::VisBuffer2& vb) {
   
   if (prtlev()>4) cout << "    VC::syncMeta2(vb)" << endl;
-
-  // Keep pointer to this vb, in case parameter calc needs it
-  //  vb_=&vb;
  
   syncMeta(vb.spectralWindows()(0),
 	   vb.time()(0),

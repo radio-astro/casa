@@ -197,9 +197,6 @@ protected:
   // Number of Calibration matrices on ant/bln axis
   virtual Int nCalMat()=0;
 
-  // Access to current vb
-  inline const VisBuffer& vb() { return *vb_; };
-
   // Current in-focus spw
   inline Int& currSpw() { return currSpw_; };
 
@@ -317,9 +314,6 @@ private:
 
   // Number of baselines
   Int nBln_;
-
-  // Pointer to the current vb
-  const VisBuffer* vb_;
 
   // Current synchronized spw
   Int currSpw_;

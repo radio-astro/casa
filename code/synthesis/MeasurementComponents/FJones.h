@@ -87,8 +87,9 @@ protected:
   // Access to z.a. data
   Vector<Double>& za() { return za_; };
 
-  // Locally set which feed basis (Jones type)
-  void syncJones(const Bool& doInv);
+  // Detect pol basis and some geometry
+  virtual void syncMeta(const VisBuffer& vb);
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
 
   // Calculate parameters (in this case, the z.a.)
   virtual void calcPar();
@@ -122,6 +123,10 @@ private:
 
   // Lin (general) or Circ (diag)
   Jones::JonesType pjonestype_;
+
+  // Measures geometry
+  MDirection phasedir_p;
+  ROScalarMeasColumn<MPosition> antpos_p;
 
 };
 

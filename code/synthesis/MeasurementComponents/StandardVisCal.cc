@@ -1572,20 +1572,42 @@ String TOpac::applyinfo() {
 
 }
 
+// TOpac needs zenith angle (old VB version)
+void TOpac::syncMeta(const VisBuffer& vb) {
+
+  // Call parent (sets currTime())
+  TJones::syncMeta(vb);
+
+  // Current time's zenith angle...
+  za().resize(nAnt());
+  Vector<MDirection> antazel(vb.azel(currTime()));
+  Double* a=za().data();
+  for (Int iant=0;iant<nAnt();++iant,++a) 
+    (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
+
+}
+
+// TOpac needs zenith angle  (VB2 version) 
+void TOpac::syncMeta2(const vi::VisBuffer2& vb) {
+
+  // Call parent (sets currTime())
+  TJones::syncMeta2(vb);
+
+  // Current time's zenith angle...
+  za().resize(nAnt());
+  Vector<MDirection> antazel(vb.azel(currTime()));
+  Double* a=za().data();
+  for (Int iant=0;iant<nAnt();++iant,++a) 
+    (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
+
+}
+
 
 void TOpac::calcPar() {
 
   if (prtlev()>6) cout << "      TOpac::calcPar()" << endl;
 
-  // NB: z.a. calc here because it is needed only 
-  //   if we have a new timestamp...
-  //  (opacity parameter is already ok)
 
-  za().resize(nAnt());
-  Vector<MDirection> antazel(vb().azel(currTime()));
-  Double* a=za().data();
-  for (Int iant=0;iant<nAnt();++iant,++a) 
-    (*a)=C::pi_2 - antazel(iant).getAngle().getValue()(1);
 
   
   // If we are interpolating from a table, get opacity(time)

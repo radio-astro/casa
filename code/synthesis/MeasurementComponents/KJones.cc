@@ -1016,22 +1016,39 @@ void KAntPosJones::specify(const Record& specify) {
 
 }
 
+// KAntPosJones needs ant-based phase direction and position frame
+void KAntPosJones::syncMeta(const VisBuffer& vb) {
+
+  // Call parent (sets currTime())
+  KJones::syncMeta(vb);
+
+  phasedir_p=vb.msColumns().field().phaseDirMeas(currField());
+  antpos0_p=vb.msColumns().antenna().positionMeas()(0);
+
+}
+
+// KAntPosJones needs ant-based phase direction and position frame
+void KAntPosJones::syncMeta2(const vi::VisBuffer2& vb) {
+
+  // Call parent (sets currTime())
+  KJones::syncMeta2(vb);
+
+  phasedir_p=vb.getVi()->subtableColumns().field().phaseDirMeas(currField());
+  antpos0_p=vb.getVi()->subtableColumns().antenna().positionMeas()(0);
+
+}
+
+
 void KAntPosJones::calcAllJones() {
 
   if (prtlev()>6) cout << "       Kap::calcAllJones()" << endl;
-
-
-  // The relevant direction for the delay offset calculation
-  const MDirection& phasedir = vb().msColumns().field().phaseDirMeas(currField());
 
   // The relevant timestamp 
   MEpoch epoch(Quantity(currTime(),"s"));
   epoch.setRefString(epochref_p);
 
-  //  cout << epoch.getValue() << ":" << endl;
-
   // The frame in which we convert our MBaseline from earth to sky and to uvw
-  MeasFrame mframe(vb().msColumns().antenna().positionMeas()(0),epoch,phasedir);
+  MeasFrame mframe(antpos0_p,epoch,phasedir_p);
 
   // template MBaseline, that will be used in calculations below
   MBaseline::Ref mbearthref(MBaseline::ITRF,mframe);
@@ -1040,7 +1057,7 @@ void KAntPosJones::calcAllJones() {
   mb.set(mvb,mbearthref); 
 
   // A converter that takes the MBaseline from earth to sky frame
-  MBaseline::Ref mbskyref(MBaseline::fromDirType(MDirection::castType(phasedir.myType())));
+  MBaseline::Ref mbskyref(MBaseline::fromDirType(MDirection::castType(phasedir_p.myType())));
   MBaseline::Convert mbcverter(mb,mbskyref);
 
 
@@ -1056,10 +1073,6 @@ void KAntPosJones::calcAllJones() {
     //   is a non-zero ant pos error
     if (max(abs(rpars))>0.0) {
 
-      //      cout << iant << " ";
-      //      cout << dpars << " ";
-      //      cout << flush;
-
       // We need the w offset (in direction of source) implied
       //  by the antenna position correction
       Double dw(0.0);
@@ -1072,7 +1085,7 @@ void KAntPosJones::calcAllJones() {
       MBaseline mbdir = mbcverter(mb);
 
       // Get implied uvw
-      MVuvw uvw(mbdir.getValue(),phasedir.getValue());
+      MVuvw uvw(mbdir.getValue(),phasedir_p.getValue());
 
       // dw is third element
       dw=uvw.getVector()(2);
@@ -1080,8 +1093,6 @@ void KAntPosJones::calcAllJones() {
       // In time units 
       dw/=C::c;    // to sec
       dw*=1.0e9;   // to nsec
-
-      //      cout << " " << dw << flush;
 
       // Form the complex corrections per chan (freq)
       for (Int ich=0; ich<nChanMat(); ++ich) {
@@ -1091,9 +1102,6 @@ void KAntPosJones::calcAllJones() {
 	currJElem()(0,ich,iant)=Complex(cos(phase),sin(phase));
 	currJElemOK()(0,ich,iant)=True;
 	
-	//	if (ich==0)
-	//	  cout << " " << cos(phase) << " " << sin(phase) << endl;
-
       }
     }
     else {

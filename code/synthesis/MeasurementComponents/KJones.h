@@ -277,6 +277,10 @@ public:
 
 protected:
 
+  // Detect phase direction and antpos for the current VB
+  virtual void syncMeta(const VisBuffer& vb);
+  virtual void syncMeta2(const vi::VisBuffer2& vb);
+
   // AntPos has three "real" parameters (dBx, dBy, dBz)
   virtual Int nPar() { return 3; };
 
@@ -291,9 +295,10 @@ protected:
 
 private:
   
-  // Some info from the MS we need for Measures work
-  ArrayMeasColumn<MDirection> dirmeas_p;
+  // Geometry info for internal calculations (updated per VB)
   String epochref_p;
+  MDirection phasedir_p;
+  MPosition antpos0_p;
 
 };
 

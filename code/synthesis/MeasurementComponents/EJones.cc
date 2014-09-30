@@ -393,6 +393,38 @@ void EGainCurve::guessPar(VisBuffer&) {
 
 }
 
+// EGainCurve needs to zenith angle (old VB version)
+void EGainCurve::syncMeta(const VisBuffer& vb) {
+
+  // Call parent (sets currTime())
+  SolvableVisJones::syncMeta(vb);
+
+  // Current time's zenith angle...  (in _degrees_)
+  za().resize(nAnt());
+  Vector<MDirection> antazel(vb.azel(currTime()));
+  Double* a=za().data();
+  for (Int iant=0;iant<nAnt();++iant,++a) 
+    (*a)=90.0 - antazel(iant).getAngle().getValue()(1)*180.0/C::pi;
+
+}
+
+// EGainCurve needs to zenith angle  (VB2 version) 
+void EGainCurve::syncMeta2(const vi::VisBuffer2& vb) {
+
+  // Call parent (sets currTime())
+  SolvableVisJones::syncMeta2(vb);
+
+  // Current time's zenith angle...(in _degrees_)
+  za().resize(nAnt());
+  Vector<MDirection> antazel(vb.azel(currTime()));
+  Double* a=za().data();
+  for (Int iant=0;iant<nAnt();++iant,++a) 
+    (*a)=90.0 - antazel(iant).getAngle().getValue()(1)*180.0/C::pi;
+
+}
+
+
+
 void EGainCurve::calcPar() {
 
   if (prtlev()>6) cout << "      EGainCurve::calcPar()" << endl;
@@ -402,13 +434,6 @@ void EGainCurve::calcPar() {
     SolvableVisCal::calcPar();
   else
     throw(AipsError("Problem in EGainCurve::calcPar()"));
-
-  // za changes with time, so recalculate it
-  za().resize(nAnt());
-  Vector<MDirection> antazel(vb().azel(currTime()));
-  Double* a=za().data();
-  for (Int iant=0;iant<nAnt();++iant,++a) 
-    (*a)=90.0 - antazel(iant).getAngle().getValue()(1)*180.0/C::pi;
 
   // Pars now valid, matrices not yet
   validateP();

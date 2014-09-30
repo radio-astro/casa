@@ -413,21 +413,40 @@ void FJones::specify(const Record& specify) {
   }
 }
 
-void FJones::syncJones(const Bool& doInv) {
+// FJones needs to know pol basis, and some geometry
+void FJones::syncMeta(const VisBuffer& vb) {
 
-  // Circulars
-  if (vb().corrType()(0)==5)
+  // Call parent (sets currTime())
+  SolvableVisJones::syncMeta(vb);
+
+  // Basis
+  if (vb.corrType()(0)==5)         // Circulars
     pjonestype_=Jones::Diagonal;
-
-  // Linears
-  else if (vb().corrType()(0)==9)
+  else if (vb.corrType()(0)==9)    // Linears
     pjonestype_=Jones::General;
 
-  VisJones::syncJones(doInv);
+  // Geometry
+  phasedir_p=vb.msColumns().field().phaseDirMeas(currField());
+  antpos_p.reference(vb.msColumns().antenna().positionMeas());
 
 }
 
+// FJones needs to know pol basis, and some geometry
+void FJones::syncMeta2(const vi::VisBuffer2& vb) {
 
+  // Call parent (sets currTime())
+  SolvableVisJones::syncMeta2(vb);
+
+  // Basis
+  if (vb.correlationTypes()(0)==5)         // Circulars
+    pjonestype_=Jones::Diagonal;
+  else if (vb.correlationTypes()(0)==9)    // Linears
+    pjonestype_=Jones::General;
+
+  phasedir_p=vb.getVi()->subtableColumns().field().phaseDirMeas(currField());
+  antpos_p.reference(vb.getVi()->subtableColumns().antenna().positionMeas());
+
+}
 
 void FJones::calcPar() {
 
@@ -439,13 +458,12 @@ void FJones::calcPar() {
   mframe_.set(epoch);
 
   // Set this antenna's position in mframe_
-  const MPosition& antpos0 = vb().msColumns().antenna().positionMeas()(0);
+  const MPosition& antpos0 = antpos_p(0);
   mframe_.set(antpos0);
 
   // set direction ref in emm
-  const MDirection& phasedir = vb().msColumns().field().phaseDirMeas(currField());
-  const MDirection::Ref phasedirR=phasedir.getRef();
-  const MVDirection phasedirV=phasedir.getValue();
+  const MDirection::Ref phasedirR=phasedir_p.getRef();
+  const MVDirection phasedirV=phasedir_p.getValue();
 
   // Construct workable EMM (if not yet done)
   if (!emm_) 
@@ -458,7 +476,7 @@ void FJones::calcPar() {
   for (Int iant=0;iant<nAnt();++iant) {
 
     // Set this antenna's position in mframe_
-    const MPosition& antpos = vb().msColumns().antenna().positionMeas()(iant);
+    const MPosition& antpos = antpos_p(iant);
     mframe_.resetPosition(antpos);
     emm_->set(mframe_);  // seems to be needed to force new position in emm calculations
 
@@ -508,8 +526,8 @@ void FJones::calcAllJones() {
       tec = Double(*lostec); 
       rotpers2 = radper_*tec*BlosG_(iant);
 
-      for (Int ich=0;ich<vb().nChannel();++ich) {
-	f=vb().frequency()(ich);   // Hz
+      for (Int ich=0;ich<nChanMat();++ich) {
+	f=currFreq()(ich)*1.0e9;   // Hz
 	del = 8.4483e-7*tec/f;
 	rot = rotpers2/f/f;
 
