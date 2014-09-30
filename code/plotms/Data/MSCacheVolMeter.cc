@@ -215,6 +215,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::PHASE:
 			case PMS::REAL:
 			case PMS::IMAG:
+			case PMS::WTSP:
 				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
 				break;
 			case PMS::FLAG:
@@ -224,7 +225,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 				axisVol=sizeof(Bool)*sum(nRowsPerDDID_);
 				break;
 			case PMS::WT:
-				axisVol=sizeof(Int)*sum(nRowsPerDDID_*nCorrPerDDID_);
+				axisVol=sizeof(Float)*sum(nRowsPerDDID_*nCorrPerDDID_);
 				break;
 			case PMS::AZ0:
 			case PMS::EL0:

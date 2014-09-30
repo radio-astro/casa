@@ -1201,6 +1201,15 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		*wt_[vbnum] = vb.weightMat();
 		break;
 	}
+
+	case PMS::WTSP: {
+	        if (vb.weightSpectrum().nelements()>0)
+		  *wtsp_[vbnum] = vb.weightSpectrum();
+		else
+		  throw(AipsError("This MS does not have a valid WEIGHT_SPECTRUM column."));
+		break;
+	}
+
 	case PMS::WTxAMP: {
 		switch(data) {
 		case PMS::DATA:

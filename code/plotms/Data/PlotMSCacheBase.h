@@ -200,6 +200,8 @@ public:
   inline Double getWt(Int chnk,Int irel) { return *(wt_[chnk]->data()+irel); };
   inline Double getWtxAmp(Int chnk, Int irel) { return *(wtxamp_[chnk]->data()+irel); }
 
+  inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
+
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
@@ -346,7 +348,7 @@ protected:
   PtrBlock<Array<Bool>*> flag_;
   PtrBlock<Vector<Bool>*> flagrow_;
   
-  PtrBlock<Array<Float>*> wt_;
+  PtrBlock<Array<Float>*> wt_,wtsp_;
 
   PtrBlock<Vector<Float>*> parang_;
   PtrBlock<Vector<Int>*> antenna_;

@@ -796,6 +796,10 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		getmethod = &PlotMSCacheBase::getWtxAmp;
 		break;
 
+	case PMS::WTSP:
+		getmethod = &PlotMSCacheBase::getWtSp;
+		break;
+
 	case PMS::AZ0:
 		getmethod = &PlotMSCacheBase::getAz0;
 		break;
@@ -882,6 +886,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 	case PMS::SWP:
 	case PMS::OPAC:
 	case PMS::WTxAMP:
+	case PMS::WTSP:
 		indexmethod = &PlotMSIndexer::getIndex1110;
 		break;
 
@@ -968,6 +973,7 @@ void PlotMSIndexer::setCollapser(CollapseMethPtr& collmethod,PMS::Axis axis) {
   case PMS::REAL:
   case PMS::IMAG:
   case PMS::FLAG:
+  case PMS::WTSP:
     collmethod = &PlotMSIndexer::collapseMask1110;
     break;
 
