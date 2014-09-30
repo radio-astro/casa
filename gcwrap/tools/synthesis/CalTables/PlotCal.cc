@@ -1280,7 +1280,7 @@ Int PlotCal::multiTables(const Table& tablein,
     else if(subType[0].contains("A")){
       calType_p="A";
     }
-    else if(subType[0].contains("F Jones")){
+    else if(subType[0].contains("F")){
       calType_p="F";
     }
     else {
