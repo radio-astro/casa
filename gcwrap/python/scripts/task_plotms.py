@@ -198,6 +198,7 @@ def plotms(vis=None,
         synonyms['radialvelocity']='Radial Velocity [km/s]'
         synonyms['rho']='Distance (rho) [km]'
         synonyms['weight'] = 'wt'
+        synonyms['weightspectrum'] = 'wtsp'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = synonyms['uvdist_l']='uvwave'
         synonyms['amplitude'] = 'amp'
