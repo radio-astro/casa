@@ -439,9 +439,11 @@ void ImageRegrid<T>::_regridOneCoordinate (LogIO& os, IPosition& outShape2,
 		Bool lastPass = allEQ(doneOutPixelAxes, True);
 		//
 		if (!regridIt) {
-			os << "Input and output shape/coordinate information for "
-				<< Coordinate::typeToString(inCoord.type()) << " axis "
-				"equal - no regridding needed" << LogIO::POST;
+			if (verbose) {
+				os << "Input and output shape/coordinate information for "
+					<< Coordinate::typeToString(inCoord.type())
+					<< " axis equal - no regridding needed" << LogIO::POST;
+			}
 			if (lastPass) {
 
 				// Can't avoid this copy
