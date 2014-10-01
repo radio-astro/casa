@@ -57,11 +57,31 @@ namespace sdmbin {
 
   SDMBinData::~SDMBinData(){
     if(coutDeleteInfo_)cout<<"Destructor SSDMBinData"<<endl;
-    for(unsigned int n=0; n<v_msDataPtr_.size();  n++)if( v_msDataPtr_[n]){delete  v_msDataPtr_[n]; msDataPtr_=NULL; }
-    for(unsigned int n=0; n<v_sdmDataPtr_.size(); n++)if(v_sdmDataPtr_[n]){delete v_sdmDataPtr_[n]; sdmDataPtr_=NULL; }
-    if(vmsDataPtr_) delete vmsDataPtr_;
-    if(msDataPtr_ ) delete msDataPtr_;
-    if(sdmDataPtr_) delete sdmDataPtr_;
+
+    for(unsigned int n=0; n<v_msDataPtr_.size();  n++) {
+      if(v_msDataPtr_[n]){delete  v_msDataPtr_[n];}
+      msDataPtr_=NULL;
+    }
+
+    for(unsigned int n=0; n<v_sdmDataPtr_.size(); n++){
+      if(v_sdmDataPtr_[n]){delete v_sdmDataPtr_[n]; }
+      sdmDataPtr_=NULL;
+    }
+
+    // if(vmsDataPtr_) {
+    //   delete vmsDataPtr_;
+    //   vmsDataPtr_ = NULL;
+    // }
+
+    // if(msDataPtr_ ) {
+    //   delete msDataPtr_;
+    //   msDataPtr_ = NULL;
+    // }
+
+    // if(sdmDataPtr_) {
+    //   delete sdmDataPtr_;
+    //   sdmDataPtr_ = NULL;
+    // }
     vector<DataDump*>::reverse_iterator
       it,
       itrb=v_dataDump_.rbegin(),
@@ -2657,6 +2677,11 @@ namespace sdmbin {
     }
 
     v_msDataPtr_.clear(); // I doubt this is really useful ... (MC 08/12/2011)
+    
+    // No more data available... then return empty content.
+    if  (!sdmdosr.hasSubset()) {
+      return NULL;
+    }
 
     v_msDataPtr_ = getMSDataFromBDFData(e_qcm, es_qapc, nDataSubset);
     int numRows = v_msDataPtr_.size();
