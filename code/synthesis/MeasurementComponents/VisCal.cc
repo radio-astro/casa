@@ -919,9 +919,7 @@ void VisMueller::applyCal2(vi::VisBuffer2& vb,
     
     // Solution and data array registration
     M().sync(currMElem()(0,solCh0,ibln),currMElemOK()(0,solCh0,ibln));
-    if (!trial)
-      V().sync(visCube(0,0,row),flagCube(0,0,row));
-    
+    V().sync(visCube(0,0,row),flagCube(0,0,row));
     
     for (Int chn=0; chn<nChanDat; chn++,V()++,dataChan++) {
       
@@ -1477,9 +1475,7 @@ void VisJones::applyCal2(vi::VisBuffer2& vb,
       // Solution and data array registration
       J1().sync(currJElem()(0,solCh0,*a1),currJElemOK()(0,solCh0,*a1));
       J2().sync(currJElem()(0,solCh0,*a2),currJElemOK()(0,solCh0,*a2));
-      if (!trial)
-	V().sync(visCube(0,0,row),flagCube(0,0,row));
-
+      V().sync(visCube(0,0,row),flagCube(0,0,row));
 
       for (Int chn=0; chn<nChanDat; chn++,V()++,dataChan++) {
 	  

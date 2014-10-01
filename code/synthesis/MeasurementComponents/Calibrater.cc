@@ -1207,37 +1207,50 @@ Calibrater::correct2(String mode)
 
 	      // Re-initialize weight info from sigma info
 	      //   This is smart wrt spectral weights, etc.
+	      //   (this makes W and WS, if present, "dirty" in the vb)
+	      // TBD: only do this if !trial (else: avoid the I/O)
 	      vb->resetWeightsUsingSigma();
 
-	      // Arrange for _in-place_ apply on CORRECTED_DATA
+	      // Arrange for _in-place_ apply on CORRECTED_DATA (init from DATA)
+	      //   (this makes CD "dirty" in the vb)
+	      // TBD: only do this if !trial (else: avoid the I/O)
 	      vb->setVisCubeCorrected(vb->visCube());
+
+	      // Make flagcube dirty in the vb
+	      //  NB: we must _always_ do this I/O  (even trial mode)
+	      vb->setFlagCube(vb->flagCube());
+
+	      // Make all vb "not dirty"; we'll carefully arrange the writeback below
+	      vb->dirtyComponentsClear();
 
 	      // throws exception if nothing to apply
 	      ve_p->correct2(*vb,trialmode,doWtSp);
 		    
-	      // Only if not a trial run, trigger write to disk
-
-	      /* TBD: need to discard one or another dirty vb components using VB's dirty comp methods
+	      // Only if not a trial run, manage writes to disk
 	      if (upmode!="TRIAL") {
 		
 		if (upmode.contains("CAL")) {
-		  vb->setVisCubeCorrected(vb->visCube());
-		  vb->setWeight(vb->weight()); 
+		  vb->setVisCubeCorrected(vb->visCubeCorrected());
+
+		  if (calWt()) {
+		    // Set weights dirty only if calwt=T
+		    if (doWtSp) {
+		      vb->setWeightSpectrum(vb->weightSpectrum());
+		      // If WS was calibrated, set W to its channel-axis median
+		      vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
+		    }
+		    else
+		      vb->setWeight(vb->weight()); 
+		  }
 		}
-		  
-		// TBD flagCube!!
-		//if (upmode.contains("FLAG"))
-		//		  vb->setFlag (vb->flag());
+
+		if (upmode.contains("FLAG"))
+		  vb->setFlagCube(vb->flagCube());
 		
+		// Push the calibrated data etc. back to the MS
+		vb->writeChangesBack();
 	      }
-	      */
 
-	      // If WS was calibrated, set W to its channel-axis median
-	      if (doWtSp)
-		vb->setWeight(partialMedians(vb->weightSpectrum(),IPosition(1,1)));
-
-
-	      vb->writeChangesBack();
 	    }
 	    else{
 	      uncalspw[spw] = true;
