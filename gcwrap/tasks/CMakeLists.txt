@@ -61,6 +61,7 @@ imsubimage.xml
 imtrans.xml
 imval.xml
 imview.xml
+initweights.xml
 listcal.xml
 listhistory.xml
 listfits.xml

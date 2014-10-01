@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="initweights" category="calibration">
+	<shortdescription>Initializes weight information in the MS</shortdescription>
+
+<input>
+	<param type="string" name="vis" mustexist="true">
+		<description>Name of input visibility file (MS)</description>
+		<value></value>
+	</param>
+	<param type="bool" name="dobt">
+		<description>Initialize according to bandwidth and integration time; else unity.</description>
+		<value>True</value>
+	</param>
+	<param type="bool" name="dowtsp">
+		<description>Initialize the WEIGHT_SPECTRUM column.</description>
+		<value>False</value>
+	</param>
+	</input>
+<returns type="void"/>
+
+<example>
+
+      This task provides for initialization of the weight information
+      in the MS.  For ALMA and EVLA data, it should not generally be
+      necessary to use this task, as the weight information should 
+      have been initialized fill time (v4.2.2 and later).
+
+      If dobt=T, then the initialization will be according to the
+      channel bandwidth and integration time.  This is formally
+      corrected for normalized visibility data (e.g., ALMA).  For
+      the EVLA, this is correct if switched-power and bandpass 
+      calibration will later be applied.
+
+      If dobt=F, then the initialization value will be unity (1.0).
+      This is ok if the channel bandwidth and integration time are uniform
+      for all spectral windows and scans.  If this condition is not
+      met, then there will be disproprotionate weights within the MS.
+    
+      If dowtsp=T, then the WEIGHT_SPECTRUM colum will also be
+      initialized (uniformly in channel).  If necessary, the 
+      WEIGHT_SPECTRUM column will be created.  Use of the 
+      WEIGHT_SPECTRUM column is only meaningful
+      for ALMA data which will be calibrated with channelized
+      Tsys information, or if the weights will be manually set
+      in a channelized manner after calibration (a task for this
+      is currently under development).
+
+
+ </example>
+ </task>
+ </casaxml>

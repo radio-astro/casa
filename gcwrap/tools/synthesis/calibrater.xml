@@ -1323,7 +1323,12 @@ cb.close()
    bandwidth and integration time</shortdescription>
 
 <input>
-     <param type="bool" direction="in" name="dowtspec">
+     <param type="bool" direction="in" name="dobt">
+     <description>Initialize according to bandwith and time (else
+     unity)</description>
+     <value>true</value>
+     </param>
+     <param type="bool" direction="in" name="dowtsp">
      <description>Initialize WEIGHT_SPECTRUM column</description>
      <value>false</value>
      </param>
@@ -1334,8 +1339,19 @@ cb.close()
 
 <description>
 
-This function initializes the MS SIGMA and WEIGHT columns according
-to bandwidth and integration time.
+This function initializes the MS SIGMA and WEIGHT columns.  If dobt=T
+(recommended), the initialization will be according to bandwidth and 
+integration time.  Otherwise, the initialization value will be unity
+(1.0).
+
+If dowtspec=T, the WEIGHT_SPECTRUM column will also be initialized
+(uniformly in channel), in a manner consistent with the WEIGHT
+column.  If the WEIGHT_SPECTRUM column
+does not exist, it will be created.
+
+Note that this method does not support any prior selection.
+Intialization of the weight information must currently be done
+globally or not at all.  This is to maintain consistency.
 
 </description>
 
