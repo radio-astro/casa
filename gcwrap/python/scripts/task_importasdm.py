@@ -360,8 +360,14 @@ def importasdm(
             mslocal = mstool() 
             param_names = importasdm.func_code.co_varnames[:importasdm.func_code.co_argcount] 
             param_vals = [eval(p) for p in param_names] 
-            write_history(mslocal, viso, 'importasdm', param_names, 
-                          param_vals, casalog) 
+            if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
+                write_history(mslocal, viso, 'importasdm', param_names, 
+                              param_vals, casalog) 
+
+            if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
+                write_history(mslocal, visoc, 'importasdm', param_names, 
+                              param_vals, casalog) 
+
         except Exception, instance: 
             casalog.post("*** Error \'%s\' updating HISTORY" % (instance), 
                          'WARN')
@@ -405,8 +411,7 @@ def importasdm(
                         comment='Original flags at import into CASA',
                         merge='save')
                 aflocal.done()
-        elif wvr_corrected_data == 'yes' or wvr_corrected_data \
-            == 'both':
+        elif wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
             if os.path.exists(visoc) and flagbackup==True:
                 aflocal.open(visoc)
                 aflocal.saveflagversion('Original',
@@ -445,7 +450,7 @@ def importasdm(
                 nflags = onlinekeys.__len__()
                                 
                 # Apply flags to the MS
-                if nflags > 0:
+                if nflags > 0 and (wvr_corrected_data == "no" or wvr_corrected_data == "both"):
                     if applyflags:
                         
                         # Open the MS and attach it to the tool
