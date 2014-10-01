@@ -169,8 +169,8 @@ class Calibrater
   //  deposit in the MODEL_DATA column
   Bool corrupt();
 
-  // Initialize sigma/weight according to bandwidth/exposure
-  Bool initWeights(Bool dowtsp=False);
+  // Initialize sigma/weight, and possibly weight_spectrum
+  Bool initWeights(Bool doBT=True, Bool dowtsp=False);
 
   // Solve for a given calibration component
   Bool solve();

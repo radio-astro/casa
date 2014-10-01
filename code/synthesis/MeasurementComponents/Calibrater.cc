@@ -1459,7 +1459,7 @@ Bool Calibrater::corrupt() {
 }
 
 
-Bool Calibrater::initWeights(Bool dowtsp) {
+Bool Calibrater::initWeights(Bool doBT, Bool dowtsp) {
 
   logSink() << LogOrigin("Calibrater","initWeights") << LogIO::NORMAL;
   Bool retval = true;
@@ -1470,7 +1470,11 @@ Bool Calibrater::initWeights(Bool dowtsp) {
       throw(AipsError("Calibrater not prepared for initWeights!"));
 
     // Log that we are beginning...
-    logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." << LogIO::POST;
+    if (doBT)
+      logSink() << "Initializing SIGMA and WEIGHT according to channel bandwidth and integration time." << LogIO::POST;
+    else
+      logSink() << "Initializing SIGMA and WEIGHT to unity." << LogIO::POST;
+
     if (dowtsp) {
       logSink() << "Also initializing WEIGHT_SPECTRUM uniformly in channel (==WEIGHT)." << LogIO::POST;
 
@@ -1531,70 +1535,78 @@ Bool Calibrater::initWeights(Bool dowtsp) {
 
       for (vi2.origin(); vi2.more(); vi2.next()) {
 
-       Int spw = vb->spectralWindows()(0);
+	Int spw = vb->spectralWindows()(0);
 
-       Int nrow=vb->nRows();
-       Int nchan=vb->nChannels();
-       Int ncor=vb->nCorrelations();
+	Int nrow=vb->nRows();
+	Int nchan=vb->nChannels();
+	Int ncor=vb->nCorrelations();
 
-       // Detect ACs
-       const Vector<Int> a1(vb->antenna1());
-       const Vector<Int> a2(vb->antenna2());
-       Vector<Bool> ac(a1==a2);
+	Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
+	newwt.set(1.0);
+	newsig.set(1.0);
 
-       // XCs need an extra factor of 2
-       Vector<Float> xcfactor(nrow,2.0);
-       xcfactor(ac)=1.0;   // (but not ACs)
+	Cube<Float> newwtsp(0,0,0);
+	if (dowtsp) {
+	  newwtsp.resize(ncor,nchan,nrow);
+	  newwtsp.set(1.0);
+	}
 
-       // The row-wise integration time
-       Vector<Float> expo(nrow);
-       convertArray(expo,vb->exposure());
+	// If requested, set weights according to bandwidth and integration time
+	if (doBT) {
+	  
+	  // Detect ACs
+	  const Vector<Int> a1(vb->antenna1());
+	  const Vector<Int> a2(vb->antenna2());
+	  Vector<Bool> ac(a1==a2);
+	  
+	  // XCs need an extra factor of 2
+	  Vector<Float> xcfactor(nrow,2.0);
+	  xcfactor(ac)=1.0;   // (but not ACs)
+	  
+	  // The row-wise integration time
+	  Vector<Float> expo(nrow);
+	  convertArray(expo,vb->exposure());
 
-       Matrix<Float> newwt(ncor,nrow),newsig(ncor,nrow);
-       newsig.set(1.0);
+	  // Set weights to channel bandwidth first.
+	  newwt.set(Float(effChBw(spw)));
+	  
+	  // For each correlation, apply exposure and xcfactor
+	  for (Int icor=0;icor<ncor;++icor) {
 
-       Cube<Float> newwtsp(0,0,0);
-       if (dowtsp)
-	 newwtsp.resize(ncor,nchan,nrow);
+	    Vector<Float> wt(newwt.row(icor));
+	    wt*=expo;
+	    wt*=xcfactor;
+	    if (dowtsp) {
+	      for (Int ich=0;ich<nchan;++ich) {
+		Vector<Float> wtsp(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()));
+		wtsp=wt;
+	      }
+	    }
+	    
+	  }
 
+	  // sig from wt is inverse sqrt
+	  newsig=newsig/sqrt(newwt);
 
-       // Set weights to channel bandwidth first.
-       newwt.set(Float(effChBw(spw)));
+	}
 
-       // For each correlation, apply exposure and xcfactor
-       for (Int icor=0;icor<ncor;++icor) {
-         Vector<Float> wt(newwt.row(icor));
-         wt*=expo;
-	 wt*=xcfactor;
-	 if (dowtsp) {
-	   for (Int ich=0;ich<nchan;++ich) {
-	     Vector<Float> wtsp(newwtsp(Slice(icor,1,1),Slice(ich,1,1),Slice()));
-	     wtsp=wt;
-	   }
-	 }
-	   
-       }
+	/*
+	  cout << ivb << " "
+	  << ncor << " " << nchan << " " << nrow << " "
+	  << expo(0) << " "
+	  << newwt(0,0) << " "
+	  << newsig(0,0) << " "
+	  << endl;
+	*/
+	++ivb;
 
-       // sig from wt is inverse sqrt
-       newsig=newsig/sqrt(newwt);
-
-       /*
-       cout << ivb << " "
-            << ncor << " " << nchan << " " << nrow << " "
-            << expo(0) << " "
-            << newwt(0,0) << " "
-            << newsig(0,0) << " "
-            << endl;
-       */
-       ++ivb;
-
-       vb->setWeight(newwt);
-       vb->setSigma(newsig);
-       vb->writeChangesBack();
-
-       if (dowtsp)
-	 vb->initWeightSpectrum(newwtsp);
-
+	// Set in vb, and writeback
+	vb->setWeight(newwt);
+	vb->setSigma(newsig);
+	vb->writeChangesBack();
+	
+	if (dowtsp)
+	  vb->initWeightSpectrum(newwtsp);
 
       }
     }
