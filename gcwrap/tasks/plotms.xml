@@ -1459,7 +1459,7 @@ Constraints
 		  example: observation='0' (select obsID 0)
       msselect -- Optional TaQL data selection
 
-    averagedata -- data averaing parameters flag
+    averagedata -- data averaging parameters flag
                    default: True   (reveals expandable parameters
                                     described below)
       &gt;&gt;&gt; averagedata expandable parameters
