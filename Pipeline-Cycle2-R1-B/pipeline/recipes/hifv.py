@@ -29,6 +29,7 @@ __rethrow_casa_exceptions = True
 # CASA imports
 from h_init_cli import h_init_cli as h_init
 from hifv_importdata_cli import hifv_importdata_cli as hifv_importdata
+from hifv_hanning_cli import hifv_hanning_cli as hifv_hanning
 from hifv_flagdata_cli import hifv_flagdata_cli as hifv_flagdata
 from hifv_vlasetjy_cli import hifv_vlasetjy_cli as hifv_vlasetjy
 from hifv_priorcals_cli import hifv_priorcals_cli as hifv_priorcals
