@@ -1504,6 +1504,9 @@ void ImageFitter::_fitsky(
 			String error;
 			Record r;
 			result[j].flux().toRecord(error, r);
+			/*
+			 // this was the old way of determining errors, which in some cases
+			 // was defective
             try {
                 _encodeSkyComponentError(
 				    result[j], facToJy, allAxesSubImage.coordinates(),
@@ -1518,6 +1521,7 @@ void ImageFitter::_fitsky(
                 	+ x.getMesg()
                 );
             }
+            */
 			_curConvolvedList.add(result[j]);
 			if (doDeconvolved) {
 				_curDeconvolvedList.add(result[j].copy());
@@ -1672,6 +1676,7 @@ void ImageFitter::_fitskyExtractBeam(
 	parameters(5) = dParameters(2);
 }
 
+/*
 void ImageFitter::_encodeSkyComponentError(
 		SkyComponent& sky, Double facToJy, const CoordinateSystem& csys,
 		const Vector<Double>& parameters, const Vector<Double>& errors,
@@ -1782,7 +1787,6 @@ void ImageFitter::_encodeSkyComponentError(
 			csys, pixelAxes, False
 		);
 	// TSS::setRefDirErr interface has lat first
-
 	if (flipped) {
 		pS->setRefDirectionError(
 				errors(2) == 0 ? qzero : wParameters.getMinor(),
@@ -1796,7 +1800,7 @@ void ImageFitter::_encodeSkyComponentError(
 		);
 	}
 }
-
+*/
 
 
 
