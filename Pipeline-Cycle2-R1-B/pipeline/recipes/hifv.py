@@ -73,7 +73,7 @@ def hifv (vislist, importonly=False, pipelinemode='automatic', interactive=True)
 	   raise Exception(IMPORT_ONLY)
 	   
 	# Hanning smooth the data
-        hifv_hanning (vis=vislist, pipelinemode=pipelinemode)
+        hifv_hanning (pipelinemode=pipelinemode)
     
         # Flag known bad data
         hifv_flagdata (pipelinemode=pipelinemode, scan=True, hm_tbuff='1.5int')
