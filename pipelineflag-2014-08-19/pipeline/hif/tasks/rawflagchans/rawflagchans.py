@@ -27,7 +27,9 @@ class RawflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, spw=None,
       intent=None,
       metric=None, flag_hilo=None, fhl_limit=None, fhl_minsample=None,
-      flag_tmf=None, tmf_axis=None, tmf_excess_limit=None, niter=None):
+      flag_tmf=None, tmf_axis=None, tmf_excess_limit=None,
+      flag_bad_quadrant=None, fbq_hilo_limit=None, fbq_frac_limit=None,
+      niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -163,6 +165,36 @@ class RawflagchansInputs(basetask.StandardInputs):
         self._tmf_excess_limit = value
 
     @property
+    def flag_bad_quadrant(self):
+        return self._flag_bad_quadrant
+
+    @flag_bad_quadrant.setter
+    def flag_bad_quadrant(self, value):
+        if value is None:
+            value = True
+        self._flag_bad_quadrant = value
+
+    @property
+    def fbq_hilo_limit(self):
+        return self._fbq_hilo_limit
+
+    @fbq_hilo_limit.setter
+    def fbq_hilo_limit(self, value):
+        if value is None:
+            value = 10.0
+        self._fbq_hilo_limit = value
+
+    @property
+    def fbq_frac_limit(self):
+        return self._fbq_frac_limit
+
+    @fbq_frac_limit.setter
+    def fbq_frac_limit(self, value):
+        if value is None:
+            value = 0.5
+        self._fbq_frac_limit = value
+
+    @property
     def niter(self):
         if self._niter is None:
             return 2
@@ -199,7 +231,10 @@ class Rawflagchans(basetask.StandardTaskTemplate):
           fhl_minsample=inputs.fhl_minsample,
 #          flag_tmf1=inputs.flag_tmf, tmf1_axis='Antenna2',
           flag_tmf1=inputs.flag_tmf, tmf1_axis=inputs.tmf_axis,
-          tmf1_limit=1.0, tmf1_excess_limit=inputs.tmf_excess_limit)
+          tmf1_limit=1.0, tmf1_excess_limit=inputs.tmf_excess_limit,
+          flag_bad_quadrant=inputs.flag_bad_quadrant,
+          fbq_hilo_limit=inputs.fbq_hilo_limit,
+          fbq_frac_limit=inputs.fbq_frac_limit)
         flagger = viewflaggers.MatrixFlagger
  
         # Construct the flagger task around the data view task  and the
@@ -522,14 +557,14 @@ class RawflagchansWorker(basetask.StandardTaskTemplate):
         # the current view will be very similar to the last, if available.
         # For now approximate as being identical which will save having to
         # recalculate
-#        prev_descriptions = self.result.descriptions()
-#        if prev_descriptions:
-#            for description in prev_descriptions:
-#                prev_result = self.result.last(description)
-#                self.result.addview(description, prev_result)
+        prev_descriptions = self.result.descriptions()
+        if prev_descriptions:
+            for description in prev_descriptions:
+                prev_result = self.result.last(description)
+                self.result.addview(description, prev_result)
 
             # EARLY RETURN
-#            return
+            return
 
         ants = np.array(self.antenna_ids)
 
