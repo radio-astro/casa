@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import math
 import os
 import numpy as np
 
@@ -29,14 +30,16 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                          'outlier':4,
                          'high outlier':5,
                          'low outlier':6,
-                         'too many flags':7}
+                         'too many flags':7,
+                         'bad quadrant':8}
     flag_reason_key = {1:'max abs',
                        2:'min abs',
                        3:'nmedian',
                        4:'outlier',
                        5:'high outlier',
                        6:'low outlier',
-                       7:'too many flags'}
+                       7:'too many flags',
+                       8:'bad quadrant'}
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -135,7 +138,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
       flag_tmf2=False, tmf2_axis='Time', tmf2_limit=1.0, tmf2_excess_limit=10000000,
       flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_maxabs=False, fmax_limit=0.1,
-      flag_minabs=False, fmin_limit=0.0):
+      flag_minabs=False, fmin_limit=0.0,
+      flag_bad_quadrant=False, fbq_hilo_limit=7.0, fbq_frac_limit=0.5):
 
         """
         Generate a list of flagging rules from a set of flagging parameters.
@@ -173,6 +177,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
               'axis':str.upper(tmf2_axis),
               'limit':tmf2_limit,
               'excess limit':tmf2_excess_limit})
+        if flag_bad_quadrant:
+            rules.append({'name':'bad quadrant', 'hilo_limit':fbq_hilo_limit,
+              'frac_limit':fbq_frac_limit})
 
         return rules
 
@@ -531,6 +538,94 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                         flag_reason[i2flag, j2flag] =\
                           self.flag_reason_index[rulename]
 
+                    elif rulename == 'bad quadrant':
+                        # a quadrant is one quarter of the extent of the x-axis
+
+                        # Check limits.
+                        hilo_limit = rule['hilo_limit']
+                        frac_limit = rule['frac_limit']
+
+                        # find outlier flags first                 
+                        i2flag = i[np.logical_and(np.abs(data - data_median) >\
+                          hilo_limit * data_mad, np.logical_not(flag))]
+                        j2flag = j[np.logical_and(np.abs(data - data_median) >\
+                          hilo_limit * data_mad, np.logical_not(flag))]
+
+                        # No flagged data.
+                        if len(i2flag) <= 0:
+                            continue
+
+                        # have to be careful here not to corrupt the data view
+                        # as we go through it testing for bad quadrant/antenna.
+                        # Make a copy of the view flags
+                        # and go though these one antenna at a time testing
+                        # for bad quadrant. If bad, copy 'outlier' and 'bad quadrant'
+                        # flags to original view.
+                        flag_copy = np.copy(flag)
+                        flag_reason_copy = np.copy(flag_reason)
+                        flag_copy[i2flag, j2flag] = True
+                        flag_reason_copy[i2flag, j2flag] = \
+                          self.flag_reason_index['outlier']
+
+                        # look for bad antenna/quadrants in view copy
+                        data_shape = np.shape(data)
+                        nchan = data_shape[0]
+                        nbaseline = data_shape[1]
+                        nant = int(math.sqrt(nbaseline))
+
+                        quadrant = [[0,nchan/4-1],
+                          [nchan/4,nchan/2-1],
+                          [nchan/2,nchan*3/4-1],
+                          [nchan*3/4,nchan-1]]
+                        
+                        quadrant_len = nchan/4
+
+                        for ant in range(nant):
+                            # baselines involving this antenna
+                            baselines = [baseline for baseline in range(nbaseline) if 
+                              (baseline >= ant*nant and baseline < (ant+1)*nant) or
+                              (baseline%nant == ant)]
+                            baselines = np.array(baselines)
+
+                            for iquad in range(4):
+                                quad_slice = slice(quadrant[iquad][0], quadrant[iquad][1])
+                                ninvalid = np.count_nonzero(flag_copy[quad_slice,baselines])
+                                frac = float(ninvalid) / float(quadrant_len * len(baselines))
+
+                                if frac > frac_limit:
+                                    i2flag = i[quad_slice,baselines]\
+                                      [np.logical_not(flag_copy[quad_slice,baselines])]
+                                    j2flag = j[quad_slice,baselines]\
+                                      [np.logical_not(flag_copy[quad_slice,baselines])]
+
+                                    # No flags
+                                    if len(i2flag) <= 0:
+                                        continue
+
+                                    # Add new flag commands to flag the data underlying
+                                    # the view. These will flag the entire quadrant.
+                                    # If the quadrant is not bad then any 'outlier'
+                                    # points found earlier will not be flagged.
+                                    flagcoords = []
+                                    for chan in range(quadrant[iquad][0], quadrant[iquad][1]):
+                                        flagcoords.append((chan,ant))
+                                    for flagcoord in flagcoords:
+                                        newflags.append(arrayflaggerbase.FlagCmd(
+                                          reason='bad quadrant',
+                                          filename=table, rulename=rulename,
+                                          spw=spw, axisnames=[xtitle, ytitle],
+                                          flagcoords=flagcoord, pol=pol,
+                                          extendfields=self.inputs.extendfields))
+ 
+                                    # copy 'outlier' flag state for this antenna back to original
+                                    flag[quad_slice,baselines] = flag_copy[quad_slice,baselines]
+                                    flag_reason[quad_slice,baselines] = flag_reason_copy[quad_slice,baselines]
+
+                                    # finally, set 'bad quadrant' flags in original
+                                    flag[i2flag, j2flag] = True
+                                    flag_reason[i2flag, j2flag] =\
+                                       self.flag_reason_index[rulename]
+                                    
                     else:           
                         raise NameError, 'bad rule: %s' % rule
 
