@@ -38,7 +38,9 @@ def consolidate_flagcmd_channels(flagcmds):
         if flagcmd.axisnames is not None:
             for k,name in enumerate(flagcmd.axisnames):
                 if name.upper()=='CHANNELS':
-                    flagchannels = [flagcmd.flagcoords[k]]
+                    flagchannels = flagcmd.flagcoords[k]
+                    if type(flagchannels) is not types.ListType:
+                        flagchannels = [flagchannels]
                     # need remaining flagcoords in dict key
                     truncated_flagcoords = list(flagcmd.flagcoords)
                     truncated_flagcoords[k] = None
