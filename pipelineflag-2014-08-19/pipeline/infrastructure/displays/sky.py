@@ -132,6 +132,11 @@ class SkyDisplay(object):
                 relative = coordsys.torel(world)
                 y[pix] = relative['numeric'][1]
 
+            # remove any incomplete matplotlib plots, if left these can cause
+            # weird errors
+            plt.close('all')
+            plt.figure(1)
+
             # plot data
             plt.jet()
             plt.imshow(np.transpose(data), interpolation='nearest',
@@ -162,28 +167,6 @@ class SkyDisplay(object):
             for i,k in enumerate(coord_refs['string']):
                 yoff = self.plottext(1.05, yoff, '%s: %s' %
                   (coord_names[i], k), 40, mult=0.8)
-
-            # threshold and image rms info, if present.
-#            if result.has_key('threshold'):
-#                yoff = self.plottext(1.05, yoff, 'clean threshold: %6.2e' %
-#                  result['threshold'], 40, mult=0.8)
-#            if result.has_key('rms'):
-#                yoff = self.plottext(1.05, yoff, 'residual rms: %6.2e' % 
-#                  result['rms'], 40, mult=0.8)
- 
-            # plot contours
-#            if result.has_key('rms2d'):
-#                rms2d = result['rms2d']
-#                contlevels = np.array([3, 10]) * rms2d
-#                contTitle = \
-#                  'contours at [3, 10] * 2d residual rms (%.3e)' % rms2d 
-#            else:
-#                imageMax = max(np.ravel(data))
-#                contlevels = np.array([0.01, 0.10]) * imageMax
-#                contTitle = \
-#                  'contours at [1, 10] per cent of image max. (%.3e)' % imageMax 
-#            plt.contour(data, contlevels, origin='lower',
-#              extent=[x[0], x[-1], y[0], y[-1]], colors='blue')
 
             # plot beam
             cqa = casatools.quanta
