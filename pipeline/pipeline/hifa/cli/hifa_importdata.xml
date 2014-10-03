@@ -46,7 +46,7 @@
 
     <param type="bool" name="bdfflags" subparam="true">
 	<description>Apply BDF flags on import</description>
-	<value>False</value>
+	<value>True</value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
@@ -67,7 +67,7 @@
 		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
-		<default param="bdfflags"><value type="bool">False</value></default>
+		<default param="bdfflags"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -75,7 +75,7 @@
 		<default param="asis"><value type="string">Antenna Station Receiver Source CalAtmosphere CalWVR</value></default>
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
-		<default param="bdfflags"><value type="bool">False</value></default>
+		<default param="bdfflags"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -135,7 +135,7 @@ overwrite -- Overwrite existing MSs on output.
    default: False
 
 bdfflags -- Apply BDF flags on line
-   default: False
+   default: True
 
 --- pipeline task execution modes
 
