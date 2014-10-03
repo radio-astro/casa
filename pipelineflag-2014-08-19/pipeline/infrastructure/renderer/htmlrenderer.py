@@ -66,7 +66,8 @@ LOG = infrastructure.get_logger(__name__)
 
 
 def get_task_description(result_obj):
-    if not isinstance(result_obj, collections.Iterable):
+
+    if not isinstance(result_obj, (list, basetask.ResultsList)):
         return get_task_description([result_obj, ])
 
     if len(result_obj) is 0:
@@ -276,8 +277,8 @@ def _get_task_description_for_class(task_cls):
 
 
 def get_task_name(result_obj, include_stage=True):
-    if not isinstance(result_obj, collections.Iterable):
-        return get_task_name([result_obj, ])
+    if not isinstance(result_obj, (list, basetask.ResultsList)):
+        return get_task_description([result_obj, ])
 
     if len(result_obj) is 0:
         msg = 'Cannot get task name for zero-length results list'
@@ -297,8 +298,8 @@ def get_task_name(result_obj, include_stage=True):
 
 
 def get_stage_number(result_obj):
-    if not isinstance(result_obj, collections.Iterable):
-        return get_stage_number([result_obj, ])
+    if not isinstance(result_obj, (list, basetask.ResultsList)):
+        return get_task_description([result_obj, ])
 
     if len(result_obj) is 0:
         msg = 'Cannot get stage number for zero-length results list'
