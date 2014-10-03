@@ -99,11 +99,16 @@ class MakeCleanListInputs(basetask.StandardInputs):
     def imsize(self):
         if self._imsize is None:
             return []
+        elif type(self._imsize) is types.StringType:
+            if self._imsize[0] == '[':
+                temp = self._imsize.translate(None, '[]\'')
+            temp = temp.split(',')
+            self._imsize = map(int, temp)
         return self._imsize
 
     @imsize.setter
     def imsize(self, value):
-         self._imsize = value
+        self._imsize = value
 
     @property
     def cell(self):
