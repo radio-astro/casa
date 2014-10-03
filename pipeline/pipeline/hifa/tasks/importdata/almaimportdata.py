@@ -13,7 +13,7 @@ class ALMAImportDataInputs(importdata.ImportDataInputs):
     # the base class
     process_caldevice  = basetask.property_with_default('process_caldevice', False)
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver Source CalAtmosphere CalWVR')
-    bdfflags  = basetask.property_with_default('bdfflags', False)
+    bdfflags  = basetask.property_with_default('bdfflags', True)
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, vis=None, output_dir=None, asis=None,
