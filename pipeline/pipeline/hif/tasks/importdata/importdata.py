@@ -35,7 +35,7 @@ class ImportDataInputs(basetask.StandardInputs):
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
-    bdfflags = basetask.property_with_default('bdfflags', False)
+    bdfflags = basetask.property_with_default('bdfflags', True)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
 
     @property
