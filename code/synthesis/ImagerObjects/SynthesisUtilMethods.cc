@@ -1313,6 +1313,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       { err += "Stokes " + stokes + " is an unsupported option \n";}
 
     ///    err += verifySpectralSetup();  
+
+    // Allow only one starting model. No additions to be done.
+    
+    if( startModel.length()>0 )
+      {
+	if( nTaylorTerms<=1 ) {
+	  File fp( imageName+".model" );
+	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model before restarting";
+	  }
+	else {
+	  File fp( imageName+".model.tt0" ); 
+	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model.tt* before restarting";
+	}
+      }
     
 	return err;
   }
@@ -2539,6 +2553,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String err;
 
+    /*
+    // Allow only one starting model. No additions to be done.
+    if( startModel.length()>0 )
+      {
+	if( nTaylorTerms<=1 ) {
+	  File fp( imageName+".model" );
+	  if( fp.exists() ) err += "Model " + imageName+".model exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model before restarting";
+	  }
+	else {
+	  File fp( imageName+".model.tt0" ); 
+	  if( fp.exists() ) err += "Model " + imageName+".model.tt* exists, but a starting model of " + startModel + " is also being requested. Please either reset startmodel='' or delete " + imageName + ".model.tt* before restarting";
+	}
+      }
+    */
 
     return err;
   }

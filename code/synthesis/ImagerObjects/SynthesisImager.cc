@@ -349,6 +349,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+
+  void SynthesisImager::unlockMSs()
+  {
+    LogIO os( LogOrigin("SynthesisImager","unlockMSs",WHERE) );
+    for(uInt i=0;i<mss4vi_p.nelements();i++)
+      { 
+	os << "Unlocking : " << mss4vi_p[i].tableName() << LogIO::POST;
+	mss4vi_p[i].unlock(); 
+      }
+  }
  
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -657,36 +667,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SynthesisImager::predictModel(){
-    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
-
-      os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
-    
-    {
-      VisBufferAutoPtr vb(rvi_p);
-      rvi_p->originChunks();
-      rvi_p->origin();
-      itsMappers.initializeDegrid(*vb);
-      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
-	{
-	  
-	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
-	    {
-	      //			  cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
-	      //if !usescratch ...just save
-	      vb->setModelVisCube(Complex(0.0, 0.0));
-	      itsMappers.degrid(*vb, useScratch_p);
-	      if(writeAccess_p && useScratch_p)
-		wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
-	      
-	    }
-	}
-      itsMappers.finalizeDegrid(*vb);
-    }
-    
-  }// end of predictModel
 
    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1480,10 +1460,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     itsMappers.checkOverlappingModels("restore");
 
+    unlockMSs();
+
   }// end runMajorCycle
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void SynthesisImager::predictModel(){
+    LogIO os( LogOrigin("SynthesisImager","predictModel ",WHERE) );
+
+    os << "---------------------------------------------------- Predict Model ---------------------------------------------" << LogIO::POST;
+    
+    Bool savemodelcolumn = !readOnly_p && useScratch_p;
+    Bool savevirtualmodel = !readOnly_p && !useScratch_p;
+
+    if( savemodelcolumn ) os << "Saving model column" << LogIO::POST;
+    if( savevirtualmodel ) os << "Saving virtual model" << LogIO::POST;
+
+    itsMappers.checkOverlappingModels("blank");
+
+
+    {
+      VisBufferAutoPtr vb(rvi_p);
+      rvi_p->originChunks();
+      rvi_p->origin();
+
+      ProgressMeter pm(1.0, Double(vb->numberCoh()), 
+		       "Predict Model", "","","",True);
+      Int cohDone=0;
+
+      itsMappers.initializeDegrid(*vb);
+      for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	{
+	  
+	  for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	    {
+	      //if !usescratch ...just save
+	      vb->setModelVisCube(Complex(0.0, 0.0));
+	      itsMappers.degrid(*vb, savevirtualmodel);
+	      if(savemodelcolumn && writeAccess_p )
+		wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+
+	      //	      cout << "nRows "<< vb->nRow() << "   " << max(vb->modelVisCube()) <<  endl;
+	      cohDone += vb->nRow();
+	      pm.update(Double(cohDone));
+
+	    }
+	}
+      itsMappers.finalizeDegrid(*vb);
+    }
+
+    itsMappers.checkOverlappingModels("restore");
+    unlockMSs();
+   
+  }// end of predictModel
+
+
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 } //# NAMESPACE CASA - END

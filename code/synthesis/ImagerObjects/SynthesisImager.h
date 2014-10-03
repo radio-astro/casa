@@ -273,6 +273,9 @@ protected:
 			  String mappertype=String("default"),
 			  uInt ntaylorterms=1,
 			  String startmodel="");
+
+  void unlockMSs();
+
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;

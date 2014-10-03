@@ -176,6 +176,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os( LogOrigin("SynthesisNormalizer", "scatterModel",WHERE) );
 
+    setupImagesOnDisk(); // To open up and initialize itsPartImages.
+
+    //    os << "In ScatterModel : " << itsPartImages.nelements() << " for " << itsPartImageNames << LogIO::POST;
+
     if( itsPartImages.nelements() > 0 )
       {
 	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
@@ -332,9 +336,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    foundPartImages = False;
 	  }
       }
+
     if( foundPartImages == False) 
       { 
-	itsPartImages.resize(0); 
+	if( foundFullImage == True && itsPartImageNames.nelements()>0 )
+	  {
+	    // Pick the coordsys, etc from fullImage, and construct new/fresh partial images. 
+	    cout << "Found full image, but no partial images. Make partImStores for : " << itsPartImageNames << endl;
+	    
+	    String imopen = itsImages->getName()+".residual"+((itsMapperType=="multiterm")?".tt0":"");
+	    Directory imdir( imopen );
+	    if( ! imdir.exists() )
+	      {
+		imopen = itsImages->getName()+".psf"+((itsMapperType=="multiterm")?".tt0":"");
+		Directory imdir2( imopen );
+		if( ! imdir2.exists() )
+		  throw(AipsError("Cannot find partial image psf or residual for  " +itsImages->getName() +err));
+	      }
+
+	    PagedImage<Float> temppart( imopen );
+	    IPosition tempshape = temppart.shape();
+	    CoordinateSystem tempcsys = temppart.coordinates();
+
+	    Bool useweightimage = itsImages->getUseWeightImage( *(itsImages->sumwt()) );
+	    for( uInt part=0; part<itsPartImageNames.nelements(); part++ )
+	      {
+		itsPartImages[part] = makeImageStore ( itsPartImageNames[part], tempcsys, tempshape, useweightimage );
+	      }
+	  }
+	else
+	  {
+	    itsPartImages.resize(0); 
+	  }
       }
     else // Check that all have the same shape.
       {

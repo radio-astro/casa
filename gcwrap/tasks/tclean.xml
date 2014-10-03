@@ -345,7 +345,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="ntaylorterms" subparam="true">
       <description>Number of Taylor coefficients in the spectral model</description>
-      <value type="int">1</value>
+      <value type="int">2</value>
     </param>
 
     <param type="any" name="restoringbeam" subparam="true">

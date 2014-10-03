@@ -111,11 +111,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void SIMinorCycleController::incrementMinorCycleCount(Int itersDonePerStep)
   {
+    /*
     if( itersDonePerStep <= 0 )
       {
 	LogIO os( LogOrigin("SIMinorCycleController",__FUNCTION__,WHERE) );
 	os << LogIO::WARN << "Zero iterations done after " << itsCycleIterDone << LogIO::POST;
       }
+    */
 
     itsIterDiff = itersDonePerStep;
     itsIterDone += itersDonePerStep;

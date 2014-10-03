@@ -246,18 +246,25 @@ class PySynthesisImager:
 
 #############################################
     def predictModel(self):
-        self.SItool.predictmodel();
+        for immod in range(0,self.NF):
+            self.PStools[immod].dividemodelbyweight()
+            self.PStools[immod].scattermodel() 
+
+        self.predictModelCore()
+##        self.SItool.predictmodel();
         
 #############################################
 ## Overloaded for parallel runs
     def makePSFCore(self):
         self.SItool.makepsf()
-
 #############################################
 ## Overloaded for parallel runs
     def runMajorCycleCore(self, lastcycle):
-        ### Run major cycle
         self.SItool.executemajorcycle(controls={'lastcycle':lastcycle})
+#############################################
+## Overloaded for parallel runs
+    def predictModelCore(self):
+        self.SItool.predictmodel()
 #############################################
 
     def runMinorCycle(self):
@@ -392,8 +399,8 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             normpars = copy.deepcopy( self.allnormpars[str(immod)] )
             partnames = []
             if(self.NN>1):
-                if not shutil.os.path.exists(normpars['workdir']):
-                    shutil.os.system('mkdir '+normpars['workdir'])
+#                if not shutil.os.path.exists(normpars['workdir']):
+#                    shutil.os.system('mkdir '+normpars['workdir'])
                 for node in range(0,self.NN):
                     onename = self.allimpars[str(immod)]['imagename']+'.n'+str(node)
                     partnames.append( self.PH.getpath(node) + '/' + onename  )
@@ -431,7 +438,7 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
-    def predictModel(self):
+    def predictModelCore(self):
         joblist=[]
         for node in range(0,self.PH.NN):
              joblist.append( self.PH.runcmd("toolsi.predictmodel()",node) )
@@ -950,7 +957,7 @@ class ImagerParameters():
 
 
     def checkParameters(self):
-        casalog.origin('refimagerhelper.checkParameters')
+        #casalog.origin('refimagerhelper.checkParameters')
         casalog.post('Verifying Input Parameters')
         # Init the error-string
         errs = "" 
@@ -967,8 +974,8 @@ class ImagerParameters():
             self.alldecpars[immod]['imagename'] = self.allimpars[immod]['imagename']
             self.iterpars['allimages'][immod] = { 'imagename':self.allimpars[immod]['imagename'] , 'ntaylorterms':self.allimpars[immod]['ntaylorterms'] }
 
-            if len(self.allnormpars[immod]['workdir'])==0:
-                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
+#            if len(self.allnormpars[immod]['workdir'])==0:
+#                self.allnormpars[immod]['workdir'] = self.allnormpars[immod]['imagename'] + '.workdir'
 
         
         ## If there are errors, print a message and exit.

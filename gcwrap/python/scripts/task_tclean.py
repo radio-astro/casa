@@ -19,91 +19,91 @@ from refimagerhelper import ImagerParameters
 
 def tclean(
     ####### Data Selection
-    vis='', 
-    field='', 
-    spw='',
-    timerange='',
-    uvrange='',
-    antenna='',
-    scan='',
-    observation='',
-    intent='',
-    datacolumn='corrected',
+    vis,#='', 
+    field,#='', 
+    spw,#='',
+    timerange,#='',
+    uvrange,#='',
+    antenna,#='',
+    scan,#='',
+    observation,#='',
+    intent,#='',
+    datacolumn,#='corrected',
 
     ####### Image definition
-    imagename='',
-    imsize=[100,100],
-    cell=['1.0arcsec','1.0arcsec'],
-    phasecenter='J2000 19:59:28.500 +40.44.01.50',
-    stokes='I',
-    projection='SIN',
-    startmodel='',
+    imagename,#='',
+    imsize,#=[100,100],
+    cell,#=['1.0arcsec','1.0arcsec'],
+    phasecenter,#='J2000 19:59:28.500 +40.44.01.50',
+    stokes,#='I',
+    projection,#='SIN',
+    startmodel,#='',
 
-    outlierfile='',
-    overwrite=True,
+    outlierfile,#='',
+    overwrite,#=True,
 
     ## Spectral parameters
-    specmode='mfs',
-    reffreq='',
-    nchan=1,
-    start='',
-    width='',
-    outframe='LSRK',
-    veltype='',
-    restfreq=[''],
-    sysvel='',
-    sysvelframe='',
-    interpolation='',
+    specmode,#='mfs',
+    reffreq,#='',
+    nchan,#=1,
+    start,#='',
+    width,#='',
+    outframe,#='LSRK',
+    veltype,#='',
+    restfreq,#=[''],
+    sysvel,#='',
+    sysvelframe,#='',
+    interpolation,#='',
     ## 
     ####### Gridding parameters
-    gridmode='ft', 
-    facets=1,
+    gridmode,#='ft', 
+    facets,#=1,
 
-    wprojplanes=1,
+    wprojplanes,#=1,
 
-    aterm=True,
-    psterm=True,
-    wbawp = True,
-    conjbeams = True,
-    cfcache = "",
-    computepastep =360.0,
-    rotatepastep =5.0,
+    aterm,#=True,
+    psterm,#=True,
+    wbawp ,#= True,
+    conjbeams ,#= True,
+    cfcache ,#= "",
+    computepastep ,#=360.0,
+    rotatepastep ,#=5.0,
 
-    pblimit=0.01,
-    normtype='flatnoise',
+    pblimit,#=0.01,
+    normtype,#='flatnoise',
 
     #### Weighting
-    weighting='natural',
-    robust=0.5,
-    npixels=0,
-#    uvtaper=False,
-    uvtaper=[],
+    weighting,#='natural',
+    robust,#=0.5,
+    npixels,#=0,
+#    uvtaper,#=False,
+    uvtaper,#=[],
 
     ####### Deconvolution parameters
-    deconvolver='hogbom',
-    scales=[],
-    ntaylorterms=1,
-    restoringbeam=[],
+    deconvolver,#='hogbom',
+    scales,#=[],
+    ntaylorterms,#=1,
+    restoringbeam,#=[],
 
     ##### Action control
-#    action="csclean",
+#    action,#="csclean",
 
     ##### Iteration control
-    niter=0, 
-    gain=0.1,
-    threshold=0.0, 
-    cycleniter=0, 
-    cyclefactor=1.0,
-    minpsffraction=0.1,
-    maxpsffraction=0.8,
-    interactive=False, 
-    mask='',
-    savemodel="none",
-    recalcres=True,
-    recalcpsf=True,
+    niter,#=0, 
+    gain,#=0.1,
+    threshold,#=0.0, 
+    cycleniter,#=0, 
+    cyclefactor,#=1.0,
+    minpsffraction,#=0.1,
+    maxpsffraction,#=0.8,
+    interactive,#=False, 
+    mask,#='',
+    savemodel,#="none",
+    recalcres,#=True,
+    recalcpsf,#=True,
 
     ####### State parameters
-    parallel=False):
+    parallel):#=False):
 
     #####################################################
     #### Sanity checks and controls
@@ -277,106 +277,53 @@ def tclean(
          return False
 
     retrec={}
+
+    try: 
     
-    ## Init major cycle elements
-    imager.initializeImagers()
-    imager.initializeNormalizers()
+        ## Init major cycle elements
+        imager.initializeImagers()
+        imager.initializeNormalizers()
 
-    ## Init minor cycle elements
-    if niter>0:
-        imager.initializeDeconvolvers()
-        imager.initializeIterationControl()
+        ## Init minor cycle elements
+        if niter>0:
+            imager.initializeDeconvolvers()
+            imager.initializeIterationControl()
 
-    ## Make PSF
-    if recalcpsf==True:
-        imager.makePSF()
+        ## Make PSF
+        if recalcpsf==True:
+            imager.makePSF()
 
-    if niter >=0 : 
+        if niter >=0 : 
 
-        ## Make dirty image
-        if recalcres==True:
-            imager.runMajorCycle()
-
-        ## In case of no deconvolution iterations....
-        if niter==0 and recalcres==False:
-            if savemodel != "none":
-                imager.predictModel()
-        
-        ## Do deconvolution and iterations
-        if niter>0 :
-            while ( not imager.hasConverged() ):
-                imager.runMinorCycle()
+            ## Make dirty image
+            if recalcres==True:
                 imager.runMajorCycle()
 
-            ## Restore images.
-            imager.restoreImages()
+            ## In case of no deconvolution iterations....
+            if niter==0 and recalcres==False:
+                if savemodel != "none":
+                    imager.predictModel()
+        
+            ## Do deconvolution and iterations
+            if niter>0 :
+                while ( not imager.hasConverged() ):
+                    imager.runMinorCycle()
+                    imager.runMajorCycle()
 
-            ## Get summary from iterbot
-            retrec=imager.getSummary();
+                ## Restore images.
+                imager.restoreImages()
 
-    ## Close tools.
-    imager.deleteTools()
+                ## Get summary from iterbot
+                retrec=imager.getSummary();
+
+        ## Close tools.
+        imager.deleteTools()
+
+    except Exception as e:
+        #print 'Exception : ' + str(e)
+        casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
+        imager.deleteTools()
 
     return retrec
 
 ##################################################
-#  Make separate tasks for all of these...
-    ####################################################
-    ##
-    ##  multicycle : Full set of major and minor cycle iterations.
-    ##  makepsf : Make psf, weight, sumwt
-    ##  makeresidual : Make psf, weight, sumwt, dirty/residual image. Use starting model if supplied
-    ##                         If psf,weight,sumwt already exist, detect and don't recompute.
-    ##  deconvolve : Only minor cycle
-    ##  setmodel : Only predict starting model (evaluate or virtual)
-    ##  restore : Only setup deconvolvers, and restore
-    ##
-    ####################################################
-#
-#
-#    ## Init major cycle elements
-#    if action=='makeresidual' or action=='makepsf' or action=='multicycle' or action=='setmodel':
-#        imager.initializeImagers()
-#        if action != 'setmodel':
-#            imager.initializeNormalizers()
-#
-#    ## Init minor cycle elements
-#    if action=='deconvolve' or action=='multicycle' or action=='restore':
-#        imager.initializeDeconvolvers()
-#        if action != 'restore':
-#            imager.initializeIterationControl()
-#
-#    ## Make PSF
-#    if action=='makeresidual' or action=='makepsf' or action=='multicycle':
-#        imager.makePSF()
-#
-#    ## Make dirty image
-#    if action=='makeresidual' or action=='multicycle':
-#        imager.runMajorCycle()
-#
-#    ## Predict model (independent call)
-#    if action=='setmodel':
-#        imager.predictModel()
-#
-#    ## Do deconvolution and restore
-#    if action=='multicycle' or action=='deconvolve':
-#        while ( not imager.hasConverged() ):
-#            imager.runMinorCycle()
-#            if action=='multicycle':
-#                imager.runMajorCycle()
-#
-#    ## Restore images.
-#    if action=='multicycle' or action=='deconvolve' or action=='restore':
-#        imager.restoreImages()
-#
-#
-#    retrec={}
-#    if action=='multicycle' or action=='deconvolve':
-#        retrec=imager.getSummary();
-#
-#    ## Close tools.
-#    imager.deleteTools()
-#
-#    return retrec
-#
-#######################################

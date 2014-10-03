@@ -462,7 +462,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	                        ( ! ( ((itsMappers[model])->imageStore())->isModelEmpty() ));
 	validmodel =  ! ( ((itsMappers[model])->imageStore())->isModelEmpty() );
       }
-    //cout << "anyNonZeroModel : " << validmodel << endl;
+    //    cout << "anyNonZeroModel : " << validmodel << endl;
     return validmodel;
   }
   //////////////////////////////////////////////////////////////////////////////////////////////////////
