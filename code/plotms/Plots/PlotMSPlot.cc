@@ -26,7 +26,6 @@
 //# $Id: $
 #include <plotms/Plots/PlotMSPlot.h>
 
-#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/CacheFactory.h>
 #include <plotms/Data/PlotMSCacheBase.h>
@@ -458,7 +457,7 @@ bool PlotMSPlot::updateCache() {
 		cacheUpdating = true;
 		result = itsParent_->updateCachePlot( this,
 			PlotMSPlot::cacheLoaded, true );
-
+			
 	}
 	catch( AipsError& error ){
 		cacheUpdating = false;
@@ -715,8 +714,9 @@ void PlotMSPlot::logIter(Int iter, Int nIter) {
 
 void PlotMSPlot::parametersHaveChanged(const PlotMSWatchedParameters& p,
         int updateFlag ) {
-
-	cacheUpdating = false;
+	if ( isCacheUpdating() ){
+		return;
+	}
 
     // Make sure it's this plot's parameters.
     if(&p != &parameters()) return;
@@ -899,7 +899,7 @@ void PlotMSPlot::exportToFormatCancel(){
 void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	// Ensure we fail gracefully if cache loading yielded nothing
 	// or was cancelled
-	cacheUpdating = false;
+
 	if ( itsCache_ == NULL ){
 		return;
 	}
@@ -909,7 +909,7 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	}
 
 	// Make this more specific than canvas-triggered
-	if (itsTCLParams_.updateCanvas){
+	if (itsTCLParams_.updateCanvas || itsTCLParams_.updateIteration ){
 		updateIndexing();
 	}
 
@@ -933,7 +933,7 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	}
 
 	// Release drawing if needed.
-	if(itsTCLParams_.releaseWhenDone){
+	if(itsTCLParams_.releaseWhenDone && !isCacheUpdating() ){
 		releaseDrawing();
 	}
 
@@ -1036,8 +1036,10 @@ bool PlotMSPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 	bool locationChange = false;
 	if ( (gridRow != displayRow || gridCol != displayCol) && gridRow != -1 ){
 		locationChange = true;
+
 		//This removes the title and axes from its previous plot location.
 		QList<PlotMSPlot*> canvasPlots = itsParent_->getPlotManager().getCanvasPlots( gridRow, gridCol);
+
 		if ( canvasPlots.size() == 1 ){
 			//We are the sole occupant of the old spot (no overplotting) so we
 			//erase all evidence of there being a plot
@@ -1064,7 +1066,6 @@ bool PlotMSPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
 					(itsParent_->getAxisLocationX() != locationAxisX) ||
 					(itsParent_->getAxisLocationY() != locationAxisY) ||
 					locationChange );
-
 	itsParent_->setCommonAxes( commonAxisX, commonAxisY);
 	itsParent_->setAxisLocation( locationAxisX, locationAxisY);
 	gridRow = displayRow;
@@ -1291,7 +1292,10 @@ bool PlotMSPlot::resetIter() {
 }
 
 void PlotMSPlot::recalculateIteration( ) {
-	this->holdDrawing();
+	bool drawingHeld = allDrawingHeld();
+	if ( !drawingHeld ){
+		this->holdDrawing();
+	}
 	int nIter = itsCache_->nIter(0);
 		if ( nIter <= 0 ){
 			nIter = 1;
@@ -1334,7 +1338,9 @@ void PlotMSPlot::recalculateIteration( ) {
 
 	attachToCanvases();
 	updatePlots();
-	releaseDrawing();
+	if ( !isCacheUpdating() && !drawingHeld ){
+		releaseDrawing();
+	}
 
 	logPoints();
 

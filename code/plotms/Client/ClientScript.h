@@ -108,7 +108,7 @@ public:
 			PlotMSPlot* postThreadObject = NULL,
 			int index = 0);
 
-	virtual void plot();
+	virtual bool plot();
 	virtual void showGUI( bool show = true);
 
 	virtual int execLoop() {

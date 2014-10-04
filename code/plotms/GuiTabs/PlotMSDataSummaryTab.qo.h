@@ -71,7 +71,7 @@ public:
      vector<vector<PMS::Axis> > selectedReleaseAxes() const;
 
      //Tell all of the supported plots to update their displays.
-    void plot();
+    bool plot();
 
     //Add a plot
     void insertData( int index );

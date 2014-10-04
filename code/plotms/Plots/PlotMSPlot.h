@@ -30,6 +30,7 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 #include <plotms/Data/PlotMSCacheBase.h>
 #include <plotms/PlotMS/PlotMSRegions.h>
+#include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameters.h>
 #include <plotms/Plots/PlotMSPlot.h>
 #include <plotms/Plots/PlotMSPage.h>
@@ -40,7 +41,6 @@
 namespace casa {
 
 //# Forward declarations
-class PlotMSApp;
 class PlotMSPages;
 class PMS_PP_Cache;
 class PMS_PP_Canvas;
@@ -230,11 +230,13 @@ public:
     void logPoints();
     void logIter(Int iter, Int nIter);
 
-    static void cacheLoaded(void *obj, bool wasCanceled)
-    {
+    static void cacheLoaded(void *obj, bool wasCanceled){
         PlotMSPlot *cobj = static_cast<PlotMSPlot*>(obj);
         if(cobj != NULL){
-            cobj->cacheLoaded_(wasCanceled);
+        	cobj->setCacheUpdating( false );
+            if ( ! cobj->itsParent_->guiShown() ){
+            	cobj->cacheLoaded_(wasCanceled);
+            }
         }
     }
 

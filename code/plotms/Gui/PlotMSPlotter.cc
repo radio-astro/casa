@@ -898,8 +898,9 @@ void PlotMSPlotter::exportPlots(){
 	exportAction->doAction( itsParent_ );
 }
 
-void PlotMSPlotter::plot(){
-	itsPlotTab_->plot();
+bool PlotMSPlotter::plot(){
+	bool plotted = itsPlotTab_->plot();
+	return plotted;
 }
 
 void PlotMSPlotter::gridSizeChanged( int rowCount, int colCount ){

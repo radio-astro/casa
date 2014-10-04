@@ -49,7 +49,7 @@ bool ClientScript::isActionEnabled( PlotMSAction::Type /*type*/ ) const {
 	return false;
 }
 
-void ClientScript::plot() {
+bool ClientScript::plot() {
 	if ( currentPlots.size() > 0 ){
 		//initializeCurrentPlot();
 		currentPlots.clear();
@@ -62,6 +62,7 @@ void ClientScript::plot() {
 		//i.e., a missing y-axis.
 		itsPlotter_->updateScriptGui();
 	}
+	return true;
 }
 
 

@@ -202,9 +202,14 @@ void PlotMSOptionsTab::gridChanged(){
 
 		itsParameters_.setRowCount(rowCount);
 		itsParameters_.setColCount(colCount);
-
-		itsParameters_.releaseNotification();
-
+		//Required so that if the user has unplotted changes, for example, selection
+		//the new grid will pick up the changes.
+		bool plotted = itsPlotter_->plot();
+		if ( !plotted ){
+			//There was no data change so trigger the grid change through
+			// a release notification.
+			itsParameters_.releaseNotification();
+		}
 		itsChangeFlag_ = true;
 	}
 }

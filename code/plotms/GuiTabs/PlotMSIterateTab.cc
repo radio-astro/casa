@@ -123,7 +123,7 @@ bool PlotMSIterateTab::setGridSize(unsigned int nRows,unsigned int nCols){
     //Reset the limits on the spins.
     gridRowSpin->setMaximum( nRows );
     gridColSpin->setMaximum( nCols );
-    emit plottableChanged();
+    //emit plottableChanged();
     return validLocation;
 }
 
@@ -178,7 +178,6 @@ void PlotMSIterateTab::getValue(PlotMSPlotParameters& params) const   {
         d = params.typedGroup<PMS_PP_Iteration>();
     }
         
-	
     d->setIterationAxis(
            PMS::axis(iterationAxisChooser->currentText().toStdString()) );
 

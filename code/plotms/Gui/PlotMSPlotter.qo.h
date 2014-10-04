@@ -68,7 +68,7 @@ public:
     virtual bool isActionEnabled( PlotMSAction::Type type ) const;
 
     virtual vector<PlotMSPlot*> getCurrentPlots() const;
-    virtual void plot();
+    virtual bool plot();
     virtual vector<vector<PMS::Axis> > getSelectedLoadAxes() const;
     virtual vector<vector<PMS::Axis> > getSelectedReleaseAxes() const;
     virtual PlotMSFlagging getFlagging() const;

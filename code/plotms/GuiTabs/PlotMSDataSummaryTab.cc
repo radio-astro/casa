@@ -205,11 +205,17 @@ void PlotMSDataSummaryTab::close( PlotMSDataCollapsible* collapsible ){
 	delete collapsible;
 }
 
-void PlotMSDataSummaryTab::plot(){
+bool PlotMSDataSummaryTab::plot(){
+	bool plotted = false;
+	//If there is at least one of the graphs updating its data
+	//we want to return plotted=true;
 	int dataCount = dataList.size();
 	for ( int i = 0; i < dataCount; i++ ){
-		dataList[i]->plot( its_force_reload );
+		if ( dataList[i]->plot( its_force_reload ) ){
+			plotted = true;
+		}
 	}
+	return plotted;
 }
 
 void PlotMSDataSummaryTab::completePlotting( bool success, PlotMSPlot* plot ){

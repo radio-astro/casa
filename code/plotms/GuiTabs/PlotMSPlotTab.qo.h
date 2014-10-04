@@ -282,7 +282,7 @@ private slots:
     //y-axis data has been removed.
     void removeAxisIdentifier( int index );
 
-    void plottableChanged();
+    //void plottableChanged();
 
 };
 

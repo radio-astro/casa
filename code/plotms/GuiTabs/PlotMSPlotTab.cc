@@ -220,7 +220,7 @@ String PlotMSPlotTab::getAveragingSummary() const {
 // Public Slots //
 
 bool PlotMSPlotTab::plot( bool forceReload ) {
-	Bool plotCompleted = true;
+	Bool plotCompleted = false;
 
 	//Post an error rather than plotting if the user has specified duplicate
 	//y-axes.
@@ -230,6 +230,7 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
 		if ( !axesValid ){
 			String message( "Please remove duplicate y-axes.");
 			this->itsPlotter_->showError( message, "Duplicate y-axes", true);
+			plotCompleted = true;
 			return plotCompleted;
 		}
 	}
@@ -303,6 +304,7 @@ bool PlotMSPlotTab::plot( bool forceReload ) {
 
 void PlotMSPlotTab::completePlotting( bool success ){
 	if ( itsCurrentPlot_ != NULL ){
+		itsCurrentPlot_->setCacheUpdating( false );
 		if ( !success ){
 			itsCurrentPlot_->dataMissing();
 		}
@@ -567,18 +569,18 @@ PlotMSIterateTab* PlotMSPlotTab::insertIterateSubtab (int index){
          itsPlotManager_.getGridSize( rows, cols );
          tab->setGridSize( rows, cols );
 
-         connect( tab, SIGNAL(plottableChanged()), this, SLOT(plottableChanged()));
+         //connect( tab, SIGNAL(plottableChanged()), this, SLOT(plottableChanged()));
      }
      insertSubtab (index, tab);
      return tab;
 }
 
-void PlotMSPlotTab::plottableChanged(){
+/*void PlotMSPlotTab::plottableChanged(){
 	if ( this->itsCurrentParameters_ != NULL ){
 		itsCurrentPlot_->parametersHaveChanged(*itsCurrentParameters_,
 		                        PMS_PP::UPDATE_REDRAW );
 	}
-}
+}*/
 
 PlotMSTransformationsTab*  PlotMSPlotTab::addTransformationsSubtab (){
      return insertTransformationsSubtab (itsSubtabs_.size ());
