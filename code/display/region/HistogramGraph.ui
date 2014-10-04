@@ -50,12 +50,15 @@
      </item>
      <item>
       <widget class="QToolButton" name="toolButton">
+       <property name="toolTip">
+        <string>Histogram Statistical Analysis Tool</string>
+       </property>
        <property name="text">
         <string>...</string>
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>:/images/hist.png</normaloff>../QtViewer/icons/hist.png</iconset>
+         <normaloff>:/images/hist.png</normaloff>:/images/hist.png</iconset>
        </property>
       </widget>
      </item>
