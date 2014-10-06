@@ -242,9 +242,12 @@ bool PlotMSApp::updateCachePlot( PlotMSPlot* plot,
 	 ActionCacheLoad loadCacheAction( itsPlotter_, updatePlots, f);
 	 bool threading = itsPlotter_->isInteractive();
 	 loadCacheAction.setUseThreading( threading );
-	 
 	 loadCacheAction.setSetupPlot( setupPlot );
 	 bool result = loadCacheAction.doAction( this );
+	 if ( result ){
+		 //So that in fixed mode the plot gets redrawn.
+		 plot->setRelease( true );
+	 }
 
 	 return result;
 }

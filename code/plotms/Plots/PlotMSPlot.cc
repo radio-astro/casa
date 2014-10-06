@@ -950,6 +950,10 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	}
 }
 
+void PlotMSPlot::setRelease( bool b ){
+	itsTCLParams_.releaseWhenDone = b;
+}
+
 void PlotMSPlot::canvasWasDisowned(PlotCanvasPtr canvas) {
     if(canvas.null()) return;
 

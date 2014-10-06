@@ -230,9 +230,14 @@ public:
     void logPoints();
     void logIter(Int iter, Int nIter);
 
+    //This was added so that in 'mixed mode', cacheloaded will trigger
+    //a redraw of the plot.
+    void setRelease( bool b );
+
     static void cacheLoaded(void *obj, bool wasCanceled){
         PlotMSPlot *cobj = static_cast<PlotMSPlot*>(obj);
         if(cobj != NULL){
+        	qDebug() << "cacheLoaded";
         	cobj->setCacheUpdating( false );
             if ( ! cobj->itsParent_->guiShown() ){
             	cobj->cacheLoaded_(wasCanceled);
