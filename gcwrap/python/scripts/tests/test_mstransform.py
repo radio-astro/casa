@@ -199,7 +199,25 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)                             
+        default(mstransform)                
+        
+    def setUp_CAS_6733(self):
+
+        self.vis = 'CAS-6733.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)  
+        
+    def setUp_CAS_6941(self):
+
+        self.vis = 'CAS-6941.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform) 
           
                    
     def createMMS(self, msfile, axis='auto',scans='',spws=''):
@@ -2100,7 +2118,72 @@ class test_radial_velocity_correction(test_base_compare):
         self.generate_tolerance_map()
         self.post_process()     
         
+class test_vla_mixed_polarizations(test_base):
+    '''Test behaviour of mstransform in split mode when the input MS contains mixed VLA correlations XY/LR'''
+    
+    def setUp(self):
                 
+        self.setUp_CAS_6733()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_vla_mixed_polarizations_1(self):
+        
+        self.outputms = 'test_vla_mixed_polarizations_1.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outputms,scan='14',datacolumn='DATA')
+        
+        # Check that DDI sub-table is consistent with POLARIZATION sub-table
+        mytb = tbtool()
+        mytb.open(self.outputms + '/POLARIZATION')
+        npols = mytb.nrows()
+        mytb.close()
+        
+        mytb = tbtool()
+        mytb.open(self.outputms + '/DATA_DESCRIPTION')
+        polIds = mytb.getcol('POLARIZATION_ID')
+        mytb.close()    
+        
+        self.assertTrue(all(polIds < npols), 'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table') 
+        
+        # Check that flagdata can run properly with output MS
+        summary = flagdata(vis=self.outputms,mode='summary')
+        self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS') 
+        
+        
+class test_alma_wvr_correlation_products(test_base):
+    '''Test behaviour of mstransform in split mode when the input MS contains ALMA WVR correlation products'''
+    
+    def setUp(self):
+                
+        self.setUp_CAS_6941()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outputms)
+    
+    def test_alma_wvr_correlation_products_1(self):
+        
+        self.outputms = 'test_alma_wvr_correlation_products_1.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outputms,spw='0,1,2',datacolumn='DATA')
+        
+        # Check that POLARIZATION sub-table is properly sorted
+        mytb = tbtool()
+        mytb.open(self.outputms + '/POLARIZATION')
+        numCorr = mytb.getcol('NUM_CORR')
+        mytb.close()    
+        
+        self.assertEqual(numCorr[0],2,'POLARIZATION table miss-sorted')         
+        self.assertEqual(numCorr[1],1, 'POLARIZATION table miss-sorted')         
+        
+        # Check that flagdata can run properly with output MS
+        summary = flagdata(vis=self.outputms,mode='summary')
+        self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')         
+ 
+        
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2142,4 +2225,6 @@ def suite():
             test_subtables_evla,
             test_subtables_alma,
             test_radial_velocity_correction,
+            test_vla_mixed_polarizations,
+            test_alma_wvr_correlation_products,
             Cleanup]
