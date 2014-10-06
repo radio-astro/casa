@@ -4,6 +4,7 @@ import collections
 import os
 import numpy as np 
 import re
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -34,11 +35,10 @@ class BandpassflagchansInputs(basetask.StandardInputs):
 
     @property
     def caltable(self):
-        return self._caltable
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('caltable')
 
-    @caltable.setter
-    def caltable(self, value):
-        if value is None:
+        if self._caltable is None:
             caltables = self.context.callibrary.active.get_caltable(
               caltypes='bandpass')
 
@@ -48,9 +48,12 @@ class BandpassflagchansInputs(basetask.StandardInputs):
                 bptable_vis = \
                   caltableaccess.CalibrationTableDataFiller._readvis(name)
                 if bptable_vis in self.vis:
-                    value = name
-                    break
+                    return name
 
+        return self._caltable
+
+    @caltable.setter
+    def caltable(self, value):
         self._caltable = value
 
     @property
@@ -145,7 +148,6 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-#          vis=inputs.vis, table=inputs.vis, inpfile=[])
           vis=inputs.vis, table=inputs.caltable, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
