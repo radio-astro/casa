@@ -76,7 +76,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="wvr_corrected_data">
 	    <description>Specifies which values are considerd in the SDM binary data to fill the DATA column in the MAIN table of the MS. Expected values for this option are: no, for uncorrected data (default), yes, for the corrected data, and both, for for corrected and uncorrected data. Note if both is selected two measurement sets are created, one with uncorrected data and the other with corrected data.  </description>
 	    <value>no</value>
-	    <allowed>
+	    <allowed kind="enum">
 	    <value>no</value>
 	    <value>yes</value>
 	    <value>both</value>
