@@ -249,7 +249,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 	catch(AipsError &x)
 	  {
-	    throw(AipsError("Cannot construct ImageStore for "+itsImageName));
+	    throw(AipsError("Cannot construct ImageStore for "+itsImageName+". "+x.what()));
 	  }
 	//	return;
       }
