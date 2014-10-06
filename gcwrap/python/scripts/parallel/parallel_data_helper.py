@@ -12,6 +12,8 @@ import simple_cluster
 import partitionhelper as ph
 import inspect
 from numpy.f2py.auxfuncs import throw_error
+from mpi4casa.MPIEnvironment import MPIEnvironment
+from mpi4casa.MPICommandClient import MPICommandClient
 
 
 # Decorator function to print the arguments of a function
@@ -509,6 +511,9 @@ class ParallelDataHelper(ParallelTaskHelper):
 
         # self._arg is populated inside ParallelTaskHelper._init_()
         self._arg['vis'] = os.path.abspath(self._arg['vis'])
+        # MPI setting
+        if self._mpi_cluster:
+            self._cluster.start_services()
             
         if (self._arg['outputvis'] != ""):
             self._arg['outputvis'] = os.path.abspath(self._arg['outputvis'])        
@@ -528,7 +533,8 @@ class ParallelDataHelper(ParallelTaskHelper):
         if os.path.exists(self.dataDir): 
             shutil.rmtree(self.dataDir)
 
-        os.mkdir(self.dataDir)                    
+        os.mkdir(self.dataDir)
+                            
          
 #    @dump_args
     def generateJobs(self):
@@ -604,8 +610,10 @@ class ParallelDataHelper(ParallelTaskHelper):
                 localArgs['createmms'] = False
                 
             subMs_idx += 1
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName,localArgs))
+            if not self._mpi_cluster:
+                self._executionList.append(simple_cluster.JobData(self._taskName,localArgs))
+            else:
+                self._executionList.append([self._taskName + '()',localArgs])
 
     
 #    @dump_args
@@ -663,8 +671,10 @@ class ParallelDataHelper(ParallelTaskHelper):
                             listToCasaString(partitionedScans[output])                                                
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+            if not self._mpi_cluster:
+                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+            else:
+                self._executionList.append([self._taskName + '()',mmsCmd])
 
 #    @dump_args
     def __createSPWSeparationCommands(self):
@@ -719,8 +729,10 @@ class ParallelDataHelper(ParallelTaskHelper):
             self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, output)
 
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+            if not self._mpi_cluster:
+                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+            else:
+                self._executionList.append([self._taskName + '()',mmsCmd])
             
 #    @dump_args
     def __createDefaultSeparationCommands(self):
@@ -821,8 +833,11 @@ class ParallelDataHelper(ParallelTaskHelper):
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
                                   % (self.outputBase, sindex)
-            self._executionList.append(
-                simple_cluster.JobData(self._taskName, mmsCmd))
+                                  
+            if not self._mpi_cluster:
+                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+            else:
+                self._executionList.append([self._taskName + '()',mmsCmd])
             
             sindex += 1 # index of subMS name
 
@@ -1304,13 +1319,22 @@ class ParallelDataHelper(ParallelTaskHelper):
         # dictionary of the form:
         # {'path/outputvis.data/SUBMSS/outputvis.0000.ms':True,
         #  'path/outuputvis.data/SUBMSS/outputvis.0001.ms':False}
+        outputList = {}
       
         if (ParallelTaskHelper.getBypassParallelProcessing()==1):
             # This is the list of output SubMSs
             outputList = self._sequential_return_list
             self._sequential_return_list = {}
-        else:                                                    
-            outputList =  self._cluster.get_output_return_list()
+        elif (self._cluster != None):
+            if self._mpi_cluster:
+                command_response_list =  self._cluster.get_command_response(self._command_request_id_list,True,True)
+                # Format list in the form of vis dict
+                for command_response in command_response_list:
+                    outvis = command_response['parameters']['outputvis']
+#                    print command_response['parameters']['outputvis']
+                    outputList[outvis] = command_response['ret']
+            else:                                                    
+                outputList =  self._cluster.get_output_return_list()
                                                                      
                      
         # List of failed MSs. TBD
