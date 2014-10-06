@@ -229,7 +229,7 @@ for info in [ (['dbus-daemon'],'dbus'),
             if casa['helpers'][entry] is not None:
                 break
 
-print "CASA Version " + casa['build']['version'] + " (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
+print "CASA Version " + casa['build']['version'] + "-DEV (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
