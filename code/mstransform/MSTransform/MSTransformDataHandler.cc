@@ -1880,20 +1880,34 @@ Bool MSTransformDataHandler::fillDDTables()
 	}
 
 
-	// Get a unique sorted list of the POLARIZATION_ID
-	// of the selected DDI
+	// Get a unique sorted list of the POLARIZATION_ID of the selected DDI
 	Sort sort(selectedPolId.getStorage(dum), sizeof(Int));
 	sort.sortKey((uInt) 0, TpInt);
 	Vector<uInt> index, uniq;
 	sort.sort(index, selectedPolId.nelements());
 	nPol = sort.unique(uniq, index);
 
+	// jagonzal (CAS-6941): Generate resulting vector of unique sorted polarizations
+	Vector<Int> sortedPolId(selectedPolId.size());
+	for (uInt idx=0;idx < selectedPolId.size(); idx++)
+	{
+		sortedPolId(idx) = selectedPolId(index(idx));
+	}
+
+	Vector<Int> uniqueSortedPolId(uniq.size());
+	for (uInt idx=0;idx < uniq.size(); idx++)
+	{
+		uniqueSortedPolId(idx) = sortedPolId(uniq(idx));
+	}
+
 	// Write to output MS POLARIZATION table
 	// This table should not be resized!!!
 	corrSlice_p.resize(nPol);
 	for (uInt outpid = 0; outpid < nPol; ++outpid)
 	{
-		uInt inpid = selectedPolId[outpid];
+		// jagonzal (CAS-6941): Must use vector of unique sorted polarizations and not original one
+		uInt inpid = uniqueSortedPolId[outpid];
+
 		uInt ncorr = inPolOutCorrToInCorrMap_p[inpid].nelements();
 		const Vector<Int> inCT(corrType(inpid));
 
