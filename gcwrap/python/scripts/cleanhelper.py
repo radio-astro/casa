@@ -6,6 +6,7 @@ import pdb
 import numpy
 import shutil
 import string
+import pwd
 from numpy import unique
 from odict import odict
 
@@ -3345,6 +3346,8 @@ def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """
 #    ftm = userftm;
     ftm='ft';
+    if((gridmode != '') and (imagermode=='mosaic')):
+           raise Exception, pwd.getpwuid(os.getuid())[4].split()[0]+ " gridmode='"+gridmode + "' combined with " + "imagermode='"+imagermode + "' is not supported yet" 
     if ((gridmode == 'widefield') and(wprojplanes > 1)): ftm = 'wproject';
     elif (gridmode == 'aprojection'):                    ftm = 'awproject';
     elif (gridmode == 'advancedaprojection'):            ftm = 'awproject';
