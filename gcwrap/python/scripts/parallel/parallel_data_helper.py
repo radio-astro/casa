@@ -888,6 +888,8 @@ class ParallelDataHelper(ParallelTaskHelper):
             scans = ''
             hasscans = False
 
+        # It needs to take the correlation selection into account
+        corr_sel = self._arg['correlation']
         ddistartList = []
                
         # scan+spw separation axis 
@@ -903,7 +905,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             
                     try:
                         # The dictionary with selected indices
-                        seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws)
+                        seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws,polarization=corr_sel)
                     except:
                         self._msTool.close()
                         continue
@@ -931,7 +933,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         
                 try:
                     # The dictionary with selected indices
-                    seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws)
+                    seldict = self._msTool.msseltoindex(vis=self._arg['vis'],scan=scans,spw=spws, polarization=corr_sel)
                 except:
                     self._msTool.reset()
                     continue
