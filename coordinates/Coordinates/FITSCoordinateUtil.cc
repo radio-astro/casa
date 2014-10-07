@@ -439,9 +439,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    latPole =  dCoord.longLatPoles()(3);
 //
 	    const DirectionCoordinate &dc = cSys.directionCoordinate(skyCoord);
+	    Double reflat = 0.;
+	    if(latAxis>=0){
+	      reflat = C::pi/180.0*crval(latAxis);
+	    }
 	    cctype = cTypeFromDirection (isNCP, dc.projection(), 
 					 DirectionCoordinate::axisNames(dc.directionType(),
-									True), C::pi/180.0*crval(latAxis), True);
+									True), reflat, True);
 	}
 //
 	ctype = cSys.worldAxisNames();
