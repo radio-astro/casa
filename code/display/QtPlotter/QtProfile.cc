@@ -1333,7 +1333,6 @@ namespace casa {
 			const Vector<Double>& regionX, const Vector<Double>& regionY, String shape,
 			QtProfile::ExtrType combineType, String& unit, const String& coordinateType,
 			int qualityAxis, String restFreq, const String& frame){
-
 		const DisplayCoordinateSystem& cSys = img->coordinates();
 		Bool stokesCoordinate = cSys.hasPolarizationCoordinate();
 
@@ -2571,7 +2570,7 @@ namespace casa {
 				default:
 					ok = generateProfile(z_xval, z_eval, image, wxv, wyv,
 										shape, QtProfile::RMSE, xaxisUnit, coordinateType,
-										1, cSysRval, spcRefFrame);
+										0, cSysRval, spcRefFrame);
 
 					break;
 				}
