@@ -2133,7 +2133,7 @@ class test_vla_mixed_polarizations(test_base):
         
         self.outputms = 'test_vla_mixed_polarizations_1.ms'
         
-        mstransform(vis=self.vis,outputvis=self.outputms,scan='14',datacolumn='DATA')
+        mstransform(vis=self.vis,outputvis=self.outputms,scan='16',datacolumn='DATA')
         
         # Check that DDI sub-table is consistent with POLARIZATION sub-table
         mytb = tbtool()
@@ -2146,7 +2146,7 @@ class test_vla_mixed_polarizations(test_base):
         polIds = mytb.getcol('POLARIZATION_ID')
         mytb.close()    
         
-        self.assertTrue(all(polIds < npols), 'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table') 
+        self.assertTrue(all(polIds < npols) and all(polIds > -1), 'PolarizationId in DATA_DESCRIPTION not consistent with POLARIZATION table') 
         
         # Check that flagdata can run properly with output MS
         summary = flagdata(vis=self.outputms,mode='summary')
