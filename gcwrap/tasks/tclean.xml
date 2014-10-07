@@ -345,7 +345,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="int" name="ntaylorterms" subparam="true">
       <description>Number of Taylor coefficients in the spectral model</description>
-      <value type="int">2</value>
+      <value type="int">1</value>
     </param>
 
     <param type="any" name="restoringbeam" subparam="true">
@@ -411,7 +411,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="string"></value>
     </param>
 
-    <param type="string" name="savemodel">                >
+
+<!--============================================== -->
+<!--                            Other Operational Parameters                                       -->
+<!--============================================== -->
+
+
+    <param type="string" name="savemodel"> 
 	    <description>Options to save model at the end (none, virtual, modelcolumn)</description>
 	    <value type="string">"none"</value>
 <!--	    <allowed kind="enum">
@@ -431,16 +437,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="bool">True</value>
     </param>
 
-
-
-<!--============================================== -->
-<!--                            Other Operational Parameters                                       -->
-<!--============================================== -->
-
     <param type="bool" name="parallel">
 	    <description>Run major cycles in parallel</description>
 	    <value type="bool">False</value>
     </param>
+
+
 
 <!--    <param type="string" name="clusterdef" subparam="true">
             <description>Name of a file that contains the cluster definition</description>
@@ -603,7 +605,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        </equals>
        <equals type="string" value="mtmfs">
 	 <default param="scales"><value type="intArray"></value></default>
-	 <default param="ntaylorterms"><value>2</value></default>  
+	 <default param="ntaylorterms"><value>1</value></default>  
 	 <default param="restoringbeam"><value type="stringArray"></value></default>
        </equals>
        <equals type="string" value="aasp">
@@ -649,11 +651,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
-      (Refactored) Imaging task
+      (Refactored) Imaging task.  Documentation to come.... 
 
-      NOTE : Please test only the major cycle ( i.e. niter=0 ) at this time.  Thanks.
-
-      Missing parameters and functions : post-deconvolution pbcor, mask handling, 
+      Missing parameters and functions : post-deconvolution pbcor.
 
   </example>
 
