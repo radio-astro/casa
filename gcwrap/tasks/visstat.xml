@@ -7,11 +7,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="visstat" category="information">
-<shortdescription>Displays statistical information from a measurement set, or from a measurement set selection</shortdescription>
+<shortdescription>Displays statistical information from a Measurement Set, or from a Multi-MS</shortdescription>
 
 <input>
     <param type="string" name="vis" kind="ms" mustexist="true">
-        <description>Name of input visibility file</description>
+        <description>Name of Measurement Set or Multi-MS</description>
         <value></value>
         <example>vis='ngc5921.ms'</example>
     </param>
@@ -134,8 +134,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-        This task returns statistical information about data in a measurement
-        set.
+        This task returns statistical information about data in a Measurement
+        Set or Multi-MS.
 
         The following values are computed: mean value, sum of values,
         sum of squared values, median, median absolute deviation, quartile,
@@ -156,7 +156,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         Keyword arguments:
 
-        vis  --- Name of input visibility file
+        vis  --- Name of input Measurement Set or Multi-MS
                   default: '', example: vis='my.ms'
 
         axis -- Which data to analyze.

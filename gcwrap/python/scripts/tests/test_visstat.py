@@ -59,9 +59,6 @@ class visstat_test(unittest.TestCase):
                               'var': 268.37019512552371}}}
             
         
-#        flagdata(vis=self.msfile, antenna='17')
-#        flagdata(vis=self.msfile, mode='summary')
-
         s = visstat(vis=self.msfile, axis='amp', datacolumn='data')
 
         if s.keys() != expected[self.msfile].keys():
@@ -103,7 +100,6 @@ class visstat_test(unittest.TestCase):
     def test2(self):     
         '''Visstat 2: Check channel selections'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
-#        flagdata(vis=self.msfile, antenna='17')
         for ch in [1, 2, 4, 7, 13, 62]:
           for corr in ['ll', 'rr', 'll,rr']:
             print "Call with spw='0:1~"+str(ch)+"', correlation="+corr
@@ -126,14 +122,18 @@ class visstat_test(unittest.TestCase):
     def test3(self):
         '''Visstat 3: Test on different columns and axis'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
-#        flagdata(vis=self.msfile, antenna='17')
         print "Create scratch columns."
-        cb.open(self.msfile)
-        cb.close()
+        if testmms:
+            clearcal(self.msfile)
+        else:
+            cblocal = cbtool()
+            cblocal.open(self.msfile)
+            cblocal.close()
 
-        tb.open(self.msfile)
-        cols = tb.colnames()
-        tb.close()
+        tblocal = tbtool()
+        tblocal.open(self.msfile)
+        cols = tblocal.colnames()
+        tblocal.close()
 
         cplx = ['amp', 'amplitude', 'phase', 'imag', 'imaginary', 'real']
         for x in cplx:
@@ -208,14 +208,13 @@ class visstat_test(unittest.TestCase):
     def test4(self):
         '''Visstat 4: Test of special cases'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
-#        flagdata(vis=self.msfile, antenna='17')
         for a in range(1, 5):
             s = visstat(vis=self.msfile, axis='ANTENNA1', antenna=str(a)+'&26')
             print "antenna =", a, "; mean = ", s['ANTENNA1']['mean']
 
             # Note there's a counting from 0 or 1 issue here
             # with the antenna numbering
-            if self.msfile == 'ngc5921.ms':
+            if self.msfile == self.msfile:
                 offset = 1
             else:
                 offset = 0
@@ -241,7 +240,6 @@ class visstat_test(unittest.TestCase):
         '''Visstat 5: Test that flagging impact statistics'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }            
 
-#        flagdata(vis=self.msfile, antenna='17')
         s = visstat(vis=self.msfile, axis='scan_number', scan='>=1')
         print "min = ", s['SCAN_NUMBER']['min']
         if abs(s['SCAN_NUMBER']['min'] - 1) > epsilon:
@@ -250,7 +248,7 @@ class visstat_test(unittest.TestCase):
                 +"\nError: Failed with visstat(vis=self.msfile, axis='scan_number', scan='>=1') "
 #            raise Exception("Error")
 
-        flagdata(vis=self.msfile, scan="1")
+        flagdata(vis=self.msfile, scan="1", flagbackup=False)
         s = visstat(vis=self.msfile, axis='scan_number', scan='>=1')
         print "min = ", s['SCAN_NUMBER']['min']
         if abs(s['SCAN_NUMBER']['min'] - 2) > epsilon:
@@ -260,7 +258,7 @@ class visstat_test(unittest.TestCase):
                 +"when data is flagged as flagdata(vis=msfile, scan='1')"
 #            raise Exception("Error")
 
-        flagdata(vis=self.msfile, scan="2")
+        flagdata(vis=self.msfile, scan="2", flagbackup=False)
         s = visstat(vis=self.msfile, axis='scan_number', scan='>=1')
         print "min = ", s['SCAN_NUMBER']['min']
         if abs(s['SCAN_NUMBER']['min'] - 3) > epsilon:
@@ -282,7 +280,7 @@ class visstat_test(unittest.TestCase):
 
     def test6(self):
         '''Visstat 6: Test when all selected rows are flagged'''
-        flagdata(vis=self.msfile,mode='manualflag',antenna='1;1&&1')
+        flagdata(vis=self.msfile,mode='manual',antenna='1;1&&1', flagbackup=False)
         res = visstat(vis=self.msfile,antenna='1',useflags=True)
         self.assertFalse(res, 'All data are flagged. An exception should have been raised')
 
