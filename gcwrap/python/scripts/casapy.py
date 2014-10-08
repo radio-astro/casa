@@ -1394,8 +1394,8 @@ if MPIEnvironment.is_mpi_enabled:
     mpi_comunicator = MPICommunicator()    
     # Post MPI related info
     casalog.post(MPIEnvironment.mpi_info_msg,"INFO","casapy" )
-elif MPIEnvironment.mpi_initialized and MPIEnvironment.mpi_world_size > 1 and not MPIEnvironment.is_mpi_thread_safe:
-    casalog.post(MPIEnvironment.mpi_thread_safe_info_msg,"WARN","casapy" )
+elif os.environ.has_key('OMPI_COMM_WORLD_SIZE'):
+    casalog.post("Error initializing MPI environment: %s" % MPIEnvironment.mpi_error_msg,"WARN","casapy" )
 
 casa['state']['startup'] = False
 

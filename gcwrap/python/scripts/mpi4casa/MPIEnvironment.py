@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import socket
+import traceback # To pretty-print tracebacks
 
 class MPIEnvironment:
     
@@ -54,7 +55,8 @@ class MPIEnvironment:
             
         # Set initialization flag
         mpi_initialized = True
-    except:
+    except Exception, instance:
+        mpi_initialization_error_msg = traceback.format_exc()
         __mpi_factory = None
         mpi_world_size = 1
         mpi_processor_rank = 0
@@ -91,19 +93,32 @@ class MPIEnvironment:
         mpi_thread_safe_info_msg = mpi_thread_safe_info_msg + "\nNOTE: In most MPI implementations thread-safety "
         mpi_thread_safe_info_msg = mpi_thread_safe_info_msg + "can be enabled at pre-compile, "
         mpi_thread_safe_info_msg = mpi_thread_safe_info_msg + "by setting explicit thread-safe configuration options, "
-        mpi_thread_safe_info_msg = mpi_thread_safe_info_msg + "\n      e.g. (MPI 1.6.5) --enable-mpi-thread-multiple"          
+        mpi_thread_safe_info_msg = mpi_thread_safe_info_msg + "\n      e.g. (MPI 1.6.5) --enable-mpi-thread-multiple"    
+        
+    # Allocate memory for buffered sends
+    if mpi_initialized  and mpi_world_size > 1 and is_mpi_thread_safe:
+        try:
+            mpi_buffer_size_in_mb = 100
+            __mpi_buffer = __mpi_factory.Alloc_mem(mpi_buffer_size_in_mb*1024*1024)
+            __mpi_factory.Attach_buffer(__mpi_buffer)
+            mpi_buffer_allocated = True
+        except Exception, instance:
+            mpi_buffer_allocated = False
+            mpi_buffer_allocation_error_msg = traceback.format_exc()
         
     # Check if MPI is effectively enabled
-    if mpi_initialized  and mpi_world_size > 1 and is_mpi_thread_safe:
+    if mpi_initialized  and mpi_world_size > 1 and is_mpi_thread_safe and mpi_buffer_allocated:
         is_mpi_enabled = True           
     else:
         is_mpi_enabled = False 
         if not mpi_initialized:
-            mpi_error_msg = "MPI could not be initialized"
+            mpi_error_msg = mpi_initialization_error_msg
         elif mpi_world_size < 2:
             mpi_error_msg = "Only 1 MPI process found"
         elif not is_mpi_thread_safe:
-            mpi_error_msg = mpi_thread_safe_info_msg       
+            mpi_error_msg = mpi_thread_safe_info_msg   
+        elif not mpi_buffer_allocated:
+            mpi_error_msg = mpi_buffer_allocation_error_msg
         
     # Determine whether this processor is the 'privileged' MPI rank
     mpi_client_rank = 0
@@ -162,7 +177,6 @@ class MPIEnvironment:
         mpi_command_response_handler_service_sleep_time = 0.1 # Aggressive, idle state should only be temporal
         mpi_command_request_queue_service_sleep_time = 0.1 # Aggressive, this determines the responsiveness of the system
         mpi_push_command_request_block_mode_sleep_time = 0.1 # Aggressive, this determines the responsiveness of the system
-    
     
     # Static methods ###################################################################################################       
         
