@@ -48,6 +48,10 @@ namespace casa {
 		virtual double convert ( double oldValue, SpectralCoordinate coordinate);
 		virtual ~Converter();
 
+		typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
+
+		static UnitType getUnitType( const QString& unit );
+
 	protected:
 		static const QList<QString> FREQUENCY_UNITS;
 		static const QList<QString> WAVELENGTH_UNITS;
@@ -55,10 +59,7 @@ namespace casa {
 
 		QString oldUnits;
 		QString newUnits;
-		typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
 
-	private:
-		static UnitType getUnitType( const QString& unit );
 
 	};
 

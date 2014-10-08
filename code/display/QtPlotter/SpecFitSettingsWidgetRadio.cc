@@ -462,9 +462,15 @@ namespace casa {
 							double fwhmVal = fwhmStr.toDouble();
 
 							//Gaussian Estimate must be in pixels.
-							double centerValPix = toPixels( centerVal, coord );
-							double fwhmValPtPix = toPixels( centerVal - fwhmVal, coord );
-							double fwhmValPix = fabs(centerValPix - fwhmValPtPix);
+							double centerValPix = centerVal;
+							double fwhmValPix = fwhmVal;
+							String xAxisUnit = getXAxisUnit();
+							Converter::UnitType xUnitType = Converter::getUnitType( xAxisUnit.c_str());
+							if ( xUnitType != Converter::CHANNEL_UNIT ){
+								centerValPix = toPixels( centerVal, xAxisUnit, coord );
+								double fwhmValPtPix = toPixels( centerVal - fwhmVal, xAxisUnit, coord );
+								fwhmValPix = fabs(centerValPix - fwhmValPtPix);
+							}
 
 							//Peak values must be in the same units as the image.
 							Unit imageUnit = this->getImage(fitCurveName)->units();
@@ -495,12 +501,12 @@ namespace casa {
 
 
 
-	double SpecFitSettingsWidgetRadio::toPixels( Double val, SpectralCoordinate& coord ) const {
-		String xAxisUnit = getXAxisUnit();
+	double SpecFitSettingsWidgetRadio::toPixels( Double val, String xAxisUnit, SpectralCoordinate& coord ) const {
+		//String xAxisUnit = getXAxisUnit();
 		double pixelValue = val;
 		//We are not already in pixels = channels
-
-		if ( xAxisUnit.length() > 0 ) {
+		Converter::UnitType unitType = Converter::getUnitType( xAxisUnit.c_str() );
+		if ( unitType != Converter::CHANNEL_UNIT ) {
 			QString unitStr( xAxisUnit.c_str());
 			Converter* converter = Converter::getConverter( unitStr, unitStr );
 			pixelValue = converter->toPixel( val, coord );
@@ -671,17 +677,26 @@ namespace casa {
 				std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
 				Bool validSpec;
 				SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+				Converter::UnitType xUnitType= Converter::getUnitType( getXAxisUnit().c_str());
 				for ( int i = startChannelIndex; i <= endChannelIndex; i++ ) {
 					int startBaseIndex = (i - startChannelIndex) * fitRatio;
 					xValues[startBaseIndex] = curveXValues[i];
-					xValuesPix[startBaseIndex] = toPixels( curveXValues[i], coord );
-
+					xValuesPix[startBaseIndex] = curveXValues[i];
+					if ( xUnitType != Converter::CHANNEL_UNIT ){
+						xValuesPix[startBaseIndex] = toPixels( curveXValues[i], getXAxisUnit(), coord );
+					}
 					//Cut the interval into pieces to get a higher resolution fit
 					if ( i < endChannelIndex && fitRatio > 1 ) {
 						float startX = xValues[startBaseIndex];
 						float endX = curveXValues[i+1];
-						float startXPixel = toPixels( startX, coord);
-						float endXPixel = toPixels(endX, coord);
+						float startXPixel = startX;
+						if ( xUnitType != Converter::CHANNEL_UNIT ){
+							startXPixel = toPixels( startX, getXAxisUnit(), coord);
+						}
+						float endXPixel = endX;
+						if ( xUnitType != Converter::CHANNEL_UNIT ){
+							endXPixel = toPixels(endX, getXAxisUnit(), coord);
+						}
 						float intervalWidth = abs( endX - startX ) / fitRatio;
 						float intervalWidthPixels = abs( endXPixel - startXPixel ) / fitRatio;
 						for ( int j = 1; j < fitRatio; j++ ) {
@@ -983,13 +998,21 @@ namespace casa {
 				xAxisUnit.toStdString(),velocityUnits, wavelengthUnits, tabularIndex, mFrequency ));
 		//Note::This converts to standard units.  In the case of frequency, this is "Hz". May
 		//need to add prefix.
+		QString oldUnits = "Hz";
 		if ( !velocityUnits && !wavelengthUnits ){
 			Bool validSpec;
 			SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( img, validSpec );
-			QString oldUnits = "Hz";
-			Converter* converter = Converter::getConverter( oldUnits, xAxisUnit );
-			fwhmValX = converter->convert( fwhmValX, coord );
-			centerVal = converter->convert( centerVal, coord );
+			Converter::UnitType unitType = Converter::getUnitType( xAxisUnit );
+			if ( unitType != Converter::CHANNEL_UNIT ){
+				Converter* converter = Converter::getConverter( oldUnits, xAxisUnit );
+				fwhmValX = converter->convert( fwhmValX, coord );
+				centerVal = converter->convert( centerVal, coord );
+			}
+			else {
+				String oldUnitsStr( oldUnits.toStdString().c_str());
+				fwhmValX = toPixels(fwhmValX, oldUnitsStr, coord );
+				centerVal = toPixels( centerVal, oldUnitsStr, coord );
+			}
 		}
 		float fwhmVal = 2 * abs(fwhmValX - centerVal);
 		if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ) {
@@ -1179,6 +1202,14 @@ namespace casa {
 //current information.
 	void SpecFitSettingsWidgetRadio::specifyGaussianEstimates() {
 
+		//Put in a correct spectral coordinate in case we have to do conversions.
+		QString curveName = ui.curveComboBox->currentText();
+		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
+		Bool validSpec;
+		SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
+		gaussEstimateDialog.setSpectralCoordinate( coord );
+
+
 		//Let the dialog know the x axis units we are using
 		String axisUnitStr = getXAxisUnit();
 		QString unitStr( axisUnitStr.c_str());
@@ -1187,7 +1218,6 @@ namespace casa {
 
 		//Get the yvalues from the curve so they are already in the
 		//correct units.
-		QString curveName = ui.curveComboBox->currentText();
 		CanvasCurve curve = pixelCanvas->getCurve( curveName );
 		Vector<float> yValues = curve.getYValues();
 
@@ -1216,12 +1246,6 @@ namespace casa {
 			}
 		}
 		gaussEstimateDialog.setEstimates( estimates );
-
-		//Put in a correct spectral coordinate in case we have to do conversions.
-		std::tr1::shared_ptr<const ImageInterface<Float> > imagePtr = taskMonitor->getImage( curveName );
-		Bool validSpec;
-		SpectralCoordinate coord = taskMonitor->getSpectralCoordinate( imagePtr, validSpec );
-		gaussEstimateDialog.setSpectralCoordinate( coord );
 		gaussEstimateDialog.show();
 	}
 
@@ -1230,7 +1254,6 @@ namespace casa {
 		QString dialogUnits = gaussEstimateDialog.getUnits();
 		QString xAxisUnit(this->getXAxisUnit().c_str());
 		Converter* converter = Converter::getConverter( dialogUnits, xAxisUnit );
-
 		//If our display y-values don't match those of the gaussian estimate dialog,
 		//we need to convert.
 		QString estimateDisplayYUnits = gaussEstimateDialog.getDisplayYUnits();
@@ -1245,12 +1268,17 @@ namespace casa {
 			float centerVal = estimate.getCenter();
 			float fwhmVal = estimate.getFWHM();
 			float fwhmPt = centerVal - fwhmVal;
-			if ( xAxisUnit.length() > 0 ) {
+			Converter::UnitType xAxisUnitType = Converter::getUnitType( xAxisUnit );
+			if ( converter != NULL ) {
 				centerVal = converter->convert( centerVal, coord );
 				fwhmPt = converter->convert( fwhmPt, coord );
-			} else {
-				centerVal = converter->toPixel( centerVal, coord );
-				fwhmPt = converter->toPixel( fwhmPt, coord );
+			}
+			else if ( xAxisUnitType == Converter::CHANNEL_UNIT ){
+				centerVal = toPixels( centerVal, dialogUnits.toStdString().c_str(), coord );
+				fwhmPt = toPixels( fwhmPt, dialogUnits.toStdString().c_str(), coord );
+			}
+			else {
+				qDebug() << "gaussianEstimatesChanged unrecognized x-axisUnit="<<xAxisUnit;
 			}
 			fwhmVal = qAbs(centerVal - fwhmPt);
 

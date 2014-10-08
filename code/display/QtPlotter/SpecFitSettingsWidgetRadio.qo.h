@@ -106,7 +106,7 @@ namespace casa {
 		                                 QList<SpecFit*>& curves);
 		bool isInRange( double xValue ) const;
 		QString settingsToString() const;
-		double toPixels( double val, SpectralCoordinate& coord ) const;
+		double toPixels( double val, String units, SpectralCoordinate& coord ) const;
 		void drawCurves( int pixelX, int pixelY );
 
 		enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
