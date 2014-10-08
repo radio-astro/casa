@@ -74,7 +74,7 @@ def tget(task=None, savefile=''):
 			taskparameterfile.close()
 		execfile(savefile)
 		# Put the task parameters back into the global namespace
-                f=zip(myf[task].__call__.func_code.co_varnames,myf[task].__call__.func_defaults)
+                f=zip(myf[task].__call__.func_code.co_varnames[1:],myf[task].__call__.func_defaults)
                 missing_ks = []
                 for j in f:
                         k = j[0]
