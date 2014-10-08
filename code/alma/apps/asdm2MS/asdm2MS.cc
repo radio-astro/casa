@@ -2397,6 +2397,53 @@ void v2oss(std::vector<T> v,
   oss << cChar;
 }
 
+void fillMainLazily2(const string& dsName,
+		    ASDM* ds_p,
+		    std::map<int, std::set<int> >& selected_eb_scan_m,
+		    std::map<AtmPhaseCorrection, ASDM2MSFiller*>& msFillers,
+		    std::map<unsigned int , double>& effectiveBwPerDD_m) {
+
+  LOGENTER("fillMainLazily2");
+
+  ostringstream oss;
+
+  MainTable&			mainT	= ds_p->getMain();
+  StateTable&			stateT	= ds_p->getState();  
+  ConfigDescriptionTable&	cfgDscT = ds_p->getConfigDescription();
+  ProcessorTable&		procT   = ds_p->getProcessor();
+
+
+  MainRow*	r      = 0;
+  MainRow*	temp_r = 0;
+
+  vector<MainRow*>	mRUncorrected_v;
+  vector<int32_t>	mRIndexUncorrected_v;
+  vector<string>	bdfNamesUncorrected_v;
+
+  vector<MainRow*>	mRCorrected_v;
+  vector<int32_t>	mRIndexCorrected_v;
+  vector<string>	bdfNamesCorrected_v;
+
+  const vector<MainRow *>& temp = mainT.get();
+    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+    map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
+    if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() ) {
+      // Are these data radiometric ?
+      if (procT.getRowByKey(cfgDscT.getRowByKey((*iter_v)->getConfigDescriptionId())->getProcessorId())->getProcessorType() == RADIOMETER) {
+	
+      }
+      else {
+
+      }
+      mRIndexUncorrected_v.push_back(iter_v - temp.begin());
+      mRUncorrected_v.push_back(*iter_v);
+      string abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
+      bdfNamesUncorrected_v.push_back(abspath);
+    }
+  }
+  
+}
+		    
 void fillMainLazily(const string& dsName,
 		    ASDM*  ds_p,
 		    map<int, set<int> >&   selected_eb_scan_m,
@@ -6224,9 +6271,10 @@ int main(int argc, char *argv[]) {
     vector<string> tablenames;
     while (iss>>word)
       tablenames.push_back(word);
-    
-    ASDMVerbatimFiller avf(const_cast<casa::MS*>(msFillers.begin()->second->ms()), Name2Table::find(tablenames, verbose));
-    avf.fill(*ds);
+    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin(); iter != msFillers.end(); ++iter){   
+      ASDMVerbatimFiller avf(const_cast<casa::MS*>(msFillers.begin()->second->ms()), Name2Table::find(tablenames, verbose));
+      avf.fill(*ds);
+    }
   }
 
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();

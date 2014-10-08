@@ -457,6 +457,7 @@ void UvwCoords::uvw_bl( asdm::MainRow* mainRow, vector<double> v_timeCentroid, E
 		  CorrelationModeMod::CROSS_ONLY,
 		  reverse, autoTrailing, 
 		  v_bluvw);
+	  //cout << "v_uvw size " << v_uvw.size() << ", v_bluvw size " << v_bluvw.size() << endl;
 	  v_uvw.insert( v_uvw.end(),v_bluvw.begin(), v_bluvw.end() ); 
 	}else{
 	  cout<<"cnt="<<cnt<<"   "<<v_timeCentroid[nt*nbl*nrepeat]<<endl;

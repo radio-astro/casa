@@ -560,8 +560,6 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   
   char* p = &(flag_v_p->at(0));
   Matrix<Bool> flagCell(IPosition(2, numCorr, numChan));
-  //cout << "Trying to retrieve a " << numCorr << " x " << numChan << " matrix of flags"; 
-  //cout << "in a cell shaped as follows " << flag.shape((uInt) iRow0) << " at row " << iRow0 << endl;
   flag.get((uInt)iRow0, flagCell);
   
   bool allSet = true;
@@ -776,7 +774,8 @@ int main (int argC, char * argV[]) {
     generic.add_options()
       ("help", "produces help message.")
       ("flagcond,f", po::value<string>()->default_value(""), flagcondDoc.c_str())
-      ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.");
+      ("scans,s", po::value<string>(), "processes only the scans specified in the option's value. This value is a semicolon separated list of scan specifications. A scan specification consists in an exec bock index followed by the character ':' followed by a comma separated list of scan indexes or scan index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 1-based while exec blocks's are 0-based. \"0:1\" or \"2:2~6\" or \"0:1,1:2~6,8;2:,3:24~30\" \"1,2\" are valid values for the option. \"3:\" alone will be interpreted as 'all the scans of the exec block#3'. An scan index or a scan index range not preceded by an exec block index will be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default all the scans are considered.")
+      ("wvr-corrected-data", po::value<bool>()->default_value(false), "must be set to True (resp. False) whenever the MS to be populated contains corrected (resp. uncorrected) data (default==false)");
     
     po::options_description hidden("Hidden options");
     hidden.add_options()
@@ -935,6 +934,17 @@ int main (int argC, char * argV[]) {
     errstream << "This dataset announces telescopeName == '" << telescopeName << "', which is not ALMA. Flags can't be processed." << endl;
     error(errstream.str());
   }
+
+  //
+  // Selection of the kind of data - uncorrected or corrected - to consider.
+  //
+  infostream.str("");
+  bool processUncorrectedData = true;
+  if (vm.count("wvr-corrected-data")) {
+    processUncorrectedData = !vm["wvr-corrected-data"].as< bool >();
+  }
+  infostream << "only " << (processUncorrectedData ? "uncorrected" : "corrected") << " data will be considered." << endl;
+  info(infostream.str());
   
   //
   // Selection of the scans to consider.
@@ -1042,19 +1052,28 @@ int main (int argC, char * argV[]) {
 
   //
   //
-  // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection.
+  // Consider only the Main rows whose execBlockId and scanNumber attributes correspond to the selection and which
+  // contain the data with appropriate atmospheric phase correction characteristics.
   //
+  AtmPhaseCorrectionMod::AtmPhaseCorrection queriedAPC = processUncorrectedData ? AtmPhaseCorrectionMod::AP_UNCORRECTED : AtmPhaseCorrectionMod::AP_CORRECTED;
   vector<MainRow*> v;
   vector<int32_t> mainRowIndex; 
   const vector<MainRow *>& temp = ds.getMain().get();
   for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
     map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
     if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() ) {
-      mainRowIndex.push_back(iter_v - temp.begin());
-      v.push_back(*iter_v);
+      bool toBeProcessed  = cfgT.getRowByKey((*iter_v)->getConfigDescriptionId())->getProcessorType() == RADIOMETER ; // RADIOMETER data are always put in both (UN/CORRECTED) MS.
+      if (!toBeProcessed) {
+	vector<AtmPhaseCorrectionMod::AtmPhaseCorrection > apc_v = cfgT.getRowByKey((*iter_v)->getConfigDescriptionId())->getAtmPhaseCorrection();
+	toBeProcessed =   find(apc_v.begin(), apc_v.end(), queriedAPC) != apc_v.end();
+      }
+      if (toBeProcessed) {
+	mainRowIndex.push_back(iter_v - temp.begin());
+	v.push_back(*iter_v);
+      }
     }
   }
-  
+
   infostream.str("");
   infostream << "The dataset has " << temp.size() << " main(s)...";
   infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
