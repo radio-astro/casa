@@ -319,18 +319,26 @@ void QPLayeredCanvas::drawItems(QPainter* painter, const QRect& cRect,
         return;
     }
     
+    PlotLoggerPtr infoLog = m_parent->logger();
+
     // Adjust drawing rectangle and scale maps for drawing into a cached image.
     QRect rect = cRect;
     if(cRect == canvas()->contentsRect()) rect = canvasDrawRect();
-    
+    // This is the image size for the draw thread.  Quit if invalid.
+    if (!rect.isValid()) {
+        infoLog->postMessage(CLASS_NAME, "drawItems",
+                             "No room for plot. Decrease gridrows or increase plotms window size", 
+                             PlotLogger::MSG_WARN);
+        m_parent->logMethod(CLASS_NAME, "drawItems", false);
+        return;
+    }
+
     QwtScaleMap maps[axisCnt];
     for(int i = 0; i < axisCnt; i++) {
         maps[i] = cMaps[i];
         if(i == xBottom || i == xTop) maps[i].setPaintInterval(0,rect.width());
         else maps[i].setPaintInterval(0, rect.height());
     }
-    
-    PlotLoggerPtr infoLog = m_parent->logger();
     
     // We can used a cached image if:
     // 1) none of the items have changed, which is checked via the
