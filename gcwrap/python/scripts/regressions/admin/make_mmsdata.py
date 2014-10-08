@@ -15,6 +15,7 @@ import getopt
 import pprint
 import traceback
 import shutil
+from taskinit import tbtool, mstool
 import partitionhelper as ph
 
 # ---------- ADD NEW TASKS HERE ----------------
@@ -35,7 +36,8 @@ TASKLIST = [
             'vishead',
             'wvrgcal',
             'concat', # shared with virtualconcat
-            'hanningsmooth'
+            'hanningsmooth',
+            'visstat'
             ]
 
 # NOTE: task 'fixplanets' uses data from task 'listvis'
@@ -195,6 +197,39 @@ def main(thislist, axis='auto'):
             os.system('ln -s '+ mmsname + ' ' + cvelms)
             os.chdir(thisdir)
             
+        # Create the jup.mms file
+        mmsname = 'jup.mms'
+        output = MMSPATH+mmsname
+        split2(vis=MMSPATH+'/jupiter6cm.demo-thinned.mms', outputvis=output, field='JUPITER', datacolumn='data')
+        tblocal = tbtool()
+        tblocal.open(output, nomodify=False)
+        a = tblocal.getcol('TIME')
+        delta = (54709.*86400-a[0])
+        a = a + delta
+        strt = a[0]
+        tblocal.putcol('TIME', a)
+        a = tblocal.getcol('TIME_CENTROID')
+        a = a + delta
+        tblocal.putcol('TIME_CENTROID', a)
+        tblocal.close()
+        tblocal.open(output+'/OBSERVATION', nomodify=False)
+        a = tblocal.getcol('TIME_RANGE')
+        delta = strt - a[0][0]
+        a = a + delta
+        tblocal.putcol('TIME_RANGE', a)
+        tblocal.close()
+        tblocal.open(output+'/FIELD', nomodify=False)
+        a = tblocal.getcol('TIME')
+        delta = strt - a[0]
+        a = a + delta
+        tblocal.putcol('TIME', a)
+        tblocal.close()
+        mslocal = mstool()
+        mslocal.open(output, nomodify=False)
+        mslocal.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
+                        'Jupiter_54708-55437dUTC', 0)
+        mslocal.close()
+        
         CVELMS = DATAPATH + 'fits-import-export/input/test.ms'
         MMSPATH = './unittest_mms/cvel/'
         thisdir = os.getcwd()
