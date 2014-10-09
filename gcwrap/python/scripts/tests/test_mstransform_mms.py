@@ -123,7 +123,7 @@ class test_mms_transformations(test_base):
 
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf '+ self.outputms)
+#        os.system('rm -rf '+ self.outputms)
         os.system('rm -rf inpmms*.*ms combcvel*ms testmms*ms list.obs')
 
     def test_combspw1_3(self):
@@ -292,7 +292,17 @@ class test_mms_transformations(test_base):
         self.setUp_CAS_5013()
         mstransform(vis=self.vis, outputvis=self.outputmms,createmms=True, datacolumn='corrected')
         
-        # if SPW sub-table is not correct, the next step will fail
+        # Check that optional ASSOC_SPW_ID is the same in input and output
+        tblocal = tbtool()
+        tblocal.open(self.vis+'/SPECTRAL_WINDOW',nomodify=True)
+        in_assoc = tblocal.iscelldefined('ASSOC_SPW_ID',0)
+        tblocal.close()
+        tblocal.open(self.outputmms+'/SPECTRAL_WINDOW',nomodify=True)
+        out_assoc = tblocal.iscelldefined('ASSOC_SPW_ID',0)
+        tblocal.close()
+        self.assertEqual(in_assoc, out_assoc, 'Error in SPW sub-table creation; ASSOC_SPW_ID is different')
+        
+        # if SPW sub-table is not correct, the next step might fail
         self.assertTrue(mstransform(vis=self.outputmms, outputvis=self.outputms, hanning=True, datacolumn='data'))
         
 
