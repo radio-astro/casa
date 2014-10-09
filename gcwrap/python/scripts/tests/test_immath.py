@@ -816,12 +816,9 @@ class immath_test2(unittest.TestCase):
             else:
                 os.remove(img)
         # FIXME need to figure out how to close this table correctly
+        me.done()
         cache_tables = tb.showcache()
-        if (len(cache_tables) > 0):
-            for table in cache_tables:
-                self.assertTrue(table.rfind("/IERSeop97") >= 0)
-        
-
+        self.assertTrue(len(cache_tables) == 0)
                        
     def copy_img(self):
         '''Copy images to local disk'''
