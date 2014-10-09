@@ -13,15 +13,15 @@
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
-#include <synthesis/MSVis/UtilJ.h>
-#include <synthesis/MSVis/VisBuffer.h>
-#include <synthesis/MSVis/ViFrequencySelection.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisibilityIteratorImpl2.h>
-#include <synthesis/MSVis/FinalTvi2.h>
-#include <synthesis/MSVis/VisBuffer2.h>
-#include <synthesis/MSVis/SubMS.h>
-#include <synthesis/MSVis/test/MsFactory.h>
+#include <msvis/MSVis/UtilJ.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisibilityIteratorImpl2.h>
+#include <msvis/MSVis/FinalTvi2.h>
+#include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/SubMS.h>
+#include <msvis/MSVis/test/MsFactory.h>
 #include <boost/tuple/tuple.hpp>
 
 using namespace std;
@@ -889,17 +889,19 @@ BasicChannelSelection::getUnderlyingCorrelation (Int spectralWindow, Int correla
 
     Vector<Slice> vs = correlationSlices_p (spectralWindow);
 
-    Assert (vs.nelements() == 1);
-
     uInt n = 0;
 
+    for (Int sliceIndex = 0; sliceIndex <= (int) vs.nelements(); sliceIndex ++){
 
-    for (Int j = vs(0).start(); n < vs(0).length (); j += vs(0).inc()){
+        for (Int j = vs(sliceIndex).start(), i = 0;
+             i < vs(sliceIndex).length ();
+             j += vs(sliceIndex).inc(), i++){
 
-        if ((int) n == correlation){
-            return j;
+            if ((int) n == correlation){
+                return j;
+            }
+            n ++;
         }
-        n ++;
     }
 
     Throw ("Bugcheck: Failed to find correlation defined in spectral window");
@@ -961,8 +963,11 @@ BasicCorrelationSelection::BasicCorrelationSelection ()
     aSlice(0) = Slice (0,2,3);
     slices (2) = aSlice;
 
-    aSlice(0) = Slice (1,2,2);
-    slices (3) = aSlice;
+    Vector<Slice> twoSlices (2);
+
+    twoSlices(0) = Slice (1,1,1);
+    twoSlices(1) = Slice (3,1,1);
+    slices (3) = twoSlices;
 
     setCorrelationSlices (slices);
 }
@@ -1379,7 +1384,7 @@ CopyMs::doit (const String & oldMsName)
     String newMsName = String::format ("%s.copy", oldMsName.c_str());
 
     system (String::format ("test -d %s && rm -r %s", newMsName.c_str(), newMsName.c_str()).c_str());
-    system ("casapy --nogui -c \"execfile('/home/orion/casa/trunk/code/synthesis/MSVis/test/makeEmptyCopy.py')\"");
+    system ("casapy --nogui -c \"execfile('/home/orion/casa/trunk/code/msvis/MSVis/test/makeEmptyCopy.py')\"");
 
 
 //    subMs.setmsselect("", "", "", "0");
@@ -1536,8 +1541,8 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
     TestErrorIf (vi.weightSpectrumExists(),
                  "This test requires that the weight spectrum column not exist.");
 
-    TestErrorIf (! vi.weightSpectrumCorrectedExists(),
-                 "This test requires that the corrected weight spectrum column exist.");
+    // TestErrorIf (! vi.weightSpectrumCorrectedExists(),
+    //              "This test requires that the corrected weight spectrum column exist.");
 
     Matrix <Float> weight;
     weight = vb->weight();  // get an unshared copy
@@ -1571,23 +1576,23 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
         }
     }
 
-    const Cube<Float> & correctedWeightSpectrum = vb->weightSpectrumCorrected();
+    // const Cube<Float> & correctedWeightSpectrum = vb->weightSpectrumCorrected();
 
-    for (Int row = 0; row < nRows; row ++){
-        for (Int correlation = 0; correlation < nCorrelations; correlation ++){
-            for (Int channel = 0; channel < nChannels; channel ++){
+    // for (Int row = 0; row < nRows; row ++){
+    //     for (Int correlation = 0; correlation < nCorrelations; correlation ++){
+    //         for (Int channel = 0; channel < nChannels; channel ++){
 
-                Float expected = rowIds(row) * 1000 /*+ spw * 100*/ + channel * 10 + correlation + 2;
-                Float actual = correctedWeightSpectrum (correlation, channel, row);
+    //             Float expected = rowIds(row) * 1000 /*+ spw * 100*/ + channel * 10 + correlation + 2;
+    //             Float actual = correctedWeightSpectrum (correlation, channel, row);
 
-                TestErrorIf (actual != expected,
-                             String::format ("CorrectedWeightSpectrum incorrect at "
-                                     "row=%d, channel=%d, correlation=%d;\n"
-                                     "expected=%f but got %f\n",
-                                     row, channel, correlation, expected, actual));
-            }
-        }
-    }
+    //             TestErrorIf (actual != expected,
+    //                          String::format ("CorrectedWeightSpectrum incorrect at "
+    //                                  "row=%d, channel=%d, correlation=%d;\n"
+    //                                  "expected=%f but got %f\n",
+    //                                  row, channel, correlation, expected, actual));
+    //         }
+    //     }
+    // }
 }
 
 

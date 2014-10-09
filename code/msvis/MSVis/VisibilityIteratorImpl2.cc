@@ -140,6 +140,12 @@ public:
         return subslicer_p [i];
     }
 
+    Vector<Slice>
+    getSlices () const
+    {
+        return subslicer_p;
+    }
+
     size_t nelements () const
     {
         return subslicer_p.size();
@@ -227,12 +233,8 @@ public:
 
             const ChannelSubslicer & subslicer = slicer_p [i];
 
-            rep [i] = Vector<Slice> (subslicer.nelements());
+            rep [i] = subslicer.getSlices();
 
-            for (uInt j = 0; j < subslicer.nelements(); j ++){
-
-                rep [i][j] = subslicer.getSlice (j);
-            }
         }
 
         return rep;
@@ -751,14 +753,14 @@ VisibilityIteratorImpl2::getColumnRowsMatrix (const ROArrayColumn<T> & column,
 {
     if (correlationSlicing){
 
+        // Extract the correlations slices and repackage them for use by getColumnCells
+
         const ChannelSlicer & slicer = channelSelector_p->getSlicer();
         const ChannelSubslicer subslicer = slicer.getSubslicer (0); // has to be at least one
-        const Slice & correlationSlice = subslicer.getSlice (0); // first one is correlation in this case
+        Vector<Slice> correlationSlices = subslicer.getSlices ();
+        Vector<Vector <Slice> > wrappedSlicer (1, correlationSlices);
 
-        Vector<Slice> coreSlicerElement (1, correlationSlice);
-        Vector<Vector <Slice> > coreSlicer (1, coreSlicerElement);
-
-        column.getColumnCells (rowBounds_p.subchunkRows_p, coreSlicer, array, True);
+        column.getColumnCells (rowBounds_p.subchunkRows_p, wrappedSlicer, array, True);
     }
     else{
 
