@@ -251,7 +251,8 @@ public:
 	template <class T>  static Bool columnOk(ArrayColumn<T> column)
         {
 	     Bool ret;
-	     if (column.isNull()==false and column.hasContent()==true and column.ndimColumn() > 0)
+	     // jagonzal (CAS-6206): ndimColumn only returns >0 is there is the array column has fixed size
+	     if (column.isNull()==false and column.hasContent()==true and column.ndim(0) > 0)
 	       {
 		 ret = True;
 	       }

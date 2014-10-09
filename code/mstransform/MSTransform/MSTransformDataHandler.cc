@@ -3340,12 +3340,12 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
                 	feedCols_0.time().putColumnCells(refRow,feedcols_i.time().getColumn());
 
                 	// optional columns
-                	if (columnOk(feedCols_0.focusLength()))
+                	if (columnOk(feedcols_i.focusLength()))
                 	{
                 		feedCols_0.focusLength().putColumnCells(refRow,feedcols_i.focusLength().getColumn());
                 	}
 
-                	if (columnOk(feedCols_0.phasedFeedId()))
+                	if (columnOk(feedcols_i.phasedFeedId()))
                 	{
                 		feedCols_0.phasedFeedId().putColumnCells(refRow,feedcols_i.phasedFeedId().getColumn());
                 	}
@@ -3435,32 +3435,32 @@ Bool MSTransformDataHandler::mergeSourceSubTables(Vector<String> filenames, Vect
 		    		sourceCols_0.time().putColumnCells(refRow,sourcecols_i.time().getColumn());
 
 		    		// Optional columns
-		    		if (columnOk(sourceCols_0.position()))
+		    		if (columnOk(sourcecols_i.position()))
 		    		{
 		    			sourceCols_0.position().putColumnCells(refRow,sourcecols_i.position().getColumn());
 		    		}
 
-		    		if (columnOk(sourceCols_0.transition()))
+		    		if (columnOk(sourcecols_i.transition()))
 		    		{
 		    			sourceCols_0.transition().putColumnCells(refRow,sourcecols_i.transition().getColumn());
 		    		}
 
-		    		if (columnOk(sourceCols_0.restFrequency()))
+		    		if (columnOk(sourcecols_i.restFrequency()))
 		    		{
 		    			sourceCols_0.restFrequency().putColumnCells(refRow,sourcecols_i.restFrequency().getColumn());
 		    		}
 
-		    		if (columnOk(sourceCols_0.sysvel()))
+		    		if (columnOk(sourcecols_i.sysvel()))
 		    		{
 		    			sourceCols_0.sysvel().putColumnCells(refRow,sourcecols_i.sysvel().getColumn());
 		    		}
 
-		    		if (columnOk(sourceCols_0.pulsarId()))
+		    		if (columnOk(sourcecols_i.pulsarId()))
 		    		{
 		    			sourceCols_0.pulsarId().putColumnCells(refRow,sourcecols_i.pulsarId().getColumn());
 		    		}
 
-		    		if (columnOk(sourceCols_0.sourceModel()))
+		    		if (columnOk(sourcecols_i.sourceModel()))
 		    		{
 		    			sourceCols_0.sourceModel().putColumnCells(refRow,sourcecols_i.sourceModel().getColumn());
 		    		}
@@ -3546,102 +3546,102 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 		    		syscalCols_0.time().putColumnCells(refRow,syscalcols_i.time().getColumn());
 
 		    		// Optional columns
-		    		if (columnOk(syscalCols_0.phaseDiff()))
+		    		if (columnOk(syscalcols_i.phaseDiff()))
 		    		{
 		    			syscalCols_0.phaseDiff().putColumnCells(refRow,syscalcols_i.phaseDiff().getColumn());
 		    		}
 
-		    		if (columnOk(syscalCols_0.phaseDiffFlag()))
+		    		if (columnOk(syscalcols_i.phaseDiffFlag()))
 		        	{
 		        		syscalCols_0.phaseDiffFlag().putColumnCells(refRow,syscalcols_i.phaseDiffFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tant()))
+		    		if (columnOk(syscalcols_i.tant()))
 		        	{
 		        		syscalCols_0.tant().putColumnCells(refRow,syscalcols_i.tant().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tantFlag()))
+		    		if (columnOk(syscalcols_i.tantFlag()))
 		        	{
 		        		syscalCols_0.tantFlag().putColumnCells(refRow,syscalcols_i.tantFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tantSpectrum()))
+		    		if (columnOk(syscalcols_i.tantSpectrum()))
 		        	{
 		        		syscalCols_0.tantSpectrum().putColumnCells(refRow,syscalcols_i.tantSpectrum().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tantTsys()))
+		    		if (columnOk(syscalcols_i.tantTsys()))
 		        	{
 		        		syscalCols_0.tantTsys().putColumnCells(refRow,syscalcols_i.tantTsys().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tantTsysFlag()))
+		    		if (columnOk(syscalcols_i.tantTsysFlag()))
 		        	{
 		        		syscalCols_0.tantTsysFlag().putColumnCells(refRow,syscalcols_i.tantTsysFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tantTsysSpectrum()))
+		    		if (columnOk(syscalcols_i.tantTsysSpectrum()))
 		        	{
 		        		syscalCols_0.tantTsysSpectrum().putColumnCells(refRow,syscalcols_i.tantTsysSpectrum().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tcal()))
+		    		if (columnOk(syscalcols_i.tcal()))
 		        	{
 		        		syscalCols_0.tcal().putColumnCells(refRow,syscalcols_i.tcal().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tcalFlag()))
+		    		if (columnOk(syscalcols_i.tcalFlag()))
 		        	{
 		        		syscalCols_0.tcalFlag().putColumnCells(refRow,syscalcols_i.tcalFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tcalSpectrum()))
+		    		if (columnOk(syscalcols_i.tcalSpectrum()))
 		        	{
 		        		syscalCols_0.tcalSpectrum().putColumnCells(refRow,syscalcols_i.tcalSpectrum().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.trx()))
+		    		if (columnOk(syscalcols_i.trx()))
 		        	{
 		        		syscalCols_0.trx().putColumnCells(refRow,syscalcols_i.trx().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.trxFlag()))
+		    		if (columnOk(syscalcols_i.trxFlag()))
 		        	{
 		        		syscalCols_0.trxFlag().putColumnCells(refRow,syscalcols_i.trxFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.trxSpectrum()))
+		    		if (columnOk(syscalcols_i.trxSpectrum()))
 		        	{
 		        		syscalCols_0.trxSpectrum().putColumnCells(refRow,syscalcols_i.trxSpectrum().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tsky()))
+		    		if (columnOk(syscalcols_i.tsky()))
 		        	{
 		        		syscalCols_0.tsky().putColumnCells(refRow,syscalcols_i.tsky().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tskyFlag()))
+		    		if (columnOk(syscalcols_i.tskyFlag()))
 		        	{
 		        		syscalCols_0.tskyFlag().putColumnCells(refRow,syscalcols_i.tskyFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tskySpectrum()))
+		    		if (columnOk(syscalcols_i.tskySpectrum()))
 		        	{
 		        		syscalCols_0.tskySpectrum().putColumnCells(refRow,syscalcols_i.tskySpectrum().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tsys()))
+		    		if (columnOk(syscalcols_i.tsys()))
 		        	{
 		        		syscalCols_0.tsys().putColumnCells(refRow,syscalcols_i.tsys().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tsysFlag()))
+		    		if (columnOk(syscalcols_i.tsysFlag()))
 		        	{
 		        		syscalCols_0.tsysFlag().putColumnCells(refRow,syscalcols_i.tsysFlag().getColumn());
 		        	}
 
-		    		if (columnOk(syscalCols_0.tsysSpectrum()))
+		    		if (columnOk(syscalcols_i.tsysSpectrum()))
 		        	{
 		        		syscalCols_0.tsysSpectrum().putColumnCells(refRow,syscalcols_i.tsysSpectrum().getColumn());
 		        	}
@@ -3880,53 +3880,53 @@ Bool MSTransformDataHandler::mergeCalDeviceSubtables(Vector<String> filenames, V
 		        	spectralWindowIdCol_0.putColumnCells(refRow,spectralWindowId_output);
 
 		        	// Columns that can be just copied
-					if (columnOk(antennaIdCol_0) and columnOk(antennaIdCol_i))
+					if (columnOk(antennaIdCol_i))
 					{
 						antennaIdCol_0.putColumnCells(refRow,antennaId_i);
 					}
 
-					if (columnOk(feedIdCol_0) and columnOk(feedIdCol_i))
+					if (columnOk(feedIdCol_i))
 					{
 						feedIdCol_0.putColumnCells(refRow,feedId_i);
 					}
 
-					if (columnOk(timeCol_0) and columnOk(timeCol_i))
+					if (columnOk(timeCol_i))
 					{
 						timeCol_0.putColumnCells(refRow,time_i);
 					}
 
-					if (columnOk(intervalCol_0) and columnOk(intervalCol_i))
+					if (columnOk(intervalCol_i))
 					{
 						intervalCol_0.putColumnCells(refRow,interval_i);
 					}
 
 
-					if (columnOk(numCalLoadCol_0) and columnOk(numCalLoadCol_i))
+					if (columnOk(numCalLoadCol_i))
 					{
 						numCalLoadCol_0.putColumnCells(refRow,numCalLoad_i);
 					}
 
-					if (columnOk(calLoadNamesCol_0) and columnOk(calLoadNamesCol_i))
+					if (columnOk(calLoadNamesCol_i))
 					{
 						calLoadNamesCol_0.putColumnCells(refRow,calLoadNames_i);
 					}
 
-					if (columnOk(numReceptorCol_0) and columnOk(numReceptorCol_i))
+					if (columnOk(numReceptorCol_i))
 					{
 						numReceptorCol_0.putColumnCells(refRow,numReceptor_i);
 					}
 
-					if (columnOk(noiseCalCol_0) and columnOk(noiseCalCol_i))
+					if (columnOk(noiseCalCol_i))
 					{
 						noiseCalCol_0.putColumnCells(refRow,noiseCal_i);
 					}
 
-					if (columnOk(calEffCol_0) and columnOk(calEffCol_i))
+					if (columnOk(calEffCol_i))
 					{
 						calEffCol_0.putColumnCells(refRow,calEff_i);
 					}
 
-					if (columnOk(temperatureLoadCol_0) and columnOk(temperatureLoadCol_i))
+					if (columnOk(temperatureLoadCol_i))
 					{
 						temperatureLoadCol_0.putColumnCells(refRow,temperatureLoad_i);
 					}
@@ -4063,38 +4063,38 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 		        	spectralWindowIdCol_0.putColumnCells(refRow,spectralWindowId_output);
 
 		        	// Columns that can be just copied
-		        	if (columnOk(antennaIdCol_0) and columnOk(antennaIdCol_i))
+		        	if (columnOk(antennaIdCol_i))
 					{
 						antennaIdCol_0.putColumnCells(refRow,antennaId_i);
 					}
 
-		        	if (columnOk(feedIdCol_0) and columnOk(feedIdCol_i))
+		        	if (columnOk(feedIdCol_i))
 					{
 						feedIdCol_0.putColumnCells(refRow,feedId_i);
 					}
 
-		        	if (columnOk(timeCol_0) and columnOk(timeCol_i))
+		        	if (columnOk(timeCol_i))
 					{
 						timeCol_0.putColumnCells(refRow,time_i);
 					}
 
-		        	if (columnOk(intervalCol_0) and columnOk(intervalCol_i))
+		        	if (columnOk(intervalCol_i))
 					{
 						intervalCol_0.putColumnCells(refRow,interval_i);
 					}
 
 
-		        	if (columnOk(switchedDiffCol_0) and columnOk(switchedDiffCol_i))
+		        	if (columnOk(switchedDiffCol_i))
 					{
 						switchedDiffCol_0.putColumnCells(refRow,switchedDiff_i);
 					}
 
-		        	if (columnOk(switchedSumCol_0) and columnOk(switchedSumCol_i))
+		        	if (columnOk(switchedSumCol_i))
 					{
 						switchedSumCol_0.putColumnCells(refRow,switchedSum_i);
 					}
 
-		        	if (columnOk(requantizerGainCol_0) and columnOk(requantizerGainCol_i))
+		        	if (columnOk(requantizerGainCol_i))
 					{
 						requantizerGainCol_0.putColumnCells(refRow,requantizerGain_i);
 					}
