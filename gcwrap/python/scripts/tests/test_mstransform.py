@@ -872,7 +872,6 @@ class test_Columns(test_base):
         
         self.assertTrue(th.compTables('allcols.ms', self.outputms,['FLAG_CATEGORY','WEIGHT_SPECTRUM'],0.000001,"absolute"))
                 
-    @unittest.skip('Skip until CAS-6946 is fixed')
     def test_weight_corr_sel(self):
         '''mstransform: check WEIGHT shape after correlation selection'''
         self.setUp_4ants()
@@ -886,7 +885,6 @@ class test_Columns(test_base):
         self.assertEqual(out_ws[0],'[2]','WEIGHT shape is not correct')
         self.assertEqual(out_ss[0],'[2]','SIGMA shape is not correct')
         
-    @unittest.skip('Skip until CAS-6946 is fixed')
     def test_weight_ws_corr_sel(self):
         '''mstransform: check WEIGHT shape after correlation selection. WEIGHT_SPECTRUM exists'''
         self.setUp_4ants()
