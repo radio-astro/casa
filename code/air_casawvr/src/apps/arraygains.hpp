@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
    Initial version January 2010.
+   Maintained by ESO since 2013.
 
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -17,7 +18,7 @@
 
 #include <boost/multi_array.hpp>
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   // Forward 
   class InterpArrayData;
@@ -25,7 +26,7 @@ namespace LibAIR {
 
   /** Gains calculated for an array (taking into account flags)
    */
-  class ArrayGains2
+  class ArrayGains
   {
 
   public:
@@ -60,7 +61,7 @@ namespace LibAIR {
 	
 	\param nAnt number of antennas in the array
      */
-    ArrayGains2(const std::vector<double> &time, 
+    ArrayGains(const std::vector<double> &time, 
 	       const std::vector<double> &el, 
 	       const std::vector<size_t> &state, 
 	       const std::vector<size_t> &field, 
@@ -108,7 +109,7 @@ namespace LibAIR {
     /** \brief Calculate the gains by linearly interpolating another
 	array
      */
-    void calcLinI(const ArrayGains2 &o);
+    void calcLinI(const ArrayGains &o);
 
     /** \brief Scale the all paths by a give factor
      */
@@ -167,12 +168,12 @@ namespace LibAIR {
 
     /** \brief Compute discrepancy in path for two set of paths
      */
-    void pathDiscAnt(const ArrayGains2 &other,
+    void pathDiscAnt(const ArrayGains &other,
 		     std::vector<double> &res) const;
 
     /** \brief Compute discrepancy in path for two set of paths
      */
-    void pathDiscAnt(const ArrayGains2 &other,
+    void pathDiscAnt(const ArrayGains &other,
 		     const std::vector<std::pair<double, double> > &tmask,
 		     std::vector<double> &res) const;
 

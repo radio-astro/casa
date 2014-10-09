@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version January 2010. 
+   Initial version January 2010.
+   Maintained by ESO since 2013. 
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -16,6 +17,7 @@
 #include "mswvrdata.hpp"
 #include "msspec.hpp"
 #include "msutils.hpp"
+#include "casawvr_errs.hpp"
 
 #include <casacore/ms/MeasurementSets/MeasurementSet.h>
 #include <casacore/ms/MeasurementSets/MSProcessor.h>
@@ -26,11 +28,10 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/MVTime.h>
 
-#include "almawvr/arraydata.hpp"
-#include "casawvr_errs.hpp"
+#include "../src/apps/arraydata.hpp"
 
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   SPWSet
   WVRSPWIDs(const casa::MeasurementSet &ms)
@@ -237,7 +238,7 @@ namespace LibAIR {
 
     const size_t n=ptime.nrow();
     if(n==0){
-      throw LibAIR::MSInputDataError("Didn't find any POINTING data points");
+      throw LibAIR2::MSInputDataError("Didn't find any POINTING data points");
     }
 
     time.resize(n); 
@@ -272,9 +273,9 @@ namespace LibAIR {
     }
     catch(const std::runtime_error rE){
       std::cerr << std::endl << "WARNING: problem while accessing POINTING table:"
-		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
+		<< std::endl << "         LibAIR2::WVRNearestPointing: " << rE.what() << std::endl;
       std::cout << std::endl << "WARNING: problem while accessing POINTING table:"
-		<< std::endl << "         LibAIR::WVRNearestPointing: " << rE.what() << std::endl;
+		<< std::endl << "         LibAIR2::WVRNearestPointing: " << rE.what() << std::endl;
       rval = false;
     }
 
@@ -369,8 +370,6 @@ namespace LibAIR {
       }
     }
     
-    std::cout << "Multi-MS (MMS) capable version using time sorted access and respecting flags." << std::endl;
-
     std::vector<double> times, az, el;
     std::vector<size_t> states, fields, source;
     WVRTimeStatePoints(ms,
@@ -381,7 +380,7 @@ namespace LibAIR {
 		       sortedI); 
 
     if (times.size() == 0){
-      throw LibAIR::MSInputDataError("Didn't find any WVR data points");
+      throw LibAIR2::MSInputDataError("Didn't find any WVR data points");
     }
     
     if(usepointing && !WVRNearestPointing(ms, times, az, el)){
@@ -520,12 +519,12 @@ namespace LibAIR {
       }
       if(allFlagged)
       {
-	throw LibAIR::MSInputDataError("All antennas needed to be flagged.");
+	throw LibAIR2::MSInputDataError("All antennas needed to be flagged.");
       }
     }
     else
     {
-      throw LibAIR::MSInputDataError("All WVR data points are flagged.");
+      throw LibAIR2::MSInputDataError("All WVR data points are flagged.");
     }
 
 

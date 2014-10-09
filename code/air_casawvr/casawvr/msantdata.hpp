@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
    Initial version September 2010. 
+   Maintained by ESO since 2013.
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -15,10 +16,10 @@
 #include <string>
 #include <boost/bimap.hpp>
 
-#include "almawvr/antennautils.hpp"
+#include "../src/apps/antennautils.hpp"
 #include "msfwds.hpp"
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   /** \brief Load positions of all antennas
    */

@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version January 2010. 
+   Initial version January 2010.
+   Maintained by ESO since 2013. 
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -21,10 +22,10 @@
 
 #include "msfwds.hpp"
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   // Forward declarations
-  class ArrayGains2;
+  class ArrayGains;
   class MSSpec;
 
   /** \brief Write out gains calculated from WVRs to a table
@@ -40,7 +41,7 @@ namespace LibAIR {
       correction from the default dispersion table will be applied)
    */
 
-  void writeNewGainTbl(const ArrayGains2 &g,
+  void writeNewGainTbl(const ArrayGains &g,
 		       const char *fnameout,
 		       const MSSpec &s,
 		       std::set<size_t> reverse,

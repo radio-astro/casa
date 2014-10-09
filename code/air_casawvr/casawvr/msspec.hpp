@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version June 2010. 
+   Initial version June 2010.
+   Maintained by ESO since 2013.
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -20,7 +21,7 @@
 
 #include "msfwds.hpp"
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   /// Information about an individual spectral window
   struct MSSPW

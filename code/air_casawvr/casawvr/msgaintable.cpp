@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version January 2010. 
+   Initial version January 2010.
+   Maintained by ESO since 2013. 
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -11,6 +12,7 @@
 */
 
 #include "msgaintable.hpp"
+#include "msspec.hpp"
 
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CalTable.h>
@@ -18,20 +20,19 @@
 #include <synthesis/CalTables/CalSet.h>
 #include <synthesis/CalTables/CalHistRecord.h>
 
-#include "almawvr/libair_main.hpp"
-#include "../apps/arraygains2.hpp"
-#include "msspec.hpp"
-#include "almawvr/dispersion.hpp"
+#include "../src/libair_main.hpp"
+#include "../src/apps/arraygains.hpp"
+#include "../src/dispersion.hpp"
 
 // These are used to turn the directory where the data files live into
 // a string
 #define bnstringer1(x) #x
 #define bnstringer2(x) bnstringer1(x)
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   // Write a NewCalTable
-  void writeNewGainTbl(const ArrayGains2 &g,
+  void writeNewGainTbl(const ArrayGains &g,
 		       const char *fnameout,
 		       const MSSpec &s,
 		       std::set<size_t> reverse,
@@ -141,7 +142,7 @@ namespace LibAIR {
 
 
     // Add history info (before flushing to disk)
-    ct.addHistoryMessage(std::string("Produced with libAIR version: ") + LibAIR::version(),
+    ct.addHistoryMessage(std::string("Produced with libAIR version: ") + LibAIR2::version(),
 			 invocation);
 
     // Flush to disk
@@ -154,7 +155,7 @@ namespace LibAIR {
 
   {
     casa::CalHistoryRecord h;
-    h.defineCalNotes(std::string("Produced with libAIR version: ") + LibAIR::version());
+    h.defineCalNotes(std::string("Produced with libAIR version: ") + LibAIR2::version());
     h.defineCalParms(invocation);
 
     casa::CalTable c(fnameout,

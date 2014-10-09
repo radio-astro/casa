@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
    Initial version January 2010.
+   Maintained by ESO since 2013.
 
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -10,15 +11,15 @@
    Structure to hold gains derived from WVR data
 */
 
-#include "../apps/arraygains2.hpp"
-#include "almawvr/arraydata.hpp"
-#include "almawvr/dtdlcoeffs.hpp"
+#include "arraygains.hpp"
+#include "arraydata.hpp"
+#include "dtdlcoeffs.hpp"
 
 
-namespace LibAIR {
+namespace LibAIR2 {
   
 
-  ArrayGains2::ArrayGains2(const std::vector<double> &time, 
+  ArrayGains::ArrayGains(const std::vector<double> &time, 
 			 const std::vector<double> &el, 
 			 const std::vector<size_t> &state, 
 			 const std::vector<size_t> &field, 
@@ -32,7 +33,7 @@ namespace LibAIR {
   {
   }
 
-  void ArrayGains2::calc(const InterpArrayData &wvrdata,
+  void ArrayGains::calc(const InterpArrayData &wvrdata,
 			const std::vector<double> &coeffs)
   {
     std::vector<double> c;
@@ -58,7 +59,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::calc(const InterpArrayData &wvrdata,
+  void ArrayGains::calc(const InterpArrayData &wvrdata,
 			const std::vector<double> &coeffs,
 			const std::vector<double> &coeffs2,
 			const std::vector<double> &TRef)
@@ -85,7 +86,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::calc(const InterpArrayData &wvrdata,
+  void ArrayGains::calc(const InterpArrayData &wvrdata,
 			const std::vector<double> &coeffs,
 			const std::vector<double> &weights)
   {
@@ -112,7 +113,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::calc(const InterpArrayData &wvrdata,
+  void ArrayGains::calc(const InterpArrayData &wvrdata,
 			const dTdLCoeffsBase &coeffs)
   {
     const size_t ntimes=wvrdata.nTimes();
@@ -145,7 +146,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::calcLinI(const ArrayGains2 &o)
+  void ArrayGains::calcLinI(const ArrayGains &o)
   {
     const std::vector<double> &otime=o.g_time();
     const path_t & opath=o.g_path();
@@ -183,7 +184,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::scale(double s)
+  void ArrayGains::scale(double s)
   {
     const size_t ntimes=time.size();
     for (size_t i=0; i<ntimes; ++i)
@@ -195,20 +196,20 @@ namespace LibAIR {
     }
   }
 
-  const double ArrayGains2::deltaPath(size_t timei,
+  const double ArrayGains::deltaPath(size_t timei,
 				     size_t i,
 				     size_t j) const
   {
     return path[timei][i]-path[timei][j];
   }
 
-  const double ArrayGains2::absPath(size_t timei,
+  const double ArrayGains::absPath(size_t timei,
 				   size_t i) const
   {
     return path[timei][i];
   }
 
-  double ArrayGains2::greatestRMSBl(const std::vector<std::pair<double, double> > &tmask) const
+  double ArrayGains::greatestRMSBl(const std::vector<std::pair<double, double> > &tmask) const
   {
     const size_t ntimes=time.size();
     double maxrms=0;
@@ -247,14 +248,14 @@ namespace LibAIR {
     return maxrms;
   }
 
-  void ArrayGains2::pathRMSAnt(std::vector<double> &res) const 
+  void ArrayGains::pathRMSAnt(std::vector<double> &res) const 
   {
     std::vector<std::pair<double, double> > tmask;
     tmask.push_back(std::pair<double, double>(g_time()[0], g_time()[g_time().size()-1]));
     pathRMSAnt(tmask, res);
   }
 
-  void ArrayGains2::pathRMSAnt(const std::vector<std::pair<double, double> > &tmask,
+  void ArrayGains::pathRMSAnt(const std::vector<std::pair<double, double> > &tmask,
 			      std::vector<double> &res) const
   {
     res.resize(nAnt);
@@ -293,7 +294,7 @@ namespace LibAIR {
     }
   }
   
-  void ArrayGains2::pathDiscAnt(const ArrayGains2 &other,
+  void ArrayGains::pathDiscAnt(const ArrayGains &other,
 			       std::vector<double> &res) const
   {
     res.resize(nAnt);
@@ -324,7 +325,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::pathDiscAnt(const ArrayGains2 &other,
+  void ArrayGains::pathDiscAnt(const ArrayGains &other,
 			       const std::vector<std::pair<double, double> > &tmask,
 			       std::vector<double> &res) const
   {
@@ -366,7 +367,7 @@ namespace LibAIR {
     }
   }
 
-  void ArrayGains2::blankSources(std::set<size_t> &flagsrc)
+  void ArrayGains::blankSources(std::set<size_t> &flagsrc)
   {
     const size_t ntimes=time.size();
     for (size_t i=0; i<ntimes; ++i)

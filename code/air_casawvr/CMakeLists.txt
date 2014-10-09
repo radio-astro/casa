@@ -27,7 +27,47 @@ casa_add_library( air_casawvr
   casawvr/msspec.cpp
   casawvr/msweather.cpp 
   casawvr/msantdata.cpp
-  apps/arraygains2.cpp
+  cmdline/wvrgcal.cpp
+  cmdline/wvrgcalerrors.cpp
+  cmdline/wvrgcalfeedback.cpp
+  src/basicphys.cpp
+  src/cloudywater.cpp
+  src/columns.cpp
+  src/columns_data.cpp
+  src/decorr.cpp
+  src/dipmeasure_iface.cpp
+  src/dipmodel_iface.cpp
+  src/dispersion.cpp
+  src/dtdltools.cpp
+  src/layers.cpp
+  src/libair_main.cpp
+  src/lineparams.cpp
+  src/lineshapes.cpp
+  src/measure_iface.cpp
+  src/model_iface.cpp
+  src/model_make.cpp
+  src/models_basic.cpp
+  src/model_water.cpp
+  src/partitionsum.cpp
+  src/partitionsum_testdata.cpp
+  src/path_measure.cpp
+  src/path_transfer.cpp
+  src/radiometermeasure.cpp
+  src/radiometer_utils.cpp
+  src/rtranfer.cpp
+  src/singlelayerwater.cpp
+  src/slice.cpp
+  src/taumodel.cpp
+  src/tbutils.cpp
+  src/apps/almaabs.cpp
+  src/apps/almaabs_i.cpp
+  src/apps/almaopts.cpp
+  src/apps/almaresults.cpp
+  src/apps/antennautils.cpp
+  src/apps/arraydata.cpp
+  src/apps/arraygains.cpp
+  src/apps/dtdlcoeffs.cpp
+  src/apps/segmentation.cpp
   )
 
 casa_add_executable( air_casawvr wvrgcal

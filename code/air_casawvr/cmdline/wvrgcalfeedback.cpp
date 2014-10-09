@@ -1,7 +1,8 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
    Initial version December 2010. 
-   
+   Maintained by ESO since 2013.
+
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
    
@@ -14,11 +15,11 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 
-#include "almawvr/libair_main.hpp"
+#include "../src/libair_main.hpp"
 #include "wvrgcalfeedback.hpp"
 
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   void fatalMsg(const std::string &m)
   {
@@ -42,12 +43,14 @@ namespace LibAIR {
   {
     std::cout<<std::endl
 	     <<"WVRGCAL  -- Version "
-	     <<LibAIR::version()
+	     <<LibAIR2::version()
 	     <<std::endl
 	     <<std::endl
 	     <<"Developed by Bojan Nikolic at the University of Cambridge as part of EU FP6 ALMA Enhancement"
 	     <<std::endl
-	     <<"GPLv2 License -- you have a right to the source code (see http://www.mrao.cam.ac.uk/~bn204/alma)"
+	     <<"Maintained since 2013 by the European Southern Observatory as part of the ALMA project"
+	     <<std::endl
+	     <<"GPLv2 License -- you have a right to the source code"
 	     <<std::endl
 	     <<std::endl;
     

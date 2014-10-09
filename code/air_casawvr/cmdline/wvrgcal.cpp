@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version January 2010. 
+   Initial version January 2010.
+   Maintained by ESO since 2013. 
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -32,24 +33,20 @@
 #include "../casawvr/msutils.hpp"
 #include "../casawvr/msspec.hpp"
 #include "../casawvr/msantdata.hpp"
-#include "almawvr/arraydata.hpp"
-#include "../apps/arraygains2.hpp"
-#include "almawvr/almaabs.hpp"
-#include "almawvr/dtdlcoeffs.hpp"
-#include "almawvr/almaresults.hpp"
-#include "almawvr/segmentation.hpp"
-#include "almawvr/libair_main.hpp"
-
-#ifdef BUILD_HD5
-#include "../hd5wvr/resoutput.hpp"
-#endif
+#include "../src/apps/arraydata.hpp"
+#include "../src/apps/arraygains.hpp"
+#include "../src/apps/almaabs.hpp"
+#include "../src/apps/dtdlcoeffs.hpp"
+#include "../src/apps/almaresults.hpp"
+#include "../src/apps/segmentation.hpp"
+#include "../src/libair_main.hpp"
 
 #include "wvrgcalerrors.hpp"
 #include "wvrgcalfeedback.hpp"
 
-using LibAIR::fatalMsg;
-using LibAIR::errorMsg;
-using LibAIR::warnMsg;
+using LibAIR2::fatalMsg;
+using LibAIR2::errorMsg;
+using LibAIR2::warnMsg;
 
 /// Check the options and parameters supplied by the user for internal
 /// consistency 
@@ -146,7 +143,7 @@ void checkMSandPars(const casa::MeasurementSet &ms,
   if (vm.count("statsource"))
   {
     std::string srcname=vm["statsource"].as<std::vector<std::string> >()[0];
-    std::set<size_t> fselect=LibAIR::getSrcFields(ms,
+    std::set<size_t> fselect=LibAIR2::getSrcFields(ms,
 						  srcname);
     if (fselect.size() == 0)
     {
@@ -166,7 +163,7 @@ std::set<int> getAntPars(const std::string &s,
 			 const boost::program_options::variables_map &vm,
 			 const casa::MeasurementSet &ms)
 {
-  using namespace LibAIR;
+  using namespace LibAIR2;
   aname_t anames=getAName(ms);
   std::vector<std::string> pars=vm[s].as<std::vector<std::string> >();
   std::set<int> res;
@@ -225,18 +222,18 @@ static std::string buildCmdLine(int argc,
    are flagged or have a distance > maxdist_m
 */
  
-LibAIR::AntSetWeight limitedNearestAnt(const LibAIR::antpos_t &pos,
+LibAIR2::AntSetWeight limitedNearestAnt(const LibAIR2::antpos_t &pos,
 				       size_t i,
-				       const LibAIR::AntSet &flag,
+				       const LibAIR2::AntSet &flag,
 				       size_t n,
 				       double maxdist_m)
 {
-  LibAIR::AntSetD dist=LibAIR::antsDist(pos, i, flag);
-  LibAIR::AntSetWeight res;
+  LibAIR2::AntSetD dist=LibAIR2::antsDist(pos, i, flag);
+  LibAIR2::AntSetWeight res;
     
   double total=0;
   size_t limitedn=0;
-  LibAIR::AntSetD::const_iterator s=dist.begin();
+  LibAIR2::AntSetD::const_iterator s=dist.begin();
   for (size_t j=0; j<n; ++j)
   {
     if(s!=dist.end() and s->first <= maxdist_m)
@@ -263,15 +260,15 @@ LibAIR::AntSetWeight limitedNearestAnt(const LibAIR::antpos_t &pos,
  */
 void flagInterp(const casa::MeasurementSet &ms,
 		const std::set<int> &wvrflag,
-		LibAIR::InterpArrayData &d,
+		LibAIR2::InterpArrayData &d,
 		const double maxdist_m,
 		const int minnumants,
 		std::set<int> &interpImpossibleAnts)
 {
 
-  LibAIR::antpos_t apos;
-  LibAIR::getAntPos(ms, apos);
-  LibAIR::AntSet wvrflag_s(wvrflag.begin(), 
+  LibAIR2::antpos_t apos;
+  LibAIR2::getAntPos(ms, apos);
+  LibAIR2::AntSet wvrflag_s(wvrflag.begin(), 
 			   wvrflag.end());
 
   for(std::set<int>::const_iterator i=wvrflag.begin();
@@ -279,18 +276,18 @@ void flagInterp(const casa::MeasurementSet &ms,
       ++i)
   {
 
-    LibAIR::AntSetWeight near=limitedNearestAnt(apos, 
+    LibAIR2::AntSetWeight near=limitedNearestAnt(apos, 
 						*i, 
 						wvrflag_s, 
 						3,
 						maxdist_m);
     if(near.size()>= static_cast<unsigned int>(minnumants)){
-      //LibAIR::interpBadAntW(d, *i, near);
-      const LibAIR::InterpArrayData::wvrdata_t &data(d.g_wvrdata());
+      //LibAIR2::interpBadAntW(d, *i, near);
+      const LibAIR2::InterpArrayData::wvrdata_t &data(d.g_wvrdata());
       for(size_t ii=0; ii<d.g_time().size(); ++ii){
 	for(size_t k=0; k < 4; ++k){
 	  double p=0;
-	  for(LibAIR::AntSetWeight::const_iterator j=near.begin(); j!=near.end(); ++j){
+	  for(LibAIR2::AntSetWeight::const_iterator j=near.begin(); j!=near.end(); ++j){
 	    double thisData = data[ii][j->second][k];
 	    if(thisData>0){
 	      p+=thisData*j->first;
@@ -329,7 +326,7 @@ void flagInterp(const casa::MeasurementSet &ms,
 
 
 /// Work out which spectral windows might need to be reversed
-std::set<size_t> reversedSPWs(const LibAIR::MSSpec &sp,
+std::set<size_t> reversedSPWs(const LibAIR2::MSSpec &sp,
 			      const boost::program_options::variables_map &vm)
 {
   std::set<size_t> reverse;
@@ -345,7 +342,7 @@ std::set<size_t> reversedSPWs(const LibAIR::MSSpec &sp,
     {
       if (torev[i]<0 or torev[i] >= (int)sp.spws.size())
       {
-	throw LibAIR::SPWIDError(torev[i], 
+	throw LibAIR2::SPWIDError(torev[i], 
 				 sp.spws.size());
       }
       reverse.insert(torev[i]);
@@ -354,8 +351,8 @@ std::set<size_t> reversedSPWs(const LibAIR::MSSpec &sp,
   return reverse;
 }
 
-void printExpectedPerf(const LibAIR::ArrayGains2 &g,
-		       const LibAIR::dTdLCoeffsBase &coeffs,
+void printExpectedPerf(const LibAIR2::ArrayGains &g,
+		       const LibAIR2::dTdLCoeffsBase &coeffs,
 		       const std::vector<std::pair<double, double> > &tmask)
 {
 
@@ -365,7 +362,7 @@ void printExpectedPerf(const LibAIR::ArrayGains2 &g,
   std::vector<double> cr, err;
   coeffs.repr(cr, err);
   std::cout<<"* Estimated WVR thermal contribution to path fluctuations (micron per antenna): "
-	   <<LibAIR::thermal_error(cr)/1e-6
+	   <<LibAIR2::thermal_error(cr)/1e-6
 	   <<std::endl;
   const double grmsbl=g.greatestRMSBl(tmask);
   std::cout<<"* Greatest Estimated path fluctuation is (micron on a baseline): "
@@ -388,13 +385,13 @@ void statTimeMask(const casa::MeasurementSet &ms,
   std::vector<int> flds;
   std::vector<double> time;
   std::vector<int> src;
-  LibAIR::fieldIDs(ms, 
+  LibAIR2::fieldIDs(ms, 
 		   time,
 		   flds,
 		   src,
 		   sortedI);
   std::vector<size_t> spws;
-  LibAIR::dataSPWs(ms, spws, sortedI);
+  LibAIR2::dataSPWs(ms, spws, sortedI);
 
   if (vm.count("statfield") == 0 && vm.count("statsource") == 0)
   {
@@ -403,9 +400,9 @@ void statTimeMask(const casa::MeasurementSet &ms,
   }
   else if ( vm.count("statsource") > 0)
   {
-    std::set<size_t> fselect=LibAIR::getSrcFields(ms,
+    std::set<size_t> fselect=LibAIR2::getSrcFields(ms,
 						  vm["statsource"].as<std::vector<std::string> >()[0]);
-    LibAIR::fieldTimes(time,
+    LibAIR2::fieldTimes(time,
 		       flds,
 		       spws,
 		       fselect,
@@ -415,7 +412,7 @@ void statTimeMask(const casa::MeasurementSet &ms,
   else
   {
     std::vector<std::string> fields=vm["statfield"].as<std::vector<std::string> >();
-    LibAIR::field_t fnames=LibAIR::getFieldNames(ms);
+    LibAIR2::field_t fnames=LibAIR2::getFieldNames(ms);
 
     std::set<size_t> fselect;
     if (fnames.right.count(fields[0])) // User supplied  field *name*
@@ -436,26 +433,26 @@ void statTimeMask(const casa::MeasurementSet &ms,
 		 <<std::endl;
       }
     }
-    LibAIR::fieldTimes(time,
+    LibAIR2::fieldTimes(time,
 		       flds,
 		       spws,
 		       fselect,
 		       0,
 		       tmask);
   }
-  LibAIR::printStatTimes(std::cout,
+  LibAIR2::printStatTimes(std::cout,
 			 time,
 			 tmask);
 }
 		  
 
 /// Compute the discrepance in path estimate between channels 1 and 3
-void computePathDisc(const LibAIR::InterpArrayData &d,
+void computePathDisc(const LibAIR2::InterpArrayData &d,
 		     const std::vector<std::pair<double, double> > &tmask,
-		     LibAIR::dTdLCoeffsBase  &coeffs,
+		     LibAIR2::dTdLCoeffsBase  &coeffs,
 		     std::vector<double> &res)
 {
-  LibAIR::ArrayGains2 g1(d.g_time(), 
+  LibAIR2::ArrayGains g1(d.g_time(), 
 			d.g_el(),
 			d.g_state(),
 			d.g_field(),
@@ -469,7 +466,7 @@ void computePathDisc(const LibAIR::InterpArrayData &d,
   g1.calc(d,
 	  coeffs);    
   
-  LibAIR::ArrayGains2 g3(d.g_time(), 
+  LibAIR2::ArrayGains g3(d.g_time(), 
 			d.g_el(),
 			d.g_state(),
 			d.g_field(),
@@ -524,7 +521,7 @@ std::vector<std::set<std::string> > getTied(const boost::program_options::variab
 std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> > &tied,
 					const casa::MeasurementSet &ms)
 {
-  boost::bimap<size_t, std::string > srcmap=LibAIR::getSourceNames(ms);
+  boost::bimap<size_t, std::string > srcmap=LibAIR2::getSourceNames(ms);
   std::vector<std::set<size_t> > res;
   for (size_t i=0; i<tied.size(); ++i)
   {
@@ -576,7 +573,7 @@ void printTied(const std::vector<std::set<std::string> > &tied,
 std::set<size_t> sourceSet(const std::vector<std::string> &sources,
 			   const casa::MeasurementSet &ms)
 {
-  boost::bimap<size_t, std::string > snames=LibAIR::getSourceNames(ms);
+  boost::bimap<size_t, std::string > snames=LibAIR2::getSourceNames(ms);
   std::set<size_t> sset;
   for(size_t i=0; i<sources.size(); ++i)
     sset.insert(snames.right.at(sources[i]));  
@@ -596,8 +593,8 @@ std::set<size_t> sourceSet(const std::vector<std::string> &sources,
     to be "row-synchronous".
     
  */
-std::pair<LibAIR::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
-filterInp(const LibAIR::ALMAAbsInpL &inp,
+std::pair<LibAIR2::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
+filterInp(const LibAIR2::ALMAAbsInpL &inp,
 	  const std::vector<std::pair<double, double> > &fb,
 	  const std::vector<std::string> &sourceflag,
 	  const casa::MeasurementSet &ms)
@@ -605,10 +602,10 @@ filterInp(const LibAIR::ALMAAbsInpL &inp,
 
   std::set<size_t> flagset=sourceSet(sourceflag, ms);
 
-  LibAIR::ALMAAbsInpL res;
+  LibAIR2::ALMAAbsInpL res;
   std::vector<std::pair<double, double> > rfb;
   size_t j=0;
-  for(LibAIR::ALMAAbsInpL::const_iterator i=inp.begin();
+  for(LibAIR2::ALMAAbsInpL::const_iterator i=inp.begin();
       i!=inp.end();
       ++i, ++j)
   {
@@ -625,16 +622,16 @@ filterInp(const LibAIR::ALMAAbsInpL &inp,
     coefficients from to exclude flagged data points (zero Tobs)
     
  */
-std::pair<LibAIR::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
-filterFlaggedInp(const LibAIR::ALMAAbsInpL &inp,
+std::pair<LibAIR2::ALMAAbsInpL,  std::vector<std::pair<double, double> > >
+filterFlaggedInp(const LibAIR2::ALMAAbsInpL &inp,
 		 const std::vector<std::pair<double, double> > &fb)
 {
 
-  LibAIR::ALMAAbsInpL res;
+  LibAIR2::ALMAAbsInpL res;
   std::vector<std::pair<double, double> > rfb;
   size_t j=0;
   bool fbFilled = (fb.size()>0);
-  for(LibAIR::ALMAAbsInpL::const_iterator i=inp.begin();
+  for(LibAIR2::ALMAAbsInpL::const_iterator i=inp.begin();
       i!=inp.end();
       ++i, ++j)
   {
@@ -652,10 +649,10 @@ filterFlaggedInp(const LibAIR::ALMAAbsInpL &inp,
 
 /** Return the set of antenna IDs that do not have a WVR
  */
-std::set<int> NoWVRAnts(const LibAIR::aname_t &an)
+std::set<int> NoWVRAnts(const LibAIR2::aname_t &an)
 {
   std::set<int> res;
-  for(LibAIR::aname_t::const_iterator i=an.begin();
+  for(LibAIR2::aname_t::const_iterator i=an.begin();
       i!= an.end();
       ++i)
   {
@@ -750,7 +747,7 @@ int main(int argc,  char* argv[])
  	vm);
   notify(vm);
 
-  LibAIR::printBanner(std::cout);
+  LibAIR2::printBanner(std::cout);
 
 
   
@@ -781,7 +778,7 @@ int main(int argc,  char* argv[])
 
   std::string fnameout=vm["output"].as<std::string>();
 
-  std::set<size_t> useID=LibAIR::skyStateIDs(ms);
+  std::set<size_t> useID=LibAIR2::skyStateIDs(ms);
 
   std::set<int> wvrflag;
   // Prepare flagging and interpolation
@@ -790,14 +787,14 @@ int main(int argc,  char* argv[])
      wvrflag=getAntPars("wvrflag", vm, ms);    
   }
 
-  LibAIR::aname_t anames=LibAIR::getAName(ms);
+  LibAIR2::aname_t anames=LibAIR2::getAName(ms);
   std::set<int> nowvr=NoWVRAnts(anames);
   
   std::set<int> interpwvrs(wvrflag); // the antennas to interpolate solutions for
   interpwvrs.insert(nowvr.begin(), nowvr.end());
 
   std::set<int> flaggedants; // the antennas flagged in the ANTENNA table are not to be interpolated
-  LibAIR::WVRAddFlaggedAnts(ms, flaggedants);
+  LibAIR2::WVRAddFlaggedAnts(ms, flaggedants);
 
   wvrflag.insert(flaggedants.begin(),flaggedants.end());
 
@@ -815,7 +812,7 @@ int main(int argc,  char* argv[])
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
      std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
-     boost::scoped_ptr<LibAIR::InterpArrayData> d (LibAIR::loadWVRData(ms, 
+     boost::scoped_ptr<LibAIR2::InterpArrayData> d (LibAIR2::loadWVRData(ms, 
 								       sortedI, 
 								       flaggedantsInMain,
 								       vm["mingoodfrac"].as<double>(),
@@ -832,7 +829,7 @@ int main(int argc,  char* argv[])
 	smoothWVR(*d, vm["smooth"].as<int>());
      }
      
-     d.reset(LibAIR::filterState(*d, useID));
+     d.reset(LibAIR2::filterState(*d, useID));
 
      std::set<int> interpImpossibleAnts;
 
@@ -844,14 +841,14 @@ int main(int argc,  char* argv[])
 		vm["minnumants"].as<int>(),
 		interpImpossibleAnts);
      
-     LibAIR::ArrayGains2 g(d->g_time(), 
-			   d->g_el(),
-			   d->g_state(),
-			   d->g_field(),
-			   d->g_source(),
-			   d->nWVRs);
+     LibAIR2::ArrayGains g(d->g_time(), 
+			  d->g_el(),
+			  d->g_state(),
+			  d->g_field(),
+			  d->g_source(),
+			  d->nWVRs);
      
-     boost::scoped_ptr<LibAIR::dTdLCoeffsBase>  coeffs;
+     boost::scoped_ptr<LibAIR2::dTdLCoeffsBase>  coeffs;
      
      // These are the segments on which coefficients are re-calculated
      std::vector<std::pair<double, double> >  fb;
@@ -860,25 +857,25 @@ int main(int argc,  char* argv[])
      {
 	std::cout<<"[Output from \"cont\" option has not yet been updated]"
 		 <<std::endl;
-	coeffs.reset(LibAIR::SimpleSingleCont(*d));
+	coeffs.reset(LibAIR2::SimpleSingleCont(*d));
      }
      else
      {
 	
-	LibAIR::ALMAAbsInpL inp;
+	LibAIR2::ALMAAbsInpL inp;
 	if (vm.count("segsource"))
 	{
 	   std::vector<int> flds;
 	   std::vector<double> time;
 	   std::vector<int> src;
-	   LibAIR::fieldIDs(ms, 
+	   LibAIR2::fieldIDs(ms, 
 			    time,
 			    flds,
 			    src,
 			    sortedI);
 	   std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
 	   printTied(tied, tiedi);
-	   LibAIR::fieldSegmentsTied(time,
+	   LibAIR2::fieldSegmentsTied(time,
 				     src,
 				     tiedi,
 				     fb);
@@ -918,7 +915,7 @@ int main(int argc,  char* argv[])
 	else
 	{
 	   const size_t n=vm["nsol"].as<int>();
-	   inp=LibAIR::MultipleUniformI(*d, 
+	   inp=LibAIR2::MultipleUniformI(*d, 
 					n,
 					useID);
 	}
@@ -936,20 +933,20 @@ int main(int argc,  char* argv[])
 					    fb);
 
 	std::cerr<<"Calculating the coefficients now...";
-	boost::ptr_list<LibAIR::ALMAResBase> rlist;
+	boost::ptr_list<LibAIR2::ALMAResBase> rlist;
 	std::vector<int> problemAnts;
 
 	rval = 0;
 
 	try {
-	   rlist=LibAIR::doALMAAbsRet(inp,
+	   rlist=LibAIR2::doALMAAbsRet(inp,
 				      problemAnts);
 	}
 	catch(const std::runtime_error rE){
 	   std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
-		     << std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+		     << std::endl << "         LibAIR2::doALMAAbsRet: " << rE.what() << std::endl;
 	   std::cout << std::endl << "WARNING: problem while calculating coefficients:"
-		     << std::endl << "         LibAIR::doALMAAbsRet: " << rE.what() << std::endl;
+		     << std::endl << "         LibAIR2::doALMAAbsRet: " << rE.what() << std::endl;
 	   rval = -2;
 	}
 	
@@ -991,20 +988,20 @@ int main(int argc,  char* argv[])
 	   std::vector<int> flds;
 	   std::vector<double> time;
 	   std::vector<int> src;
-	   LibAIR::fieldIDs(ms, 
+	   LibAIR2::fieldIDs(ms, 
 			    time,
 			    flds,
 			    src,
 			    sortedI);
 	   
-	   coeffs.reset(LibAIR::SimpleMultiple(*d, 
+	   coeffs.reset(LibAIR2::SimpleMultiple(*d, 
 					       time,
 					       fb,
 					       rlist));   
 	}
 	else
 	{
-	   coeffs.reset(LibAIR::ALMAAbsProcessor(inp, rlist));
+	   coeffs.reset(LibAIR2::ALMAAbsProcessor(inp, rlist));
 	}  
 	
      }
@@ -1012,7 +1009,7 @@ int main(int argc,  char* argv[])
     
      if (coeffs->isnan())
      {
-	LibAIR::printNoSolution(std::cerr);
+	LibAIR2::printNoSolution(std::cerr);
 	return -1;
      }
      g.calc(*d,
@@ -1041,7 +1038,7 @@ int main(int argc,  char* argv[])
 		     *coeffs,
 		     pathDisc);
      
-     std::cout<<LibAIR::AntITable(anames,
+     std::cout<<LibAIR2::AntITable(anames,
 				  wvrflag,
 				  nowvr,
 				  pathRMS,
@@ -1057,14 +1054,14 @@ int main(int argc,  char* argv[])
 	g.scale(vm["scale"].as<double>());
      }
      
-     LibAIR::MSSpec sp;
+     LibAIR2::MSSpec sp;
      loadSpec(ms, sp);
      std::set<size_t> reverse=reversedSPWs(sp, vm);  
      
      std::cout << "Writing gain table ..." << std::endl;
 
      // Write new table, including history
-     LibAIR::writeNewGainTbl(g,
+     LibAIR2::writeNewGainTbl(g,
 			     fnameout.c_str(),
 			     sp,
 			     reverse,
@@ -1075,7 +1072,7 @@ int main(int argc,  char* argv[])
 			     interpImpossibleAnts);
 
 #ifdef BUILD_HD5
-     LibAIR::writeAntPath(g,
+     LibAIR2::writeAntPath(g,
 			  fnameout+".hd5");
 #endif
 

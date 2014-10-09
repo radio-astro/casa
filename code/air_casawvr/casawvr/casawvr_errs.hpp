@@ -1,6 +1,7 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
-   Initial version March 2010. 
+   Initial version March 2010.
+   Maintained by ESO since 2013. 
    
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
@@ -14,7 +15,7 @@
 
 #include <stdexcept>
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   class MSInputDataError: 
     public std::runtime_error

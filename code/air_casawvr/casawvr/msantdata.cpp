@@ -1,7 +1,8 @@
 /**
    Bojan Nikolic <b.nikolic@mrao.cam.ac.uk>, <bojan@bnikolic.co.uk>
    Initial version September 2010. 
-   
+   Maintained by ESO since 2013.
+
    This file is part of LibAIR and is licensed under GNU Public
    License Version 2
    
@@ -14,7 +15,7 @@
 #include <casacore/ms/MeasurementSets/MSAntenna.h>
 #include <casacore/ms/MeasurementSets/MSColumns.h>
 
-namespace LibAIR {
+namespace LibAIR2 {
 
   void getAntPos(const casa::MeasurementSet &ms,
 		 antpos_t &res)
