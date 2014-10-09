@@ -822,8 +822,6 @@ namespace casa {
 		spcRefFrame = String(MFrequency::showType(freqtype));
 		updateSpectralReferenceFrame();
 
-
-
 		xpos = "";
 		ypos = "";
 		lastPX.resize(0);
@@ -1283,7 +1281,7 @@ namespace casa {
 
 	void QtProfile::changeTopAxis() {
 
-		if ( topAxisCType->isEnabled() && lastWX.size() /*>= 2*/> 0 ) {
+		if ( topAxisCType->isEnabled() && lastWX.size()> 0 ) {
 			Vector<Float> xValues (lastWX.size());
 			Vector<Float> yValues (lastWY.size());
 			QString text = topAxisCType ->currentText();
@@ -3096,45 +3094,48 @@ namespace casa {
 
 
 	void QtProfile::adjustTopAxisSettings() {
-		int mainCurveCount = pixelCanvas->getLineCount();
-		//If the user does not want us to show a top axis
-		//we don't.
-		QString bottomAxisUnits = bottomAxisCType->currentText();
+		if ( lastWX.size() > 0 ){
 
-		restrictTopAxisOptions( false, bottomAxisUnits );
-		if ( !showTopAxis ){
-			topAxisCType->setEnabled( false );
-		}
+			int mainCurveCount = pixelCanvas->getLineCount();
+			//If the user does not want us to show a top axis
+			//we don't.
+			QString bottomAxisUnits = bottomAxisCType->currentText();
 
-		//If we have more than one curve, we show the top axis
-		//only if there is an image whose domain encompasses the domains
-		//of all the other images using the frequency units on the bottom
-		//axis.  The is because the canvas plots the bottom axis using the
-		//min and max of all the images whereas the top axis just uses a
-		//the min/max of a single image.  We also need to check that the
-		//frequency units/channel are the same on all images.
-		else if ( mainCurveCount > 1 ) {
-			int opticalIndex = bottomAxisUnits.indexOf( OPTICAL );
-			int airIndex = bottomAxisUnits.indexOf( AIR );
-			if ( opticalIndex >= 0 || airIndex >= 0 ){
+			restrictTopAxisOptions( false, bottomAxisUnits );
+			if ( !showTopAxis ){
 				topAxisCType->setEnabled( false );
 			}
-			else {
-				bool frequencyMatch = isFrequencyMatch();
-				bool velocityMatch = isVelocityMatch();
-				bool enableTopAxis = frequencyMatch || velocityMatch;
-				topAxisCType->setEnabled( enableTopAxis );
-				if ( enableTopAxis ){
-					restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
+
+			//If we have more than one curve, we show the top axis
+			//only if there is an image whose domain encompasses the domains
+			//of all the other images using the frequency units on the bottom
+			//axis.  The is because the canvas plots the bottom axis using the
+			//min and max of all the images whereas the top axis just uses a
+			//the min/max of a single image.  We also need to check that the
+			//frequency units/channel are the same on all images.
+			else if ( mainCurveCount > 1 ) {
+				int opticalIndex = bottomAxisUnits.indexOf( OPTICAL );
+				int airIndex = bottomAxisUnits.indexOf( AIR );
+				if ( opticalIndex >= 0 || airIndex >= 0 ){
+					topAxisCType->setEnabled( false );
 				}
-				pixelCanvas->setTopAxisCompatible( enableTopAxis );
+				else {
+					bool frequencyMatch = isFrequencyMatch();
+					bool velocityMatch = isVelocityMatch();
+					bool enableTopAxis = frequencyMatch || velocityMatch;
+					topAxisCType->setEnabled( enableTopAxis );
+					if ( enableTopAxis ){
+						restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
+					}
+					pixelCanvas->setTopAxisCompatible( enableTopAxis );
+				}
+				//If there is only one curve, we show the top axis assuming
+				//nothing else applies.
+			} else {
+				topAxisCType-> setEnabled( true );
 			}
-		//If there is only one curve, we show the top axis assuming
-		//nothing else applies.
-		} else {
-			topAxisCType-> setEnabled( true );
+			pixelCanvas->setShowTopAxis( topAxisCType->isEnabled());
 		}
-		pixelCanvas->setShowTopAxis( topAxisCType->isEnabled());
 	}
 
 	void QtProfile::addCanvasMainCurve( const Vector<Float>& xVals,
