@@ -2424,24 +2424,54 @@ void fillMainLazily2(const string& dsName,
   vector<int32_t>	mRIndexCorrected_v;
   vector<string>	bdfNamesCorrected_v;
 
+  bool	produceUncorrected = msFillers.find(AP_UNCORRECTED) != msFillers.end();
+  bool	produceCorrected   = msFillers.find(AP_CORRECTED) != msFillers.end();
+  bool	hasUncorrected	   = true;
+  bool	hasCorrected	   = true;
+
   const vector<MainRow *>& temp = mainT.get();
-    for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
+  for ( vector<MainRow *>::const_iterator iter_v = temp.begin(); iter_v != temp.end(); iter_v++) {
     map<int, set<int> >::iterator iter_m = selected_eb_scan_m.find((*iter_v)->getExecBlockId().getTagValue());
     if ( iter_m != selected_eb_scan_m.end() && iter_m->second.find((*iter_v)->getScanNumber()) != iter_m->second.end() ) {
-      // Are these data radiometric ?
-      if (procT.getRowByKey(cfgDscT.getRowByKey((*iter_v)->getConfigDescriptionId())->getProcessorId())->getProcessorType() == RADIOMETER) {
-	
-      }
-      else {
+      string abspath;
+      // Are these data radiometric , if yes consider them both for corrected and uncorrected ms?
+      ProcessorType processorType = procT.getRowByKey(cfgDscT.getRowByKey((*iter_v)->getConfigDescriptionId())->getProcessorId())->getProcessorType();
+      if ( processorType == RADIOMETER ) {
+	hasUncorrected = true;
+	hasCorrected = true; // one considers that radiometric data must go to both uncorrected and corrected ms.
+	mRIndexUncorrected_v.push_back(iter_v - temp.begin());
+	mRUncorrected_v.push_back(*iter_v);
+	abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
+	bdfNamesUncorrected_v.push_back(abspath);
 
+	mRIndexCorrected_v.push_back(iter_v - temp.begin());
+	mRCorrected_v.push_back(*iter_v);
+	abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
+	bdfNamesCorrected_v.push_back(abspath);
       }
-      mRIndexUncorrected_v.push_back(iter_v - temp.begin());
-      mRUncorrected_v.push_back(*iter_v);
-      string abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
-      bdfNamesUncorrected_v.push_back(abspath);
+      else if (processorType == CORRELATOR) {
+	// We are in front of CORRELATOR data. what's their status regarding AP correction ?
+	vector<AtmPhaseCorrection> apc_v =  cfgDscT.getRowByKey((*iter_v)->getConfigDescriptionId())->getAtmPhaseCorrection();
+	
+	hasUncorrected = find(apc_v.begin(), apc_v.end(), AP_UNCORRECTED) != apc_v.end();
+	hasUncorrected=  find(apc_v.begin(), apc_v.end(), AP_CORRECTED) != apc_v.end();
+      }
+      
+      if ( hasUncorrected && produceUncorrected) { 
+	mRIndexUncorrected_v.push_back(iter_v - temp.begin());
+	mRUncorrected_v.push_back(*iter_v);
+	abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
+	  bdfNamesUncorrected_v.push_back(abspath);
+      }
+
+      if ( hasCorrected && produceCorrected) {
+	mRIndexCorrected_v.push_back(iter_v - temp.begin());
+	mRCorrected_v.push_back(*iter_v);
+	abspath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy((*iter_v)->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
+	bdfNamesCorrected_v.push_back(abspath);
+      }
     }
   }
-  
 }
 		    
 void fillMainLazily(const string& dsName,
