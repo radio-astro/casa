@@ -560,6 +560,10 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   
   char* p = &(flag_v_p->at(0));
   Matrix<Bool> flagCell(IPosition(2, numCorr, numChan));
+  if (debug) {
+    cout << "expecting a cell of shape numCorr=" << numCorr << ", numChan=" << numChan << endl;
+    cout << "actual shape is " << flag.shape(iRow0) << endl;
+  }
   flag.get((uInt)iRow0, flagCell);
   
   bool allSet = true;
