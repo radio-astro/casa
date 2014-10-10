@@ -349,10 +349,10 @@ class sdtask_template(sdtask_interface):
                 ifnos = scantb.getifnos()
                 nominal_spw = -1
                 for ifno in ifnos:
-                    ## ignore channel-averaged spw and WVR
-                    #if scantb.nchan(ifno) > 4:
-                    nominal_spw = ifno
-                    break
+                    # ignore channel-averaged spw and WVR
+                    if scantb.nchan(ifno) > 4:
+                        nominal_spw = ifno
+                        break
                 if nominal_spw > -1:
                     sel.set_ifs(nominal_spw)
                     scantb.set_selection(sel)
@@ -360,7 +360,7 @@ class sdtask_template(sdtask_interface):
 
                     # raster row utility
                     casalog.post('nominal spw and pol = (%s,%s)'%(nominal_spw,nominal_pol))
-                    r = rasterutil.Raster(self.infile)
+                    r = rasterutil.Raster(scantb)
                     r.detect(spw=nominal_spw, pol=nominal_pol)
                     if row_selection:
                         casalog.post('raster row=%s (type %s)'%(self.rasterrow,type(self.rasterrow)))

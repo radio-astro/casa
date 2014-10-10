@@ -2,6 +2,7 @@ from taskinit import casalog, gentools, qa
 import pylab as pl
 import numpy
 import os
+import contextlib
 
 import asap as sd
 
@@ -22,9 +23,21 @@ def astimerange(mjd0, mjd1):
         # different date
         return '%s~%s'%(tuple(map(asdatestring,[mjd0,mjd1])))
 
+@contextlib.contextmanager
+def selection_manager(scantab, original_selection, **kwargs):
+    sel = sd.selector(original_selection)
+    for (k,v) in kwargs.items():
+        method_name = 'set_%s'%(k)
+        if hasattr(sel, method_name):
+            getattr(sel, method_name)(v)
+    scantab.set_selection(sel)
+    yield scantab
+    scantab.set_selection(original_selection)
+    
 class Raster(object):
-    def __init__(self, infile):
-        self.infile = infile
+    def __init__(self, scantab):
+        self.scantab = scantab
+        self.original_selection = self.scantab.get_selection()
         self.rows = None
         self.rasters = None
         self.mjd_range = None
@@ -50,19 +63,16 @@ class Raster(object):
             return self._nominal_spw
         
         self._nominal_spw = None
-        tb.open(self.infile)
-        tsel = tb.query('SRCTYPE==0') # on-source
-        spw_list = numpy.unique(tsel.getcol('IFNO'))
+        with selection_manager(self.scantab, self.original_selection, types=0) as s:
+            spw_list = s.getifnos()
+        print spw_list
         for spw in spw_list:
-            tsel = tb.query('IFNO==%s'%(spw))
-            if tsel.nrows() > 0:
-                nchan = len(tsel.getcell('SPECTRA',0))
-                if nchan > 4: # ignore channel-averaged and WVR
-                    self._nominal_spw = spw
-                    tsel.close()
-                    break
-            tsel.close()
-        tb.close()
+            with selection_manager(self.scantab, self.original_selection, ifs=spw) as s:
+                if self.scantab.nrow() > 0:
+                    nchan = len(self.scantab._getspectrum(0))
+                    if nchan > 4: # ignore channel-averaged and WVR
+                        self._nominal_spw = spw
+                        break
         return self._nominal_spw
 
     @property
@@ -72,14 +82,14 @@ class Raster(object):
 
         self._nominal_pol = None
         nominal_spw = self.nominal_spw
-        tb.open(self.infile)
-        tsel = tb.query('SRCTYPE==0 && IFNO==%s'%(nominal_spw))
-        if tsel.nrows() > 0:
-            self._nominal_pol = tsel.getcell('POLNO', 0)
-        tsel.close()
-        tb.close()
+        with selection_manager(self.scantab, self.original_selection, types=0, ifs=nominal_spw) as s:
+            if self.scantab.nrow() > 0:
+                self._nominal_pol = self.scantab.getpolnos()[0]
         return self._nominal_pol
 
+    def reset_selection(self):
+        self.scantab.set_selection(self.original_selection)
+    
     def detect(self, spw=None, pol=None):
         if spw is None:
             self.spw = self.nominal_spw
@@ -90,7 +100,7 @@ class Raster(object):
         else:
             self.pol = pol
         casalog.post('spw, pol = %s, %s'%(self.spw, self.pol), priority='DEBUG')
-        self.gaplist, self.gaplist_raster = detect_gap(self.infile, self.spw, self.pol)
+        self.gaplist, self.gaplist_raster = detect_gap(self.scantab, self.spw, self.pol)
         self.ngap = len(self.gaplist)
         self.ngap_raster = len(self.gaplist_raster)
 
@@ -110,7 +120,7 @@ class Raster(object):
         casalog.post('Raster Row/Raster Detection Summary')
         casalog.post(separator)
         headertitles = ['Filename', 'Nominal Spw for Detection', 'Nominal Pol for Detection', 'Number of Raster Rows', 'Number of Rasters']
-        headervalues = [self.infile, self.spw, self.pol, self.nrow, self.nraster]
+        headervalues = ['', self.spw, self.pol, self.nrow, self.nraster]
         headertemplate = '%-{digit}s: %s'.format(digit=max(map(len,headertitles)))
         for (t,v) in zip(headertitles, headervalues):
             ht = t
@@ -119,7 +129,7 @@ class Raster(object):
         header = formatline('ROW', 'TIMERANGE')
         casalog.post(header)
         for i in xrange(self.nrow):
-            rows = self.select(rowid=i)
+            self.select(rowid=i)
             mjd_range = self.mjd_range
             daterangestring = astimerange(*self.mjd_range)
             casalog.post(formatline(i, daterangestring))
@@ -128,7 +138,7 @@ class Raster(object):
         header = formatline('RASTER', 'TIMERANGE')
         casalog.post(header)
         for i in xrange(self.nraster):
-            rows = self.select(rasterid=i)
+            self.select(rasterid=i)
             mjd_range_raster = self.mjd_range_raster
             daterangestring = astimerange(*self.mjd_range_raster)
             casalog.post(formatline(i, daterangestring))
@@ -144,40 +154,24 @@ class Raster(object):
         if (rasterid is not None) and (rasterid >= self.nraster):
             raise IndexError('row index %s is out of range (number of rasters detected: %s)'%(rasterid,self.nraster))
 
-        tb.open(self.infile)
-        tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
-        allrows = tsel.rownumbers()
-        alltimes = tsel.getcol('TIME')
-        allintervals = tsel.getcol('INTERVAL')
-        tsel.close()
-        tb.close()
+        with selection_manager(self.scantab, self.original_selection, types=0, ifs=self.spw, pols=self.pol) as s:
+            alltimes = numpy.array(map(lambda x: qa.quantity(x)['value'], s.get_time(prec=16)))
+            allintervals = numpy.array(s.get_inttime())
 
         if rowid is not None:
-            rows = allrows[self.gaplist[rowid]:self.gaplist[rowid+1]]
-            casalog.post('rownumber list for rowid %s: %s'%(rowid, rows), priority='DEBUG')
             times = alltimes[self.gaplist[rowid]:self.gaplist[rowid+1]]
             mean_interval = allintervals.mean() / 86400.0
 
             self.mjd_range = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
             casalog.post('time range: %s ~ %s'%(self.mjd_range), priority='DEBUG')
             
-            if len(rows) > 0:
-                self.rows = map(int, rows)
-            return rows
-
         else:
-            rasters = allrows[self.gaplist_raster[rasterid]:self.gaplist_raster[rasterid+1]]
-            casalog.post('rownumber list for rasterid %s: %s'%(rasterid, rasters), priority='DEBUG')
             times = alltimes[self.gaplist_raster[rasterid]:self.gaplist_raster[rasterid+1]]
             mean_interval = allintervals.mean() / 86400.0
 
             self.mjd_range_raster = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
             casalog.post('time range: %s ~ %s'%(self.mjd_range_raster), priority='DEBUG')
             
-            if len(rasters) > 0:
-                self.rasters = map(int, rasters)
-            return rasters
-
     def asscantable(self, rowid=None, rasterid=None):
         s = sd.scantable(self.infile, average=False)
         sel = self.asselector(rowid=rowid, rasterid=rasterid)
@@ -224,16 +218,11 @@ class Raster(object):
         else: raise ValueError("Invalid rastermode (should be 'row' or 'raster'")
         taql = self.astaql(rowid=rowid,rasterid=rasterid)
 
-        tb.open(self.infile)
-        tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(self.spw,self.pol))
-        alldir = tsel.getcol('DIRECTION')
-        tsel.close()
-        
-        tsel = tb.query(taql)
-        tsel.nrows()
-        dirs = tsel.getcol('DIRECTION')
-        tsel.close()
-        tb.close()
+        with selection_manager(self.scantab, self.original_selection, types=0, ifs=self.spw, pols=self.pol) as s:
+            alldir = numpy.array([s.get_directionval(i) for i in xrange(s.nrow())]).transpose()
+
+        with selection_manager(self.scantab, self.original_selection, query=taql) as s:
+            dirs = numpy.array([s.get_directionval(i) for i in xrange(s.nrow())]).transpose()
    
         pl.clf()
         pl.plot(alldir[0], alldir[1], 'o', color='#aaaaaa', markeredgewidth=0)
@@ -242,13 +231,10 @@ class Raster(object):
         pl.ylabel('Declination [rad]')
         pl.gca().set_aspect('equal')
 
-def detect_gap(infile, spw, pol):
-    tb.open(infile)
-    tsel = tb.query('SRCTYPE==0 && IFNO==%s && POLNO==%s'%(spw,pol))
-    alldir = tsel.getcol('DIRECTION')
-    timestamp = tsel.getcol('TIME')
-    tsel.close()
-    tb.close()
+def detect_gap(scantab, spw, pol):
+    with selection_manager(scantab, scantab.get_selection(), types=0, ifs=spw, pols=pol) as s:
+        alldir = numpy.array([s.get_directionval(i) for i in xrange(s.nrow())]).transpose()
+        timestamp = numpy.array(map(lambda x: qa.quantity(x)['value'], s.get_time(prec=16)))
 
     row_gap = _detect_gap(timestamp)
     ras_gap = _detect_gap_raster(timestamp, alldir, row_gap=row_gap)
