@@ -6302,7 +6302,7 @@ int main(int argc, char *argv[]) {
     while (iss>>word)
       tablenames.push_back(word);
     for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin(); iter != msFillers.end(); ++iter){   
-      ASDMVerbatimFiller avf(const_cast<casa::MS*>(msFillers.begin()->second->ms()), Name2Table::find(tablenames, verbose));
+      ASDMVerbatimFiller avf(const_cast<casa::MS*>(iter->second->ms()), Name2Table::find(tablenames, verbose));
       avf.fill(*ds);
     }
   }
