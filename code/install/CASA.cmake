@@ -89,7 +89,7 @@ macro( casa_qt4_add_dbus_proxy qohfiles ccfiles _header _interface)
     add_custom_command( 
       OUTPUT ${_out_header} ${_out_source}
       COMMAND mkdir -p ${_out_path}
-      COMMAND qdbusxml2cpp -v -c ${_out_name} -i "casaqt/QtUtilities/QtDBusMeta.h" -p ${_out_header}:${_out_source} ${_infile}
+      COMMAND ${QT_DBUSXML2CPP_EXECUTABLE} -v -c ${_out_name} -i "casaqt/QtUtilities/QtDBusMeta.h" -p ${_out_header}:${_out_source} ${_infile}
       DEPENDS ${_infile}
     )
     SET(${qohfiles} ${${qohfiles}} ${_out_header})
