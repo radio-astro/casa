@@ -280,8 +280,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 		# Get field name
 	        scanfieldset = [field.name for field in scan.fields]
-	        scanfieldset = set(scanfieldset)
 		fieldname = scanfieldset[0]
+	        scanfieldset = set(scanfieldset)
 
 		# Get atmospheric windows and ids
 	        scanspwset = set ([scanspw for scanspw in scan.spws() \
