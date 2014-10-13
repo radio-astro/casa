@@ -102,7 +102,7 @@ A blank selection expression is interpreted as "no selection to be
 applied to the MS".  Hence a blank expression effectively implies
 "select all".
 
-\subsection{Number format}
+\subsection{Number Format}
 \label{Sec:NUMBERS}
 
 Integers can be of any length (in terms of characters) and composed of
@@ -119,7 +119,7 @@ or in the mantissa-exponent format (e.g. 10.56e-1).  If a floating
 point number is given where only integers are expected (e.g. indexes),
 the floating point value is truncated to the nearest integer.
 
-\subsection{Range specification}
+\subsection{Range Specification}
 \label{Sec:RANGE}
 Range of numbers (integers or real numbers) can be given in the format
 N0$\sim$N1.  Integer ranges are expanded into a list of integers
@@ -212,7 +212,7 @@ expressions/patterns:
   (.* operator has the same meaning as the '*' operator of patterns).
 \end{itemize}
 
-\subsection{Handling of blanks}
+\subsection{White Spaces (blanks in expressions)}
 
 In most cases, blanks are treated as white-spaces (i.e., insertion of
 blanks anywhere in the expression has no effect), except in the case
@@ -231,7 +231,7 @@ name character are included as part of the name.  Hence
   30} is same as\\ baseline={\tt 1,2,3\&4,5,6;10$\sim$11\&20$\sim$30}
 \end{itemize}
 
-\section{Time selection}
+\section{Time Selection}
 
 Time selection expression is a comma separated list of time
 specifications. Time can be specified in the format
@@ -333,7 +333,7 @@ separated list of baseline specifications.
 
 \subsection{Syntax}
 
-\subsubsection{Antenna specification}
+\subsubsection{Antenna Specification}
 
 An ANT can be given as a single \hyperref{string}{string (see Section
 }{)}{Sec:STRINGS} (literal/pattern/regular expression), single integer
@@ -370,7 +370,7 @@ follows:
   column is attempted.
 \end{enumerate}
 
-\subsubsection{Antenna@Station specification}
+\subsubsection{Antenna@Station Specification}
 
 A fully qualified antenna specification can also include the station
 name via the {\tt ANT@STATION} syntax.  {\tt STATION} specification
@@ -401,7 +401,7 @@ that the second form of specification can itself be a member of a
 comma-separated list.
 
 
-\subsubsection{Baseline specification}
+\subsubsection{Baseline Specification}
 \label{BASELINE_SPEC}
 
 A baseline specification consists of an ANT followed by an
@@ -489,7 +489,7 @@ optional and {\tt $<$OP$>$} can be {\tt '\&', '\&\&'} or {\tt
   '\&\&\&'}).
 
 
-\subsubsection{Baseline negation operator}
+\subsubsection{Baseline Negation Operator}
 
 The negation operator {\tt '!'} can be used to exclude a baseline
 specification from the final selection. {\it Note that this is a
@@ -553,7 +553,7 @@ with each elements of the semi-colon separated list being interpreted
 as explained above.
 
 
-\subsection{Integers-as-names VLA naming convention}
+\subsection{Integers-as-names VLA Naming Convention}
 \label{VLACONVENTION}
 Antenna naming convention for VLA is such that the antenna names are
 actually valid integers converted to strings.  While we feel that this
@@ -721,7 +721,7 @@ a list of boolean expressions involving IDs.  E.g.
 \item spwspec={\tt 1$\sim$3} same as above
 \end{itemize}
 
-\subsubsection{Selection by name}
+\subsubsection{Selection By Name}
 
 SPWSPEC can be a name or a list of names which will be matched against
 the NAME column of the SPECTRAL\_WINDOW.  The name can be
@@ -734,7 +734,7 @@ All SPWs that match the given name will be selected.  E.g.
     SUBBAND}'' and ending with ``{\tt 0}''.
 \end{itemize}
 
-\subsubsection{Selection by frequency}
+\subsubsection{Selection By Frequency}
 SPWSPEC can also be constructed using the reference frequency of the
 SPWs.  The reference frequency is defined as the average of the
 frequency corresponding to the first and the last channel for each
