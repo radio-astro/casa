@@ -229,7 +229,7 @@ for info in [ (['dbus-daemon'],'dbus'),
             if casa['helpers'][entry] is not None:
                 break
 
-print "CASA Version " + casa['build']['version'] + "-DEV (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
+print "CASA Version " + casa['build']['version'] + "-REL (r" + casa['source']['revision'] + ")\n  Compiled on: " + casa['build']['time']
 
 a = [] + sys.argv             ## get a copy from goofy python
 a.reverse( )
@@ -1282,7 +1282,7 @@ class casaDocHelper(pydoc.Helper):
 
 pydoc.help = casaDocHelper(sys.stdin, sys.stdout)
 
-fullpath=casadef.python_library_directory + '/assignmentFilter.py'
+fullpath='/usr/lib64/casa/4.3.0/lib/python2.7/assignmentFilter.py'
 
 if os.environ.has_key('__CASAPY_PYTHONDIR'):
     fullpath=os.environ['__CASAPY_PYTHONDIR'] + '/assignmentFilter.py'
