@@ -1328,8 +1328,8 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
         return sp
 
 def suite():
-    return [#sdgrid_failure_case, sdgrid_single_integ,
-            #sdgrid_clipping, sdgrid_flagging,
-            #sdgrid_weighting, sdgrid_map,
-            #sdgrid_dec_correction, sdgrid_grid_center,
+    return [sdgrid_failure_case, sdgrid_single_integ,
+            sdgrid_clipping, sdgrid_flagging,
+            sdgrid_weighting, sdgrid_map,
+            sdgrid_dec_correction, sdgrid_grid_center,
             sdgrid_selection]
