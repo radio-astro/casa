@@ -294,7 +294,7 @@ class ImageDisplay(object):
                 cb = plt.colorbar(shrink=shrink, fraction=fraction,
                   format='%.1e')
         for label in cb.ax.get_yticklabels():
-            label.set_fontsize(10)
+            label.set_fontsize(8)
         if plotnumber==1:
             if dataunits is not None:
                 cb.set_label('%s (%s)' % (datatype, dataunits), fontsize=10)
