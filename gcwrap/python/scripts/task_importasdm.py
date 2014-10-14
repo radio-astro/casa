@@ -40,51 +40,49 @@ def importasdm(
            The conversion of the ALMA SDM archive format into a measurement set.  This version
            is under development and is geared to handling many spectral windows of different
            shapes.
-................          
+
            Keyword arguments:
            asdm -- Name of input ASDM file (directory)
                default: none; example: asdm='ExecBlock3'
 
-....   vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
-               default: none
-
-....   singledish   -- Set True to write data as single-dish format (Scantable)
-               default: False
-
-            &gt;&gt;&gt; singledish expandable parameter
+       vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+           default: none
+           
+       singledish   -- Set True to write data as single-dish format (Scantable)
+               default: False singledish expandable parameter
                  antenna -- antenna name or id.
  
-....   corr_mode -- correlation mode to be considered on input. Could
-....         be one or more of the following, ao, co, ac, or all
-....       default: all
+       corr_mode -- correlation mode to be considered on input. Could
+            be one or more of the following, ao, co, ac, or all
+           default: all
 
-....   srt       -- spectral resolution type. Could be one or more of
-....                the following, fr, ca, bw, or all
-....       default: all
+       srt       -- spectral resolution type. Could be one or more of
+                    the following, fr, ca, bw, or all
+           default: all
 
-....   time_sampling -- specifies the time sampling, INTEGRATION and/or
+       time_sampling -- specifies the time sampling, INTEGRATION and/or
                             SUBINTEGRATION. could be one or more of the following
                             i, si, or all.
-........ default: all
+           default: all
 
-....   ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+       ocorr_mode    -- output data for correlation mode AUTO_ONLY 
                             (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
-........ default: ca
-........ 
-....   compression  -- produces comrpressed columns in the resulting measurement set.
+           default: ca
+
+      compression  -- produces comrpressed columns in the resulting measurement set.
                  default: False
 
        lazy         -- Make the MS DATA column read the ASDM Binary data directly
                        (faster import, smaller MS)
                  default: False
 
-....   asis         --  creates verbatim copies of the ASDM tables in 
-....                    the output measurement set. The value given to
-........            this option must be a list of table names separated
-........            by space characters; the wildcard character '*' is 
+       asis         --  creates verbatim copies of the ASDM tables in 
+                        the output measurement set. The value given to
+                    this option must be a list of table names separated
+                    by space characters; the wildcard character '*' is 
                             allowed in table names.
 
-....   wvr_corrected_data -- specifies wich values are considered in the 
+       wvr_corrected_data -- specifies wich values are considered in the 
                       ASDM binary data to fill the DATA column in 
                       the MAIN table of the MS. Expected values for 
                       this option are 'no' for the uncorrected data 
@@ -96,38 +94,38 @@ def importasdm(
                       by '-wvr-corrected', containing the corrected 
                       data.
 
-....   scans --....  processes only the scans specified in the option's value. This value is a semicolon 
-....              separated list of scan specifications. A scan specification consists in an exec bock index 
-                      followed by the character ':' followed by a comma separated list of scan indexes or scan 
-                      index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 
-                      1-based while exec blocks's are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" 
-                      are valid values for the option. "3:" alone will be interpreted as 'all the scans of the 
-                      exec block#3'. An scan index or a scan index range not preceded by an exec block index will
-                      be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
-                      all the scans are considered.
+       scans --  processes only the scans specified in the option's value. This value is a semicolon 
+                 separated list of scan specifications. A scan specification consists in an exec bock index 
+                 followed by the character ':' followed by a comma separated list of scan indexes or scan 
+                 index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 
+                 1-based while exec blocks's are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" 
+                 are valid values for the option. "3:" alone will be interpreted as 'all the scans of the 
+                 exec block#3'. An scan index or a scan index range not preceded by an exec block index will
+                 be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
+                 all the scans are considered.
 
-....   ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
+       ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
                       and Weather are processed independently of the time range of the selected exec block / scan.
 
-....   process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
-....          default: True
+       process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
+              default: True
 
-....   process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
-....          default: True
+       process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
+              default: True
 
-....   process_pointing -- The Pointing table is processed if and only if this parameter is set to True. If the parameter is set to False
-                       the resulting MS will have an empty POINTING table.
-....          default: True
+       process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
+                       If the parameter is set to False the resulting MS will have an empty POINTING table.
+              default: True
 
-....  process_flags -- Process the online flags and save them to the FLAG_CMD sub-table.
-....          default: True
+      process_flags -- Process the online flags and save them to the FLAG_CMD sub-table.
+              default: True
 
             &gt;&gt;&gt; process_flags expandable parameter
                  tbuff -- Time padding buffer (in seconds).
                     default: 0.0
 
-....             applyflags -- Apply the online flags to the MS.
-....                default: False
+                 applyflags -- Apply the online flags to the MS.
+                    default: False
 
                  savecmds -- Save the online flags to an ASCII file.
                     default: False
@@ -135,23 +133,23 @@ def importasdm(
                  outfile -- Filename to save the online flags.
                     default: ''
 
-....   flagbackup -- Backup the FLAG column in the .flagversions.
-....          default: True
+       flagbackup -- Backup the FLAG column in the .flagversions.
+              default: True
 
-....   verbose     -- produce log output as asdm2MS is being run.
+       verbose     -- produce log output as asdm2MS is being run.
 
-....   overwrite -- Over write an existing MS.
+       overwrite -- Over write an existing MS.
 
-....   showversion -- report the version of the asdm2MS being used.
+       showversion -- report the version of the asdm2MS being used.
 
-....   useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
+       useversion -- Selects the version of asdm2MS to be used (presently only \'v3\' is available).
                      default: v3
                      
-....  bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
+      bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
                    default: false
 
-....  with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written
-                                   in MS::Pointing::direction - (see ALMA JIRA tickets CSV-2878, ICT-1532 and CASA JIRA ticket CAS-6833))
+      with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection)
+                 to the value to be written in MS::Pointing::direction 
                    default: false
            
         """
@@ -176,8 +174,8 @@ def importasdm(
                         # if useversion == 'v2':
                         #        theexecutable = 'oldasdm2ASAP'
             if compression:
-                casalog.post('compression=True has no effect for single-dish format.'
-                             )
+                casalog.post('compression=True has no effect for single-dish format.')
+                
             cmd = 'which %s > /dev/null 2>&1' % theexecutable
             ret = os.system(cmd)
             if ret == 0:
@@ -213,7 +211,7 @@ def importasdm(
                     casalog.post(theexecutable
                                  + ' terminated with exit code '
                                  + str(ret), 'SEVERE')
-                                        # raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
+                    # raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
                     raise Exception, \
                         'ASDM conversion error, please check if it is a valid ASDM.'
             else:
@@ -279,6 +277,8 @@ def importasdm(
                 viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                 vis = asdm.rstrip('/') + '.asap'
 
+
+
         useversion = 'v3'
         theexecutable = 'asdm2MS'
 
@@ -310,22 +310,36 @@ def importasdm(
         if not overwrite and os.path.exists(viso):
             raise Exception, \
                 'You have specified an existing MS and have indicated you do not wish to overwrite it'
+
+        # Compression
+        if compression:
+                   # viso = viso + '.compressed'
+            viso = viso.rstrip('.ms') + '.compressed.ms'
+            visoc = visoc.rstrip('.ms') + '.compressed.ms'
+
+        vistoproc = [] # the output MSs to postprocess
+        if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
+            vistoproc.append(viso)
+        if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
+            vistoproc.append(visoc)
+
         #
         # If viso+".flagversions" then process differently depending on the value of overwrite..
         #
         if flagbackup:
-            dotFlagversion = viso + '.flagversions'
-            if os.path.exists(dotFlagversion):
-                if overwrite:
-                    casalog.post("Found '" + dotFlagversion
-                                 + "' . It'll be deleted before running the filler."
-                                 )
-                    os.system('rm -rf %s' % dotFlagversion)
-                else:
-                    casalog.post("Found '%s' but can't overwrite it."
-                                 % dotFlagversion)
-                    raise Exception, "Found '%s' but can't overwrite it." \
-                        % dotFlagversion
+            for myviso in vistoproc:
+                dotFlagversion = myviso + '.flagversions'
+                if os.path.exists(dotFlagversion):
+                    if overwrite:
+                        casalog.post("Found '" + dotFlagversion
+                                     + "' . It'll be deleted before running the filler."
+                                     )
+                        os.system('rm -rf %s' % dotFlagversion)
+                    else:
+                        casalog.post("Found '%s' but can't overwrite it."
+                                     % dotFlagversion)
+                        raise Exception, "Found '%s' but can't overwrite it." \
+                            % dotFlagversion
 
         execute_string = execute_string + ' ' + asdm + ' ' + viso
 
@@ -359,13 +373,10 @@ def importasdm(
         try: 
             mslocal = mstool() 
             param_names = importasdm.func_code.co_varnames[:importasdm.func_code.co_argcount] 
-            param_vals = [eval(p) for p in param_names] 
-            if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
-                write_history(mslocal, viso, 'importasdm', param_names, 
-                              param_vals, casalog) 
+            param_vals = [eval(p) for p in param_names]
 
-            if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
-                write_history(mslocal, visoc, 'importasdm', param_names, 
+            for myviso in vistoproc:
+                write_history(mslocal, myviso, 'importasdm', param_names, 
                               param_vals, casalog) 
 
         except Exception, instance: 
@@ -378,42 +389,31 @@ def importasdm(
         
         # Binary Flag processing
         if bdfflags:
+            
             casalog.post('Parameter bdfflags==True: flags from the ASDM binary data will be used to set the MS flags ...')
-
+            
             bdffexecutable = 'bdflags2MS '
             bdffexecstring = bdffexecutable+' -f ALL'
             if len(scans) > 0:
                 bdffexecstring = bdffexecstring + ' --scans ' + scans
-            
-            bdffexecstring = bdffexecstring+' '+ asdm + ' ' + viso
-            
-            casalog.post('Running '+bdffexecutable+' standalone invoked as:')
-            casalog.post(bdffexecstring)
 
-            bdffexitcode = os.system(bdffexecstring)
-            if bdffexitcode != 0:
-                casalog.post(bdffexecutable
-                             + ' terminated with exit code '
-                             + str(bdffexitcode), 'SEVERE')
-                raise Exception, \
-                      'ASDM binary flags conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+            for myviso in vistoproc:
+                bdffexecstring = bdffexecstring+' '+ asdm + ' ' + myviso
 
-        # Compression
-        if compression:
-                   # viso = viso + '.compressed'
-            viso = viso.rstrip('.ms') + '.compressed.ms'
-            visoc = visoc.rstrip('.ms') + '.compressed.ms'
+                casalog.post('Running '+bdffexecutable+' standalone invoked as:')
+                casalog.post(bdffexecstring)
 
-        if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
-            if os.path.exists(viso) and flagbackup==True:
-                aflocal.open(viso)
-                aflocal.saveflagversion('Original',
-                        comment='Original flags at import into CASA',
-                        merge='save')
-                aflocal.done()
-        elif wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
-            if os.path.exists(visoc) and flagbackup==True:
-                aflocal.open(visoc)
+                bdffexitcode = os.system(bdffexecstring)
+                if bdffexitcode != 0:
+                    casalog.post(bdffexecutable
+                                 + ' terminated with exit code '
+                                 + str(bdffexitcode), 'SEVERE')
+                    raise Exception, \
+                          'ASDM binary flags conversion error. Please check if it is a valid ASDM and that data/alma/asdm is up to date.'
+
+        for myviso in vistoproc:
+            if os.path.exists(myviso) and flagbackup==True:
+                aflocal.open(myviso)
                 aflocal.saveflagversion('Original',
                         comment='Original flags at import into CASA',
                         merge='save')
@@ -443,66 +443,50 @@ def importasdm(
             # Parse Flag.xml into flag dictionary
             #
             if process_flags:
-#                flagcmds = fh.readXML(asdm, float(tbuff))
                 flagcmds = fh.parseXML(asdm, float(tbuff))
                 onlinekeys = flagcmds.keys()
 
                 nflags = onlinekeys.__len__()
                                 
                 # Apply flags to the MS
-                if nflags > 0 and (wvr_corrected_data == "no" or wvr_corrected_data == "both"):
-                    if applyflags:
-                        
-                        # Open the MS and attach it to the tool
-                        aflocal.open(viso)
-                        
-                        # Select the data
-                        aflocal.selectdata()
-                        
-                        # Setup the agent's parameters
-#                        saved_list = fh.setupAgent(aflocal, flagcmds, [], True, True)
-#                        fh.setupAgent(aflocal, flagcmds, [], True, True)
-                        fh.parseAgents(aflocal, flagcmds, [], True, True, '')
-                        
-                        # Initialize the agents
-                        aflocal.init()
-                        
-                        # Run the tool
-                        aflocal.run(True, True)
-    
-                        casalog.post('Applied %s flag commands to data'%str(nflags))
-                        
-                        # Destroy the tool and de-attach the MS
-                        aflocal.done()
-                        
-                        # Save to FLAG_CMD table. APPLIED is set to True.
-#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, True, '', '')       
-                        fh.writeFlagCommands(viso, flagcmds, True, '', '', True)       
-                        
-                    else:
-                        casalog.post('Will not apply flags (apply_flags=False), use flagcmd to apply')
+                if nflags > 0:
+                    for myviso in vistoproc:
+                        if applyflags:
+                            # Open the MS and attach it to the tool
+                            aflocal.open(myviso)
+                            # Select the data
+                            aflocal.selectdata()
+                            # Setup the agent's parameters
+                            fh.parseAgents(aflocal, flagcmds, [], True, True, '')
+                            # Initialize the agents
+                            aflocal.init()
+                            # Run the tool
+                            aflocal.run(True, True)
+                            casalog.post('Applied %s flag commands to data'%str(nflags))
+                            # Destroy the tool and de-attach the MS
+                            aflocal.done()
+                            # Save to FLAG_CMD table. APPLIED is set to True.
+                            fh.writeFlagCommands(myviso, flagcmds, True, '', '', True)       
+                        else:
+                            casalog.post('Will not apply flags (apply_flags=False), use flagcmd to apply')
+
+                            # Write to FLAG_CMD, APPLIED is set to False
+                            fh.writeFlagCommands(myviso, flagcmds, False, '', '', True)
                     
-                        # Write to FLAG_CMD, APPLIED is set to False
-#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', '')
-                        fh.writeFlagCommands(viso, flagcmds, False, '', '', True)
-                    
-                    # Save the flag cmds to an ASCII file
-                    if savecmds:
-                        # Save to standard filename
-                        if outfile == '': 
-                            outfile = viso.replace('.ms','_cmd.txt')
+                        # Save the flag cmds to an ASCII file
+                        if savecmds:
+                            # Save to standard filename
+                            if outfile == '': 
+                                outfile = myviso.replace('.ms','_cmd.txt')
                             
-#                        fh.writeFlagCmd(viso, flagcmds, onlinekeys, False, '', outfile)
-                        fh.writeFlagCommands(viso, flagcmds, False, '', outfile, True)
-                        casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
+                            fh.writeFlagCommands(myviso, flagcmds, False, '', outfile, True)
+                            casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
                     
                 else:
                     casalog.post('There are no flag commands to process')
                 
-                    
-                             
         else:
-            casalog.post('There is not Flag.xml in ASDM', 'WARN')
+            casalog.post('There is no Flag.xml in ASDM', 'WARN')
         
         
         
