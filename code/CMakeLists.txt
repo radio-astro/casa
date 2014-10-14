@@ -1133,8 +1133,6 @@ file( WRITE ${CMAKE_INSTALL_PREFIX}/makedefs
   RPFITSLIBD = ${rpfitslibd}\n
   CFITSIOLIBD = ${cfitsiolibd}\n
   CFITSIOINCD =  ${CFITSIO_INCLUDE_DIRS}\n
-  eval_vars :\n
-  \t@\ echo\ \"$(foreach\ V,$(VARS),$V=\\\"$($V)\\\")\ \;\ export\ $(VARS)\"\n
 )
 
 add_subdirectory( doc/userman )
