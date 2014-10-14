@@ -21,6 +21,7 @@ import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
 from sdgrid import sdgrid
+from sdutil import tbmanager
 import asap as sd
 
 #
@@ -72,9 +73,8 @@ class sdgrid_unittest_base(object):
         return diff
         
     def getdata(self):
-        tb.open(self.outfile)
-        self.data = tb.getcol('SPECTRA')
-        tb.close()
+        with tbmanager(self.outfile) as tb:
+            self.data = tb.getcol('SPECTRA')
 
     def check(self,ref,val):
         diff=abs((val-ref)/ref)
@@ -986,7 +986,7 @@ class sdgrid_grid_center(sdgrid_unittest_base,unittest.TestCase):
         #print nonzeropix
         self.nonzero(nonzeropix_ref,nonzeropix)
     
-class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
+class sdgrid_selection_OLD(selection_syntax.SelectionSyntaxTest,
                         sdgrid_unittest_base,unittest.TestCase):
     """
     Test selection syntax. Selection parameters to test are:
@@ -1420,9 +1420,350 @@ class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
         tb.close()
         return sp
 
+class sdgrid_selection(selection_syntax.SelectionSyntaxTest,
+                       sdgrid_unittest_base,unittest.TestCase):
+    """
+    Test selection syntax. Selection parameters to test are:
+    spw (no channel selection), scan, pol
+    """
+    # Input and output names
+    rawfile='sd_analytic_type1-3.bl.asap'
+    infiles=[rawfile]
+    reffile='sd_analytic_type1-3.bl.asap'
+    prefix=sdgrid_unittest_base.taskname+'TestSel'
+    postfix='.grid.asap'
+    outname=prefix+postfix
+
+    gfunc='box'
+    npix=1
+    
+    @property
+    def task(self):
+        return sdgrid
+    
+    @property
+    def spw_channel_selection(self):
+        return False
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.rawfile)):
+            shutil.copytree(self.datapath+self.rawfile, self.rawfile)
+        default(sdgrid)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def _compare_OLD( self, name, ref ):
+        self._checkfile( name )
+        # reference data
+        tb.open(ref)
+        nrow0=tb.nrows()
+        rsp=[]
+        for irow in xrange(nrow0):
+            rsp.append(tb.getcell('SPECTRA',irow))
+        tb.close()
+        # check shape
+        tb.open(name)
+        nrow=tb.nrows()
+        self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
+        sp=[]
+        for irow in xrange(nrow):
+            sp.append(tb.getcell('SPECTRA',irow))
+            self.assertEqual(len(sp[irow]),len(rsp[irow]),
+                             msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
+        tb.close()
+        # check data
+        valuetype=type(sp[0][0])
+        #print ''
+        for irow in xrange(nrow):
+            #print 'irow=%s'%(irow)
+            #print '  rsp=%s'%(rsp[irow])
+            #print '   sp=%s'%(sp[irow])
+            ret=numpy.allclose(rsp[irow],sp[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
+
+    def _compare( self, name, ref ):
+        self._checkfile( name )
+        # reference data
+        rsp=[]
+        with tbmanager(ref) as tb:
+            nrow0=tb.nrows()
+            for irow in xrange(nrow0):
+                rsp.append(tb.getcell('SPECTRA',irow))
+        # check shape
+        sp=[]
+        with tbmanager(name) as tb:
+            nrow=tb.nrows()
+            self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
+            for irow in xrange(nrow):
+                sp.append(tb.getcell('SPECTRA',irow))
+                self.assertEqual(len(sp[irow]),len(rsp[irow]),
+                                 msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
+        
+        # check data
+        valuetype=type(sp[0][0])
+        #print ''
+        for irow in xrange(nrow):
+            #print 'irow=%s'%(irow)
+            #print '  rsp=%s'%(rsp[irow])
+            #print '   sp=%s'%(sp[irow])
+            ret=numpy.allclose(rsp[irow],sp[irow])
+            self.assertEqual(ret,True,
+                             msg='SPECTRA: data differ in row%s'%(irow))
+
+    ####################
+    # scan
+    ####################
+    def test_scan_id_default(self):
+        """test scan selection (scan='')"""
+        scan=''
+        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15,16,17], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+    
+    def test_scan_id_exact(self):
+        """ test scan selection (scan='15')"""
+        scan = '15'
+        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+
+    def test_scan_id_lt(self):
+        """ test scan selection (scan='<16')"""
+        scan = '<16'
+        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+
+    def test_scan_id_gt(self):
+        """ test scan selection (scan='>15')"""
+        scan = '>15'
+        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [16,17], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+    
+    def test_scan_id_range(self):
+        """ test scan selection (scan='15~16')"""
+        scan = '15~16'
+        self.res=sdgrid(scan=scan,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15,16], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+    
+    def test_scan_id_list(self):
+        """ test scan selection (scan='15,17')"""
+        scan = '15,17'
+        self.res=sdgrid(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15,17], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+    
+    def test_scan_id_exprlist(self):
+        """ test scan selection (scan='<16, 17')"""
+        scan = '<16, 17'
+        self.res=sdgrid(scan=scan,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'SCANNO': [0], 'IFNO': [23]}
+        tbselref = {'SCANNO': [15,17], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel, self.reffile, tbselref)
+
+    ####################
+    # pol
+    ####################
+    def test_pol_id_default(self):
+        """test pol selection (pol='')"""
+        pol=''
+        self.res=sdgrid(pol=pol,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [0,1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+
+    def test_pol_id_exact(self):
+        """ test pol selection (pol='1')"""
+        pol = '1'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    def test_pol_id_lt(self):
+        """ test pol selection (pol='<1')"""
+        pol = '<1'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [0], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+
+    def test_pol_id_gt(self):
+        """ test pol selection (pol='>0')"""
+        pol = '>0'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    def test_pol_id_range(self):
+        """ test pol selection (pol='0~1')"""
+        pol = '0~1'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [0,1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    def test_pol_id_list(self):
+        """ test pol selection (pol='0,1')"""
+        pol = '0,1'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [0,1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    def test_pol_id_exprlist(self):
+        """test pol selection (pol='<1,1')"""
+        pol = '<1,1'
+        self.res=sdgrid(pol=pol,spw='23',infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'POLNO': [0,1], 'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    ####################
+    # spw
+    #
+    # note: implement cases of selecting single spw only, since sd.gridder only works for one spw.
+    ####################
+    def test_spw_id_default_value(self):
+        """ test spw selection (when spw not given, spw is set '-1' and ifno of the first row is adopted for spw)"""
+        self.res=sdgrid(infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+
+    def test_spw_id_default(self):
+        """test spw selection (spw='')"""
+        pass
+
+    def test_spw_id_exact(self):
+        """ test spw selection (spw='23')"""
+        spw='23'
+        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+
+    def test_spw_id_lt(self):
+        """ test spw selection (spw='<25')"""
+        pass
+
+    def test_spw_id_gt(self):
+        """ test spw selection (spw='>21')"""
+        pass
+
+    def test_spw_id_range(self):
+        """ test spw selection (spw='21~24')"""
+        pass
+
+    def test_spw_id_list(self):
+        """ test spw selection (spw='21,22,23,25')"""
+        pass
+
+    def test_spw_id_exprlist(self):
+        """ test spw selection (spw='<22,>24')"""
+        pass
+
+    def test_spw_id_pattern(self):
+        """test spw selection (spw='*')"""
+        pass
+    
+    def test_spw_value_frequency(self):
+        """test spw selection (spw='300~400GHz')"""
+        spw='300~400GHz'
+        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'IFNO': [25]}
+        self._comparecal_with_selection(self.outname, tbsel)
+    
+    def test_spw_value_velocity(self):
+        """test spw selection (spw='-50~50km/s')"""
+        spw='-50~50km/s'
+        self.res=sdgrid(spw=spw,infiles=self.infiles,outfile=self.outname,gridfunction=self.gfunc,npix=self.npix)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        tbsel = {'IFNO': [23]}
+        self._comparecal_with_selection(self.outname, tbsel)
+
+    def test_spw_mix_exprlist(self):
+        """test spw selection (spw='150~550km/s,>23')"""
+        pass
+    
+    ####################
+    # Helper functions
+    ####################
+    def _comparecal_with_selection( self, name, tbsel={}, ref=None, tbselref=None):
+        if ref is None: ref = self.reffile
+        if tbselref is None: tbselref = tbsel
+        self._checkfile(name)
+        sp=self._getspectra_selected(name, tbsel)
+        spref=self._getspectra_selected(ref, tbselref)
+
+        self._checkshape( sp, spref )
+        
+        for irow in xrange(len(sp)):
+            diff=self._diff(numpy.array(sp[irow]),numpy.array(spref[irow]))
+            retval=numpy.all(diff<0.01)
+            maxdiff=diff.max()
+            self.assertEqual( retval, True,
+                             msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
+        del sp, spref
+
+    def _getspectra_selected( self, name, tbsel={} ):
+        """
+        Returns an array of spectra in rows selected in table.
+        
+        name  : the name of scantable
+        tbsel : a dictionary of table selection information.
+                The key should be column name and the value should be
+                a list of column values to select.
+        """
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))
+
+        with tbmanager(name) as tb:
+            sp = []
+            if len(tbsel) == 0:
+                for i in range(tb.nrows()):
+                    sp.append(tb.getcell('SPECTRA', i).tolist())
+            else:
+                command = ''
+                for key, val in tbsel.items():
+                    if len(command) > 0:
+                        command += ' AND '
+                    command += ('%s in %s' % (key, str(val)))
+                try:
+                    newtb = tb.query(command)
+                    for i in range(newtb.nrows()):
+                        sp.append(newtb.getcell('SPECTRA', i).tolist())
+                finally:
+                    newtb.close()
+
+        return sp
+
 def suite():
-    return [sdgrid_failure_case, sdgrid_single_integ,
-            sdgrid_clipping, sdgrid_flagging,
-            sdgrid_weighting, sdgrid_map,
-            sdgrid_dec_correction, sdgrid_grid_center,
+    return [#sdgrid_failure_case, sdgrid_single_integ,
+            #sdgrid_clipping, sdgrid_flagging,
+            #sdgrid_weighting, sdgrid_map,
+            #sdgrid_dec_correction, sdgrid_grid_center,
             sdgrid_selection]
