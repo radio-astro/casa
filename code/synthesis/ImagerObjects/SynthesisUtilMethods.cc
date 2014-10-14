@@ -949,7 +949,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    //   Need this, to deal with a null phase center being translated to a string to go back out.
 		    err += readVal( inrec, String("phasecenterfieldid"), phaseCenterFieldId);
 		  }
-		else {  phaseCenterFieldId=0; } // Take the first field of the MS.
+		//else {  phaseCenterFieldId=0; } // Take the first field of the MS.
+		else {  phaseCenterFieldId=-2; } // deal with this later in buildCoordinateSystem to assign the first selected field 
 	      }
 	    if (inrec.dataType("phasecenter")==TpInt 
 		|| inrec.dataType("phasecenter")==TpFloat 
@@ -1533,7 +1534,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( phaseCenterFieldId != -1 )
       {
 	ROMSFieldColumns msfield(msobj.field());
-	phaseCenterToUse=msfield.phaseDirMeas( phaseCenterFieldId ); 
+        if(phaseCenterFieldId == -2) // the case for  phasecenter=''
+          { 
+	    phaseCenterToUse=msfield.phaseDirMeas( fld ); 
+          }
+        else 
+          {
+	    phaseCenterToUse=msfield.phaseDirMeas( phaseCenterFieldId ); 
+          }
       }
     // Setup Phase center if it is specified only by field id.
 
@@ -1783,7 +1791,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 
     MDirection phaseCenterToUse = phaseCenter;
-
     if( phaseCenterFieldId != -1 )
       {
 	ROMSFieldColumns msfield(msobj.field());
@@ -2119,6 +2126,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          <<" inStep="<<inStep<<" restfreq="<<restfreq<<" freqframe="<<freqframe
          <<" dataFrame="<<dataFrame <<" veltype="<<veltype
          << LogIO::POST;
+      ostringstream ostr;
+      ostr << " phaseCenter='" << phaseCenter;
+      os << String(ostr)<<"' ";
+
 
       //Bool rst=SubMS::calcChanFreqs(os,
       Double dummy; // dummy variable  - weightScale is not used here
