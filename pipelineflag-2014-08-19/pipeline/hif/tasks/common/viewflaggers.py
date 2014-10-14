@@ -557,10 +557,14 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # have to be careful here not to corrupt the data view
                         # as we go through it testing for bad quadrant/antenna.
-                        # Make a copy of the view flags
-                        # and go though these one antenna at a time testing
-                        # for bad quadrant. If bad, copy 'outlier' and 'bad quadrant'
-                        # flags to original view.
+                        # Make a copy of the view flags and go though these
+                        # one antenna at a time testing for bad quadrant.
+                        # If bad, copy 'outlier' and 'bad quadrant' flags to
+                        # original view. 'unflagged_flag_copy' is a copy
+                        # of the flags made before the 'outlier' flags are
+                        # applied - it is used to estimate how many 
+                        # _additional_ points have been flagged.
+                        unflagged_flag_copy = np.copy(flag)
                         flag_copy = np.copy(flag)
                         flag_reason_copy = np.copy(flag_reason)
                         flag_copy[i2flag, j2flag] = True
@@ -590,7 +594,17 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                             for iquad in range(4):
                                 quad_slice = slice(quadrant[iquad][0], quadrant[iquad][1])
                                 ninvalid = np.count_nonzero(flag_copy[quad_slice,baselines])
-                                frac = float(ninvalid) / float(quadrant_len * len(baselines))
+                                ninvalid_on_entry = np.count_nonzero(
+                                  unflagged_flag_copy[quad_slice,baselines])
+                                nvalid_on_entry = np.count_nonzero(np.logical_not(
+                                  unflagged_flag_copy[quad_slice,baselines]))
+                                if nvalid_on_entry:
+                                    frac = float(ninvalid - ninvalid_on_entry) /\
+                                      float(nvalid_on_entry)
+#quadrant_len * 
+#len(baselines))
+                                else:
+                                    frac = 0.0
 
                                 if frac > frac_limit:
                                     i2flag = i[quad_slice,baselines]\
