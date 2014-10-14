@@ -1114,9 +1114,9 @@ specifications.  E.g.
 \item scan={\tt $<$5}       selects all scans less than 5
 \end{itemize}
 
-\appendix{}
 \newpage
-\section{API Note: General Error Handling}
+\appendix{}
+\section{Appendix: API Note - General Error Handling}
 
 The \MSS\ sub-system reports errors via the C++ exception mechanism.
 \MSSelectionError\ is the base class of the objects used to report
@@ -1221,8 +1221,8 @@ This mechanism of error handling is currently available for ANTENNA
 and STATE (a.k.a. ``intent selection'') selection expressions only.
 
 \newpage
-\section{API Note: Using the {\tt MSSelection} module for other
-  MS-like Tables}
+\section{Appendix: API Note - Using the {\tt MSSelection} module for
+  other MS-like Tables}
 
 The \MSS\ module was originally written to provide a higher-level,
 simpler language called STaQL (Simpler TaQL) specifically for applying
@@ -1327,7 +1327,7 @@ selected CalTable as shown in Listing~\ref{LIST:CTCODE}.
 
   TableExprNode ten=mss.toTableExprNode(&msLike);
   //
-  // Now use the global method getSelectedTable() to apply the ten on the calTab 
+  // Now use the global method getSelectedTable() to apply the TEN on the calTab 
   // parameter and return the selected table in selectedCalTable parameter.
   //
   getSelectedTable(selectedCalTable, calTab, ten, "");
