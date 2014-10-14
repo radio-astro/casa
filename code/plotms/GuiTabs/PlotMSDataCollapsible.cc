@@ -57,6 +57,10 @@ PlotMSDataCollapsible::PlotMSDataCollapsible(PlotMSPlotter* plotter,
 
 	maximizeDisplay();
 
+        // Display control buttons
+        connect(ui.minMaxButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()) );
+        connect(ui.closeButton, SIGNAL(clicked()), this, SLOT(closePlot()) );
+
 	//Context Menu
 	setContextMenuPolicy( Qt::CustomContextMenu );
 	connect( this, SIGNAL( customContextMenuRequested( const QPoint&)), this, SLOT(showContextMenu( const QPoint&)) );
@@ -92,6 +96,11 @@ bool PlotMSDataCollapsible::isMinimized() const {
 	return minimized;
 }
 
+void PlotMSDataCollapsible::closePlot() {
+    plotTab->removePlot();
+    emit close( this );
+}
+
 void PlotMSDataCollapsible::openCloseDisplay() {
 	bool minimized = isMinimized();
 	if ( minimized ) {
@@ -114,6 +123,7 @@ void PlotMSDataCollapsible::minimizeDisplay() {
 	nameLabel->setText( identifier.c_str() );
 
 	ui.widgetLayout->addWidget( nameLabel );
+	ui.minMaxButton->setText("Maximize");
 
 	minimumSize = SIZE_COLLAPSED;
 }
@@ -127,6 +137,7 @@ void PlotMSDataCollapsible::maximizeDisplay() {
 		ui.widgetLayout->addWidget( plotTab );
 	}
 
+	ui.minMaxButton->setText("Minimize");
 
 	minimumSize = SIZE_EXPANDED;
 }
@@ -260,8 +271,7 @@ void PlotMSDataCollapsible::showContextMenu( const QPoint& location ) {
 	//Act on the user's selection.
 	QAction* selectedAction = contextMenu.exec( showLocation );
 	if ( selectedAction == &closeAction ){
-		plotTab->removePlot();
-		emit close( this );
+		closePlot();
 	}
 	else if ( selectedAction == &minimizeAction ){
 		openCloseDisplay();

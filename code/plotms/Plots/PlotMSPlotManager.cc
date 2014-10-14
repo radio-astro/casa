@@ -261,6 +261,7 @@ bool PlotMSPlotManager::findEmptySpot( Int& row, Int& col ){
 
 void PlotMSPlotManager::removePlot( PlotMSPlot* plot ){
 	std::vector<PlotMSPlot*>::iterator plotLoc = std::find( itsPlots_.begin(), itsPlots_.end(), plot );
+        PlotMSPlotParameters* plotParams = &(plot->parameters());
 	if ( plotLoc != itsPlots_.end() ){
 		//Hold the drawing so we don't trigger a draw thread that causes
 		//a segfault as we delete the plot out from under it.
@@ -271,6 +272,11 @@ void PlotMSPlotManager::removePlot( PlotMSPlot* plot ){
 		itsPlots_.erase(plotLoc);
 		delete plot;
 	}
+        // PlotMSPlot destructor also deletes its plot parameters, so need to remove it from vector too
+	std::vector<PlotMSPlotParameters*>::iterator paramLoc = std::find( itsPlotParameters_.begin(), itsPlotParameters_.end(), plotParams );
+	if ( paramLoc != itsPlotParameters_.end() ){
+		itsPlotParameters_.erase(paramLoc);
+        }
 	notifyWatchers();
 }
 

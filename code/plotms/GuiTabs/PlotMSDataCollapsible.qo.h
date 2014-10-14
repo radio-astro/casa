@@ -116,6 +116,7 @@ signals:
 	void close( PlotMSDataCollapsible*);
 
 private slots:
+	void closePlot();
 	void openCloseDisplay();
 	void showContextMenu( const QPoint& location );
 
