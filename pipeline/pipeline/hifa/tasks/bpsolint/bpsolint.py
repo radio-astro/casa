@@ -71,21 +71,18 @@ class BpSolintInputs(basetask.StandardInputs):
         # Get the science spw ids
         sci_spws = set([spw.id for spw in \
             self.ms.get_spectral_windows(science_windows_only=True)])
-	print 'science spws ', sci_spws
 
         # Get the bandpass spw ids
         bandpass_spws = []
         for scan in self.ms.get_scans(scan_intent=self.intent):
             bandpass_spws.extend(spw.id for spw in scan.spws)
         bandpass_spws = set (bandpass_spws).intersection(sci_spws)
-	print 'bandpass spws ', bandpass_spws
 
         # Get science target spw ids
         target_spws = []
         for scan in self.ms.get_scans(scan_intent='TARGET'):
             target_spws.extend([spw.id for spw in scan.spws])
         target_spws = set(target_spws).intersection(sci_spws)
-	print 'target spws ', bandpass_spws
         
         # Compute the intersection of the bandpass and science target spw
         # ids
@@ -144,7 +141,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	inputs = self.inputs
 
 	# Create the results structure
-	results = BpSolintResults(vis=inputs.vis)
+	result = BpSolintResults(vis=inputs.vis)
 
 	# Turn the CASA field name and spw id lists into Python lists
 	fieldlist = inputs.field.split(',')
@@ -155,7 +152,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	LOG.info('Selecting bandpass spws %s ' % spwlist)
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
 	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
-	    return results
+	    return result
 
 	# Get the fluxes as a function of spw and field
 	#    Return if there are no flux values for the bandpass calibrator.
@@ -163,17 +160,15 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    intent=inputs.intent, spwlist=spwlist)
 	if not fluxdict:
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
-	    return results
-	print 'Flux Dictionary'
-	print fluxdict
+	    return result
 
 	# Get the tsys as function of spw and field
 	#    Return if there are no flux values for the bandpass calibrator.
 	tsysdict = self._get_tsysdict(ms=inputs.ms, fieldnamelist=fieldlist,
 	    intent=inputs.intent, spwlist=spwlist)
-	if not tysdict:
+	if not tsysdict:
 	    LOG.info('No tsys spw for MS %s' % inputs.ms.basename)
-	    return results
+	    return result
 	print 'Tsys Dictionary'
 	print tsysdict
 
@@ -184,7 +179,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    #intent=intent, spwlist=spwlist)
 	#if not scanlist:
 	    #LOG.info('No bandpass scans for MS %s' % inputs.ms.name)
-	    #return results
+	    #return result
 
 	# Compute the number of unflagged antennas if request.
 	#if hm_nantennas == 'unflagged'
@@ -196,8 +191,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    #LOG.info('Bandpass scan %s nantennas unflagged %d  flagged %d' \
 	    #% (scan.id, nunflagged_antennas, nflagged_antennas))
 
-
-	result = None
 	return result
 
     def analyse(self, result):
@@ -252,7 +245,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	tsysdict = {}
 	fieldset = set(fieldnamelist)
 
-	# get atmospheric scans associated with the field list
+	# Get atmospheric scans associated with the field list
+	#    Ccheck that they come bacj in order
 	atmscans = []
         for scan in ms.get_scans(scan_intent='ATMOSPHERE'):
 	    # Remove scans not associated with the input field names
@@ -274,28 +268,28 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    except:
 	        continue
 
-	    # Get atmospheric windows
+	    # Find best atmospheric window
 	    ftsysdict = collections.OrderedDict()
 	    for scan in atmscans:
 
 		# Get field name
-	        scanfieldset = [field.name for field in scan.fields]
-		fieldname = scanfieldset[0]
-	        scanfieldset = set(scanfieldset)
+	        scanfieldlist = [field.name for field in scan.fields]
+		fieldname = scanfieldlist[0]
 
-		# Get atmospheric windows and ids
-	        scanspwset = set ([scanspw for scanspw in scan.spws() \
-		    if scanspw.num_channels not in (1,4)])
-	        scanspwidset = set ([scanspw.id for scanspw in scan.spws() \
-		    if scanspw.num_channels not in (1,4)])
+		# Get tsys spws and spw ids
+	        scanspwlist = [scanspw for scanspw in list(scan.spws) \
+		    if scanspw.num_channels not in (1,4)]
+	        scanspwidlist = [scanspw.id for scanspw in list(scan.spws) \
+		    if scanspw.num_channels not in (1,4)]
 
 		# Match the tsys spw to the science spw
 		#   Match first by id then by frequency   
-		mindiff = sys.float_info.max; bestspwid = None
-		if spw.id in scanspwidset: 
+		bestspwid = None
+		if spw.id in scanspwidlist: 
 		    bestspwid = scanspw.id
 		else:
-		    for scanspw in scanspwset:
+		    mindiff = sys.float_info.max
+		    for scanspw in scanspwlist:
 		        if spw.band != scanspw.band:
 			    continue
 		        if spw.baseband != scanspw.baseband:
@@ -305,10 +299,15 @@ class BpSolint(basetask.StandardTaskTemplate):
 			if diff < mindiff:
 			    bestspwid = scanspw.id
 			    mindiff = diff
+
+		# Create dictionary entry based on first scan matched.
 		if bestspwid is not None:
 		    ftsysdict['field'] = fieldname
+		    ftsysdict['scan'] = scan.id
 		    ftsysdict['tsysspw'] = bestspwid
 		    break
+
+	    # Update the spw dictinary
 	    if ftsysdict:
 	        tsysdict[spw.id] = ftsysdict
 
