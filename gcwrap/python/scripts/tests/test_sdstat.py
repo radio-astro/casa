@@ -1879,7 +1879,7 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
         default(sdstat)
 
         tb.open(self.infile)
-        self.ref_flagtra = tb.getcol('FLAGTRA').T.flatten()
+        self.ref_flagtra = tb.getcol('FLAGTRA')
         self.ref_flagrow = tb.getcol('FLAGROW')
         tb.close()
 
@@ -1912,10 +1912,10 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
 
     def _checkInputFile(self, infile):
         tb.open(infile)
-        flagtra = tb.getcol('FLAGTRA').T.flatten()
+        flagtra = tb.getcol('FLAGTRA')
         flagrow = tb.getcol('FLAGROW')
         tb.close()
-        self.assertTrue(any(flagtra==self.ref_flagtra))
+        self.assertTrue((flagtra==self.ref_flagtra).all())
         self.assertTrue(all(flagrow==self.ref_flagrow))
 
 def suite():
