@@ -2510,21 +2510,23 @@ class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
     """
     Verify correct handling of flag information in sdsave for scantable output.
     no changes must be made on any flag information.
+
+    the input data has attributes as follows:
+        flagged row ids [0,1]
+        channel flagged row ids [1,2]
+        masklist of channel flags [[5,9],[15,19],[94,98]]
+        field_id_list = [5,6,7,8]
     """
     infile = 'flagtest.asap'
     outfile1 = 'flagtest_out.asap'
     outfile2 = 'flagtest_out.ms'
-    flagged_row_list = [0,1]
-    flagged_chan_row_list = [1,2]
-    flagged_chan_list = [[5,9],[15,19],[94,98]]
-    field_id_list = [5,6,7,8]
 
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.infile)):
             shutil.copytree(self.datapath+self.infile, self.infile)
-
         default(sdsave)
+        self._getinfo(self.infile)
 
     def tearDown(self):
         if (os.path.exists(self.infile)):
@@ -2539,54 +2541,48 @@ class sdsave_flag(sdsave_unittest_base, unittest.TestCase):
         test_flag01: Test for Scantable output
         """
         sdsave(infile=self.infile,outfile=self.outfile1,outform='ASAP')
-        self.verifyflag(self.outfile1)
+        self._verifyflag(self.outfile1)
 
     def test_flag02(self):
         """
         test_flag02: Test for MS (with npol=1) output
         """
         sdsave(infile=self.infile,outfile=self.outfile2,outform='MS2')
-        self.verifyflag(self.outfile2, False)
+        self._verifyflag(self.outfile2, False)
 
-    def verifyflag(self, outfile, is_scantable=True):
-        tb.open(outfile)
-        assert (tb.nrows() == 4)
-        for i in xrange(tb.nrows()):
+    def _getinfo(self, infile):
+        with tbmanager(infile) as tb:
+            self.nrow_orig = tb.nrows()
+            self.nchan_orig = len(tb.getcell('FLAGTRA', 0))
+            self.rowid_rflag_orig = tb.getcol('FLAGROW')
+            cfraw = tb.getcol('FLAGTRA').sum(axis=0)
+            self.rowid_cflag_orig = [cfraw[i] > 0 for i in xrange(len(cfraw))]
+            self.cflag_orig = tb.getcell('FLAGTRA', numpy.where(self.rowid_cflag_orig)[0][0])
+            self.field_id_list_new = []
+            fldname = tb.getcol('FIELDNAME')
+            for i in xrange(len(fldname)):
+                self.field_id_list_new.append(int(fldname[i].split('__')[1]))
+
+    def _verifyflag(self, outfile, is_scantable=True):
+        with tbmanager(outfile) as tb:
+            self.assertTrue(tb.nrows() == self.nrow_orig)
             if is_scantable:
-                rowflag = tb.getcell('FLAGROW', i)
-                rowflag_ref = 1 if self.get_index(i, self.flagged_row_list) >= 0 else 0
-                self.assertEqual(rowflag, rowflag_ref)
-                
-                mask = tb.getcell('FLAGTRA', i)
-                mask_ref = numpy.zeros(100, numpy.int32)
-                if self.get_index(i, self.flagged_chan_row_list) >= 0:
-                    for j in xrange(len(self.flagged_chan_list)):
-                        idx_start = self.flagged_chan_list[j][0]
-                        idx_end   = self.flagged_chan_list[j][1]+1
-                        for k in xrange(idx_start, idx_end):
-                            mask_ref[k] = 128
-            else:
-                mask = tb.getcell('FLAG', i)[0]
-                mask_ref = numpy.array([False]*100)
-                field_id = tb.getcell('FIELD_ID', i)
-                indata_irow = self.get_index(field_id, self.field_id_list)
-                if self.get_index(indata_irow, self.flagged_row_list) >= 0:
-                    mask_ref = numpy.array([True]*100)
-                elif self.get_index(indata_irow, self.flagged_chan_row_list) >= 0:
-                    for j in xrange(len(self.flagged_chan_list)):
-                        idx_start = self.flagged_chan_list[j][0]
-                        idx_end   = self.flagged_chan_list[j][1]+1
-                        for k in xrange(idx_start, idx_end):
-                            mask_ref[k] = True
+                self.assertTrue(all(tb.getcol('FLAGROW') == self.rowid_rflag_orig))
+            for i in xrange(tb.nrows()):
+                if is_scantable:
+                    mask = tb.getcell('FLAGTRA', i)
+                    mask_ref = self.cflag_orig if self.rowid_cflag_orig[i] else numpy.zeros(self.nchan_orig, numpy.int32)
+                else:
+                    mask = tb.getcell('FLAG', i)[0]
+                    mask_ref = numpy.array([False]*self.nchan_orig)
+                    field_id = tb.getcell('FIELD_ID', i)
+                    indata_irow = self.field_id_list_new.index(field_id)
+                    if self.rowid_rflag_orig[indata_irow]:
+                        mask_ref = numpy.array([True]*self.nchan_orig)
+                    elif self.rowid_cflag_orig[indata_irow]:
+                        mask_ref = [self.cflag_orig[i] > 0 for i in xrange(len(self.cflag_orig))]
 
-            self.assertTrue(all(mask == mask_ref))
-        tb.close()
-
-    def get_index(self, value, list):
-        try:
-            return list.index(value)
-        except:
-            return -1
+                self.assertTrue(all(mask == mask_ref))
 
 
 def suite():
@@ -2596,5 +2592,6 @@ def suite():
             sdsave_freq_labeling, sdsave_flaggingMS,
             sdsave_scan_number, sdsave_test_splitant,
             sdsave_selection_syntax, sdsave_scanrate,
-            sdsave_weighting, sdsave_weighting2, sdsave_flag
+            sdsave_weighting, sdsave_weighting2,
+            sdsave_flag
             ]
