@@ -17,6 +17,7 @@ except:
 
 import asap as sd
 from sdstat import sdstat
+from sdutil import tbmanager
 from asap.scantable import set_restfreq
 
 class sdstat_unittest_base:
@@ -1878,10 +1879,9 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
         shutil.copyfile(self.datapath+self.reffile, self.reffile)
         default(sdstat)
 
-        tb.open(self.infile)
-        self.ref_flagtra = tb.getcol('FLAGTRA')
-        self.ref_flagrow = tb.getcol('FLAGROW')
-        tb.close()
+        with tbmanager(self.infile) as tb:
+            self.ref_flagtra = tb.getcol('FLAGTRA')
+            self.ref_flagrow = tb.getcol('FLAGROW')
 
     def tearDown( self ):
         if (os.path.exists(self.infile)):
@@ -1893,8 +1893,8 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
         tid = "Flag"
         infile = self.infile
         outfile = self.outroot+tid+self.outsuff
-        
         retstat = sdstat(infile=infile,outfile=outfile)
+
         self._compareFiles(outfile, self.reffile)
         self.assertTrue(isinstance(retstat,dict),
                          msg='The returned statistics are not a dictionary')
@@ -1911,12 +1911,11 @@ class sdstat_flagTest( sdstat_unittest_base, unittest.TestCase ):
                 self.assertTrue(all(numpy.array(stat[key])==numpy.array(ref_stat[key])))
 
     def _checkInputFile(self, infile):
-        tb.open(infile)
-        flagtra = tb.getcol('FLAGTRA')
-        flagrow = tb.getcol('FLAGROW')
-        tb.close()
-        self.assertTrue((flagtra==self.ref_flagtra).all())
-        self.assertTrue(all(flagrow==self.ref_flagrow))
+        with tbmanager(infile) as tb:
+            flagtra = tb.getcol('FLAGTRA')
+            flagrow = tb.getcol('FLAGROW')
+            self.assertTrue((flagtra==self.ref_flagtra).all())
+            self.assertTrue(all(flagrow==self.ref_flagrow))
 
 def suite():
     return [sdstat_basicTest, sdstat_averageTest, sdstat_restfreqTest,
