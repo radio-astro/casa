@@ -461,24 +461,33 @@ namespace LibAIR2 {
 	  {
 	    casa::Array<std::complex<float> > a;
 	    indata.get(i,a, casa::True);
+	    bool tobsbad=false;
 
 	    for(size_t k=0; k<4; ++k)
-	    {
-	      res->set(counter,
-		       a1(i),
-		       k,
-		       a(casa::IPosition(2,k,0)).real());
+            {
+	      casa::Double rdata = a(casa::IPosition(2,k,0)).real();
+	      if(2.7<rdata and rdata<300.){
+		res->set(counter,
+			 a1(i),
+			 k,
+			 a(casa::IPosition(2,k,0)).real());
+	      }
+	      else{
+		tobsbad=true;
+	      }
 	    }
-	    nunflagged[a1(i)]++;
+	    if(tobsbad){ // TObs outside permitted range
+	      for(size_t k=0; k<4; ++k){
+		res->set(counter, a1(i), k, 0.);
+	      }
+	    }
+	    else{ 
+	      nunflagged[a1(i)]++;
+	    }
 	  }
-	  else
-	  {
-	    for(size_t k=0; k<4; ++k)
-	    {
-	      res->set(counter,
-		       a1(i),
-		       k,
-		       0.);
+	  else{ // flagged
+	    for(size_t k=0; k<4; ++k){
+	      res->set(counter, a1(i), k, 0.);
 	    }
 	  }
 	} // end if c_times ...
