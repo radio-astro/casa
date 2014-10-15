@@ -118,8 +118,7 @@ class sdlist_test(unittest.TestCase):
         rowinfo = []
         read_rowinfo = False
         with open(outfile, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
+            for line in f:
                 sline = line.strip()
                 if sline.startswith('Data Records:'):
                     sline_elem = sline.split(' ')
@@ -131,7 +130,7 @@ class sdlist_test(unittest.TestCase):
 
                 if read_rowinfo:
                     rowinfo.append(sline)
-        assert (len(rowinfo) == 5)
+        self.assertTrue(len(rowinfo) == 5)
         del rowinfo[0:2]
         import re
         import string
