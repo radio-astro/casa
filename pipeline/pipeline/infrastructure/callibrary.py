@@ -63,7 +63,7 @@ class CalApplication(object):
         """
         d = eval(string.replace(s, 'applycal(', 'dict('))
         calto = CalTo(vis=d['vis'], field=d['field'], spw=d['spw'], 
-                      antenna=d['antenna'])
+                      antenna=d['antenna'], intent=d['intent'])
         
         # wrap these values in a list if they are single valued, 
         # eg. 'm31' -> ['m31']
