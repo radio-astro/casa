@@ -62,13 +62,15 @@ namespace casa {
 // Constructors/Destructors //
 
 PlotMSApp::PlotMSApp(bool connectToDBus, bool userGui) :
-		itsExportFormat( PlotExportFormat::JPG, ""), itsDBus_(NULL){
+                isGUI_(userGui),
+		itsExportFormat( PlotExportFormat::JPG, ""), 
+                itsDBus_(NULL){
     initialize(connectToDBus, userGui);
 }
 
 PlotMSApp::PlotMSApp(const PlotMSParameters& params, bool connectToDBus,
 		bool userGui) :
-        itsPlotter_(NULL), itsParameters_(params),
+        itsPlotter_(NULL), isGUI_(userGui), itsParameters_(params),
         itsExportFormat( PlotExportFormat::JPG, ""), itsDBus_(NULL) {
     initialize(connectToDBus, userGui);
 }
@@ -81,7 +83,6 @@ PlotMSApp::~PlotMSApp() {
 // Public Methods //
 
 //PlotMSPlotter* PlotMSApp::getPlotter() { return itsPlotter_; }
-void PlotMSApp::showGUI(bool show) { itsPlotter_->showGUI(show); }
 bool PlotMSApp::guiShown() const { return itsPlotter_->guiShown(); }
 int PlotMSApp::execLoop() { return itsPlotter_->execLoop(); }
 int PlotMSApp::showAndExec(bool show) { return itsPlotter_->showAndExec(show); }
@@ -93,6 +94,15 @@ void PlotMSApp::showWarning(const String& message, const String& title) {
     itsPlotter_->showError(message, title, true); }
 void PlotMSApp::showMessage(const String& message, const String& title) {
     itsPlotter_->showMessage(message, title);
+}
+
+void PlotMSApp::showGUI(bool show) {
+    if (show != isGUI_) {
+        close();
+        isGUI_ = show; 
+        initialize(false, show);  // DBus has already been taken care of 
+    } 
+    itsPlotter_->showGUI(show);
 }
 
 PlotMSParameters& PlotMSApp::getParameters() {

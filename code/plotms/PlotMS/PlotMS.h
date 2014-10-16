@@ -184,9 +184,9 @@ public:
 
 
 private:
-    // Plotter GUI.
-    //PlotMSPlotter* itsPlotter_;
+    // Plotter, Script or GUI
     Client* itsPlotter_;
+    bool isGUI_;
 
     // Current parameters.
     PlotMSParameters itsParameters_;
