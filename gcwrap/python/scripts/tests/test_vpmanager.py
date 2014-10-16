@@ -89,7 +89,7 @@ class vpmanager_test(unittest.TestCase):
                            freq = 'TOPO 100GHz',
                            obsdirection = 'AZEL 30deg 60deg')
         
-        self.assertTrue(myrval==4)
+        self.assertTrue(myrval==3)
 
     def test6(self):
         '''Test 6: numvps for ALMA with too high freq'''
