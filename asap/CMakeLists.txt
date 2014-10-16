@@ -19,7 +19,7 @@ message( STATUS "USE_LIBCASACORE = " ${USE_LIBCASACORE} )
 message( STATUS "STANDALONE = " ${STANDALONE} )
 message( STATUS "PKSMS = " ${PKSMS} )
 
-# Use casapy's fork of casacore  
+# Use casapy's fork of casacore
 if ( NOT STANDALONE )
   add_definitions( -DUSE_CASAPY )
 endif ()
@@ -45,7 +45,7 @@ project( ASAP )
 
 
 #
-# build type and their flags 
+# build type and their flags
 #
 # CMAKE_BUILD_TYPE (Release, Debug, RelWithDebInfo, MinSizeRel, Profile)
 # default is RelWithDebInfo
@@ -120,7 +120,7 @@ if( APPLE )
       if( NOT _cxx_version STREQUAL "4.4" )
          set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -arch ${archflag}" )
       endif()
-   endif()         
+   endif()
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )
    set( SO so )
    add_definitions( -DAIPS_LINUX )
@@ -180,9 +180,9 @@ unset( CASACORE_LIBRARIES CACHE )
 if( NOT USE_LIBCASACORE )
    # use casacore libraries 
    set( _includename casa/aipsdef.h )
-   find_path( CASACORE_INCLUDE_DIR ${_includename} 
+   find_path( CASACORE_INCLUDE_DIR ${_includename}
               PATHS ${CASACORE_PATHS}
-              PATH_SUFFIXES include include/casacore 
+              PATH_SUFFIXES include include/casacore
               NO_DEFAULT_PATH )
    find_path( CASACORE_INCLUDE_DIR ${_includename} ) 
    if( CASACORE_INCLUDE_DIR MATCHES "NOTFOUND$" )
@@ -205,7 +205,7 @@ if( NOT USE_LIBCASACORE )
       set( _libname libcasa_${_a}.${SO} )
       unset( _casacore_lib CACHE )
       find_library( _casacore_lib ${_libname}
-                    PATHS ${CASACORE_PATHS} 
+                    PATHS ${CASACORE_PATHS}
                     PATH_SUFFIXES lib64 lib )
       if( _casacore_lib MATCHES "NOTFOUND$" )
          message( FATAL_ERROR "${_libname} could not be found. Please check!" )
@@ -218,7 +218,7 @@ if( NOT USE_LIBCASACORE )
 else()
    # use libcasacore
    set( _libname libcasacore.${SO} )
-   find_library( CASACORE_LIBRARIES ${_libname} 
+   find_library( CASACORE_LIBRARIES ${_libname}
                  PATHS ${CASACORE_PATHS} 
                  PATH_SUFFIXES lib64 lib )
    if( CASACORE_LIBRARIES MATCHES "NOTFOUND$" )
@@ -230,11 +230,11 @@ else()
               PATHS ${_coreroot}
               PATH_SUFFIXES include include/casacore
               NO_DEFAULT_PATH )
-   find_path( CASACORE_INCLUDE_DIR ${_includename} 
+   find_path( CASACORE_INCLUDE_DIR ${_includename}
               PATHS ${CASACORE_PATHS}
-              PATH_SUFFIXES include include/casacore 
-              NO_DEFAULT_PATH ) 
-   find_path( CASACORE_INCLUDE_DIR ${_includename} ) 
+              PATH_SUFFIXES include include/casacore
+              NO_DEFAULT_PATH )
+   find_path( CASACORE_INCLUDE_DIR ${_includename} )
    if( CASACORE_INCLUDE_DIR MATCHES "NOTFOUND$" )
      message( FATAL_ERROR "${_includename} could not be found. Please check!" )
    endif()
@@ -259,11 +259,11 @@ if( STANDALONE )
    # find numpy
    string( REGEX MATCH [0-9].[0-9] PYTHONV ${PYTHON_INCLUDE_DIRS} )
    string( REPLACE "." "" PV ${PYTHONV} )
-   find_path( NUMPY_INCLUDE_DIR numpy/npy_interrupt.h 
+   find_path( NUMPY_INCLUDE_DIR numpy/npy_interrupt.h
               PATHS 
-                 ${pyroot}/lib/python${PYTHONV}/site-packages/numpy/core 
-                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV} 
-                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core 
+                 ${pyroot}/lib/python${PYTHONV}/site-packages/numpy/core
+                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
+                 ${pyroot}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
               PATH_SUFFIXES include )
    if( NUMPY_INCLUDE_DIR MATCHES "NOTFOUND$" )
       message( FATAL_ERROR "numpy/npy_interrupt.h could not be found. Please check!" )
@@ -289,11 +289,11 @@ else()
       set( _found False )
       foreach( _v ${_names} )
 
-         casa_find( 
+         casa_find(
             PYTHON${_v}
 	    #PREFIX_HINTS ${PYTHON_ROOT_DIR}
-            LIBS python${_v} 
-            NO_REQUIRE 
+            LIBS python${_v}
+            NO_REQUIRE
          )
 
          if( PYTHON${_v}_FOUND )
@@ -319,7 +319,7 @@ else()
    string( REPLACE "." "" PV ${PYTHONV} )
    set( python_library python${PYTHON_LIBNAME} )
 
-   # Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from 
+   # Form the Python install prefix by stripping away "lib/libpython2.5.2.dylib" (example) from
    # the full python library path
    string( REGEX MATCH "/lib(64)?/lib${python_library}" _match ${PYTHON${PYTHON_LIBNAME}_LIBRARIES} )
    if( _match )
@@ -344,10 +344,10 @@ else()
 
    casa_find( PYTHON
       VERSION 2.5    # minimum required
-      INCLUDES Python.h 
+      INCLUDES Python.h
          numpy/npy_interrupt.h   # for numpy
       INCLUDES_SUFFIXES python${PYTHONV}
-      PREFIX_HINTS 
+      PREFIX_HINTS
          ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
          ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
          ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
@@ -400,7 +400,7 @@ find_library( LAPACK_LIBRARIES liblapack.${SO} )
 if ( LAPACK_LIBRARIES MATCHES "NOTFOUND$" )
    message( FATAL_ERROR "lapack could not be found. Please check!" )
 endif()
-message( STATUS "LAPACK_LIBRARIES = " ${LAPACK_LIBRARIES} ) 
+message( STATUS "LAPACK_LIBRARIES = " ${LAPACK_LIBRARIES} )
 
 
 #
@@ -434,12 +434,12 @@ if( STANDALONE )
                  PATH_SUFFIXES lib64 lib
                  NO_DEFAULT_PATH )
    if( CFITSIO_LIBRARIES MATCHES "NOTFOUND$" )
-      find_library( CFITSIO_LIBRARIES libcfitsio.a 
+      find_library( CFITSIO_LIBRARIES libcfitsio.a
                     PATHS ${CFITSIO_ROOT}
                     PATH_SUFFIXES lib64 lib
                     NO_DEFAULT_PATH )
    endif()
-   find_library( CFITSIO_LIBRARIES libcfitsio.${SO} 
+   find_library( CFITSIO_LIBRARIES libcfitsio.${SO}
                  PATHS /usr/local /usr
                  PATH_SUFFIXES lib64 lib )
    if( CFITSIO_LIBRARIES MATCHES "NOTFOUND$" )
@@ -492,7 +492,7 @@ if( NOT FORTRAN_LIBRARIES )
       set( FORTRAN_LIBRARIES ${_gfortran_lib_path}
 	CACHE STRING "Fortran library linker option" FORCE )
     else()
-      set( FORTRAN_LIBRARIES -lgfortran 
+      set( FORTRAN_LIBRARIES -lgfortran
         CACHE STRING "Fortran library linker option" FORCE )
     endif()
     message( STATUS "Looking for Fortran runtime libraries -- ${FORTRAN_LIBRARIES}" )
@@ -547,7 +547,7 @@ endif()
 #
 # RPFITS
 #
-if ( STANDALONE ) 
+if ( STANDALONE )
    find_path( RPFITS_INCLUDE_DIRS RPFITS.h
               PATHS /usr/local /usr
               PATH_SUFFIXES include )
@@ -584,10 +584,10 @@ find_library( WCSLIB ${_wcslib}
 if( WCSLIB MATCHES "NOTFOUND$" )
    message( STATUS "${_wcslib} could not be found." )
    unset( _wcslib CACHE )
-   unset( WCSLIB CACHE ) 
+   unset( WCSLIB CACHE )
    set( _wcslib libwcs.${_wcs_version}.${SO} )
    message( STATUS "Try to find ${_wcslib}..." )
-   find_library( WCSLIB ${_wcslib} 
+   find_library( WCSLIB ${_wcslib}
                  PATHS ${WCSLIB_PATHS}
                  PATH_SUFFIXES lib64 lib )
    if( WCSLIB MATCHES "NOTFOUND$" )
@@ -607,13 +607,13 @@ message( STATUS "WCSLIB_INCLUDE_DIR = " ${WCSLIB_INCLUDE_DIR} )
 #
 # common include path
 #
-include_directories( ${CASACORE_INCLUDE_DIR} 
-                     ${Boost_INCLUDE_DIR} 
-                     ${X11_INCLUDE_DIRS} 
-                     ${PGPLOT_INCLUDE_DIRS} 
-                     ${PYTHON_INCLUDE_DIRS} 
-                     ${WCSLIB_INCLUDE_DIR} 
-                     ${CFITSIO_INCLUDE_DIRS} 
+include_directories( ${CASACORE_INCLUDE_DIR}
+                     ${Boost_INCLUDE_DIR}
+                     ${X11_INCLUDE_DIRS}
+                     ${PGPLOT_INCLUDE_DIRS}
+                     ${PYTHON_INCLUDE_DIRS}
+                     ${WCSLIB_INCLUDE_DIR}
+                     ${CFITSIO_INCLUDE_DIRS}
                      ${RPFITS_INCLUDE_DIRS} )
 
 
