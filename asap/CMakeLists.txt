@@ -99,7 +99,9 @@ if( APPLE )
    if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
 		CMAKE_SYSTEM MATCHES ^Darwin-11 )
       if( NOT archflag )
-         if( EXISTS /opt/casa/darwin11 )
+         if( EXISTS /opt/casa/01 )
+            set( archflag x86_64 )
+         elseif( EXISTS /opt/casa/darwin11 )
             set( archflag x86_64 )
 	 elseif( EXISTS /opt/casa/darwin10-64b )
             set( archflag x86_64 )
@@ -190,6 +192,7 @@ if( NOT USE_LIBCASACORE )
    endif()
    set( CASACORE_LIBS casa
                       coordinates
+		      components
                       fits
                       images
                       lattices
