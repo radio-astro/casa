@@ -652,16 +652,23 @@ void plotms::setShowGui( bool showGui ){
 	//Set the variable first so we instantiate the script/non-script
 	//client
 	this->showGui = showGui;
+
 	//When app is being launched, showGui determines whether it is
 	//a script client or not.  Afterward, it will just show the GUI
 	//if it has been closed by the user in non-scripting mode.
 	launchApp();
+
+        // Allow the user to switch between script and gui clients;
+        // no state is carried between clients
 	if ( showGui ){
 		//This is needed in the case where the is running plotms
 		//from casapy.  If the user closes plotms, and then calls
 		//the constructor again, plotms will not be shown without
 		//this line.
 		callAsync(PlotMSDBusApp::METHOD_SHOW);
+        }
+        else {
+		callAsync(PlotMSDBusApp::METHOD_HIDE);
 	}
 }
 
