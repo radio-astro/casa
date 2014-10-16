@@ -1,17 +1,20 @@
-import os
-import sys
-import shutil
-from __main__ import default
-from tasks import *
-from taskinit import *
-import unittest
-import sha
-import time
+import itertools
 import numpy
+import os
 import re
+import sha
+import shutil
 import string
+import sys
+import time
+
+from __main__ import default
+from taskinit import *
+from tasks import *
+import unittest
 
 from sdscale import sdscale
+from sdutil import tbmanager
 import asap as sd
 
 #
@@ -674,61 +677,68 @@ class sdscale_testflag(unittest.TestCase,sdscale_unittest_base):
     rawfile='sdscale_flagtest.asap'
     prefix=sdscale_unittest_base.taskname+'TestFlag'
     outfile=prefix+'.asap'
-    flagged_chan_list = [[5,9],[15,19],[94,98]]
-    
+    factor = 2.0
+
     def setUp(self):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-
         default(sdscale)
+        self._getinfo(self.rawfile)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def testflag(self):
-        """Testflag: verify proper handling of flag information"""
-        factor = 2.0
+    def testflag01(self):
+        """Testflag: verify proper handling of flag information for scaletsys=True"""
         scaletsys=True
-        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
-        self.assertEqual(res,None,
-                         msg='Any error occurred during calibration')
+        res=sdscale(infile=self.rawfile,factor=self.factor,scaletsys=scaletsys,outfile=self.outfile)
+        self.assertEqual(res, None, msg='Any error occurred during calibration')
 
-        # check if no changes applied on flag values
-        tb.open(self.outfile)
-        rowflags = tb.getcol('FLAGROW')
-        rowflags_ref = numpy.array([1, 1, 0, 0])
-        self.assertTrue(all(rowflags==rowflags_ref))
-        for i in xrange(tb.nrows()):
-            chanflag = tb.getcell('FLAGTRA', i)
-            chanflag_ref = numpy.zeros(100, numpy.int32)
-            if i in [1, 2]:
-                for j in xrange(len(self.flagged_chan_list)):
-                    idx_start = self.flagged_chan_list[j][0]
-                    idx_end   = self.flagged_chan_list[j][1]+1
-                    for k in xrange(idx_start, idx_end):
-                        chanflag_ref[k] = 128
-            self.assertTrue(all(chanflag==chanflag_ref))
-        tb.close()
+        self._check_flags_no_change()
+        self._check_values(scaletsys)
 
-        #check spectra and tsys values
-        tb.open(self.outfile)
-        for i in xrange(tb.nrows()):
-            spec = tb.getcell('SPECTRA', i)
-            spec_ref = numpy.ones(100, numpy.float)
-            tsys = tb.getcell('TSYS', i)
-            tsys_ref = numpy.ones(100, numpy.float)
-            if rowflags_ref[i] == 0:
-                spec_ref *= factor
-                tsys_ref *= factor
-            self.assertTrue(all(spec==spec_ref))
-            self.assertTrue(all(tsys==tsys_ref))
-        tb.close()
+    def testflag02(self):
+        """Testflag: verify proper handling of flag information for scaletsys=False"""
+        scaletsys=False
+        res=sdscale(infile=self.rawfile,factor=self.factor,scaletsys=scaletsys,outfile=self.outfile)
+        self.assertEqual(res, None, msg='Any error occurred during calibration')
+
+        self._check_flags_no_change()
+        self._check_values(scaletsys)
+
+    def _getinfo(self, infile):
+        with tbmanager(infile) as tb:
+            self.nchan_orig = len(tb.getcell('FLAGTRA', 0))
+            self.rowid_rflag_orig = tb.getcol('FLAGROW')
+            cfraw = tb.getcol('FLAGTRA').sum(axis=0)
+            self.rowid_cflag_orig = [cfraw[i] > 0 for i in xrange(len(cfraw))]
+            self.cflag_orig = tb.getcell('FLAGTRA', numpy.where(self.rowid_cflag_orig)[0][0])
+
+    def _check_flags_no_change(self):
+        """check if no changes applied on flag values"""
+        with tbmanager(self.outfile) as tb:
+            self.assertTrue(all(tb.getcol('FLAGROW')==self.rowid_rflag_orig))
+            for i in xrange(tb.nrows()):
+                chanflag = tb.getcell('FLAGTRA', i)
+                chanflag_ref = self.cflag_orig if self.rowid_cflag_orig[i] else numpy.zeros(self.nchan_orig, numpy.int32)
+                self.assertTrue(all(chanflag==chanflag_ref))
+        
+    def _check_values(self, scaletsys):
+        """check spectra and tsys values"""
+        with tbmanager(self.outfile) as tb:
+            for irow, col in itertools.product(xrange(tb.nrows()), ['SPECTRA', 'TSYS']):
+                data = tb.getcell(col, irow)
+                data_ref = numpy.ones(self.nchan_orig, numpy.float)
+                if self.rowid_rflag_orig[irow] == 0:
+                    if scaletsys or col=='SPECTRA':
+                        data_ref *= self.factor
+                self.assertTrue(all(data==data_ref))
 
 
 def suite():
     return [sdscale_test0,sdscale_test1,
-            sdscale_test2,sdscale_test3,
-            sdscale_test4,sdscale_testflag]
+            sdscale_test2,sdscale_test3,sdscale_test4,
+            sdscale_testflag]
