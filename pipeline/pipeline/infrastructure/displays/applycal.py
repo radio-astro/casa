@@ -34,11 +34,14 @@ class PlotmsLeaf(object):
 
         self._spw = spw
         self._intent = intent
+        
+        print "APPLYCAL SPWS:" + str(spw)
 
         # convert intent to scan selection
         if intent != '':
             domain_fields = self._ms.get_fields(field)
             domain_spws = self._ms.get_spectral_windows(spw)
+            print "DOMAIN SPWS:" + str(domain_spws)
             scans = [s for s in self._ms.get_scans(scan_intent=intent)
                      if s.fields.intersection(domain_fields)
                      and s.spws.intersection(domain_spws)]
@@ -178,6 +181,8 @@ class PlotmsLeaf(object):
                      'showgui'         : False}
 
         task_args.update(**self._plot_args)
+        
+        print "_CREATE_PLOT SPWS:" + task_args['spw']
 
         task = casa_tasks.plotms(**task_args)
         task.execute(dry_run=False)
