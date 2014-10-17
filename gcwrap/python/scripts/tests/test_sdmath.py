@@ -21,6 +21,7 @@ import inspect
 g = sys._getframe(len(inspect.stack())-1).f_globals
 g['__rethrow_casa_exceptions'] = True
 from sdmath import sdmath
+from sdutil import tbmanager
 import asap as sd
 from asap.scantable import is_scantable
 
@@ -1792,23 +1793,15 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
     """
     Examine if flag information is handled properly.
     
-    Data used for this test are sdmath_flagtest[12].asap (input)
-    and sdmath_flagtest.asap.ref (reference data).
-    The reference data are generated using the following expr parameter:
-    expr='IN0+IN1' where IN0 and IN1 are sdmath_flagtest1.asap
-    and sdmath_flagtest2.asap, respectively.
-
+    Data used for this test are sdmath_flagtest[12].asap (input).
     """
     # Input and output names
     infile1='sdmath_flagtest1.asap'
     infile2='sdmath_flagtest2.asap'
     infiles = [infile1, infile2]
-    reffile='sdmath_flagtest.asap.ref'
     prefix=sdmath_unittest_base.taskname+'TestFlag'
     postfix='.math.asap'
 
-    expr = 'IN0+IN1'
-    
     @property
     def task(self):
         return sdmath
@@ -1823,9 +1816,6 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
             shutil.copytree(self.datapath+self.infile1, self.infile1)
         if (not os.path.exists(self.infile2)):
             shutil.copytree(self.datapath+self.infile2, self.infile2)
-        if (not os.path.exists(self.reffile)):
-            shutil.copytree(self.datapath+self.reffile, self.reffile)
-
         default(sdmath)
 
     def tearDown(self):
@@ -1833,49 +1823,72 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
             shutil.rmtree(self.infile1)
         if (os.path.exists(self.infile2)):
             shutil.rmtree(self.infile2)
-        if (os.path.exists(self.reffile)):
-            shutil.rmtree(self.reffile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def _compare( self, name, ref ):
-        self._checkfile( name )
-        # reference data
-        tb.open(ref)
-        nrow0=tb.nrows()
-        rsp=[]
-        rcf=[]
-        for irow in xrange(nrow0):
-            rsp.append(tb.getcell('SPECTRA',irow))
-            rcf.append(tb.getcell('FLAGTRA',irow))
-        rrf=tb.getcol('FLAGROW')
-        tb.close()
-        # check shape
-        tb.open(name)
-        nrow=tb.nrows()
-        self.assertEqual(nrow,nrow0,msg='number of rows mismatch')
-        sp=[]
-        cf=[]
-        for irow in xrange(nrow):
-            sp.append(tb.getcell('SPECTRA',irow))
-            cf.append(tb.getcell('FLAGTRA',irow))
-            self.assertEqual(len(sp[irow]),len(rsp[irow]),
-                             msg='SPECTRA: number of channel mismatch in row%s'%(irow)) 
-            self.assertEqual(len(cf[irow]),len(rcf[irow]),
-                             msg='FLAGTRA: number of channel mismatch in row%s'%(irow)) 
-        rf=tb.getcol('FLAGROW')
-        tb.close()
-
-        for irow in xrange(nrow):
-            self.assertTrue(all(rsp[irow]==sp[irow]))
-            self.assertTrue(all(rcf[irow]==cf[irow]))
-        self.assertTrue(all(rrf==rf))
-
     def testflag00(self):
-        """test flag handling"""
+        """test flag handling in using two scantables"""
+        expr = 'IN0+IN1'
         outname=self.prefix+self.postfix
-        self.res=sdmath(infiles=self.infiles,expr=self.expr,outfile=outname)
+        self.res=sdmath(infiles=self.infiles,expr=expr,outfile=outname)
         self.assertEqual(self.res,None, msg='Any error occurred during calibration')
-        self._compare(outname, self.reffile)
+        self._compare(outname)
+
+    def testflag01(self):
+        """test flag handling in case of a scantable and a scalar"""
+        value = 10.0
+        expr = 'IN0+'+str(value)
+        outname=self.prefix+self.postfix
+        self.res=sdmath(infiles=[self.infile1],expr=expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, value)
+        
+    def testflag02(self):
+        """test flag handling in case of a scantable and an array"""
+        with tbmanager(self.infile1) as tb: nchan = len(tb.getcell('SPECTRA', 0))
+        value = range(nchan)
+        expr = 'IN0+'+str(value)
+        outname=self.prefix+self.postfix
+        self.res=sdmath(infiles=[self.infile1],expr=expr,outfile=outname)
+        self.assertEqual(self.res,None, msg='Any error occurred during calibration')
+        self._compare(outname, value)
+
+    def _compare(self, outfile, value=None):
+        self._checkfile(outfile)
+        
+        # read input and output data
+        infile1 = self.infile1
+        infile2 = self.infile2
+        files = [infile1, outfile]
+        if value is None: files.append(infile2)
+        nrows = {}
+        rflag = {}
+        cflag = {}
+        data  = {}
+        for file in files:
+            with tbmanager(file) as tb:
+                nrows[file] = tb.nrows()
+                rflag[file] = tb.getcol('FLAGROW')
+                cflag[file] = tb.getcol('FLAGTRA')
+                data[file]  = tb.getcol('SPECTRA').transpose()
+        cflag[outfile] /= 128
+
+        # compute reference data
+        if value is None:
+            rflagref = numpy.array(numpy.logical_or(rflag[infile1], rflag[infile2]), dtype='int32')
+            cflagref = numpy.array(numpy.logical_or(cflag[infile1], cflag[infile2]), dtype='int32')
+            dataref  = data[infile1]
+            for i in xrange(nrows[infile1]):
+                if rflagref[i] == 0: dataref[i] += data[infile2][i]
+        else:
+            rflagref = rflag[infile1]
+            cflagref = cflag[infile1]/128
+            dataref  = data[infile1]
+            for i in xrange(nrows[infile1]):
+                if rflagref[i] == 0: dataref[i] += value
+
+        self.assertEqual(nrows[outfile], nrows[infile1])
+        self.assertTrue(all(rflagref == rflag[outfile]))
+        self.assertTrue((cflagref == cflag[outfile]).all())
 
 def suite():
     return [sdmath_test0,sdmath_test1,sdmath_test2,
