@@ -113,11 +113,17 @@ class Fluxdb(basetask.StandardTaskTemplate):
 				row = node.getElementsByTagName('TD')
 				rowdict = {}
 				rowdict['sourcename']      = row[0].childNodes[0].nodeValue
-				rowdict['frequency']       = row[1].childNodes[0].nodeValue
+				rowdict['dbfrequency']     = row[1].childNodes[0].nodeValue
 				rowdict['fluxestimation']  = row[2].childNodes[0].nodeValue
 				rowdict['date']            = row[3].childNodes[0].nodeValue
 				rowdict['uppererror']      = row[4].childNodes[0].nodeValue
 				rowdict['lowererror']      = row[5].childNodes[0].nodeValue
+				
+				rowdict['fieldid']         = str(field.id)
+				rowdict['fieldname']       = field.name
+				rowdict['fieldfluxI']      = str(I)
+				rowdict['frequency']       = str(frequency)
+				
 				fluxtable.append(rowdict)
 		            LOG.info("Successful web service call")
 		            LOG.info(" ")

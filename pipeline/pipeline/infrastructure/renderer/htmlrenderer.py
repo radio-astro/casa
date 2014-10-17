@@ -118,6 +118,9 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hifa.tasks.Linpolcal:
         return 'Linear polarization calibration'
+        
+    if task_cls is hifa.tasks.Fluxdb:
+        return 'Flux calibration database'
 
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
@@ -4769,6 +4772,7 @@ renderer_map = {
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.Gaincal        : T2_4MDetailsGaincalRenderer(),
         hifa.tasks.GcorFluxscale : T2_4MDetailsGFluxscaleRenderer('t2-4m_details-hif_gfluxscale.html'),
+        hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hifa.tasks.TimeGaincal   : T2_4MDetailsGaincalRenderer(),
