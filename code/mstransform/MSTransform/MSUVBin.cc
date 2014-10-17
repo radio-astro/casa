@@ -30,6 +30,8 @@
  *  Created on: Feb 4, 2014
  *      Author: kgolap
  */
+
+//#include <boost/math/special_functions/round.hpp>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
@@ -53,7 +55,7 @@
 #include <imageanalysis/Utilities/SpectralImageUtil.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <wcslib/wcsconfig.h>  /** HAVE_SINCOS **/
-
+#include <math.h>
 #if HAVE_SINCOS
 #define SINCOS(a,s,c) sincos(a,&s,&c)
 #else
@@ -485,7 +487,7 @@ void MSUVBin::locateuvw(Matrix<Int>& locuv, const Vector<Double>& increment,
 	locuv.resize(2, uvw.shape()(1));
 	for (Int k=0; k <uvw.shape()(1); ++k){
 		for(Int j=0; j < 2; ++j)
-			locuv(j,k)=Int(center(j)+uvw(j,k)/increment(j));
+			locuv(j,k)=Int(Double(center(j))+uvw(j,k)/increment(j)+0.5);
 	}
 
 
@@ -768,8 +770,8 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	for (Int k=0; k <nrows; ++k){
 	  for(Int chan=0; chan < vb.nChannels(); ++chan ){
 	    if(chanMap_p(chan) >=0){
-	      locv(chan, k)=Int(ny_p/2+eluvw(1,k)*visFreq(chan)*scale(1));
-	      locu(chan, k)=Int(nx_p/2+eluvw(0,k)*visFreq(chan)*scale(0));
+	      locv(chan, k)=Int(Double(ny_p)/2.0+eluvw(1,k)*visFreq(chan)*scale(1)+0.5);
+	      locu(chan, k)=Int(Double(nx_p)/2.0+eluvw(0,k)*visFreq(chan)*scale(0)+0.5);
 	      Int newrow=locv(chan, k)*nx_p+locu(chan, k);
 	      if(rowToIndex[newrow] <0){ 
 		rowToIndex[newrow]=numUniq;
@@ -901,10 +903,10 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
 	Bool needRot=vbutil_p.rotateUVW(vb, phaseCenter_p, eluvw, phasor);
 	//cerr << "SHAPES " << eluvw.shape() << "    " << vb.uvw().shape() << endl;
 	for (Int k=0; k <nrows; ++k){
-	  locv(k)=Int(ny_p/2+eluvw(1,k)*refFreq*scale(1));
-	      locu(k)=Int(nx_p/2+eluvw(0,k)*refFreq*scale(0));
-	      //cerr << "locu " << locu(k) << " locv " << locv(k) <<  " eluvw " << eluvw(0,k) << "  uvw " << vb.uvw()(0,k) << endl;
-	      if(locu(k) > -1 && locu(k) < nx_p && locv(k)> -1 && locv(k) < ny_p){
+	  locv(k)=Int(Double(ny_p)/2.0+eluvw(1,k)*refFreq*scale(1)+0.5);
+	  locu(k)=Int(Double(nx_p)/2.0+eluvw(0,k)*refFreq*scale(0)+0.5);
+	  //cerr << "locu " << locu(k) << " locv " << locv(k) <<  " eluvw " << eluvw(0,k) << "  uvw " << vb.uvw()(0,k) << endl;
+	  if(locu(k) > -1 && locu(k) < nx_p && locv(k)> -1 && locv(k) < ny_p){
 		Int newrow=locv(k)*nx_p+locu(k);
 		if(rowToIndex[newrow] <0){ 
 		  rowToIndex[newrow]=numUniq;
@@ -1014,9 +1016,9 @@ void MSUVBin::inplaceGridData(const vi::VisBuffer2& vb){
   }
 
 void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
-		Matrix<Float>& wght, Cube<Float>& wghtSpec,
+		Matrix<Float>& /*wght*/, Cube<Float>& wghtSpec,
 		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-		Vector<Int>& ant2, Vector<Double>& timeCen, const Matrix<Int>& locuv){
+		Vector<Int>& ant2, Vector<Double>& timeCen, const Matrix<Int>& /*locuv*/){
 	//all pixel that are touched the flag and flag Row shall be unset and the w be assigned
 		//later we'll deal with multiple w for the same uv
 		//we need polmap and chanmap;
@@ -1027,6 +1029,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
     SpectralCoordinate spec=csys_p.spectralCoordinate(2);
     DirectionCoordinate thedir=csys_p.directionCoordinate(0);
     Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+    //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
     Vector<Float> scale(2);
     scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
     scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
@@ -1039,18 +1042,26 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 		  if(!vb.flagRow()[k]){
 		  Int locu, locv;
 		  {
-		    locv=Int(ny_p/2+vb.uvw()(1,k)*refFreq*scale(1));
-		    locu=Int(nx_p/2+vb.uvw()(0,k)*refFreq*scale(0));
+		    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+		    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
 
 		  }
-
+		  //cerr << "fracbw " << fracbw << " pixel u " << Double(locu-nx_p/2)/refFreq/scale(0) << " data u" << vb.uvw()(0,k) <<
+		//		  " pixel v "<< Double(locv-ny_p/2)/refFreq/scale(1) << " data v "<< vb.uvw()(1,k) << endl;
+		    //Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+		    //Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+		    //Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+		    //Double phaseCorr=((newU-vb.uvw()(0,k))+(newV-vb.uvw()(1,k)))*2.0*C::pi*refFreq/C::c;
+		    //cerr << "fracbw " << fracbw << " pixel u " << Double(locu-nx_p/2)/refFreq/scale(0) << " data u" << vb.uvw()(0,k) <<
+		    //				  " pixel v "<< Double(locv-ny_p/2)/refFreq/scale(1) << " data v "<< vb.uvw()(1,k) << " phase " << phaseCorr << endl;
 		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
 		    if(chanMap_p(chan) >=0){
 		      //Double outChanFreq;
 		      //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
-		      if(fracbw > 0.05){
-			locv=Int(ny_p/2+vb.uvw()(1,k)*visFreq(chan)*scale(1));
-			locu=Int(nx_p/2+vb.uvw()(0,k)*visFreq(chan)*scale(0));
+		      if(fracbw > 0.05)
+		      {
+		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+		    	  locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
 		      }
 		      if(locv < ny_p && locu < nx_p){ 
 				  Int newrow=locv*nx_p+locu;
@@ -1069,8 +1080,14 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 				  }
 				  for(Int pol=0; pol < vb.nCorrelations(); ++pol){
 				    if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0)){
+				  //  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+				 //   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+				 //   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
 				      Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k):
 					vb.visCube()(pol,chan,k)*vb.weight()(pol,k);
+				    //  Double s, c;
+				    //SINCOS(phaseCorr, s, c);
+				    //  toB=toB*Complex(c,s);
 				      grid(polMap_p(pol),chanMap_p(chan), newrow)
 					= (grid(polMap_p(pol),chanMap_p(chan), newrow)*wghtSpec(polMap_p(pol),chanMap_p(chan),newrow)
 					   + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan),newrow));
@@ -1102,7 +1119,7 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 
 Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
-				const Cube<Float>&wghtSpec, const Matrix<Float>& wght,
+				const Cube<Float>&wghtSpec, const Matrix<Float>& /*wght*/,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
 				const Vector<Int>& ant2, const Vector<Double>& timeCen){
 	Bool retval=True;
