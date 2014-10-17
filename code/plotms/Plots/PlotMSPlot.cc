@@ -1312,10 +1312,9 @@ void PlotMSPlot::recalculateIteration( ) {
 		assignCanvases(pages);
 	}
 
-	//Add for CAS-6928.  Hover was not being reset when
+	//Add for CAS-6928/CAS-7014.  Tools were not being reset when
 	//the iteration plot page changed.
-	itsParent_->resetHover();
-
+	itsParent_->resetTools();
 
 	//Put the data into the plot
 	uInt rows = itsPlots_.size();
