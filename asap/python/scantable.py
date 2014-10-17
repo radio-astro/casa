@@ -5052,15 +5052,14 @@ class scantable(Scantable):
         elif isinstance(other, float):
             if other == 0.0:
                 raise ZeroDivisionError("Dividing by zero is not recommended")
-            s = scantable(self._math._unaryop(self, other, mode, False, False))
+            s = scantable(self._math._unaryop(self, other, mode, False, True))
         elif isinstance(other, list) or isinstance(other, numpy.ndarray):
             if isinstance(other[0], list) \
                     or isinstance(other[0], numpy.ndarray):
                 from asapmath import _array2dOp
-                s = _array2dOp( self, other, mode, False )
+                s = _array2dOp(self, other, mode, False)
             else:
-                s = scantable( self._math._arrayop( self, other, 
-                                                    mode, False, False ) )
+                s = scantable(self._math._arrayop(self, other, mode, False, True))
         else:
             raise TypeError("Other input is not a scantable or float value")
         return s

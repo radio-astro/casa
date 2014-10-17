@@ -70,14 +70,14 @@ public:
   ScantableWrapper
     unaryOperate( const ScantableWrapper& in, float val,
                   const std::string& mode, bool tsys=false,
-                  bool skip_flaggedrow=false )
+                  bool skip_flaggedrow=true )
   { return ScantableWrapper(STMath::unaryOperate(in.getCP(), val, mode, tsys, skip_flaggedrow)); }
 
   ScantableWrapper arrayOperate( const ScantableWrapper& in, 
                                  const std::vector<float> val,
                                  const std::string& mode,
                                  bool tsys=false,
-                                 bool skip_flaggedrow=false )
+                                 bool skip_flaggedrow=true )
   { return ScantableWrapper(STMath::arrayOperateChannel(in.getCP(), val, mode, tsys, skip_flaggedrow)); }
 
   ScantableWrapper array2dOperate( const ScantableWrapper& in, 
