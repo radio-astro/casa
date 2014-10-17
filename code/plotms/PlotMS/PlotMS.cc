@@ -270,10 +270,22 @@ bool PlotMSApp::isCommonAxisX() const {
 	return itsPlotter_->isCommonAxisX();
 }
 
-void PlotMSApp::resetHover(){
+void PlotMSApp::resetTools(){
 	if ( guiShown()){
-		CountedPtr<PlotMSAction> hoverAction = ActionFactory::getAction( PlotMSAction::TRACKER_ENABLE_HOVER, itsPlotter_ );
-		hoverAction->doAction( this );
+		// Reset enabled Tool actions across iteration pages
+		PlotMSAction::Type actionType;
+		bool enabled;
+		CountedPtr<PlotMSAction> toolAction;
+		for(int actionInt = PlotMSAction::TOOL_MARK_REGIONS; 
+		    actionInt <=  PlotMSAction::TRACKER_ENABLE_DISPLAY; 
+		    actionInt++) {
+			actionType = static_cast<PlotMSAction::Type>(actionInt); 
+			enabled = itsPlotter_->isActionEnabled(actionType);
+			if (enabled) {
+				toolAction = ActionFactory::getAction( actionType, itsPlotter_ );
+				toolAction->doAction( this );
+			}
+		}
 	}
 }
 

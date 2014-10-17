@@ -312,7 +312,7 @@
      <normaloff>:/actions/images/stack_forward.png</normaloff>:/actions/images/stack_forward.png</iconset>
    </property>
    <property name="text">
-    <string>Stack Foward</string>
+    <string>Stack Forward</string>
    </property>
   </action>
   <action name="actionClearPlots">
