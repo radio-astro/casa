@@ -2186,9 +2186,9 @@ class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
 
 
 def suite():
-    return [#sdimaging_test0,sdimaging_test1,
-            #sdimaging_test2,sdimaging_test3,
-            #sdimaging_autocoord,sdimaging_test_selection,
-            sdimaging_test_flag#,
-            #sdimaging_test_polflag,sdimaging_test_mslist
+    return [sdimaging_test0,sdimaging_test1,
+            sdimaging_test2,sdimaging_test3,
+            sdimaging_autocoord,sdimaging_test_selection,
+            sdimaging_test_flag, 
+            sdimaging_test_polflag,sdimaging_test_mslist
             ]
