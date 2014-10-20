@@ -950,6 +950,8 @@ if ( pcalmodel.has_key(polxfield) ):
         field = polxfield
 
         scalebychan=False
+
+        standard='manual'
         
         for spw in usespwlist:
             fluxdensity = polmodel[field][spw]['flux']
@@ -988,7 +990,7 @@ if ( pcalmodel.has_key(polxfield) ):
     uvrange = polxuvrange
     
     # Solve for Chi
-    poltype = 'X'
+    poltype = 'Xf'
     solint = 86400.
     
     # reference antenna
@@ -996,7 +998,7 @@ if ( pcalmodel.has_key(polxfield) ):
     
     # minimum SNR 3
     minsnr = 3
-    
+
     saveinputs('polcal',prefix+'.polcal.X.saved')
     polcal()
     
