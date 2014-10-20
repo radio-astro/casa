@@ -17,6 +17,7 @@ except:
     import tests.selection_syntax as selection_syntax
 
 from sdimaging import sdimaging
+from sdutil import tbmanager
 import asap as sd
 
 #
@@ -1777,7 +1778,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
        
        - If a channel is flagged, the data of the channel must not be
          added to the output CASA image.
-       - If all channels of a spectrum is flagged (i.e., row-flagged
+       - If all channels of a spectrum are flagged (i.e., row-flagged
          in original Scantable), the whole data of the spectrum must
          not be added to the output CASA image.
        - Flagged channels must not be modified by sdimaging.
@@ -1786,7 +1787,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
        - this data contains 768 spectra covering 32x24 grid-like points 
          with interval of 10^-5 radian (the position of the bottom-right
          corner is (00:00:00.0, 00.00.00.0) in (RA, Dec)). Amongst the
-         spectra, the 32x8 spectra corresponding to the middle 1/3 of
+         spectra, 32x8 spectra corresponding to the middle 1/3 of
          the survey area, all channels are flagged, and for the half of 
          the rest spectra at the smaller side in RA (16x8x2 spectra) are
          flagged at channels 2 to 6 (5 out of 10 channels are flagged).
@@ -1851,7 +1852,8 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
     rawfile='sdimaging_flagtest.ms'
     prefix=sdimaging_unittest_base.taskname+'TestFlag'
     outfile=prefix+sdimaging_unittest_base.postfix
-
+    weightfile = outfile + '.weight'
+    
     gridfunction = "BOX"
     imsize = [32, 24]
     cellarcsec = 2.062648 #= 0.00001*180.0/3.1415926535897932384*3600.0
@@ -1866,50 +1868,109 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
         shutil.copytree(self.datapath+self.rawfile, self.rawfile)
         if os.path.exists(self.outfile):
             shutil.rmtree(self.outfile)
-
         default(sdimaging)
+        with tbmanager(self.rawfile) as tb:
+            self.nchan = len(tb.getcell('DATA', 0)[0])
 
     def tearDown(self):
-        if (os.path.exists(self.rawfile)):
+        if os.path.exists(self.rawfile):
             shutil.rmtree(self.rawfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def testFlag(self):
+    def testFlag01(self):
         """testFlag01: """
         res=sdimaging(infiles=self.rawfile,outfile=self.outfile,gridfunction=self.gridfunction,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,minweight=self.minweight0)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
-        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,10)
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,self.nchan)
+        self._set_data_ranges()
+        self._check_data()
+        self._check_weight()
 
-        val = self._get_refvalues(self.rawfile)
-        self._checkvalue(self.outfile, [0,16], [0,8],   [0,2],  val[0])
-        self._checkvalue(self.outfile, [0,16], [0,8],   [2,7],  0.0)
-        self._checkvalue(self.outfile, [0,16], [0,8],   [7,10], val[0])
-        self._checkvalue(self.outfile, [16,32],[0,8],   [0,10], val[0])
-        self._checkvalue(self.outfile, [0,32], [8,16],  [0,10], 0.0)
-        self._checkvalue(self.outfile, [0,16], [16,24], [0,2],  val[1])
-        self._checkvalue(self.outfile, [0,16], [16,24], [2,7],  0.0)
-        self._checkvalue(self.outfile, [0,16], [16,24], [7,10], val[1])
-        self._checkvalue(self.outfile, [16,32],[16,24], [0,10], val[1])
+    def testFlag02(self):
+        res=sdimaging(infiles=self.rawfile,outfile=self.outfile,width=10,gridfunction=self.gridfunction,cell=self.cell,imsize=self.imsize,phasecenter=self.phasecenter,minweight=self.minweight0)
+        self.assertEqual(res,None,
+                         msg='Any error occurred during imaging')
+        self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
+        self._set_data_ranges(True)
+        self._check_data(True)
+        self._check_weight(True)
+    
+    def _set_data_ranges(self, chanmerge=False):
+        xn = 2
+        xw = self.imsize[0]/xn
+        self.x_range = []
+        for i in xrange(xn):
+            self.x_range.append([xw*i, xw*(i+1)])
+        yn = 3
+        yw = self.imsize[1]/yn
+        self.y_range = []
+        for i in xrange(yn):
+            self.y_range.append([yw*i, yw*(i+1)])
+        self.f_range = [[0,1]] if chanmerge else [[0,2],[2,7],[7,10]]
 
-    def _get_refvalues(self, file):
+    def _check_data(self, chanmerge=False):
+        val = self._get_refvalues(self.rawfile, chanmerge)
+        idx = 0
+        for i in xrange(len(self.x_range)):
+            for j in xrange(len(self.y_range)):
+                for k in xrange(len(self.f_range)):
+                    self._checkvalue(self.outfile, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
+                    idx += 1
+
+    def _check_weight(self, chanmerge=False):
+        val = self._get_refweight(self.weightfile, chanmerge)
+        idx = 0
+        for i in xrange(len(self.x_range)):
+            for j in xrange(len(self.y_range)):
+                for k in xrange(len(self.f_range)):
+                    self._checkvalue(self.weightfile, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
+                    idx += 1
+
+    def _get_refweight(self, file, chanmerge=False):
         res = []
-        tb.open(file)
-        res.append(tb.getcell('DATA', 0)[0][0].real)
-        res.append(tb.getcell('DATA', tb.nrows()-1)[0][0].real)
-        tb.close()
+        with tbmanager(file) as tb:
+            for i in [0, self.imsize[0]/2]:
+                for j in [0, self.imsize[1]/3, self.imsize[1]*2/3]:
+                    k_range = [0] if chanmerge else [0, 5, 9]
+                    for k in k_range:
+                        res.append(tb.getcell('map', 0)[i][j][0][k].real)
+        return res
+            
+    def _get_refvalues(self, file, chanmerge=False):
+        res = []
+        with tbmanager(file) as tb:
+            for i in [self.imsize[0]/2, 0]:
+                for j in [0, self.imsize[1]/3, self.imsize[1]*2/3]:
+                    irow = self.imsize[0]*j+i
+                    if chanmerge:
+                        if (tb.getcell('FLAG', irow)[0]==True).all():
+                            res.append(0.0)
+                        else:
+                            res.append(tb.getcell('DATA', irow)[0][0].real)
+                    else:
+                        if (tb.getcell('FLAG', irow)[0]==True).all():
+                            for k in xrange(3): res.append(0.0)
+                        else:
+                            res.append(tb.getcell('DATA', irow)[0][0].real)
+                            if (tb.getcell('FLAG', irow)[0][5]):
+                                res.append(0.0)
+                            else:
+                                res.append(tb.getcell('DATA', irow)[0][5].real)
+                            res.append(tb.getcell('DATA', irow)[0][9].real)
         return res
 
-    def _checkvalue(self, file, x_range, y_range, f_range, ref_value, tol=1e-5):
-        tb.open(file)
-        val = tb.getcell('map', 0)
-        tb.close()
-        
+    def _checkvalue(self, file, x_range, y_range, f_range, ref_value, chanmerge=False):
+        tol=1e-5
+        with tbmanager(file) as tb:
+            val = tb.getcell('map', 0)
+
         for i in xrange(x_range[0], x_range[1]):
             for j in xrange(y_range[0], y_range[1]):
                 for k in xrange(f_range[0], f_range[1]):
                     diff_value = abs(val[i][j][0][k]-ref_value)
                     self.assertTrue(diff_value < tol)
+
 
 class sdimaging_test_polflag(sdimaging_unittest_base,unittest.TestCase):
     """
@@ -2125,8 +2186,9 @@ class sdimaging_test_mslist(sdimaging_unittest_base,unittest.TestCase):
 
 
 def suite():
-    return [sdimaging_test0,sdimaging_test1,
-            sdimaging_test2,sdimaging_test3,
-            sdimaging_autocoord,sdimaging_test_selection,
-            sdimaging_test_flag,sdimaging_test_polflag,
-            sdimaging_test_mslist]
+    return [#sdimaging_test0,sdimaging_test1,
+            #sdimaging_test2,sdimaging_test3,
+            #sdimaging_autocoord,sdimaging_test_selection,
+            sdimaging_test_flag#,
+            #sdimaging_test_polflag,sdimaging_test_mslist
+            ]
