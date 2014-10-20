@@ -256,12 +256,11 @@ void SolvableVisCal::setApply(const Record& apply) {
   }
 
   // Collect interpolation parameters
-  String fInterpType("linear"); // by default
   if (apply.isDefined("interp")) {
     String interp=apply.asString("interp");
     if (interp.contains(',')) {
       tInterpType()=String(interp.before(','));
-      fInterpType = interp.after(',');
+      fInterpType() = interp.after(',');
     }
     else
       tInterpType()=interp;
@@ -270,6 +269,12 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Protect against non-specific interp
   if (tInterpType()=="")
     tInterpType()="linear";
+  if (fInterpType()=="" && this-freqDepPar()) // only if we are freq-dep
+    fInterpType()="linear";
+
+  // Catch use of deprecated 'aipslin' interpolation
+  if (tInterpType().contains("aips") || fInterpType().contains("aips") )
+    throw(AipsError("The (peculiar) 'aipslin' interpolation type was deprecated in CASA v3.4; use 'linear'."));
 
 
   //  cout << "SVC::setApply(apply) is not yet supporting CalSelection." << endl;
@@ -342,7 +347,7 @@ void SolvableVisCal::setApply(const Record& apply) {
 
   // Make the interpolation engine
   MeasurementSet ms(msName());
-  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,ms,spwMap());
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType(),fieldtype,ms,spwMap());
 
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need
