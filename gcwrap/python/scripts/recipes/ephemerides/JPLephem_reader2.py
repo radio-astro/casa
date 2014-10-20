@@ -157,7 +157,24 @@ def readJPLephem(fmfile,version=''):
 
     # Try opening fmfile now, because otherwise there's no point continuing.
     try:
-        ephem = open(fmfile)
+        ephem = open(fmfile, 'r')
+        print "opened the file=",fmfile
+        lines=ephem.readlines()
+        crCount=0
+        newlines=''
+        newln=''
+        for ln in lines:
+          n = ln.count('\r')
+          if n > 0:
+            newln=ln.replace('\r','\n')
+            crCount+=n
+          newlines += newln
+        if crCount > 0:
+          print "The input file appears to contains the carriage return code, \'^M\', will replace it with \'\\n\'..."
+          ephem.close()
+          ephem = open('temp_ephem_data.txt','w+')
+          ephem.write(newlines)
+        ephem.seek(0)
     except IOError:
         casalog.post("Could not open ephemeris file " + fmfile,
                      priority="SEVERE")
@@ -301,6 +318,9 @@ def readJPLephem(fmfile,version=''):
                             retdict[hk] = matchobj.group(1) # 0 is the whole line
                             break
     ephem.close()
+    # clean up the temp file if exists
+    if os.path.exists('temp_ephem_data.txt'):
+      os.remove('temp_ephem_data.txt')
 
     # If there were errors, provide debugging info.
     if comp_mismatches:
