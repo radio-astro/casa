@@ -36,9 +36,8 @@ namespace LibAIR2 {
 
     // -------------------- Public data ---------------------
 
-    static const double n_bump;
-
-    static const double tau_bump;
+    inline double n_bump( ) const;
+    inline double tau_bump( ) const;
 
     // -------------------- Construction / Destruction ------
 
@@ -70,12 +69,12 @@ namespace LibAIR2 {
 
     virtual double dTdc (size_t ch) const
     {
-      const double invdelta = 0.5/n_bump;
+      const double invdelta = 0.5/n_bump( );
       const double on=am->n;
       
-      am->n=on+n_bump;
+      am->n=on+n_bump( );
       const double fwdval =  eval(ch);
-      am->n=on-n_bump;
+      am->n=on-n_bump( );
       const double backval = eval(ch);
       am->n=on;
       
@@ -84,17 +83,17 @@ namespace LibAIR2 {
 
     void dTdc (std::vector<double> &res) const
     {
-      const double invdelta = 0.5/ n_bump;
+      const double invdelta = 0.5/ n_bump( );
       const size_t nc = mr->nchannels();
       const double on=am->n;
       
       std::vector<double> fwdval(nc);
-      am->n=on+n_bump;
+      am->n=on+n_bump( );
       eval(fwdval);
       
 
       std::vector<double> backval(nc);
-      am->n=on-n_bump;
+      am->n=on-n_bump( );
       eval(backval);
 
       am->n=on;
@@ -183,20 +182,25 @@ namespace LibAIR2 {
 
   }
 
+  template<>   inline double WaterModel<ISingleLayerWater>::tau_bump( ) const { return 0.001; }
+  template<>   inline double WaterModel<ISingleLayerWater>::n_bump( ) const { return 0.001; }
+  template<>   inline double WaterModel<ICloudyWater>::tau_bump( ) const { return 0.001; }
+  template<>   inline double WaterModel<ICloudyWater>::n_bump( ) const { return 0.001; }
+
   template<>   inline 
   void WaterModel<ICloudyWater>::dTdTau (std::vector<double> &res) const
   {
-    const double invdelta = 0.5/ tau_bump;
+    const double invdelta = 0.5/ tau_bump( );
     const size_t nc = mr->nchannels();
     const double on=am->tau183;
     
     std::vector<double> fwdval(nc);
-    am->tau183=on+tau_bump;
+    am->tau183=on+tau_bump( );
     eval(fwdval);
     
     
     std::vector<double> backval(nc);
-    am->tau183=on-tau_bump;
+    am->tau183=on-tau_bump( );
     eval(backval);
     
     am->tau183=on;
