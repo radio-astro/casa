@@ -28,7 +28,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     if gridmode == 'advancedaprojection' and usescratch==False:
         casalog.post('Forcing usescratch=True for new FTMs. This is temporary.', 'WARN')
         usescratch=True
-
+    
     #######################################################################  
     #
     # start of the big cube treatment
@@ -229,6 +229,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
            ((type(imagename) == str) and imagename.isspace())):
             raise Exception, 'Cannot proceed with blank imagename'
 
+        opim=imset.checkimageusage(imagename)
+        if(len(opim) != 0):
+            raise Exception, 'image '+str(opim[0])+' is opened by another process' if(len(opim)==1) else  'images '+str(opim)+' are under use by other processes'
         multifield=False
         if (type(imagename)==list) & (len(imagename) > 1):
             multifield=True

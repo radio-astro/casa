@@ -66,6 +66,30 @@ class cleanhelper:
             spectable=visname+"/"+subtab
         return spectable
 
+    @staticmethod
+    def checkimageusage(imagename=''):
+        """
+        check if images which will be written into is open elsewhere
+        """
+        retval=[]
+        if(imagename=='' or imagename==[]):
+            return retval
+        images=[]
+        if(type(imagename)==str):
+            images=[imagename]
+        elif(type(imagename)==list):
+            images=imagename
+        for ima in images:
+            for postfix in ['.model', '.image', '.residual', '.mask'] :
+                diskim=ima+postfix
+                if(os.path.exists(diskim)):
+                    tb.open(diskim)
+                    if(tb.ismultiused()):
+                        retval.append(diskim)
+                    tb.done()
+        return retval
+                    
+            
     def initsinglems(self, imtool, vis, usescratch):
         """
         initialization for single ms case
