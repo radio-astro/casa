@@ -18,6 +18,10 @@ int BDF2AsdmStManIndex::version() {
   return 1;
 }
 
+BDF2AsdmStManIndex::BDF2AsdmStManIndex() {
+    this->fileAttached = false;
+}
+
 BDF2AsdmStManIndex::BDF2AsdmStManIndex(const vector<string>& bdfNames, bool isBigEndian, const string& fname) {
   LOGENTER("BDF2AsdmStManIndex::BDF2AsdmStManIndex");
   this->numberOfDataDescriptions = numberOfDataDescriptions;
@@ -52,7 +56,48 @@ BDF2AsdmStManIndex::BDF2AsdmStManIndex(const vector<string>& bdfNames, bool isBi
       LOG(oss.str());
     }
   }
+
+  this->fileAttached = true;
   LOGEXIT("BDF2AsdmStManIndex::BDF2AsdmStManIndex");
+}
+
+void BDF2AsdmStManIndex::init(const vector<string>& bdfNames, bool isBigEndian, const string& fname) {
+  LOGENTER("BDF2AsdmStManIndex::init");
+  this->numberOfDataDescriptions = numberOfDataDescriptions;
+  this->bdfNames.resize(bdfNames.size());
+
+  int i = 0;
+  if (getenv("SHOW_ASDMINDEX"))
+    cout << "* isBigEndian = " << isBigEndian << endl;
+
+  BOOST_FOREACH(string bdfName, bdfNames) {
+    if (s2i_m.find(bdfName) == s2i_m.end()) {
+      this->bdfNames[i] = bdfName;
+      s2i_m[bdfName] = i;
+      if (getenv("SHOW_ASDMINDEX"))
+	cout << "* s2i_m[" << bdfName << "] = " << i << endl;
+      i++;	    
+    }
+  }
+
+  // Write the preamble in the AsdmStMan table.
+  aio.open(fname + "asdmindex", ByteIO::New);
+  aio.putstart("AsdmStMan", version());
+  aio << isBigEndian << this->bdfNames;
+
+  // We start with row # 0 in the MS Main table.
+  MSMainRowNumber = 0;
+
+  if (debug) {
+    for (map<string, int>::const_iterator iter = s2i_m.begin(); iter != s2i_m.end(); iter++) {
+      oss.str("");
+      oss << iter->first << "->" << iter->second << endl;
+      LOG(oss.str());
+    }
+  }
+
+  this->fileAttached = true;
+  LOGEXIT("BDF2AsdmStManIndex::init");
 }
 
 BDF2AsdmStManIndex::~BDF2AsdmStManIndex() {
@@ -74,8 +119,12 @@ void BDF2AsdmStManIndex::done(){
   s2i_m.clear();
   autoIndexes_vv.clear();
   crossIndexes_vv.clear();
-  aio.put(allIndexes_v);
-  aio.putend();
+  if (this->fileAttached) {
+    aio.put(allIndexes_v);
+    aio.putend();
+    aio.close();
+    this->fileAttached = false;
+  }
   LOGEXIT("BDF2AsdmStManIndex::done");
 }
 
