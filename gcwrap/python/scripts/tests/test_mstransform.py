@@ -903,9 +903,11 @@ class test_SeparateSPWs(test_base):
     '''Test the nspw parameter to separate spws'''
     def setUp(self):
         self.setUp_4ants()
+        self.tmpms = ""
 
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.tmpms)
         os.system('rm -rf '+ self.outputms)
         os.system('rm -rf list.obs')
 
@@ -1024,7 +1026,23 @@ class test_SeparateSPWs(test_base):
         mytb.close()            
         check_eq(numChan[0], 10)
         check_eq(numChan[1], 10)
-        check_eq(numChan[2], 10)        
+        check_eq(numChan[2], 10)      
+        
+    def test_CAS_6529(self):
+        '''mstransform: Combine all SPWs and then separated them to obtain the original grid'''
+        
+        self.tmpms = "combined.ms"
+        self.outputms = "separated.ms"
+        
+        mstransform(vis=self.vis, outputvis=self.tmpms,combinespws=True,datacolumn = 'data')   
+        mstransform(vis=self.tmpms,outputvis=self.outputms,regridms = True , 
+                    mode = 'channel' , nchan = 64 , nspw = 16, datacolumn='data')
+        
+        listobs_dict = listpartition(self.outputms,createdict=True)
+        spws_scan_30 = listobs_dict[0]['scanId'][30]['spwIds']
+        self.assertEqual(len(spws_scan_30), 16,'Wrong number of SPWs found in scan 30')
+        self.assertEqual(spws_scan_30[0],0,'SPW Id 0 not found in scan 30')
+        self.assertEqual(spws_scan_30[15],15,'SPW Id 15 not found in scan 30')
 
 
 class test_state(test_base):

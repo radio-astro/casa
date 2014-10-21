@@ -4405,7 +4405,7 @@ void MSTransformManager::setupBufferTransformations(vi::VisBuffer2 *vb)
 	// Calculate number of rows to add to the output MS depending on the combination parameters
 	uInt rowsToAdd = 0;
 
-	if (combinespws_p)
+	if ((combinespws_p) or (nspws_p > 1))
 	{
 		// Fill baseline map using as key Ant1,Ant2,Scan and State,
 		// Which are the elements that can be combined in one chunk
@@ -4794,13 +4794,9 @@ Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vecto
 {
 	Bool transformed = True;
 
-	if (combinespws_p)
+	if ((combinespws_p) or (nspws_p > 1))
 	{
-		if (nspws_p <2)
-		{
-			outputVector = ddiStart_p;
-		}
-		else
+		if (nspws_p > 1)
 		{
 			uInt absoluteIndex = 0;
 			for (uInt index=0; index<rowIndex_p.size();index++)
@@ -4811,6 +4807,10 @@ Bool MSTransformManager::transformDDIVector(const Vector<Int> &inputVector,Vecto
 					absoluteIndex += 1;
 				}
 			}
+		}
+		else
+		{
+			outputVector = ddiStart_p;
 		}
 	}
 	else
