@@ -698,12 +698,6 @@ class WvrgCalibrationTable(CalibrationTable):
         super(WvrgCalibrationTable, self).__init__(other)
         self.wvrg_cal()
 
-
-class XYf0CalibrationTable(CalibrationTable):
-    def __init__(self, other=None):
-        super(XYf0CalibrationTable, self).__init__(other)
-        self.xyf0_cal()
-
     
 if __name__ == '__main__':
     l = CASALog()
