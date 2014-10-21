@@ -2333,14 +2333,14 @@ namespace sdmbin {
 
     for(unsigned int n=0; n<v_napc.size(); n++)
       msDataPtr_->v_data[n] = new float[2*msDataPtr_->numData];               // a complex is composed of 2 floats
-    float oneOverSF = 1./scaleFactor;
+    //float oneOverSF = 1./scaleFactor;
     int base = 0;
 
     if(shortDataPtr_){ // case short ints 2 bytes
       for(unsigned int i=0; i<v_napc.size(); i++){
 	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
 	for(int n=0; n<2*msDataPtr_->numData; n++)
-	  msDataPtr_->v_data[i][n] = oneOverSF * (float)shortDataPtr_[base+n];
+	  msDataPtr_->v_data[i][n] = shortDataPtr_[base+n]/scaleFactor; //oneOverSF * (float)shortDataPtr_[base+n];
       }
     }
 
@@ -2348,14 +2348,14 @@ namespace sdmbin {
       for(unsigned int i=0; i<v_napc.size(); i++){
 	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
 	for(int n=0; n<2*msDataPtr_->numData; n++)
-	  msDataPtr_->v_data[i][n] = oneOverSF * (float)longDataPtr_[base+n];
+	  msDataPtr_->v_data[i][n] = longDataPtr_[base+n]/scaleFactor; //oneOverSF * (float)longDataPtr_[base+n];
       }
     }
     else{       // case floats
       for(unsigned int i=0; i<v_napc.size(); i++){
 	base = baselinesSet_->transferId(na1,na2,nfe,ndd,nbin,v_napc[i]);
 	for(int n=0; n<2*msDataPtr_->numData; n++){
-	  msDataPtr_->v_data[i][n] = oneOverSF * floatDataPtr_[base+n];
+	  msDataPtr_->v_data[i][n] = floatDataPtr_[base+n]/scaleFactor; //oneOverSF * floatDataPtr_[base+n];
 	}
       }
     }
@@ -2520,10 +2520,33 @@ namespace sdmbin {
     if(verbose_)cout<<"numApcMax="<<numApcMax<<endl;
 
     multimap<int,unsigned int> mm_dd;
+    if (ddfirst_) {
+      vector<int> ddId_v;
+      vector<int>::iterator ddId_i;
+      int ddIdOld = -1;
+      int ddIndex;
+ 
+      for(unsigned int n=0; n<v_msDataPtr_.size(); n++) {
+	if (v_msDataPtr_[n]->dataDescId != ddIdOld) {
+	  ddIdOld = v_msDataPtr_[n]->dataDescId ;
+	  if ((ddId_i = find(ddId_v.begin(), ddId_v.end(),ddIdOld)) == ddId_v.end()) {
+	    ddId_v.push_back(ddIdOld);
+	    ddIndex = ddId_v.size()-1;
+	  }
+	  else 
+	    ddIndex = ddId_i - ddId_v.begin();
+	}
+	mm_dd.insert(make_pair(ddIndex,n));	  
+      }
+    }
+
+    /*
+    multimap<int,unsigned int> mm_dd;
     if(ddfirst_){
       for(unsigned int n=0; n<v_msDataPtr_.size(); n++)
 	mm_dd.insert(make_pair(v_msDataPtr_[n]->dataDescId,n));
     }
+    */
 
     v_tci_.clear();  
     v_tci_.resize(numRows);
@@ -2707,11 +2730,32 @@ namespace sdmbin {
     if(verbose_)cout<<"numApcMax="<<numApcMax<<endl;
 
     multimap<int,unsigned int> mm_dd;
+    if (ddfirst_) {
+      vector<int> ddId_v;
+      vector<int>::iterator ddId_i;
+      int ddIdOld = -1;
+      int ddIndex;
+ 
+      for(unsigned int n=0; n<v_msDataPtr_.size(); n++) {
+	if (v_msDataPtr_[n]->dataDescId != ddIdOld) {
+	  ddIdOld = v_msDataPtr_[n]->dataDescId ;
+	  if ((ddId_i = find(ddId_v.begin(), ddId_v.end(),ddIdOld)) == ddId_v.end()) {
+	    ddId_v.push_back(ddIdOld);
+	    ddIndex = ddId_v.size()-1;
+	  }
+	  else 
+	    ddIndex = ddId_i - ddId_v.begin();
+	}
+	mm_dd.insert(make_pair(ddIndex,n));	  
+      }
+    }
+/*
+    multimap<int,unsigned int> mm_dd;
     if(ddfirst_){
       for(unsigned int n=0; n<v_msDataPtr_.size(); n++)
 	mm_dd.insert(make_pair(v_msDataPtr_[n]->dataDescId,n));
     }
-
+*/
     v_tci_.clear();  
     v_tci_.resize(numRows);
 
@@ -2818,10 +2862,34 @@ namespace sdmbin {
     if(verbose_)cout<<"numApcMax="<<numApcMax<<endl;
 
     multimap<int,unsigned int> mm_dd;
+    if (ddfirst_) {
+      vector<int> ddId_v;
+      vector<int>::iterator ddId_i;
+      int ddIdOld = -1;
+      int ddIndex;
+ 
+      for(unsigned int n=0; n<v_msDataPtr_.size(); n++) {
+	if (v_msDataPtr_[n]->dataDescId != ddIdOld) {
+	  ddIdOld = v_msDataPtr_[n]->dataDescId ;
+	  if ((ddId_i = find(ddId_v.begin(), ddId_v.end(),ddIdOld)) == ddId_v.end()) {
+	    ddId_v.push_back(ddIdOld);
+	    ddIndex = ddId_v.size()-1;
+	  }
+	  else 
+	    ddIndex = ddId_i - ddId_v.begin();
+	}
+	mm_dd.insert(make_pair(ddIndex,n));	  
+      }
+    }
+
+
+    /*
+    multimap<int,unsigned int> mm_dd;
     if(ddfirst_){
       for(unsigned int n=0; n<v_msDataPtr_.size(); n++)
 	mm_dd.insert(make_pair(v_msDataPtr_[n]->dataDescId,n));
     }
+    */
 
     v_tci_.clear();  
     v_tci_.resize(numRows);
