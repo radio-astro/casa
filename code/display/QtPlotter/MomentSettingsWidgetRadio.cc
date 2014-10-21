@@ -184,8 +184,8 @@ namespace casa {
 				                                  mask, method,
 				                                  smoothaxes, smoothtypes, smoothwidths,
 				                                  includepix,excludepix,
-				                                  peaksnr, stddev, "RADIO", outFile, "", "",
-				                                  1,1,False,False,False);
+				                                  peaksnr, stddev, "RADIO", outFile, "",
+				                                  False,False);
 				if ( newImage != NULL ) {
 					CollapseResult result( outFile, outputFileTemporary, newImage );
 					collapseResults.push_back( result );

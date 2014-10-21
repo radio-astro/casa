@@ -1943,8 +1943,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const Double peaksnr,
 	const Double stddev, const String& velocityType, const String& out,
-	const String& smoothout, const String& pgdevice, const Int nx,
-	const Int ny, const Bool yind, const Bool overwrite,
+	const String& smoothout, const Bool overwrite,
 	const Bool removeAxis, const Bool stretchMask
 ) {
 	_onlyFloat(__func__);
@@ -2058,24 +2057,6 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		// Set output names
 		if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
 			*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-		}
-		// Set plotting attributes
-		PGPlotter plotter;
-		if (!pgdevice.empty()) {
-			//      try {
-			plotter = PGPlotter(pgdevice);
-			//      } catch (AipsError x) {
-			//          *_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-			//          return False;
-			//      }
-			Vector<Int> nxy(2);
-			nxy(0) = nx;
-			nxy(1) = ny;
-			if (nx < 0 || ny < 0)
-				nxy.resize(0);
-			if (!momentMaker.setPlotting(plotter, nxy, yind)) {
-				*_log << momentMaker.errorMessage() << LogIO::EXCEPTION;
-			}
 		}
 		// If no file name given for one moment image, make TempImage.
 		// Else PagedImage results

@@ -224,8 +224,7 @@ class ImageAnalysis
         const Vector<Float>& excludepix,
         const Double peaksnr, const Double stddev,
         const String& doppler = "RADIO",  const String& outfile = "",
-        const String& smoothout="", const String& plotter="/NULL",
-        const Int nx=1, const Int ny=1,  const Bool yind=False,
+        const String& smoothout="",
         const Bool overwrite=False, const Bool drop=True,
         const Bool stretchMask=False
     );

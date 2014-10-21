@@ -51,9 +51,9 @@ ImageStatsCalculator::ImageStatsCalculator(
 		"", maskInp, "", False
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
 	_oldStatsStorageForce(False),
-	_axes(),_plotStats(),
+	_axes(),
 	_includepix(), _excludepix(),
-	_plotter(""), _nx(1), _ny(1), _list(False), _force(False),
+	_list(False), _force(False),
 	_disk(False), _robust(False), _verbose(False) {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
@@ -261,7 +261,6 @@ void ImageStatsCalculator::_reportDetailedStats(
 Record ImageStatsCalculator::statistics(
 	vector<String> *const &messageStore
 ) {
-	String pgdevice("/NULL");
 	LogOrigin myOrigin(_class, __func__);
 	*_getLog() << myOrigin;
 	ImageRegion* pRegionRegion = 0;
@@ -420,25 +419,12 @@ Record ImageStatsCalculator::statistics(
 		*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
 	}
 
-	// What to plot
-	Vector<Int> statsToPlot = LatticeStatsBase::toStatisticTypes(_plotStats);
 	// Recover statistics
 	Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
 	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile;
 	Bool ok = True;
 
 	Bool trobust(_robust);
-	if (!trobust) {
-		for (uInt i = 0; i < statsToPlot.nelements(); i++) {
-			if (
-					statsToPlot(i) == Int(LatticeStatsBase::MEDIAN)
-					|| statsToPlot(i) == Int(LatticeStatsBase::MEDABSDEVMED)
-					|| statsToPlot(i) == Int(LatticeStatsBase::QUARTILE)
-			) {
-				trobust = True;
-			}
-		}
-	}
 	Bool doFlux = True;
 	if (_getImage()->imageInfo().hasMultipleBeams()) {
 		if (cSys.hasSpectralAxis() || cSys.hasPolarizationCoordinate()) {
@@ -517,27 +503,8 @@ Record ImageStatsCalculator::statistics(
 	}
 
 	// Make plots
-	PGPlotter plotter;
-	Vector<Int> nxy(2);
-	if (!pgdevice.empty()) {
-		//      try {
-		plotter = PGPlotter(pgdevice);
-		//      } catch (AipsError x) {
-		//          *_log << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
-		//          return False;
-		//      }
-		nxy(0) = _nx;
-		nxy(1) = _ny;
-		if (_nx < 0 || _ny < 0) {
-			nxy.resize(0);
-		}
 
-		if (!_statistics->setPlotting(plotter, statsToPlot, nxy)) {
-			*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
-		}
-	}
-
-	if (_list || !pgdevice.empty()) {
+	if (_list) {
 		_statistics->showRobust(trobust);
 		if (!_statistics->display()) {
 			*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;

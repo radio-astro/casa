@@ -72,9 +72,6 @@ public:
 
     inline String getClass() const {return _class;}
 
-    // I suspect this is not useful any longer
-    inline void setPlotStats(const Vector<String>& ps) {_plotStats.assign(ps); }
-
     // Set range of pixel values to include in the calculation. Should be a two element
     // Vector
     inline void setIncludePix(const Vector<Float>& inc) {_includepix.assign(inc);}
@@ -82,15 +79,6 @@ public:
     // Set range of pixel values to exclude from the calculation. Should be a two element
     // Vector
     inline void setExcludePix(const Vector<Float>& exc) {_excludepix.assign(exc);}
-
-    // I doubt this is useful any longer
-    inline void setPlotter(const String& p) {_plotter = p;}
-
-    // I doubt this is useful any longer
-    inline void setNXNY(const Int x, const Int y) {
-    	_nx = x;
-    	_ny = y;
-    }
 
     // List stats to logger? If you want no logging you should set this to False in addition to
     // calling setVerbosity()
@@ -134,10 +122,7 @@ private:
     std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
     Bool _oldStatsStorageForce;
     Vector<Int> _axes;
-    Vector<String> _plotStats;
     Vector<Float> _includepix, _excludepix;
-    String _plotter;
-    Int _nx, _ny;
     Bool _list, _force, _disk, _robust, _verbose;
 
     static const String _class;
