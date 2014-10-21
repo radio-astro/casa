@@ -36,6 +36,7 @@ class TsysSummaryChart(object):
                      'interactive' : False,
                      'spw'         : tsys_spw,
                      'showatm'     : True,
+                     'showfdm'     : True,
                      'subplot'     : 11,
                      'figfile'     : figfile}
 
@@ -112,6 +113,7 @@ class TsysPerAntennaChart(object):
                      'spw'         : tsys_spw,
                      'antenna'     : antenna.id,
                      'showatm'     : True,
+                     'showfdm'     : True,
                      'subplot'     : 11,
                      'figfile'     : figfile}
 
