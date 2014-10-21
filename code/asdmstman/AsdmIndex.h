@@ -77,7 +77,7 @@ struct AsdmIndex
   uInt  nBl, nSpw, nChan, nPol;
   uInt  stepBl; // The number of values between two consecutive baselines for the same data description.
   uInt  iSpw;   // The data description index in the sequence of basebands/spectral windows in the BDF.
-  Int64 row;
+  Int64 row;    // The index (0-based) in the MS Main table of the first of the rows associated to this index.
   vector<double> scaleFactors;    //# crossdata scale factor per spw
   Int64 fileOffset;     // The offset from the beginning of the file to the beginning of the block of data
                         // to be read.

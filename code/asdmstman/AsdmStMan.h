@@ -283,6 +283,9 @@ private:
   // </group>
 
 
+  // set transposeBLNum_v
+  void setTransposeBLNum(uInt nBl);
+
   //# Declare member variables.
   // Name of data manager.
   String itsDataManName;
@@ -303,6 +306,9 @@ private:
   vector<char>      itsData;
   vector<AsdmIndex> itsIndex;
   vector<Int64>     itsIndexRows;
+
+  uInt              itsNBl;
+  vector<uInt>      itsTransposeBLNum_v;
 };
 
 
