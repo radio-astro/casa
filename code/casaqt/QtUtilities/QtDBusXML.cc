@@ -206,7 +206,7 @@ void QtDBusXML::elemFromRecord(QDomElement elem, const Record& value) {
             
         case TpDouble:
             entry.setAttribute(XML_RECORD_TYPE, TYPE_DOUBLE);
-            setElemText(entry, QString::number(value.asDouble(i)));
+            setElemText(entry, QString::number(value.asDouble(i),'g',12));
             break;
             
         case TpString:
