@@ -103,10 +103,12 @@ namespace LibAIR2 {
   std::ostream &operator<<(std::ostream &os,
 			   const boost::ptr_list<ALMAResBase> &i)
   {
-    i.begin()->header_inline(os)<<std::endl;
-    BOOST_FOREACH(const ALMAResBase &x, i)
-    {
-      x.str_inline(os)<<std::endl;
+    if(i.size()>0){
+      i.begin()->header_inline(os)<<std::endl;
+      BOOST_FOREACH(const ALMAResBase &x, i)
+      {
+	x.str_inline(os)<<std::endl;
+      }
     }
     return os;
   }
