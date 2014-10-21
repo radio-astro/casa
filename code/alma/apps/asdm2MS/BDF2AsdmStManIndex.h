@@ -28,8 +28,10 @@ extern vector<char> logIndent;
 
 class BDF2AsdmStManIndex {
 public:
+  BDF2AsdmStManIndex();
   BDF2AsdmStManIndex(const std::vector<std::string>& bdfNames, bool isBigEndian, const string& fname);
   virtual ~BDF2AsdmStManIndex();
+  void init (const std::vector<std::string>& bdfNames, bool isBigEndian, const string& fname);
   void setNumberOfDataDescriptions(unsigned int numberOfDataDescriptions);
   void						done();
   void						clearIndexes();
@@ -86,6 +88,7 @@ private:
   std::vector<std::vector<casa::AsdmIndex> >	autoIndexes_vv;
   std::vector<std::vector<casa::AsdmIndex> >	crossIndexes_vv;
   std::vector<casa::AsdmIndex>  allIndexes_v;
+  bool fileAttached;
   casa::AipsIO			aio;
   uint64_t			MSMainRowNumber;
 };
