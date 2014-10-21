@@ -5860,13 +5860,6 @@ and 1) axes.  The shape of each histogram array is then [nbins,nx,ny].
 The form of the retrieved histograms is that specified by the {\stfaf
 cumu} and {\stfaf log} arguments. 
 
-<!--
-The plotting is done directly on a PGPLOT plotting device (function
-is always run synchronously when plotting). 
-The syntax is {\stfaf plotter=name/type}.  For example
-{\stfaf plotter='plot1.ps/ps'} (disk postscript file)
-or {\stfaf plotter='plot1/glish'} (Glish PGplotter). -->
-
 This function generates ``storage'' images, into which the histograms
 and statistics are written.  They are only regenerated when necessary.
 For example, if you run the function twice successively with identical arguments,
@@ -5888,9 +5881,7 @@ ia.histograms()
 ia.close()
 #
 """
- 
-<!-- In this example we plot the histogram of the entire image
-on a PGPLOT X-windows device.-->
+
 In this example we obtain the histogram of the entire image.
 </example>
 
@@ -5914,8 +5905,7 @@ ia.close()
 In this example, let us assume the image has 3 dimensions.  We
 generate cumulative histograms of XZ (axes 0 and 2) planes for pixels
 with values in the range $-0.001$ to $0.001$ and plot them with Gaussian
-overlays as a function of Y-axis location. <!-- on the standard PGPLOT
-X-windows device with 12 plots per page.-->  The histograms are retrieved
+overlays as a function of Y-axis location.  The histograms are retrieved
 into a record {\gvf r['histout']} for further use. <!-- (because
 we are plotting the function is run synchronously).-->
 
@@ -6688,27 +6678,6 @@ ia.close()
      <value></value>
      </param>
   
-     <param type="string"  name="plotter">
-     <description>The PGPLOT device name to make plots on.
-      Default is no plotting.</description>
-     <value></value>
-     </param>
-  
-     <param type="int"  name="nx">
-     <description>The number of subplots per page in the x direction.</description>
-     <value>1</value>
-     </param>
-  
-     <param type="int"  name="ny">
-     <description>The number of subplots per page in the y direction.</description>
-     <value>1</value>
-     </param>
-  
-     <param type="bool"  name="yind">
-     <description>Scale the y axis of the profile plots independently</description>
-     <value>false</value>
-     </param>
-  
      <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
@@ -6923,27 +6892,12 @@ argument in the same way as in the
 <link anchor="images:image.sepconvolve.function">sepconvolve</link> function.  See it for
 details.
 
-<!--
-\item {\stfaf plotter} - The plotting is done directly on a PGPLOT
-plotting device.  The syntax is {\stfaf plotter=name/type}.  For
-example {\stfaf plotter='plot1.ps/ps'} (disk postscript file) or
-{\stfaf plotter='plot/glish'} (\glish\ PGplotter).
-
-Note also that if you specify a plotting device but do not ask for an
-interactive option, then plots will be made showing you the effect of the
-algorithm on each spectrum.  For example, you may have selected the
-automatic windowing method.  If you have specified a plotting device,
-then each spectrum will be plotted and the window marked on each plot. 
--->
-
 \item {\stfaf stddev} - Some of the automatic methods also require an
 estimate of the noise level in the image.  This is used to assess
 whether a spectrum is purely noise or not, and whether there is any
 signal worth digging out.  If you don't give it via the {\stfaf stddev}
 argument, it will be worked out automatically from a Gaussian fit to the
-bins above 25\% from a histogram of the entire image.  <!-- If you have
-specified the plotting device as well, you get the chance to interact
-with this fitting process. -->
+bins above 25\% from a histogram of the entire image.
 
 \item {\stfaf includepix, excludepix} - The vectors given by arguments
 {\stfaf includepix} and {\stfaf excludepix} specify a range of pixel
@@ -7048,11 +7002,7 @@ ia.close()
  
 
 In this example, the median of each spectrum is computed, after pixel
-selection by the automatic window method.  <!-- Each spectrum and the window
-are plotted (25 plots per page) on a PGPLOT X-window device.  Because the
-plotting device is given and we did not give the noise level of the
-image, a histogram of the image is made and fit and we get to
-interactively do the Gaussian fit to the histogram. --> The output 
+selection by the automatic window method. The output 
 image is temporary and accessed via the returned Image tool.
 
 </example>
@@ -9247,17 +9197,6 @@ ib.done()
      <value type="string"/>
      </param>
   
-     <param type="stringArray"  name="plotstats">
-     <description>List of statistics to plot
-     String containing any
-           combination of 'npts', 'sum', 'flux', 'sumsq', 'min', 
-           'max', 'mean', 'sigma' (or 'stddev'), 'rms', 'median',
-           'medabsdevmed', 'quartile'
-     Default is ['mean','sigma'].
-     </description>
-     <value type="vector"></value>
-     </param>
-  
      <param type="doubleArray"  name="includepix">
      <description>Range of pixel values to include.  Vector of 1 or 2 doubles.
      Default is to include all pixels.</description>
@@ -9268,21 +9207,6 @@ ib.done()
      <description>Range of pixel values to exclude.  Vector of 1 or 2 doubles.
      Default is exclude no pixels.</description>
      <value>-1</value>
-     </param>
-  
-     <param type="string"  name="plotter">
-     <description>The PGPLOT device name to make plots on.  Default is no plotting.</description>
-     <value></value>
-     </param>
-  
-     <param type="int"  name="nx">
-     <description>The number of subplots per page in the x direction, \&gt; 0</description>
-     <value>1</value>
-     </param>
-  
-     <param type="int"  name="ny">
-     <description>The number of subplots per page in the y direction, \&gt; 0</description>
-     <value>1</value>
      </param>
   
      <param type="bool"  name="list">
@@ -9462,14 +9386,7 @@ specify a range of pixel values for which pixels are either included or
 excluded.  They are mutually exclusive; you can specify one or the
 other, but not both.  If you only give one value for either of these,
 say {\stfaf includepix=b}, then this is interpreted as {\stfaf
-includepix=[-abs(b),abs(b)]}.  
-
-<!--
-The plotting is done directly on a PGPLOT plotting device.  The syntax
-is {\stfaf plotter=name/type}.  For example {\stfaf
-plotter='plot1.ps/ps'} (disk postscript file) or {\stfaf plotter='plot/glish'}
-(\glish\ pgplotter). 
--->
+includepix=[-abs(b),abs(b)]}. 
 
 This function generates a `storage' lattice, into which the statistics
 are written.  It is only regenerated when necessary.  For example, if
@@ -9537,16 +9454,6 @@ the standard deviation about the mean and the rms of Y (axes 1) for
 pixels with values in the range 0 to 100 as a function of the X-axis
 location.  The statistics are not listed to the logger but are saved
 in the record {\stfaf 'stats'}.
-
-<!--
-In this example, let us assume the image has 3 dimensions.  We plot the
-standard deviation about the mean and the rms of YZ (axes 2 and 3)
-planes for pixels with values in the range 0 to 100 as a function of
-X-axis location on the standard PGPLOT X-windows device.  The statistics
-are not listed to the logger.  Because we are making plots, the tool
-function is automatically run synchronously so we can directly recover
-the the record containing the statistics arrays. 
--->
 
 </example>
 </method> 

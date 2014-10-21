@@ -2961,8 +2961,7 @@ image::moments(
 	const std::vector<double>& d_excludepix, const double peaksnr,
 	const double stddev, const std::string& velocityType,
 	const std::string& out, const std::string& smoothout,
-	const std::string& pgdevice, const int nx, const int ny,
-	const bool yind, const bool overwrite, const bool removeAxis,
+	const bool overwrite, const bool removeAxis,
 	const bool stretch, const bool /* async */
 ) {
 	try {
@@ -3019,7 +3018,7 @@ image::moments(
 				whichmoments, axis,
 				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
 				kernelwidths, includepix, excludepix, peaksnr, stddev,
-				velocityType, out, smoothout, pgdevice, nx, ny, yind,
+				velocityType, out, smoothout,
 				overwrite, removeAxis, stretch
 			)
 		);
@@ -4189,10 +4188,9 @@ bool image::setrestoringbeam(
 
 record* image::statistics(
 	const vector<int>& axes, const variant& region,
-	const variant& mask, const vector<string>& plotstats,
+	const variant& mask,
 	const vector<double>& includepix,
-	const vector<double>& excludepix, const string& plotter,
-	int nx, int ny, bool list, bool force,
+	const vector<double>& excludepix, bool list, bool force,
 	bool disk, bool robust, bool verbose,
 	bool /* async */, bool stretch, const string& logfile,
 	bool append
@@ -4211,12 +4209,6 @@ record* image::statistics(
 		String mtmp = mask.toString();
 		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
-		}
-		Vector<String> plotStats = toVectorString(plotstats);
-		if (plotStats.size() == 0) {
-			plotStats.resize(2);
-			plotStats[0] = "mean";
-			plotStats[1] = "sigma";
 		}
 		Vector<Int> tmpaxes(axes);
 		if (tmpaxes.size() == 1 && tmpaxes[0] == -1) {
@@ -4258,12 +4250,9 @@ record* image::statistics(
 			std::tr1::shared_ptr<Record> regionRec2(_getRegion(region, False));
 			_stats->setRegion(*regionRec2);
 		}
-		_stats->setPlotStats(plotStats);
 		_stats->setAxes(tmpaxes);
 		_stats->setIncludePix(tmpinclude);
-		_stats->setPlotter(plotter);
 		_stats->setExcludePix(tmpexclude);
-		_stats->setNXNY(nx, ny);
 		_stats->setList(list);
 		_stats->setForce(force);
 		_stats->setDisk(disk);
