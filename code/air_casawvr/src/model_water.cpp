@@ -15,15 +15,6 @@ namespace LibAIR2 {
   // like GCC V4.0 has bugs prventing doing that correctly
   // automatically
 
-  template<> const double WaterModel<ISingleLayerWater>::n_bump=0.001;
-  template<> const double WaterModel<ISingleLayerWater>::tau_bump=0.001;
-
-  template<> const double WaterModel<ICloudyWater>::n_bump=0.001;
-  template<> const double WaterModel<ICloudyWater>::tau_bump=0.001;
-
-  
-  
-
 }
 
 
