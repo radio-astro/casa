@@ -238,7 +238,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                else:
                   outparentim=output
                
-
            #print "param checks before branching out for mode=========="
            #print "output=",output, " is exist?=",os.path.isdir(output)
            #print "outparentim=",outparentim, " is exist?=",os.path.isdir(outparentim)
@@ -505,18 +504,28 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		    #print "closing after regrid"
 		    ia.open(tmp_outmaskimage) # reopen output tmp image
                 
+                # for debugging
+                #os.system('cp -r '+outparentim+" expandmode-copy-"+outparentim)
+                #os.system('cp -r '+tmp_outmaskimage+" expandmode-copy-"+tmp_outmaskimage)
 		if outbmask!='':
 		    #convert the image mask to T/F mask
 		    casalog.post("Convert the image mask to T/F mask",'INFO')
-		    #ia.calcmask(mask='%s<0.5' % tmp_outmaskimage,name=outmask,asdefault=True)
-		    #ia.calcmask(mask='%s=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
-                    # regions will be masked if == 0.0
-		    ia.calcmask(mask='%s!=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
-
+                    # regions will be masked if == 0.0 for a new outfile, if outfile exists 
+                    # the pixel values inside specified mask is preserved and the rest is masked
+                    if os.path.isdir(outparentim):
+		      ia.calcmask(mask='%s==1.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
+                    else:
+		      ia.calcmask(mask='%s!=0.0' % tmp_outmaskimage,name=outbmask,asdefault=True)
                 if storeinmask:
+                    isNewFile=False
 		    if not os.path.isdir(outparentim):
                       makeEmptyimage(inpimage,outparentim)
+                      isNewFile=True
                     ia.open(outparentim)
+                    if isNewFile:
+                      ia.set(1) 
+                      # if output image exist its image pixel values will not be normalized the region
+                      # outside input mask will be masked.
                     ia.maskhandler('copy',[tmp_outmaskimage+':'+outbmask, outbmask])
                     ia.maskhandler('set',outbmask)
                     ia.done()
@@ -565,6 +574,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 	if mode=='copy':
 	    sum_tmp_outfile='__tmp_outputmask'
             tmp_inmask='__tmp_frominmask'
+            tmp_allrgmaskim='__tmp_fromAllRgn'
+            tmp_rgmaskim='__tmp_fromRgn'
             usedimfiles=[]
             usedbmasks=[]
             usedrgfiles=[]
@@ -604,7 +615,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		else:
                     #use output image - does not do zeroeing out, so output image is only modified     
 		    shutil.copytree(outparentim,sum_tmp_outfile)
-                    #print "Using outpaarentim=",outparentim, " as sum_tmp_outfile=",sum_tmp_outfile
+                    #print "Using outparentim=",outparentim, " as sum_tmp_outfile=",sum_tmp_outfile
      
                 #if type(inpimage)==str:
                 #    inpimage=[inpimage]
@@ -656,8 +667,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                       
 
                 if len(rgfiles)>0 or len(rglist)>0:
-                    tmp_allrgmaskim='__tmp_fromAllRgn'
-                    tmp_rgmaskim='__tmp_fromRgn'
                     # create an empty image with input image coords.
                     #print "Using %s as a template for regions" % inpimage 
                     ia.open(inpimage)
@@ -739,20 +748,25 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		if outbmask!='':
                     casalog.post('Putting mask in T/F','INFO')
 		    ia.open(sum_tmp_outfile)
-		    #ia.calcmask(mask='%s<0.5' % sum_tmp_outfile,name=outmask,asdefault=True)
-                    # mask only pixel != 0.0 
-		    #ia.calcmask(mask='%s==0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
-                    # mask only pixel == 0.0 
-		    ia.calcmask(mask='%s!=0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+                    # mask only pixel == 0.0 (for a new outfile), mask region !=1.0 and preserve
+                    # the pixel values if outfile exists
+                    if os.path.isdir(outparentim):
+		      ia.calcmask(mask='%s==1.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+                    else:
+		      ia.calcmask(mask='%s!=0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
 		    ia.done()
 	        # if outfile exists initially outfile is copied to sum_tmp_outfile
 		# if outfile does not exist initially sum_tmp_outfile is a copy of inpimage
 		# so rename it with overwrite=T all the cases
                 #print "open sum_tmp_outfile=",sum_tmp_outfile
                 if storeinmask:
+                    isNewfile = False
 		    if not os.path.isdir(outparentim):
                       makeEmptyimage(inpimage,outparentim)
+                      isNewfile=True
                     ia.open(outparentim)
+                    if isNewfile: 
+                      ia.set(1)
                     ia.maskhandler('copy',[sum_tmp_outfile+':'+outbmask, outbmask])    
                     ia.maskhandler('set',outbmask)
                     ia.done()
