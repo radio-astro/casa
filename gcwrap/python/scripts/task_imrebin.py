@@ -28,12 +28,15 @@ def imrebin(
         if (len(outfile) == 0):
             raise Exception, "outfile must be specified."
         if (type(region) != type({})):
-            region = rg.frombcs(
+            myrg = rgtool()
+            reg = myrg.frombcs(
                 csys=myia.coordsys().torecord(), shape=myia.shape(), box=box,
                 chans=chans, stokes=stokes, stokescontrol="a", region=region
             )
+        else:
+            reg = region
         outia = myia.rebin(
-            outfile=outfile, bin=factor, region=region, mask=mask, dropdeg=dropdeg,
+            outfile=outfile, bin=factor, region=reg, mask=mask, dropdeg=dropdeg,
             overwrite=overwrite, stretch=stretch, crop=crop
         )
         return True
@@ -45,4 +48,6 @@ def imrebin(
             myia.done()
         if outia:
             outia.done()
-        
+        if myrg:
+            myrg.done()
+                

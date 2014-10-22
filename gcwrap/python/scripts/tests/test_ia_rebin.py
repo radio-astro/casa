@@ -253,6 +253,39 @@ class ia_rebin_test(unittest.TestCase):
         zz.open(outfile)
         self.assertTrue((zz.shape() == [7,7,7]).all())
         zz.done()
-            
+
+    def test_dropdeg(self):
+        """Test dropdeg parameter"""
+        myia = self._myia
+        imagename = "kjfasd.im"
+        myia.fromshape(imagename, [20, 20, 1])
+        factor = [5,5]
+        zz = myia.rebin("", bin=factor, dropdeg=True)
+        myia.done()
+        self.assertTrue((zz.shape() == [4,4]).all())
+        zz.done()
+        outfile = "dkfajfas.im"
+        imrebin(imagename=imagename, outfile=outfile, factor=factor, dropdeg=True)
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [4,4]).all())
+        myia.done()
+   
+    def test_box(self):
+        """Test use of box"""
+        myia = self._myia
+        imagename = "erzvd.im"
+        myia.fromshape(imagename, [30, 30, 1])
+        factor = [5,5]
+        zz = myia.rebin("", bin=factor, region=rg.box([5,5,0],[25,25,0]),crop=True)
+        myia.done()
+        print "*** shape ",zz.shape()
+        self.assertTrue((zz.shape() == [4,4,1]).all())
+        zz.done()
+        outfile = "vcsfea.im"
+        imrebin(imagename=imagename, outfile=outfile, factor=factor, box="5,5,25,25",crop=True)
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [4,4,1]).all())
+        myia.done()
+ 
 def suite():
     return [ia_rebin_test]
