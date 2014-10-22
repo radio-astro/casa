@@ -11,7 +11,9 @@ template<class T> ImageRebinner<T>::ImageRebinner(
 		image, "", region, "", "", "",
 		maskInp, outname, overwrite
 	),
-	_factors(), _crop(False) {}
+	_factors(), _crop(False) {
+        this->_construct();
+    }
 
 template<class T> void ImageRebinner<T>::setFactors(const Vector<Int>& f) {
 	ThrowIf(
@@ -56,18 +58,33 @@ template<class T> void ImageRebinner<T>::setFactors(const Vector<Int>& f) {
 
 template<class T> SPIIT ImageRebinner<T>::rebin() const {
 	ThrowIf(_factors.empty(), "Logic Error: factors have not been set");
-	IPosition myFactors = _factors;
-	if (this->_getDropDegen()) {
-		uInt ndim = this->_getImage()->ndim();
-		IPosition shape = this->_getImage()->shape();
-		vector<uInt> fac;
-		for (Int i=ndim-1; i>=0; i--) {
-			if (shape[i] == 1) {
-				myFactors.removeAxes(IPosition(1, i));
-			}
-		}
-	}
-	SPIIT subImage(
+    SPCIIT image = this->_getImage();
+    uInt ndim = image->ndim();
+    ThrowIf(
+        ndim != _factors.size(),
+        "You have provided " + String::toString(_factors.size())
+        + " factors. You must provide exactly " + String::toString(ndim)
+        + (
+            this->_getDropDegen()
+                ? ". If you wish to drop degenerate axes, specify binning factors of 1 for them"
+                : ""
+        )
+    );
+    IPosition myFactors;
+    if (this->_getDropDegen()) {
+        IPosition shape = image->shape();
+        IPosition degenAxes;
+        for (uInt i=0; i<ndim; i++) {
+            if (shape[i] == 1) {
+                degenAxes.append(IPosition(1, i));
+            }
+        }
+        myFactors = _factors.removeAxes(degenAxes);
+    }
+    else { 
+        myFactors = _factors;
+    }
+    SPIIT subImage(
 		SubImageFactory<T>::createImage(
 			*this->_getImage(), "", *this->_getRegion(),
 			this->_getMask(), this->_getDropDegen(),
@@ -75,7 +92,7 @@ template<class T> SPIIT ImageRebinner<T>::rebin() const {
 		)
 	);
 	if (_crop) {
-		uInt ndim = subImage->ndim();
+        ndim = subImage->ndim();
 		IPosition shape = subImage->shape();
 		IPosition trc = shape - 1;
 		Vector<Int> mods(ndim);
