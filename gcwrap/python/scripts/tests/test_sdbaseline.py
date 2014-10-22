@@ -12,6 +12,7 @@ from numpy import array
 
 import asap as sd
 from sdbaseline import sdbaseline
+from sdutil import tbmanager
 from sdstatold import sdstatold
 
 try:
@@ -1992,10 +1993,11 @@ class sdbaseline_selection_syntax(selection_syntax.SelectionSyntaxTest):
 
         self.__exec_simple_test('pol', pol, pollist, 'POLNO', expected_nrow)
 
-class sdbaseline_flagTest( unittest.TestCase ):
+class sdbaseline_flagTest(sdbaseline_unittest_base, unittest.TestCase):
     """
     Unit tests for task sdbaseline. No interactive testing.
-    This test is to verify the proper flag handling in sdbaseline that
+    This test sees if flag information is properly handled in sdbaseline.
+    Sdbaseline should run with flagged data as the following manner:
        (1) for row-flagged spectra, neither fitting nor subtraction should be executed.
        (2) if a channel is flagged, it will not be used for baseline calculation,
            but the baseline subtraction at the channel should be made.
@@ -2011,36 +2013,76 @@ class sdbaseline_flagTest( unittest.TestCase ):
     testFlagSinusoid01 --- test sinusoidal fitting with maskmode = 'list'
     testFlagSinusoid02 --- test sinusoidal fitting with maskmode = 'auto'
 
-    Note: the rms noise of input data for the tests *02 is 1.0.
+    The test data:
+    sdbaseline_flagtest_const.asap -- spectra has 1 at all channels except for
+        channel-flagged areas
+    sdbaseline_flagtest_gauss.asap -- four spectra have the same feature with
+        mean and sigma of 1 and 0.1, respectively.
+    sdbaseline_flagtest_gauss_withplateauxonmask.asap -- same spectra as
+        sdbaseline_flagtest_gauss.asap, plus big values (100) at all flagged channels.
+    sdbaseline_flagtest_gauss_withspikesonmask.asap -- same spectra as
+        sdbaseline_flagtest_gauss.asap, plus huge values (10000) at the channels
+        2, 42, 82, and 97.
     """
+    ###
+    # the obsolete data sdbaseline_flagtest_with[out]noise.asap will be deleted.
+    # after the release of CASA-4.3 (2014/10/21 WK)
+    ###
+    
     tol01 = 1.0e-6
-    tol02 = 1.0 # large value owing to uncertainty in linefinder results and
+    tol02 = 1.5 # large value owing to uncertainty in linefinder results and
                 # to small channel numbers. enough for this testing.
     # Data path of input/output
     datapath = os.environ.get('CASAPATH').split()[0] + \
               '/data/regression/unittest/sdbaseline/'    
     # Input and output names
-    infile_01 = 'sdbaseline_flagtest_withoutnoise.asap'
-    infile_02 = 'sdbaseline_flagtest_withnoise.asap'
+    infile_01    = 'sdbaseline_flagtest_const.asap'
+    infile_02pla = 'sdbaseline_flagtest_gauss_plateauxonmask.asap'
+    infile_02    = 'sdbaseline_flagtest_gauss.asap'
+    infile_02spk = 'sdbaseline_flagtest_gauss_spikesonmask.asap'
+    infile_02int = 'sdbaseline_flagtest_gauss_interponmask.asap'
     outroot = 'sdbaseline_test'
     tid = None
+    alim = 1
 
     def setUp( self ):
-        if os.path.exists(self.infile_01):
-            shutil.rmtree(self.infile_01)
-        shutil.copytree(self.datapath+self.infile_01, self.infile_01)
-        if os.path.exists(self.infile_02):
-            shutil.rmtree(self.infile_02)
-        shutil.copytree(self.datapath+self.infile_02, self.infile_02)
-
+        for f in [self.infile_01, self.infile_02, self.infile_02pla, self.infile_02spk, self.infile_02int]:
+            if os.path.exists(f): shutil.rmtree(f)
+            shutil.copytree(self.datapath+f, f)
         default(sdbaseline)
 
     def tearDown( self ):
-        if os.path.exists(self.infile_01):
-            shutil.rmtree(self.infile_01)
-        if os.path.exists(self.infile_02):
-            shutil.rmtree(self.infile_02)
+        for f in [self.infile_01, self.infile_02, self.infile_02pla, self.infile_02spk, self.infile_02int]:
+            if os.path.exists(f): shutil.rmtree(f)
         os.system('rm -rf '+self.outroot+'*')
+
+    def testFlagFFT(self):
+        """
+        check if FFT used in sinusoidal baselining properly handles flag info
+        
+        checking is done by comparing the baseline fitting results from two
+        input data, defined as 'infile_spk' and 'infile_int'. 'infile_spk'
+        has six spiky features in its spectra at ch 2,22,42,62,82,and 97 and
+        channels around these spikes (namely, 0-4,20-24,40-44,60-64,80-84,
+        and 95-99) are flagged, while the other one 'infile_int' has
+        interpolated (as Scantable::execFFT() does) values at channels which
+        are flagged in 'infile_spk' and no channel is flagged. If FFT
+        properly handles flagged data, the resulting fitting coefficients of
+        the above two data should be very close (may not exactly identical
+        though, since some channels are flagged in 'infile_spk' but not in
+        'infile_int'), otherwise, there will be a big difference in the
+        resulting coefficients.
+        """
+
+        mode = "list"
+        infile_spk = self.infile_02spk
+        outfile_spk = "sdbaseline_flagFFT_spk.asap"
+        result = sdbaseline(infile=infile_spk,maskmode=mode,outfile=outfile_spk,blfunc='sinusoid',fftthresh='top3')
+        infile_int = self.infile_02int
+        outfile_int = "sdbaseline_flagFFT_int.asap"
+        result = sdbaseline(infile=infile_int,maskmode=mode,outfile=outfile_int,blfunc='sinusoid',fftthresh='top3')
+        bsuffix = "_blparam.txt"
+        self._compareCoefficients(outfile_spk+bsuffix, outfile_int+bsuffix)
 
     def testFlagPoly01( self ):
         """Test FlagPoly01: Polynomial fitting with maskmode = 'list'"""
@@ -2056,11 +2098,11 @@ class sdbaseline_flagTest( unittest.TestCase ):
     def testFlagPoly02( self ):
         """Test FlagPoly02: Polynomial fitting with maskmode = 'auto'"""
         self.tid = "FlagPoly02"
-        infile = self.infile_02
+        infile = self.infile_02pla
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='poly',order=0)
+        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='poly',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2078,11 +2120,11 @@ class sdbaseline_flagTest( unittest.TestCase ):
     def testFlagCheby02( self ):
         """Test FlagCheby02: Chebyshev Polynomial fitting with maskmode = 'auto'"""
         self.tid = "FlagCheby02"
-        infile = self.infile_02
+        infile = self.infile_02pla
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='chebyshev',order=0)
+        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='chebyshev',order=0)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2100,11 +2142,11 @@ class sdbaseline_flagTest( unittest.TestCase ):
     def testFlagCSpline02( self ):
         """Test FlagCSpline02: Cubic spline fitting with maskmode = 'auto'"""
         self.tid = "FlagCSpline02"
-        infile = self.infile_02
+        infile = self.infile_02pla
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=1)
+        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='cspline',npiece=1)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
@@ -2122,27 +2164,58 @@ class sdbaseline_flagTest( unittest.TestCase ):
     def testFlagSinusoid02( self ):
         """Test FlagSinusoid02: Sinusoidal Polynomial fitting with maskmode = 'auto'"""
         self.tid = "FlagSinusoid02"
-        infile = self.infile_02
+        infile = self.infile_02pla
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         
-        result = sdbaseline(infile=infile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
+        result = sdbaseline(infile=infile,maskmode=mode,avg_limit=self.alim,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         self._checkResult(infile, outfile, self.tol02)
 
+    def _compareCoefficients( self, out, reference ):
+        # test if baseline parameters are equal to the reference values
+        # currently comparing every lines in the files
+        # TO DO: compare only "Fitter range" and "Baseline parameters"
+        self._checkfile(out)
+        self._checkfile(reference)
+        
+        blparse_out = BlparamFileParser( out )
+        blparse_out.parse()
+        coeffs_out = blparse_out.coeff()
+        blparse_ref = BlparamFileParser( reference )
+        blparse_ref.parse()
+        coeffs_ref = blparse_ref.coeff()
+        allowdiff = 0.02
+        print 'Check baseline parameters:'
+        for irow in xrange(len(blparse_out.rms())):
+            print 'Row %s:'%(irow)
+            print '   Reference coeffs  = %s'%(coeffs_ref[irow])
+            print '   Calculated coeffs = %s'%(coeffs_out[irow])
+            c0 = coeffs_ref[irow]
+            c1 = coeffs_out[irow]
+            for ic in xrange(len(c1)):
+                rdiff = ( c1[ic] - c0[ic] ) / c0[ic]
+                self.assertTrue((abs(c0[ic])<0.05) or (abs(rdiff)<allowdiff),
+                                msg='row %s: coefficient for order %s is different'%(irow,ic))
+        print ''
+
     def _checkResult(self, infile, outfile, tol):
-        tb.open(infile)
-        inspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
-        inchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
-        inrowf = tb.getcol('FLAGROW')
-        tb.close()
+        with tbmanager(infile) as tb:
+            inspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
+            inchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
+            inrowf = tb.getcol('FLAGROW')
 
-        tb.open(outfile)
-        outspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
-        outchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
-        outrowf = tb.getcol('FLAGROW')
-        tb.close()
+        with tbmanager(outfile) as tb:
+            outspec = [tb.getcell('SPECTRA', 0), tb.getcell('SPECTRA', 1), tb.getcell('SPECTRA', 2)]
+            outchnf = [tb.getcell('FLAGTRA', 0), tb.getcell('FLAGTRA', 1), tb.getcell('FLAGTRA', 2)]
+            outrowf = tb.getcol('FLAGROW')
 
+        #check shape consistency
+        for i in xrange(3):
+            self.assertTrue(inspec[i].shape[0] == outspec[i].shape[0])
+            self.assertTrue(inchnf[i].shape[0] == outchnf[i].shape[0])
+        self.assertTrue(inrowf.shape[0] == outrowf.shape[0])
+        
         #check if the values of row-flagged spectra are not changed
         for i in xrange(2):
             self.assertTrue(all(inspec[i]==outspec[i]))
@@ -2152,10 +2225,10 @@ class sdbaseline_flagTest( unittest.TestCase ):
         #  if the difference values between the input and output spectra
         #  (input-output) are almost 1.0 (for tests *01) or distribute around
         #  1.0 (for tests *02), it can be recognised that both of the above
-        # requirements are satisfied. actually, the mean of the (input-output)
-        # values is examined if it is close enough to 1.0.
+        # requirements are satisfied. 
         #print '***************'+str(abs((inspec[2]-outspec[2]).mean()-1.0))
-        self.assertTrue(abs((inspec[2]-outspec[2]).mean()-1.0) < tol)
+        #self.assertTrue(abs((inspec[2]-outspec[2]).mean()-1.0) < tol)
+        self.assertTrue((abs((inspec[2]-outspec[2])-1.0) < tol).all())
         
         #check if flag values are not changed in the output file.
         for i in xrange(len(inchnf)):
