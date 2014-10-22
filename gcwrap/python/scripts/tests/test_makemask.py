@@ -130,8 +130,8 @@ class test_copy(makemaskTestBase):
         self.assertTrue(os.path.exists(self.outimage3))
 
     def test5_copyimagemask(self):
-        """ (copy mode) testcopy5: copying a region txt to a new image whose coordinates and shape is defined by inpimage and store the  mask as an in-image(T/F) mask """
-        # expected behavior: create an new image with name defined in self.outimage3, the input region will be translated as a good/valid region
+        """ (copy mode) testcopy5: copying a region txt to a new image whose coordinates and shape is defined by inpimage and store the mask as an in-image(T/F) mask """
+        # expected behavior: create an new image with name defined in self.outimage3, the input region will be translated as a good/valid region = pix value of 1
         # so in output image, all outside the ellipse will be masked as defined in newmask.
         try:
             makemask(mode='copy',inpimage=self.inimage2,inpmask='ellipse [[13:30:15.79110, +030.13.51.8986], [340.4877arcsec, 299.4327arcsec], 0.00000000deg]', output=self.outimage3+':newmask')
@@ -144,7 +144,8 @@ class test_copy(makemaskTestBase):
           ia.open(self.outimage3)
           outmask = ia.maskhandler('get')
           self.assertTrue(outmask[0]=='newmask')
-
+          stats=ia.statistics()
+          self.assertTrue(stats['max'][0]==1. and stats['min'][0]==1.)
 
     def test6_copyimagemask(self):
         """ (copy mode) testcopy6: copying an internal mask to a new image mask with different coordinates(regrid)""" 
