@@ -17,7 +17,7 @@ LOG = logging.get_logger(__name__)
 class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='gfluxscale.mako', 
                  description='Transfer fluxscale from amplitude calibrator',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsGFluxscaleRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
                                                           
