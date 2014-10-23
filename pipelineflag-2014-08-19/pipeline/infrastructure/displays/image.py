@@ -43,13 +43,12 @@ flag_color = {'outlier': 'red',
 class ImageDisplay(object):
 
     def plot(self, context, results, reportdir, prefix='',
-      change='Flagging'):
+      change='Flagging', dpi=None):
 
         if not results:
             return []
 
         stagenumber = context.stage
-
         plots = []        
 
         vis = results.vis
@@ -82,6 +81,8 @@ class ImageDisplay(object):
             if os.path.exists(plotfile):
                 LOG.trace('Not overwriting existing image at %s' % plotfile)
                 continue
+
+            plt.figure(num=1)
             
             if len(flagcmds) > 0:
                 nsubplots = 3
@@ -164,7 +165,7 @@ class ImageDisplay(object):
 
             # save the image (remove odd characters from filename to cut
             # down length)
-            plt.savefig(plotfile)
+            plt.savefig(plotfile, dpi=dpi)
             plt.clf()
             plt.close(1)
 
@@ -257,15 +258,34 @@ class ImageDisplay(object):
         # matplotlib
         plt.subplot(1, nplots, plotnumber)
 
+        # look out for yaxis values that would trip up matplotlib
         if isinstance(ydata[0], types.StringType):
-            ydata_numeric = np.arange(len(ydata))
+            if re.match('\d+&\d+', ydata[0]):
+                # baseline - replace & by . and convert to float
+                ydata_numeric = []
+                for b in ydata:
+                    ydata_numeric.append(float(b.replace('&', '.')))
+                ydata_numeric = np.array(ydata_numeric)
+                majorFormatter = ticker.FormatStrFormatter('%05.2f')
+                plt.gca().yaxis.set_major_formatter(majorFormatter)
+            else:
+                # any other string just replace by index
+                ydata_numeric = np.arange(len(ydata))
         else:
             ydata_numeric = ydata
+
+        # only plot y tick labels on first panel to avoid collision
+        # between y tick labels for second panel with greyscale for
+        # first
+        if plotnumber > 1:
+            plt.gca().yaxis.set_major_formatter(ticker.NullFormatter())
+
         if ydata_numeric[0]==ydata_numeric[-1]:
             # sometimes causes empty plots if min==max
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
         else:
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
+
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
           vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect,
           extent=extent)
@@ -282,6 +302,9 @@ class ImageDisplay(object):
             plt.ylabel(ytitle, size=15)
         for label in plt.gca().get_yticklabels():
             label.set_fontsize(10)
+
+        # rotate x tick labels to avoid them clashing
+        plt.xticks(rotation=35)
 
         # plot wedge, make tick numbers smaller, label with units
         if vmin==vmax:
