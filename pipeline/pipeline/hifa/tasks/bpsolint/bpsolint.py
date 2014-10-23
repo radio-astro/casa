@@ -1,13 +1,18 @@
 from __future__ import absolute_import
 
+import os
 import sys
 import string
 import types
 import collections
+import numpy as np
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -169,6 +174,19 @@ class BpSolint(basetask.StandardTaskTemplate):
 	if not tsysdict:
 	    LOG.info('No tsys spw for MS %s' % inputs.ms.basename)
 	    return result
+	print 'Tsys Dictionary'
+	print tsysdict
+
+	# Compute the median temperatures
+	for spw in spwlist:
+	    if not tsysdict.has_key(spw):
+	        continue
+            tsystempdict = self._get_mediantemp (inputs.ms,
+	        tsysdict[spw]['tsysspw'], tsysdict[spw]['scan'],
+		antenna='', temptype='tsys')
+	    if not tsystempdict:
+	        continue
+	    tsysdict[spw]['mediantsys'] = tsystempdict[spw]
 	print 'Tsys Dictionary'
 	print tsysdict
 
@@ -340,6 +358,125 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    nflagged_antennas.append(0)
 
 	return scanlist, nunflagged_antennas, nflagged_antennas 
+
+    
+    # Get median temperatures
+    def _get_mediantemp (self, ms, spwlist, scan, antenna='', temptype='tsys'):
+    
+        """
+        Compute median temperatures for either the Tsys, Trx or Tsky from the
+        SYSCAL table of the specified ms for a specified spw list and scan
+        combination.
+    
+        Inputs:
+           ms: pipeline measurement set object
+           spw: the list of spw ids as integers
+           scan: the scan number as a single integer greater than 0
+           antenna: '' for all antennas or a single antenna id or name
+           temptype: The temperature type 'tsys' (default), 'trx' or 'tsky'
+    
+        Returns:
+           The median temperature for the specified spwlist / scan combinations
+
+        """
+    
+        # Initialize
+        mediantemps = {}
+    
+        # Temperature type must be one of 'tsys' or 'trx' or 'tsky'
+        temptype = temptype.lower()
+        if (temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky'):
+            return mediantemps
+    
+        # Get a list of unique antenna ids.
+        if antenna == '':
+            uniqueAntennaIds = [a.id for a in ms.get_antenna()]
+        else:
+            uniqueAntennaIds = [ms.get_antenna(search_term=antenna)[0].id]
+    
+        # Get the requested scan and returns its id and begin and end times.
+        reqscan = ms.get_scans(scan_id=scan)
+        if not reqscan:
+            LOG.info ("Requested scan %d not found" % scan)
+            return mediantemps
+        begintime = reqscan[0].start_time
+        endtime = reqscan[0].end_time
+        reqscan = reqscan[0].id
+    
+        # Get the syscal table meta data.
+        #    Create a dummy scans column and populate it with zero.
+        with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
+
+            tsys_antennas = table.getcol('ANTENNA_ID')
+            if (len(tsys_antennas) < 1):
+                LOG.info("The SYSCAL table is blank")
+                return mediantemps
+
+            # get columns and tools needed to create tsys times
+            time_colkeywords = table.getcolkeywords('TIME')
+            time_unit = time_colkeywords['QuantumUnits'][0]
+            time_ref = time_colkeywords['MEASINFO']['Ref']
+            mt = casatools.measures
+            qt = casatools.quanta
+
+            tsys_times = table.getcol('TIME')
+            tsys_scans = np.zeros(len(tsys_times), dtype=np.int32)
+            nmatch = 0
+            for i in range(len(tsys_times)):
+                #tsys_times[i] = mt.epoch(time_ref,
+		    #qt.quantity(tsys_times[i], time_unit))
+                tt = mt.epoch(time_ref, qt.quantity(tsys_times[i], time_unit))
+
+	        print 'row time %s %s %s' % (tt, begintime, endtime)
+                if tt >= begintime and tt <= endtime:
+    	            tsys_scans[i] = scan
+    	            nmatch = nmatch + 1
+            if nmatch <= 0:
+	        LOG.info ('No time matches for the scan %d' % scan)
+                return mediantemps
+            #tsys_intervals = table.getcol('INTERVAL')
+            #tsys_times -= 0.5*tsys_intervals
+            tsys_spws = table.getcol('SPECTRAL_WINDOW_ID')
+    
+        tsys_uniqueAntennas = np.unique(tsys_antennas)
+        tsys_uniqueSpws = np.unique(tsys_spws)
+    
+    
+        # Initialize
+        for spw in spwlist:
+    
+            medians = []
+            if (spw not in tsys_uniqueSpws):
+                LOG.info ("spw %d is not in the SYSCAL table: " % (spw, tsys_uniqueSpws))
+                return mediantemps
+    
+            # Loop over the rows
+            with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
+                for i in range(len(tsys_antennas)):
+                    if (spws[i] != spw):
+                        continue
+                    if (antennas[i] not in uniqueAntennaIds):
+                        continue
+                    if (scan != scans[i]):
+                        continue
+                    if (temptype == 'tsys'):
+                        tsys = table.getcell('TSYS_SPECTRUM',i)
+                    elif (temptype == 'trx'):
+                        tsys = table.getcell('TRX_SPECTRUM',i)
+                    elif (temptype == 'tsky'):
+                        tsys = table.getcell('TSKY_SPECTRUM',i)
+                    medians.append(np.median(tsys))
+    
+            if (len(medians) > 0):
+                mediantemps[spw] = np.median(medians)
+                LOG.info ("Median %s value for spw %2d = %.1f K" % (temptype, spw, 
+    	            mediantemps[spw]))
+            else:
+                LOG.info ("No data for spw %d scan %d" % (spw, scan))
+    	    pass
+    
+        # Return median temperature per spw and scan.
+        return mediantemps 
 
     # Loop over the scans in scanlist. Compute the list and number of unflagged and
     # flagged antennas for each scan. In most cases there will be only one scan
