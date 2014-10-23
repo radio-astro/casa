@@ -1006,11 +1006,11 @@ int main(int argc,  char* argv[])
 	
      }
     
-    
-     if (coeffs->isnan())
+     std::vector<double> nantimes;
+
+     if (coeffs->zeronan(nantimes))
      {
-	LibAIR2::printNoSolution(std::cerr);
-	return -1;
+       LibAIR2::printNoSolution(std::cerr, nantimes);
      }
      g.calc(*d,
 	    *coeffs);    
@@ -1023,13 +1023,11 @@ int main(int argc,  char* argv[])
      }
      
      
-     
      std::vector<std::pair<double, double> > tmask;
      statTimeMask(ms, vm, tmask, sortedI);
      
      std::vector<double> pathRMS;
      g.pathRMSAnt(tmask, pathRMS);
-     
      
      
      std::vector<double> pathDisc;

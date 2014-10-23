@@ -46,7 +46,7 @@ namespace LibAIR2 {
 	     <<LibAIR2::version()
 	     <<std::endl
 	     <<std::endl
-	     <<"Developed by Bojan Nikolic at the University of Cambridge as part of EU FP6 ALMA Enhancement"
+	     <<"Developed by B. Nikolic at the University of Cambridge as part of EU FP6 ALMA Enhancement"
 	     <<std::endl
 	     <<"Maintained since 2013 by the European Southern Observatory as part of the ALMA project"
 	     <<std::endl
@@ -56,15 +56,18 @@ namespace LibAIR2 {
     
   }
 
-  void printNoSolution(std::ostream &os)
+  void printNoSolution(std::ostream &os, std::vector<double> &nantimes)
   {
     os<<std::endl
-      <<"Error: Some solution for phase correction coefficients are invalid"<<std::endl
-      <<"       This normally happens because WVR data were corrupted is some way:"<<std::endl
-      <<"       e.g.: there was some shadowing, the calibration arm was in the WVR beam, or other issues"
-      <<std::endl<<std::endl
-      <<"       Aborting the calibration process and not writing a gain cal table"
+      <<"WARNING: Some solutions for phase correction coefficients at the following times are invalid."<<std::endl
+      <<"         This normally happens because WVR data were corrupted is some way:"<<std::endl
+      <<"         e.g.: there was some shadowing, the calibration arm was in the WVR beam, or other issues."<<std::endl
+      <<"         The solutions will be set to zero and flagged."
       <<std::endl;
+    for(size_t i=0; i<nantimes.size(); i++){
+      os.precision(10);
+      os << "          time " << i << ": " << nantimes[i] << std::endl;
+    }
   }
 
   void printUsedStates(const std::set<size_t> &useID)

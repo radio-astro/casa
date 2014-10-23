@@ -80,11 +80,14 @@ namespace LibAIR2 {
 		      std::vector<double> &err) const =0;
 
     /** \brief Are all coefficients in this object finite?
-
 	Useful to check for errors
      */
     virtual bool isnan(void) const =0;
 		     
+    /** Set all NaN solutions to zero and give the times at which this occurred;
+        return true if a NaN was encountered
+     */
+    virtual bool zeronan(std::vector<double> &nantimes)=0;
 
   };
 
@@ -129,6 +132,7 @@ namespace LibAIR2 {
 
     virtual bool isnan(void) const;
 
+    virtual bool zeronan(std::vector<double> &nantimes);
     
   };
 
@@ -182,6 +186,7 @@ namespace LibAIR2 {
 
     virtual bool isnan(void) const;
 
+    virtual bool zeronan(std::vector<double> &nantimes);
     
   };
 
@@ -230,6 +235,7 @@ namespace LibAIR2 {
 		const boost::array<double, 4> &coeffs,
 		const boost::array<double, 4> &err);
 
+
     // ----------------------- Inherited from dTdLCoeffsBase --------
     virtual void get(size_t i,
 		     double time,
@@ -239,7 +245,9 @@ namespace LibAIR2 {
     virtual void print(std::ostream &os);
     virtual void repr(std::vector<double> &res,
 		      std::vector<double> &err) const;
-    virtual bool isnan(void) const;
+    virtual bool isnan() const;
+    
+    virtual bool zeronan(std::vector<double> &nantimes);
     
   };
 

@@ -32,7 +32,7 @@ namespace LibAIR2 {
   void printBanner(std::ostream &os);
   
   /// Inform user no solution was obtained
-  void printNoSolution(std::ostream &os);
+  void printNoSolution(std::ostream &os, std::vector<double>& nantimes);
 
   /// Infor user about states_ids that we will take into accout
   void printUsedStates(const std::set<size_t> &useID);

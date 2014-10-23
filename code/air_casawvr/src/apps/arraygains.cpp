@@ -382,6 +382,23 @@ namespace LibAIR2 {
     }
   }
 
+  void ArrayGains::blankTimes(std::vector<double> &blanktimes)
+  {
+    const size_t ntimes=time.size();
+    size_t k = 0;
+    for (size_t i=0; i<ntimes; ++i){
+      if (time[i]==blanktimes[k]){
+	for(size_t j=0; j<nAnt; ++j){
+	  path[i][j]=0;
+	}
+	k++;
+	if(k>=blanktimes.size()){
+	  break;
+	}
+      }
+    }
+  }
+
 
   void reweight(const std::vector<double> &coeffs,
 		std::vector<double> &res )
