@@ -181,6 +181,10 @@ namespace LibAIR2 {
      */
     void blankSources(std::set<size_t> &flagsrc);
 
+    /** Set path for these times to zero
+     */
+    void blankTimes(std::vector<double> &blanktimes);
+
   };
 
   /** Invert the coefficients and reweight so that they can applied
