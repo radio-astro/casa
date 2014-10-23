@@ -204,6 +204,18 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
 	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
+      else{
+	///remove keys that point to nowehere
+	////cerr << "The key " << elkey << endl;
+	if(newTab.source().rwKeywordSet().isDefined(elkey))
+	  newTab.source().rwKeywordSet().removeField(elkey);
+	if(newTab.rwKeywordSet().isDefined(elkey))
+	  newTab.rwKeywordSet().removeField(elkey);
+	if(newTab.source().rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	  newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	   newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+      }
   }
   ////Cleaning out orphaned image disk models
   String srctable=thems.source().tableName();
