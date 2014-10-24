@@ -3205,6 +3205,37 @@ tb.showcache()
 
 </method>
 
+   <method type="function" name="testincrstman">
+   
+        <shortdescription>Checks consistency of an Incremental Store Manager bucket layout</shortdescription>
+        
+        <description>
+        
+        Checks consistency of an Incremental Store Manager bucket layout
+        
+        In case of corruption it returns False and a SEVERE msg is posted containing information about the location of the corrupted bucket
+        
+        </description>
+        
+  		<input>
+    
+     		<param type="string" name="column">
+     			<description>Column name</description>
+     		</param>
+
+  		</input>
+        
+        <returns type="bool"/>
+        	
+        <example>
+        
+        	mytb = tbtool()
+        	mytb.open('uid___A002_X841035_X203.ms.split')
+        	mytb.testincrstman('FLAG_ROW')        
+        
+        </example>
+        
+   </method>
 
 </tool>
 </casaxml>
