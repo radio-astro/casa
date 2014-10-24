@@ -320,10 +320,9 @@ def importasdm(
         vistoproc = [] # the output MSs to postprocess
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             vistoproc.append(viso)
-        if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both':
+        if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both' and os.path.exists(visoc): # it may happen that no MS with corrected data was produced.
             vistoproc.append(visoc)
 
-        #
         # If viso+".flagversions" then process differently depending on the value of overwrite..
         #
         if flagbackup:
@@ -393,12 +392,12 @@ def importasdm(
             casalog.post('Parameter bdfflags==True: flags from the ASDM binary data will be used to set the MS flags ...')
             
             bdffexecutable = 'bdflags2MS '
-            bdffexecstring = bdffexecutable+' -f ALL'
+            bdffexecstring_base = bdffexecutable+' -f ALL'
             if len(scans) > 0:
-                bdffexecstring = bdffexecstring + ' --scans ' + scans
+                bdffexecstring_base = bdffexecstring_base + ' --scans ' + scans
 
             for myviso in vistoproc:
-                bdffexecstring = bdffexecstring+' '+ asdm + ' ' + myviso
+                bdffexecstring = bdffexecstring_base+' '+ asdm + ' ' + myviso
 
                 casalog.post('Running '+bdffexecutable+' standalone invoked as:')
                 casalog.post(bdffexecstring)
