@@ -35,7 +35,6 @@ import pipeline.infrastructure.displays.vla.semifinalBPdcalsdisplay as semifinal
 import pipeline.infrastructure.displays.vla.testgainsdisplay as testgainsdisplay
 import pipeline.infrastructure.displays.vla.fluxbootdisplay as fluxbootdisplay
 import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
-import pipeline.infrastructure.displays.vla.opacitiesdisplay as opacitiesdisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -178,9 +177,6 @@ def _get_task_description_for_class(task_cls):
         
     if task_cls is hifv.tasks.setmodel.VLASetjy:
         return 'Set model: Prepare for calibrations'
-    
-    if task_cls is hifv.tasks.priorcals.priorcals.Priorcals:
-        return 'Priorcals (gaincurves, opacities, and rq gains)'
     
     if task_cls is hifv.tasks.flagging.hflag.Heuristicflag:
         return 'VLA heuristic flagging'
@@ -3081,54 +3077,7 @@ class T2_4MDetailstestBPdcalsRenderer(T2_4MDetailsDefaultRenderer):
 
 
 
-class T2_4MDetailspriorcalsRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_priorcals.html', 
-                 always_rerender=False):
-        super(T2_4MDetailspriorcalsRenderer, self).__init__(template,
-                                                          always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailspriorcalsRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        opacity_plots = {}
-        spw = {}
-        center_frequencies = {}
-        opacities = {}
-        
-        for result in results:
-            
-            ms = os.path.basename(result.inputs['vis'])
-            spw[ms] = result.oc_result[0].spw.split(',')
-            center_frequencies[ms] = result.oc_result[0].center_frequencies
-            opacities[ms] = result.oc_result[0].opacities
-            
-            plotter = opacitiesdisplay.opacitiesSummaryChart(context, result)
-            plots = plotter.plot()
-            opacity_plots[ms] = plots
-            
-            # generate testdelay plots and JSON file
-            #plotter = testgainsdisplay.testgainsPerAntennaChart(context, result, 'amp')
-            #plots = plotter.plot() 
-            #json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            #renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.html', 'amp')
-            #with renderer.get_file() as fileobj:
-            #    fileobj.write(renderer.render())
-            #    testgainsamp_subpages[ms] = renderer.filename
-           
-        
-        ctx.update({'opacity_plots'        : opacity_plots,
-                    'spw'                  : spw,
-                    'center_frequencies'   : center_frequencies,
-                    'opacities'            : opacities,
-                    'dirname'              : weblog_dir})
-                
-        return ctx
+
 
 
 
@@ -4688,7 +4637,6 @@ renderer_map = {
         hifv.tasks.flagging.vlaagentflagger.VLAAgentFlagger : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=False),
         hifv.tasks.flagging.flagdetervla.FlagDeterVLA : T2_4MDetailsVLAAgentFlaggerRenderer(template='t2-4m_details-hifv_flagdata.html', always_rerender=False),
         hifv.tasks.setmodel.SetModel : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_setmodel.html', always_rerender=False),
-        hifv.tasks.priorcals.priorcals.Priorcals : T2_4MDetailspriorcalsRenderer('t2-4m_details-hifv_priorcals.html', always_rerender=False),
         hifv.tasks.flagging.hflag.Heuristicflag : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_hflag.html', always_rerender=False),
         hifv.tasks.testBPdcals                   : T2_4MDetailstestBPdcalsRenderer('t2-4m_details-hifv_testbpdcals.html', always_rerender=False),
         hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=False),
