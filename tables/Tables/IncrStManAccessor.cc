@@ -82,5 +82,26 @@ void ROIncrementalStManAccessor::clearCache()
     dataManPtr_p->clearCache();
 }
 
+Bool ROIncrementalStManAccessor::checkBucketLayout (	uInt &offenndingCursor,
+														uInt &offendingBucketStartRow,
+														uInt &offendingBucketNrow,
+														uInt &offendingBucketNr,
+														uInt &offendingCol,
+														uInt &offendingIndex,
+														uInt &offendingRow,
+														uInt &offendingPrevRow) const
+{
+	Bool ok;
+	ok = dataManPtr_p->checkBucketLayout (	offenndingCursor,
+											offendingBucketStartRow,
+											offendingBucketNrow,
+											offendingBucketNr,
+											offendingCol,
+											offendingIndex,
+											offendingRow,
+											offendingPrevRow);
+	return ok;
+}
+
 } //# NAMESPACE CASA - END
 
