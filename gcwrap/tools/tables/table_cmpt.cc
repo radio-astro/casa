@@ -15,6 +15,7 @@
 #include <table_cmpt.h>
 #include <casa/aips.h>
 #include <tables/Tables/IncrementalStMan.h>
+#include <tables/Tables/IncrStManAccessor.h>
 #include <tables/Tables/MemoryStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableProxy.h>
@@ -2277,6 +2278,61 @@ table::showcache(const bool verbose)
  }
  return rstat;
 }
+
+bool table::testincrstman(const std::string& column)
+{
+	Bool ok(False);
+
+	if (itsTable)
+	{
+		try
+		{
+			uInt offenndingCursor = 0;
+			uInt offendingBucketStartRow = 0;
+			uInt offendingBucketNrow = 0;
+			uInt offendingBucketNr = 0;
+			uInt offendingCol = 0;
+			uInt offendingIndex = 0;
+			uInt offendingRow = 0;
+			uInt offendingPrevRow = 0;
+
+			String ismName(column);
+			ROIncrementalStManAccessor acc(itsTable->table(), ismName);
+			ok = acc.checkBucketLayout (	offenndingCursor,
+											offendingBucketStartRow,
+											offendingBucketNrow,
+											offendingBucketNr,
+											offendingCol,
+											offendingIndex,
+											offendingRow,
+											offendingPrevRow);
+
+			if (not ok)
+			{
+				*itsLog << LogIO::SEVERE 	<< "Incremental Store Manager corruption (not ascending rowId) detected at "
+											<< "bucket number " << offendingBucketNr
+											<< " (startRow=" << offendingBucketStartRow
+											<< ", nRows=" << offendingBucketNrow
+											<< ", offendingBucketNr=" << offendingBucketNr
+											<< ", cursor=" << offenndingCursor
+											<< ") column=" << offendingCol
+											<< " index=" << offendingIndex
+											<< " rowId=" << offendingRow
+											<< " preRowId=" << offendingPrevRow
+											<< LogIO::POST;
+			}
+
+
+		}
+		catch (AipsError x)
+		{
+			RETHROW(x);
+		}
+	}
+
+	return ok;
+}
+
 
 
 
