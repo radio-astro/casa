@@ -45,11 +45,12 @@ class statwt_test(unittest.TestCase):
         input: specData - numpy masked array
         """
         dev2 = 0.0
-        dmean = specData.mean()
-        nchan=len(specData)
+        validSpecData=specData[~specData.mask]
+        dmean = validSpecData.mean()
+        nchan=len(validSpecData)
         for n in xrange(nchan):
-          dev = specData[n] - dmean
-          dev2 += dev*dev.conjugate()  
+          dev = validSpecData[n] - dmean
+          dev2 += dev*(dev.conjugate())  
         var = (1./(nchan-1))*dev2
         return var.real
         
@@ -89,17 +90,22 @@ class statwt_test(unittest.TestCase):
        
         # Compare 10 randomly selected rows of weight and 
         # sigma columns with calculated statistics from the data
-        random.seed()
-        randomRowList=random.sample(xrange(nr),10)
-        for i in random.sample(xrange(nr),10):
-            icorr = random.randint(0,1)
+        #random.seed()
+        #randomRowList=random.sample(xrange(nr),10)
+        #for i in random.sample(xrange(nr),10):
+        #    icorr = random.randint(0,1)
+        
+        # do it for all rows!
+        for i in xrange(nr):
+            icorr = 0
             (v,s,r) = self.calcwt(i,icorr,datc,fg)
-            diffwt = 1/v - wt[icorr][i]
-            diffsg = s - sg[icorr][i]
-            #print "w=",1/v, " wt[",icorr,"][",i,"]=",wt[icorr][i]
-            #print "diffwt=",diffwt," diffwt/w=",abs(diffwt)*1/v
-            self.assertTrue(abs(diffwt)/(1/v) < tol)
-            self.assertTrue(abs(diffsg)/s < tol)
+            if v!=0:
+              diffwt = 1/v - wt[icorr][i]
+              diffsg = s - sg[icorr][i]
+              #print "w=",1/v, " wt[",icorr,"][",i,"]=",wt[icorr][i]
+              #print "diffwt=",diffwt," diffwt/w=",abs(diffwt)*1/v
+              self.assertTrue(abs(diffwt)/(1/v) < tol)
+              self.assertTrue(abs(diffsg)/s < tol)
 
 def suite():
     return [statwt_test]
