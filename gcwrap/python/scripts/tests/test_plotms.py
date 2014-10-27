@@ -346,7 +346,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)        
        
-    def test012a(self):
+    def stest012a(self):
         '''Plotms 12a: Test that we can colorize by synonym see CAS-6921.'''
         self.plotfile_jpg = self.outputDir + "testPlot012a.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -976,7 +976,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
        
         print            
  
-    def test037(self):
+    def stest037(self):
         print
         '''Plotms 37: Juergan's cookbook example'''
         self.plotfile_jpg = self.outputDir + "testPlot037.jpg"
@@ -1061,8 +1061,114 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         
         #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         #self._checkPlotFile(94000, self.plotfile_jpg)
-       
-        print            
+     
+    def stest038(self):
+        '''Plotms 38: Test for CAS-6975 overplotting problem.'''
+        self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal',
+                          spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
+                          field="0",correlation="XX", showgui=False)
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal.mapall',
+                          spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
+                          field="0",correlation="XX", showgui=False, plotindex=1, clearplots=False, 
+                          plotfile=self.plotfile_jpg )
+        
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000, self.plotfile_jpg)   
+        print
+        
+    def stest039( self ):
+        '''Plotms 39:'Making a plot with a 2x1 grid.'''
+        self.plotfile_jpg = self.outputDir + "testPlot039.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
+                          showgui=False, gridrows=2, rowindex=0, colindex=0)
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",
+                          gridrows=2, rowindex=0, colindex=0)'''
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
+                          showgui=False, plotindex=1, clearplots=False, gridrows=2, rowindex=1, colindex = 0, 
+                          plotfile=self.plotfile_jpg )
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",
+                          gridrows=2, rowindex=1, colindex=0,plotindex=1,clearplots=False)'''
+        
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000, self.plotfile_jpg)   
+        print
+        
+    def stest040( self ):
+        '''Plotms 40:  CAS-7043:  Cannot create two adjacent plots using plotms with plotindex'''
+        self.plotfile_jpg = self.outputDir + "testPlot040.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
+                          showgui=False,customsymbol=True,symbolshape='diamond',symbolsize=5,symbolcolor='00ff00')
+        plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",
+                          customsymbol=True,symbolshape='diamond',symbolsize=5,symbolcolor='00ff00')
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
+                          showgui=False, plotindex=1, clearplots=False, customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff', 
+                          plotfile=self.plotfile_jpg )
+        plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",
+                          plotindex=1, clearplots=False, customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff' )
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000, self.plotfile_jpg)   
+        print
+        
+    def test041( self ):
+        '''Plotms 41:  CAS-7046:  With custom flagged symbol=False, should not be able to change shape of points.'''
+        self.plotfile_jpg = self.outputDir + "testPlot041.jpg"
+        self.plotfile_jpg2 = self.outputDir + "testPlot0412.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        if ( os.path.exists( self.plotfile_jpg2 ) ):
+             os.remove( self.plotfile_jpg2 )    
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot check that a custom flagged symbol has been set'''
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+                          xaxis="time",yaxis="amp",avgtime="1000",
+                          showgui=False,
+                          customflaggedsymbol=True,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                          plotfile = self.plotfile_jpg)
+        self.assertTrue( self.res )
+        self._checkPlotFile( 50000, self.plotfile_jpg )
+        plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+                          xaxis="time",yaxis="amp",avgtime="1000",
+                          showgui = False,
+                          customflaggedsymbol=False,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                          plotfile = self.plotfile_jpg2)
+        self.assertTrue( self.res )
+        self._checkPlotFile( 50000, self.plotfile_jpg2 ) 
+        print     
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
