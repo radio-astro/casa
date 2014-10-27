@@ -49,11 +49,12 @@ LOG = logging.get_logger(__name__)
 
 recipes_dir = os.path.join(os.path.dirname(__file__), 'recipes')
 
-def _create_context(loglevel='info', name=None):
-    return launcher.Pipeline(loglevel=loglevel, name=name).context
+def _create_context(loglevel, plotlevel, name):
+    return launcher.Pipeline(loglevel=loglevel, plotlevel=plotlevel, 
+                             name=name).context
 
 def _get_context_name(procedure):
-    root, _ = os.path.splitext(procedure)
+    root, _ = os.path.splitext(os.path.basename(procedure))
     return 'pipeline-%s' % root
 
 def _get_task_class(cli_command):
@@ -124,10 +125,10 @@ def _as_task_call(task_class, task_args):
     return '%s(%s)' % (task_class.__name__, ', '.join(kw_args))
             
 def reduce(vis=[], infiles=[], procedure='procedure_hifacal.xml',
-           context=None, name=None, loglevel='info'):
+           context=None, name=None, loglevel='info', plotlevel='default'):
     if context is None:
         name = name if name else _get_context_name(procedure)
-        context = _create_context(loglevel=loglevel, name=name)
+        context = _create_context(loglevel, plotlevel, name)
 
     task_generator = _get_tasks(context, vis, infiles, procedure)    
     try:
