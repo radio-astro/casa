@@ -37,7 +37,7 @@ flag_color = {'outlier': 'red',
               'nmedian':'darkred',
               'max abs':'pink',
               'min abs':'darkcyan',
-              'bad quadrant':'lightblue'}
+              'bad quadrant':'yellow'}
               
 
 class ImageDisplay(object):
@@ -265,6 +265,15 @@ class ImageDisplay(object):
                 ydata_numeric = []
                 for b in ydata:
                     ydata_numeric.append(float(b.replace('&', '.')))
+
+                # highest baseline number is am.am where 'am' is the 
+                # largest antenna id. If this 34, for example, then 
+                # highest axis value will be 34.34 - must be changed
+                # to 34.99 otherwise scale will not look right 
+                # (think, next baseline would be 35.00).
+                am = int(ydata_numeric[-1])
+                ydata_numeric[-1] = am + 0.99
+
                 ydata_numeric = np.array(ydata_numeric)
                 majorFormatter = ticker.FormatStrFormatter('%05.2f')
                 plt.gca().yaxis.set_major_formatter(majorFormatter)
