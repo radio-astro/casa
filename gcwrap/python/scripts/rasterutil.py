@@ -187,7 +187,7 @@ class Raster(object):
             taql = 'TIME > %s && TIME < %s'%(self.mjd_range)
         else:
             rasters = self.select(rasterid=rasterid)
-            taql = 'TIME > %s && TIME < %s'%(self.mjd_range_raster)
+            taql = 'TIME > %s && TIME < %s && SRCTYPE == 0'%(self.mjd_range_raster)
         return taql
 
     def asselector(self, rowid=None, rasterid=None, input_selector=None):
