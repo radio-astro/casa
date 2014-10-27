@@ -461,7 +461,7 @@ def plotms(vis=None,
            
             
         # Set custom flagged symbol
-        if type(customflaggedsymbol) is bool:
+        if type(customflaggedsymbol) is bool and customflaggedsymbol:
             customSymbolValue = customflaggedsymbol
             customflaggedsymbol=[customSymbolValue]
             
