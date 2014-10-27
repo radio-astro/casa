@@ -54,7 +54,7 @@ def _create_context(loglevel, plotlevel, name):
                              name=name).context
 
 def _get_context_name(procedure):
-    root, _ = os.path.splitext(procedure)
+    root, _ = os.path.splitext(os.path.basename(procedure))
     return 'pipeline-%s' % root
 
 def _get_task_class(cli_command):
