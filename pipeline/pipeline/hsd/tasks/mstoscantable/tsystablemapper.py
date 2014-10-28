@@ -4,8 +4,6 @@ import numpy
 
 from taskinit import gentools
 
-#tb = gentools(['tb'])[0]
-
 def __coldesc( vtype, option, maxlen,
              ndim, comment, unit=None, measinfo=None ):
     d={'dataManagerGroup': 'StandardStMan',
@@ -27,21 +25,22 @@ def __coldesc( vtype, option, maxlen,
 def tbobj():
     return gentools(['tb'])[0]
 
-def coldesc(colname, vtype, option, maxlen, ndim, comment, unit=None, measinfo=None):
+# generate column description, default is scalar column
+def coldesc(colname, vtype, option=0, maxlen=0, ndim=-1, comment='', unit=None, measinfo=None):
     desc = __coldesc(vtype, option, maxlen, ndim, comment, unit, measinfo)
     return colname, desc
 
 TABLE_DESC = dict([
-    coldesc('SCANNO', 'uint', 0, 0, -1, 'Scan number'),
-    coldesc('CYCLENO', 'uint', 0, 0, -1, 'Cycle number'),
-    coldesc('IFNO', 'uint', 0, 0, -1, 'IF number'),
-    coldesc('BEAMNO', 'uint', 0, 0, -1, 'Beam number'),
-    coldesc('POLNO', 'uint', 0, 0, -1, 'Pol number'),
-    coldesc('FREQ_ID', 'uint', 0, 0, -1, 'Key for FREQUENCIES table'),
-    coldesc('TIME', 'double', 0, 0, -1, 'Time', unit='d', measinfo={'type': 'epoch', 'Ref': 'UTC'}),
-    coldesc('TSYS', 'float', 0, 0, 1, 'Tsys'),
-    coldesc('FLAGTRA', 'uchar', 0, 0, 1, 'Channel flag'),
-    coldesc('ELEVATION', 'float', 0, 0, -1, 'Elevation')
+    coldesc('SCANNO', 'uint', comment='Scan number'),
+    coldesc('CYCLENO', 'uint', comment='Cycle number'),
+    coldesc('IFNO', 'uint', comment='IF number'),
+    coldesc('BEAMNO', 'uint', comment='Beam number'),
+    coldesc('POLNO', 'uint', comment='Pol number'),
+    coldesc('FREQ_ID', 'uint', comment='Key for FREQUENCIES table'),
+    coldesc('TIME', 'double', comment='Time', unit='d', measinfo={'type': 'epoch', 'Ref': 'UTC'}),
+    coldesc('TSYS', 'float', ndim=1, comment='Tsys'),
+    coldesc('FLAGTRA', 'uchar', ndim=1, comment='Channel flag'),
+    coldesc('ELEVATION', 'float', comment='Elevation')
 ])
 
 TABLE_KEYWORD = {'VERSION': 1,
