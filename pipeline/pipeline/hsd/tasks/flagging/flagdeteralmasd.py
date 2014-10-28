@@ -98,6 +98,72 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
         else:
             return 1.875e9 # 1.875GHz
     
+    def _yield_edge_spw_cmds(self):
+        inputs = self.inputs
+        # loop over the spectral windows, generate a flagging command for each
+        # spw in the ms. Calling get_spectral_windows() with no arguments
+        # returns just the science windows, which is exactly what we want.
+        for spw in inputs.ms.get_spectral_windows():
+            try:
+                # test that this spw should be flagged by assessing number of
+                # correlations, TDM/FDM mode etc.
+                self.verify_spw(spw)
+            except ValueError as e:
+                # this spw should not be or is incapable of being flagged
+                LOG.debug(e.message)
+                continue
+
+            # get fraction of spw to flag from template function
+            fracspw_org = inputs.fracspw
+            try:
+                fracspw_list = []
+                for _frac in fracspw_org:
+                    inputs.fracspw = _frac
+                    fracspw_list.append(self.get_fracspw(spw))
+            finally:
+                inputs.fracspw = fracspw_org
+            if len(fracspw_list) == 0:
+                continue
+            elif len(fracspw_list) == 1:
+                fracspw_list.append(fracspw_list[0])
+
+            # If the twice the number of flagged channels is greater than the
+            # number of channels for a given spectral window, skip it.
+            #frac_chan = int(round(fracspw * spw.num_channels + 0.5))
+            # Make rounding less agressive
+            frac_chan_list = map(lambda x: int(round(x * spw.num_channels)), fracspw_list)[:2]
+            if sum(frac_chan_list) >= spw.num_channels:
+                LOG.debug('Too many flagged channels %s for spw %s '
+                          '' % (spw.num_channels, spw.id))
+                continue
+
+            # calculate the channel ranges to flag. No need to calculate the
+            # left minimum as it is always channel 0.
+            l_max = frac_chan_list[0] - 1
+            #r_min = spw.num_channels - frac_chan - 1
+            # Fix asymmetry 
+            r_min = spw.num_channels - frac_chan_list[1]
+            r_max = spw.num_channels - 1
+
+            # state the spw and channels to flag in flagdata format, adding
+            # the statement to the list of flag commands
+            def yield_channel_ranges():
+                if l_max >= 0:
+                    yield '0~{0}'.format(l_max)
+                if r_max >= r_min:
+                    yield '{0}~{1}'.format(r_min, r_max)
+            channel_ranges = list(yield_channel_ranges())
+
+            if len(channel_ranges) == 0:
+                continue
+            
+            cmd = '{0}:{1}'.format(spw.id, ';'.join(channel_ranges))
+            
+            LOG.debug('list type edge fraction specification for spw %s' % spw.id)
+            LOG.debug('cmd=\'%s\'' % cmd)
+
+            yield cmd
+
     def _get_edgespw_cmds(self):
         inputs = self.inputs
         
@@ -110,69 +176,8 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
             
 
             # to_flag is the list to which flagging commands will be appended
-            to_flag = []
-        
-            # loop over the spectral windows, generate a flagging command for each
-            # spw in the ms. Calling get_spectral_windows() with no arguments
-            # returns just the science windows, which is exactly what we want.
-            for spw in inputs.ms.get_spectral_windows():
-                try:
-                    # test that this spw should be flagged by assessing number of
-                    # correlations, TDM/FDM mode etc.
-                    self.verify_spw(spw)
-                except ValueError as e:
-                    # this spw should not be or is incapable of being flagged
-                    LOG.debug(e.message)
-                    continue
-    
-                # get fraction of spw to flag from template function
-                fracspw_org = inputs.fracspw
-                try:
-                    fracspw_list = []
-                    for _frac in fracspw_org:
-                        inputs.fracspw = _frac
-                        fracspw_list.append(self.get_fracspw(spw))
-                finally:
-                    inputs.fracspw = fracspw_org
-                if len(fracspw_list) == 0:
-                    continue
-                elif len(fracspw_list) == 1:
-                    fracspw_list.append(fracspw_list[0])
-    
-                # If the twice the number of flagged channels is greater than the
-                # number of channels for a given spectral window, skip it.
-                #frac_chan = int(round(fracspw * spw.num_channels + 0.5))
-                # Make rounding less agressive
-                frac_chan_list = map(lambda x: int(round(x * spw.num_channels)), fracspw_list)[:2]
-                if sum(frac_chan_list) >= spw.num_channels:
-                    LOG.debug('Too many flagged channels %s for spw %s '
-                              '' % (spw.num_channels, spw.id))
-                    continue
-    
-                # calculate the channel ranges to flag. No need to calculate the
-                # left minimum as it is always channel 0.
-                l_max = frac_chan_list[0] - 1
-                #r_min = spw.num_channels - frac_chan - 1
-                # Fix asymmetry 
-                r_min = spw.num_channels - frac_chan_list[1]
-                r_max = spw.num_channels - 1
-    
-                # state the spw and channels to flag in flagdata format, adding
-                # the statement to the list of flag commands
-                if l_max >= 0 and r_max >= r_min:
-                    cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                elif l_max < 0:
-                    cmd = '{0}:{1}~{2}'.format(spw.id, r_min, r_max)
-                elif r_max < r_min:
-                    cmd = '{0}:0~{1}'.format(spw.id, l_max)
-                else:
-                    cmd = ''
-                    continue
-                to_flag.append(cmd)
-                
-            LOG.debug('list type edge fraction specification for spw %s' % spw.id)
-            LOG.debug('cmd=\'%s\'' % cmd)
-
+            to_flag = list(self._yield_edge_spw_cmds())
+                        
         return to_flag
     
     def get_fracspw(self, spw):    
