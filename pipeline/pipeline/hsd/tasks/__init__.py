@@ -10,7 +10,6 @@ from .applycal import SDApplyCal
 from .inspectdata import SDInspectData
 from .imaging import SDImaging
 from .imaging_old import SDImagingOld
-from .baseline import SDBaselineOld
 from .baseline import SDBaseline
 from .flagdata import SDFlagData
 from .flagbaseline import SDFlagBaseline

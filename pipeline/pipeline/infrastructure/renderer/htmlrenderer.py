@@ -148,9 +148,6 @@ def _get_task_description_for_class(task_cls):
     if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImagingOld):
         return 'Image single dish data'
 
-    if task_cls is hsd.tasks.SDBaselineOld:
-        return 'Subtract spectral baseline'
-
     if task_cls is hsd.tasks.SDBaseline:
         return 'Generate Baseline tables and subtract spectral baseline'
 
