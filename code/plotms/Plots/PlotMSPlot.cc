@@ -858,6 +858,7 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     String baseFileName = format.location;
     String suffix = "";
     int periodIndex = baseFileName.find_last_of( ".");
+    //Remove the last '.' from the storage location.
     if ( periodIndex != static_cast<int>(String::npos) ){
     	suffix = baseFileName.substr( periodIndex, baseFileName.size() - periodIndex);
     	baseFileName = baseFileName.substr(0, periodIndex );
@@ -865,13 +866,43 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 
     //Loop over all the iterations, exporting them
 	waitOnCanvases();
+	PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
+	const String sep( "_");
     for ( int i = 0; i < pageCount; i++ ){
+    	String pageStr;
     	if ( i > 0 ){
-    		//Remove the last '.' from the storage location.
-    		String pageStr = String::toString( i+1 );
-    		exportFormat.location = baseFileName + pageStr + suffix;
+    		pageStr = String::toString( i+1 );
     	}
-    	
+    	String itersInclude;
+    	if (isIteration()){
+    		int iterStart = this->iter_;
+    		int iterEnd = pages[i].canvasRows() * pages[i].canvasCols();
+    		int lastIndex = std::min( this->nIter() - iterStart, iterEnd) + iterStart;
+    		int index = iterStart;
+    		while ( index < lastIndex ){
+    			String iterId;
+    			if ( index == iterStart ){
+    				iterId = itsCache_->indexer(0,index).fileLabel();
+    			}
+    			else {
+    				iterId = itsCache_->indexer(0,index).iterValue();
+    			}
+    			if ( index < lastIndex - 1 ){
+    				iterId = iterId + ",";
+    			}
+    			itersInclude = itersInclude + iterId;
+    			index++;
+    		}
+    	}
+
+    	String fileId;
+    	if ( itersInclude.size() > 0 ){
+    		fileId = sep + itersInclude;
+    	}
+    	if ( pageStr.size() > 0 ){
+    		fileId = fileId + sep + pageStr;
+    	}
+    	exportFormat.location = baseFileName + fileId + suffix;
     	exportSuccess = itsParent_->exportToFormat( exportFormat );
     	waitOnCanvases();
     	if ( i < pageCount - 1 ){

@@ -137,6 +137,8 @@ public:
 
   // Iteration label
   String iterLabel();
+  String iterValue();
+  String fileLabel();
 
   // Access to raw min/max data (no auto-global)
   bool maskedMinsMaxesRaw(double& xMin, double& xMax, double& yMin,double& yMax);
