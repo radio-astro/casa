@@ -31,7 +31,7 @@
 
     <param type="string" name="asis" subparam="true">
     <description>ASDM to convert as is</description>
-    <value>Antenna Station Receiver CalAtmosphere</value>
+    <value>CalAtmosphere</value>
     </param>
 
     <param type="bool" name="process_caldevice" subparam="true">
