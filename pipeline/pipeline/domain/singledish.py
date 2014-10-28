@@ -44,21 +44,29 @@ class ScantableList(observingrun.ObservingRun, list):
 
     @property
     def start_time(self):
-        if len(self) == 0:
+        if len(self) > 0:
+            obj = self
+        elif len(self.measurement_sets) > 0:
+            obj = self.measurement_sets
+        else:
             return None
         qt = casatools.quanta
-        s = sorted(self, 
+        s = sorted(obj, 
                    key=lambda st: st.start_time['m0'],
                    cmp=lambda x,y: 1 if qt.gt(x,y) else 0 if qt.eq(x,y) else -1)
         return s[0].start_time
 
     @property
     def end_time(self):
-        if len(self) == 0:
+        if len(self) > 0:
+            obj = self
+        elif len(self.measurement_sets) > 0:
+            obj = self.measurement_sets
+        else:
             return None
         qt = casatools.quanta
-        s = sorted(self, 
-                   key=lambda ms: ms.end_time['m0'],
+        s = sorted(obj, 
+                   key=lambda st: st.end_time['m0'],
                    cmp=lambda x,y: 1 if qt.gt(x,y) else 0 if qt.eq(x,y) else -1)
         return s[-1].end_time
 

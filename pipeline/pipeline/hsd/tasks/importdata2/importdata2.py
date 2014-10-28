@@ -47,6 +47,8 @@ class SDImportData2Results(basetask.Results):
         self.results = importdata.ImportDataResults(mses=mses, setjy_results=setjy_results)
         
     def merge_with_context(self, context):
+        if not isinstance(context.observing_run, domain.ScantableList):
+            context.observing_run = domain.ScantableList()
         self.results.merge_with_context(context)
            
     def __repr__(self):

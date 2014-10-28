@@ -57,13 +57,9 @@ class SDMsToScantableResults(common.SingleDishResults):
         self.scantables = scantables
         
     def merge_with_context(self, context):
-        if not isinstance(context.observing_run, domain.ScantableList):
+        if isinstance(context.observing_run, domain.ScantableList):
             self.replace_callibrary(context)
-            context.observing_run = domain.ScantableList()
         target = context.observing_run
-        for ms in self.mses:
-            LOG.info('Adding {0} to context'.format(ms.name))
-            target.add_measurement_set(ms)
         for st in self.scantables:
             LOG.info('Adding {0} to context'.format(st.name))            
             target.add_scantable(st)
