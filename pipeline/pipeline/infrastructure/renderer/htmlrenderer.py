@@ -126,9 +126,6 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MS to Scantables'
 
-    if task_cls is hsd.tasks.SDReduction:
-        return 'Single-dish end-to-end reduction'
-
     if task_cls is hsd.tasks.SDExportData:
         return 'Single-dish SDExportData'
 

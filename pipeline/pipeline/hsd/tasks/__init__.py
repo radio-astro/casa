@@ -16,5 +16,4 @@ from .flagdata import SDFlagData
 from .flagbaseline import SDFlagBaseline
 from .flagbaseline import SDPlotFlagBaseline
 
-from .reduce import SDReduction
 
