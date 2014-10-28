@@ -167,26 +167,33 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
 	    return result
 
-	# Get the tsys as function of spw and field
+	# Initialzie the tsys as function of spw and field
 	#    Return if there are no flux values for the bandpass calibrator.
 	tsysdict = self._get_tsysdict(ms=inputs.ms, fieldnamelist=fieldlist,
 	    intent=inputs.intent, spwlist=spwlist)
 	if not tsysdict:
 	    LOG.info('No tsys spw for MS %s' % inputs.ms.basename)
 	    return result
-	print 'Tsys Dictionary'
-	print tsysdict
 
-	# Compute the median temperatures
+	# Get the tsys spw list and the corresponding observing scan list.
+	tsys_spwlist = []; scan_list = []
 	for spw in spwlist:
 	    if not tsysdict.has_key(spw):
 	        continue
-            tsystempdict = self._get_mediantemp (inputs.ms,
-	        tsysdict[spw]['tsysspw'], tsysdict[spw]['scan'],
-		antenna='', temptype='tsys')
-	    if not tsystempdict:
+	    tsys_spwlist.append(tsysdict[spw]['tsys_spw'])
+	    scan_list.append(tsysdict[spw]['scan'])
+
+	# Get the median tsys as a function of tsys spw
+        tsystempdict = self._get_mediantemp (inputs.ms, tsys_spwlist,
+	    scan_list, antenna='', temptype='tsys')
+
+	# Update tsys dictionary
+	for spw in spwlist:
+	    if not tsysdict.has_key(spw):
 	        continue
-	    tsysdict[spw]['mediantsys'] = tsystempdict[spw]
+	    if not tsystempdict.has_key(tsysdict[spw]['tsys_spw']):
+	        continue
+	    tsysdict[spw]['mediantsys'] = tsystempdict[tsysdict[spw]['tsys_spw']]
 	print 'Tsys Dictionary'
 	print tsysdict
 
@@ -212,7 +219,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 	return result
 
     def analyse(self, result):
-
         return result
 
     # Get the fluxes as a function of field and spw
@@ -232,7 +238,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    for fieldname in fieldnamelist:
 
 		# Get fields associated with that name and intent.
-		#    There should be only one. Pick the first.
+		#    There should be only one. Pick the first field.
 	        fields = ms.get_fields (name=fieldname, intent=intent)
 		if len(fields) <= 0:
 		    continue
@@ -251,8 +257,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    (I, Q, U, V) = flux.casa_flux_density
 		    fluxdict[spw.id]['fieldname'] = fieldname
 		    fluxdict[spw.id]['flux'] = I
-	            LOG.info('Setting flux for spw %s  field  %s to %0.2f Jy '  \
-		        % (spw.id, fieldname, I))
+	            LOG.info('Setting flux for field %s  spw %s to %0.2f Jy' \
+		        % (fieldname, spw.id, I))
 
         return fluxdict
 
@@ -263,8 +269,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	tsysdict = {}
 	fieldset = set(fieldnamelist)
 
-	# Get atmospheric scans associated with the field list
-	#    Ccheck that they come bacj in order
+	# Get atmospheric scans associated with the field name list
 	atmscans = []
         for scan in ms.get_scans(scan_intent='ATMOSPHERE'):
 	    # Remove scans not associated with the input field names
@@ -275,6 +280,20 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# No atmospheric scans found
 	if not atmscans:
+	    return tsysdict
+
+	# Get the scans associated with the field name list and intent
+	obscans = []
+        for scan in ms.get_scans(scan_intent=intent):
+	    # Remove scans not associated with the input field names
+	    scanfieldset = set([field.name for field in scan.fields])
+	    if len(fieldset.intersection(scanfieldset)) == 0:
+	        continue
+	    obscans.append(scan)
+
+	# No data scans found
+	#    Note possible issue with PHASE, OBSERVE_TARGET scans 
+	if not obscans:
 	    return tsysdict
 
 	# Loop over the science spws
@@ -288,16 +307,16 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	    # Find best atmospheric window
 	    ftsysdict = collections.OrderedDict()
-	    for scan in atmscans:
+	    for atmscan in atmscans:
 
 		# Get field name
-	        scanfieldlist = [field.name for field in scan.fields]
+	        scanfieldlist = [field.name for field in atmscan.fields]
 		fieldname = scanfieldlist[0]
 
 		# Get tsys spws and spw ids
-	        scanspwlist = [scanspw for scanspw in list(scan.spws) \
+	        scanspwlist = [scanspw for scanspw in list(atmscan.spws) \
 		    if scanspw.num_channels not in (1,4)]
-	        scanspwidlist = [scanspw.id for scanspw in list(scan.spws) \
+	        scanspwidlist = [scanspw.id for scanspw in list(atmscan.spws) \
 		    if scanspw.num_channels not in (1,4)]
 
 		# Match the tsys spw to the science spw
@@ -319,11 +338,14 @@ class BpSolint(basetask.StandardTaskTemplate):
 			    mindiff = diff
 
 		# Create dictionary entry based on first scan matched.
-		if bestspwid is not None:
-		    ftsysdict['field'] = fieldname
-		    ftsysdict['scan'] = scan.id
-		    ftsysdict['tsysspw'] = bestspwid
-		    break
+		if bestspwid is None:
+		    continue
+		ftsysdict['field'] = fieldname
+		ftsysdict['intent'] = intent
+		ftsysdict['scan'] = obscans[0].id
+		ftsysdict['tsys_scan'] = atmscan.id
+		ftsysdict['tsys_spw'] = bestspwid
+		break
 
 	    # Update the spw dictinary
 	    if ftsysdict:
@@ -361,7 +383,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
     
     # Get median temperatures
-    def _get_mediantemp (self, ms, spwlist, scan, antenna='', temptype='tsys'):
+    def _get_mediantemp (self, ms, tsys_spwlist, scan_list, antenna='', temptype='tsys'):
     
         """
         Compute median temperatures for either the Tsys, Trx or Tsky from the
@@ -370,13 +392,13 @@ class BpSolint(basetask.StandardTaskTemplate):
     
         Inputs:
            ms: pipeline measurement set object
-           spw: the list of spw ids as integers
-           scan: the scan number as a single integer greater than 0
+           tsys_spwlist: the list of tsys spw ids as integers
+           scan_list: the list of corresponding observation scan numbers
            antenna: '' for all antennas or a single antenna id or name
            temptype: The temperature type 'tsys' (default), 'trx' or 'tsky'
     
         Returns:
-           The median temperature for the specified spwlist / scan combinations
+           The median temperature for the specified tsys_spwlist / scan combinations
 
         """
     
@@ -384,9 +406,84 @@ class BpSolint(basetask.StandardTaskTemplate):
         mediantemps = {}
     
         # Temperature type must be one of 'tsys' or 'trx' or 'tsky'
-        temptype = temptype.lower()
         if (temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky'):
             return mediantemps
+
+	# Get list of unique scan ids.
+	uniqueScans = list(set(scan_list))
+
+	# Determine the start and end times for each unique scan
+	beginScanTimes = []; endScanTimes = []
+	for scan in uniqueScans:
+            reqscan = ms.get_scans(scan_id=scan)
+	    if not reqscan:
+                LOG.info ('Observation scan %d found' % scan)
+                return mediantemps
+	    startTime = reqscan[0].start_time 
+	    endTime = reqscan[0].end_time 
+	    beginScanTimes.append(startTime)
+	    endScanTimes.append(endTime)
+    
+        # Get the syscal table meta data.
+        with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
+
+	    # Get the antenna ids
+            tsys_antennas = table.getcol('ANTENNA_ID')
+            if (len(tsys_antennas) < 1):
+                LOG.info("The SYSCAL table is blank")
+                return mediantemps
+
+            # Get columns and tools needed to understand the tsys times
+            time_colkeywords = table.getcolkeywords('TIME')
+            time_unit = time_colkeywords['QuantumUnits'][0]
+            time_ref = time_colkeywords['MEASINFO']['Ref']
+            mt = casatools.measures
+            qt = casatools.quanta
+
+	    # Get time and intervals
+            tsys_start_times = table.getcol('TIME')
+            tsys_intervals = table.getcol('INTERVAL')
+
+	    # Compute the time range of validity for each tsys measurement 
+	    #    Worry about memory efficiency later
+	    tsys_start_times = tsys_start_times - 0.5 * tsys_intervals
+            tsys_end_times = np.zeros(len(tsys_start_times))
+            tsys_end_times = tsys_start_times + tsys_intervals
+
+	    # Create a scan id array and populate it with zeros
+            scanids = np.zeros(len(tsys_start_times), dtype=np.int32)
+
+	    # Determine if a tsys measurement matches the scan interval 
+	    #    If it does  set the scan to the scan id
+            nmatch = 0
+            for i in range(len(tsys_start_times)):
+
+		# Time conversions
+		#    Not necessary if scan begin and end times are not converted
+                tstart = mt.epoch(time_ref, qt.quantity(tsys_start_times[i], time_unit))
+                tend = mt.epoch(time_ref, qt.quantity(tsys_end_times[i], time_unit))
+
+		# Scan starts after end of validity interval
+		for j in range(len(uniqueScans)):
+                    if beginScanTimes[j] > tend or endScanTimes[j] < tstart:
+		        continue
+	            #print 'Row %d  tsys times %s %s  scan times %s %s' % \
+		        #(i, tstart, tend, beginScanTimes[j], endScanTimes[j])
+		    if scanids[i] <= 0:
+    	                scanids[i] = uniqueScans[j]
+    	                nmatch = nmatch + 1
+
+            if nmatch <= 0:
+	        LOG.info ('No time matches for scans %s tsys spws %s' % (uniqueScans,
+		    tsys_spwlist))
+                return mediantemps
+	    else:
+	        LOG.info ('Number of matching rows for scans %s tsys spws %s %d / %d' %
+		    (uniqueScans, tsys_spwlist, nmatch, len(tsys_start_times)))
+
+	    # Get the spw ids
+            tsys_spws = table.getcol('SPECTRAL_WINDOW_ID')
+            tsys_uniqueSpws = np.unique(tsys_spws)
     
         # Get a list of unique antenna ids.
         if antenna == '':
@@ -394,70 +491,22 @@ class BpSolint(basetask.StandardTaskTemplate):
         else:
             uniqueAntennaIds = [ms.get_antenna(search_term=antenna)[0].id]
     
-        # Get the requested scan and returns its id and begin and end times.
-        reqscan = ms.get_scans(scan_id=scan)
-        if not reqscan:
-            LOG.info ("Requested scan %d not found" % scan)
-            return mediantemps
-        begintime = reqscan[0].start_time
-        endtime = reqscan[0].end_time
-        reqscan = reqscan[0].id
-    
-        # Get the syscal table meta data.
-        #    Create a dummy scans column and populate it with zero.
-        with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
-
-            tsys_antennas = table.getcol('ANTENNA_ID')
-            if (len(tsys_antennas) < 1):
-                LOG.info("The SYSCAL table is blank")
-                return mediantemps
-
-            # get columns and tools needed to create tsys times
-            time_colkeywords = table.getcolkeywords('TIME')
-            time_unit = time_colkeywords['QuantumUnits'][0]
-            time_ref = time_colkeywords['MEASINFO']['Ref']
-            mt = casatools.measures
-            qt = casatools.quanta
-
-            tsys_times = table.getcol('TIME')
-            tsys_scans = np.zeros(len(tsys_times), dtype=np.int32)
-            nmatch = 0
-            for i in range(len(tsys_times)):
-                #tsys_times[i] = mt.epoch(time_ref,
-		    #qt.quantity(tsys_times[i], time_unit))
-                tt = mt.epoch(time_ref, qt.quantity(tsys_times[i], time_unit))
-
-	        print 'row time %s %s %s' % (tt, begintime, endtime)
-                if tt >= begintime and tt <= endtime:
-    	            tsys_scans[i] = scan
-    	            nmatch = nmatch + 1
-            if nmatch <= 0:
-	        LOG.info ('No time matches for the scan %d' % scan)
-                return mediantemps
-            #tsys_intervals = table.getcol('INTERVAL')
-            #tsys_times -= 0.5*tsys_intervals
-            tsys_spws = table.getcol('SPECTRAL_WINDOW_ID')
-    
-        tsys_uniqueAntennas = np.unique(tsys_antennas)
-        tsys_uniqueSpws = np.unique(tsys_spws)
-    
-    
         # Initialize
-        for spw in spwlist:
+        for spw, scan in zip (tsys_spwlist, scan_list):
     
-            medians = []
             if (spw not in tsys_uniqueSpws):
-                LOG.info ("spw %d is not in the SYSCAL table: " % (spw, tsys_uniqueSpws))
+                LOG.info ("tsys spw %d is not in the SYSCAL table: " % spw)
                 return mediantemps
     
             # Loop over the rows
+            medians = []
             with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
                 for i in range(len(tsys_antennas)):
-                    if (spws[i] != spw):
+                    if (tsys_spws[i] != spw):
                         continue
-                    if (antennas[i] not in uniqueAntennaIds):
+                    if (tsys_antennas[i] not in uniqueAntennaIds):
                         continue
-                    if (scan != scans[i]):
+                    if (scan != scanids[i]):
                         continue
                     if (temptype == 'tsys'):
                         tsys = table.getcell('TSYS_SPECTRUM',i)
@@ -473,7 +522,6 @@ class BpSolint(basetask.StandardTaskTemplate):
     	            mediantemps[spw]))
             else:
                 LOG.info ("No data for spw %d scan %d" % (spw, scan))
-    	    pass
     
         # Return median temperature per spw and scan.
         return mediantemps 
