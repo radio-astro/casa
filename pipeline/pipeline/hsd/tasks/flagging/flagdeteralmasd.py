@@ -93,8 +93,8 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
     # controllable via parameter 'fracspw' 
     @property
     def bandwidth_limit(self):
-        if isinstance(self.fracspw, str):
-            return casatools.quanta.convert(self.fracspw, 'Hz')['value']
+        if isinstance(self.inputs.fracspw, str):
+            return casatools.quanta.convert(self.inputs.fracspw, 'Hz')['value']
         else:
             return 1.875e9 # 1.875GHz
     
@@ -161,6 +161,9 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
                 # the statement to the list of flag commands
                 cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
                 to_flag.append(cmd)
+                
+            LOG.debug('list type edge fraction specification for spw %s' % spw.id)
+            LOG.debug('cmd=\'%s\'' % cmd)
 
         return to_flag
     
@@ -173,9 +176,12 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
         if isinstance(self.inputs.fracspw, float):
             return self.inputs.fracspw
         elif isinstance(self.inputs.fracspw, str):
+            LOG.debug('bandwidth limited edge flagging for spw %s' % spw.id)
             bandwidth_limit = self.bandwidth_limit
             bandwidth = float(spw.bandwidth.value)
-            return max(0.0, 0.5 * (bandwidth - bandwidth_limit) / bandwidth)
+            fracspw = 0.5 * (bandwidth - bandwidth_limit) / bandwidth
+            LOG.debug('fraction is %s' % fracspw)
+            return max(0.0, fracspw)
 
     def verify_spw(self, spw):
         # override the default verifier, adding bandwidth check
@@ -190,6 +196,6 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
 
         # Skip if edge channel flagging is based on bandwidth limit, and 
         # bandwidth is less than bandwidth limit
-        if isinstance(self.inputs.fracspw, str) and spw.bandwidth <= self.bandwidth_limit:
+        if isinstance(self.inputs.fracspw, str) and spw.bandwidth.value <= self.bandwidth_limit:
             raise ValueError('Skipping edge flagging for spw %s' % spw.id)
 
