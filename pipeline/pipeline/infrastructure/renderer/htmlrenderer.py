@@ -145,7 +145,7 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hsd.tasks.SDApplyCal:
         return 'Apply calibration tables'
 
-    if task_cls in (hsd.tasks.SDImaging, hsd.tasks.SDImagingOld):
+    if task_cls is hsd.tasks.SDImaging:
         return 'Image single dish data'
 
     if task_cls is hsd.tasks.SDBaseline:
