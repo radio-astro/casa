@@ -237,7 +237,6 @@ public:
     static void cacheLoaded(void *obj, bool wasCanceled){
         PlotMSPlot *cobj = static_cast<PlotMSPlot*>(obj);
         if(cobj != NULL){
-        	qDebug() << "cacheLoaded";
         	cobj->setCacheUpdating( false );
             if ( ! cobj->itsParent_->guiShown() ){
             	cobj->cacheLoaded_(wasCanceled);

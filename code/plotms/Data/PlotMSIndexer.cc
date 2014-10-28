@@ -1351,35 +1351,34 @@ PlotLogMessage* PlotMSIndexer::flagRange(const PlotMSFlagging& flagging,
 
 }
 
-
-String PlotMSIndexer::iterLabel() { 
+String PlotMSIndexer::iterValue() {
 
 	String itername(PMS::axis(iterAxis_));
 
 	switch (iterAxis_) {
 	case PMS::SCAN:
 	case PMS::SPW:
-		return itername+": "+String::toString(iterValue_);
+		return String::toString(iterValue_);
 		break;
 	case PMS::FIELD:
-		return itername+": "+plotmscache_->fldnames_(iterValue_);
+		return plotmscache_->fldnames_(iterValue_);
 		break;
 	case PMS::TIME:{
-		return ": "+plotmscache_->getTimeBounds( iterValue_);
+		return plotmscache_->getTimeBounds( iterValue_);
 		break;
 	}
 	case PMS::BASELINE: {
 		maskedAt(0);  // sets currChunk_ and irel_ for first point so we can get ant indices
 		Int ant1=Int(plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)));
 		Int ant2=Int(plotmscache_->getAnt2(currChunk_,getIndex0010(currChunk_,irel_)));
-		String lab=itername+": ";
+		String lab;
 		lab+=(ant1>-1 ? plotmscache_->antstanames_(ant1) : "*")+" & ";
 		lab+=(ant2>-1 ? plotmscache_->antstanames_(ant2) : "*");
 		return lab;
 		break;
 	}
 	case PMS::ANTENNA:
-		return itername+": "+plotmscache_->antstanames_(iterValue_);
+		return plotmscache_->antstanames_(iterValue_);
 		break;
 	default:
 		return String("");
@@ -1388,6 +1387,28 @@ String PlotMSIndexer::iterLabel() {
 	}
 
 	return String("");
+}
+
+
+
+String PlotMSIndexer::iterLabel() {
+	String itername(PMS::axis(iterAxis_));
+	String iterVal = iterValue();
+	String iterLabel = itername + ": " +iterVal;
+	if (iterAxis_ == PMS::TIME ) {
+		iterLabel = ": "+iterVal;
+	}
+	return iterLabel;
+}
+
+String PlotMSIndexer::fileLabel(){
+	String itername(PMS::axis(iterAxis_));
+	String iterVal = iterValue();
+	String iterLabel = itername +iterVal;
+	if (iterAxis_ == PMS::TIME ) {
+		iterLabel = "Time" + iterVal;
+	}
+	return iterLabel;
 }
 
 
