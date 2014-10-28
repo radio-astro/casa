@@ -1,19 +1,25 @@
 <ProcessingProcedure>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_importdata</Command>
+        <Command xmlns="">hsd_importdata2</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hifa_tsyscal</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_mstoscantable</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
 
     <ProcessingCommand>
         <Command xmlns="">hsd_inspectdata</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
-        <Command xmlns="">hsd_caltsys</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
