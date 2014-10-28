@@ -43,7 +43,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_flagdata</Command>
+        <Command xmlns="">hsd_blflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -61,7 +61,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_flagdata</Command>
+        <Command xmlns="">hsd_blflag</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

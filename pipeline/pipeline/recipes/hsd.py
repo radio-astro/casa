@@ -38,7 +38,7 @@ from hsd_caltsys_cli import hsd_caltsys_cli as hsd_caltsys
 from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
 from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
 from hsd_baseline_cli import hsd_baseline_cli as hsd_baseline
-from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
+from hsd_blflag_cli import hsd_blflag_cli as hsd_blflag
 from hsd_imaging_cli import hsd_imaging_cli as hsd_imaging
 from hsd_exportdata_cli import hsd_exportdata_cli as hsd_exportdata
 from h_save_cli import h_save_cli as h_save
@@ -79,14 +79,14 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
         hsd_applycal (pipelinemode=pipelinemode)
     
         # Improve line mask for baseline subtraction by executing 
-        # hsd_baseline and hsd_flagdata iteratively
+        # hsd_baseline and hsd_blflag iteratively
         for i in xrange(ITERATION):
             
             # Baseline subtraction with automatic line detection
             hsd_baseline (pipelinemode=pipelinemode)
             
             # Flag data based on baseline quality
-            hsd_flagdata (pipelinemode=pipelinemode)
+            hsd_blflag (pipelinemode=pipelinemode)
             
             # Imaging
             hsd_imaging (pipelinemode=pipelinemode)

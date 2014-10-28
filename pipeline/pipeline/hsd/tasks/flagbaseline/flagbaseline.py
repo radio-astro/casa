@@ -5,7 +5,7 @@ import pipeline.infrastructure.basetask as basetask
 
 from .. import common
 from ..baseline import baseline
-from ..flagdata import flagdata
+from ..baselineflag import baselineflag
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -65,8 +65,8 @@ class SDFlagBaselineInputs(common.SingleDishInputs):
                                           fitfunc=self.fitfunc)
         
     @property
-    def flagdata_inputs(self):
-        return flagdata.SDFlagData.Inputs(self.context, output_dir=self.output_dir,
+    def blflag_inputs(self):
+        return baselineflag.SDBLFlag.Inputs(self.context, output_dir=self.output_dir,
                                           iteration=self.flag_iteration, edge=self.edge,
                                           flag_tsys=self.flag_tsys, tsys_thresh=self.tsys_thresh,
                                           flag_weath=self.flag_weath, weath_thresh=self.weath_thresh,
@@ -94,9 +94,9 @@ class SDFlagBaselineResults(common.SingleDishResults):
             return None
         
     @property
-    def flagdata_result(self):
-        if self.outcome.has_key('flagdata'):
-            return self.outcome['flagdata']
+    def blflag_result(self):
+        if self.outcome.has_key('blflag'):
+            return self.outcome['blflag']
         else:
             return None    
 
@@ -105,10 +105,10 @@ class SDFlagBaselineResults(common.SingleDishResults):
 
     def _outcome_name(self):
         baseline_result = self.baseline_result
-        flagdata_result = self.flagdata_result
+        blflag_result = self.blflag_result
         baseline_name = ','.join(baseline_result._outcome_name()) if baseline_result is not None else ''
-        flagdata_name = flagdata_result._outcome_name() if flagdata_result is not None else ''
-        return '\n'.join([baseline_name, flagdata_name])
+        blflag_name = blflag_result._outcome_name() if blflag_result is not None else ''
+        return '\n'.join([baseline_name, blflag_name])
 
 class SDFlagBaseline(common.SingleDishTaskTemplate):
     Inputs = SDFlagBaselineInputs
@@ -123,7 +123,7 @@ class SDFlagBaseline(common.SingleDishTaskTemplate):
         result = basetask.ResultsList()
         
         baseline_inputs = inputs.baseline_inputs
-        flagdata_inputs = inputs.flagdata_inputs
+        blflag_inputs = inputs.blflag_inputs
         
         for iter in xrange(iteration):
             LOG.debug('iteration %s'%(iter))
@@ -131,14 +131,14 @@ class SDFlagBaseline(common.SingleDishTaskTemplate):
             baseline_task = baseline.SDBaseline(baseline_inputs)
             baseline_result = self._executor.execute(baseline_task, merge=True)
             
-            # Run flagdata task
-            flagdata_task = flagdata.SDFlagData(flagdata_inputs)
-            flagdata_result = self._executor.execute(flagdata_task, merge=True)
+            # Run blflag task
+            blflag_task = baselineflag.SDBLFlag(blflag_inputs)
+            blflag_result = self._executor.execute(blflag_task, merge=True)
             
             LOG.todo('maybe we need to generate plots for flagbaseline here')
             
             outcome = {'baseline': baseline_result,
-                       'flagdata': flagdata_result}
+                       'blflag': blflag_result}
             r = SDFlagBaselineResults(task=self.__class__,
                                       success=True,
                                       outcome=outcome)

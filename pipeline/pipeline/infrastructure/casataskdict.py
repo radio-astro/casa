@@ -32,7 +32,7 @@ CasaTaskDict = {
                    'hsd_inspectdata'  : 'SDInspectData',
                    'hsd_imaging'      : 'SDImaging',
                    'hsd_baseline'     : 'SDBaseline',
-                   'hsd_flagdata'     : 'SDFlagData',
+                   'hsd_blflag'     : 'SDBLFlag',
                    'hsd_flagbaseline' : 'SDFlagBaseline',
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
                    'hifa_importdata' : 'ALMAImportData',
@@ -119,7 +119,7 @@ classToCASATask = {
     hsd_tasks.SDInspectData : 'hsd_inspectdata',
     hsd_tasks.SDImaging : 'hsd_imaging',
     hsd_tasks.SDBaseline : 'hsd_baseline',
-    hsd_tasks.SDFlagData : 'hsd_flagdata',
+    hsd_tasks.SDBLFlag : 'hsd_blflag',
     hsd_tasks.SDFlagBaseline : 'hsd_flagbaseline',
     hsd_tasks.SDPlotFlagBaseline : 'hsd_plotflagbaseline',
     #VLA tasks
@@ -275,7 +275,7 @@ TASK_COMMENTS = {
         'these features from the fit. \n'
         '' + SILENT_TASK_COMMENT
     ),
-    (hsd_tasks.SDFlagData,) : (
+    (hsd_tasks.SDBLFlag,) : (
         'Perform row-based flagging based on noise level and quality of '
         'spectral baseline subtraction. \n'
         '' + SILENT_TASK_COMMENT

@@ -71,7 +71,7 @@ try:
    detail = baseline_context[-1]['detail']
    cover_only = baseline_context[-1]['cover_only']
 
-   # for flagdata summary
+   # for flag summary
    html_names = []
    asdm_names = []
    ant_names = []
@@ -79,8 +79,8 @@ try:
    pol = []
    nrows = []
    flags = []
-   flagdata_result = result[-1].outcome['flagdata']
-   summaries = flagdata_result.outcome['summary']
+   flag_result = result[-1].outcome['blflag']
+   summaries = flag_result.outcome['summary']
    for summary in summaries:
        html_names.append(summary['html'])
        asdm_names.append(summary['name'])

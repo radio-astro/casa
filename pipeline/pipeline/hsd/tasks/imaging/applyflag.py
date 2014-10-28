@@ -130,7 +130,7 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
         tx.close()
         
         if len(rows) > 0:
-            LOG.info('Apply flags determined by hsd_flagdata')
+            LOG.info('Apply flags determined by hsd_blflag')
             args = {'infile': filename,
                     'mode': 'rowid',
                     'row': common.list_to_selection(rows)}

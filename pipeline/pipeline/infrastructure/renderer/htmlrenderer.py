@@ -151,7 +151,7 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hsd.tasks.SDBaseline:
         return 'Generate Baseline tables and subtract spectral baseline'
 
-    if task_cls is hsd.tasks.SDFlagData:
+    if task_cls is hsd.tasks.SDBLFlag:
         return 'Flag data by Tsys, weather, and statistics of spectra'
     
     if task_cls is hsd.tasks.SDFlagBaseline:

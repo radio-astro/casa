@@ -22,7 +22,7 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 
-class SDFlagDataWorker(object):
+class SDBLFlagWorker(object):
     '''
     The worker class of single dish flagging task.
     This class defines per spwid flagging operation.
@@ -86,7 +86,7 @@ class SDFlagDataWorker(object):
         flagSummary = []
         # loop over file
         for (idx,spwid,pollist) in zip(file_index, spwid_list, pols_list):
-            LOG.debug('Performing flagdata for Antenna %s Spw %s'%(idx,spwid))
+            LOG.debug('Performing flag for Antenna %s Spw %s'%(idx,spwid))
             st = self.context.observing_run[idx]
             filename_in = st.name
             filename_out = st.baselined_name

@@ -7,7 +7,7 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_flagdata(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
+def hsd_blflag(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  flag_weath=None, weath_thresh=None,
                  flag_prfre=None, prfre_thresh=None,
                  flag_pofre=None, pofre_thresh=None,
@@ -25,7 +25,7 @@ def hsd_flagdata(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDFlagData'
+    task_name = 'SDBLFlag'
 
     ##########################################################################
     #                                                                        #

@@ -45,7 +45,7 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(basetemplates.T2_4MDetailsDefau
         for r in results:
 
             baseline_result = r.outcome['baseline']
-            flagdata_result = r.outcome['flagdata']
+            flag_result = r.outcome['blflag']
            
             plots = []
             inputs = displays.ClusterDisplay.Inputs(context,result=baseline_result)
@@ -63,7 +63,7 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(basetemplates.T2_4MDetailsDefau
             rel_path = os.path.basename(stage_dir)   ### stage#
 
             html_names = []
-            summaries = flagdata_result.outcome['summary']
+            summaries = flag_result.outcome['summary']
             for summary in summaries:
                 html_names.append(summary['html'])
                 flag_html_list.append(html_names)

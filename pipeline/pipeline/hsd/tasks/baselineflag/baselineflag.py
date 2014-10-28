@@ -8,12 +8,12 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 from .. import common
 
-from .worker import SDFlagDataWorker
-from .flagsummary import SDFlagSummary
+from .worker import SDBLFlagWorker
+from .flagsummary import SDBLFlagSummary
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDFlagDataInputs(common.SingleDishInputs):
+class SDBLFlagInputs(common.SingleDishInputs):
     """
     Inputs for single dish flagging
     """
@@ -110,17 +110,17 @@ class SDFlagDataInputs(common.SingleDishInputs):
 
         
 
-class SDFlagDataResults(common.SingleDishResults):
+class SDBLFlagResults(common.SingleDishResults):
     """
     The results of SDFalgData
     """
     def __init__(self, task=None, success=None, outcome=None):
-        super(SDFlagDataResults, self).__init__(task, success, outcome)
+        super(SDBLFlagResults, self).__init__(task, success, outcome)
         ### WORKAROUND
         #self.outcome = outcome
 
     def merge_with_context(self, context):
-        super(SDFlagDataResults, self).merge_with_context(context)
+        super(SDBLFlagResults, self).merge_with_context(context)
 
         # replace and export datatable to merge updated data with context
         datatable = self.outcome.pop('datatable')
@@ -131,11 +131,11 @@ class SDFlagDataResults(common.SingleDishResults):
     def _outcome_name(self):
         return 'none'
 
-class SDFlagData(common.SingleDishTaskTemplate):
+class SDBLFlag(common.SingleDishTaskTemplate):
     """
     Single dish flagging class
     """
-    Inputs = SDFlagDataInputs
+    Inputs = SDBLFlagInputs
 
     @common.datatable_setter
     def prepare(self):
@@ -241,10 +241,10 @@ class SDFlagData(common.SingleDishTaskTemplate):
             #LOG.debug("       field: %s" % field)
             LOG.info("*"*60)
 
-            worker = SDFlagDataWorker(context, datatable, clip_niteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
+            worker = SDBLFlagWorker(context, datatable, clip_niteration, spwid_list, nchan, pols_list, _file_index, flag_rule)
             thresholds = self._executor.execute(worker, merge=False)
             # Summary
-            renderer = SDFlagSummary(context, datatable, spwid_list, pols_list, _file_index, thresholds, flag_rule)
+            renderer = SDBLFlagSummary(context, datatable, spwid_list, pols_list, _file_index, thresholds, flag_rule)
             result = self._executor.execute(renderer, merge=False)
             flagResult += result
             
@@ -253,7 +253,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
         outcome = {'datatable': datatable,
                    'summary': flagResult}
-        results = SDFlagDataResults(task=self.__class__,
+        results = SDBLFlagResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
 #         #stage_number is taken care of by basetask.result_finaliser

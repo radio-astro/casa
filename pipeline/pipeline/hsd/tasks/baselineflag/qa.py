@@ -4,13 +4,13 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.pipelineqa as pqa
 import pipeline.infrastructure.utils as utils
 
-from . import flagdata
+from . import baselineflag
 
 LOG = logging.get_logger(__name__)
 
 
-class SDFlagDataQAHandler(pqa.QAResultHandler):    
-    result_cls = flagdata.SDFlagDataResults
+class SDBLFlagQAHandler(pqa.QAResultHandler):    
+    result_cls = baselineflag.SDBLFlagResults
     child_cls = None
 
     def handle(self, context, result):
@@ -32,9 +32,9 @@ class SDFlagDataQAHandler(pqa.QAResultHandler):
         result.qa.pool[:] = scores
 
 
-class SDFlagDataListQAHandler(pqa.QAResultHandler):
+class SDBLFlagListQAHandler(pqa.QAResultHandler):
     result_cls = list
-    child_cls = flagdata.SDFlagDataResults
+    child_cls = baselineflag.SDBLFlagResults
 
     def handle(self, context, result):
         # collate the QAScores from each child result, pulling them into our

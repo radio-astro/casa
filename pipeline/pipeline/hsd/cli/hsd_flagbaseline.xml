@@ -5,7 +5,7 @@
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hsd_flagbaseline" category="pipeline">
-<shortdescription>Composite task consisting of hsd_baseline and hsd_flagdata. Iteration loop is encapsulated.</shortdescription>
+<shortdescription>Composite task consisting of hsd_baseline and hsd_blflag. Iteration loop is encapsulated.</shortdescription>
 <description>
 </description>
 <input>
@@ -294,17 +294,17 @@
 
 <example>
 The hsd_flagbaseline task is a composite task consisting of hsd_baseline 
-and hsd_flagdata task. It encapsulates iteration loop inside. By defalult 
+and hsd_blflag task. It encapsulates iteration loop inside. By defalult 
 (iteration=2), execution of hsd_flagbaseline task is equivalent to the 
 following code:
 
 for i in xrange(iteration):
     default(hsd_baseline)
     hsd_baseline()
-    default(hsd_flagdata)
-    hsd_flagdata()
+    default(hsd_blflag)
+    hsd_blflag()
     
-For details about hsd_baseline and hsd_flagdata, see inline help for 
+For details about hsd_baseline and hsd_blflag, see inline help for 
 those tasks. 
   
 Keyword arguments:

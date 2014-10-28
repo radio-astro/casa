@@ -10,7 +10,7 @@ from .applycal import SDApplyCal
 from .inspectdata import SDInspectData
 from .imaging import SDImaging
 from .baseline import SDBaseline
-from .flagdata import SDFlagData
+from .baselineflag import SDBLFlag
 from .flagbaseline import SDFlagBaseline
 from .flagbaseline import SDPlotFlagBaseline
 from .flagging import FlagDeterALMASingleDish

@@ -11,7 +11,7 @@ import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 from .. import common
 from ..baseline import baseline
-from ..flagdata import flagdata
+from ..baselineflag import baselineflag
 from ..flagbaseline import flagbaseline
 
 LOG = infrastructure.get_logger(__name__)
@@ -72,19 +72,19 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
         for i in xrange(len(results)-1, -1, -1):
             if isinstance(results[i], baseline.SDBaselineResults):
                 baseline_result = results[i]
-            elif isinstance(results[i], flagdata.SDFlagDataResults):
+            elif isinstance(results[i], baselineflag.SDBLFlagResults):
                 flag_result = results[i]
             elif isinstance(results[i], flagbaseline.SDFlagBaselineResults):
                 baseline_result = results[i].baseline_result
-                flag_result = results[i].flagdata_result
+                flag_result = results[i].blflag_result
             elif isinstance(results[i], basetask.ResultsList):
                 if isinstance(results[i][0], baseline.SDBaselineResults):
                     baseline_result = results[i][0]
-                elif isinstance(results[i][0], flagdata.SDFlagDataResults):
+                elif isinstance(results[i][0], baselineflag.SDBLFlagResults):
                     flag_result = results[i][0]
                 elif isinstance(results[i][0], flagbaseline.SDFlagBaselineResults):
                     baseline_result = results[i][0].baseline_result
-                    flag_result = results[i][0].flagdata_result
+                    flag_result = results[i][0].blflag_result
 
             if baseline_result is not None and flag_result is not None:
                 break

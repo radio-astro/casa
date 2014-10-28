@@ -178,7 +178,7 @@ class SDPipelineStagesInterface( SDLogger ):
 
         ### Default Flag rule
         #import SDFlagRule
-        from pipeline.hsd.tasks.flagdata import SDFlagRule
+        from pipeline.hsd.tasks.baselineflag import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
 
@@ -587,7 +587,7 @@ class SDPipelineStagesInterface( SDLogger ):
 
     def setFlagRules(self):
         #import SDFlagRule
-        from pipeline.hsd.tasks.flagdata import SDFlagRule
+        from pipeline.hsd.tasks.baselineflag import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
 

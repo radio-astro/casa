@@ -52,7 +52,7 @@ $(document).ready(function() {
 </script>
 
 <p>This task generages plots for whole spectra before and after baseline subtraction. 
-If flagdata results are available, background of flagged spectra are colored with red.</p>
+If blflag results are available, background of flagged spectra are colored with red.</p>
 
 <h3>Pre-/Post-Baselined Spectra</h3>
 % for ms in summary_plots.keys():
