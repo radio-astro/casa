@@ -159,7 +159,15 @@ class FlagDeterALMASingleDish(flagdeterbase.FlagDeterBase):
     
                 # state the spw and channels to flag in flagdata format, adding
                 # the statement to the list of flag commands
-                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                if l_max >= 0 and r_max >= r_min:
+                    cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                elif l_max < 0:
+                    cmd = '{0}:{1}~{2}'.format(spw.id, r_min, r_max)
+                elif r_max < r_min:
+                    cmd = '{0}:0~{1}'.format(spw.id, l_max)
+                else:
+                    cmd = ''
+                    continue
                 to_flag.append(cmd)
                 
             LOG.debug('list type edge fraction specification for spw %s' % spw.id)
