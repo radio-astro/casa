@@ -540,7 +540,7 @@ def plotms(vis=None,
             showlegend = False
         if not legendposition:
             legendposition = 'upperRight' 
-        pm.setLegend( showlegend, legendposition )          
+        pm.setLegend( showlegend, legendposition, False, plotindex )          
         
         
         # Set various user-directed appearance parameters
