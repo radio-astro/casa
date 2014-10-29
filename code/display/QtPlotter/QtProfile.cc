@@ -523,6 +523,7 @@ namespace casa {
 		QString filterString = tr(formatStr.toStdString().c_str());
 		QString currentDirectory = QDir::currentPath();
 		QFileDialog fd( this, tr("Export profile"), currentDirectory );
+		fd.setOption( QFileDialog::DontUseNativeDialog, true );
 		fd.setFileMode( QFileDialog::AnyFile );
 		fd.setNameFilter( filterString );
 		if ( fd.exec() ) {
