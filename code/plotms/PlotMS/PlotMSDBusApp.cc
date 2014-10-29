@@ -740,7 +740,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
 					parameters.dataType( PARAM_LEGENDPOSITION ) ){
 				legendPosition = parameters.asString( PARAM_LEGENDPOSITION );
 			}
-			ppcan->showLegend( showLegend, legendPosition, index );
+			ppcan->showLegend( showLegend, legendPosition, 0);
 		}
 
 		if(updateImmediately && itsPlotms_.guiShown()) {
