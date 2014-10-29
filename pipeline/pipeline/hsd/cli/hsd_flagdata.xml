@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	 	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd">
+
+<task type="function" name="hsd_flagdata" category="pipeline">
+
+<shortdescription>Do basic flagging of a list of measurement sets</shortdescription>
+
+<input>
+	<param type="stringArray" name="vis" subparam="true">
+	    <description>List of input measurement sets to flag</description>
+	    <value></value>
+	</param>			
+
+	<param type="bool" name="autocorr">
+	    <description>Flag autocorrelation data</description>
+	    <value type="bool">False</value>
+	</param>
+
+	<param type="bool" name="shadow">
+	    <description>Flag shadowed antennas</description>
+	    <value type="bool">True</value>
+	</param>
+
+	<param type="bool" name="scan">
+	    <description>Flag specified scans</description>
+	    <value>True</value>
+	</param>
+
+	<param type="string" name="scannumber" subparam="true">
+	    <description>List of scans to be flagged</description>
+	    <value></value>
+	</param>
+
+	<param type="string" name="intents" subparam="true">
+	    <description>List of intents of scans to be flagged</description>
+	    <value>POINTING,FOCUS,ATMOSPHERE,SIDEBAND</value>
+	</param>
+
+	<param type="bool" name="edgespw">
+	    <description>Flag edge channels</description>
+	    <value type="bool">True</value>
+	</param>
+
+	<param type="any" name="fracspw" subparam="true">
+	    <description>Fraction of baseline correlator edge channels to be flagged</description>
+	    <any type="variant" limittype="double string doubleArray"/>
+	    <value type="string">1.875GHz</value>
+	</param>
+
+	<param type="double" name="fracspwfps" subparam="true">
+	    <description>Fraction of ACA correlator edge channels to be flagged</description>
+	    <value>0.048387</value>
+	</param>
+
+	<param type="bool" name="online">
+	    <description>Apply the online flags</description>
+	    <value type="bool">True</value>
+	</param>
+
+	<param type="string" name="fileonline" subparam="true">
+	    <description>File of online flags to be applied</description>
+	    <value></value>
+	</param>
+
+	<param type="bool" name="template">
+	    <description>Apply a flagging template</description>
+	    <value>True</value>
+	</param>
+
+	<param type="stringArray" name="filetemplate" subparam="true">
+	    <description>File that contains the flagging template</description>
+	    <value></value>
+	</param>
+
+	<param type="string" name="hm_tbuff">
+	    <description>The time buffer computation heuristic</description>
+	    <value>halfint</value>
+	    <allowed kind="enum">
+		<value>halfint</value>
+		<value>manual</value>
+	    </allowed>
+	</param>
+
+        <param type="any" name="tbuff" subparam="true">
+            <description>List of time buffers (sec) to pad timerange in flag commands</description>
+            <any type="variant" limittypes="double doubleArray" />
+            <value type="double">0.0</value>
+        </param>
+
+	<param type="string" name="pipelinemode">
+	    <description>The pipeline operating mode</description>
+	    <value>automatic</value>
+	    <allowed kind="enum">
+		<value>automatic</value>
+		<value>interactive</value>
+		<value>getinputs</value>
+	    </allowed>
+	</param>
+
+	<param type="bool" name="flagbackup" subparam="true">
+	    <description>Backup prexistings flags before applying new ones</description>
+	    <value type="bool">False</value>
+	</param>
+
+	<param type="bool" name="dryrun" subparam="true">
+	    <description>Run the task (False) or display the command (True)</description>
+	    <value>False</value>
+	</param>
+	
+	<param type="bool" name="acceptresults" subparam="true">
+	    <description>Add the results into the pipeline context</description>
+	    <value>True</value>
+	</param>
+	
+	<constraints>
+	    <when param="pipelinemode">
+		<equals type="string" value="automatic">
+		</equals>
+		<equals type="string" value="interactive"> 
+		    <default param="vis"><value type="stringArray"></value></default>
+		    <default param="flagbackup"><value type="bool">False</value></default>
+		    <default param="dryrun"><value type="bool">False</value></default>
+		    <default param="acceptresults"><value type="bool">True</value></default>
+		</equals>
+		<equals type="string" value="getinputs"> 
+		    <default param="vis"><value type="stringArray"></value></default>
+		    <default param="flagbackup"><value type="bool">False</value></default>
+		</equals>
+	    </when>
+
+	    <when param="scan">
+	        <equals type="bool" value="True">
+		    <default param="scannumber"><value type="string"></value></default>
+		    <default param="intents"><value type="string">POINTING,FOCUS,ATMOSPHERE,SIDEBAND</value></default>
+	        </equals>
+	        <equals type="bool" value="False">
+	        </equals>
+	    </when>
+
+	    <when param="edgespw">
+	        <equals type="bool" value="True">
+		    <default param="fracspw"><value type="string">1.875GHz</value></default>
+		    <default param="fracspwfps"><value type="double">0.048387</value></default>
+	        </equals>
+	        <equals type="bool" value="False">
+		</equals>
+	    </when>
+
+	    <when param="online">
+	        <equals type="bool" value="True">
+		    <default param="fileonline"><value type="string"></value></default>
+	        </equals>
+	        <equals type="bool" value="False">
+	        </equals>
+	    </when>
+
+	    <when param="template">
+	        <equals type="bool" value="True">
+		    <default param="filetemplate"><value type="stringArray"></value></default>
+	        </equals>
+	        <equals type="bool" value="False">
+	        </equals>
+	    </when>
+
+	    <when param="hm_tbuff">
+	        <equals type="string" value="halfint">
+	        </equals>
+	        <equals type="string" value="manual">
+		    <default param="tbuff"><value type="double">0.0</value></default>
+	        </equals>
+	    </when>
+
+	</constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+The hsd_flagdata data performs basic flagging operations on a list of
+measurement sets.
+
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+autocorr -- Flag autocorrelation data.
+    default: True
+
+shadow -- Flag shadowed antennas.
+    default: True
+
+scan -- Flag a list of specifed scans.
+    default: True
+
+scannumber -- A string containing a  comma delimited list of scans to be
+    flagged.
+    example: '3,5,6'
+    default: ''
+
+intents -- A string containing a comma delimited list of intents against
+    which the scans to be flagged are matched.
+    example: '*BANDPASS*'
+    default: 'POINTING,FOCUS,ATMOSPHERE,SIDEBAND'
+
+edgespw -- Flag the edge spectral window channels.
+    default: True
+
+fracspw -- Fraction of the baseline correlator TDM edge channels to be flagged.
+    default: 0.0625
+
+fracspwfps -- Fraction of the ACS correlator TDM edge channels to be flagged.
+    default: 0.48387
+
+online -- Apply the online flags.
+   default: True
+
+fileonline -- File containing the online flags. These are computed by the
+    h_init or hif_importdata data tasks. If the online flags files
+    are undefined a name of the form 'msname_flagonline.txt' is assumed.
+    default: ''
+
+template -- Apply flagging templates
+    default: True
+
+filetemplate -- The name of an text file that contains the flagging template
+    for RFI, birdies, telluric lines, etc.  If the template flags files
+    is undefined a name of the form 'msname_flagtemplate.txt' is assumed.
+    default: ''
+
+hm_tbuff -- The heuristic for computing the default time interval padding parameter.
+    The options are 'halfint' and 'manual'. In 'halfint' mode tbuff is set to
+    half the maximum of the median integration time of the science and calibrator target
+    observations.
+    default: 'halfint'
+
+tbuff -- The time in seconds used to pad flagging command time intervals if
+    hm_tbuff='manual'.
+    default: 0.0
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    defined in the pipeline context.
+    example:
+    default: ''
+
+flagbackup -- Back up any pre-existing flags.
+       default: False
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+       do not execute (False).
+       default: True
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+       reject them (False).
+       default: True
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+
+Description
+
+The hsd_t_flagdata data performs basic flagging operations on a list of measurements including:
+
+o applying online flags
+o apply a flagging template
+o autocorrelation data flagging
+o shadowed antenna data flagging
+o scan based flagging by intent or scan number
+o edge channel flagging
+
+Issues
+
+
+Examples
+
+1. Do basic flagging on a measurement set
+    
+    hsd_flagdata()
+
+2. Do basic flagging on a measurement set flaggin additional scans selected
+   by number as well.
+
+    hsd_flagdata(scannumber='13,18')
+
+</example>
+
+
+</task>
+</casaxml>
