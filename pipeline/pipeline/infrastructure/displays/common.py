@@ -237,7 +237,7 @@ class LeafComposite(object):
     """
     Base class to hold multiple PlotLeafs, thus generating multiple plots when
     plot() is called.
-    """    
+    """
     def __init__(self, children):
         self._children = children
         

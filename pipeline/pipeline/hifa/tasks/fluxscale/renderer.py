@@ -20,27 +20,13 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                  always_rerender=False):
         super(T2_4MDetailsGFluxscaleRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
-                                                          
-    def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsGFluxscaleRenderer, self)
-        ctx = super_cls.get_display_context(context, result)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % result.stage_number)
-                                  
-        ctx.update({'dirname'  : weblog_dir})
-        
-        '''
-        amp_vs_uv_summary_plots = self.create_plots(context, 
-                                                    result, 
-                                                    setjy.AmpVsUVSummaryChart, 
-                                                    'AMPLITUDE')
-        '''
+
+    def update_mako_context(self, mako_context, pipeline_context, results):
         #All antenna, sort by baseband
         ampuv_allant_plots = collections.defaultdict(dict)
         for intents in ['AMPLITUDE']:
-            plots = self.create_plots(context, 
-                                      result, 
+            plots = self.create_plots(pipeline_context, 
+                                      results, 
                                       gfluxscale.GFluxscaleSummaryChart, 
                                       intents)
             self.sort_plots_by_baseband(plots)
@@ -53,8 +39,8 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         ampuv_ant_plots = collections.defaultdict(dict)
 
         for intents in ['AMPLITUDE']:
-            plots = self.create_plots_ants(context, 
-                                      result, 
+            plots = self.create_plots_ants(pipeline_context, 
+                                      results, 
                                       gfluxscale.GFluxscaleSummaryChart, 
                                       intents)
             self.sort_plots_by_baseband(plots)
@@ -63,10 +49,8 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             for vis, vis_plots in plots.items():
                 ampuv_ant_plots[vis][key] = vis_plots
 
-        ctx.update({'ampuv_allant_plots'     : ampuv_allant_plots,
-                    'ampuv_ant_plots'     : ampuv_ant_plots})
-        
-        return ctx
+        mako_context.update({'ampuv_allant_plots' : ampuv_allant_plots,
+                             'ampuv_ant_plots'    : ampuv_ant_plots})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -84,19 +68,21 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             d = utils.dict_merge(d, plots)
         return d
         
-    def create_plots_ants(self, context, results, plotter_cls, intents, renderer_cls=None):
+    def create_plots_ants(self, context, results, plotter_cls, intents,
+                          renderer_cls=None):
         """
         Create plots and return a dictionary of vis:[Plots].
         """
         d = {}
         for result in results:
-            plots = self.plots_for_result(context, result, plotter_cls, intents, renderer_cls, ant=result.resantenna)
+            plots = self.plots_for_result(context, result, plotter_cls,
+                    intents, renderer_cls, ant=result.resantenna)
             d = utils.dict_merge(d, plots)
         return d
 
-    def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None, ant=''):
+    def plots_for_result(self, context, result, plotter_cls, intents,
+                         renderer_cls=None, ant=''):
         vis = os.path.basename(result.inputs['vis'])
-        
         
         plotter = plotter_cls(context, result, intents, ant=ant)
         plots = plotter.plot()
@@ -110,5 +96,3 @@ class T2_4MDetailsGFluxscaleRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())        
 
         return d
-
-    

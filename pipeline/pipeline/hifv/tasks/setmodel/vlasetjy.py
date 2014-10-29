@@ -464,7 +464,7 @@ class VLASetjy(basetask.StandardTaskTemplate):
                 # merge identical jobs into one job with a multi-spw argument
                 # be careful - that comma after spw is required for ignore to
                 # be an iterable of strings!
-                jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                (jobs, _) = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
                 for job in jobs:
                     self._executor.execute(job)
         

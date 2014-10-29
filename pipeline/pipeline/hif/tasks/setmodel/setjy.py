@@ -386,9 +386,8 @@ class Setjy(basetask.StandardTaskTemplate):
                         result.measurements[field_identifier].append(flux)
 
             # merge identical jobs into one job with a multi-spw argument
-            print jobs
-            jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=['spw'])
-            for job in jobs:
+            jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+            for job, _ in jobs_and_components:
                 self._executor.execute(job)
 
         # higher-level tasks may run multiple Setjy tasks before running

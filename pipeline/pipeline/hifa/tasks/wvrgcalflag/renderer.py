@@ -5,7 +5,6 @@ Created on 10 Sep 2014
 '''
 import collections
 import json
-import math
 import os
 
 import pipeline.infrastructure.displays.image as image
@@ -222,92 +221,37 @@ class WvrcalflagMetricPlotsRenderer(basetemplates.CommonRenderer):
                              'plot_title' : 'WVR flagging metric view for %s' % self.ms})
 
 
-class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.CommonRenderer):
+class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        super(WvrgcalflagPhaseOffsetPlotRenderer, self).__init__('wvrgcalflag_phase_offset_plots.mako', 
-                                                                 context, result)
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        self.basename= filenamer.sanitize('phase_offsets-%s.html' % self.ms)
-        self.path = os.path.join(self.dirname, self.basename)
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'WVR Phase Offset Plots for %s' % vis
+        outfile = filenamer.sanitize('phase_offsets-%s.html' % vis)
 
         # put this code here to save overcomplicating the template
         antenna_names = set()
         for plot in plots:
             antenna_names.update(set(plot.parameters['ant']))
         antenna_names = sorted(list(antenna_names))
-        self.antenna_names = antenna_names
-        
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            antenna_name = plot.parameters['ant']
-            spw_id = plot.parameters['spw']
+        self.antenna_names = antenna_names        
 
-            ratio = 1.0 / plot.qa_score
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-            if math.isnan(ratio) or math.isinf(ratio):
-                ratio = 'null'
-
-            d[image_relpath] = {'antenna'   : antenna_name,
-                                'spw'       : spw_id,
-                                'ratio'     : ratio,
-                                'thumbnail' : thumbnail_relpath}
-
-        self.json = json.dumps(d)
+        super(WvrgcalflagPhaseOffsetPlotRenderer, self).__init__(
+                'wvrgcalflag_phase_offset_plots.mako', 
+                context, result, plots, title, outfile)
+         
+    def update_json_dict(self, d, plot):
+        d['ratio'] = 1.0 / plot.qa_score
          
     def update_mako_context(self, mako_context):
-        mako_context.update({'plots' : self.plots,
-                             'antennas'   : self.antenna_names,
-                             'json'       : self.json,
-                             'plot_title' : 'WVR Phase Offset Plots for %s' % self.ms})
+        super(WvrgcalflagPhaseOffsetPlotRenderer, self).update_mako_context(mako_context)
+        mako_context['antennas'] = self.antenna_names
 
 
-class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(basetemplates.CommonRenderer):
+class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        super(WvrgcalflagPhaseOffsetVsBaselinePlotRenderer, self).__init__('wvrgcalflag_phase_offset_vs_baseline_plots.mako', 
-                                                                           context, result)
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
-
-        self.basename = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % self.ms)
-        self.path = os.path.join(self.dirname, self.basename)
-
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            scan_id = plot.parameters['scan']
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
-
-            d[image_relpath] = {'spw'       : spw_id,
-                                'scan'      : scan_id,
-                                'thumbnail' : thumbnail_relpath}
-
-        self.json = json.dumps(d)
-         
-    def update_mako_context(self, mako_context):
-        mako_context.update({'plots' : self.plots,
-                             'json'       : self.json,
-                             'plot_title' : 'Phase offset vs average baseline for %s' % self.ms})
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'Phase offset vs average baseline for %s' % vis
+        outfile = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % vis)
+        
+        super(WvrgcalflagPhaseOffsetVsBaselinePlotRenderer, self).__init__(
+                'wvrgcalflag_phase_offset_vs_baseline_plots.mako', context, 
+                result, plots, title, outfile)

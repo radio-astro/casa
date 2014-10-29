@@ -373,7 +373,8 @@ class memoized(object):
     '''
     def __init__(self, func):
         self.func = func
-        self.cache = weakref.WeakKeyDictionary()
+#        self.cache = weakref.WeakKeyDictionary()
+        self.cache = {}
     def __call__(self, *args):
         if not isinstance(args, collections.Hashable):
             # uncacheable. a list, for instance.
@@ -578,7 +579,7 @@ def field_arg_to_id(ms_path, field_arg):
     :param field_arg: the field selection in CASA format
     :return: a list of field IDs 
     """
-    all_indices = _convert_arg_to_id('field', ms_path, field_arg)    
+    all_indices = _convert_arg_to_id('field', ms_path, str(field_arg))    
     return all_indices['field'].tolist()
 
 def spw_arg_to_id(ms_path, spw_arg):
@@ -589,7 +590,7 @@ def spw_arg_to_id(ms_path, spw_arg):
     :param spw_arg: the spw selection in CASA format
     :return: a list of (spw, chan_start, chan_end, step) lists 
     """
-    all_indices = _convert_arg_to_id('spw', ms_path, spw_arg)
+    all_indices = _convert_arg_to_id('spw', ms_path, str(spw_arg))
     # filter out channel tuples whose spw is not in the spw entry
     return [(spw, start, end, step) 
             for (spw, start, end, step) in all_indices['channel']
@@ -603,7 +604,7 @@ def ant_arg_to_id(ms_path, ant_arg):
     :param ant_arg: the antenna selection in CASA format
     :return: a list of antenna IDs 
     """
-    all_indices = _convert_arg_to_id('baseline', ms_path, ant_arg)    
+    all_indices = _convert_arg_to_id('baseline', ms_path, str(ant_arg))    
     return all_indices['antenna1'].tolist()
 
 @memoized
@@ -703,3 +704,96 @@ def get_intervals(context, calapp):
         all_solints.update(set(solints))
     
     return all_solints
+
+def merge_jobs(jobs, task, merge=(), ignore=()):
+    """
+    Merge jobs that are identical apart from the arguments named in
+    ignore. These jobs will be recreated with  
+
+    Identical tasks are identified by creating a hash of the dictionary
+    of task keyword arguments, ignoring keywords specified in the 
+    'ignore' argument. Jobs with the same hash can be merged; this is done
+    by appending the spw argument of job X to the spw argument of memoed
+    job Y, whereafter job X can be discarded.  
+
+    :param jobs: the job requests to merge
+    :type jobs: a list of\ 
+        :class:`~pipeline.infrastructure.jobrequest.JobRequest`
+    :param task: the CASA task to recreate
+    :type task: a reference to a function on \
+        :class:`~pipeline.infrastructure.jobrequest.casa_tasks'
+    :param ignore: the task arguments to ignore during hash creation
+    :type ignore: an iterable containing strings
+
+    :rtype: a list of \
+        :class:`~pipeline.infrastructure.jobrequest.JobRequest`
+    """
+    # union holds the property names to ignore while calculating the job hash
+    union = frozenset(itertools.chain.from_iterable((merge, ignore)))
+
+    # mapping of job hash to merged job 
+    merged_jobs = collections.OrderedDict()
+    # mapping of job hash to all the jobs that were merged to create it
+    component_jobs = collections.OrderedDict()
+
+    for job in jobs:
+        job_hash = job.hash_code(ignore=union)
+        # either first job or a unique job, so add to dicts..
+        if job_hash not in merged_jobs:
+            merged_jobs[job_hash] = job
+            component_jobs[job_hash] = [job]
+            continue
+
+        # .. otherwise this job looks identical to one we have already. Merge
+        # this job's arguments with those of the job we've already got.
+        hashed_job_args = merged_jobs[job_hash].kw
+        new_job_args = dict(hashed_job_args)
+        for prop in merge:
+            if job.kw[prop] not in hashed_job_args[prop]:
+                merged_value = ','.join((hashed_job_args[prop], job.kw[prop]))
+                new_job_args[prop] = merged_value
+            merged_jobs[job_hash] = task(**new_job_args)
+
+        # add this to the record of jobs we merged
+        component_jobs[job_hash].append(job)
+
+    return zip(merged_jobs.values(), component_jobs.values())
+
+def plotms_iterate(jobs_and_wrappers, iteraxis):
+    jobs = [j for j,_ in jobs_and_wrappers]
+    
+    merged_results = merge_jobs(jobs, casa_tasks.plotms, merge=(iteraxis,), 
+                                ignore=('plotfile',))
+
+    iter_filename = 'iterator.png'
+    root, ext = os.path.splitext(iter_filename)
+    
+    for merged_job, component_jobs in merged_results:
+        # massage the merged job arguments to activate plotms iteration
+        merged_job.kw['plotfile'] = iter_filename
+        merged_job.kw['clearplots'] = True
+        merged_job.kw['overwrite'] = True
+        merged_job.kw['exprange'] = 'all'
+        
+        import pipeline.infrastructure.casa_tasks as casa_tasks
+        iter_job = casa_tasks.plotms(iteraxis=iteraxis, **merged_job.kw)
+        iter_job.execute(dry_run=True)
+        
+        # plotms with iterator writes files as file.png, file2.png, file3.png,
+        # etc.
+        iter_indexes = ['%s' % (n+1) for n in range(len(component_jobs))]
+        iter_indexes[0] = ''
+        src_filenames = ['%s%s%s' % (root, idx, ext) for idx in iter_indexes]
+        dest_filenames = [job.kw['plotfile'] for job in component_jobs]
+        
+        for src, dest, job in zip(src_filenames, dest_filenames, 
+                                  component_jobs):
+            if os.path.exists(src):
+                os.rename(src, dest)
+            else:
+                LOG.info('%s not found. plotms iterator did not generate any '
+                         'output for equivalent of %s', src, job)
+
+    wrappers = [w for _,w in jobs_and_wrappers]
+    return filter(lambda w: os.path.exists(w.abspath), wrappers)
+        

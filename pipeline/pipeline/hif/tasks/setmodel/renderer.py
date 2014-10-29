@@ -34,7 +34,7 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             for vis, vis_plots in plots.items():
                 amp_vs_uv_summary_plots[vis][key] = vis_plots
 
-        ctx.update({'amp_vs_uv_plots'     : amp_vs_uv_summary_plots})
+        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -53,12 +53,11 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return d
 
     def plots_for_result(self, context, result, plotter_cls, intents, renderer_cls=None):
-        vis = os.path.basename(result.inputs['vis'])
-        
         plotter = plotter_cls(context, result, intents)
         plots = plotter.plot()
 
         d = collections.defaultdict(dict)
+        vis = os.path.basename(result.inputs['vis'])        
         d[vis] = plots
 
         if renderer_cls is not None:

@@ -142,46 +142,36 @@ $(document).ready(function(){
 </table>
 
 
+<%self:plot_group plot_dict="${amp_vs_uv_plots}"
+				  url_fn="${lambda ms: 'noop'}"
+				  plot_accessor="${lambda ms_plots: ms_plots.items()}">
+	<%def name="title()">
+		Model amplitude vs UV distance
+	</%def>
+
+	<%def name="preamble()">
+		<p>Plots of model amplitude vs UV distance for each Measurement Set.
+		One plot is generated per baseband, with data shown for all antennas
+		and correlations, colored by spw.</p>
+	</%def>
+	
+	<%def name="mouseover(plot)">Click to show model amplitude vs UV distance for baseband ${plot.parameters['baseband']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Baseband: ${plot.parameters['baseband']}		
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_text(plot, source_id)">
+		Model amplitude vs UV distance in baseband
+		${plot.parameters['baseband']} for ${plot.parameters['intent']}
+		calibrator.
+	</%def>
 
 
-%if amp_vs_uv_plots:
-	<h3>Model amplitude vs UV distance</h3>
 
-	% for ms in amp_vs_uv_plots:
-	    <h4> ${ms} </h4>
-		% for intent in amp_vs_uv_plots[ms]:
-		    <ul class="thumbnails">
-		        % for plot in amp_vs_uv_plots[ms][intent]:
-		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       rel="amp_vs_uv-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
-		                    </a>
-		
-		                    <div class="caption">
-								<h4>
-
-					                   Baseband ${plot.parameters['baseband']}
-
-								</h4>
-								
-		                        <p>Model amp vs UV distance for ${intent} calibrator  baseband ${plot.parameters['baseband']}, all antennas and correlations. Data are colored by spw.
-		                        </p>
-		                    </div>
-		                </div>
-		            </li>
-		            % endif
-		        % endfor
-		    </ul>
-		% endfor
-	%endfor
-%endif
-
-
+</%self:plot_group>
 

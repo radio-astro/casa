@@ -39,8 +39,11 @@ $(document).ready(function() {
                 width: 50,
                 height: 50,
             }
-        }
-    });
+        },
+    	beforeShow : function() {
+        	this.title = $(this.element).attr('caption');
+       	}    
+    }); 
 });
 </script>
 
@@ -49,42 +52,33 @@ science spectral window to the T<sub>sys</sub> window that overlaps in
 frequency.</p>
 
 <h2>Plots</h2>
-% for ms in summary_plots:
-    <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
-    </h4>
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="tsys-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="T<sub>sys</sub> summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
 
-                    <div class="caption">
-                    	<h4>
-							<a href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}"
-	                       	   class="replace"
-	                           data-spw="${plot.parameters['spw']}">
-	                           Spectral Window ${plot.parameters['spw']}
-	                        </a>
-                        </h4>
+<%self:plot_group plot_dict="${summary_plots}"
+				  url_fn="${lambda x: summary_subpage[x]}"
+				  data_spw="${True}">
 
-                        <p>Plot of time-averaged T<sub>sys</sub> for spectral
-                            window ${plot.parameters['spw']} (T<sub>sys</sub>
-                            window
-                        ${plot.parameters['tsys_spw']}), coloured by antenna.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-% endfor
+	<%def name="title()">
+		T<sub>sys</sub> vs frequency
+	</%def>
+
+	<%def name="preamble()">
+		<p>Plots of time-averaged T<sub>sys</sub> vs frequency, colored by antenna.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show Tsys vs frequency for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Spw: ${plot.parameters['spw']}<br />
+		T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral Window ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_text(plot, _)">
+		T<sub>sys</sub> spw ${plot.parameters['tsys_spw']}
+	</%def>
+
+</%self:plot_group>
+

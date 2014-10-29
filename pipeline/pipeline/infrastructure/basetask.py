@@ -979,49 +979,6 @@ class StandardTaskTemplate(api.Task):
         """
         raise NotImplementedError
 
-    def _merge_jobs(self, jobs, task, merge=(), ignore=()):
-        """
-        Merge jobs that are identical apart from the arguments named in
-        ignore. These jobs will be recreated with  
-
-        Identical tasks are identified by creating a hash of the dictionary
-        of task keyword arguments, ignoring keywords specified in the 
-        'ignore' argument. Jobs with the same hash can be merged; this is done
-        by appending the spw argument of job X to the spw argument of memoed
-        job Y, whereafter job X can be discarded.  
-
-        :param jobs: the job requests to merge
-        :type jobs: a list of\ 
-            :class:`~pipeline.infrastructure.jobrequest.JobRequest`
-        :param task: the CASA task to recreate
-        :type task: a reference to a function on \
-            :class:`~pipeline.infrastructure.jobrequest.casa_tasks'
-        :param ignore: the task arguments to ignore during hash creation
-        :type ignore: an iterable containing strings
-
-        :rtype: a list of \
-            :class:`~pipeline.infrastructure.jobrequest.JobRequest`
-        """
-        # union stores the property names that to ignore while calculating the
-        # job hash
-        union = frozenset(itertools.chain.from_iterable((merge, ignore)))
-
-        hashes = collections.OrderedDict()
-        for job in jobs:
-            job_hash = job.hash_code(ignore=union)
-            if job_hash not in hashes:
-                hashes[job_hash] = job
-            else:
-                hashed_job_args = hashes[job_hash].kw
-                new_job_args = dict(hashed_job_args)
-                for prop in merge:
-                    if job.kw[prop] not in hashed_job_args[prop]:
-                        merged_value = ','.join((hashed_job_args[prop], job.kw[prop]))
-                        new_job_args[prop] = merged_value
-                    hashes[job_hash] = task(**new_job_args)
-
-        return hashes.values()
-
     @timestamp
     @capture_log
     @result_finaliser

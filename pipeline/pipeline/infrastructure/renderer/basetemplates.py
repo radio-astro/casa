@@ -4,6 +4,8 @@ Created on 8 Sep 2014
 @author: sjw
 '''
 import contextlib
+import json
+import math
 import os
 
 import pipeline.infrastructure.logging as logging
@@ -86,3 +88,55 @@ class CommonRenderer(object):
             
         file_obj = open(self.path, 'w')
         return contextlib.closing(file_obj)
+    
+
+class JsonPlotRenderer(CommonRenderer):
+    def __init__(self, uri, context, result, plots, title, outfile):
+        super(JsonPlotRenderer, self).__init__(uri, context, result)
+        self.plots = plots
+        self.title = title
+        self.path = os.path.join(self.dirname, outfile)
+
+        # all values set on this dictionary will be written to the JSON file
+        d = {}
+        for plot in plots:
+            # calculate the relative pathnames as seen from the browser
+            thumbnail_relpath = os.path.relpath(plot.thumbnail,
+                                                self.context.report_dir)
+            image_relpath = os.path.relpath(plot.abspath,
+                                            self.context.report_dir)
+            json_dict_for_plot = {'thumbnail' : thumbnail_relpath}
+            # push the most commonly used filter parameters directly into the
+            # JSON dictionary to save the extending classes from doing it in
+            # update_json_dict 
+            for param in ('spw', 'scan', 'ant', 'baseband', 'field'):
+                if param in plot.parameters:
+                    json_dict_for_plot[param] = str(plot.parameters[param])                    
+            self.update_json_dict(json_dict_for_plot, plot)
+
+            # Javascript JSON parser doesn't like Javascript floating point 
+            # constants (NaN, Infinity etc.), so convert them to null. We  
+            # do not omit the dictionary entry so that the plot is hidden
+            # by the filters.
+            for k, v in json_dict_for_plot.items():
+                if isinstance(v, float):
+                    if math.isnan(v) or math.isinf(v):
+                        json_dict_for_plot[k] = v
+
+            d[image_relpath] = json_dict_for_plot
+
+        self.json = json.dumps(d)
+    
+    def update_json_dict(self, d, plot):
+        """
+        Hook function that can be used by extending classes to extract extra
+        parameters from the plot object and insert them into the JSON
+        dictionary for that plot.
+        """
+        pass
+         
+    def update_mako_context(self, mako_context):
+        mako_context.update({'plots'      : self.plots,
+                            # Javascript parser requires \" -> \\" conversion 
+                             'json'       : self.json.replace('\"', '\\"'),
+                             'plot_title' : self.title})

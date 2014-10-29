@@ -26,8 +26,8 @@ class PlotmsLeaf(object):
         self._context = context
         self._result = result
 
-        self._ms = context.observing_run.get_ms(calto.vis)
         self._vis = calto.vis
+        self._ms = context.observing_run.get_ms(self._vis)
 
         self._xaxis = xaxis
         self._yaxis = yaxis
@@ -35,13 +35,10 @@ class PlotmsLeaf(object):
         self._spw = spw
         self._intent = intent
         
-        print "APPLYCAL SPWS:" + str(spw)
-
         # convert intent to scan selection
         if intent != '':
             domain_fields = self._ms.get_fields(field)
             domain_spws = self._ms.get_spectral_windows(spw)
-            print "DOMAIN SPWS:" + str(domain_spws)
             scans = [s for s in self._ms.get_scans(scan_intent=intent)
                      if s.fields.intersection(domain_fields)
                      and s.spws.intersection(domain_spws)]
@@ -49,7 +46,7 @@ class PlotmsLeaf(object):
         self._scan = scan
 
         # use field name rather than ID where possible
-        field_label = None
+        field_label = ''
         if field != '':
             matching = self._ms.get_fields(field)
 
@@ -182,8 +179,6 @@ class PlotmsLeaf(object):
 
         task_args.update(**self._plot_args)
         
-        print "_CREATE_PLOT SPWS:" + task_args['spw']
-
         task = casa_tasks.plotms(**task_args)
         task.execute(dry_run=False)
         
@@ -292,7 +287,6 @@ class FieldComposite(common.LeafComposite):
             if not intersection:
                 continue
 
-            LOG.warning(field)
             leaf_obj = self.leaf_class(context, result, calto, xaxis, yaxis,
                                         ant=ant, spw=spw, 
                                         intent=','.join(intersection), 

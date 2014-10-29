@@ -202,7 +202,7 @@ except:
 		                <div class="thumbnail">
 		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 		                       class="fancybox"
-		                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennae.' if plot.parameters['ant'] == '' else 'Antennae: '+str(plot.parameters['ant'])+'.' }
+		                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
                               Flux calibrator fields: ${plot.parameters['field']}."
 		                       rel="amp_vs_uv-${ms}">
 		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
@@ -215,10 +215,10 @@ except:
                                             <h4>Baseband ${plot.parameters['baseband']}</h4>
 					    <p>Amp vs. uvdist for 
 					    <%
-						antlist = plot.parameters['ant'].split(',')
+						antlist = plot.parameters.get('ant','').split(',')
 						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
 					    %>
-					    ${'all antennae.' if plot.parameters['ant'] == '' else 'antennae: '+antdisp}
+					    ${'all antennas.' if plot.parameters.get('ant','') == '' else 'antennae: '+antdisp}
 					    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
 					    </p>
 					</div>
@@ -236,7 +236,7 @@ except:
 		                <div class="thumbnail">
 		                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
 		                       class="fancybox"
-		                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennae.' if antplot.parameters['ant'] == '' else 'Antennae: '+str(antplot.parameters['ant'])+'.' }
+		                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennae.' if antplot.parameters.get('ant','') == '' else 'Antennae: '+str(antplot.parameters['ant'])+'.' }
                               Flux calibrator fields: ${antplot.parameters['field']}."
 		                       rel="amp_vs_uv-${ms}">
 		                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
@@ -249,10 +249,10 @@ except:
                                             <h4>Baseband ${antplot.parameters['baseband']}</h4>
 					    <p>Selection for 
 					    <%
-						antlist = antplot.parameters['ant'].split(',')
+						antlist = antplot.parameters.get('ant','').split(',')
 						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
 					    %>
-					    ${' all antennae.' if antplot.parameters['ant'] == '' else ' antennae: '+antdisp}
+					    ${' all antennae.' if antplot.parameters.get('ant','') == '' else ' antennae: '+antdisp}
 					    </p>
 					</div>
 		                </div>

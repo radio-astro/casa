@@ -28,6 +28,8 @@ class TsysSummaryChart(object):
     def create_plot(self, tsys_spw):
         figfile = self.get_figfile()
 
+#        chanrange = get_chanrange(self.ms, tsys_spw)
+
         task_args = {'vis'         : self.ms.name,
                      'caltable'    : self.caltable,
                      'xaxis'       : 'freq',
@@ -37,6 +39,7 @@ class TsysSummaryChart(object):
                      'spw'         : tsys_spw,
                      'showatm'     : True,
                      'showfdm'     : True,
+#                     'chanrange'   : chanrange,
                      'subplot'     : 11,
                      'figfile'     : figfile}
 
@@ -104,6 +107,8 @@ class TsysPerAntennaChart(object):
     def create_plot(self, tsys_spw, antenna):
         figfile = self.get_figfile()
 
+#        chanrange = get_chanrange(self.ms, tsys_spw)
+
         task_args = {'vis'         : self.ms.name,
                      'caltable'    : self.caltable,
                      'xaxis'       : 'freq',
@@ -114,6 +119,7 @@ class TsysPerAntennaChart(object):
                      'antenna'     : antenna.id,
                      'showatm'     : True,
                      'showfdm'     : True,
+#                     'chanrange'   : chanrange,
                      'subplot'     : 11,
                      'figfile'     : figfile}
 
@@ -254,3 +260,11 @@ class ScoringTsysPerAntennaChart(object):
         median_max = numpy.max(mean_tsyses)
 
         return TsysStat(median, rms, median_max)
+
+
+def get_chanrange(ms, tsys_spw):
+    # CAS-7011: scale Tsys plots to show the inner 90% of channels
+    num_tsys_channels = ms.get_spectral_window(tsys_spw).num_channels
+    delta = int(round(0.05 * num_tsys_channels)) - 1
+    chanrange = '%s~%s' % (delta, num_tsys_channels - delta)
+    return chanrange
