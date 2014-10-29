@@ -462,10 +462,8 @@ class VLASetjy(basetask.StandardTaskTemplate):
                         result.measurements[field].append(flux)
                 
                 # merge identical jobs into one job with a multi-spw argument
-                # be careful - that comma after spw is required for ignore to
-                # be an iterable of strings!
-                (jobs, _) = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
-                for job in jobs:
+                jobs_and_components = utils.merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
+                for job, _ in jobs_and_components:
                     self._executor.execute(job)
         
         '''
