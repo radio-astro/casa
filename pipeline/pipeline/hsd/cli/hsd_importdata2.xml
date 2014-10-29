@@ -44,6 +44,11 @@
     <value>False</value>
     </param>
 
+    <param type="bool" name="bdfflags" subparam="true">
+    <description>Apply BDF flags on import</description>
+    <value>True</value>
+    </param>
+
     <param type="bool" name="dryrun" subparam="true">
     <description>Run the task (False) or display task command (True)</description>
     <value>False</value>
@@ -62,6 +67,7 @@
         <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
         <default param="process_caldevice"><value type="bool">False</value></default>
         <default param="overwrite"><value type="bool">False</value></default>
+        <default param="bdfflags"><value type="bool">True</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
         </equals>
@@ -69,6 +75,7 @@
         <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
         <default param="process_caldevice"><value type="bool">False</value></default>
         <default param="overwrite"><value type="bool">False</value></default>
+        <default param="bdfflags"><value type="bool">True</value></default>
         </equals>
     </when>
     </constraints>
@@ -126,6 +133,9 @@ process_caldevice -- Ingest the ASDM caldevice table
 
 overwrite -- Overwrite existing MSs on output.
    default: False
+
+bdfflags -- Apply BDF flags on line
+   default: True
 
 --- pipeline task execution modes
 
