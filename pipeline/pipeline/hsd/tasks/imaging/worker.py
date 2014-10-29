@@ -90,9 +90,13 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         # baseline
         #baseline = '0&&&'
     
+        # the number of pixels per beam
+        ### reccomended by EOC
+        grid_factor = 9.0
         # cellx and celly
         grid_size = reference_data.beam_size[spwid]
-        cellx = qa.div(grid_size, 3.0)
+        #cellx = qa.div(grid_size, 3.0)
+        cellx = qa.div(grid_size, grid_factor)
         celly = cellx
         cell_in_deg = qa.convert(cellx, 'deg')['value']
         print 'cell=%s' % (cellx)
@@ -135,7 +139,7 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             ny += 1
     
         # increase nx and ny to reduce the effect of edges
-        margin = 3
+        margin = int(grid_factor)
         nx += 2 * margin
         ny += 2 * margin
         LOG.info('nx,ny=%s,%s' % (nx, ny))
@@ -183,13 +187,18 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
         outframe = 'LSRK'
     
         # gridfunction
-        gridfunction = 'GAUSS'
+        #gridfunction = 'GAUSS'
+        ### reccomended by EOC
+        gridfunction = 'SF'
     
         # truncate, gwidth, jwidth, and convsupport
-        truncate = '3pixel'
-        gwidth = '1.5pixel'
-        jwidth = '-1pixel'  # default (not used)
-        convsupport = 3
+        #truncate = '3pixel'
+        #gwidth = '1.5pixel'
+        #jwidth = '-1pixel'  # default (not used)
+        #convsupport = 3
+        ### reccomended by EOC
+        truncate = gwidth = jwidth = -1  # defaults (not used)
+        convsupport = 6
     
         temporary_name = imagename.rstrip('/')+'.tmp'
         cleanup_params = ['outfile', 'infiles', 'spw', 'scan']
