@@ -87,7 +87,7 @@ class GriddingBase(common.SingleDishTaskTemplate):
         combine_radius = self.grid_ra
         kernel_width = 0.5 * combine_radius
         allowance = self.grid_ra * 0.1
-        spacing = self.grid_ra / 3.0
+        spacing = self.grid_ra / 9.0
         DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
         grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing)
