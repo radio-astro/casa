@@ -2,9 +2,11 @@
 LineFinderRule = {'MaxFWHM': 900, 
                   'MinFWHM': 5, 
                   #'MinFWHM': 3, 
-                  'Threshold': 3}
-                  #'Threshold': 2.5}
-                  #'Threshold': 2}
+                  #'Threshold': 3,
+                  'Threshold': 2.5,
+                  #'Threshold': 2.5,
+                  #'Threshold': 2,
+                  'IgnoreEdge': 0.05}
 
 # Rule for Line Validation
 ClusterRule = {'ThresholdValid': 0.5, 

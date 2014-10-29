@@ -293,8 +293,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         for row in ROWS:
             #if len(detect_signal[row][2]) > Maxlines: Maxlines = len(detect_signal[row][2])
             #Maxlines = max(Maxlines, len(detect_signal[row][2]))
-
-            if detect_signal[row][2][0][0] != -1: Npos += 1
+            if len(detect_signal[row][2]) != 0 and detect_signal[row][2][0][0] != -1: Npos += 1
 
             for line in detect_signal[row][2]:
                 # Check statistics flag added by G.K. 2008/1/17
@@ -671,7 +670,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
         #SDP.ShowClusterInchannelSpace(Region2, Bestlines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
-        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (Ncluster, BestScore, lines))
+        LOG.info('Final: Ncluster = %s, Score = %s, lines = %s' % (BestNcluster, BestScore, lines))
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
@@ -755,6 +754,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
+        #LOG.info('GridCluster %s' % GridCluster)
+        #LOG.info('GridMember %s' % GridMember)
+        self.GridClusterValidation = GridCluster.copy()
         
         return (GridCluster, GridMember, lines)
 
@@ -815,13 +817,12 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
+        #LOG.info('GridCluster %s' % GridCluster)
         
         return (GridCluster, lines)
 
     def final_stage(self, GridCluster, GridMember, Region, Region2, lines, category, grid_ra, grid_dec, broad_component, xorder, yorder, x0, y0, nsigma, nchan, Grid2SpectrumID, index_list, PosList):
                 
-        (MaskMin, MaskMax) = (10000, 0)
-
         (Ncluster, nra, ndec) = GridCluster.shape
         xorder0 = xorder
         yorder0 = yorder
@@ -841,6 +842,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         # Clean isolated grids
         for Nc in xrange(Ncluster):
+            #LOG.info('------00------ Exec for Nth Cluster: Nc=%d' % Nc)
             #print '\nNc=', Nc
             if lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
@@ -911,6 +913,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 ratio = rules.ClusterRule['BlurRatio']
                 # Set-up SubCluster
                 for n in xrange(len(Nmember)):
+                    #LOG.info('------01------ n=%d' % n)
                     SubPlane = numpy.zeros((nra, ndec), dtype=numpy.float32)
                     #xlist = []
                     #ylist = []
@@ -947,6 +950,12 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     for x in xrange(len(ValidPlane)):
                         LOG.trace(' %d : %s' % (x, list(ValidPlane[x])))
 
+                    #LOG.info('ValidPlane %s' % ValidPlane)
+                    #LOG.info('Plane %s' % Plane)
+                    #LOG.info('SubPlane %s' % SubPlane)
+                    #LOG.info('BlurPlane %s' % BlurPlane)
+                    #LOG.info('Original %s' % Original)
+                    #LOG.info('GridClusterV %s' % self.GridClusterValidation[Nc])
                     # 2D fit for each Plane
                     # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
                     # Not use for fit but apply the value at the border if GridCluster[Nc][x][y] > self.Marginal
@@ -957,11 +966,14 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     # Determine fitting order if not specified
                     #if xorder < 0: xorder0 = min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum() - 1, 5)
                     #if yorder < 0: yorder0 = min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum() - 1, 5)
-                    if xorder < 0: xorder0 = int(min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
-                    if yorder < 0: yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    if xorder < 0: xorder0 = int(min(((numpy.sum(self.GridClusterValidation[Nc], axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    if yorder < 0: yorder0 = int(min(((numpy.sum(self.GridClusterValidation[Nc], axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    ###if xorder < 0: xorder0 = int(min(((numpy.sum(ValidPlane, axis=0) > 0.5)*1).sum()/Bfactor - 1, 5))
+                    ###if yorder < 0: yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
                     #if xorder < 0: xorder0 = min(max(max(xlist) - min(xlist), 0), 5)
                     #if yorder < 0: yorder0 = min(max(max(ylist) - min(ylist), 0), 5)
                     LOG.trace('(X,Y)order = (%d, %d)' % (xorder0, yorder0))
+                    #LOG.info('(X,Y)order, order0 = (%d, %d) (%d, %d)' % (xorder, yorder, xorder0, yorder0))
 
                     # clear Flag
                     for i in xrange(len(category)): Region[i][5] = 1
@@ -973,7 +985,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         SingularMatrix = False
                         ExceptionLinAlg = True
 
+                    # for Channel Map wavelength range determination
+                    (MaskMin, MaskMax) = (10000, 0)
                     while ExceptionLinAlg:
+                        #LOG.info('------02------ in ExceptionLinAlg')
                         FitData = []
                         ### 2011/05/15 One parameter (Width, Center) for each spectra
                         #Region format:([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
@@ -1001,6 +1016,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         B1 = numpy.zeros((xorder0 + 1) * (yorder0 + 1), dtype=numpy.float64)
                         MM0 = numpy.zeros([(xorder0 + 1) * (yorder0 + 1), (xorder0 + 1) * (yorder0 + 1)], dtype=numpy.float64)
                         for iteration in xrange(3):
+                            #LOG.info('------03------ iteration=%d' % iteration)
                             LOG.trace('2D Fit Iteration = %d' % iteration)
 
                             ### Commented out three lines 2011/05/15
@@ -1030,6 +1046,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             MM0[:] = 0.0
                             for eff in effective:
                                 (Width, Center, x, y, flag) = FitData[eff]
+                                #LOG.info('W,C,x,y,flag = %f, %f, %f, %f, %s' % (Width, Center, x, y, flag))
                                 yk = 1.0
                                 idx = 0
                                 for k in xrange(yorder0 * 2 + 1):
@@ -1069,6 +1086,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 A1 = LA.solve(MM0, B1)
                             #except LinAlgError:
                             except:
+                                #LOG.info('------04------ in exception loop ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
                                 if xorder0 != 0 or yorder0 != 0:
                                     ExceptionLinAlg = True
                                     LOG.trace('xorder0,yorder0 = %s,%s' % (xorder0, yorder0))
@@ -1077,6 +1095,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                 else:
                                     SingularMatrix = True
                                 break
+                            #LOG.info('------05------ after try ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
 
                             # Calculate Sigma
                             # Sigma should be calculated in the upper stage
@@ -1087,6 +1106,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                             # following clipping stage. So, evalueate Diff 
                             # only once here and reuse it in clipping.
                             for (Width, Center, x, y, flag) in FitData:
+                                #LOG.info('%d %d %f %f %s %s' % (xorder0,yorder0,x,y,A0,A1))
                                 (Fit0, Fit1) = _eval_poly(xorder0+1, yorder0+1, x, y, A0, A1)
                                 Fit0 -= Center
                                 Fit1 -= Width
@@ -1116,15 +1136,18 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                     NFlagged += 1
 
                             LOG.trace('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
+                            #LOG.info('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
                             #2009/10/15 compare the number of the remainder and fitting order
                             if (Number - NFlagged) <= max(xorder0, yorder0) or Number == NFlagged:
                                 SingularMatrix = True
                                 break
                     # Iteration End
                     ### 2011/05/15 Fitting is no longer (Width, Center) but (minchan, maxChan)
+                    #LOG.info('------06------ End of Iteration ExceptionLinAlg=%s SingularMatrix=%s' % (ExceptionLinAlg, SingularMatrix))
 
                     # FitData: [(Width, Center, RA, DEC)]
                     if not SingularMatrix:
+                        #LOG.info('------07------ in not SingularMatrix loop')
                         FitData = []
                         for i in range(len(category)):
                             if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid:
@@ -1133,11 +1156,13 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         if len(FitData) == 0: continue
 
                         # for Channel Map velocity range determination 2014/1/12
-                        (MaskMin, MaskMax) = (10000, 0)
+                        (MaskMin, MaskMax) = (10000.0, 0.0)
                         # Calculate Fit for each position
+                        #LOG.info('------08------ Calc Fit for each pos')
                         for x in xrange(nra):
                             for y in xrange(ndec):
                                 if ValidPlane[x][y] == 1:
+                                    #LOG.info('------09------ in ValidPlane x=%d y=%d' % (x, y))
                                     for PID in Grid2SpectrumID[x][y]:
                                         ID = index_list[PID]
                                         ### 2011/05/15 (Width, Center) -> (minchan, maxChan)
@@ -1145,6 +1170,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                         Fit0 = 0.5 * (Chan0 + Chan1)
                                         Fit1 = (Chan1 - Chan0) + 1.0
                                         LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
+                                        #LOG.info('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
                                         if (Fit1 >= self.MinFWHM) and (Fit1 <= self.MaxFWHM):
                                             # Allowance = Fit1 / 2.0 * 1.3
                                             # To keep broad line region, make allowance larger
@@ -1161,7 +1187,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                             # for Channel map velocity range determination 2014/1/12
                                             MaskCen = (Protect[0] + Protect[1]) / 2.0
                                             if MaskMin > MaskCen: MaskMin = MaskCen
-                                            elif MaskMax < MaskCen: MaskMax = MaskCen
+                                            if MaskMax < MaskCen: MaskMax = MaskCen
                                             #if MaskMin > Protect[0]: MaskMin = Protect[0]
                                             #if MaskMax < Protect[1]: MaskMax = Protect[1]
 
@@ -1169,7 +1195,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
                                                 RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
+                                        #else: LOG.info('------10------ out of range Fit0=%f Fit1=%f' % (Fit0,Fit1))
                                 elif BlurPlane[x][y] == 1:
+                                    #LOG.info('------11------ in BlurPlane x=%d y=%d' % (x, y))
                                     # in Blur Plane, Fit is not extrapolated, 
                                     # but use the nearest value in Valid Plane
                                     # Search the nearest Valid Grid
@@ -1226,7 +1254,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
                                                 RealSignal[ID] = [PosList[0][PID], PosList[1][PID] ,[Protect]]
-                                    else: continue
+                                    else:
+                                        #LOG.info('------12------ out of range Fit0=%f Fit1=%f' % (Fit0,Fit1))
+                                        continue
+                                    #else: continue
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable:
@@ -1235,6 +1266,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 # for Channel map velocity range determination 2014/1/12 arbitrary factor 0.8
                 #channelmap_range[Nc][1] = (MaskMax - MaskMin - 10) * 0.8
                 channelmap_range[Nc][1] = MaskMax - MaskMin + lines[Nc][1] / 2.0
+                #LOG.info('Nc, MaskMax, Min: %d, %f, %f' % (Nc, MaskMax, MaskMin))
+                #LOG.info('channelmap_range[Nc]: %s' % channelmap_range[Nc])
+                #LOG.info('lines[Nc]: %s' % lines[Nc])
 
                 for x in range(nra):
                     for y in range(ndec):

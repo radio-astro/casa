@@ -4,11 +4,14 @@ import os
 import time
 from math import sqrt
 import numpy
+import math
+import pylab as PL
 
 import pipeline.infrastructure as infrastructure
 import pipeline.h.heuristics as heuristics
 from .. import common
 from . import rules
+
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -129,6 +132,8 @@ class DetectLine(common.SingleDishTaskTemplate):
         #rules.LineFinderRule['MaxFWHM'] = MaxFWHM
         MinFWHM = int(rules.LineFinderRule['MinFWHM'])
         Threshold = rules.LineFinderRule['Threshold']        
+        EdgeMin = int(nchan * rules.LineFinderRule['IgnoreEdge'])
+        EdgeMax = int(nchan * (1.0 - rules.LineFinderRule['IgnoreEdge']) - 1)
 
         # 2011/05/17 TN
         # Switch to use either ASAP linefinder or John's linefinder
@@ -161,33 +166,66 @@ class DetectLine(common.SingleDishTaskTemplate):
 
         # Create progress timer
         Timer = common.ProgressTimer(80, nrow, LOG.level)
-
+        # 100.0: minimum number of channels for binned spectrum to detect lines
+        MinChanBinSp = 50.0
+        TmpRange = [4**i for i in xrange(int(math.ceil(math.log(len(spectra[0])/MinChanBinSp)/math.log(4))))]
+        BinningRange = []
+        for i in TmpRange:
+           BinningRange.append([i, 0])
+           if i>1: BinningRange.append([i, i/2])
         for row in xrange(nrow):
             # Countup progress timer
             Timer.count()
 
             ProcStartTime = time.time()
+            Protected = []
             if grid_table[row][6] == 0:
                 LOG.debug('Row %d: No spectrum' % row)
                 # No spectrum
                 protected = [[-1, -1]]
             else:
                 LOG.debug('Start Row %d' % (row))
+                for [BINN, offset]  in BinningRange:
+                    MinNchan = (MinFWHM-2) / BINN + 2
+                    #print 'Comment:', len(spectra[row])
+                    SP = self.SpBinning(spectra[row], BINN, offset)
+                    #print len(SP)
+                    #print masks[row]
+                    #print len(masks[row])
+                    MSK = self.MaskBinning(masks[row], BINN, offset)
+                    #print MSK
+                    #print len(MSK)
+                    #print Thre, MinFWHM, BoxSize, Binning, AvgLimit
+    
+                    protected = self._detect(spectrum = SP,
+                                             mask = MSK,
+                                             start=Start,
+                                             end=len(Thre),
+                                             binning=Binning,
+                                             threshold=Thre,
+                                             box_size=BoxSize,
+                                             #min_nchan=MinFWHM,
+                                             min_nchan=MinNchan,
+                                             avg_limit=AvgLimit,
+                                             tweak=True,
+                                             edge=(EdgeL,EdgeR))
 
-                protected = self._detect(spectrum = spectra[row],
-                                         mask = masks[row],
-                                         start=Start,
-                                         end=len(Thre),
-                                         binning=Binning,
-                                         threshold=Thre,
-                                         box_size=BoxSize,
-                                         min_nchan=MinFWHM,
-                                         avg_limit=AvgLimit,
-                                         tweak=True,
-                                         edge=(EdgeL,EdgeR))
+                    for i in range(len(protected)):
+                        if protected[i][0] != -1:
+                            Chan0 = protected[i][0]*BINN+offset
+                            Chan1 = protected[i][1]*BINN-1+offset
+                            if(EdgeMin < Chan0) and (Chan1 < EdgeMax):
+                                Protected.append([Chan0, Chan1])
+                        else:
+                            Protected.append([-1,-1])
+
+                # plot to check detected lines
+                #self.plot_detectrange(spectra[row], Protected, 'SpPlot0%04d.png' % row)
+
             detect_signal[row] = [grid_table[row][4], # RA
                                   grid_table[row][5], # DEC
-                                  protected]          # Protected Region
+                                  Protected]          # Protected Region
+                                  #protected]          # Protected Region
             ProcEndTime = time.time()
             LOG.info('Channel ranges of detected lines for Row %s: %s' % (row, detect_signal[row][2]))
             
@@ -208,6 +246,28 @@ class DetectLine(common.SingleDishTaskTemplate):
                 
         return result
     
+    def plot_detectrange(self, sp, protected, fname):
+        print protected, fname
+        PL.clf()
+        PL.plot(sp)
+        ymin,ymax = PL.ylim()
+        for i in range(len(protected)):
+            y = ymin + (ymax - ymin)/30.0 * (i + 1)
+            PL.plot(protected[i],(y,y),'r')
+        PL.savefig(fname, format='png')
+
+    def MaskBinning(self, data, Bin, offset=0):
+        if Bin == 1: 
+            return data
+        else:
+            return numpy.array([data[i:i+Bin].min() for i in xrange(offset, len(data)-Bin+1, Bin)], dtype=numpy.bool)
+
+    def SpBinning(self, data, Bin, offset=0):
+        if Bin == 1: 
+            return data
+        else:
+            return numpy.array([data[i:i+Bin].mean() for i in xrange(offset, len(data)-Bin+1, Bin)], dtype=numpy.float)
+
     def analyse(self, result):
         return result
 
@@ -253,7 +313,10 @@ class DetectLine(common.SingleDishTaskTemplate):
                 if len(protected) == 0: protected = [[-1, -1]]
             # Single line is detected
             elif (nlines == 2):
-                Ranges = getWidenLineList(int(nchan/Bin), 1, 1, line_ranges)
+                ### 2014/10/28 not use getWidenLineList
+                #Ranges = line_ranges
+                ### 2014/10/28 getWiden 1,1 -> 0,0
+                Ranges = getWidenLineList(int(nchan/Bin), 0, 0, line_ranges)
                 ### 2012/02/29 GK for broad line detection
                 (Ranges[0], Ranges[1]) = (Ranges[0]*Bin+int(Bin/2), Ranges[1]*Bin+int(Bin/2))
                 Width = Ranges[1] - Ranges[0] + 1
@@ -277,7 +340,10 @@ class DetectLine(common.SingleDishTaskTemplate):
             # Multipule lines (candidates) are detected
             else:
                 linestat = []
-                Ranges = getWidenLineList(int(nchan/Bin), 1, 1, line_ranges)
+                ### 2014/10/28 not use getWidenLineList
+                #Ranges = line_ranges
+                ### 2014/10/28 getWiden 1,1 -> 0,0
+                Ranges = getWidenLineList(int(nchan/Bin), 0, 0, line_ranges)
                 # y loops over [0,2,4,...] instead of [0,1,2,...]
                 #for y in range(int(len(Ranges)/2)):
                 for y in xrange(0,len(Ranges),2):
