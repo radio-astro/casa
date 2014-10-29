@@ -27,7 +27,7 @@ class T2_4MDetailsGaincalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         super(T2_4MDetailsGaincalRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
-    def update_display_context(self, ctx, context, results):
+    def update_mako_context(self, ctx, context, results):
         applications = []
         structure_plots = {}
         amp_vs_time_summaries = {}
