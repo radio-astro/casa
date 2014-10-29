@@ -154,7 +154,8 @@ void PlotMSPlot::resize(PlotMSPages &pages, uInt rows, uInt cols) {
 
 	// Resize pages
 	iterStep_ = plotCanvasRowCount * plotCanvasColCount;
-	int pageSize = static_cast<int>(ceil( (plotCols*1.0f) / iterStep_));
+	int ownedCanvasStart = this->getPageIterationCount( pages[0]);
+	int pageSize = static_cast<int>(ceil( (plotCols*1.0f+ownedCanvasStart) / iterStep_));
 	pages.resize( pageSize );
 	for(size_t i = 0; i < pages.totalPages(); ++i) {
 		pages[i].resize(rows, cols);
@@ -821,6 +822,8 @@ bool PlotMSPlot::isIteration() const {
 	return iterationPlot;
 }
 
+
+
 bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
 	vector<PlotCanvasPtr> canv = canvases();
     bool exportSuccess = true;
@@ -873,12 +876,14 @@ bool PlotMSPlot::exportToFormat(const PlotExportFormat& format) {
     	if ( i > 0 ){
     		pageStr = String::toString( i+1 );
     	}
+
     	String itersInclude;
     	if (isIteration()){
     		int iterStart = this->iter_;
-    		int iterEnd = pages[i].canvasRows() * pages[i].canvasCols();
+    		int iterEnd = getPageIterationCount( pages[i]);
     		int lastIndex = std::min( this->nIter() - iterStart, iterEnd) + iterStart;
     		int index = iterStart;
+
     		while ( index < lastIndex ){
     			String iterId;
     			if ( index == iterStart ){
@@ -1453,7 +1458,6 @@ bool PlotMSPlot::assignCanvases(PlotMSPages &pages) {
 		rowIndex = iterParams->getGridRow();
 		colIndex = iterParams->getGridCol();
 	}
-
 
 	page.disown( this );
 	if ( rowIndex >= 0 && colIndex >= 0 ){
