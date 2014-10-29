@@ -161,41 +161,59 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Get the fluxes as a function of spw and field
 	#    Return if there are no flux values for the bandpass calibrator.
-	fluxdict = self._get_fluxdict(ms=inputs.ms, fieldnamelist=fieldlist,
+	flux_dict = self._get_fluxdict(ms=inputs.ms, fieldnamelist=fieldlist,
 	    intent=inputs.intent, spwlist=spwlist)
-	if not fluxdict:
+	if not flux_dict:
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
 	    return result
 
-	# Initialzie the tsys as function of spw and field
-	#    Return if there are no flux values for the bandpass calibrator.
-	tsysdict = self._get_tsysdict(ms=inputs.ms, fieldnamelist=fieldlist,
+	# Initialize the spw dictionary
+	#    Populate it initially with the tsys observation information
+	#    Return if there are no tsys spws for the bandpass calibrator.
+	spw_dict = self._get_tsysdict(ms=inputs.ms, fieldnamelist=fieldlist,
 	    intent=inputs.intent, spwlist=spwlist)
-	if not tsysdict:
+	if not spw_dict:
 	    LOG.info('No tsys spw for MS %s' % inputs.ms.basename)
 	    return result
 
-	# Get the tsys spw list and the corresponding observing scan list.
+	# Transfer flux information to the spw dictionary.
+	for spw in spwlist:
+	    if not flux_dict.has_key(spw):
+	        continue
+	    if not spw_dict.has_key(spw):
+	        continue
+	    if spw_dict[spw]['fieldname'] != flux_dict[spw]['fieldname']: 
+	        continue
+	    spw_dict[spw]['flux'] = flux_dict[spw]['flux']
+
+	# Get the tsys spw list and the tsys associated observing scan list.
+	# from the spw dictionary
 	tsys_spwlist = []; scan_list = []
 	for spw in spwlist:
-	    if not tsysdict.has_key(spw):
+	    if not spw_dict.has_key(spw):
 	        continue
-	    tsys_spwlist.append(tsysdict[spw]['tsys_spw'])
-	    scan_list.append(tsysdict[spw]['scan'])
+	    if not spw_dict[spw].has_key('tsys_spw'):
+	        continue
+	    tsys_spwlist.append(spw_dict[spw]['tsys_spw'])
+	    scan_list.append(spw_dict[spw]['tsys_obsscan'])
 
-	# Get the median tsys as a function of tsys spw
-        tsystempdict = self._get_mediantemp (inputs.ms, tsys_spwlist,
+	# Get the median tsys as a function of spw
+        tsystemp_dict = self._get_mediantemp (inputs.ms, tsys_spwlist,
 	    scan_list, antenna='', temptype='tsys')
 
-	# Update tsys dictionary
+	# Transfer the tsys temp information to the spw dictionary
 	for spw in spwlist:
-	    if not tsysdict.has_key(spw):
+	    if not spw_dict.has_key(spw):
 	        continue
-	    if not tsystempdict.has_key(tsysdict[spw]['tsys_spw']):
+	    if not tsystemp_dict.has_key(spw_dict[spw]['tsys_spw']):
 	        continue
-	    tsysdict[spw]['mediantsys'] = tsystempdict[tsysdict[spw]['tsys_spw']]
-	print 'Tsys Dictionary'
-	print tsysdict
+	    spw_dict[spw]['mediantsys'] = tsystemp_dict[spw_dict[spw]['tsys_spw']]
+	print 'Spw Dictionary'
+	print spw_dict
+
+	# Get the observing characteristics dictionary
+	#obs_dict = self._get_obsinfo (inputs.ms, fieldnamelist=fieldlist,
+	#    intent=inputs.intent, spwlist=spwlist)
 
 	# Get the list of bandpass scans and determine the number of
 	# antennas in each scan.
@@ -262,7 +280,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
         return fluxdict
 
-    # Get the fluxes as a function of field and spw
+    # Get the tsys information
     def _get_tsysdict(self, ms, fieldnamelist=[], intent='', spwlist=[]):
 
 	# Initialize
@@ -340,9 +358,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 		# Create dictionary entry based on first scan matched.
 		if bestspwid is None:
 		    continue
-		ftsysdict['field'] = fieldname
+		ftsysdict['fieldname'] = fieldname
 		ftsysdict['intent'] = intent
-		ftsysdict['scan'] = obscans[0].id
+		ftsysdict['tsys_obsscan'] = obscans[0].id
 		ftsysdict['tsys_scan'] = atmscan.id
 		ftsysdict['tsys_spw'] = bestspwid
 		break
@@ -352,6 +370,81 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        tsysdict[spw.id] = ftsysdict
 
 	return tsysdict
+
+    # Retrieve observing parameter information
+    def _get_obsinfo (self, ms, fieldnamelist=[], intent='', spwidlist=[]):
+
+        obsdict = {}
+	fieldset = set(fieldnamelist)
+	spwset = set(spwidlist)
+
+	# Get the scans associated with the field name list and intent
+	obscans = []
+        for scan in ms.get_scans(scan_intent=intent):
+	    # Remove scans not associated with the input field names
+	    scanfieldset = set([field.name for field in scan.fields])
+	    if len(fieldset.intersection(scanfieldset)) == 0:
+	        continue
+	    obscans.append(scan)
+
+	# No data scans found
+	if not obscans:
+	    return obsdict
+
+        mt = casatools.measures
+        qt = casatools.quanta
+
+	# Loop over the spws
+	for spwid in spwidlist:
+
+	    # Get spectral window
+	    try:
+	        spw = ms.get_spectral_window(spwid)
+	    except:
+	        continue
+
+	    # Find scans associated with the spw. They may
+	    # be different from one spw to the next
+	    scans = []
+	    for obscan in obscans:
+	        scanspwset = set ([spw.id for spw in obscan.spws()])
+	        if len(spwset.intersection(scanspwset)) == 0:
+	            continue
+		scans.append(obsscan)
+	    if not scans:
+	        continue
+
+	    obsdict[spw] = {}
+
+	    # Limit the scans per spw to those for the first field.
+	    #    in the scan sequence.
+	    fieldnames = [field.name for field in scan[0].fields]
+	    fieldname = fieldnames[0]
+	    scans = [scan for scan in scans if fieldname == scan.fields[0].name]
+	    scanids = [scan.id for scan in scans]
+	    obsdict[spw]['obs_scans'] = scanids
+
+	    # Compute spw characteristics
+	    #    Add to dictionary
+	    exposureTime = 0.0
+	    for scan in scans:
+		scanTime = mt.getvalue(scan.time_on_source)['m0']
+		scanTime = qt.convert(scanTime, 'm')
+	        exposureTime = exposureTime + qt.getvalue(scanTime)
+	    obsdict[spw]['exptime'] = exposureTime
+
+	    # Add in other spw characteristics
+	    obsdict[spw]['band'] = spw.band 
+	    obsdict[spw]['centerfreq'] = spw.centre_frequency 
+	    obsdict[spw]['bandwidth'] = spw.bandwidth 
+	    obsdict[spw]['nchan'] = spw.num_channels 
+	    channels = spw.channels
+	    chanwidths = np.zeros(spw.num_channels)
+	    for i in range(spw.num_channels):
+	        chanwidths[i] = qt.getvalue(channels[i][1] - channels[i][0]) 
+	    obsdict[spw]['chanwidths'] = np.median(chanwidths) 
+
+	return obsdict
 
     # Create the bandpass scan list. Initialize the number of unflagged
     # and flagged antennas for each scan.
@@ -463,7 +556,8 @@ class BpSolint(basetask.StandardTaskTemplate):
                 tstart = mt.epoch(time_ref, qt.quantity(tsys_start_times[i], time_unit))
                 tend = mt.epoch(time_ref, qt.quantity(tsys_end_times[i], time_unit))
 
-		# Scan starts after end of validity interval
+		# Scan starts after end of validity interval or ends before
+		# the beginning of tje validity interval
 		for j in range(len(uniqueScans)):
                     if beginScanTimes[j] > tend or endScanTimes[j] < tstart:
 		        continue
@@ -491,7 +585,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         else:
             uniqueAntennaIds = [ms.get_antenna(search_term=antenna)[0].id]
     
-        # Initialize
+        # Lopp over the spw and scan list which have the same length
         for spw, scan in zip (tsys_spwlist, scan_list):
     
             if (spw not in tsys_uniqueSpws):
@@ -518,16 +612,17 @@ class BpSolint(basetask.StandardTaskTemplate):
     
             if (len(medians) > 0):
                 mediantemps[spw] = np.median(medians)
-                LOG.info ("Median %s value for spw %2d = %.1f K" % (temptype, spw, 
-    	            mediantemps[spw]))
+                LOG.info ("Median %s value for spw %2d = %.1f K" % \
+		    (temptype, spw, mediantemps[spw]))
             else:
                 LOG.info ("No data for spw %d scan %d" % (spw, scan))
     
         # Return median temperature per spw and scan.
         return mediantemps 
 
-    # Loop over the scans in scanlist. Compute the list and number of unflagged and
-    # flagged antennas for each scan. In most cases there will be only one scan
+    # Loop over the scans in scanlist. Compute the list and number of unflagged
+    # and flagged antennas for each scan. In most cases there will be only one
+    # scan.
     def _get_unflagged_antennas(self, vis, scanlist=[], maxfracflagged = 0.90):
 
 	# Loop over the bandpass scans
