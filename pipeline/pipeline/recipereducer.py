@@ -85,7 +85,8 @@ def _get_tasks(context, vis, infiles, procedure='procedure_hifacal.xml'):
         
         if cli_command in ['hif_importdata',
                            'hifa_importdata',
-                           'hif_restoredata']:
+                           'hif_restoredata',
+                           'hsd_importdata2']:
             task_args['vis'] = vis 
         elif cli_command in ['hsd_importdata', 'hsd_restoredata']:
             task_args['infiles'] = infiles
