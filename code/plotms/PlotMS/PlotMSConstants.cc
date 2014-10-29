@@ -82,7 +82,7 @@ PMS::AxisUnit PMS::axisUnit(Axis axis) {
     case FREQUENCY:
        	return GHERTZ;
     case VELOCITY:
-       	return METERS_PER_SECOND;
+       	return KILOMETERS_PER_SECOND;
     case UVDIST:
     case U:
     case V:
