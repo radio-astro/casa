@@ -155,7 +155,8 @@ class SDSparseMapDisplay(SDImageDisplay):
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
             TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
             mask_p = self.mask.take([pol], axis=self.id_stokes).squeeze()
-            isvalid = mask_p.prod(axis=2)
+            #isvalid = mask_p.prod(axis=2)
+            isvalid = numpy.any(mask_p, axis=2)
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
