@@ -2651,11 +2651,17 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
       btp = new STBaselineTable((String)outbltable);
     } else {
       btp = new STBaselineTable(*this);
-      for (int i = 0; i < nRowSt; ++i) {
-        btp->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
-			   0, timeSecCol[i]);
-        btp->setApply(i, false);
-      }
+      // for (int i = 0; i < nRowSt; ++i) {
+      //   btp->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
+      //   		   0, timeSecCol[i]);
+      //   btp->setApply(i, false);
+      // }
+    }
+    int nrow = btp->nrow();
+    for (int i = nrow; i < nRowSt; ++i) {
+      btp->appendbasedata(getScan(i), getCycle(i), getBeam(i), getIF(i), getPol(i), 
+                          0, timeSecCol[i]);
+      btp->setApply(i, false);
     }
   }
 
@@ -2677,9 +2683,15 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
       std::vector<float> params;
       float rms;
       std::vector<bool> finalmask;
-
-      std::vector<float> resfit = doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, clipth, clipn, uself, irow, lfth, lfedge, lfavg);
-      setSpectrum(resfit, irow);
+      Bool doApply = True;
+      
+      if (flagrowCol_(irow) == 0) {
+        std::vector<float> resfit = doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, clipth, clipn, uself, irow, lfth, lfedge, lfavg);
+        setSpectrum(resfit, irow);
+      }
+      else {
+        doApply = False;
+      }
 
       if (returnfitresult) {
 	res.push_back(packFittingResults(irow, params, rms));
@@ -2694,7 +2706,7 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
 	btp->setdata(uInt(irow), 
 		    uInt(getScan(irow)), uInt(getCycle(irow)), 
 		    uInt(getBeam(irow)), uInt(getIF(irow)), uInt(getPol(irow)), 
-		    uInt(0), timeSecCol[irow], Bool(true), ftype, fparam, 
+		    uInt(0), timeSecCol[irow], doApply, ftype, fparam, 
 	            Vector<Float>(), getMaskListFromMask(finalmask), Vector<Float>(params), 
 	            Float(rms), uInt(spec.size()), Float(clipth), uInt(clipn), 
 	            Float(0.0), uInt(0), Vector<uInt>());
@@ -2901,7 +2913,7 @@ std::vector<bool> Scantable::getMaskFromMaskList(const int nchan, const std::vec
     res[i] = false;
   }
   for (uInt j = 0; j < masklist.size(); j += 2) {
-    for (int i = masklist[j]; i <= masklist[j+1]; ++i) {
+    for (int i = masklist[j]; i <= min(nchan-1, masklist[j+1]); ++i) {
       res[i] = true;
     }
   }
