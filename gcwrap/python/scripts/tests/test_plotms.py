@@ -173,10 +173,11 @@ class plotms_test1(test_base):
     def stest006(self):
         '''Plotms 6: Export an iteration plot consisting of two pages.'''
         self.plotfile_jpg = self.outputDir + "testPlot006.jpg"
-        self.plotfile2_jpg = self.outputDir + "testPlot0062.jpg"
-        print 'Writing to ', self.plotfile_jpg, " and ", self.plotfile2_jpg
-        if os.path.exists( self.plotfile_jpg):
-            os.remove( self.plotfile_jpg)
+        self.plotfile1_jpg = self.outputDir + "testPlot006_Scan1,2,3,4.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot006_Scan5,6,7_2.jpg"
+        print 'Writing to ', self.plotfile1_jpg, " and ", self.plotfile2_jpg
+        if os.path.exists( self.plotfile1_jpg):
+            os.remove( self.plotfile1_jpg)
         if os.path.exists( self.plotfile2_jpg):
             os.remove( self.plotfile2_jpg) 
               
@@ -194,9 +195,9 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         
         '''Check the first page got saved'''
-        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
-        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(91000, self.plotfile_jpg)
+        self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
+        self._checkPlotFile(91000, self.plotfile1_jpg)
         
         '''Check the second page got saved'''
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
@@ -284,31 +285,31 @@ class plotms_test1(test_base):
                           rowindex=0, colindex=0)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=1, title='Plot B',
-                          rowindex=0, clearplots = False, colindex=1)
+                          rowindex=0, showgui=False, clearplots = False, colindex=1)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=2, title='Plot C',
-                          rowindex=0, clearplots=False, colindex=2)
+                          rowindex=0, showgui=False, clearplots=False, colindex=2)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=3, title='Plot D',
-                          rowindex=1, clearplots=False, colindex=0)
+                          rowindex=1, showgui=False, clearplots=False, colindex=0)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=4, title='Plot E',
-                          rowindex=1, clearplots=False, colindex=1)
+                          rowindex=1, showgui=False, clearplots=False, colindex=1)
         self.assertTrue(self.res)
         self.res = plotms(vis=self.ms, plotindex=5, title='Plot F',
                           plotfile=self.plotfile_jpg, expformat='jpg',
-                          overwrite=True, clearplots=False,
+                          overwrite=True, showgui=False, clearplots=False,
                           rowindex=1, colindex=2)
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)
         
         '''Now use a grid with 1 row and 2 cols.  Fill in all the plots in the grid.'''
         self.res = plotms(vis=self.ms, plotindex=0, title='Plot A',
-                          gridrows=1, gridcols=2,
+                          gridrows=1, gridcols=2,showgui=False,
                           rowindex=0, colindex=0)
         self.res = plotms(vis=self.ms, plotindex=1, title='Plot B',
                           plotfile=self.plotfile2_jpg, expformat='jpg',
-                          overwrite=True,  clearplots=False,
+                          overwrite=True,  clearplots=False,showgui=False,
                           rowindex=0, colindex=1)
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile2_jpg)
@@ -346,7 +347,7 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         self._checkPlotFile(60000, self.plotfile_jpg)        
        
-    def test012a(self):
+    def stest012a(self):
         '''Plotms 12a: Test that we can colorize by synonym see CAS-6921.'''
         self.plotfile_jpg = self.outputDir + "testPlot012a.jpg"
         print 'Writing to ', self.plotfile_jpg
@@ -383,9 +384,10 @@ class plotms_test1(test_base):
     def stest014(self):
         '''Plotms 14: Test that we iterate over time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot014.jpg"
-        print 'Writing to ', self.plotfile_jpg
-        if os.path.exists( self.plotfile_jpg):
-            os.remove( self.plotfile_jpg)
+        self.writefile_jpg = self.outputDir + "testPlot014_Time09:18:59.9998,09:19:30.0002,09:20:00.000572205,09:20:30.001.jpg"
+        print 'Writing to ', self.writefile_jpg
+        if os.path.exists( self.writefile_jpg):
+            os.remove( self.writefile_jpg)
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Iterate by time.'''
@@ -393,12 +395,13 @@ class plotms_test1(test_base):
                           overwrite=True, showgui=False, xaxis='elevation', yaxis='amp',
                           iteraxis='time', gridrows=2, gridcols=2)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000, self.plotfile_jpg) 
+        self._checkPlotFile(60000, self.writefile_jpg) 
         
         
     def stest015(self):
         '''Plotms 15: Test that we iterate over averaged time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot015.jpg"
+        self.writefile_jpg = self.outputDir + "testPlot015_Time09:18:59.9998,09:19:30.0002.jpg"
         print 'Writing to ', self.plotfile_jpg
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
@@ -409,7 +412,7 @@ class plotms_test1(test_base):
                           overwrite=True, showgui=False, xaxis='elevation', yaxis='amp',
                           iteraxis='time', gridrows=1, gridcols=2)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000, self.plotfile_jpg)  
+        self._checkPlotFile(90000, self.writefile_jpg)  
         
     
     def stest016(self):
@@ -464,9 +467,10 @@ class plotms_test1(test_base):
     def stest019(self):
         '''Plotms 19: Test if we can overplot (scan and field) vs time and iterate over antenna.'''
         self.plotfile_jpg = self.outputDir + "testPlot019.jpg"
-        print 'Writing to ', self.plotfile_jpg
-        if os.path.exists( self.plotfile_jpg):
-            os.remove( self.plotfile_jpg)
+        self.writefile_jpg = self.outputDir + "testPlot019_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg"
+        print 'Writing to ', self.writefile_jpg
+        if os.path.exists( self.writefile_jpg):
+            os.remove( self.writefile_jpg)
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         '''Create a (scan & field)/time plot with iteration over antenna'''
@@ -477,17 +481,18 @@ class plotms_test1(test_base):
                           customsymbol=[True,True], symbolshape=['diamond','circle'], symbolsize=[5,5],
                           symbolcolor=['ff0000','00ff00'], symbolfill=['mesh3','mesh3'])
         self.assertTrue(self.res)
-        self._checkPlotFile(222500, self.plotfile_jpg) 
+        self._checkPlotFile(213500, self.writefile_jpg) 
         
     def stest020(self):
         '''Plotms 20: Export an iteration plot with one plot per page (pipeline).'''
-        self.plotFiles = [self.outputDir + "testPlot020.jpg",
-                          self.outputDir + "testPlot0202.jpg",
-                          self.outputDir + "testPlot0203.jpg",
-                          self.outputDir + "testPlot0204.jpg",
-                          self.outputDir + "testPlot0205.jpg",
-                          self.outputDir + "testPlot0206.jpg",
-                          self.outputDir + "testPlot0207.jpg"]
+        self.plotfile = self.outputDir + "testPlot020.jpg"
+        self.plotFiles = [self.outputDir + "testPlot020_Scan1.jpg",
+                          self.outputDir + "testPlot020_Scan2_2.jpg",
+                          self.outputDir + "testPlot020_Scan3_3.jpg",
+                          self.outputDir + "testPlot020_Scan4_4.jpg",
+                          self.outputDir + "testPlot020_Scan5_5.jpg",
+                          self.outputDir + "testPlot020_Scan6_6.jpg",
+                          self.outputDir + "testPlot020_Scan7_7.jpg"]
         
         printMsg = 'Writing to '
         for  i in range(0, len(self.plotFiles)):
@@ -503,7 +508,7 @@ class plotms_test1(test_base):
         time.sleep(5)
         
         '''Make iteration plots over scan'''
-        self.res = plotms(vis=self.ms, plotfile=self.plotFiles[0],
+        self.res = plotms(vis=self.ms, plotfile=self.plotfile,
                           overwrite=True, showgui=False, expformat='jpg',  exprange='all',
                           iteraxis='scan', gridrows=1, gridcols=1)   
         self.assertTrue(self.res)
@@ -562,9 +567,9 @@ class plotms_test1(test_base):
                           showgui=False, yaxis='amp', ydatacolumn='corrected/model', xaxis='time')
         
         self.assertTrue(self.res)
-        self.res = plotms(vis=self.ms, plotfile=self.plotfile_jpg, expformat='jpg', 
+        self.res = plotms(vis=self.ms, gridrows=2, gridcols=1, plotfile=self.plotfile_jpg, expformat='jpg', 
                           plotindex=1, rowindex=1, colindex=0, 
-                          overwrite=True, showgui=False, clearplots=False,
+                          showgui=False, clearplots=False,
                           xaxis='amp', xdatacolumn='corrected/model', yaxis='time')
         self.assertTrue( self.res )
         self._checkPlotFile(249000, self.plotfile_jpg)    
@@ -626,10 +631,11 @@ class plotms_test1(test_base):
     def stest026(self):
         '''Plotms 26: Export an iteration plot consisting of two pages. Duplicate of test 6 except we use a right axis and a non-square grid.'''
         self.plotfile_jpg = self.outputDir + "testPlot026.jpg"
-        self.plotfile2_jpg = self.outputDir + "testPlot0262.jpg"
-        print 'Writing to ', self.plotfile_jpg, " and ", self.plotfile2_jpg
-        if os.path.exists( self.plotfile_jpg):
-            os.remove( self.plotfile_jpg)
+        self.plotfile1_jpg = self.outputDir + "testPlot026_Scan1,2,3,4,5,6.jpg"
+        self.plotfile2_jpg = self.outputDir + "testPlot026_Scan7_2.jpg"
+        print 'Writing to ', self.plotfile1_jpg, " and ", self.plotfile2_jpg
+        if os.path.exists( self.plotfile1_jpg):
+            os.remove( self.plotfile1_jpg)
         if os.path.exists( self.plotfile2_jpg):
             os.remove( self.plotfile2_jpg) 
               
@@ -648,21 +654,22 @@ class plotms_test1(test_base):
         self.assertTrue(self.res)
         
         '''Check the first page got saved'''
-        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
-        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(10000, self.plotfile_jpg)
+        self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
+        self._checkPlotFile(100000, self.plotfile1_jpg)
         
         '''Check the second page got saved'''
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
         print 'Plot2 file size is ', os.path.getsize(self.plotfile2_jpg)
-        self._checkPlotFile(65000, self.plotfile2_jpg)
+        self._checkPlotFile(64000, self.plotfile2_jpg)
         print    
         
     def stest027(self):
         '''Plotms 27: Test that we can do a 2x2 multiplot display. Consisting of single plots and overplots'''
-        self.plotFiles = [self.outputDir + "testPlot027.jpg",
-                          self.outputDir + "testPlot0272.jpg",
-                          self.outputDir + "testPlot0273.jpg"]
+        self.plotFile = self.outputDir + "testPlot027.jpg"
+        self.plotFiles = [self.outputDir + "testPlot027_Scan1,2.jpg",
+                          self.outputDir + "testPlot027_Scan3,4,5,6_2.jpg",
+                          self.outputDir + "testPlot027_Scan7_3.jpg"]
         
         printMsg = 'Writing to '
         for  i in range(0, len(self.plotFiles)):
@@ -682,7 +689,6 @@ class plotms_test1(test_base):
         self.res = plotms(vis=self.ms, gridrows=2, gridcols=2,  
                           showgui=False, yaxis='scan',
                           rowindex=0, colindex=0, plotindex=0,
-                          showlegend=True, legendposition='lowerRight',
                           customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
                           symbolcolor=['ff0000'], symbolfill=['mesh3'])
         self.assertTrue( self.res )
@@ -691,34 +697,36 @@ class plotms_test1(test_base):
         '''Overplot field vs time.'''
         self.res = plotms(vis=self.ms,  
                           showgui=False, yaxis='field',
+                          gridrows=2, gridcols=2,
                           rowindex=0, colindex=0, plotindex=1, clearplots=False,
                           showlegend=True, legendposition='lowerRight',
                           customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
                           symbolcolor=['00FF00'], symbolfill=['mesh3'])   
         self.assertTrue( self.res)
-        print 'Added overplot 2' 
+        print 'Added overplot 2'  
         
         
         '''Now add a single basic plot in the first row, second column'''
         print
         print 'Adding single plot'
-        self.res = plotms(vis=self.ms, 
+        self.res = plotms(vis=self.ms, gridrows=2, gridcols=2,
                           rowindex=0, colindex=1, plotindex=2, clearplots=False, 
                           showgui=False)   
         print 'Added single plot'
         
         '''Now add in an iteration plot and export it.'''
-        self.res = plotms(vis=self.ms, plotfile=self.plotFiles[0],
+        self.res = plotms(vis=self.ms, 
                           overwrite=True, showgui=False, clearplots=False, expformat='jpg', 
-                          exprange='all', iteraxis='scan',
-                          rowindex=1, colindex=0, plotindex=3
-                          )   
+                          iteraxis='scan',
+                          gridrows=2, gridcols=2,
+                          rowindex=1, colindex=0, plotindex=3,
+                          plotfile=self.plotFile,exprange='all')   
         print 'Added iteration plot, now exporting'
         '''Check each page got saved'''
         for  i in range(0, len(self.plotFiles)):
             self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
             print 'Plot file size ', i, ' is ', os.path.getsize(self.plotFiles[i])
-            self._checkPlotFile(55000, self.plotFiles[i]) 
+            self._checkPlotFile(54000, self.plotFiles[i]) 
         print    
         
     def stest028(self):
@@ -838,7 +846,7 @@ class plotms_test1(test_base):
                           plotfile=self.plotFile)
         print 'Result from plotms=', self.res
         self.assertTrue(self.res)
-        self._checkPlotFile(14000, self.plotFile)   
+        self._checkPlotFile(13000, self.plotFile)   
         
         self.res =plotms(vis='/home/uniblab/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms',xaxis="freq",xdatacolumn="",yaxis="amp",
 ydatacolumn="corrected",selectdata=True,field="1",spw="",timerange="",
@@ -868,7 +876,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
     def stest033(self):
         print
         '''Plotms 33: CAS-6813, Iteration problem with two spws in a row'''
-        plotFile = 'home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms'
+        plotFile = '/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms'
         self.plotfile1_jpg = "/tmp/testPlot033.jpg"
         self.plotfile2_jpg = "/tmp/testPlot0332.jpg"
     
@@ -879,19 +887,20 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
             os.remove( self.plotfile2_jpg)    
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms',
-                          spw='0')  
+        self.res = plotms(vis=plotFile,
+                          spw='0', showgui=False,plotfile=self.plotfile1_jpg)  
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot  1 was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
         self._checkPlotFile(48000, self.plotfile1_jpg)
         
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/uid___A002_X49990a_X1f.ms',yaxis='amp',
-                          xaxis='freq',spw='1',field='0',avgtime='1e8',avgscan=True,clearplots=True)  
+        self.res = plotms(vis=plotFile,yaxis='amp',
+                          xaxis='freq',spw='2',avgtime='1e8',avgscan=True,
+                          showgui=False,clearplots=True, plotfile=self.plotfile2_jpg)  
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot  2 was not created')
         print 'Plot file 2 size is ', os.path.getsize(self.plotfile2_jpg)
-        self._checkPlotFile(47000, self.plotfile2_jpg)
+        self._checkPlotFile(37000, self.plotfile2_jpg)
         
         print 
 
@@ -910,22 +919,18 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           gridrows=2, gridcols=2, 
                           iteraxis='baseline',
                           showgui=False, plotfile=self.plotfile_jpg)  
-        self.assertTrue(self.res)
-        self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
-        print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(190000, self.plotfile_jpg)
+        self.assertFalse(self.res)
+        self.assertFalse(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 
         
     def stest035(self):
         print
         '''Plotms 34: See CAS-6844. Huge and fuzzy plot for large plot index'''
         self.plotfile_jpg = self.outputDir + "testPlot035.jpg"
-        self.plotfile2_jpg = self.outputDir + "testPlot0352.jpg"
-        print 'Writing to ', self.plotfile_jpg, ' ', self.plotfile2_jpg
+        
+        print 'Writing to ', self.plotfile_jpg
         if os.path.exists( self.plotfile_jpg):    
-            os.remove( self.plotfile_jpg)
-        if os.path.exists( self.plotfile2_jpg):    
-            os.remove( self.plotfile2_jpg)    
+            os.remove( self.plotfile_jpg)  
         self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
         time.sleep(5)
         
@@ -935,21 +940,14 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(190000, self.plotfile_jpg)
+        self._checkPlotFile(52000, self.plotfile_jpg)
         
-        '''Now increase the plot index to something huge'''
+        '''Now increase the plot index to something huge- it should return false'''
         self.res = plotms(vis=self.ms, plotindex=400, 
                           gridrows=3, gridcols=3,
-                          showgui=False, plotfile=self.plotfile_jpg)
-        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms', 
-                           plotindex=400, 
-                          gridrows=3, gridcols=3,
-                          showgui=True)
-        self.assertTrue(self.res)
-        self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot was not created')   
+                          showgui=False)
         
-        print 'Plot file size is ', os.path.getsize(self.plotfile2_jpg)
-        self._checkPlotFile(190000, self.plotfile2_jpg)
+        self.assertFalse(self.res)
         print  
         
     def stest036(self):
@@ -976,7 +974,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
        
         print            
  
-    def test037(self):
+    def stest037(self):
         print
         '''Plotms 37: Juergan's cookbook example'''
         self.plotfile_jpg = self.outputDir + "testPlot037.jpg"
@@ -1061,8 +1059,189 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         
         #print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
         #self._checkPlotFile(94000, self.plotfile_jpg)
-       
-        print            
+     
+    def stest038(self):
+        '''Plotms 38: Test for CAS-6975 overplotting problem.'''
+        self.plotfile_jpg = self.outputDir + "testPlot038a.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal',
+                          spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
+                          field="0",correlation="XX", showgui=False)
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X8666c7_X1fa.ms.split.cal.mapall',
+                          spw="1",xaxis="freq",yaxis="phase",antenna="0&1",avgchannel="1e6",
+                          field="0",correlation="XX", showgui=False, plotindex=1, clearplots=False, 
+                          plotfile=self.plotfile_jpg )
+        
+        self.assertTrue(self.res)
+        self._checkPlotFile(48000, self.plotfile_jpg)   
+        print
+        
+    def stest039( self ):
+        '''Plotms 39:'Making a plot with a 2x1 grid.'''
+        self.plotfile_jpg = self.outputDir + "testPlot039.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
+                          showgui=False, gridrows=2, rowindex=0, colindex=0)
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",
+                          gridrows=2, rowindex=0, colindex=0)'''
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
+                          showgui=False, plotindex=1, clearplots=False, gridrows=2, rowindex=1, colindex = 0, 
+                          plotfile=self.plotfile_jpg )
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",
+                          gridrows=2, rowindex=1, colindex=0,plotindex=1,clearplots=False)'''
+        
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000, self.plotfile_jpg)   
+        print
+        
+    def stest040( self ):
+        '''Plotms 40:  CAS-7043:  Cannot create two adjacent plots using plotms with plotindex'''
+        self.plotfile_jpg = self.outputDir + "testPlot040.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",avgchannel="1000",
+                          showgui=False,customsymbol=True,symbolshape='diamond',symbolsize=5,symbolcolor='00ff00')
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="DV01",
+                          customsymbol=True,symbolshape='diamond',
+                          symbolsize=5,symbolcolor='00ff00')'''
+        self.assertTrue( self.res )
+        '''Do an overplot with a different file'''
+        self.res = plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",avgchannel="1000",
+                          showgui=False, plotindex=1, clearplots=False, customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff', 
+                          plotfile=self.plotfile_jpg )
+        '''plotms(vis='/home/uniblab/tmp/uid___A002_X915f1c_X8be.ms.split.spw0chanavg',
+                          xaxis="time",yaxis="amp",antenna="!DV01",
+                          plotindex=1, clearplots=False, 
+                          customsymbol=True,symbolshape='diamond',symbolsize=1,symbolcolor='0000ff' )'''
+        self.assertTrue(self.res)
+        self._checkPlotFile(60000, self.plotfile_jpg)   
+        print
+        
+    def stest041( self ):
+        '''Plotms 41:  CAS-7046:  With custom flagged symbol=False, should not be able to change shape of points.'''
+        self.plotfile_jpg = self.outputDir + "testPlot041.jpg"
+        self.plotfile_jpg2 = self.outputDir + "testPlot0412.jpg"
+        print 'Writing to ', self.plotfile_jpg
+        if os.path.exists( self.plotfile_jpg):
+            os.remove( self.plotfile_jpg)
+        if ( os.path.exists( self.plotfile_jpg2 ) ):
+             os.remove( self.plotfile_jpg2 )    
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot check that a custom flagged symbol has been set'''
+        self.res = plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+                          xaxis="time",yaxis="amp",avgtime="1000",
+                          showgui=False,
+                          customflaggedsymbol=True,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                          plotfile = self.plotfile_jpg)
+        self.assertTrue( self.res )
+        self._checkPlotFile( 50000, self.plotfile_jpg )
+        plotms(vis='/home/uniblab/casa/trunk/test/Plotms/titan.ms',
+                          xaxis="time",yaxis="amp",avgtime="1000",
+                          showgui = False,
+                          customflaggedsymbol=False,flaggedsymbolshape='diamond',flaggedsymbolsize=5,flaggedsymbolcolor='00ff00',
+                          plotfile = self.plotfile_jpg2)
+        self.assertTrue( self.res )
+        self._checkPlotFile( 50000, self.plotfile_jpg2 ) 
+        print   
+        
+    def stest042( self ):
+        '''Plotms 42:  CAS-7050:  (Pipeline) With iteration plots and bad selections you should be able to tell what plots are skipped.'''
+        '''The expectation is the plot with the bad spw, 100, will be skipped'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot042.jpg"
+        self.plotfile_jpg1 = self.outputDir + "testPlot042_Spw10.jpg"
+        self.plotfile_jpg2 = self.outputDir + "testPlot042_Spw11_2.jpg"
+        self.plotfile_jpg3 = self.outputDir + "testPlot042_Spw12_3.jpg"
+        self.plotfile_jpg4 = self.outputDir + "testPlot042_Spw13_4.jpg"
+        print 'Writing to ', self.plotfile_jpg1, ', ', self.plotfile_jpg2, ', ',self.plotfile_jpg3, ', ',self.plotfile_jpg4
+        if os.path.exists( self.plotfile_jpg1):
+            os.remove( self.plotfile_jpg1)
+        if ( os.path.exists( self.plotfile_jpg2 ) ):
+             os.remove( self.plotfile_jpg2 ) 
+        if ( os.path.exists( self.plotfile_jpg3 ) ):
+             os.remove( self.plotfile_jpg3 )
+        if ( os.path.exists( self.plotfile_jpg4 ) ):
+             os.remove( self.plotfile_jpg4 )                  
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the first plot check that a custom flagged symbol has been set'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp",spw="10,11,100,12,13",
+                          showgui=False,iteraxis='spw',clearplots=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertTrue( self.res )
+        self._checkPlotFile( 95000, self.plotfile_jpg1 )
+        self._checkPlotFile( 95000, self.plotfile_jpg2 )
+        self._checkPlotFile( 94000, self.plotfile_jpg3 )
+        self._checkPlotFile( 95000, self.plotfile_jpg4 )
+        print
+        
+    def test043(self):
+        '''Plotms 43: Test that legend works with overplots'''
+        '''Note when testing this, don't just check the file size, but look at the
+           plot and make sure there is a legend there.'''
+        self.plotFile = self.outputDir + "testPlot043.jpg"
+        
+        printMsg = 'Writing to ', self.plotFile
+        
+        if os.path.exists( self.plotFile):
+            os.remove( self.plotFile )        
+        
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        
+        '''First put the multiplot in, scan,field vs time'''
+        '''Plot scan vs time.'''
+        self.res = plotms(vis=self.ms,  
+                          showgui=False, yaxis='scan',
+                          plotindex=0,
+                          showlegend=True, legendposition='lowerRight',
+                          customsymbol=[True], symbolshape=['diamond'], symbolsize=[3],
+                          symbolcolor=['ff0000'], symbolfill=['mesh3'])
+        self.assertTrue( self.res )
+        print 'Added overplot 1'
+        
+        '''Overplot field vs time.'''
+        self.res = plotms(vis=self.ms,  
+                          showgui=False, yaxis='field',
+                          plotindex=1, clearplots=False,
+                          showlegend=True, legendposition='lowerRight',
+                          customsymbol=[True], symbolshape=['circle'], symbolsize=[3],
+                          symbolcolor=['00FF00'], symbolfill=['mesh3'],
+                          plotfile=self.plotFile)   
+        self.assertTrue( self.res)
+        print 'Added overplot 2'  
+      
+        self.assertTrue(os.path.exists(self.plotFile), 'Plot was not created')
+        print 'Plot file size is ', os.path.getsize(self.plotFile)
+        self._checkPlotFile(55000, self.plotFile) 
+        print                   
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
