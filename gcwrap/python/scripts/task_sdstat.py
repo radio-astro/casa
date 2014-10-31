@@ -315,9 +315,13 @@ class sdstat_worker(sdutil.sdtask_template):
         val = self.result[key]
         if isinstance(val,list):
             ns = len(val)
+            irow = 0
             for i in xrange(ns):
                 if val[i] is not None:
-                    out += self.__get_statstr(i, val[i], sep)
+                    while self.scan._is_all_chan_flagged(irow):
+                        irow += 1
+                    out += self.__get_statstr(irow, val[i], sep)
+                    irow += 1
         else:
             if val is not None:
                 out += self.__get_statstr(0, val, sep)
