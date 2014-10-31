@@ -96,8 +96,7 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.Rawflagchans:
         return 'Flag channels in raw data'
 
-    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportData2,
-                    hifv.tasks.importdata.importdata.VLAImportData):
+    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportData2):
         return 'Register measurement sets with the pipeline'
 
     if task_cls is hifa.tasks.Linpolcal:
@@ -1454,31 +1453,6 @@ class T2_4MDetailsRawflagchansRenderer(T2_4MDetailsDefaultRenderer):
         return filename
 
 
-class T2_4MDetailsVLAImportDataRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_importdata.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsVLAImportDataRenderer, self).__init__(template,
-                                                             always_rerender)
-        
-    def get_display_context(self, context, result):
-        super_cls = super(T2_4MDetailsVLAImportDataRenderer, self)        
-        ctx = super_cls.get_display_context(context, result)
-
-        setjy_results = []
-        for r in result:
-            setjy_results.extend(r.setjy_results)
-
-        measurements = []        
-        for r in setjy_results:
-            measurements.extend(r.measurements)
-
-        num_mses = reduce(operator.add, [len(r.mses) for r in result])
-
-        ctx.update({'flux_imported' : True if measurements else False,
-                    'setjy_results' : setjy_results,
-                    'num_mses'      : num_mses})
-
-        return ctx
 
 
 #-----------------------------------------------------------------------
@@ -2474,7 +2448,6 @@ renderer_map = {
         hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
-        hifv.tasks.importdata.VLAImportData : T2_4MDetailsVLAImportDataRenderer(),
         hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=False),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=False),
         hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=False),
