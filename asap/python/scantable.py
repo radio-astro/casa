@@ -958,17 +958,23 @@ class scantable(Scantable):
             refstr = ''
             statunit= ''
             if getchan:
-                qx, qy = self.chan2data(rowno=i, chan=chan[i])
-                if rtnabc:
-                    statvals.append(qx['value'])
-                    refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
-                    statunit= '['+qx['unit']+']'
+                if self._is_all_chan_flagged(i):
+                    if rtnabc:
+                        statvals.append(None)
                 else:
-                    refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
+                    qx, qy = self.chan2data(rowno=i, chan=chan[i])
+                    if rtnabc:
+                        statvals.append(qx['value'])
+                        refstr = ('(value: %'+form) % (qy['value'])+' ['+qy['unit']+'])'
+                        statunit= '['+qx['unit']+']'
+                    else:
+                        refstr = ('(@ %'+form) % (qx['value'])+' ['+qx['unit']+'])'
 
-            if skip_flaggedrow and self._getflagrow(i):
-                statvals[i] = None
-                continue
+            if self._is_all_chan_flagged(i):
+                if not rtnabc:
+                    statvals[i] = None
+                if skip_flaggedrow:
+                    continue
 
             tm = self._gettime(i)
             src = self._getsourcename(i)
@@ -980,10 +986,16 @@ class scantable(Scantable):
             #outvec.append(callback(i))
             if len(rows) > 1:
                 # out += ('= %'+form) % (outvec[i]) +'   '+refstr+'\n'
-                out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n'
+                if statvals[i] is None:
+                    out += ('= None(flagged)') + '   '+refstr+'\n'
+                else:
+                    out += ('= %'+form) % (statvals[i]) +'   '+refstr+'\n'
             else:
                 # out += ('= %'+form) % (outvec[0]) +'   '+refstr+'\n'
-                out += ('= %'+form) % (statvals[0]) +'   '+refstr+'\n'
+                if statvals[0] is None:
+                    out += ('= None(flagged)') + '   '+refstr+'\n'
+                else:
+                    out += ('= %'+form) % (statvals[0]) +'   '+refstr+'\n'
             out +=  sep+"\n"
 
         import os
@@ -1004,6 +1016,11 @@ class scantable(Scantable):
         f.close()
         asaplog.push(''.join(x), False)
 
+        if skip_flaggedrow:
+            nstatvals = len(statvals)
+            for i in reversed(xrange(nstatvals)):
+                if statvals[i] is None:
+                    del statvals[i]
         return statvals
 
     def chan2data(self, rowno=0, chan=0):

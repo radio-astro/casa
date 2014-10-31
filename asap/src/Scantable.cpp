@@ -5003,7 +5003,6 @@ std::vector<bool> Scantable::getCompositeChanMask(int whichrow,
 
   lineFinder.setData(getSpectrum(whichrow));
   lineFinder.findLines(getCompositeChanMask(whichrow, inMask), currEdge, whichrow);
-
   return lineFinder.getMask();
 }
 
