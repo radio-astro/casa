@@ -39,9 +39,25 @@ class finalcalsSummaryChart(object):
         
         ms_active = m.name
 
+        task_args = {'vis'         : self.ms.name,
+                                 'caltable'    : 'finaldelay.k',
+                                 'xaxis'       : 'freq',
+                                 'yaxis'       : 'phase',
+                                 'interactive' : False,
+                                 'spw'         : '',
+                                 'antenna'     : antPlot,
+                                 'showatm'     : False,
+                                 'showfdm'     : False,
+                                 'subplot'     : 11,
+                                 'plotrange'   : [],
+                                 'figfile'     : figfile}
+                    
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
 
+        '''
         casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna='0~2', spw='', timerange='', subplot=311, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
-
+        '''
 
 
     def get_figfile(self):
@@ -54,8 +70,11 @@ class finalcalsSummaryChart(object):
         
         context = self.context
         m = context.observing_run.measurement_sets[0]
+        
+        root, ext = os.path.splitext(figfile)
+        real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
 
-	wrapper = logger.Plot(figfile, x_axis='freq', y_axis='delay',
+	wrapper = logger.Plot(real_figfile, x_axis='freq', y_axis='delay',
 			    parameters={'vis'      : self.ms.basename,
 					'type'     : 'finalcalsjunk',
 					'spw'      : ''})
@@ -133,7 +152,28 @@ class finalDelaysPerAntennaChart(object):
 	        
 	            LOG.info("Plotting final calibration tables")
 	        
+	        
+	            task_args = {'vis'         : self.ms.name,
+                                 'caltable'    : 'finaldelay.k',
+                                 'xaxis'       : 'freq',
+                                 'yaxis'       : 'phase',
+                                 'interactive' : False,
+                                 'spw'         : '',
+                                 'antenna'     : antPlot,
+                                 'showatm'     : False,
+                                 'showfdm'     : False,
+                                 'subplot'     : 11,
+                                 'plotrange'   : [],
+                                 'figfile'     : figfile}
+                    
+                    task = casa_tasks.plotbandpass(**task_args)
+                    task.execute(dry_run=False)
+	        
+	        
+	        
+	            '''
 	            casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
+	            '''
 	            #plots.append(figfile)
 
 	        except:
@@ -149,13 +189,16 @@ class finalDelaysPerAntennaChart(object):
                     idents = [a.name if a.name else a.id for a in domain_antennas]
                     antName = ','.join(idents)
             
-                plot = logger.Plot(figfile, x_axis='Frequency', y_axis='Delay',
+                root, ext = os.path.splitext(figfile)
+                real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+            
+                plot = logger.Plot(real_figfile, x_axis='Frequency', y_axis='Delay',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
                         'ant': antName,
                         'type': 'finaldelay',
-                        'file': os.path.basename(figfile)})
+                        'file': os.path.basename(real_figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
@@ -347,7 +390,27 @@ class finalbpSolAmpPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting amp bandpass solutions")
+	            
+	            task_args = {'vis'         : self.ms.name,
+                                 'caltable'    : 'finalBPcal.b',
+                                 'xaxis'       : 'freq',
+                                 'yaxis'       : 'amp',
+                                 'interactive' : False,
+                                 'spw'         : '',
+                                 'antenna'     : antPlot,
+                                 'showatm'     : False,
+                                 'showfdm'     : False,
+                                 'subplot'     : 11,
+                                 'plotrange'   : [0,0,0, ampplotmax],
+                                 'figfile'     : figfile}
+                                 
+                    task = casa_tasks.plotbandpass(**task_args)
+                    task.execute(dry_run=False)
+	            
+	            
+	            '''
 	            casa.plotcal(caltable='finalBPcal.b', xaxis='freq',  yaxis='amp', poln='', field='', antenna=antPlot, spw='', timerange='', subplot=111,      overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,0,ampplotmax],  showflags=False, plotsymbol='o',        plotcolor='blue',  markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
+	            '''
 	            #plots.append(figfile)
 
 	        except:
@@ -364,13 +427,16 @@ class finalbpSolAmpPerAntennaChart(object):
                     idents = [a.name if a.name else a.id for a in domain_antennas]
                     antName = ','.join(idents)
             
-                plot = logger.Plot(figfile, x_axis='Freq', y_axis='Amp',
+                root, ext = os.path.splitext(figfile)
+                real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+            
+                plot = logger.Plot(real_figfile, x_axis='Freq', y_axis='Amp',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
                         'ant': antName,
                         'type': 'finalbpsolamp',
-                        'file': os.path.basename(figfile)})
+                        'file': os.path.basename(real_figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
@@ -462,7 +528,29 @@ class finalbpSolPhasePerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting phase bandpass solutions")
+	            
+	            
+	            task_args = {'vis'         : self.ms.name,
+                                 'caltable'    : 'finalBPcal.b',
+                                 'xaxis'       : 'freq',
+                                 'yaxis'       : 'phase',
+                                 'interactive' : False,
+                                 'spw'         : '',
+                                 'antenna'     : antPlot,
+                                 'showatm'     : False,
+                                 'showfdm'     : False,
+                                 'subplot'     : 11,
+                                 'plotrange'   : [0,0,-phaseplotmax, phaseplotmax],
+                                 'figfile'     : figfile}
+	            
+	            task = casa_tasks.plotbandpass(**task_args)
+                    task.execute(dry_run=False)
+	            
+
+	            '''
 	            casa.plotcal(caltable='finalBPcal.b',  xaxis='freq', yaxis='phase', poln='',  field='',  antenna=antPlot, spw='',  timerange='',      subplot=111,  overplot=False, clearpanel='Auto', iteration='antenna',  plotrange=[0,0,-phaseplotmax,phaseplotmax], showflags=False,        plotsymbol='o', plotcolor='blue',  markersize=5.0, fontsize=10.0,  showgui=False,  figfile=figfile).execute()
+	            '''
+	            
 	            #plots.append(figfile)
 
 	        except:
@@ -478,14 +566,17 @@ class finalbpSolPhasePerAntennaChart(object):
                     domain_antennas = self.ms.get_antenna(antPlot)
                     idents = [a.name if a.name else a.id for a in domain_antennas]
                     antName = ','.join(idents)
+                    
+                root, ext = os.path.splitext(figfile)
+                real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
             
-                plot = logger.Plot(figfile, x_axis='Freq', y_axis='Phase',
+                plot = logger.Plot(real_figfile, x_axis='Freq', y_axis='Phase',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
                         'ant': antName,
                         'type': 'finalbpsolphase',
-                        'file': os.path.basename(figfile)})
+                        'file': os.path.basename(real_figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
@@ -775,7 +866,26 @@ class finalAmpFreqCalPerAntennaChart(object):
 	    if not os.path.exists(figfile):
 	        try:
 	            LOG.info("Plotting final amp freqcal")
+	            
+	            task_args = {'vis'         : self.ms.name,
+                                 'caltable'    : 'finalampgaincal.g',
+                                 'xaxis'       : 'freq',
+                                 'yaxis'       : 'amp',
+                                 'interactive' : False,
+                                 'spw'         : '',
+                                 'antenna'     : antPlot,
+                                 'showatm'     : False,
+                                 'showfdm'     : False,
+                                 'subplot'     : 11,
+                                 'plotrange'   : [0,0,0, plotmax],
+                                 'figfile'     : figfile}
+	            
+	            task = casa_tasks.plotbandpass(**task_args)
+                    task.execute(dry_run=False)
+	            
+	            '''
 	            casa.plotcal(caltable='finalampgaincal.g', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
+	            '''
 	            #plots.append(figfile)
 
 	        except:
@@ -792,13 +902,16 @@ class finalAmpFreqCalPerAntennaChart(object):
                     idents = [a.name if a.name else a.id for a in domain_antennas]
                     antName = ','.join(idents)
             
-                plot = logger.Plot(figfile, x_axis='freq', y_axis='Amp',
+                root, ext = os.path.splitext(figfile)
+                real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+            
+                plot = logger.Plot(real_figfile, x_axis='freq', y_axis='Amp',
 		        field='',
                         parameters={ 'spw': '',
                         'pol': '',
                         'ant': antName,
                         'type': 'finalampfreqcal',
-                        'file': os.path.basename(figfile)})
+                        'file': os.path.basename(real_figfile)})
                 plots.append(plot)
             except:
                 LOG.warn("Unable to add plot to stack")
@@ -876,7 +989,7 @@ class finalPhaseGainCalPerAntennaChart(object):
 	            #plots.append(figfile)
 
 	        except:
-	            LOG.warn("Unable to plot " + filename)
+	            LOG.warn("Problem with plotting " + filename)
             else:
                 LOG.debug('Using existing ' + filename + ' plot.')
             
