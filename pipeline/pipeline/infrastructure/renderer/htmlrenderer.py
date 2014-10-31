@@ -24,10 +24,6 @@ import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.vla.finalcalsdisplay as finalcalsdisplay
-import pipeline.infrastructure.displays.vla.semifinalBPdcalsdisplay as semifinalBPdcalsdisplay
-import pipeline.infrastructure.displays.vla.testgainsdisplay as testgainsdisplay
-import pipeline.infrastructure.displays.vla.fluxbootdisplay as fluxbootdisplay
 import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
@@ -146,42 +142,15 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MSs into Scantables'
-    
-    if task_cls is hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters:
-        return 'Flag bad deformatters'
         
     if task_cls is hifv.tasks.flagging.uncalspw.Uncalspw:
         return 'Flag spws that have no calibration'
-        
-    if task_cls is hifv.tasks.flagging.checkflag.Checkflag:
-        return 'Flag possible RFI on BP calibrator using rflag'
-    
-    if task_cls is hifv.tasks.semiFinalBPdcals:
-        return 'Semi-final delay and bandpass calibrations'
-        
-    if task_cls is hifv.tasks.fluxscale.solint.Solint:
-        return 'Determine solint'
-    
-    if task_cls is hifv.tasks.fluxscale.testgains.Testgains:
-        return 'Test gain calibrations'
-        
-    if task_cls is hifv.tasks.setmodel.fluxgains.Fluxgains:
-        return 'Flux density bootstrapping'
-    
-    if task_cls is hifv.tasks.fluxscale.fluxboot.Fluxboot:
-        return 'Fit spectral index'
-        
-    if task_cls is hifv.tasks.Finalcals:
-        return 'Final calibration tables'
     
     if task_cls is hifv.tasks.Applycals:
         return 'Apply all calibrations'
     
     if task_cls is hifv.tasks.flagging.targetflag.Targetflag:
         return 'Targetflag (all data through rflag)'
-    
-    if task_cls is hifv.tasks.Statwt:
-        return 'Reweight visibilities'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -1691,200 +1660,9 @@ class T2_4MDetailsHeuristicFlagRenderer(T2_4MDetailsDefaultRenderer):
 
 
 
-class T2_4MDetailssemifinalBPdcalsRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_semifinalbpdcals.html', 
-                 always_rerender=False):
-        super(T2_4MDetailssemifinalBPdcalsRenderer, self).__init__(template,
-                                                          always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailssemifinalBPdcalsRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        summary_plots = {}
-        delay_subpages = {}
-        ampgain_subpages = {}
-        phasegain_subpages = {}
-        bpsolamp_subpages = {}
-        bpsolphase_subpages = {}
-        
-        suffix=''
-        
-        for result in results:
-            
-            plotter = semifinalBPdcalsdisplay.semifinalBPdcalsSummaryChart(context, result, suffix=suffix)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-            
-            # generate testdelay plots and JSON file
-            plotter = semifinalBPdcalsdisplay.DelaysPerAntennaChart(context, result, suffix=suffix)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'delays')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                delay_subpages[ms] = renderer.filename
-            
-                
-            # generate phase Gain plots and JSON file
-            plotter = semifinalBPdcalsdisplay.semifinalphaseGainPerAntennaChart(context, result, suffix=suffix)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'phasegain')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                phasegain_subpages[ms] = renderer.filename
-                
-            # generate amp bandpass solution plots and JSON file
-            plotter = semifinalBPdcalsdisplay.semifinalbpSolAmpPerAntennaChart(context, result, suffix=suffix)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'bpsolamp')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                bpsolamp_subpages[ms] = renderer.filename
-                
-            # generate phase bandpass solution plots and JSON file
-            plotter = semifinalBPdcalsdisplay.semifinalbpSolPhasePerAntennaChart(context, result, suffix=suffix)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'semifinalcals_plots.html', 'bpsolphase')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                bpsolphase_subpages[ms] = renderer.filename
-        
-        ctx.update({'summary_plots'   : summary_plots,
-                    'delay_subpages' : delay_subpages,
-                    'phasegain_subpages' : phasegain_subpages,
-                    'bpsolamp_subpages'  : bpsolamp_subpages,
-                    'bpsolphase_subpages' : bpsolphase_subpages,
-                    'dirname'         : weblog_dir})
-                
-        return ctx
 
 
 
-
-
-
-
-
-
-
-
-class T2_4MDetailsSolintRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_testgains.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsSolintRenderer, self).__init__(template,
-                                                          always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsSolintRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        summary_plots = {}
-        testgainsamp_subpages = {}
-        testgainsphase_subpages = {}
-        
-        longsolint = {}
-        gain_solint2 = {}
-        
-        shortsol2 = {}
-        short_solint = {}
-        new_gain_solint1 = {}
-        
-        
-        for result in results:
-            
-            plotter = testgainsdisplay.testgainsSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-            
-            # generate testdelay plots and JSON file
-            plotter = testgainsdisplay.testgainsPerAntennaChart(context, result, 'amp')
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.html', 'amp')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                testgainsamp_subpages[ms] = renderer.filename
-            
-            # generate amp Gain plots and JSON file
-            plotter = testgainsdisplay.testgainsPerAntennaChart(context, result, 'phase')
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-            
-             # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.html', 'phase')
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-                testgainsphase_subpages[ms] = renderer.filename
-           
-            #String type
-            new_gain_solint1[ms] = result.new_gain_solint1
-            longsolint[ms]       = result.longsolint
-            
-
-        ctx.update({'summary_plots'   : summary_plots,
-                    'testgainsamp_subpages' : testgainsamp_subpages,
-                    'testgainsphase_subpages'   : testgainsphase_subpages,
-                    'new_gain_solint1'           : new_gain_solint1,
-                    'longsolint'                : longsolint,
-                    'dirname'         : weblog_dir})
-                
-        return ctx
-        
-
-class T2_4MDetailsfluxbootRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_fluxboot.html', 
-                 always_rerender=False):
-        super(T2_4MDetailsfluxbootRenderer, self).__init__(template,
-                                                          always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsfluxbootRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        summary_plots = {}
-        weblog_results = {}
-        spindex_results = {}
-
-        for result in results:
-            
-            plotter = fluxbootdisplay.fluxbootSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-            weblog_results[ms] = result.weblog_results
-            spindex_results[ms] = result.spindex_results
-            
-        ctx.update({'summary_plots'   : summary_plots,
-                    'weblog_results'  : weblog_results,
-                    'spindex_results' : spindex_results,
-                    'dirname'         : weblog_dir})
-                
-        return ctx
 
 class T2_4MDetailstargetflagRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_targetflag.html', 
@@ -2448,18 +2226,9 @@ renderer_map = {
         hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
-        hifv.tasks.flagging.flagbaddeformatters.FlagBadDeformatters : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_flagbaddef.html', always_rerender=False),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=False),
-        hifv.tasks.flagging.checkflag.Checkflag  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_checkflag.html', always_rerender=False),
-        hifv.tasks.semiFinalBPdcals              : T2_4MDetailssemifinalBPdcalsRenderer('t2-4m_details-hifv_semifinalbpdcals.html', always_rerender=False),
-        hifv.tasks.fluxscale.solint.Solint       : T2_4MDetailsSolintRenderer('t2-4m_details-hifv_solint.html', always_rerender=False),
-        hifv.tasks.setmodel.fluxgains.Fluxgains  : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_fluxgains.html', always_rerender=False),
-        hifv.tasks.fluxscale.fluxboot.Fluxboot   : T2_4MDetailsfluxbootRenderer('t2-4m_details-hifv_fluxboot.html', always_rerender=False),
-        hifv.tasks.Finalcals                     : T2_4MDetailsfinalcalsRenderer('t2-4m_details-hifv_finalcals.html', always_rerender=False),
-        #hifv.tasks.Applycals                     : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_applycals.html', always_rerender=True),
         hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False),
-        hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailstargetflagRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=False),
-        hifv.tasks.Statwt                         : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_statwt.html', always_rerender=False)
+        hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailstargetflagRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=False)
 
     }
 }
