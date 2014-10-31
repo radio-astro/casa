@@ -91,6 +91,7 @@ public:
             bool isWarning = false);
     void showWarning(const String& message,
             const String& title = "PlotMS Warning");
+    void clearMessage();
     // </group>
     
     // See PlotMSPlotter::showMessage().

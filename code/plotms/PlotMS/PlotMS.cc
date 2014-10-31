@@ -95,6 +95,7 @@ void PlotMSApp::showWarning(const String& message, const String& title) {
 void PlotMSApp::showMessage(const String& message, const String& title) {
     itsPlotter_->showMessage(message, title);
 }
+void PlotMSApp::clearMessage() { itsPlotter_->clearMessage(); }
 
 void PlotMSApp::showGUI(bool show) {
     if (show != isGUI_) {

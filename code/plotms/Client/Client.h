@@ -98,6 +98,7 @@ public:
 	//a web log.
 	virtual void showMessage(const String& message, const String& title, bool warning = false) = 0;
 
+	virtual void clearMessage() = 0;
 
 	virtual void setCanvasCachedAxesStackImageSize(int width, int height );
 

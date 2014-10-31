@@ -84,6 +84,9 @@ public:
 	//a web log.
 	virtual void showMessage(const String& message, const String& title, bool warning = false);
 
+	// only for GUI client
+	virtual void clearMessage() {};
+
 
 	//Add a plot to those displayed.
 	virtual void canvasAdded( PlotCanvasPtr& /*canvas*/ ){
