@@ -401,7 +401,7 @@ class plotms_test1(test_base):
     def stest015(self):
         '''Plotms 15: Test that we iterate over averaged time on an elevation x amp plot.'''
         self.plotfile_jpg = self.outputDir + "testPlot015.jpg"
-        self.writefile_jpg = self.outputDir + "testPlot015_09:18:59.9998,09:19:30.0002.jpg"
+        self.writefile_jpg = self.outputDir + "testPlot015_Time09:18:59.9998,09:19:30.0002.jpg"
         print 'Writing to ', self.plotfile_jpg
         if os.path.exists( self.plotfile_jpg):
             os.remove( self.plotfile_jpg)
@@ -412,7 +412,7 @@ class plotms_test1(test_base):
                           overwrite=True, showgui=False, xaxis='elevation', yaxis='amp',
                           iteraxis='time', gridrows=1, gridcols=2)
         self.assertTrue(self.res)
-        self._checkPlotFile(60000, self.writefile_jpg)  
+        self._checkPlotFile(90000, self.writefile_jpg)  
         
     
     def stest016(self):
@@ -481,7 +481,7 @@ class plotms_test1(test_base):
                           customsymbol=[True,True], symbolshape=['diamond','circle'], symbolsize=[5,5],
                           symbolcolor=['ff0000','00ff00'], symbolfill=['mesh3','mesh3'])
         self.assertTrue(self.res)
-        self._checkPlotFile(222500, self.writefile_jpg) 
+        self._checkPlotFile(213500, self.writefile_jpg) 
         
     def stest020(self):
         '''Plotms 20: Export an iteration plot with one plot per page (pipeline).'''
@@ -656,12 +656,12 @@ class plotms_test1(test_base):
         '''Check the first page got saved'''
         self.assertTrue(os.path.exists(self.plotfile1_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile1_jpg)
-        self._checkPlotFile(10000, self.plotfile1_jpg)
+        self._checkPlotFile(100000, self.plotfile1_jpg)
         
         '''Check the second page got saved'''
         self.assertTrue(os.path.exists(self.plotfile2_jpg), 'Plot2 was not created')
         print 'Plot2 file size is ', os.path.getsize(self.plotfile2_jpg)
-        self._checkPlotFile(65000, self.plotfile2_jpg)
+        self._checkPlotFile(64000, self.plotfile2_jpg)
         print    
         
     def stest027(self):
@@ -726,7 +726,7 @@ class plotms_test1(test_base):
         for  i in range(0, len(self.plotFiles)):
             self.assertTrue(os.path.exists(self.plotFiles[i]), 'Plot was not created')
             print 'Plot file size ', i, ' is ', os.path.getsize(self.plotFiles[i])
-            self._checkPlotFile(55000, self.plotFiles[i]) 
+            self._checkPlotFile(54000, self.plotFiles[i]) 
         print    
         
     def stest028(self):
@@ -846,7 +846,7 @@ class plotms_test1(test_base):
                           plotfile=self.plotFile)
         print 'Result from plotms=', self.res
         self.assertTrue(self.res)
-        self._checkPlotFile(14000, self.plotFile)   
+        self._checkPlotFile(13000, self.plotFile)   
         
         self.res =plotms(vis='/home/uniblab/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms',xaxis="freq",xdatacolumn="",yaxis="amp",
 ydatacolumn="corrected",selectdata=True,field="1",spw="",timerange="",
@@ -940,7 +940,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(self.res)
         self.assertTrue(os.path.exists(self.plotfile_jpg), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotfile_jpg)
-        self._checkPlotFile(53000, self.plotfile_jpg)
+        self._checkPlotFile(52000, self.plotfile_jpg)
         
         '''Now increase the plot index to something huge- it should return false'''
         self.res = plotms(vis=self.ms, plotindex=400, 
@@ -1198,7 +1198,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( self.res )
         self._checkPlotFile( 95000, self.plotfile_jpg1 )
         self._checkPlotFile( 95000, self.plotfile_jpg2 )
-        self._checkPlotFile( 95000, self.plotfile_jpg3 )
+        self._checkPlotFile( 94000, self.plotfile_jpg3 )
         self._checkPlotFile( 95000, self.plotfile_jpg4 )
         print
         
