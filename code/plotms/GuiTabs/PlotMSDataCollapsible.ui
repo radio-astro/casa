@@ -42,6 +42,9 @@
          <pointsize>8</pointsize>
         </font>
        </property>
+       <property name="toolTip">
+        <string>Expand/Collapse Plot Data</string>
+       </property>
        <property name="text">
         <string>Minimize</string>
        </property>
@@ -53,6 +56,9 @@
         <font>
          <pointsize>8</pointsize>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>Close Plot Data</string>
        </property>
        <property name="text">
         <string>Close</string>

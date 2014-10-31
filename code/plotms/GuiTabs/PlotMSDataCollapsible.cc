@@ -122,7 +122,7 @@ void PlotMSDataCollapsible::minimizeDisplay() {
 
 	nameLabel->setText( identifier.c_str() );
 
-	ui.widgetLayout->addWidget( nameLabel );
+	ui.widgetLayout->insertWidget(0, nameLabel );
 	ui.minMaxButton->setText("Maximize");
 
 	minimumSize = SIZE_COLLAPSED;
@@ -134,7 +134,7 @@ void PlotMSDataCollapsible::maximizeDisplay() {
 	nameLabel->setParent( NULL );
 
 	if ( plotTab != NULL ){
-		ui.widgetLayout->addWidget( plotTab );
+		ui.widgetLayout->insertWidget( 0, plotTab );
 	}
 
 	ui.minMaxButton->setText("Minimize");
