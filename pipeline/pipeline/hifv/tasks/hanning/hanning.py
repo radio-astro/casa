@@ -56,7 +56,6 @@ class Hanning(basetask.StandardTaskTemplate):
 
         task = casa_tasks.hanningsmooth(vis=self.inputs.vis, 
                                         datacolumn='data',
-                                        outputvis='',
-                                        async=False)
+                                        outputvis='')
 
         self._executor.execute(task)

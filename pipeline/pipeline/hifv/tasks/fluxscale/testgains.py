@@ -191,8 +191,7 @@ class Testgains(basetask.StandardTaskTemplate):
                      'gainfield'    : [''],
                      'interp'       : [''],
                      'spwmap'       : [],
-                     'parang'       : False,
-                     'async'        : False}
+                     'parang'       : False}
 
         
         job = casa_tasks.gaincal(**task_args)

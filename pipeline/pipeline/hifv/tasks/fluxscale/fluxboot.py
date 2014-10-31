@@ -187,8 +187,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                      'reference'    : [fluxcalfields],
                      'transfer'     : [''],
                      'append'       : False,
-                     'refspwmap'    : [-1],
-                     'async'        : False}
+                     'refspwmap'    : [-1]}
                      
         job = casa_tasks.fluxscale(**task_args)
         
