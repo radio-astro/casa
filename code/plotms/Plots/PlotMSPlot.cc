@@ -672,13 +672,15 @@ void PlotMSPlot::logPoints() {
 			display->unflaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL;
 	bool showFlagged =
 			display->flaggedSymbol()->symbol() != PlotSymbol::NOSYMBOL;
+	bool allFlagged = false;
 
 	stringstream ss;
 	ss << "Plotting ";
 	if(showUnflagged) {
 		if ( itsCache_->nIter(0) > iter_ ){
-			ss << itsCache_->indexer(0,iter_).sizeUnmasked() << " unflagged"
-					<< (showFlagged ? ", " : "");
+                        uInt nUnflaggedPoints = itsCache_->indexer(0,iter_).sizeUnmasked(); 
+			ss << nUnflaggedPoints << " unflagged" << (showFlagged ? ", " : "");
+			if (nUnflaggedPoints==0) allFlagged = true;
 		}
 		else {
 			ss << "0 unflagged" <<(showFlagged ? ", " : "");
@@ -698,6 +700,12 @@ void PlotMSPlot::logPoints() {
 			PMS::LOG_ORIGIN_PLOT,
 			ss.str(),
 			PMS::LOG_EVENT_PLOT);
+        if (allFlagged) {
+		itsParent_->showWarning("All selected data are flagged.");
+	}
+	else { //clear warning
+		itsParent_->clearMessage();
+	}
 }
 
 void PlotMSPlot::logIter(Int iter, Int nIter) {

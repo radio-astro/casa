@@ -203,7 +203,10 @@ public slots:
     
     // Shows the given informational message in a GUI window.
     virtual void showMessage(const String& message, const String& title, bool warning = false);
-    
+   
+    // Clears the message in a GUI window.
+    virtual void clearMessage() { clearStatusText(); }
+ 
     // Slot for showing an "about" dialog.
     void showAbout();
     
