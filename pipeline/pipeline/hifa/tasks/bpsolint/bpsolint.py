@@ -160,35 +160,24 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
 	    return result
 
-	# Get the fluxes as a function of spw and field
+	# Get the flux dictionary
 	#    Return if there are no flux values for the bandpass calibrator.
 	flux_dict = self._get_fluxinfo(inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
 	if not flux_dict:
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
 	    return result
-	print
-	print 'Flux dictionary'
-	print flux_dict
-	print
 
 	# Get the tys dictionary
-	#    Populate it initially with the tsys observation information
-	#    Return if there are no tsys spws for the bandpass calibrator.
+	#    Return if there are no Tsys spws for the bandpass calibrator.
 	tsys_dict = self._get_tsysinfo(inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
 	if not tsys_dict:
-	    LOG.info('No tsys spw for MS %s' % inputs.ms.basename)
+	    LOG.info('No Tsys spw for MS %s' % inputs.ms.basename)
 	    return result
-	print 'Tsys dictionary'
-	print tsys_dict
-	print
 
 	# Initialize the spw dictionary from the tsys dictionary
 	spw_dict = deepcopy(tsys_dict)
-	print 'Spw dictionary'
-	print spw_dict
-	print
 
 	# Transfer flux information to the spw dictionary.
 	for spw in spwlist:
@@ -196,14 +185,11 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        continue
 	    if not spw_dict.has_key(spw):
 	        continue
-	    if spw_dict[spw]['fieldname'] != flux_dict[spw]['fieldname']: 
+	    if spw_dict[spw]['field_name'] != flux_dict[spw]['field_name']: 
 	        continue
 	    spw_dict[spw]['flux'] = flux_dict[spw]['flux']
-	print 'Spw dictionary'
-	print spw_dict
-	print
 
-	# Get the tsys spw list and the tsys associated observing scan list.
+	# Get the Tsys spw list and the tsys bandpass scan list.
 	# from the spw dictionary
 	tsys_spwlist = []; scan_list = []
 	for spw in spwlist:
@@ -212,14 +198,11 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    if not spw_dict[spw].has_key('tsys_spw'):
 	        continue
 	    tsys_spwlist.append(spw_dict[spw]['tsys_spw'])
-	    scan_list.append(spw_dict[spw]['tsys_obsscan'])
+	    scan_list.append(spw_dict[spw]['bandpass_scan'])
 
-	# Get the median tsys as a function of spw
+	# Get the median Tsys as a function of spw
         tsystemp_dict = self._get_mediantemp (inputs.ms, tsys_spwlist,
 	    scan_list, antenna='', temptype='tsys')
-	print 'Tsys temp dictionary'
-	print tsystemp_dict
-	print
 
 	# Transfer the tsys temp information to the spw dictionary
 	for spw in spwlist:
@@ -228,16 +211,10 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    if not tsystemp_dict.has_key(spw_dict[spw]['tsys_spw']):
 	        continue
 	    spw_dict[spw]['median_tsys'] = tsystemp_dict[spw_dict[spw]['tsys_spw']]
-	print 'Spw dictionary'
-	print spw_dict
-	print
 
 	# Get the observing characteristics dictionary
 	obs_dict = self._get_obsinfo (inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
-	print 'Obs Dictionary'
-	print obs_dict
-	print
 
 	# Transfer the observing information to the spw dictionary
 	for spw in spwlist:
@@ -245,12 +222,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        continue
 	    if not obs_dict.has_key(spw):
 	        continue
-	    spw_dict[spw]['obs_scans'] = obs_dict[spw_dict[spw]['obs_scans']]
+	    spw_dict[spw]['bandpass_scans'] = obs_dict[spw_dict[spw]['obs_scans']]
 	    spw_dict[spw]['exptime'] = obs_dict[spw_dict[spw]['exptime']]
-	    spw_dict[spw]['n7mant'] = obs_dict[spw_dict[spw]['n7mant']]
-	    spw_dict[spw]['n12mant'] = obs_dict[spw_dict[spw]['n12mant']]
+	    spw_dict[spw]['num_7mantenna'] = obs_dict[spw_dict[spw]['num_7mantenna']]
+	    spw_dict[spw]['num_12mantenna'] = obs_dict[spw_dict[spw]['num_12mantenna']]
 	    spw_dict[spw]['band'] = obs_dict[spw_dict[spw]['band']]
-	    spw_dict[spw]['centerfreq'] = obs_dict[spw_dict[spw]['centerfreq']]
+	    spw_dict[spw]['bandcenter'] = obs_dict[spw_dict[spw]['centerfreq']]
 	    spw_dict[spw]['bandwidth'] = obs_dict[spw_dict[spw]['bandwidth']]
 	    spw_dict[spw]['nchan'] = obs_dict[spw_dict[spw]['nchan']]
 	    spw_dict[spw]['chanwidths'] = obs_dict[spw_dict[spw]['chanwidths']]
@@ -260,15 +237,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Compute the bandpass solint parameters
 	solint_dict = self._compute_bpsolint(spwlist, spw_dict, inputs.bpsnr)
-
-	# Get the list of bandpass scans and determine the number of
-	# antennas in each scan.
-	#scanlist, nunflagged_antennas, nflagged_antennas = \
-	    #self._get_scanlist(ms=inputs.ms, fieldlist=fieldlist, 
-	    #intent=intent, spwlist=spwlist)
-	#if not scanlist:
-	    #LOG.info('No bandpass scans for MS %s' % inputs.ms.name)
-	    #return result
 
 	# Compute the number of unflagged antennas if request.
 	#if hm_nantennas == 'unflagged'
@@ -286,12 +254,12 @@ class BpSolint(basetask.StandardTaskTemplate):
         return result
 
     # Get the fluxes as a function of field and spw from the pipeline
-    # context
+    # context and return a dictionary.
     #
     # The flux dictionary keys abd values 
     #        key: the spw id         value: The source dictionary
     # The source dictionary keys and values
-    #        key: fieldname          value: The name of the source
+    #        key: field_name         value: The name of the source
     #        key: flux               value: The flux of the source in Jy
     #
     def _get_fluxinfo(self, ms, fieldnamelist, intent, spwlist):
@@ -331,18 +299,31 @@ class BpSolint(basetask.StandardTaskTemplate):
 		        continue
 		    fluxdict[spw.id] = collections.OrderedDict()
 		    (I, Q, U, V) = flux.casa_flux_density
-		    fluxdict[spw.id]['fieldname'] = fieldname
+		    fluxdict[spw.id]['field_name'] = fieldname
 		    fluxdict[spw.id]['flux'] = I
 	            LOG.info('Setting flux for field %s  spw %s to %0.2f Jy' \
 		        % (fieldname, spw.id, I))
 
         return fluxdict
 
-    # Get the tsys information
+    # Get the tsys information as functions of field and spw and
+    # return a dictionary
+    #
+    # The tsys dictionary keys abd values 
+    #        key: the spw id         value: The source dictionary
+    # The source dictionary keys and values
+    #        key: field_name         value: The name of the source
+    #        key: intent             value: The intent of the bandpass source
+    #        key: bandpass_scan      value: The bandpass scan associated with Tsys
+    #        key: tsys_scan          value: The Tsys scan for Tsys computation
+    #        key: tsys_spw           value: The Tsys spw
+    #
     def _get_tsysinfo(self, ms, fieldnamelist, intent, spwlist):
 
 	# Initialize
 	tsysdict = collections.OrderedDict()
+
+	# Get the list of unique field names
 	fieldset = set(fieldnamelist)
 
 	# Get atmospheric scans associated with the field name list
@@ -368,7 +349,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    obscans.append(scan)
 
 	# No data scans found
-	#    Note possible issue with PHASE, OBSERVE_TARGET scans 
+	#    Note possible issue with PHASE / OBSERVE_TARGET scans 
 	if not obscans:
 	    return tsysdict
 
@@ -382,6 +363,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        continue
 
 	    # Find best atmospheric window
+	    #    This dictionary is created only if the spw id is valid
 	    ftsysdict = collections.OrderedDict()
 	    for atmscan in atmscans:
 
@@ -416,20 +398,35 @@ class BpSolint(basetask.StandardTaskTemplate):
 		# Create dictionary entry based on first scan matched.
 		if bestspwid is None:
 		    continue
-		ftsysdict['fieldname'] = fieldname
+		ftsysdict['field_name'] = fieldname
 		ftsysdict['intent'] = intent
-		ftsysdict['tsys_obsscan'] = obscans[0].id
+		ftsysdict['bandpass_scan'] = obscans[0].id
 		ftsysdict['tsys_scan'] = atmscan.id
 		ftsysdict['tsys_spw'] = bestspwid
 		break
 
 	    # Update the spw dictinary
 	    if ftsysdict:
-	        tsysdict[spw.id] = ftsysdict
+	        tsysdict[spwid] = ftsysdict
 
 	return tsysdict
 
-    # Retrieve observing parameter information
+    # Get the observing information and return a dictionary
+    #
+    # The observing dictionary keys abd values 
+    #        key: the spw id         value: The bandpass source observing dictionary
+    # The observation dictionary keys and values
+    #        key: bandpass_scans     value: The lists of bandpass source scans
+    #        key: num_12mantenna     value: The max number of 12 m antenna in the bandpass scans
+    #        key: num_7mantenna      value: The max number of 7 m antenna in the bandpass scans
+    #        key: exposure           value: The bandpass scan exposure time in minutes
+    #        key: band               value: The ALMA receiver band
+    #        key: bandcenter         value: The center frequency in Hz of the spw
+    #        key: bandwidth          value: The band width in Hz of the spw
+    #        key: nchan              value: The number of channels in the spw
+    #        key: chanwidths         value: The median channek widht in Hz for the spw
+    #
+
     def _get_obsinfo (self, ms, fieldnamelist, intent, spwidlist):
 
         obsdict = collections.OrderedDict()
@@ -460,7 +457,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        spw = ms.get_spectral_window(spwid)
 	    except:
 	        continue
-	    print 'get_obsinfo check spw ids ', spw.id, spwid
 
 	    # Find scans associated with the spw. They may be different from one spw to the next
 	    spwscans = []
@@ -486,7 +482,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    continue
 		fscans.append(scan)
 	    scanids = [scan.id for scan in fscans]
-	    obsdict[spwid]['obs_scans'] = scanids
+	    obsdict[spwid]['bandpass_scans'] = scanids
 
 	    # Figure out the number of antennas
 	    #   Flagging not taken into account here
@@ -494,8 +490,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    for scan in fscans:
 	        n7mant = max (n7mant, len ([a for a in scan.antenna if a.diameter == 7.0]))
 	        n12mant = max (n12mant, len ([a for a in scan.antenna if a.diameter == 12.0]))
-	    obsdict[spwid]['n12mant'] = n12mant
-	    obsdict[spwid]['n7mant'] = n12mant
+	    obsdict[spwid]['num_12mantenna'] = n12mant
+	    obsdict[spwid]['num_7mantenna'] = n12mant
 
 	    # Retrieve total exposure time in minutes
 	    #    Add to dictionary
@@ -510,7 +506,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    #        channels, and median channel width
 	    #    Add to dictionary
 	    obsdict[spwid]['band'] = spw.band 
-	    obsdict[spwid]['centerfreq'] = float(spw.centre_frequency.value) 
+	    obsdict[spwid]['bandcenter'] = float(spw.centre_frequency.value) 
 	    obsdict[spwid]['bandwidth'] = float(spw.bandwidth.value) 
 	    obsdict[spwid]['nchan'] = spw.num_channels 
 	    channels = spw.channels
@@ -521,36 +517,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	return obsdict
 
-    # Create the bandpass scan list. Initialize the number of unflagged
-    # and flagged antennas for each scan.
-    def _get_scanlist (self, ms, fieldlist=[], intent='', spwlist=[]):
-
-	fieldset = set(fieldlist)
-	spwset = set(spwlist)
-
-	# Loop over the scans with the correct intent.
-	scanlist = []; nunflagged_antennas = []; nflagged_antennas = []
-        for scan in ms.get_scans(scan_intent=intent):
-
-	    # Skip scans with the wrong field name
-	    scanfieldset = set([field.name for field in scan.fields])
-	    if len(fieldset.intersection(scanfieldset)) == 0:
-	        continue
-
-	    # Skip scans with an incorrect spw
-	    scanspwset = set ([spw.id for spw in scan.spws()])
-	    if len(spwset.intersection(scanspwset)) == 0:
-	        continue
-
-	    # Update the lists
-	    scanlist.append(scan)
-	    nunflagged_antennas.append(len(scan.antennas))
-	    nflagged_antennas.append(0)
-
-	return scanlist, nunflagged_antennas, nflagged_antennas 
-
     
-    # Get median temperatures
+    # Get median temperatures and return as a dictionary
+    #
+    # The observing dictionary keys abd values 
+    #        key: the spw id         value: The median Tsys value
+
     def _get_mediantemp (self, ms, tsys_spwlist, scan_list, antenna='', temptype='tsys'):
     
         """
@@ -571,7 +543,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         """
     
         # Initialize
-        mediantemps = {}
+        mediantemps = collections.OrderedDict()
     
         # Temperature type must be one of 'tsys' or 'trx' or 'tsky'
         if (temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky'):
@@ -728,6 +700,26 @@ class BpSolint(basetask.StandardTaskTemplate):
 
     # Compute the bandpass frequency solution interval given the
     # spw list and the spw dictionary 
+    #
+    # The bandpass preaveraging dictionary keys abd values 
+    #        key: the spw id     value: The science spw id as an integer
+    # The preaveraging parameter dictionary keys abd values 
+    #        key: band               value: The ALMA receiver band
+    #        key: frequency_Hz       value: The frequency of the spw
+    #        key: nchan_total        value: The total number of channels in the spw
+    #        key: chanwidth_Hz       value: The median channel width in Hz
+    #
+    #        key: tsys_spw           value: The tsys spw id as an integer
+    #        key: median_tsys        value: The median tsys value
+    #
+    #        key: flux_Jy            value: The flux of the source in Jy
+    #        key: minutes            value: The bandpass source exposure time in minutes
+    #        key: snr_per_channel    value: The signal to noise per channel
+    #        key: sensitivity_mJy    value: The sensitivity in mJy per channel
+
+    #        key: solint             value: The frequency averaging solint in MHz
+    #        key: nchan_solint       value: The total number of channels in the solint
+
     def _compute_bpsolint(self, spwlist, spw_dict, reqSnr):
 
 	# The ALMA receiver bands defined per pipeine convention
@@ -744,15 +736,15 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    bandidx = ALMA_BANDS.index(spw_dict[spwid]['band'])
 	    relativeTsys = spw_dict[swpid]['median_tsys'] / ALMA_TSYS[bandidx]
 	    timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exposure'])
-	    nbaselines = spw_dict[spwid]['n7mant'] + spw_dict[spwid]['n12mant'] - 1
+	    nbaselines = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna'] - 1
 	    arraySizeFactor = np.sqrt(16 * 15 / 2.0) / np.sqrt(nbaselines)
-	    if spw_dict[spwid]['n7mant'] == 0:
+	    if spw_dict[spwid]['num_7mantenna'] == 0:
 	        areaFactor = 1.0
-	    elif spw_dict[spwid]['n12mant'] == 0:
+	    elif spw_dict[spwid]['num_12mantenna'] == 0:
 	        areaFactor = (12.0 / 7.0) ** 2
 	    else:
-		ntotant = spw_dict[spwid]['n7mant'] + spw_dict[spwid]['n12mant']
-	        areaFactor = (spw_dict[spwid]['n12mant'] + (12.0 / 7.0)**2 * spw_dict[spwid]['n7mant']) / ntotant 
+		ntotant = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna']
+	        areaFactor = (spw_dict[spwid]['num_12mantenna'] + (12.0 / 7.0)**2 * spw_dict[spwid]['num_7mantenna']) / ntotant 
 	    bandwidthFactor = np.sqrt(8.0e9 / spw_dict[spwid]['chanwidths'])
 	    polarizationFactor = np.sqrt(2.0)
 	    factor = relativeTsys * timeFactor * arraySizeFactor * areaFactor * \
@@ -763,18 +755,22 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	    # Fill in the dictionary
 	    solint_dict[spwid] = collection.OrderedDict()
-	    solint_dict[spwid]['solint'] = '%fMHz' % (requiredChannels * spw_dict[spwid]['chanwidths'] * 1.0e-6)
-	    solint_dict[spwid]['nchan_total'] = spw_dict[spwid]['nchan']
-	    solint_dict[spwid]['nchan_solint'] = '%d' % (np.ceil(requireChannels))
-	    solint_dict[spwid]['median_tsys'] = spw_dict[spwid]['median_tsys']
-	    solint_dict[spwid]['tsys_spw'] = spw_dict[spwid]['tsys_spw']
+
 	    solint_dict[spwid]['band'] = spw_dict[spwid]['band']
+	    solint_dict[spwid]['frequency_Hz'] = spw_dict[spwid]['bandcenter']
+	    solint_dict[spwid]['nchan_total'] = spw_dict[spwid]['nchan']
+	    solint_dict[spwid]['chanwidth_Hz'] = spw_dict[spwid]['chanwidths']
+
+	    solint_dict[spwid]['tsys_spw'] = spw_dict[spwid]['tsys_spw']
+	    solint_dict[spwid]['median_tsys'] = spw_dict[spwid]['median_tsys']
+
+	    solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
 	    solint_dict[spwid]['minutes'] = spw_dict[spwid]['exposure']
 	    solint_dict[spwid]['snr_per_channel'] = snrPerChannel
 	    solint_dict[spwid]['sensitivity_mJy'] = sensitivity
-	    solint_dict[spwid]['chanwidth_Hz'] = spw_dict[spwid]['chanwidths']
-	    solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
-	    solint_dict[spwid]['frequency_Hz'] = spw_dict[spwid]['centerfreq']
+
+	    solint_dict[spwid]['solint'] = '%fMHz' % (requiredChannels * spw_dict[spwid]['chanwidths'] * 1.0e-6)
+	    solint_dict[spwid]['nchan_solint'] = '%d' % (np.ceil(requireChannels))
 
 	return solint_dict
 	    
