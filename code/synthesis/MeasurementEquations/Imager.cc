@@ -5389,7 +5389,6 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                                  returnFluxes, returnFluxErrs,
                                  tempCLs, "_setjy_");
   }
-
   if(!foundSrc){
     if(standard == String("SOURCE")){
       // *** THIS MODE IS NOT USED IN CURRENT SETJY ***
@@ -5552,6 +5551,7 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
     //Vector<Double> uflux;
     Vector<Flux<Double> > fluxvalvec; 
     Bool gotQUFlux(false);
+    Bool useFluxAsIs(false);
     // 
     if(reffreq.getValue().getValue() > 0.0){
       //original code uses first time of the data but shouldn't be using the same time as for
@@ -5619,7 +5619,11 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       //  cerr<<"running sjy_calcquflux...."<<endl;
       //     - returns qflux and uflux
         gotQUFlux = sjy_calcquflux(inpipars, inpapars, iflux, rotMeas, mfreqs[selspw], reffreq, qflux, uflux);
-      } 
+      }
+      else if (fluxUsed[1] != 0.0 || fluxUsed[2] != 0.0 | fluxUsed[3] != 0.0) {
+        gotQUFlux=true;
+        useFluxAsIs=true;
+      }
         /***
         if ( !useTabularFlux ) {
           Vector<Double> stokesIndex(4);
@@ -5633,6 +5637,11 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
           qflux[ichn] = 0.0; 
           uflux[ichn] = 0.0;
         } 
+        else if(useFluxAsIs) {
+          qflux[ichn] = fluxUsed[1];
+          uflux[ichn] = fluxUsed[2];
+          vflux[ichn] = fluxUsed[3];
+        }
         if ( circpolFraction != 0.0) vflux[ichn] = iflux[ichn]*circpolFraction;
         Flux<Double> iquvflux(iflux[ichn],qflux[ichn],uflux[ichn],vflux[ichn]);
         fluxvalvec[ichn] = iquvflux; 
@@ -5664,7 +5673,8 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
     else {
     //if simodel is set use this 
       //cerr<<"NON-Tabular makeComponentList..."<<endl;
-      if (fluxval.value(1) ==0.0 && fluxval.value(2) == 0.0 && gotQUFlux) {
+      //if (fluxval.value(1) ==0.0 && fluxval.value(2) == 0.0 && gotQUFlux) {
+      if ( gotQUFlux) {
         fluxval=fluxvalvec[0]; 
       }   
       tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
