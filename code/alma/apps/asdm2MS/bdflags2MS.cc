@@ -509,6 +509,7 @@ void traverseALMACorrelatorFlagsAxes(const vector<SDMDataObject::Baseband>&	base
 				     const vector<pair<string, string> >&	dataDescriptions,
 				     const pair<unsigned int, const FLAGSTYPE*>& flagsPair,
 				     MSFlagEval&                               flagEval,
+				     CorrelationModeMod::CorrelationMode        correlationMode,
 				     MSFlagAccumulator<char>&                   autoAccumulator,
 				     MSFlagAccumulator<char>&                   crossAccumulator) {
   LOGENTER("traverseALMACorrelatorFlagsAxes");
@@ -518,8 +519,10 @@ void traverseALMACorrelatorFlagsAxes(const vector<SDMDataObject::Baseband>&	base
   BDFFlagConsumer<FLAGSTYPE> consumer(flags_p, numFlags);
 
   // Attention the next two calls must be done in *this* order (BAL then ANT) !!!!
-  traverseBAL(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, crossAccumulator);
-  traverseANT(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, autoAccumulator);
+  if (correlationMode != CorrelationModeMod::AUTO_ONLY) 
+    traverseBAL(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, crossAccumulator);
+  if (correlationMode != CorrelationModeMod::CROSS_ONLY) 
+    traverseANT(basebands, antennas, dataDescriptions, flagsPair, consumer, flagEval, autoAccumulator);
 
   LOGEXIT("traverseALMACorrelatorFlagsAxes");
 }
@@ -584,7 +587,8 @@ bool  putCell( FLAG_SHAPE* flagShape_p,
   return cellFlagged;  
 }
 
-pair<uInt, uInt> mergeAndPut(MSFlagAccumulator<char>& autoAccumulator,
+pair<uInt, uInt> mergeAndPut(CorrelationModeMod::CorrelationMode correlationMode,
+			     MSFlagAccumulator<char>& autoAccumulator,
 			     MSFlagAccumulator<char>& crossAccumulator,
 			     uInt iRow0,
 			     ArrayColumn<Bool>& flag,
@@ -620,30 +624,34 @@ pair<uInt, uInt> mergeAndPut(MSFlagAccumulator<char>& autoAccumulator,
   for (unsigned int iDD = 0; iDD < numDD; iDD++) {
     //
     // ... put the flags for auto correlation firstly
-    for (unsigned int iTIMEANT = 0; iTIMEANT < numIntegration * numANT; iTIMEANT++) {
-      if (putCell(autoFlagShapes_p_v_p->at(kAuto),
-		  autoFlagValues_p_v_p->at(kAuto),
-		  iRow0,
-		  flag, 
-		  flagRow))
-	numFlaggedRows++;
-
-      iRow0++;
-      kAuto++;
+    if (correlationMode != CorrelationModeMod::CROSS_ONLY) {
+      for (unsigned int iTIMEANT = 0; iTIMEANT < numIntegration * numANT; iTIMEANT++) {
+	if (putCell(autoFlagShapes_p_v_p->at(kAuto),
+		    autoFlagValues_p_v_p->at(kAuto),
+		    iRow0,
+		    flag, 
+		    flagRow))
+	  numFlaggedRows++;
+	
+	iRow0++;
+	kAuto++;
+      }
     }
     
     //
     // ... put the flags for cross correlation then
-    for (unsigned int iTIMEBAL = 0; iTIMEBAL < numIntegration * numBAL; iTIMEBAL++) {
-      if (putCell(crossFlagShapes_p_v_p->at(kCross),
-		  crossFlagValues_p_v_p->at(kCross),
-		  iRow0,
-		  flag, 
-		  flagRow))
-	numFlaggedRows++;
-      
-      iRow0++;
-      kCross++;
+    if (correlationMode != CorrelationModeMod::AUTO_ONLY) {
+      for (unsigned int iTIMEBAL = 0; iTIMEBAL < numIntegration * numBAL; iTIMEBAL++) {
+	if (putCell(crossFlagShapes_p_v_p->at(kCross),
+		    crossFlagValues_p_v_p->at(kCross),
+		    iRow0,
+		    flag, 
+		    flagRow))
+	  numFlaggedRows++;
+	
+	iRow0++;
+	kCross++;
+      }
     }
   }
   LOGEXIT("mergeAndPut");
@@ -1039,7 +1047,7 @@ int main (int argC, char * argV[]) {
   }
 
   // Regular expressions for the correct sequences of axes in the flags in the case of ALMA data.
-  boost::regex ALMACorrelatorFlagsAxesRegex("BAL ANT (BAB )?(POL )?");
+  boost::regex ALMACorrelatorFlagsAxesRegex("(BAL )?ANT (BAB )?(POL )?");
   boost::regex ALMARadiometerFlagsAxesRegex("(TIM ANT )?");
 
 
@@ -1155,12 +1163,14 @@ int main (int argC, char * argV[]) {
 	    throw ProcessFlagsException("'" + oss.str() + "' is not a valid sequence of flags axes for an ALMA correlator.");
 	  }
 
-
+	  CorrelationModeMod::CorrelationMode correlationMode = sdosr.correlationMode();
 	  unsigned int numBAL = antennas.size() * (antennas.size() - 1) / 2;
 	  MSFlagAccumulator<char> autoAccumulator(numIntegration, antennas.size(), numDD);
 	  MSFlagAccumulator<char> crossAccumulator(numIntegration, numBAL, numDD);
-	  autoAccumulator.resetIntegration();
-	  crossAccumulator.resetIntegration();
+	  if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+	    autoAccumulator.resetIntegration();
+	  if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+	    crossAccumulator.resetIntegration();
 	  while (sdosr.hasSubset()) {
 	    const FLAGSTYPE * flags_p;
 	    unsigned int numFlags = sdosr.getSubset().flags(flags_p);
@@ -1171,14 +1181,22 @@ int main (int argC, char * argV[]) {
 					    dataDescriptions,
 					    flagsPair,
 					    flagEval,
+					    correlationMode,
 					    autoAccumulator,
 					    crossAccumulator);
-	    autoAccumulator.nextIntegration();
-	    crossAccumulator.nextIntegration();
+	    if ( correlationMode != CorrelationModeMod::CROSS_ONLY )
+	      autoAccumulator.nextIntegration();
+	    if ( correlationMode != CorrelationModeMod::AUTO_ONLY )
+	      crossAccumulator.nextIntegration();
 	  }
 	  //autoAccumulator.dump(cout, true);
 	  //crossAccumulator.dump(cout, true);
-	  pair<uInt, uInt> putReturn = mergeAndPut(autoAccumulator, crossAccumulator, iMSRow, flag, flagRow);
+	  pair<uInt, uInt> putReturn = mergeAndPut(correlationMode,
+						   autoAccumulator,
+						   crossAccumulator,
+						   iMSRow,
+						   flag,
+						   flagRow);
 	  iMSRow = putReturn.first;
 	  numFlaggedRows = putReturn.second;
 	  sdosr.close();
