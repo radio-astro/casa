@@ -72,7 +72,7 @@ class finalcalsSummaryChart(object):
         m = context.observing_run.measurement_sets[0]
         
         root, ext = os.path.splitext(figfile)
-        real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+        real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, 'ea00', 00, 't00',ext)
 
 	wrapper = logger.Plot(real_figfile, x_axis='freq', y_axis='delay',
 			    parameters={'vis'      : self.ms.basename,
