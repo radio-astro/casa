@@ -24,7 +24,6 @@ import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
-import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -148,9 +147,6 @@ def _get_task_description_for_class(task_cls):
     
     if task_cls is hifv.tasks.Applycals:
         return 'Apply all calibrations'
-    
-    if task_cls is hifv.tasks.flagging.targetflag.Targetflag:
-        return 'Targetflag (all data through rflag)'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -1664,32 +1660,7 @@ class T2_4MDetailsHeuristicFlagRenderer(T2_4MDetailsDefaultRenderer):
 
 
 
-class T2_4MDetailstargetflagRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hifv_targetflag.html', 
-                 always_rerender=False):
-        super(T2_4MDetailstargetflagRenderer, self).__init__(template,
-                                                          always_rerender)
-    
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailstargetflagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-        
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-        
-        summary_plots = {}
 
-        for result in results:
-            
-            plotter = targetflagdisplay.targetflagSummaryChart(context, result)
-            plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
-            
-        ctx.update({'summary_plots'   : summary_plots,
-                    'dirname'         : weblog_dir})
-                
-        return ctx
 
 class VLASubPlotRenderer(object):
     #template = 'testdelays_plots.html'
@@ -2227,9 +2198,8 @@ renderer_map = {
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=False),
-        hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False),
-        hifv.tasks.flagging.targetflag.Targetflag : T2_4MDetailstargetflagRenderer('t2-4m_details-hifv_targetflag.html', always_rerender=False)
-
+        hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False)
+        
     }
 }
 

@@ -6,6 +6,7 @@ import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
 
 LOG = logging.get_logger(__name__)
 
@@ -15,7 +16,7 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
     FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
     def __init__(self, uri='vlaagentflagger.mako', 
-                 description='VLA Deterministic flagging', always_rerender=True):
+                 description='VLA Deterministic flagging', always_rerender=False):
         super(T2_4MDetailsVLAAgentFlaggerRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
@@ -153,3 +154,34 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
             previous_summary = summary
                 
         return total
+        
+
+
+
+
+class T2_4MDetailstargetflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
+    def __init__(self, uri='targetflag.mako', 
+                 description='Targetflag (All targets through RFLAG)', always_rerender=False):
+        super(T2_4MDetailstargetflagRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
+    
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailstargetflagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+        
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+        
+        summary_plots = {}
+
+        for result in results:
+            
+            plotter = targetflagdisplay.targetflagSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+            
+        ctx.update({'summary_plots'   : summary_plots,
+                    'dirname'         : weblog_dir})
+                
+        return ctx

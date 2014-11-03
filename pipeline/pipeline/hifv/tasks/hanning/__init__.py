@@ -8,4 +8,4 @@ from . import hanning
 
 
 weblog.add_renderer(Hanning, basetemplates.T2_4MDetailsDefaultRenderer(uri='hanning.mako',
-                                                                      description='VLA Hanning Smoothing', always_rerender=True))
+                                                                      description='VLA Hanning Smoothing', always_rerender=False))

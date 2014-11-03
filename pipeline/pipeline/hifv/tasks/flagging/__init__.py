@@ -7,6 +7,7 @@ from pipeline.hif.tasks.flagging import flagdeterbase
 from . import vlaagentflagger
 from . import flagbaddeformatters
 from . import checkflag
+from . import targetflag
 from . import renderer
 
 from pipeline.hif.tasks.flagging.flagdeterbase import FlagDeterBase
@@ -26,4 +27,5 @@ weblog.add_renderer(FlagBadDeformatters, basetemplates.T2_4MDetailsDefaultRender
                                                                       
 weblog.add_renderer(Checkflag, basetemplates.T2_4MDetailsDefaultRenderer(uri='checkflag.mako',
                                                                       description='Flag possible RFI on BP calibrator using rflag', always_rerender=False))                                                                      
-                                                                      
+
+weblog.add_renderer(Targetflag, renderer.T2_4MDetailstargetflagRenderer())

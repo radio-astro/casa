@@ -45,7 +45,7 @@ class finalcalsSummaryChart(object):
                                  'yaxis'       : 'phase',
                                  'interactive' : False,
                                  'spw'         : '',
-                                 'antenna'     : antPlot,
+                                 #'antenna'     : antPlot,
                                  'showatm'     : False,
                                  'showfdm'     : False,
                                  'subplot'     : 11,

@@ -66,7 +66,7 @@ class VLASubPlotRenderer(object):
 
 class T2_4MDetailssemifinalBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,uri='semifinalbpdcals.mako', description='Semi-final delay and bandpass calibrations', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailssemifinalBPdcalsRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     

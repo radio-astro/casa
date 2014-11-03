@@ -70,7 +70,7 @@ class VLASubPlotRenderer(object):
 
 class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,uri='solint.mako', description='Determine solint and Test gain calibrations', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsSolintRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     
