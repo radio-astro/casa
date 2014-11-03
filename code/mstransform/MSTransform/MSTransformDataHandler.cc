@@ -1208,9 +1208,11 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 
 	// Add this optional column because random group fits has a weight per visibility
 	MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
+	MS::addColumnToDesc(td, MS::SIGMA_SPECTRUM, 2);
 
 	td.defineHypercolumn("TiledFlagCategory", 4,stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
 	td.defineHypercolumn("TiledWgtSpectrum", 3,stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
+	td.defineHypercolumn("TiledSigmaSpectrum", 3,stringToVector(MS::columnName(MS::SIGMA_SPECTRUM)));
 	td.defineHypercolumn("TiledUVW", 2, stringToVector(MS::columnName(MS::UVW)));
 
 	if (asdmStManUse != USE_FOR_DATA_WEIGHT_SIGMA_FLAG)
@@ -1275,6 +1277,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 	TiledShapeStMan tiledStMan1f("TiledFlag", tileShape);
 	TiledShapeStMan tiledStMan1fc("TiledFlagCategory",IPosition(4, tileShape(0), tileShape(1), 1, tileShape(2)));
 	TiledShapeStMan tiledStMan2("TiledWgtSpectrum", tileShape);
+	TiledShapeStMan tiledStMan6("TiledSigmaSpectrum", tileShape);
 	TiledColumnStMan tiledStMan3("TiledUVW",IPosition(2, 3, (tileShape(0) * tileShape(1) * tileShape(2)) / 3));
 	TiledShapeStMan tiledStMan4("TiledWgt",IPosition(2, tileShape(0), tileShape(1) * tileShape(2)));
 	TiledShapeStMan tiledStMan5("TiledSigma",IPosition(2, tileShape(0), tileShape(1) * tileShape(2)));
@@ -1308,6 +1311,7 @@ MeasurementSet* MSTransformDataHandler::setupMS(	const String& MSFileName, const
 	}
 	newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY), tiledStMan1fc);
 	newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM), tiledStMan2);
+	newtab.bindColumn(MS::columnName(MS::SIGMA_SPECTRUM), tiledStMan6);
 
 	newtab.bindColumn(MS::columnName(MS::UVW), tiledStMan3);
 	if (asdmStManUse == USE_FOR_DATA_WEIGHT_SIGMA_FLAG)

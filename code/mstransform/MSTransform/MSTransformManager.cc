@@ -5051,46 +5051,20 @@ template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &
 // ----------------------------------------------------------------------------------------
 void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
-	// First of all we fill WEIGHT_SPECTRUM because it might be needed by channel average
-    if (inputWeightSpectrumAvailable_p)
-    {
-    	// Unset all the weights-based operations
-    	setWeightBasedTransformations(MSTransformations::cumSum);
+	if (inputWeightSpectrumAvailable_p or usewtspectrum_p)
+	{
+		// Unset all the weights-based operations
+		setWeightBasedTransformations(MSTransformations::cumSum);
 
-		// Transform weights
-    	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
+		// Write WEIGHT_SPECTRUM and SIGMA_SPECTRUM
+		transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
 
-    	// Reset all the weights-based operations
-    	setWeightBasedTransformations(weightmode_p);
-    }
-    else if (combinespws_p or usewtspectrum_p)
-    {
-    	// Fill WEIGHT_SPECTRUM with WEIGHTS
-		Matrix<Float> inputWeightPlane = vb->weight();
-		IPosition PolChanRow = vb->flagCube().shape();
-		weightSpectrumCube_p.resize(PolChanRow,False);
-		Double scaleFactor = 1.0/PolChanRow(1);
-		for (uInt row=0; row < PolChanRow(2); row++)
-		{
-			Matrix<Float> inputWeightSpectrumPlane = weightSpectrumCube_p.xyPlane(row);
-			for (uInt pol = 0; pol < PolChanRow(0); pol++)
-			{
-				inputWeightSpectrumPlane.row(pol) = scaleFactor*inputWeightPlane(pol,row);
-			}
-		}
+		// jagonzal (TBD): SIGMA_SPECTRUM is not correct in the general case of spectral regridding
+		transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL);
 
-		if (usewtspectrum_p)
-		{
-			// Unset all the weights-based operations
-			setWeightBasedTransformations(MSTransformations::cumSum);
-
-			// jagonzal: I don't want to spend so much resources transforming and writing synthetic WEIGHT_SPECTRUM
-			transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
-
-			// Reset all the weights-based operations
-			setWeightBasedTransformations(weightmode_p);
-		}
-    }
+		// Reset all the weights-based operations
+		setWeightBasedTransformations(weightmode_p);
+	}
 
 	ArrayColumn<Bool> *outputFlagCol=NULL;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
@@ -5317,19 +5291,9 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 
 	// Get input flag and weight cubes
 	const Cube<Bool> inputFlagCube = vb->flagCube();
-	Cube<Float> inputWeightsCubeLocal;
-	if (inputWeightSpectrumAvailable_p)
-	{
-		inputWeightsCubeLocal = Cube<Float>(	vb->weightSpectrum().shape(),
-												const_cast<Float*>(vb->weightSpectrum().getStorage(MSTransformations::False)),
-												SHARE);
-	}
-	else
-	{
-		inputWeightsCubeLocal = Cube<Float>(	weightSpectrumCube_p.shape(),
-												const_cast<Float*>(weightSpectrumCube_p.getStorage(MSTransformations::False)),
-												SHARE);
-	}
+	// jagonzal: WEIGHT_SPECTRUM is filled by the VI/VB framework
+	Cube<Float> inputWeightsCubeLocal = vb->weightSpectrum();
+
 
 	// Get input SPWs and exposures
 	Vector<Int> spws = vb->spectralWindows();
