@@ -222,31 +222,30 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        continue
 	    if not obs_dict.has_key(spw):
 	        continue
-	    spw_dict[spw]['bandpass_scans'] = obs_dict[spw_dict[spw]['obs_scans']]
-	    spw_dict[spw]['exptime'] = obs_dict[spw_dict[spw]['exptime']]
-	    spw_dict[spw]['num_7mantenna'] = obs_dict[spw_dict[spw]['num_7mantenna']]
-	    spw_dict[spw]['num_12mantenna'] = obs_dict[spw_dict[spw]['num_12mantenna']]
-	    spw_dict[spw]['band'] = obs_dict[spw_dict[spw]['band']]
-	    spw_dict[spw]['bandcenter'] = obs_dict[spw_dict[spw]['centerfreq']]
-	    spw_dict[spw]['bandwidth'] = obs_dict[spw_dict[spw]['bandwidth']]
-	    spw_dict[spw]['nchan'] = obs_dict[spw_dict[spw]['nchan']]
-	    spw_dict[spw]['chanwidths'] = obs_dict[spw_dict[spw]['chanwidths']]
+	    spw_dict[spw]['bandpass_scans'] = obs_dict[spw]['bandpass_scans']
+	    spw_dict[spw]['exptime'] = obs_dict[spw]['exptime']
+	    spw_dict[spw]['num_7mantenna'] = obs_dict[spw]['num_7mantenna']
+	    spw_dict[spw]['num_12mantenna'] = obs_dict[spw]['num_12mantenna']
+	    spw_dict[spw]['band'] = obs_dict[spw]['band']
+	    spw_dict[spw]['bandcenter'] = obs_dict[spw]['bandcenter']
+	    spw_dict[spw]['bandwidth'] = obs_dict[spw]['bandwidth']
+	    spw_dict[spw]['nchan'] = obs_dict[spw]['nchan']
+	    spw_dict[spw]['chanwidths'] = obs_dict[spw]['chanwidths']
 	print 'Spw dictionary'
 	print spw_dict
 	print
 
 	# Compute the bandpass solint parameters
 	solint_dict = self._compute_bpsolint(spwlist, spw_dict, inputs.bpsnr)
+	print 'Solint dictionary'
+	print solint_dict
+	print
 
 	# Compute the number of unflagged antennas if request.
 	#if hm_nantennas == 'unflagged'
 	    #nunflagged_antennas, nflagged_antennas = \
 	        #self._get_unflagged_antennas(vis=inputs.vis, scanlist=scanlist,
 		#maxfracflagged=inputs.maxfracflagged)
-
-	#for scan in scanlist:
-	    #LOG.info('Bandpass scan %s nantennas unflagged %d  flagged %d' \
-	    #% (scan.id, nunflagged_antennas, nflagged_antennas))
 
 	return result
 
@@ -419,7 +418,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     #        key: bandpass_scans     value: The lists of bandpass source scans
     #        key: num_12mantenna     value: The max number of 12 m antenna in the bandpass scans
     #        key: num_7mantenna      value: The max number of 7 m antenna in the bandpass scans
-    #        key: exposure           value: The bandpass scan exposure time in minutes
+    #        key: exptime            value: The bandpass scan exposure time in minutes
     #        key: band               value: The ALMA receiver band
     #        key: bandcenter         value: The center frequency in Hz of the spw
     #        key: bandwidth          value: The band width in Hz of the spw
@@ -488,8 +487,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    #   Flagging not taken into account here
 	    n7mant = 0; n12mant = 0
 	    for scan in fscans:
-	        n7mant = max (n7mant, len ([a for a in scan.antenna if a.diameter == 7.0]))
-	        n12mant = max (n12mant, len ([a for a in scan.antenna if a.diameter == 12.0]))
+	        n7mant = max (n7mant, len ([a for a in scan.antennas if a.diameter == 7.0]))
+	        n12mant = max (n12mant, len ([a for a in scan.antennas if a.diameter == 12.0]))
 	    obsdict[spwid]['num_12mantenna'] = n12mant
 	    obsdict[spwid]['num_7mantenna'] = n12mant
 
@@ -734,8 +733,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	for spwid in spwlist:
 	    bandidx = ALMA_BANDS.index(spw_dict[spwid]['band'])
-	    relativeTsys = spw_dict[swpid]['median_tsys'] / ALMA_TSYS[bandidx]
-	    timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exposure'])
+	    relativeTsys = spw_dict[spwid]['median_tsys'] / ALMA_TSYS[bandidx]
+	    timeFactor = 1.0 / np.sqrt(spw_dict[spwid]['exptime'])
 	    nbaselines = spw_dict[spwid]['num_7mantenna'] + spw_dict[spwid]['num_12mantenna'] - 1
 	    arraySizeFactor = np.sqrt(16 * 15 / 2.0) / np.sqrt(nbaselines)
 	    if spw_dict[spwid]['num_7mantenna'] == 0:
@@ -748,13 +747,13 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    bandwidthFactor = np.sqrt(8.0e9 / spw_dict[spwid]['chanwidths'])
 	    polarizationFactor = np.sqrt(2.0)
 	    factor = relativeTsys * timeFactor * arraySizeFactor * areaFactor * \
-	        bandwidthFactor * PolarizationFactor
+	        bandwidthFactor * polarizationFactor
 	    sensitivity = ALMA_SENSITIVITIES[bandidx] * factor
-	    snrPerChannel = spw_dict[spw]['flux'] * 1000.0 / sensitivity
+	    snrPerChannel = spw_dict[spwid]['flux'] * 1000.0 / sensitivity
 	    requiredChannels = ( reqSnr / snrPerChannel ) ** 2
 
 	    # Fill in the dictionary
-	    solint_dict[spwid] = collection.OrderedDict()
+	    solint_dict[spwid] = collections.OrderedDict()
 
 	    solint_dict[spwid]['band'] = spw_dict[spwid]['band']
 	    solint_dict[spwid]['frequency_Hz'] = spw_dict[spwid]['bandcenter']
@@ -765,12 +764,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    solint_dict[spwid]['median_tsys'] = spw_dict[spwid]['median_tsys']
 
 	    solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
-	    solint_dict[spwid]['minutes'] = spw_dict[spwid]['exposure']
+	    solint_dict[spwid]['minutes'] = spw_dict[spwid]['exptime']
 	    solint_dict[spwid]['snr_per_channel'] = snrPerChannel
 	    solint_dict[spwid]['sensitivity_mJy'] = sensitivity
 
 	    solint_dict[spwid]['solint'] = '%fMHz' % (requiredChannels * spw_dict[spwid]['chanwidths'] * 1.0e-6)
-	    solint_dict[spwid]['nchan_solint'] = '%d' % (np.ceil(requireChannels))
+	    solint_dict[spwid]['nchan_solint'] = '%d' % (np.ceil(requiredChannels))
 
 	return solint_dict
 	    
