@@ -2279,14 +2279,16 @@ class cleanhelper:
         frange=im.advisechansel(msname=invis, spwselection=spw, fieldid=selfield[0], getfreqrange=True)
         startchan=0
         endchan=len(newfreqs)-1
-        if(descendingnewfreqs):
-            startchan=numpy.min(numpy.where(frange['freqend'] < numpy.array(newfreqs)))
-            endchan=numpy.min(numpy.where(frange['freqstart'] < numpy.array(newfreqs)))
-        else:
-            startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
-            endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
-        newfreqs=(numpy.array(newfreqs)[startchan:endchan]).tolist()
-                     
+        try:
+            if(descendingnewfreqs):
+                startchan=numpy.min(numpy.where(frange['freqend'] < numpy.array(newfreqs)))
+                endchan=numpy.min(numpy.where(frange['freqstart'] < numpy.array(newfreqs)))
+            else:
+                startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
+                endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
+                newfreqs=(numpy.array(newfreqs)[startchan:endchan]).tolist()
+        except:
+            pass
         if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
