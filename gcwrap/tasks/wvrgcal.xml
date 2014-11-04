@@ -76,6 +76,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<description>Scale the entire phase correction by this factor</description>
 	<value>1.</value>
       </param>
+
+      <param type="intArray" name="spw">
+	<description>List of the spectral window IDs for which solutions should be saved into the caltable</description>
+	<value></value>
+      </param>
+      
+      <param type="intArray" name="wvrspw">
+	<description>List of the spectral window IDs from which the WVR data should be taken</description>
+	<value></value>
+      </param>
+      
       
       <param type="string" name="reversespw">
 	<description>Reverse the sign of the correction for the listed SPWs (only needed for early ALMA data before Cycle 0)</description>
@@ -185,6 +196,12 @@ WVRGCAL correction should not be used.
 
   scale -- Scale the entire phase correction by this factor
            default: 1. (no scaling)
+
+  spw -- List of the spectral window IDs for which solutions should be saved into the caltable
+	   default: [] (all spectral windows), example [17,19,21,23]
+
+  wvrspw -- List of the spectral window IDs from which the WVR data should be taken
+	   default: [] (all WVR spectral windows), example [0]
 
   reversespw -- Reverse the sign of the correction for the listed SPWs
                 (only neede for early ALMA data before Cycle 0)

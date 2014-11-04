@@ -440,6 +440,28 @@ def checkwithtaql(taqlstring):
     print "Found ", therval, " rows in selection."
     return therval
 
+
+def compcaltabnumcol(cal1, cal2, tolerance, colname1='CPARAM', colname2="CPARAM", testspw=None):
+    print "Comparing column "+colname1+" of caltable "+cal1
+    print "     with column "+colname2+" of caltable "+cal2
+    if testspw!=None:
+        print "for SPW "+str(testspw)+" only."
+    print "Discrepant row search ..."
+    rval = False
+    try:
+        discrepantrows = -1
+        if(testspw==None):
+            discrepantrows = checkwithtaql("select from [select from "+cal1+" orderby TIME, FIELD_ID, SPECTRAL_WINDOW_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+cal2+" orderby TIME, FIELD_ID, SPECTRAL_WINDOW_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1."+colname1+",t2."+colname2+", "+str(tolerance)+")))")
+        else:
+            discrepantrows = checkwithtaql("select from [select from "+cal1+" where SPECTRAL_WINDOW_ID=="+str(testspw)+" orderby TIME, FIELD_ID, ANTENNA1, ANTENNA2 ] t1, [select from "+cal2+" where SPECTRAL_WINDOW_ID=="+str(testspw)+" orderby TIME, FIELD_ID, ANTENNA1, ANTENNA2 ] t2 where (not all(near(t1."+colname1+",t2."+colname2+", "+str(tolerance)+")))")
+        if discrepantrows==0:
+            print "The two columns agree."
+            rval = True
+    except Exception, instance:
+        print "Error: "+str(instance)
+
+    return rval
+
                     
 def compmsmainnumcol(vis1, vis2, tolerance, colname1='DATA', colname2="DATA"):
     print "Comparing column "+colname1+" of MS "+vis1
