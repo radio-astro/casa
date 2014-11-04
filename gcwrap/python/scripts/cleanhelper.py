@@ -17,6 +17,7 @@ qa = casac.quanta()
 me = casac.measures()
 rg = casac.regionmanager()
 ia = casac.image()
+im = casac.imager()
 
 class cleanhelper:
     def __init__(self, imtool='', vis='', usescratch=False, casalog=None):
@@ -2275,6 +2276,17 @@ class cleanhelper:
         if len(newfreqs)>1:
           if newfreqs[1]-newfreqs[0] < 0:
             descendingnewfreqs=True
+        frange=im.advisechansel(msname=invis, spwselection=spw, fieldid=selfield[0], getfreqrange=True)
+        startchan=0
+        endchan=len(newfreqs)-1
+        if(descendingnewfreqs):
+            startchan=numpy.min(numpy.where(frange['freqend'] < numpy.array(newfreqs)))
+            endchan=numpy.min(numpy.where(frange['freqstart'] < numpy.array(newfreqs)))
+        else:
+            startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
+            endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
+        newfreqs=(numpy.array(newfreqs)[startchan:endchan]).tolist()
+                     
         if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
@@ -2351,7 +2363,7 @@ class cleanhelper:
         # user's start parameter is preserved for channel mode only.
         # (i.e. the current code may adjust start parameter for other modes but
         # this probably needs to be changed, especially for multiple ms handling.)
-        if (start!="" and mode=='channel'):
+        if ((start not in [-1, "", " "]) and mode=='channel'):
           retstart=start
         else:
           # default cases
