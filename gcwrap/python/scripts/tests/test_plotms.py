@@ -5,6 +5,7 @@ from __main__ import default
 from tasks import *
 from taskinit import *
 import unittest
+import fnmatch
 import sha
 import time
 
@@ -62,6 +63,14 @@ class test_base(unittest.TestCase):
         #else:
             # store to check against following test results
         #    self.plotfile_hash = sha.new(open(plotfileName, 'r').read()).hexdigest()
+        
+    def _getFileCount(self, dirName, namePattern ):
+        nameTarget = namePattern + '*'
+        count = 0
+        for  file in os.listdir( dirName ):
+            if fnmatch.fnmatch( file, nameTarget):
+                count = count + 1
+        return count
             
     
         
@@ -1201,8 +1210,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self._checkPlotFile( 94000, self.plotfile_jpg3 )
         self._checkPlotFile( 95000, self.plotfile_jpg4 )
         print
+                
         
-    def test043(self):
+    def stest043(self):
         '''Plotms 43: Test that legend works with overplots'''
         '''Note when testing this, don't just check the file size, but look at the
            plot and make sure there is a legend there.'''
@@ -1241,7 +1251,107 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue(os.path.exists(self.plotFile), 'Plot was not created')
         print 'Plot file size is ', os.path.getsize(self.plotFile)
         self._checkPlotFile(55000, self.plotFile) 
-        print                   
+        print
+        
+        
+    def test044( self ):
+        '''Plotms 44:  CAS-7050:  (Pipeline) Check that if you specify the first 3 antenna and iterate over
+           antenna then you only get 3 iteration plots'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot044.jpg"
+        self.plotfile_jpg1 = self.outputDir + "testPlot044_AntennaDA43@A075.jpg"
+        self.plotfile_jpg2 = self.outputDir + "testPlot044_AntennaDA45@A070_2.jpg"
+        self.plotfile_jpg3 = self.outputDir + "testPlot044_AntennaDA46@A067_3.jpg"
+        print 'Writing to ', self.plotfile_jpg1, ', ', self.plotfile_jpg2, ', ',self.plotfile_jpg3
+        print 'But not writing any more!'
+        if os.path.exists( self.plotfile_jpg1):
+            os.remove( self.plotfile_jpg1)
+        if ( os.path.exists( self.plotfile_jpg2 ) ):
+             os.remove( self.plotfile_jpg2 ) 
+        if ( os.path.exists( self.plotfile_jpg3 ) ):
+             os.remove( self.plotfile_jpg3 )
+                       
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot and check that there are only 3 iterations'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp",antenna='0~2',
+                          showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertTrue( self.res )
+        self._checkPlotFile( 130000, self.plotfile_jpg1 )
+        self._checkPlotFile( 130000, self.plotfile_jpg2 )
+        self._checkPlotFile( 130000, self.plotfile_jpg3 )
+        fileCount = self._getFileCount( self.outputDir, "testPlot044_" )
+        self.assertTrue( fileCount == 3 )
+        print 
+        
+    def test045( self ):
+        '''Plotms 45:  CAS-7050:  (Pipeline) Check antenna with a range that includes only one valid antenna and iterate over
+           antenna then you only get 1 iteration plot'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot045.jpg"
+        self.plotfile_jpg1 = self.outputDir + "testPlot045_AntennaDV24@A088.jpg"
+       
+        print 'Writing to ', self.plotfile_jpg1
+        print 'But hopefully not writing any more of them '
+        if os.path.exists( self.plotfile_jpg1):
+            os.remove( self.plotfile_jpg1)
+         
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot and check that there are only 3 iterations'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp",antenna='21~30',
+                          showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertTrue( self.res )
+        self._checkPlotFile( 70000, self.plotfile_jpg1 )
+        fileCount = self._getFileCount( self.outputDir, "testPlot045_" )
+        self.assertTrue( fileCount == 1 )
+        print 
+        
+    def test046( self ):
+        '''Plotms 46:  CAS-7050:  (Pipeline) Iterate on antenna, but don't select.  
+             Make sure there are 22 iteration plots'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot046.jpg"
+        #self.plotfile_jpg1 = self.outputDir + "testPlot045_AntennaDV24@A08.jpg"
+       
+        print 'Writing to ', self.plotfile_jpg
+ 
+        #if os.path.exists( self.plotfile_jpg1):
+        #    os.remove( self.plotfile_jpg1)
+         
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot and check that there are only 3 iterations'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp",
+                          showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertTrue( self.res )
+        fileCount = self._getFileCount( self.outputDir, "testPlot046_" )
+        self.assertTrue( fileCount == 22 )
+        print         
+        
+    def test047( self ):
+        '''Plotms 47:  CAS-7050:  (Pipeline) Iterate on antenna with an empty selection.  
+             Make sure there are NO iteration plots'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot047.jpg"
+       
+        print 'Writing NO plots '
+         
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot with empty antenna selection and check the result is false'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp", antenna="100,101,102",
+                          showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertFalse( self.res )
+        print                               
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
