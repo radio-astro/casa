@@ -392,6 +392,9 @@ protected:
   PMS::Axis iterAxis;
   bool ephemerisInitialized;
   QVector<double> uniqueTimes;
+
+private:
+  void _updateAntennaMask( Int a, Vector<Bool>& antMask, const Vector<Int> selectedAntennas );
 };
 typedef CountedPtr<PlotMSCacheBase> PlotMSCacheBasePtr;
 

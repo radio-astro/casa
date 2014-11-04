@@ -92,7 +92,7 @@ private:
 
   // Setup the VisIter
   void setUpVisIter(const String& msname,
-		    const PlotMSSelection& selection,
+		    PlotMSSelection& selection,
 		    Bool readonly=True,
 		    Bool chanselect=True,
 		    Bool corrselect=True);

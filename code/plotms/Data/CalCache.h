@@ -90,7 +90,7 @@ private:
 
   // Setup the CalIter
   void setUpCalIter(const String& calname,
-		    const PlotMSSelection& selection,
+		    PlotMSSelection& selection,
 		    Bool readonly=True,
 		    Bool chanselect=True,
 		    Bool corrselect=True);

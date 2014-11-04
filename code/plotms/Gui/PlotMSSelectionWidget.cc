@@ -40,7 +40,8 @@ PlotMSSelectionWidget::PlotMSSelectionWidget(QWidget* parent) :
     QLabel* label; QLineEdit* val;
     for(unsigned int i = 0; i < fields.size(); i++) {
         label = new QLabel(QString(PlotMSSelection::field(fields[i]).c_str()));
-        label->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+        Qt::Alignment align = (Qt::Alignment)(Qt::AlignVCenter | Qt::AlignRight);
+        label->setAlignment(align);
         l->addWidget(label, i, 0);        
         val = new QLineEdit();       
         l->addWidget(val, i, 1);

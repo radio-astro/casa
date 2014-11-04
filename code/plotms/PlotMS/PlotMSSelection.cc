@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTInterface.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -113,20 +114,35 @@ String PlotMSSelection::toStringShort() const {
 
 void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
 			    Vector<Vector<Slice> >& chansel,
-			    Vector<Vector<Slice> >& corrsel) const {    
+			    Vector<Vector<Slice> >& corrsel){
     // Set the selected MeasurementSet to be the same initially as the input
     // MeasurementSet
     selMS = ms;
-
     mssSetData(ms, selMS, chansel,corrsel, "", 
 	       timerange(), antenna(), field(), spw(),
 	       uvrange(), msselect(), corr(), scan(), array(),
-	       "", observation());
+	       "", observation(), 1, &mss );
+}
+
+Vector<int> PlotMSSelection::getSelectedAntennas1(){
+	Vector<int> selAnts;
+	if ( ! isEmpty() ){
+		selAnts = mss.getAntenna1List();
+	}
+	return selAnts;
+}
+
+Vector<int> PlotMSSelection::getSelectedAntennas2(){
+	Vector<int> selAnts;
+	if ( ! isEmpty() ){
+		selAnts = mss.getAntenna2List();
+	}
+	return selAnts;
 }
 
 void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
   		            Vector<Vector<Slice> >& /*chansel*/,
-  		            Vector<Vector<Slice> >& /*corrsel*/) const {
+  		            Vector<Vector<Slice> >& /*corrsel*/) {
   // Trap unsupported selections
 
   if (uvrange().length()>0)
@@ -143,7 +159,6 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
   //cout << "Whole NCT nrows    = " << ct.nrow() << endl;
 
   CTInterface cti(ct);
-  MSSelection mss;
   mss.setTimeExpr(timerange());
   mss.setObservationExpr(observation());
   mss.setScanExpr(scan());
