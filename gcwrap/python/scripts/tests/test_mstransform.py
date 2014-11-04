@@ -305,7 +305,7 @@ class test_base_compare(test_base):
 
     def compare_main_table_columns(self,startrow = 0, nrow = -1, rowincr = 1):
         for col in self.columns:
-            if col != "WEIGHT_SPECTRUM" and col != "SIGMA" and col != "FLAG_CATEGORY":
+            if col != "WEIGHT_SPECTRUM" and col != "SIGMA_SPECTRUM" and col != "SIGMA" and col != "FLAG_CATEGORY":
                     tmpcolumn = self.columns[:]
                     tmpcolumn.remove(col)
                     self.assertTrue(th.compTables(self.refvis_sorted,self.outvis_sorted,tmpcolumn,self.tolerance[col],self.mode[col],startrow,nrow,rowincr))
@@ -870,7 +870,7 @@ class test_Columns(test_base):
         mstransform(vis=self.vis, outputvis='allcols.ms',spw='0',
                     datacolumn='all')
         
-        self.assertTrue(th.compTables('allcols.ms', self.outputms,['FLAG_CATEGORY','WEIGHT_SPECTRUM'],0.000001,"absolute"))
+        self.assertTrue(th.compTables('allcols.ms', self.outputms,['FLAG_CATEGORY','WEIGHT_SPECTRUM','SIGMA_SPECTRUM'],0.000001,"absolute"))
                 
     def test_weight_corr_sel(self):
         '''mstransform: check WEIGHT shape after correlation selection'''
@@ -1145,6 +1145,7 @@ class test_WeightSpectrum(test_base):
         check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
         check_eq(exposure[0], 7.5, 0.0001)
 
+    @unittest.skip('Skip until propagation of WEIGHT_SPECTRUM by cvel is defined')
     def test_fillWeightSpectrumFromWeight(self):
         '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
 

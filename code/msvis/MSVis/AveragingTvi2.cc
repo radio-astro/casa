@@ -1234,7 +1234,7 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
 
     // If doing both DATA and CORRECTED_DATA then SIGMA_SPECTRUM contains the weight
     // (not sigma) accumulation for DATA, and we have to derive SIGMA from it
-    if (doing_p.sigmaSpectrumOut_p)
+    if (doing_p.correctedData_p and doing_p.observedData_p)
     {
     	Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1));
     	arrayTransformInPlace (weight, weightToSigma);
@@ -1243,17 +1243,21 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     	// Now convert the DATA weight accumulation stored in sigmaSpectrum into the real SIGMA_SPECTRUM
     	// TODO: This should happen only if we are writing out SIGMA_SPECTRUM but
     	//       multiple column operation is rare and might be forbidden in the future
-    	// Caution!!! Taking advantage of the copy reference constructor
-    	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum();
+    	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
     	arrayTransformInPlace (sigmaSpectrun, weightToSigma);
     }
     // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
     else
     {
-    	Vector<Float> weight; // Caution!!! The constructor makes a referenced copy
-    	weight = msRow->weight(); // This accessor creates normal copy
-    	arrayTransformInPlace (weight, weightToSigma);
-    	msRow->setSigma (weight);
+    	// Derive SIGMA from computed WEIGHT
+    	Vector<Float> sigma = msRow->sigma(); // Reference copy
+    	sigma = msRow->weight(); // Normal copy (transfer Weight values to Sigma)
+    	arrayTransformInPlace (sigma, weightToSigma);
+
+    	// Derive SIGMA_SPECTRUM from computed WEIGHT_SPECTRUM
+    	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
+    	sigmaSpectrun = msRow->weightSpectrum(); // Normal copy (transfer WeightSpectrum values to SigmaSpectrum)
+    	arrayTransformInPlace (sigmaSpectrun, weightToSigma);
     }
 
     // Get the normalization factor for this baseline, containing
@@ -1671,7 +1675,7 @@ VbAvg::startChunk (ViImplementation2 * vi)
     doing_p.weightSpectrumIn_p = doing_p.correctedData_p;
     doing_p.sigmaSpectrumIn_p = doing_p.observedData_p;
     doing_p.weightSpectrumOut_p = True; // We always use the output WeightSpectrum
-    doing_p.sigmaSpectrumOut_p = doing_p.correctedData_p && doing_p.observedData_p;
+    doing_p.sigmaSpectrumOut_p = True; // We always use the output SigmaSpectrum
 
     // Set up the flags for row copying
 

@@ -753,7 +753,7 @@ class test_mms_input(test_base):
 
         # Compare both tables. Ignore the DATA column and compare it in next line
         self.assertTrue(th.compTables('input_sorted.ms','output_sorted.ms', 
-                                      ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM','DATA']))
+                                      ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM','SIGMA_SPECTRUM','DATA']))
         
         # Compare the DATA column
         self.assertTrue(th.compVarColTables('input_sorted.ms','output_sorted.ms','DATA'))
