@@ -87,19 +87,20 @@ namespace LibAIR2 {
 
     for(size_t i=0; i<ntimes; ++i)
     {
-      for(size_t spw=0; spw<nspw; ++spw)
+      for(size_t ispw=0; ispw<nspw; ++ispw)
       {
-	const size_t nch=s.spws[spw].chf.size();
+	const size_t nch=s.spws[ispw].chf.size();
+	const size_t spwid=s.spws[ispw].spwid;
 
 	// The minus sign here is required to match ALMA convention
-	double path_to_phase=-2 * M_PI * s.spws[spw].chf[nch/2] / 3e8;
-	if (reverse.count(spw))
+	double path_to_phase=-2 * M_PI * s.spws[ispw].chf[nch/2] / 3e8;
+	if (reverse.count(spwid))
 	  {
 	    path_to_phase *= -1;
 	  }
 	if (disperse)
 	  {
-	    const double dispf=(1+dispt(s.spws[spw].chf[nch/2]));
+	    const double dispf=(1+dispt(s.spws[ispw].chf[nch/2]));
 	    path_to_phase *= dispf;
 	  }
 	
@@ -128,7 +129,7 @@ namespace LibAIR2 {
 				g.g_time()[i],  // timestamp
 				deltat,         // interval
 				g.g_field()[i], // field id
-				spw,            // spw id
+				spwid,          // spw id
 				-1,             // scan number (non-specific)
 				Vector<Int>(),  // antenna1 will be auto-generated: [0,1,2,...]
 				-1,             // refant (non-specific)

@@ -19,10 +19,12 @@
 namespace LibAIR2 {
 
   void loadSpec(const casa::MeasurementSet &ms,
+		const std::vector<int> &spws,
 		MSSpec &s)
   {
     casa::MSSpectralWindow specTable(ms.spectralWindow());
     // Number of spectral windows in this measurement set
+
     const size_t nspw=specTable.nrow();
 
     // Number of channels 
@@ -35,15 +37,30 @@ namespace LibAIR2 {
       chfreq(specTable,
 	     casa::MSSpectralWindow::columnName(casa::MSSpectralWindow::CHAN_FREQ));
 
-    s.spws.resize(nspw);
-    for (size_t spw=0; spw<nspw; ++spw)
+    std::vector<int> spwsout = spws;
+    size_t nspwout = spwsout.size();
+    if(nspw==0){
+      for(size_t i=0; i<nspw; i++){
+	if(nc(i)!=4){
+	  spwsout.push_back(i);
+	}
+      }
+      nspwout=spwsout.size();
+    }
+
+    s.spws.resize(nspwout);
+
+    for (size_t ispw=0; ispw<nspwout; ++ispw)
     {
+      size_t spwid=spwsout[ispw];
+
+      s.spws[ispw].spwid=spwid;
       casa::Array<casa::Double> freq;
-      chfreq.get(spw, freq, casa::True);
-      s.spws[spw].chf.resize(nc(spw));
-      for(size_t i=0; i< static_cast<size_t>(nc(spw)); ++i)
+      chfreq.get(spwid, freq, casa::True);
+      s.spws[ispw].chf.resize(nc(spwid));
+      for(size_t i=0; i< static_cast<size_t>(nc(spwid)); ++i)
       {
-	s.spws[spw].chf[i]=freq(casa::IPosition(1,i));
+	s.spws[ispw].chf[i]=freq(casa::IPosition(1,i));
       }
     }
   }
@@ -128,6 +145,12 @@ namespace LibAIR2 {
 
       spw[i]=map[dd(i)];
     }
+  }
+
+  size_t numSPWs(const casa::MeasurementSet &ms){
+    casa::MSSpectralWindow specTable(ms.spectralWindow());
+
+    return specTable.nrow();
   }
 
 

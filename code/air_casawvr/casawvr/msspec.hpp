@@ -26,6 +26,7 @@ namespace LibAIR2 {
   /// Information about an individual spectral window
   struct MSSPW
   {
+    int spwid;
     /// Frequency of each channel in the spectral window
     std::vector<double> chf;
   };
@@ -40,6 +41,7 @@ namespace LibAIR2 {
       measuremnt set
    */
   void loadSpec(const casa::MeasurementSet &ms,
+		const std::vector<int> &spws,
 		MSSpec &s);
 
   std::ostream & 
@@ -65,6 +67,10 @@ namespace LibAIR2 {
   void dataSPWs(const casa::MeasurementSet &ms,
 		std::vector<size_t> &spw,
 		const std::vector<size_t> &sortedI);
+
+  /** \brief Total number of SPWs in the MS
+   */
+  size_t numSPWs(const casa::MeasurementSet &ms);
 
 }
 

@@ -39,9 +39,11 @@ namespace LibAIR2 {
   WVRSPWIDs(const casa::MeasurementSet &ms);
 
   /** Set of DATA_DESC_IDs associated with WVRs
+      among those given by spws
    */
   std::set<size_t>
-  WVRDataDescIDs(const casa::MeasurementSet &ms);
+  WVRDataDescIDs(const casa::MeasurementSet &ms,
+		 const std::vector<int> &spws);
 
   /** Number of spectral windows associated with ALMA WVRs
    */
@@ -50,7 +52,8 @@ namespace LibAIR2 {
   /** Set of antennas with data from WVRs available
    */
   AntSet
-  WVRAntennas(const casa::MeasurementSet &ms);
+  WVRAntennas(const casa::MeasurementSet &ms,
+	      const std::vector<int> &wvrspws);
 
   /** Set of antennas with data from WVRs available
       
@@ -58,7 +61,8 @@ namespace LibAIR2 {
       have WVRs
    */
   AntSet
-  WVRAntennasFeedTab(const casa::MeasurementSet &ms);
+  WVRAntennasFeedTab(const casa::MeasurementSet &ms,
+		     const std::vector<int> &wvrspws);
 
   /** Set of antennas with data from WVRs available
       
@@ -67,7 +71,8 @@ namespace LibAIR2 {
       feedtable is corrupted
    */
   AntSet
-  WVRAntennasMainTab(const casa::MeasurementSet &ms);
+  WVRAntennasMainTab(const casa::MeasurementSet &ms, 
+		     const std::vector<int> &wvrspws);
 
   /** Add the antennas flagged in the ANTENNA table to the set
    */
@@ -82,12 +87,15 @@ namespace LibAIR2 {
 			  std::vector<double> &times,
 			  std::vector<size_t> &states,
 			  std::vector<size_t> &field,
-			  std::vector<size_t> &source);
+			  std::vector<size_t> &source,
+			  const std::vector<int> &wvrspws,
+			  const std::vector<size_t>& sortedI);
 
   /** Load all WVR data from a measurment set
       
    */
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, 
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms,
+			       const std::vector<int>& spws, 
 			       std::vector<size_t> &sortedI,
 			       std::set<int> &flaggedantsInMain,
 			       double requiredUnflaggedFraction=0.8,
