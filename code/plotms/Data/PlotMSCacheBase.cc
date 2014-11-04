@@ -763,14 +763,27 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		Vector<Int> antList(nAnt_);
 		Vector<Bool> antMask(nAnt_,False);
 		indgen(antList);
-		for (Int ich=0;ich<nChunk_;++ich)
-			if (goodChunk_(ich))
+		bool selectionEmpty = selection_.isEmpty();
+		Vector<Int> selAnts1;
+		if ( !selectionEmpty ){
+			selAnts1 = selection_.getSelectedAntennas1();
+		}
+		Vector<Int> selAnts2;
+		if ( !selectionEmpty ){
+			selAnts2 = selection_.getSelectedAntennas2();
+		}
+		for (Int ich=0;ich<nChunk_;++ich){
+			if (goodChunk_(ich)){
 				for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl) {
-					Int a1=*(antenna1_[ich]->data()+ibl);
-					Int a2=*(antenna2_[ich]->data()+ibl);
-					if (a1>-1) antMask(a1)=True;
-					if (a2>-1) antMask(a2)=True;
+					Int a1 =*(antenna1_[ich]->data()+ibl);
+					_updateAntennaMask( a1, antMask, selAnts1 );
+
+					Int a2 =*(antenna2_[ich]->data()+ibl);
+					_updateAntennaMask( a2, antMask, selAnts2 );
 				}
+			}
+		}
+
 		// Remember only the occuring antenna indices
 		iterValues=antList(antMask).getCompressedArray();
 		nIter=iterValues.nelements();
@@ -888,6 +901,28 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 		logLoad(ss.str());
 
 		//  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
+	}
+}
+
+void PlotMSCacheBase::_updateAntennaMask( Int a, Vector<Bool>& antMask,
+		const Vector<Int> selectedAntennas ){
+	if (a>-1){
+		bool selected = false;
+		int selectedAntennaCount = selectedAntennas.size();
+		if ( selectedAntennaCount == 0){
+			selected = true;
+		}
+		else {
+			for ( int i = 0; i < selectedAntennaCount; i++ ){
+				if ( selectedAntennas[i] == a ){
+					selected = true;
+					break;
+				}
+			}
+		}
+		if ( selected ){
+			antMask(a)=True;
+		}
 	}
 }
 

@@ -28,6 +28,7 @@
 #define PLOTMSSELECTION_H_
 
 #include <casa/Containers/Record.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <plotms/PlotMS/PlotMSConstants.h>
 
 #include <map>
@@ -91,12 +92,12 @@ public:
     // mssSetData method in ms/MeasurementSets/MSSelectionTools.h for details.)
     void apply(MeasurementSet& ms, MeasurementSet& selectedMS,
                Vector<Vector<Slice> >& chansel,
-	       Vector<Vector<Slice> >& corrsel) const;
+	       Vector<Vector<Slice> >& corrsel);
         
     // Applies this selection to a NewCaltable
     void apply(NewCalTable& ct, NewCalTable& selectedCT,
                Vector<Vector<Slice> >& chansel,
-    	       Vector<Vector<Slice> >& corrsel) const;
+    	       Vector<Vector<Slice> >& corrsel);
         
     // Gets/Sets the value for the given selection field.
     // <group>
@@ -150,9 +151,17 @@ public:
     // Copy operator.
     PlotMSSelection& operator=(const PlotMSSelection& copy);
     
+    //Return lists of antennas that have been selected.
+    Vector<int> getSelectedAntennas1();
+    Vector<int> getSelectedAntennas2();
+
+    //Returns whether or not any selections have been made.
+    bool isEmpty() const;
 private:    
     // Selection field values.
     map<Field, String> itsValues_;
+
+    MSSelection mss;
 
     // Force appearance of new selection (even when not new)
     Int forceNew_;
@@ -160,8 +169,6 @@ private:
     // Initializes the values to their defaults.
     void initDefaults();
 
-    //Returns whether or not any selections have been made.
-    bool isEmpty() const;
 };
 
 }

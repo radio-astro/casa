@@ -121,7 +121,7 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
 }
 
 void CalCache::setUpCalIter(const String& ctname,
-			    const PlotMSSelection& selection,
+			    PlotMSSelection& selection,
 			    Bool readonly,
 			    Bool /*chanselect*/,
 			    Bool /*corrselect*/) {

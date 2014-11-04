@@ -129,6 +129,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 	//   (should remove this)
 	nAnt_ = viter.numberAnt();
 
+
 	// TBD: Consolidate count/loadChunks methods?
 
 	Vector<Int> nIterPerAve;
@@ -171,7 +172,7 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 }
 
 void MSCache::setUpVisIter(const String& msname,
-		const PlotMSSelection& selection,
+		PlotMSSelection& selection,
 		Bool readonly,
 		Bool chanselect,
 		Bool corrselect) {
@@ -228,6 +229,7 @@ void MSCache::setUpVisIter(const String& msname,
 	// Apply chan/corr selction
 	if (chanselect) rvi_p->selectChannel(chansel);
 	if (corrselect) rvi_p->selectCorrelation(corrsel);
+
 }
 
 void MSCache::countChunks(ROVisibilityIterator& vi,
