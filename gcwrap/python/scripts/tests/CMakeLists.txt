@@ -163,20 +163,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdscale.py
   test_sdstat.py
   test_sdtpimaging.py
-  test_sdbaselineold.py
-  test_sdcalold.py
-  test_sdcal2old.py
-  test_sdfitold.py
-  test_sdflagold.py
-  test_sdflag2old.py
-  test_sdgridold.py
-  test_sdimagingold.py
-  test_sdmathold.py
-  test_sdplotold.py
-  test_sdreduceold.py
-  test_sdsaveold.py
-  test_sdsmoothold.py
-  test_sdstatold.py
   test_setjy.py
   test_simobserve.py
   test_simplecluster.py

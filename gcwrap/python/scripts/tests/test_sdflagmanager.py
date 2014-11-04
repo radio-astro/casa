@@ -14,7 +14,6 @@ from numpy import array
 
 import asap as sd
 from sdflagmanager import sdflagmanager
-from sdstatold import sdstatold
 from sdutil import tbmanager
 
 @contextlib.contextmanager

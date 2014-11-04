@@ -220,37 +220,6 @@ class sdtask_template(sdtask_interface):
     def cleanup(self):
         # do nothing by default
         pass
-        
-    def get_selector_by_list(self):
-        attributes = ['scanlist','iflist','pollist','beamlist',
-                      'rowlist','field']
-        for a in attributes:
-            if not hasattr(self,a): setattr(self,a,None)
-        selector = get_selector_by_list(in_scans=self.scanlist,
-                                        in_ifs=self.iflist,
-                                        in_pols=self.pollist,
-                                        in_beams=self.beamlist,
-                                        in_rows=self.rowlist,
-                                        in_field=self.field)
-
-        # CAS-5496 selection by timerange
-        if hasattr(self, 'timerange') and len(self.timerange) > 0:
-            # base scantable
-            if hasattr(self, 'infile'):
-                base_table = self.infile
-            elif hasattr(self, 'infiles'):
-                base_table = self.infiles[0]
-            else:
-                base_table = None
-            taql_for_timerange = select_by_timerange(base_table, self.timerange)
-            query_org = selector.get_query()
-            if len(query_org) > 0:
-                selector.set_query(' && '.join([query_org, taql_for_timerange]))
-            else:
-                selector.set_query(taql_for_timerange)
-            casalog.post('taql: \'%s\''%(selector.get_query()), priority='DEBUG')
-
-        return selector
 
 
     def get_selector(self, scantb=None):
@@ -616,25 +585,6 @@ def assert_outfile_canoverwrite_or_nonexistent(outfile=None, outform=None, overw
 
 def get_listvalue(value):
     return _to_list(value, int) or []
-
-def get_selector_by_list(in_scans=None, in_ifs=None, in_pols=None, \
-                         in_field=None, in_beams=None, in_rows=None,
-                         in_timerange=None):
-    scans = get_listvalue(in_scans)
-    ifs   = get_listvalue(in_ifs)
-    pols  = get_listvalue(in_pols)
-    beams = get_listvalue(in_beams)
-    rows = get_listvalue(in_rows)
-    selector = sd.selector(scans=scans, ifs=ifs, pols=pols, beams=beams,
-                           rows=rows)
-
-    if (in_field != ""):
-        # NOTE: currently can only select one
-        # set of names this way, will probably
-        # need to do a set_query eventually
-        selector.set_name(in_field)
-
-    return selector
 
 
 def get_selector(in_scans=None, in_ifs=None, in_pols=None, \

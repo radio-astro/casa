@@ -400,7 +400,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
                                    unit=specunit, ifno=ifno)
         print("Using spw='%s'" % spw)
         currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw)
-        # Task sdstatold returns a dictionary of statistic values
+        # Task sdstat returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)
@@ -418,7 +418,7 @@ class sdstat_basicTest( sdstat_unittest_base, unittest.TestCase ):
                                    unit=specunit, ifno=ifno)
         print("Using spw='%s'" % spw)
         currstat = sdstat(infile=self.infile,outfile=outfile,spw=spw)
-        # Task sdstatold returns a dictionary of statistic values
+        # Task sdstat returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
         self._compareStats(currstat,self.ref_line2)

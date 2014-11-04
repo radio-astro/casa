@@ -13,7 +13,7 @@ from numpy import array
 import asap as sd
 from sdbaseline import sdbaseline
 from sdutil import tbmanager
-from sdstatold import sdstatold
+from sdstat import sdstat
 
 try:
     import selection_syntax
@@ -150,12 +150,12 @@ class sdbaseline_unittest_base:
         self.assertTrue(isthere,
                          msg='Could not find, %s'%(name))
 
-    def _getStats( self, filename, ifno=None ):
-        if not ifno:
-            ifno=[]
+    def _getStats( self, filename, spw=None ):
+        if not spw:
+            spw=''
         self._checkfile(filename)
         sd.rcParams['scantable.storage'] = 'memory'
-        retstat = sdstatold(filename, iflist=ifno)
+        retstat = sdstat(filename, spw=str(spw))
         return retstat
 
     def _compareStats( self, currstat, refstat, reltol=1.0e-2, complist=None ):
@@ -1064,7 +1064,7 @@ class sdbaseline_multi_IF_test( sdbaseline_unittest_base, unittest.TestCase ):
                          'stddev': 1.4974949359893799}}
         # sdstat must run each IF separately
         for ifno in [5,7]:
-            currstat = self._getStats(outfile,[ifno])
+            currstat = self._getStats(outfile,ifno)
             self._compareStats(currstat,reference[ifno])
 
 class sdbaseline_storageTest( sdbaseline_unittest_base, unittest.TestCase ):

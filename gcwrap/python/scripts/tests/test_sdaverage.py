@@ -17,7 +17,7 @@ except:
 
 import asap as sd
 from sdaverage import sdaverage
-from sdstatold import sdstatold
+from sdstat import sdstat
 
 from sdutil import tbmanager
 
@@ -756,11 +756,15 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         kwidth = 16
 
         # flag line channels
-        from sdflagold import sdflagold
+        from sdflag import sdflag
         flag_line = []
+        flag_line_str_list = []
         for rg in self.linechan:
-            flag_line.append([rg[0]+kwidth, rg[1]-kwidth])
-        sdflagold(infile=self.infile, maskflag=flag_line)
+            fseg = [rg[0]+kwidth, rg[1]-kwidth]
+            flag_line.append(fseg)
+            flag_line_str_list.append('%f~%f' % (fseg[0], fseg[1]))
+        flag_line_str = '*:'+(str(';').join(flag_line_str_list))
+        sdflag(infile=self.infile, mode='manual', spw=flag_line_str)
 
         result =sdaverage(infile=self.infile,outfile=outfile,
                          kernel=kernel,kwidth=kwidth)
@@ -779,7 +783,7 @@ class sdaverage_smoothTest(sdaverage_smoothtest_base,unittest.TestCase):
         
         
         # unflag line channels
-        sdflagold(infile=outfile, maskflag=flag_line, flagmode='unflag')
+        sdflag(infile=outfile, mode='manual', spw=flag_line_str, unflag=True)
 
         ### reference values ( ASAP r2084 + CASA r14498)
         refdic = {'linemax': 0,
@@ -1531,7 +1535,7 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
 
     def _comp_stat(self, data, refstat):
         if type(data)==str:
-            data = sdstatold(infile=data)
+            data = sdstat(infile=data)
         elif type(data)!=dict:
             self.fail(msg="Internal Error: invalid data given to calculate statistics.")
         for key, refvals in refstat.items():
@@ -1584,9 +1588,9 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
                          msg='Any error occurred during time averaging')
         refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
         refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstatold(outname, masklist=[3000, 5000])
+        outstat = sdstat(outname, spw='*:3000~5000')
         self._comp_stat(outstat, refinner)
-        outstat = sdstatold(outname, masklist=[[0, 2999], [5001, 8192]])        
+        outstat = sdstat(outname, spw='*:0~2999;5001~8192')        
         self._comp_stat(outstat, refedge)
 
     def testFlag03(self):
@@ -1628,9 +1632,9 @@ class sdaverage_test_flag(sdaverage_avetest_base,unittest.TestCase):
                          msg='Any error occurred during time averaging')
         refedge = {'max': 1.5, 'min': 1.5, 'sum': 9286.5}
         refinner = {'max': 2.0, 'min': 2.0, 'sum': 4002.0}
-        outstat = sdstatold(outname, masklist=[3000, 5000])
+        outstat = sdstat(outname, spw='*:3000~5000')
         self._comp_stat(outstat, refinner)
-        outstat = sdstatold(outname, masklist=[[0, 2999], [5001, 8192]])        
+        outstat = sdstat(outname, spw='*:0~2999;5001~8192')        
         self._comp_stat(outstat, refedge)
 
 
