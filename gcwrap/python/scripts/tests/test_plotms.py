@@ -71,6 +71,12 @@ class test_base(unittest.TestCase):
             if fnmatch.fnmatch( file, nameTarget):
                 count = count + 1
         return count
+    
+    def _removeFiles(self, dirName, namePattern ):
+        nameTarget = namePattern + '*'
+        for  file in os.listdir( dirName ):
+            if fnmatch.fnmatch( file, nameTarget):
+                os.remove( dirName + "/" + file )
             
     
         
@@ -1254,7 +1260,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         print
         
         
-    def test044( self ):
+    def stest044( self ):
         '''Plotms 44:  CAS-7050:  (Pipeline) Check that if you specify the first 3 antenna and iterate over
            antenna then you only get 3 iteration plots'''
         plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1286,7 +1292,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 3 )
         print 
         
-    def test045( self ):
+    def stest045( self ):
         '''Plotms 45:  CAS-7050:  (Pipeline) Check antenna with a range that includes only one valid antenna and iterate over
            antenna then you only get 1 iteration plot'''
         plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1311,7 +1317,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 1 )
         print 
         
-    def test046( self ):
+    def stest046( self ):
         '''Plotms 46:  CAS-7050:  (Pipeline) Iterate on antenna, but don't select.  
              Make sure there are 22 iteration plots'''
         plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1335,7 +1341,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
         self.assertTrue( fileCount == 22 )
         print         
         
-    def test047( self ):
+    def stest047( self ):
         '''Plotms 47:  CAS-7050:  (Pipeline) Iterate on antenna with an empty selection.  
              Make sure there are NO iteration plots'''
         plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
@@ -1351,7 +1357,44 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
                           plotfile = self.plotfile_jpg, exprange='all')
         self.assertFalse( self.res )
-        print                               
+        print  
+        
+    def test048( self ):
+        '''Plotms 48:  CAS-7074:  xsharedaxis needs to be a subparameter of global'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/Maw/maw.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot048.jpg"
+       
+         
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot with empty antenna selection and check the result is false'''
+        self.res = plotms(vis=plotfile,
+                          iteraxis='antenna',clearplots=True, showgui=False, xsharedaxis=True,
+                          plotfile = self.plotfile_jpg, exprange='all')
+        self.assertFalse( self.res )
+        print 
+        
+    def test049( self ):
+        '''Plotms 49:  CAS-7074:  (Pipeline) Iterate on baseline with a 2x2 grid, check that shared axis works'''
+        plotfile="/home/uniblab/casa/trunk/test/Plotms/uid___A002_X5f231a_X179b.ms"
+        self.plotfile_jpg = self.outputDir + "testPlot049.jpg"
+       
+        print 'Writing to ', self.plotfile_jpg
+        self._removeFiles( self.outputDir, "testPlot049_" )
+         
+        self.assertTrue(self.display.startswith(':'),'DISPLAY not set, cannot run test')
+        time.sleep(5)
+        '''Create the plot and check that there are only 3 iterations'''
+        self.res = plotms(vis=plotfile,
+                          xaxis="time",yaxis="amp", gridrows=2, gridcols=2,antenna='1~10',
+                          showgui=False,iteraxis='baseline',clearplots=True,
+                          plotfile = self.plotfile_jpg, exprange='all', scan='9',
+                          xselfscale=True, yselfscale=True, xsharedaxis=True, ysharedaxis=True)
+        self.assertTrue( self.res )
+        fileCount = self._getFileCount( self.outputDir, "testPlot049_" )
+        self.assertTrue( fileCount == 42 )
+        print  
+                                            
  
 def suite():
     print 'Tests may fail due to DBUS timeout if the version of Qt is not at least 4.8.5'
