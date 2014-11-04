@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 21224 2012-03-28 11:53:10Z gervandiepen $
+//# $Id: RefTable.cc 21451 2014-06-10 07:48:08Z gervandiepen $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>
@@ -296,7 +296,14 @@ void RefTable::writeRefTable (Bool)
 	ios << names;
 	ios << baseTabPtr_p->nrow();
 	ios << rowOrd_p;
-	ios.put (nrrow_p, rows_p);
+        ios << nrrow_p;
+        // (CAS-7020) Do not write more than 2**20 rownrs at once.
+        uInt done = 0;
+        while (done < nrrow_p) {
+          uInt todo = std::min(nrrow_p-done, 1048576u);
+          ios.put (todo, rows_p+done, False);
+          done += todo;
+        }
 	ios.putend();
 	writeEnd (ios);
 	changed_p = False;
@@ -327,7 +334,13 @@ void RefTable::getRef (AipsIO& ios, int opt, const TableLock& lockOptions,
     //# Resize the block of rownrs and read them in.
     rowStorage_p.resize (nrrow);
     rows_p = getStorage (rowStorage_p);
-    ios.get (nrrow, rows_p);
+    // (CAS-7020) Do not read more than 2**20 rows at once.
+    uInt done = 0;
+    while (done < nrrow) {
+      uInt todo = std::min(nrrow_p-done, 1048576u);
+      ios.get (todo, rows_p+done);
+      done += todo;
+    }
     ios.getend();
     //# Now read in the root table referenced to.
     //# Check if #rows has not decreased, which is about the only thing
