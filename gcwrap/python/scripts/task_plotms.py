@@ -183,6 +183,7 @@ def plotms(vis=None,
     if (plotfile and os.path.exists(plotfile) and not overwrite):
         casalog.post("Plot file " + plotfile + " exists and overwrite is false, cannot write the file", "SEVERE")
         return False
+  
     
     try:            
         # Check synonyms
@@ -373,6 +374,12 @@ def plotms(vis=None,
             xsharedaxis = False
         if not ysharedaxis:
             ysharedaxis = False
+        if not xselfscale and xsharedaxis:
+            casalog.post("Plots cannot share an x-axis unless they use the same x-axis scale.", "ERROR")
+            return False
+        if not yselfscale and ysharedaxis:
+            casalog.post( "Plots cannot share a y-axis unless they use the same y-axis scale.", "ERROR")
+            return False    
         pm.setPlotMSIterate(iteraxis,rowindex,colindex,
                             xselfscale,yselfscale,
                             xsharedaxis,ysharedaxis,False,plotindex);
