@@ -170,7 +170,7 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
     getSelectedTable(selCT,ct,ten,"");
   } catch (AipsError x) {
     //    logSink() << x.getMesg() << LogIO::SEVERE;
-    throw(AipsError("Error selecing on caltable: "+ct.tableName()));
+    throw(AipsError("Error selecting on caltable: "+ct.tableName()));
   }
 
   // TBD: fill chansel, corrsel
