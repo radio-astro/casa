@@ -605,41 +605,24 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	
 
 	void SysCalTable::fromXML(string& tableInXML)  {
-	  //
-	  // Look for a version information in the schemaVersion of the XML
-	  //
-	  string beginning = tableInXML.substr(0, 512);
-	  boost::regex expression("schemaVersion=\"([0-9]+)\"");
-
-	  boost::match_results<std::string::const_iterator> what;
-	  boost::match_flag_type flags = boost::match_default;
-	  if (boost::regex_search(beginning, what, expression, flags))
-	    version = what[1];
-
-	  /*
-	  cout << "version = " << version << endl;
-
-	  cout << "size of the XML containing the SYSCAL table " << tableInXML.size() << endl;
-	  ofstream a_file ( "/tmp/SysCalTransformed.xml");
-	  a_file << tableInXML;
-	  a_file.close();
-	  xmlDoc *doc = NULL;
-
-	  doc = xmlReadMemory(tableInXML.c_str(), tableInXML.size(), "XMLTableHeader.xml", NULL,  XML_PARSE_HUGE || XML_PARSE_NOBLANKS);
-
-	  if ( doc == NULL )
-	    throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysCal");
-	  
-	  xmlNode* root_element = xmlDocGetRootElement(doc);
-	  if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
-	    throw ConversionException("Failed to retrieve the root element in the DOM structure.", "SysCal");
-	  
-	  xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
-	  if ( propValue != 0 ) {
-	    version = string( (const char*) propValue);
-	    xmlFree(propValue);   		
-	  }
-	  */    		     							
+		//
+		// Look for a version information in the schemaVersion of the XML
+		//
+		xmlDoc *doc;
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		if ( doc == NULL )
+			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "SysCal");
+		
+		xmlNode* root_element = xmlDocGetRootElement(doc);
+   		if ( root_element == NULL || root_element->type != XML_ELEMENT_NODE )
+      		throw ConversionException("Failed to retrieve the root element in the DOM structure.", "SysCal");
+      		
+      	xmlChar * propValue = xmlGetProp(root_element, (const xmlChar *) "schemaVersion");
+      	if ( propValue != 0 ) {
+      		version = string( (const char*) propValue);
+      		xmlFree(propValue);   		
+      	}
+      		     							
 		Parser xml(tableInXML);
 		if (!xml.isStr("<SysCalTable")) 
 			error();
@@ -1255,7 +1238,6 @@ void SysCalTable::setFromXMLFile(const string& directory) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SysCal");
     }
     
-    trim(xmlDocument);
     if (xmlDocument.find("<BulkStoreRef") != string::npos)
       setFromMIMEFile(directory);
     else
