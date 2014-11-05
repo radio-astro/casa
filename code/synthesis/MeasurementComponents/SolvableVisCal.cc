@@ -5505,12 +5505,26 @@ void SolvableVisJones::fluxscale(const String& outfile,
         mgnall.reference(*(MGNALL[iFld]));
       }
 
+      // References to PBs for syntactical convenience
       // TBD: Handle "iFitwt" from NewCalTable?
       // Double wt=cs().iFitwt(iSpw)(iAnt,islot);
       Double wt=1;
 	      
       // amps, flags  [npar]  (one channel, one antenna)
-      Vector<Float> amp(amplitude(ctiter.cparam()));
+      // check for data shape (e.g. duplicated entries)
+      Cube<Complex> CParam(ctiter.cparam());
+      IPosition testShape=CParam.shape();
+      if (testShape[2]!=1) {
+        if (testShape[2]>1) { 
+          // possible cause: append=True in gaincal
+          throw(AipsError("Found multiple gain solutions in a single timestamp for fieldid="+String::toString(iFld)+". Please check the input Caltable."));
+        }
+        else {
+          throw(AipsError("Found gain solution array shape, "+String::toString(testShape)+" while expected [2,1,1]. Please check the input Caltable."));
+        }
+      } 
+      //Vector<Float> amp(amplitude(ctiter.cparam())[0]);
+      Vector<Float> amp(amplitude(CParam));
       Vector<Bool> fl(ctiter.flag());
       for (Int ipar=0; ipar<nPar(); ipar++) {
 	if (!fl(ipar)) {
