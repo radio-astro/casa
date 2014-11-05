@@ -113,6 +113,8 @@ VisibilityIteratorReadImpl::initialize (const Block<MeasurementSet> &mss)
 
     asyncEnabled_p = False;
     cache_p.lastazelUT_p = -1;
+    cache_p.lastazel0UT_p = -1;
+    cache_p.lasthourangUT_p = -1;
     cache_p.lastfeedpaUT_p = -1;
     cache_p.lastParangUT_p = -1;
     cache_p.lastParang0UT_p = -1;
@@ -243,6 +245,8 @@ VisibilityIteratorReadImpl::Cache::Cache()
   lastParang0UT_p (-1),
   lastParangUT_p (-1),
   lastazelUT_p (-1),
+  lastazel0UT_p (-1),
+  lasthourangUT_p (-1),
   lastfeedpaUT_p (-1),
   msHasFC_p(False),
   msHasWtSp_p (False),
@@ -264,6 +268,8 @@ VisibilityIteratorReadImpl::Cache::operator= (const VisibilityIteratorReadImpl::
     frequency_p.assign (frequency_p);
     hourang_p = other.hourang_p;
     lastazelUT_p = other.lastazelUT_p;
+    lastazel0UT_p = other.lastazel0UT_p;
+    lasthourangUT_p = other.lasthourangUT_p;
     lastfeedpaUT_p = other.lastfeedpaUT_p;
     lastParangUT_p = other.lastParangUT_p;
     lastParang0UT_p = other.lastParang0UT_p;
@@ -663,6 +669,8 @@ VisibilityIteratorReadImpl::setState ()
         cache_p.lastParang0UT_p = -1;
         cache_p.azel_p.resize (nAnt_p);
         cache_p.lastazelUT_p = -1;
+        cache_p.lastazel0UT_p = -1;
+        cache_p.lasthourangUT_p = -1;
 
     }
     if (msIter_p.newField () || msIterAtOrigin_p) {
@@ -1812,9 +1820,9 @@ VisibilityIteratorReadImpl::azel0(Double time) const
     // Absolute UT
     Double ut = time;
 
-    if (ut != cache_p.lastazelUT_p) {
+    if (ut != cache_p.lastazel0UT_p) {
 
-        cache_p.lastazelUT_p = ut;
+        cache_p.lastazel0UT_p = ut;
 
         MEpoch mEpoch = msIter_p.msColumns ().timeMeas ()(0);
 
@@ -1856,9 +1864,9 @@ VisibilityIteratorReadImpl::hourang (Double time) const
     // Absolute UT
     Double ut = time;
 
-    if (ut != cache_p.lastazelUT_p) {
+    if (ut != cache_p.lasthourangUT_p) {
 
-        cache_p.lastazelUT_p = ut;
+        cache_p.lasthourangUT_p = ut;
 
         // Set up the Epoch using the absolute MJD in seconds
         // get the Epoch reference from the column keyword

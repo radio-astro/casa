@@ -814,6 +814,8 @@ protected:
         Double             lastParang0UT_p;
         Double             lastParangUT_p;
         Double             lastazelUT_p;
+        Double             lastazel0UT_p;
+        Double             lasthourangUT_p;
         Double             lastfeedpaUT_p;
         Bool               msHasFC_p;   // Does the current MS have a valid FLAG_CATEGORY?
         Bool               msHasWtSp_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
