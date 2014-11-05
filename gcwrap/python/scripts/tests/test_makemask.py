@@ -130,11 +130,14 @@ class test_copy(makemaskTestBase):
         self.assertTrue(os.path.exists(self.outimage3))
 
     def test5_copyimagemask(self):
-        """ (copy mode) testcopy5: copying a region txt to a new image whose coordinates and shape is defined by inpimage and store the mask as an in-image(T/F) mask """
-        # expected behavior: create an new image with name defined in self.outimage3, the input region will be translated as a good/valid region = pix value of 1
-        # so in output image, all outside the ellipse will be masked as defined in newmask.
+        """ (copy mode) testcopy5: copying a region txt to a new image which is copies of inpimage and store the mask as an in-image(T/F) mask"""
+        # expected behavior: create an new image with name defined in self.outimage3, the input region will be
+        # translated as a good/valid region and so unmasked and contains values of inpimage of the corresponding region.
+        # All outside the ellipse will be masked as defined in newmask.
         try:
-            makemask(mode='copy',inpimage=self.inimage2,inpmask='ellipse [[13:30:15.79110, +030.13.51.8986], [340.4877arcsec, 299.4327arcsec], 0.00000000deg]', output=self.outimage3+':newmask')
+            makemask(mode='copy',inpimage=self.inimage2,
+                     inpmask='ellipse [[13:30:15.79110, +030.13.51.8986], [340.4877arcsec, 299.4327arcsec], 0.00000000deg]', 
+                     output=self.outimage3+':newmask')
         except Exception, e:
             print "\nError running makemask"
             raise e
@@ -145,7 +148,10 @@ class test_copy(makemaskTestBase):
           outmask = ia.maskhandler('get')
           self.assertTrue(outmask[0]=='newmask')
           stats=ia.statistics()
-          self.assertTrue(stats['max'][0]==1. and stats['min'][0]==1.)
+          # the inpimage is 1/0 image mask in this case and the ellipse region does not overlap with the '1' region in inpimage
+          # so the ellipse region inside will be 0 in output and the rest is masked.
+          self.assertTrue(stats['max'][0]==0. and stats['min'][0]==0.)
+          ia.close()
 
     def test6_copyimagemask(self):
         """ (copy mode) testcopy6: copying an internal mask to a new image mask with different coordinates(regrid)""" 
@@ -171,7 +177,9 @@ class test_copy(makemaskTestBase):
 
         self.assertTrue(os.path.exists(self.outimage1))
         if os.path.exists(self.outimage1):
+            ia.open(self.outimage1)
             masknames=ia.maskhandler('get')
+            ia.close()
             if masknames.count('newmask')==1:
                 self.assertTrue(self.compareimpix(self.inimage3,self.outimage1,True)) 
                 #shutil.rmtree('_tmp_im')

@@ -748,25 +748,29 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		if outbmask!='':
                     casalog.post('Putting mask in T/F','INFO')
 		    ia.open(sum_tmp_outfile)
+		    ia.calcmask(mask='%s==1.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
                     # mask only pixel == 0.0 (for a new outfile), mask region !=1.0 and preserve
                     # the pixel values if outfile exists
-                    if os.path.isdir(outparentim):
-		      ia.calcmask(mask='%s==1.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
-                    else:
-		      ia.calcmask(mask='%s!=0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+                    #if os.path.isdir(outparentim):
+		    #  ia.calcmask(mask='%s==1.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
+                    #else:
+		    #  ia.calcmask(mask='%s!=0.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
 		    ia.done()
 	        # if outfile exists initially outfile is copied to sum_tmp_outfile
 		# if outfile does not exist initially sum_tmp_outfile is a copy of inpimage
 		# so rename it with overwrite=T all the cases
                 #print "open sum_tmp_outfile=",sum_tmp_outfile
                 if storeinmask:
-                    isNewfile = False
+                    # by a request in CAS-6912 no setting of 1 for copying mask to the 'in-mask'
+                    # (i.e. copy the values of inpimage as well for this mode)
+                    #isNewfile = False
 		    if not os.path.isdir(outparentim):
-                      makeEmptyimage(inpimage,outparentim)
-                      isNewfile=True
+                      #makeEmptyimage(inpimage,outparentim)
+                      #isNewfile=True
+                      shutil.copytree(inpimage,outparentim)
                     ia.open(outparentim)
-                    if isNewfile: 
-                      ia.set(1)
+                    #if isNewfile: 
+                    #  ia.set(1)
                     ia.maskhandler('copy',[sum_tmp_outfile+':'+outbmask, outbmask])    
                     ia.maskhandler('set',outbmask)
                     ia.done()
