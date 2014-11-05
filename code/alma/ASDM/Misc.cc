@@ -215,7 +215,7 @@ namespace asdm {
 
     // Does ASDMPath exist ?
     if (!exists(path(ASDMPath))) {
-      throw ASDMUtilsException("File not found '"+asdmPath+"'.");
+      throw ASDMUtilsException("File not found '"+ASDMPath+"'.");
     }
 
     // Read and parse ASDM.xml
