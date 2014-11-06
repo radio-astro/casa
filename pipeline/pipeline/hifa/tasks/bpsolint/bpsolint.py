@@ -159,7 +159,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	inputs = self.inputs
 
 	# Create the results structure
-	result = BpSolintResults(vis=inputs.vis)
+	result = BpSolintResults(vis=inputs.vis, bpsnr=inputs.bpsnr)
 
 	# Turn the CASA field name and spw id lists into Python lists
 	fieldlist = inputs.field.split(',')
@@ -168,6 +168,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	LOG.info('Setting bandpass intent to %s ' % inputs.intent)
 	LOG.info('Selecting bandpass fields %s ' % fieldlist)
 	LOG.info('Selecting bandpass spws %s ' % spwlist)
+	LOG.info('Setting requested bandpass snr to %0.1f ' % (inputs.bpsnr))
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
 	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
 	    return result
@@ -196,7 +197,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Get the Tsys spw list and the tsys bandpass scan list.
 	# from the spw dictionary
-	tsys_spwlist, scanlist = self._make_tsyslists(spwlist, spw_dict)
+	tsys_spwlist, scan_list = self._make_tsyslists(spwlist, spw_dict)
 
 	# Get the median Tsys as a function of spw
         tsystemp_dict = self._get_mediantemp (inputs.ms, tsys_spwlist,
@@ -219,9 +220,10 @@ class BpSolint(basetask.StandardTaskTemplate):
 	# Get the results
 	bpsolints, bpchansolints, bpsensitivities, bpchansnrs = \
 	    self._get_results (spwlist, solint_dict)
+	result.spwids = spwlist
         result.bpsolints = bpsolints
         result.bpchansolints = bpchansolints
-        result.bpsensitivities = bpsensitivities
+        result.bpchansensitivities = bpsensitivities
         result.bpchansnrs = bpchansnrs
 
 	# Get the results
@@ -398,7 +400,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	    # Update the spw dictinary
 	    if ftsysdict:
-		LOG.info('Matched spw %d to a Tsys spw' % (spwid, bestspwid))
+		LOG.info('Matched spw %d to a Tsys spw %d' % (spwid, bestspwid))
 	        tsysdict[spwid] = ftsysdict
 	    else:
 		LOG.warn('Cannot match spw %d to a Tsys spw' % spwid)
@@ -415,6 +417,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    if not spw_dict[spw].has_key('tsys_spw'):
 	        continue
 	    tsys_spwlist.append(spw_dict[spw]['tsys_spw'])
+	    scan_list.append(spw_dict[spw]['bandpass_scan'])
+
 	return tsys_spwlist, scan_list
 
     # Get the observing information and return a dictionary
@@ -796,7 +800,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	    # Bandpass solution info
 	    solint_dict[spwid]['bpsolint'] = '%fMHz' % (requiredChannels * spw_dict[spwid]['chanwidths'] * 1.0e-6)
-	    solint_dict[spwid]['nchan_bpsolint'] = '%d' % (np.ceil(requiredChannels))
+	    #solint_dict[spwid]['nchan_bpsolint'] = '%d' % (np.ceil(requiredChannels))
+	    solint_dict[spwid]['nchan_bpsolint'] = int(np.ceil(requiredChannels))
 	    solChannels = solint_dict[spwid]['nchan_total'] / int(np.ceil(requiredChannels)) 
 	    if solChannels  < minBpnchan:
 	        tooFewChannels = True
@@ -834,11 +839,11 @@ class BpSolint(basetask.StandardTaskTemplate):
 
         bpsolints = []
         bpchansolints = []
-        bpsensititivities = []
+        bpsensitivities = []
         bpchansnrs = []
 
         for spwid in spwidlist:
-	    if not solint_dict.has_key(spw):
+	    if not solint_dict.has_key(spwid):
 	        bpsolints.append(None)
 	        bpchansolints.append(None)
 	        bpsensitivities.append(None)
@@ -846,10 +851,10 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    else:
 	        bpsolints.append(solint_dict[spwid]['bpsolint'])
 	        bpchansolints.append(solint_dict[spwid]['nchan_bpsolint'])
-	        bpsensitivities.append('%fmJy' % solint_dict[spwid]['sensitivity_Mjy'])
+	        bpsensitivities.append('%fmJy' % solint_dict[spwid]['sensitivity_mJy'])
 	        bpchansnrs.append(solint_dict[spwid]['snr_per_channel'])
 
-        return bpsolints, bpchansolints, bpsensititivities, bpchansnrs
+        return bpsolints, bpchansolints, bpsensitivities, bpchansnrs
 
 	    
 # The results class
@@ -888,11 +893,15 @@ class BpSolintResults(basetask.Results):
 #            ms.phaseup_spwmap = self.phaseup_spwmap
 
     def __repr__(self):
-        if self.vis is None or not self.solintdict:
+        if self.vis is None or not self.spwids:
             return('BpSolintResults:\n'
             '\tNo bandpass solution intervals computed')
         else:
-            spwmap = 'BpSolintResults:\n\dictionary = %s\n' % \
-		(self.solintdict)
-            return spwmap
+            line = 'BpSolintResults:\nvis=%s\n' % (self.vis)
+	    for i in range(len(self.spwids)):
+	        line = line + \
+		    '\tspwid=%2d solint=%s chansolint=%2d chansensitivity=%s chansnr=%0.1f\n' % \
+		    (self.spwids[i], self.bpsolints[i], self.bpchansolints[i], \
+		    self.bpchansensitivities[i], self.bpchansnrs[i])
+            return line
 
