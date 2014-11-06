@@ -137,47 +137,13 @@ $(document).ready(function() {
 	    </tr>
 	</thead>
 	<tbody>
-% for single_result in result:
+	% for tr in table_rows:
 		<tr>
-			<td rowspan="${reduce(lambda x, y: x + len(y), single_result.measurements.values(), 0)}">${os.path.basename(single_result.vis)}</td>
-	% for field in single_result.measurements:
-		<%
-			ms = pcontext.observing_run.get_ms(single_result.vis)
-			f = ms.get_fields(field)[0]
-			field_name = f.name
-			field_id = f.id
-		%>
-			<td rowspan="${len(single_result.measurements[field])}">${'%s (#%s)'%(field_name, field_id)}</td>
-		% for flux in sorted(single_result.measurements[field], key=lambda m: int(m.spw_id)):
-<% 
-try:
-	u = {}
-	for stokes in ['I', 'Q', 'U', 'V']:
-		flux_jy = getattr(flux, stokes).to_units(measures.FluxDensityUnits.JANSKY)
-		unc = getattr(flux.uncertainty, stokes)
-		unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
-
-		if flux_jy != 0 and unc_jy != 0:
-			u[stokes] = ' &#177; %s (%0.1f%%)' % (str(unc), decimal.Decimal('100')*(unc_jy/flux_jy))	
-		else:
-			u[stokes] = ''
-except:
-	raise
-	u = {}
-	u['I'] = ''
-	u['Q'] = ''
-	u['U'] = ''
-	u['V'] = ''	
-%>
-			<td>${flux.spw_id}</td>
-			<td>${str(flux.I) + u['I']}</td>
-			<td>${str(flux.Q) + u['Q']}</td>
-			<td>${str(flux.U) + u['U']}</td>
-			<td>${str(flux.V) + u['V']}</td>
+		% for td in tr:
+			${td}
+		% endfor
 		</tr>
-		%endfor
 	%endfor
-%endfor
 	</tbody>
 </table>
 

@@ -3,6 +3,7 @@ import atexit
 import collections
 import contextlib
 import datetime
+import decimal
 import itertools
 import json
 import math
@@ -2913,8 +2914,11 @@ class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
             for vis, vis_plots in plots.items():
                 ampuv_ant_plots[vis][key] = vis_plots
 
-        ctx.update({'ampuv_allant_plots'     : ampuv_allant_plots,
-                    'ampuv_ant_plots'     : ampuv_ant_plots})
+        table_rows = self.make_flux_table(context, result)
+
+        ctx.update({'ampuv_allant_plots' : ampuv_allant_plots,
+                    'ampuv_ant_plots'    : ampuv_ant_plots,
+                    'table_rows'         : table_rows})
         
         return ctx
 
@@ -2960,6 +2964,51 @@ class T2_4MDetailsGFluxscaleRenderer(T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())        
 
         return d
+
+    FluxTR = collections.namedtuple('FluxTR', 'vis field spw i q u v')
+
+    def make_flux_table(self, context, results):
+        # will hold all the flux stat table rows for the results
+        rows = []
+    
+        for single_result in results:
+            ms_for_result = context.observing_run.get_ms(single_result.vis)
+            vis_cell = os.path.basename(single_result.vis)
+    
+            # measurements will be empty if fluxscale derivation failed
+            if len(single_result.measurements) is 0:
+                continue
+                
+            for field_arg, measurements in single_result.measurements.items():
+                field = ms_for_result.get_fields(field_arg)[0]
+                field_cell = '%s (#%s)' % (field.name, field.id)
+    
+                for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                    fluxes = collections.defaultdict(lambda: 'N/A')
+                    for stokes in ['I', 'Q', 'U', 'V']:
+                        try:                        
+                            flux = getattr(measurement, stokes)
+                            unc = getattr(measurement.uncertainty, stokes)
+                            flux_jy = flux.to_units(measures.FluxDensityUnits.JANSKY)
+                            unc_jy = unc.to_units(measures.FluxDensityUnits.JANSKY)
+                            
+                            if flux_jy != 0 and unc_jy != 0:
+                                unc_ratio = decimal.Decimal('100')*(unc_jy/flux_jy)
+                                uncertainty = ' &#177; %s (%0.1f%%)' % (str(unc),
+                                                                        unc_ratio)
+                            else:
+                                uncertainty = ''
+                                
+                            fluxes[stokes] = '%s%s' % (flux, uncertainty)
+                        except:
+                            pass
+                                        
+                    tr = T2_4MDetailsGFluxscaleRenderer.FluxTR(vis_cell, 
+                                field_cell, measurement.spw_id, fluxes['I'],
+                                fluxes['Q'], fluxes['U'], fluxes['V'])
+                    rows.append(tr)
+    
+        return utils.merge_td_columns(rows)
 
     
 class T2_4MDetailsApplycalRenderer(T2_4MDetailsDefaultRenderer):
