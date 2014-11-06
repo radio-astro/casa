@@ -2289,7 +2289,7 @@ class cleanhelper:
                 else:
                     startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
                     endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
-                    if(start not in  [-1, "-1", "", " "]):
+                    if((start not in  [-1, "-1", "", " "]) and (mode=="channel")):
                         startchan=start
                     if(nchan not in [-1, "-1", "", " "]):
                         endchan=startchan+nchan-1
