@@ -260,8 +260,10 @@ if(mystep in thesteps):
 #    os.system('/home/arcproc/opsw/alma/wvrgcal-stable/bin/wvrgcal --ms X54.ms --output cal-wvr_X54 --toffset -1 --wvrflag CM01 --segsource --tie "1224+213 Phase","M100" --statsource "1224+213 Phase"')
 
 #    os.system('/home/arcproc/opsw/alma/wvrgcal-stable/bin/wvrgcal --ms X220.ms --output cal-wvr_X220 --toffset -1 --wvrflag CM01 --segsource --tie "1224+213 Phase","M100" --statsource "1224+213 Phase"')
-    wvrgcal(vis="X54.ms", caltable='cal-wvr_X54', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase")
-    wvrgcal(vis='X220.ms', caltable='cal-wvr_X220', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase")
+    wvrgcal(vis="X54.ms", caltable='cal-wvr_X54', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase",
+            spw=[1,3,5,7], wvrspw=[0])
+    wvrgcal(vis='X220.ms', caltable='cal-wvr_X220', toffset=-1, wvrflag=['CM01'], segsource=True, tie=["1224+213 Phase,M100"], statsource="1224+213 Phase",
+            spw=[1,3,5,7], wvrspw=[0])
 
     timing()
 

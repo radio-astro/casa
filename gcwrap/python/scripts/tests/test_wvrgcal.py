@@ -356,7 +356,7 @@ class wvrgcal_test(unittest.TestCase):
                                                        # as it was flagged. Replace by value for the unflagged case
                                                        # to make following test pass if all else agrees.
             self.rval = (rvaldict==rvaldict2)
-               
+
         self.assertTrue(self.rval)
 
     def test16(self):
@@ -469,6 +469,33 @@ class wvrgcal_test(unittest.TestCase):
         self.assertTrue(self.rval)
 
 
+    def test20(self):
+        '''Test 20:  wvrgcal4quasar_10s.ms, spw=[1,3,5,7], wvrspw=[0]'''
+        myvis = self.vis_g
+        os.system('rm -rf myinput2.ms comp.W')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        os.system('rm -rf '+self.out)
+
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, toffset=-1., spw=[1,3,5,7], wvrspw=[0])
+
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1.)
+
+        print rvaldict
+        print rvaldict2
+
+        self.rval = rvaldict['success'] and rvaldict2['success']
+
+        if(self.rval):
+            self.rval = th.compcaltabnumcol(self.out, 'comp.W', 1E-6, colname1='CPARAM', colname2="CPARAM", testspw=1)
+        if(self.rval):
+            self.rval = th.compcaltabnumcol(self.out, 'comp.W', 1E-6, colname1='CPARAM', colname2="CPARAM", testspw=3)
+        if(self.rval):
+            self.rval = th.compcaltabnumcol(self.out, 'comp.W', 1E-6, colname1='CPARAM', colname2="CPARAM", testspw=5)
+        if(self.rval):
+            self.rval = th.compcaltabnumcol(self.out, 'comp.W', 1E-6, colname1='CPARAM', colname2="CPARAM", testspw=7)
+               
+        self.assertTrue(self.rval)
 
 
 def suite():

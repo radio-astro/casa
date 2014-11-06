@@ -5,7 +5,8 @@ from taskinit import *
 def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    sourceflag=None, tie=None, nsol=None, disperse=None, 
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
-	    scale=None, reversespw=None,  cont=None, maxdistm=None,
+	    scale=None, spw=None, wvrspw=None,
+	    reversespw=None,  cont=None, maxdistm=None,
 	    minnumants=None, mingoodfrac=None, usefieldtab=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
@@ -57,9 +58,15 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		     
 	  scale -- Scale the entire phase correction by this factor								
 	             default: 1. (no scaling)											
+
+          spw -- List of the spectral window IDs for which solutions should be saved into the caltable
+	             default: [] (all spectral windows), example [17,19,21,23]
+
+          wvrspw -- List of the spectral window IDs from which the WVR data should be taken
+	             default: [] (all WVR spectral windows), example [0]
 																
 	  reversespw -- Reverse the sign of the correction for the listed SPWs							
-	                (only neede for early ALMA data before Cycle 0)								
+	                (only needed for early ALMA data before Cycle 0)								
 	             default: '' (none), example: reversespw='0~2,4'; spectral windows 0,1,2,4					
 																
 	  cont -- Estimate the continuum (e.g., due to clouds)									
@@ -134,8 +141,23 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 					execute_string += '\"'+str(src)+'\"'
 					if not (i==len(tie)-1):
 						execute_string += ' '
+						
+		if (len(spw)>0):
+			for myspw in spw:
+				if not (type(myspw)==int):
+					raise Exception, "List elements of parameter spw must be int."
+				if (myspw>=0):
+					execute_string += ' --spw '+str(myspw)
 
-		if (not reversespw==''):
+		if (len(wvrspw)>0):
+			for myspw in wvrspw:
+				if not (type(myspw)==int):
+					raise Exception, "List elements of parameter wvrspw must be int."
+				if (myspw>=0):
+					execute_string += ' --wvrspw '+str(myspw)
+			
+
+		if not (reversespw==''):
 			spws = mst.msseltoindex(vis=vis,spw=reversespw)['spw']
 			for id in spws:
 				execute_string += ' --reversespw '+str(id)
