@@ -40,6 +40,10 @@ class Scan(object):
                                       self.__calculate_mean_interval(sorted_scan_times, 
                                                                      spw_id))
                                      for spw_id in spw_ids)
+        self.__exposure_time = dict((spw_id, 
+                                      self.__calculate_exposure_time(sorted_scan_times, 
+                                                                     spw_id))
+                                     for spw_id in spw_ids)
 
     def __repr__(self):
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
@@ -66,6 +70,35 @@ class Scan(object):
         start = utils.get_epoch_as_datetime(self.start_time)
         end = utils.get_epoch_as_datetime(self.end_time)
         return end - start
+
+    def exposure_time(self, spw_id):
+        return self.__exposure_time[spw_id]
+
+    def __calculate_exposure_time (self, scan_times, spw_id):
+        """
+        Calculate the exposure time for the given spectral window.
+        """         
+        dds_with_spw = [dd for dd in self.data_descriptions
+                        if spw_id == dd.spw.id]
+        if not dds_with_spw:
+            raise ValueError('Scan %s not linked to spectral '
+                             'window %s' % (self.id, spw_id))
+
+        # I don't think it's possible to have the same spw associated with
+        # a scan more than once via multiple data descriptions, but assert
+        # just in case
+        assert len(dds_with_spw) is 1, ('Expected 1 data description for spw '
+                                        '%s but got %s' % (spw_id, 
+                                                           len(dds_with_spw)))
+        
+        times_for_spw = scan_times[dds_with_spw[0]]
+	exposure_time = 0.0
+	for time in times_for_spw:
+            start = utils.get_epoch_as_datetime(time[0])
+            end = utils.get_epoch_as_datetime(time[1])
+	    diff = end - start
+	    exposure_time = exposure_time + diff.total_seconds()
+	return exposure_time
 
     def mean_interval(self, spw_id):
         return self.__mean_intervals[spw_id]
