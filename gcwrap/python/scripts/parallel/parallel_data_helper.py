@@ -1407,7 +1407,6 @@ class ParallelDataHelper(ParallelTaskHelper):
                 os.rename(subms,newms)
                 newList[idx] = newms
                 idx += 1
-                os.system('ls -l '+newms)
 
             
             if len(subMSList) == len(newList):
