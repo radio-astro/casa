@@ -762,6 +762,7 @@ def merge_jobs(jobs, task, merge=(), ignore=()):
 def plotms_iterate(jobs_and_wrappers, iteraxis):
     jobs = [j for j,_ in jobs_and_wrappers]
     
+    from pipeline.infrastructure import casa_tasks
     merged_results = merge_jobs(jobs, casa_tasks.plotms, merge=(iteraxis,), 
                                 ignore=('plotfile',))
 
@@ -769,15 +770,12 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
     root, ext = os.path.splitext(iter_filename)
     
     for merged_job, component_jobs in merged_results:
-        # massage the merged job arguments to activate plotms iteration
+        # activate plotms iteration in the merged job arguments to activate 
         merged_job.kw['plotfile'] = iter_filename
         merged_job.kw['clearplots'] = True
         merged_job.kw['overwrite'] = True
         merged_job.kw['exprange'] = 'all'
-        
-        import pipeline.infrastructure.casa_tasks as casa_tasks
         iter_job = casa_tasks.plotms(iteraxis=iteraxis, **merged_job.kw)
-        iter_job.execute(dry_run=True)
         
         # plotms with iterator writes files as file.png, file2.png, file3.png,
         # etc.
@@ -785,15 +783,73 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
         iter_indexes[0] = ''
         src_filenames = ['%s%s%s' % (root, idx, ext) for idx in iter_indexes]
         dest_filenames = [job.kw['plotfile'] for job in component_jobs]
-        
-        for src, dest, job in zip(src_filenames, dest_filenames, 
-                                  component_jobs):
-            if os.path.exists(src):
-                os.rename(src, dest)
-            else:
-                LOG.info('%s not found. plotms iterator did not generate any '
-                         'output for equivalent of %s', src, job)
 
+        # execute merged job if some of the output files are missing
+        if not all([os.path.exists(dest) for dest in dest_filenames]):
+            iter_job.execute(dry_run=False)
+
+            # move the plotms output into place, renaming to the expected 
+            # filename containing ant, spw, field components.
+            for src, dest, job in zip(src_filenames, dest_filenames, 
+                                      component_jobs):
+                if os.path.exists(src):
+                    os.rename(src, dest)
+                else:
+                    LOG.info('%s not found. plotms iterator did not generate any '
+                             'output for equivalent of %s', src, job)
+        else:
+            LOG.trace('Skipping unnecessary job: %s' % iter_job)
+        
+    # at this point, the sequentially-named plots from the merged job have
+    # been renamed match that of the unmerged job, so we can simply check
+    # whether the plot (with the original filename) exists or not.
     wrappers = [w for _,w in jobs_and_wrappers]
     return filter(lambda w: os.path.exists(w.abspath), wrappers)
-        
+
+
+def merge_td_columns(rows, num_to_merge=None, vertical_align=False):
+    """
+    Merge HTML TD columns with identical values using rowspan.
+    
+    Arguments:
+    rows -- a list of tuples, one tuple per row, containing n elements for the
+            n columns.
+    num_to_merge -- the number of columns to merge, starting from the left
+                    hand column. Leave as None to merge all columns.
+    vertical_align -- Set to True to vertically centre any merged cells.
+    
+    Output:
+    A list of strings, one string per row, containing TD elements.
+    """
+    transposed = zip(*rows)
+    if num_to_merge is None:
+        num_to_merge = len(transposed)
+    valign = ' style="vertical-align:middle;"' if vertical_align else ''
+
+    new_cols = []
+    for col_idx, col in enumerate(transposed):
+        if col_idx > num_to_merge-1:
+            new_cols.append(['<td>%s</td>' % v for v in col])
+            continue
+            
+        merged = []
+        start = 0
+        while start < len(col):
+            l = col[start:]
+            same_vals = list(itertools.takewhile(lambda x: x==col[start], l))
+            rowspan = len(same_vals)
+            start += rowspan
+            
+            if rowspan > 1:
+                new_td = ['<td rowspan="%s"%s>%s</td>' % (rowspan, 
+                                                          valign,
+                                                          same_vals[0])]
+                blanks = [''] * (rowspan-1)
+                merged.extend(new_td + blanks)
+            else:
+                td = '<td>%s</td>' % (same_vals[0])
+                merged.append(td)
+            
+        new_cols.append(merged)
+    
+    return zip(*new_cols)

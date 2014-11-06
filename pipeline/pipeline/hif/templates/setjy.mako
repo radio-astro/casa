@@ -115,29 +115,13 @@ $(document).ready(function(){
 	    </tr>
 	</thead>
 	<tbody>
-%for single_result in result:
-<%
-    vis = os.path.basename(single_result.vis)
-
-    ms = pcontext.observing_run.get_ms(vis)
-    spws = ms.get_spectral_windows()
-%>
-	%for field in single_result.measurements:
-		%for flux in sorted(single_result.measurements[field], key=lambda m: int(m.spw_id)):
+	% for tr in table_rows:
 		<tr>
-			<td>${os.path.basename(single_result.vis)}</td>
-			<td>${field}</td>
-			<td>${flux.spw_id}</td>
-			<td>${[str(spw.centre_frequency) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
-			<td>${[str(spw.band) for spw in spws if spw.id == int(flux.spw_id)][0]}</td>
-			<td>${str(flux.I)}</td>
-			<td>${str(flux.Q)}</td>
-			<td>${str(flux.U)}</td>
-			<td>${str(flux.V)}</td>
+		% for td in tr:
+			${td}
+		% endfor
 		</tr>
-		%endfor
 	%endfor
-%endfor
 	</tbody>
 </table>
 

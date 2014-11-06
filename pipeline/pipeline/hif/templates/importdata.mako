@@ -81,21 +81,13 @@ ${'is' if num_mses == 1 else 'are'} summarised below.</p>
 	    </tr>
 	</thead>
 	<tbody>
-% for setjy_result in setjy_results:
-	% for field in setjy_result.measurements:
-		% for flux in sorted(setjy_result.measurements[field], key=lambda m: m.spw_id):
+	% for tr in table_rows:
 		<tr>
-			<td>${os.path.basename(setjy_result.vis)}</td>
-			<td>${field}</td>
-			<td>${flux.spw_id}</td>
-			<td>${str(flux.I)}</td>
-			<td>${str(flux.Q)}</td>
-			<td>${str(flux.U)}</td>
-			<td>${str(flux.V)}</td>
-		</tr>
+		% for td in tr:
+			${td}
 		% endfor
-	% endfor
-% endfor
+		</tr>
+	%endfor
 	</tbody>
 </table>
 % else:

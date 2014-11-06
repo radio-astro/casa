@@ -34,7 +34,10 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             for vis, vis_plots in plots.items():
                 amp_vs_uv_summary_plots[vis][key] = vis_plots
 
-        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots})
+        table_rows = make_flux_table(context, result)
+
+        ctx.update({'amp_vs_uv_plots' : amp_vs_uv_summary_plots,
+                    'table_rows'      : table_rows})
 
     def sort_plots_by_baseband(self, d):
         for vis, plots in d.items():
@@ -66,3 +69,39 @@ class T2_4MDetailsSetjyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())        
 
         return d
+    
+FluxTR = collections.namedtuple('FluxTR', 'vis field spw freq band i q u v')
+    
+def make_flux_table(context, results):
+    # will hold all the flux stat table rows for the results
+    rows = []
+
+    for single_result in results:
+        ms_for_result = context.observing_run.get_ms(single_result.vis)
+        vis_cell = os.path.basename(single_result.vis)
+
+        # measurements will be empty if fluxscale derivation failed
+        if len(single_result.measurements) is 0:
+            continue
+            
+        for field_arg, measurements in single_result.measurements.items():
+            field = ms_for_result.get_fields(field_arg)[0]
+            field_cell = '%s (#%s)' % (field.name, field.id)
+
+            for measurement in sorted(measurements, key=lambda m: int(m.spw_id)):
+                fluxes = collections.defaultdict(lambda: 'N/A')
+                for stokes in ['I', 'Q', 'U', 'V']:
+                    try:                        
+                        flux = getattr(measurement, stokes)
+                        fluxes[stokes] = '%s' % flux
+                    except:
+                        pass
+
+                spw = ms_for_result.get_spectral_window(measurement.spw_id)
+                                                   
+                tr = FluxTR(vis_cell, field_cell, str(spw.id),
+                            str(spw.centre_frequency), spw.band, fluxes['I'],
+                            fluxes['Q'], fluxes['U'], fluxes['V'])
+                rows.append(tr)
+    
+    return utils.merge_td_columns(rows)
