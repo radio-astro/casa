@@ -520,7 +520,8 @@ class ParallelDataHelper(ParallelTaskHelper):
 
         outputPath, self.outputBase = os.path.split(self._arg['outputvis'])
         try:
-            self.outputBase = self.outputBase[:self.outputBase.rindex('.')]
+            if self.outputBase[-1] == '.':
+                self.outputBase = self.outputBase[:self.outputBase.rindex('.')]
         except ValueError:
             # outputBase must not have a trailing .
             pass
@@ -1333,7 +1334,6 @@ class ParallelDataHelper(ParallelTaskHelper):
                 # Format list in the form of vis dict
                 for command_response in command_response_list:
                     outvis = command_response['parameters']['outputvis']
-#                    print command_response['parameters']['outputvis']
                     outputList[outvis] = command_response['ret']
             else:                                                    
                 outputList =  self._cluster.get_output_return_list()
@@ -1407,6 +1407,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                 os.rename(subms,newms)
                 newList[idx] = newms
                 idx += 1
+
             
             if len(subMSList) == len(newList):
                 subMSList = newList
