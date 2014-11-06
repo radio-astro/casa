@@ -1889,6 +1889,7 @@ class sdmath_test_flag(sdmath_unittest_base,unittest.TestCase):
         self.assertEqual(nrows[outfile], nrows[infile1])
         self.assertTrue(all(rflagref == rflag[outfile]))
         self.assertTrue((cflagref == cflag[outfile]).all())
+        self.assertTrue((dataref == data[outfile]).all())
 
 def suite():
     return [sdmath_test0,sdmath_test1,sdmath_test2,
