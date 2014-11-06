@@ -53,11 +53,24 @@ namespace LibAIR2 {
   }
 
   std::set<size_t>
-  WVRDataDescIDs(const casa::MeasurementSet &ms)
+  WVRDataDescIDs(const casa::MeasurementSet &ms, 
+		 const std::vector<int> &wvrspws)
   {
-    SPWSet ss=WVRSPWIDs(ms);
+    SPWSet ssfull=WVRSPWIDs(ms);
     std::map<size_t, size_t> ddmap=SPWDataDescMap(ms);
     std::set<size_t> res;
+
+    SPWSet ss;
+    if(wvrspws.size()==0){
+      ss = ssfull;
+    }
+    else{
+      for(size_t i=0; i<wvrspws.size(); i++){
+	if(ssfull.count(wvrspws[i])){
+	  ss.insert(wvrspws[i]);
+	}
+      }
+    }
 
     for(SPWSet::const_iterator si=ss.begin();
 	si!=ss.end();
@@ -78,18 +91,20 @@ namespace LibAIR2 {
   }
 
   AntSet
-  WVRAntennas(const casa::MeasurementSet &ms)
+  WVRAntennas(const casa::MeasurementSet &ms,
+	      const std::vector<int> &wvrspws)
   {
-    AntSet res=WVRAntennasFeedTab(ms);
+    AntSet res=WVRAntennasFeedTab(ms, wvrspws);
     if (res.size() == 0)
     {
-      res=WVRAntennasMainTab(ms);
+      res=WVRAntennasMainTab(ms, wvrspws);
     }
     return res;
   }
   
   AntSet
-  WVRAntennasFeedTab(const casa::MeasurementSet &ms)
+  WVRAntennasFeedTab(const casa::MeasurementSet &ms,
+		     const std::vector<int> &wvrspws)
   {
     const casa::MSFeed &feedtable=ms.feed();
 
@@ -99,15 +114,13 @@ namespace LibAIR2 {
     casa::ROScalarColumn<casa::Int> fspw(feedtable,
 					 casa::MSFeed::columnName(casa::MSFeed::SPECTRAL_WINDOW_ID));
 
-    SPWSet spws=WVRSPWIDs(ms);
-    
     const size_t nfeeds=feedtable.nrow();
     AntSet res;
-    for (size_t i=0; i<nfeeds; ++i)
-    {
-      if( spws.count(fspw(i)) )
-      {
-	res.insert(ant(i));
+    for (size_t i=0; i<nfeeds; ++i){
+      for (size_t j=0; j<wvrspws.size(); j++){
+	if(fspw(i)==wvrspws[j]){
+	    res.insert(ant(i));
+	}
       }
     }
 
@@ -116,9 +129,10 @@ namespace LibAIR2 {
   }
 
   AntSet
-  WVRAntennasMainTab(const casa::MeasurementSet &ms)
+  WVRAntennasMainTab(const casa::MeasurementSet &ms,
+		     const std::vector<int> &wvrspws)
   {
-    std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
+    std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
 
     casa::ROScalarColumn<casa::Int> c_desc_id(ms,
 					  casa::MS::columnName(casa::MS::DATA_DESC_ID));    
@@ -159,9 +173,10 @@ namespace LibAIR2 {
 			  std::vector<size_t> &states,
 			  std::vector<size_t> &field,
 			  std::vector<size_t> &source,
-			  const std::vector<size_t>& sortedI)
+			  const std::vector<int> &wvrspws,
+			  const std::vector<size_t> &sortedI)
   {
-    std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
+    std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
     size_t dsc_id = *dsc_ids.begin();
 
     casa::ROScalarColumn<casa::Double> c_times(ms,
@@ -336,12 +351,13 @@ namespace LibAIR2 {
   }
 			  
 
-  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, std::vector<size_t>& sortedI, 
+  InterpArrayData *loadWVRData(const casa::MeasurementSet &ms, const std::vector<int>& wvrspws,
+			       std::vector<size_t>& sortedI,
 			       std::set<int>& flaggedantsInMain, double requiredUnflaggedFraction,
 			       bool usepointing)
   {
-    std::set<size_t> dsc_ids=WVRDataDescIDs(ms);
-    AntSet wvrants=WVRAntennas(ms);
+    std::set<size_t> dsc_ids=WVRDataDescIDs(ms, wvrspws);
+    AntSet wvrants=WVRAntennas(ms, wvrspws);
     const size_t nWVRs=wvrants.size();
 
     if(requiredUnflaggedFraction<0.){
@@ -377,6 +393,7 @@ namespace LibAIR2 {
 		       states,
 		       fields,
 		       source,
+		       wvrspws,
 		       sortedI); 
 
     if (times.size() == 0){

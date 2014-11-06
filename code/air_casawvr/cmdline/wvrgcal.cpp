@@ -134,7 +134,7 @@ void checkWarnPars(const boost::program_options::variables_map &vm)
 }
 
 /* Checks on parameter that can only be done once the measurement set
-   is opened.  Do not put computatntially intensive checks otherwise
+   is opened.  Do not put computationally intensive checks otherwise
    feedback to the user will be too slow.
 */
 void checkMSandPars(const casa::MeasurementSet &ms,
@@ -153,6 +153,7 @@ void checkMSandPars(const casa::MeasurementSet &ms,
 	       <<std::endl;
     }
   }
+
 }
 
 /** \brief Take a parameter than can be specified as a sequence of
@@ -277,10 +278,10 @@ void flagInterp(const casa::MeasurementSet &ms,
   {
 
     LibAIR2::AntSetWeight near=limitedNearestAnt(apos, 
-						*i, 
-						wvrflag_s, 
-						3,
-						maxdist_m);
+						 *i, 
+						 wvrflag_s, 
+						 3,
+						 maxdist_m);
     if(near.size()>= static_cast<unsigned int>(minnumants)){
       //LibAIR2::interpBadAntW(d, *i, near);
       const LibAIR2::InterpArrayData::wvrdata_t &data(d.g_wvrdata());
@@ -726,6 +727,12 @@ static void defineOptions(boost::program_options::options_description &desc,
      "If the fraction of unflagged data for an antenna is below this value (0. to 1.), the antenna is flagged.")
     ("usefieldtab",
      "Derive the antenna pointing information from the FIELD table instead of the POINTING table.")
+    ("spw",
+     value< std::vector<int> >(),
+     "Only write out corrections for these SPWs.")
+    ("wvrspw",
+     value< std::vector<int> >(),
+     "Only use data from these WVR SPWs.")
     ;
   p.add("ms", -1);
 }
@@ -776,6 +783,71 @@ int main(int argc,  char* argv[])
 
   checkMSandPars(ms, vm);
 
+  std::vector<int> wvrspws;
+  {
+    LibAIR2::SPWSet thewvrspws=LibAIR2::WVRSPWIDs(ms);
+    if (vm.count("wvrspw")){
+      wvrspws=vm["wvrspw"].as<std::vector<int> >();
+	
+      if (wvrspws.size() > 0){
+	for(size_t i=0; i<wvrspws.size(); i++){
+	  if(thewvrspws.count(wvrspws[i])==0){
+	    std::cout << "ERROR: SPW " << wvrspws[i] << " is not a WVR SPW or invalid." <<std::endl;
+	    std::cerr << "ERROR: SPW " << wvrspws[i] << " is not a WVR SPW or invalid." <<std::endl;
+	    return -10;
+	  }
+	}
+	std::cout<<"Will use the following WVR SPWs:"<<std::endl;
+	for(size_t i=0; i<wvrspws.size();i++){
+	  std::cout<< " " << wvrspws[i];
+	}
+	std::cout <<std::endl;
+      }
+    }
+    if (wvrspws.size()==0){
+      std::cout<<"Will use all WVR SPWs:"<<std::endl;
+      for(LibAIR2::SPWSet::const_iterator si=thewvrspws.begin(); si!=thewvrspws.end();++si){
+	wvrspws.push_back(*si);
+	std::cout<< " " <<  *si;
+      }
+      std::cout <<std::endl;
+    }
+  }
+
+  std::vector<int> sciencespws;
+
+  if (vm.count("spw")){
+    sciencespws=vm["spw"].as<std::vector<int> >();
+    LibAIR2::SPWSet thewvrspws=LibAIR2::WVRSPWIDs(ms);
+    if (sciencespws.size() > 0){
+      int nspw=LibAIR2::numSPWs(ms);
+      for(size_t i=0; i<sciencespws.size(); i++){
+	if(thewvrspws.count(sciencespws[i])!=0){
+	  std::cout<<"WARNING: SPW "<< sciencespws[i] << " is a WVR SPW, not a science SPW." <<std::endl;
+	  std::cerr<<"WARNING: SPW "<< sciencespws[i] << " is a WVR SPW, not a science SPW." <<std::endl;
+	}
+	if(sciencespws[i]<0 || sciencespws[i]>= nspw){
+	  std::cout<<"ERROR: Invalid SPW "<< sciencespws[i] <<std::endl;
+	  std::cerr<<"ERROR: Invalid SPW "<< sciencespws[i] <<std::endl;
+	  return -11;
+	}
+      }
+      std::cout<<"Will produce solutions for the following SPWs:"<<std::endl;
+      for(size_t i=0; i<sciencespws.size();i++){
+	std::cout<< " " << sciencespws[i];
+      }
+      std::cout <<std::endl;
+    }
+  }
+  if(sciencespws.size()==0){
+    std::cout<<"Will produce solutions for all SPWs:"<<std::endl;
+    for(size_t i=0; i<LibAIR2::numSPWs(ms);i++){
+      sciencespws.push_back(i);
+      std::cout<< " " << i;
+    }
+    std::cout <<std::endl;
+  }
+
   std::string fnameout=vm["output"].as<std::string>();
 
   std::set<size_t> useID=LibAIR2::skyStateIDs(ms);
@@ -812,11 +884,12 @@ int main(int argc,  char* argv[])
 
      std::vector<size_t> sortedI; // to be filled with the time-sorted row number index
      std::set<int> flaggedantsInMain; // the antennas totally flagged in the MS main table
-     boost::scoped_ptr<LibAIR2::InterpArrayData> d (LibAIR2::loadWVRData(ms, 
-								       sortedI, 
-								       flaggedantsInMain,
-								       vm["mingoodfrac"].as<double>(),
-								       vm.count("usefieldtab")==0)
+     boost::scoped_ptr<LibAIR2::InterpArrayData> d (LibAIR2::loadWVRData(ms,
+									 wvrspws,
+									 sortedI, 
+									 flaggedantsInMain,
+									 vm["mingoodfrac"].as<double>(),
+									 vm.count("usefieldtab")==0)
 						   );
 
      interpwvrs.insert(flaggedantsInMain.begin(),flaggedantsInMain.end()); // for flagInterp()
@@ -940,7 +1013,7 @@ int main(int argc,  char* argv[])
 
 	try {
 	   rlist=LibAIR2::doALMAAbsRet(inp,
-				      problemAnts);
+				       problemAnts);
 	}
 	catch(const std::runtime_error rE){
 	   std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
@@ -1053,7 +1126,7 @@ int main(int argc,  char* argv[])
      }
      
      LibAIR2::MSSpec sp;
-     loadSpec(ms, sp);
+     loadSpec(ms, sciencespws, sp);
      std::set<size_t> reverse=reversedSPWs(sp, vm);  
      
      std::cout << "Writing gain table ..." << std::endl;
