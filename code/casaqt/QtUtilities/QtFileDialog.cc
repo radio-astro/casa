@@ -28,7 +28,7 @@
 
 #include <QLayout>
 #include <QSortFilterProxyModel>
-
+#include <QUrl>
 
 namespace casa {
 
@@ -59,6 +59,15 @@ QString QtFileDialog::qgetHelper(AcceptMode acceptMode, FileMode fileMode,
     chooser.setModal(true);
     chooser.setAcceptMode(acceptMode);
     chooser.setFileMode(fileMode);
+
+    // "/Volumes" on Mac is hidden, add manually to sidebar
+    QDir volumesDir(QDir("/Volumes"));
+    if ( volumesDir.exists() ) {
+	QList<QUrl> urls;
+        urls = chooser.sidebarUrls();
+	urls << QUrl::fromLocalFile(volumesDir.absolutePath() );
+	chooser.setSidebarUrls(urls);
+    }
     
 #if (0)
 	// The next three lines fixes issue CSV-433, except
