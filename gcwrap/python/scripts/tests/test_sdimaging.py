@@ -1852,6 +1852,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
     rawfile='sdimaging_flagtest.ms'
     prefix=sdimaging_unittest_base.taskname+'TestFlag'
     outfile=prefix+sdimaging_unittest_base.postfix
+    maskfile = outfile + '/mask0'
     weightfile = outfile + '.weight'
     
     gridfunction = "BOX"
@@ -1885,6 +1886,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,self.nchan)
         self._set_data_ranges()
         self._check_data()
+        self._check_mask()
         self._check_weight()
 
     def testFlag02(self):
@@ -1894,6 +1896,7 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
         self._set_data_ranges(True)
         self._check_data(True)
+        self._check_mask(True)
         self._check_weight(True)
     
     def _set_data_ranges(self, chanmerge=False):
@@ -1915,7 +1918,16 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
         for i in xrange(len(self.x_range)):
             for j in xrange(len(self.y_range)):
                 for k in xrange(len(self.f_range)):
-                    self._checkvalue(self.outfile, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
+                    self._checkvalue(self.outfile, False, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
+                    idx += 1
+
+    def _check_mask(self, chanmerge=False):
+        val = self._get_refmask(self.maskfile, chanmerge)
+        idx = 0
+        for i in xrange(len(self.x_range)):
+            for j in xrange(len(self.y_range)):
+                for k in xrange(len(self.f_range)):
+                    self._checkvalue(self.maskfile, True, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
                     idx += 1
 
     def _check_weight(self, chanmerge=False):
@@ -1924,9 +1936,19 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
         for i in xrange(len(self.x_range)):
             for j in xrange(len(self.y_range)):
                 for k in xrange(len(self.f_range)):
-                    self._checkvalue(self.weightfile, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
+                    self._checkvalue(self.weightfile, False, self.x_range[i], self.y_range[j], self.f_range[k],  val[idx], chanmerge)
                     idx += 1
 
+    def _get_refmask(self, file, chanmerge=False):
+        res = []
+        with tbmanager(file) as tb:
+            for i in [0, self.imsize[0]/2]:
+                for j in [0, self.imsize[1]/3, self.imsize[1]*2/3]:
+                    k_range = [0] if chanmerge else [0, 5, 9]
+                    for k in k_range:
+                        res.append(tb.getcell('PagedArray', 0)[i][j][0][k].real)
+        return res
+            
     def _get_refweight(self, file, chanmerge=False):
         res = []
         with tbmanager(file) as tb:
@@ -1960,10 +1982,11 @@ class sdimaging_test_flag(sdimaging_unittest_base,unittest.TestCase):
                             res.append(tb.getcell('DATA', irow)[0][9].real)
         return res
 
-    def _checkvalue(self, file, x_range, y_range, f_range, ref_value, chanmerge=False):
+    def _checkvalue(self, file, is_maskfile, x_range, y_range, f_range, ref_value, chanmerge=False):
         tol=1e-5
+        colname = 'PagedArray' if is_maskfile else 'map'
         with tbmanager(file) as tb:
-            val = tb.getcell('map', 0)
+            val = tb.getcell(colname, 0)
 
         for i in xrange(x_range[0], x_range[1]):
             for j in xrange(y_range[0], y_range[1]):
