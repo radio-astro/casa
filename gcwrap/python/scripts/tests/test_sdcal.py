@@ -53,6 +53,16 @@ class sdcal_unittest_base:
         tb.close()
         return sp
 
+    def _getflags( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='file %s does not exist'%(name))        
+        tb.open(name)
+        cflag=tb.getcol('FLAGTRA').transpose()
+        rflag=tb.getcol('FLAGROW')
+        tb.close()
+        return cflag, rflag
+
     def _checkshape( self, sp, ref ):
         # check array dimension 
         self.assertEqual( sp.ndim, ref.ndim,
@@ -1123,6 +1133,17 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
                              msg='calibrated result is wrong (irow=%s): maxdiff=%s'%(irow,diff.max()) )
         del sp, spref
 
+        cfout,rfout = self._getflags(name)
+        cfref,rfref = self._getflags(reffile)
+        self._checkshape(cfout, cfref)
+        self.assertTrue(len(rfout)==len(rfref))
+        for irow in xrange(cfout.shape[0]):
+            self.assertTrue((cfout[irow]==cfref[irow]).all())
+            self.assertTrue((rfout==rfref).all())
+
+        del cfout, cfref
+        del rfout, rfref
+
     def testFlagPSALMA01(self):
         """Test FlagPSALMA01: for non-row-flagged ON-data (ALMA position switch)"""
         outname=self.prefix+self.postfix
@@ -1139,11 +1160,13 @@ class sdcal_testFlagPSALMA(sdcal_caltest_base,unittest.TestCase):
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref2file)
 
+
+"""
 ###
 # Test flag handling in GBT position switch calibration
 ###
 class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
-    """
+    #""
     Test flag handling in GBT position switch calibration
     
     Data file: calpsGBT_flagtest[_rowflagged].asap
@@ -1181,7 +1204,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
           calibration.
         - if channel-flagged in a non-row-flagged spectrum,
           the channels must not be used for calibration.
-    """
+    #""
     # Input and output names
     raw1file='calpsGBT_flagtest.asap'
     raw2file='calpsGBT_flagtest_rowflagged.asap'
@@ -1230,7 +1253,7 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
         del sp, spref
 
     def testFlagPSGBT01(self):
-        """Test FlagPSGBT01: for non-row-flagged ON-data (GBT position switch)"""
+        #Test FlagPSGBT01: for non-row-flagged ON-data (GBT position switch)
         outname=self.prefix+self.postfix
         self.res=sdcal(infile=self.raw1file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
@@ -1238,12 +1261,13 @@ class sdcal_testFlagPSGBT(sdcal_caltest_base,unittest.TestCase):
         self._comparecal(outname, self.ref1file)
 
     def testFlagPSGBT02(self):
-        """Test FlagPSGBT02: for row-flagged ON-data (GBT position switch)"""
+        #Test FlagPSGBT02: for row-flagged ON-data (GBT position switch)
         outname=self.prefix+self.postfix
         self.res=sdcal(infile=self.raw2file,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname, self.ref2file)
+"""
 
 ###
 # Test flag handling in calibrating ALMA OTF data
@@ -1278,8 +1302,9 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='lissajous_flagtest.asap'
-    reffile='lissajous_flagtest.cal.asap'
+    #reffile='lissajous_flagtest.cal.asap'
     prefix=sdcal_unittest_base.taskname+'TestFlagOTF'
+    outfile=prefix+sdcal_caltest_base.postfix
     calmode='otf'
     fraction='10%'
 
@@ -1287,29 +1312,23 @@ class sdcal_testFlagOTF(sdcal_caltest_base,unittest.TestCase):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.reffile)):
-            shutil.copytree(self.datapath+self.reffile, self.reffile)
-
         default(sdcal)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.reffile)):
-            shutil.rmtree(self.reffile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF data"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP')
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
         tb.open(self.rawfile)
         spec_rowflagged_input = tb.getcell('SPECTRA', 100)
         tb.close()
-        tb.open(self.reffile)
+        tb.open(self.outfile)
         spec_rowflagged_output = tb.getcell('SPECTRA', 52)
         spec_output  = tb.getcol('SPECTRA')[0]
         cflag_output = tb.getcol('FLAGTRA')[0]
@@ -1363,8 +1382,9 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
     """
     # Input and output names
     rawfile='raster_flagtest.asap'
-    reffile='raster_flagtest.cal.asap'
+    #reffile='raster_flagtest.cal.asap'
     prefix=sdcal_unittest_base.taskname+'TestFlagOTFRASTER'
+    outfile=prefix+sdcal_caltest_base.postfix
     calmode='otfraster'
     fraction='10%'
 
@@ -1372,22 +1392,16 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
         self.res=None
         if (not os.path.exists(self.rawfile)):
             shutil.copytree(self.datapath+self.rawfile, self.rawfile)
-        if (not os.path.exists(self.reffile)):
-            shutil.copytree(self.datapath+self.reffile, self.reffile)
-
         default(sdcal)
 
     def tearDown(self):
         if (os.path.exists(self.rawfile)):
             shutil.rmtree(self.rawfile)
-        if (os.path.exists(self.reffile)):
-            shutil.rmtree(self.reffile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def testFlagOTF01(self):
         """Test FlagOTF01: for ALMA OTF raster data"""
-        outname=self.prefix+self.postfix
-        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=outname,outform='ASAP')
+        self.res=sdcal(infile=self.rawfile,calmode=self.calmode,fraction=self.fraction,outfile=self.outfile,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
 
@@ -1398,7 +1412,7 @@ class sdcal_testFlagOTFRASTER(sdcal_caltest_base,unittest.TestCase):
         tb.open(self.rawfile)
         spec_rowflagged_input = tb.getcell('SPECTRA', irow_rowflagged_input)
         tb.close()
-        tb.open(self.reffile)
+        tb.open(self.outfile)
         spec_rowflagged_output = tb.getcell('SPECTRA', irow_rowflagged_output)
         spec_output  = tb.getcol('SPECTRA')[0]
         cflag_output = tb.getcol('FLAGTRA')[0]
