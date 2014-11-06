@@ -2276,17 +2276,24 @@ class cleanhelper:
         if len(newfreqs)>1:
           if newfreqs[1]-newfreqs[0] < 0:
             descendingnewfreqs=True
-        frange=im.advisechansel(msname=invis, spwselection=spw, fieldid=selfield[0], getfreqrange=True)
-        startchan=0
-        endchan=len(newfreqs)-1
+        
+        
         try:
-            if(descendingnewfreqs):
-                startchan=numpy.min(numpy.where(frange['freqend'] < numpy.array(newfreqs)))
-                endchan=numpy.min(numpy.where(frange['freqstart'] < numpy.array(newfreqs)))
-            else:
-                startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
-                endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
-                newfreqs=(numpy.array(newfreqs)[startchan:endchan]).tolist()
+            if((nchan in [-1, "-1", "", " "]) or (start in [-1, "-1", "", " "])): 
+                frange=im.advisechansel(msname=invis, spwselection=spw, fieldid=selfield[0], getfreqrange=True)
+                startchan=0
+                endchan=len(newfreqs)-1
+                if(descendingnewfreqs):
+                    startchan=numpy.min(numpy.where(frange['freqend'] < numpy.array(newfreqs)))
+                    endchan=numpy.min(numpy.where(frange['freqstart'] < numpy.array(newfreqs)))
+                else:
+                    startchan=numpy.max(numpy.where(frange['freqstart'] > numpy.array(newfreqs)))
+                    endchan=numpy.max(numpy.where(frange['freqend'] > numpy.array(newfreqs)))
+                    if(start not in  [-1, "-1", "", " "]):
+                        startchan=start
+                    if(nchan not in [-1, "-1", "", " "]):
+                        endchan=startchan+nchan-1
+                    newfreqs=(numpy.array(newfreqs)[startchan:endchan]).tolist()
         except:
             pass
         if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
