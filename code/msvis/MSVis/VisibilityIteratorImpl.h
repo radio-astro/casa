@@ -811,12 +811,12 @@ protected:
         Vector<Double>     frequency_p;
         Double             hourang_p;
         Matrix<Float>      imagingWeight_p;
-        Double             lastParang0UT_p;
-        Double             lastParangUT_p;
-        Double             lastazelUT_p;
-        Double             lastazel0UT_p;
-        Double             lasthourangUT_p;
-        Double             lastfeedpaUT_p;
+        Double             lastParang0UT_p; // cache update timestamp
+        Double             lastParangUT_p; // cache update timestamp
+        Double             lastazelUT_p; // cache update timestamp
+        Double             lastazel0UT_p; // cache update timestamp
+        Double             lasthourangUT_p; // cache update timestamp
+        Double             lastfeedpaUT_p; // cache update timestamp
         Bool               msHasFC_p;   // Does the current MS have a valid FLAG_CATEGORY?
         Bool               msHasWtSp_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
         Float              parang0_p;

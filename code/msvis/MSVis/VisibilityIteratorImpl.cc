@@ -242,12 +242,12 @@ VisibilityIteratorReadImpl::Cache::Cache()
   floatDataCubeOK_p (False),
   freqCacheOK_p (False),
   hourang_p (0),
-  lastParang0UT_p (-1),
-  lastParangUT_p (-1),
-  lastazelUT_p (-1),
-  lastazel0UT_p (-1),
-  lasthourangUT_p (-1),
-  lastfeedpaUT_p (-1),
+  lastParang0UT_p (-1), // set last cache update as invalid
+  lastParangUT_p (-1), // set last cache update as invalid
+  lastazelUT_p (-1), // set last cache update as invalid
+  lastazel0UT_p (-1), // set last cache update as invalid
+  lasthourangUT_p (-1), // set last cache update as invalid
+  lastfeedpaUT_p (-1), // set last cache update as invalid
   msHasFC_p(False),
   msHasWtSp_p (False),
   parang0_p (0),
