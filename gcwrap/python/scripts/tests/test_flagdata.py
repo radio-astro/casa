@@ -2810,7 +2810,7 @@ class test_weight_spectrum(test_base):
                     usewtspectrum=True)
         
         # divide WEIGHT clipmax by the number of channels
-        newmax = 50./31
+        newmax = 50.
         flagdata(vis='weight_spectrum.ms', flagbackup=False, mode='clip', 
                  datacolumn='WEIGHT_SPECTRUM', clipminmax=[0.0, newmax])
         res = flagdata(vis='weight_spectrum.ms', mode='summary', spwchan=True)        
