@@ -294,8 +294,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        continue
 	    if not spw_dict.has_key(spw):
 	        continue
-	    if spw_dict[spw]['field_name'] != flux_dict[spw]['field_name']: 
-	        continue
+	    #if spw_dict[spw]['atm_field_name'] != flux_dict[spw]['field_name']: 
+	        #continue
+	    spw_dict[spw]['field_name'] = flux_dict[spw]['field_name']
 	    spw_dict[spw]['flux'] = flux_dict[spw]['flux']
 
     # Get the tsys information as functions of field and spw and
@@ -304,7 +305,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     # The tsys dictionary keys abd values 
     #        key: the spw id         value: The source dictionary
     # The source dictionary keys and values
-    #        key: field_name         value: The name of the source
+    #        key: atm_field_name         value: The name of the source
     #        key: intent             value: The intent of the bandpass source
     #        key: bandpass_scan      value: The bandpass scan associated with Tsys
     #        key: tsys_scan          value: The Tsys scan for Tsys computation
@@ -329,6 +330,23 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    atmscans.append(scan)
 
 	# No atmospheric scans found
+	if not atmscans and intent == 'PHASE':
+
+	    # Get science target names
+	    scifields = ms.get_fields(intent='TARGET')
+	    if len(scifields) <= 0:
+	       return tsysdict
+	    scifieldset = set([scifield.name for scifield in scifields])
+
+	    # Find atmospheric scans associated with the science target
+            for scan in ms.get_scans(scan_intent='ATMOSPHERE'):
+	        # Remove scans not associated with the input field names
+	        scanfieldset = set([field.name for field in scan.fields])
+	        if len(scifieldset.intersection(scanfieldset)) == 0:
+	            continue
+	        atmscans.append(scan)
+
+	# No atmospheric scans found
 	if not atmscans:
 	    return tsysdict
 
@@ -342,7 +360,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    obscans.append(scan)
 
 	# No data scans found
-	#    Note possible issue with PHASE / OBSERVE_TARGET scans 
 	if not obscans:
 	    return tsysdict
 
@@ -388,12 +405,19 @@ class BpSolint(basetask.StandardTaskTemplate):
 			    bestspwid = scanspw.id
 			    mindiff = diff
 
-		# Create dictionary entry based on first scan matched.
+		# No window found
 		if bestspwid is None:
 		    continue
-		ftsysdict['field_name'] = fieldname
+
+		# Create dictionary entry based on first scan matched.
+		ftsysdict['atm_field_name'] = fieldname
 		ftsysdict['intent'] = intent
-		ftsysdict['bandpass_scan'] = obscans[0].id
+		# Pick the first obs scan following the tsys scan
+		#    This should deal with the shared phase / science target scans
+		for obscan in obscans:
+		    if obscan.id > atmscan.id:
+		        ftsysdict['bandpass_scan'] = obscan.id
+			break
 		ftsysdict['tsys_scan'] = atmscan.id
 		ftsysdict['tsys_spw'] = bestspwid
 		break
@@ -525,6 +549,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    for i in range(spw.num_channels):
 	        chanwidths[i] = (channels[i].high - channels[i].low).value 
 	    obsdict[spwid]['chanwidths'] = np.median(chanwidths) 
+
+	    LOG.info('Field %s spw %2d has %2d 12m antennas %2d 7m antennas exposure time %0.3f minutes' %
+	        (fieldname, spwid, obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime))
 
 	return obsdict
 
@@ -813,7 +840,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        (asterisks, spwid, solint_dict[spwid]['bandwidth']*1.0e-6, requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6,
 		solChannels, reqSnr))
 	    if tooFewChannels:
-	        LOG.warn("%s This spw would lhave less than %d channels in its solution" % (asterisks, minbpnchan))
+	        LOG.warn("%s This spw would lhave less than %d channels in its solution" % (asterisks, minBpnchan))
 
 	return solint_dict
 
