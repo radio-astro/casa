@@ -14,7 +14,6 @@ class convertToMMS():
     def __init__(self,\
                  inpdir=None, \
                  mmsdir=None, \
-#                 parallel=False, \
                  axis='auto', \
                  createmslink=False, \
                  cleanup=False):
@@ -24,7 +23,6 @@ class convertToMMS():
 
         self.inpdir = inpdir
         self.outdir = mmsdir
-#        self.parallel = parallel
         self.axis = axis
         self. createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
@@ -289,7 +287,6 @@ class convertToMMS():
         print '   inpdir <dir>        directory with input MS.'
         print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
         print '                       the MMS in a directory called mmsdir in the current directory.'
-        print '   parallel=False      run partition in parallel or not.'
         print "   axis='auto'         separationaxis parameter of partition (spw,scan,auto)."
         print '   createmslink=False  if True it will create a link to the new MMS with extension .ms.'
         print '   cleanup=False       if True it will remove the output directory before starting.\n'
