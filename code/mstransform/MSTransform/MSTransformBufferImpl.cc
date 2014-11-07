@@ -658,7 +658,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCube(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeOk_p = True;
 	}
@@ -697,7 +698,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 											dummyRefRows,
 											manager_p->getVisBuffer()->visCubeCorrected(),
 											dummyDataCol,
-											NULL);
+											NULL,
+											weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeCorrectedOk_p = True;
 	}
@@ -736,7 +738,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCubeModel(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeModelOk_p= True;
 	}
@@ -775,7 +778,8 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCubeFloat(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeFloatOk_p = True;
 	}
@@ -804,8 +808,8 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 				RefRows dummyRefRows(0,0);
 				ArrayColumn<Float> dummyDataCol;
 
-		    	// Unset all the weights-based operations
-		    	manager_p->setWeightBasedTransformations(MSTransformations::flat);
+				// Don't propagate auxiliary weight spectrum and use cumSum for average
+		    	manager_p->setWeightBasedTransformations(False,MSTransformations::cumSum);
 
 		    	// Transform weights
 				manager_p->dataBuffer_p = MSTransformations::weightSpectrum;
@@ -813,10 +817,11 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 												dummyRefRows,
 												manager_p->getVisBuffer()->weightSpectrum(),
 												dummyDataCol,
-												NULL);
+												NULL,
+												weightSpectrum_p);
 
-		    	// Reset all the weights-based operations
-				manager_p->setWeightBasedTransformations(manager_p->weightmode_p);
+				// Go back to normal
+				manager_p->setWeightBasedTransformations(manager_p->channelAverage_p,MSTransformations::spectrum);
 			}
 		}
 		// Fill WEIGHT_SPECTRUM with transformed WEIGHTS

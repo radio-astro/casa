@@ -374,7 +374,7 @@ protected:
 
 
 	// Setter for the weight-based average
-	void setWeightBasedTransformations(uInt mode);
+	void setWeightBasedTransformations(Bool propagateWeights, uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
@@ -594,34 +594,40 @@ protected:
 								RefRows &rowRef,
 								const Cube<Complex> &inputDataCube,
 								ArrayColumn<Complex> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
+								ArrayColumn<Bool> *outputFlagCol,
+								const Cube<Float> &inputWeightCube);
 	void transformCubeOfData(	vi::VisBuffer2 *vb,
 								RefRows &rowRef,
 								const Cube<Float> &inputDataCube,
 								ArrayColumn<Float> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
+								ArrayColumn<Bool> *outputFlagCol,
+								const Cube<Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataComplex_p)(	vi::VisBuffer2 *vb,
 																		RefRows &rowRef,
 																		const Cube<Complex> &inputDataCube,
 																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
+																		ArrayColumn<Bool> *outputFlagCol,
+																		const Cube<Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataFloat_p)(	vi::VisBuffer2 *vb,
 																		RefRows &rowRef,
 																		const Cube<Float> &inputDataCube,
 																		ArrayColumn<Float> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
+																		ArrayColumn<Bool> *outputFlagCol,
+																		const Cube<Float> &inputWeightCube);
 
 	template <class T> void copyCubeOfData(	vi::VisBuffer2 *vb,
 											RefRows &rowRef,
 											const Cube<T> &inputDataCube,
 											ArrayColumn<T> &outputDataCol,
-											ArrayColumn<Bool> *outputFlagCol);
+											ArrayColumn<Bool> *outputFlagCol,
+											const Cube<Float> &inputWeightCube);
 
 	template <class T> void combineCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 
 	// Methods to transform data in cubes
 
@@ -629,17 +635,17 @@ protected:
 										uInt &pol,
 										uInt &inputChannel,
 										uInt &row,
-										Cube<Float> &inputWeightsCube);
+										const Cube<Float> &inputWeightsCube);
 	void dontAddWeightSpectrumContribution(	Double &weight,
 											uInt &pol,
 											uInt &inputChannel,
 											uInt &row,
-											Cube<Float> &inputWeightsCube);
+											const Cube<Float> &inputWeightsCube);
 	void (casa::MSTransformManager::*addWeightSpectrumContribution_p)(	Double &weight,
 																			uInt &pol,
 																			uInt &inputChannel,
 																			uInt &row,
-																			Cube<Float> &inputWeightsCube);
+																			const Cube<Float> &inputWeightsCube);
 
 
 	void fillWeightsPlane(	uInt pol,
@@ -681,22 +687,26 @@ protected:
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void smoothCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void regridCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void separateCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 
 	template <class T> void transformAndWriteCubeOfData(	Int inputSpw,
 															RefRows &rowRef,
