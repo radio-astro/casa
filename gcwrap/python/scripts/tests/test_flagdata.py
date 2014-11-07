@@ -2810,14 +2810,14 @@ class test_weight_spectrum(test_base):
                     usewtspectrum=True)
         
         # divide WEIGHT clipmax by the number of channels
-        newmax = 50./31
+        newmax = 50.
         flagdata(vis='weight_spectrum.ms', flagbackup=False, mode='clip', 
                  datacolumn='WEIGHT_SPECTRUM', clipminmax=[0.0, newmax])
         res = flagdata(vis='weight_spectrum.ms', mode='summary', spwchan=True)        
         self.assertEqual(res['flagged'],31)
         self.assertEqual(res['spw']['0']['flagged'],31)
         
-        self.addCleanup(shutil.rmtree, 'weight_spectrum.ms',True)
+        #self.addCleanup(shutil.rmtree, 'weight_spectrum.ms',True)
 
         
 class test_float_column(test_base):
