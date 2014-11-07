@@ -485,26 +485,58 @@ namespace casa {
 
 	void QtProfile::saveGraphic() {
 		QString dflt = fileName + position + ".png";
-
+		QString filter;
 		QString fn = QFileDialog::getSaveFileName(this,
-		             tr("Save as..."), QString(dflt), tr("(*.png);;(*.pdf);;(*.xpm);;(*.jpg);;(*.ppm);;(*.jpeg)"));
-
+		             tr("Save as..."), QString(dflt),
+		             tr("(*.png);;(*.pdf);;(*.xpm);;(*.jpg);;(*.ppm);;(*.jpeg)"),
+		             &filter );
+		filter = filter.trimmed();
 		if (fn.isEmpty())
 			return ;
 
 		QString ext = fn.section('.', -1);
-		if (ext == "xpm" || ext == "jpg" || ext == "png" ||
-		        ext == "xbm" || ext == "ppm" || ext == "jpeg")
-			;
-		else
+		bool pdfFile = ( ext == "pdf" || filter.contains("pdf"));
+		if ( ext == "xpm" || ext == "jpg" || ext == "png" ||
+		        ext == "xbm" || ext == "ppm" || ext == "jpeg" ){
+		}
+		else if ( !pdfFile ){
 			fn.append(".png");
+		}
 
 		QFile file(fn);
-		if (!file.open(QFile::WriteOnly))
+		if (!file.open(QFile::WriteOnly)){
 			return ;
-
-		pixelCanvas->graph()->save(fn);
+		}
+		if ( pdfFile ){
+			saveAsPDF( fn );
+		}
+		else {
+			pixelCanvas->graph()->save(fn);
+		}
 		return ;
+	}
+
+	void QtProfile::saveAsPDF( const QString& fileName ){
+		QPixmap* image = pixelCanvas->graph();
+		QPrinter printer;
+		printer.setOutputFormat( QPrinter::PdfFormat );
+		printer.setOutputFileName( fileName );
+		QPainter painter;
+		if ( !painter.begin( & printer )){
+			QString errorMsg( "Unable to save file "+fileName+" as a pdf");
+			*itsLog << LogOrigin("QtProfile", errorMsg.toStdString().c_str());
+			qDebug() << errorMsg;
+			return;
+		}
+		int width = image->width();
+		int height = image->height();
+		//Image can get chopped if it is too wide for the pdf.
+		int imageWidth = qMin( width, printer.width());
+		int imageHeight = qMin( height, printer.height() );
+		QRectF sourceRect( 0, 0, width, height );
+		QRectF targetRect( 0, 0, imageWidth, imageHeight );
+		painter.drawPixmap( targetRect, *image, sourceRect );
+		painter.end();
 	}
 
 	void QtProfile::saveExp() {

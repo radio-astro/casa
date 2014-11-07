@@ -285,7 +285,7 @@ namespace casa {
 		pair<Vector<float>, Vector<float> > convertIntensity( const Vector<float>& sourceXVals, const Vector<float>& sourceYVals,
 							std::tr1::shared_ptr<ImageInterface<Float> > imagePtr, const QString& xUnits,
 							const QString& yUnitsOld, const QString& yUnitsNew );
-
+		void saveAsPDF( const QString& fileName );
 		/**
 		 * Returns false if first vector value is greater than the last
 		 * vector value; otherwise returns true.
