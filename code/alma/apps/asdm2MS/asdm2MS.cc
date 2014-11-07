@@ -121,7 +121,7 @@ print_trace (void)
   printf ("Obtained %zd stack frames.\n", size);
 
   for (i = 0; i < size; i++)
-     printf ("%s\n", strings[i]);
+    printf ("%s\n", strings[i]);
 
   free (strings);
 }
@@ -2352,7 +2352,7 @@ void fillState(MainRow* r_p) {
  * This method was developed to check if the lazy filler can be used no a dataset given its
  * inability to deal with varying number of numChan or numCorr inside a configuration description at
  * the time when this method is developed.
-*/ 
+ */ 
 bool checkForConstantNPolNChan(ASDM* ds_p) {
 
   const vector<ConfigDescriptionRow *>& cfgR_v = ds_p->getConfigDescription().get();
@@ -2413,9 +2413,9 @@ typedef struct MainRowCUStruct {
 } MainRowCUStruct;
 
 void fillMainLazily2(const string& dsName,
-		    ASDM* ds_p,
-		    std::map<int, std::set<int> >& selected_eb_scan_m,
-		    std::map<unsigned int , double>& effectiveBwPerDD_m) {
+		     ASDM* ds_p,
+		     std::map<int, std::set<int> >& selected_eb_scan_m,
+		     std::map<unsigned int , double>& effectiveBwPerDD_m) {
 
   LOGENTER("fillMainLazily2");
 
@@ -2697,7 +2697,7 @@ void fillMainLazily2(const string& dsName,
 	  numberOfChannels_v[i-1] * (numberOfSDPolarizations_v[i-1]==3?4:numberOfSDPolarizations_v[i-1]);
 	if (onlyUncorrected)
 	  spwCrossOffsetU_v[i] = spwCrossOffsetU_v[i-1] +
-	  numberOfChannels_v[i-1] * numberOfCrossPolarizations_v[i-1];
+	    numberOfChannels_v[i-1] * numberOfCrossPolarizations_v[i-1];
 	else if (uncorrectedANDcorrected){
 	  spwCrossOffsetU_v[i] = spwCrossOffsetU_v[i-1] +
 	    2 * numberOfChannels_v[i-1] * numberOfCrossPolarizations_v[i-1];
@@ -3113,7 +3113,7 @@ void fillMainLazily2(const string& dsName,
 	  if ( correlationMode == CROSS_AND_AUTO || correlationMode == AUTO_ONLY )
 	    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msfIter = msFillers.begin();
 		 msfIter != msFillers.end();
-	       ++msfIter)
+		 ++msfIter)
 	      if ((msfIter->first == AP_UNCORRECTED and iter->uncorrected and produceUncorrected) ||
 		  (msfIter->first == AP_CORRECTED and iter->corrected and produceCorrected))
 		msfIter->second->addData(true,             // Yes ! these are complex data.
@@ -3955,26 +3955,26 @@ void fillMain(int		rowNum,
     
     // Are we with radiometric data ? Then we assume that the data are labelled AP_UNCORRECTED.
     if (sdmBinData.processorType(r_p) == RADIOMETER) {
-	if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
-	  correctedTime.push_back(vmsData_p->v_time.at(iData));
-	  correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
-	  correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
-	  correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
-	  correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
-	  correctedFilteredDD.push_back(filteredDD.at(iData));
-	  correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
-	  correctedInterval.push_back(vmsData_p->v_interval.at(iData));
-	  correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
-	  correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
-	  correctedUvw.push_back(vv_uvw.at(iData)(0));
-	  correctedUvw.push_back(vv_uvw.at(iData)(1));
-	  correctedUvw.push_back(vv_uvw.at(iData)(2));
-	  //	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0), // Force radiometric data to go
-	    //				     vmsData_p->vv_dataShape.at(iData).at(1), // into correctedData.
-					       //				     iter->second));
-	  correctedData.push_back(uncorrectedData.at(iData));
-	  correctedFlag.push_back(vmsData_p->v_flag.at(iData));
-	}
+      if ((iter=vmsData_p->v_m_data.at(iData).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(iData).end()){
+	correctedTime.push_back(vmsData_p->v_time.at(iData));
+	correctedAntennaId1.push_back(vmsData_p->v_antennaId1.at(iData));
+	correctedAntennaId2.push_back(vmsData_p->v_antennaId2.at(iData));
+	correctedFeedId1.push_back(vmsData_p->v_feedId1.at(iData));
+	correctedFeedId2.push_back(vmsData_p->v_feedId2.at(iData));
+	correctedFilteredDD.push_back(filteredDD.at(iData));
+	correctedFieldId.push_back(vmsData_p->v_fieldId.at(iData));
+	correctedInterval.push_back(vmsData_p->v_interval.at(iData));
+	correctedExposure.push_back(vmsData_p->v_exposure.at(iData));
+	correctedTimeCentroid.push_back(vmsData_p->v_timeCentroid.at(iData));
+	correctedUvw.push_back(vv_uvw.at(iData)(0));
+	correctedUvw.push_back(vv_uvw.at(iData)(1));
+	correctedUvw.push_back(vv_uvw.at(iData)(2));
+	//	  correctedData.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(iData).at(0), // Force radiometric data to go
+	//				     vmsData_p->vv_dataShape.at(iData).at(1), // into correctedData.
+	//				     iter->second));
+	correctedData.push_back(uncorrectedData.at(iData));
+	correctedFlag.push_back(vmsData_p->v_flag.at(iData));
+      }
     }
     else {  // We assume that we are in front of CORRELATOR data, but do we have corrected data on that specific subscan ?
       if (subscanHasCorrectedData) {
@@ -5007,19 +5007,26 @@ int main(int argc, char *argv[]) {
   // Let's verify immediately that if the lazy option has been set we have constant numPol x numCorr
   // on each Configuration Description.
   //
-  if (lazy && !checkForConstantNPolNChan(ds)) {
-    //infostream.str("");
-    //infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
-    //	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
-    //warning(infostream.str());
-    //lazy = false;
-  }
+  //if (lazy && !checkForConstantNPolNChan(ds)) {
+  //infostream.str("");
+  //infostream << "NOTE: This ASDM cannot be imported in 'lazy' mode because it has a varying number of polarizations and/or channels in some configuration description(s)."
+  //	       << endl << "      *** Will switch to non-lazy import. ***" << endl;
+  //warning(infostream.str());
+  //lazy = false;
+  //}
   
   //
   // What are the apc literals present in the binary data.
   //
-  es_apc = apcLiterals(*ds);
- 
+  try {
+    es_apc = apcLiterals(*ds);
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  
   //
   // Determine what kind of data complex (DATA column) or float (FLOAT_DATA) will be
   // stored in the measurement set by using the method isDataComplex on the first row of 
@@ -5040,7 +5047,16 @@ int main(int argc, char *argv[]) {
   //
   // Selection of the scans to consider.
   //
-  vector<ScanRow *>	scanRow_v	       = ds->getScan().get();
+  vector<ScanRow *>	scanRow_v;
+  try {
+    scanRow_v   = ds->getScan().get();
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+
   map<int, set<int> > all_eb_scan_m;
   for (vector<ScanRow *>::size_type i = 0; i < scanRow_v.size(); i++)
     all_eb_scan_m[scanRow_v[i]->getExecBlockId().getTagValue()].insert(scanRow_v[i]->getScanNumber());
@@ -5080,7 +5096,7 @@ int main(int argc, char *argv[]) {
 	  selected_eb_scan_m[iterr_m->first].insert(s.begin(), s.end());
 	}
       }
-
+    
     ostringstream	oss;
     oss << "The following scans will be processed : " << endl;
     for (map<int, set<int> >::const_iterator iter_m = selected_eb_scan_m.begin(); iter_m != selected_eb_scan_m.end(); iter_m++) {
@@ -5148,6 +5164,11 @@ int main(int argc, char *argv[]) {
     errstream << e.getErrorMessage();
     error(errstream.str());
   }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
 
   //
   // Prepare a map AtmPhaseCorrection -> name of measurement set.
@@ -5212,22 +5233,25 @@ int main(int argc, char *argv[]) {
     temp_poltrow = temp_polT.get()[i];
     maxNumCorr=max(maxNumCorr, temp_poltrow->getNumCorr());
   }
+
   //need to add analysis of max NumChan
   int maxNumChan=1;
   SpectralWindowTable& temp_spwT = ds->getSpectralWindow();
   SpectralWindowRow* temp_spwtrow;
   int nSpW = temp_spwT.size();
   vector<int> SwIds;
-  for (int i=0; i<temp_spwT.size(); i++) {
-    temp_spwtrow = temp_spwT.get()[i];
-    maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
-    SwIds.push_back(temp_spwtrow->getSpectralWindowId().getTagValue());
+  try {
+    for (int i=0; i<temp_spwT.size(); i++) {
+      temp_spwtrow = temp_spwT.get()[i];
+      maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
+      SwIds.push_back(temp_spwtrow->getSpectralWindowId().getTagValue());
+    }
   }
-  //for (vector<int> ::iterator it=SwIds.begin(); it != SwIds.end(); ++it)
-  //  cerr<<"SwIds="<<*it<<endl;
-
-  // need loop through nDDs/scans to create msFillers per DD
-  //vector< map<AtmPhaseCorrection,ASDM2MSFiller* > > msFillersv;
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
 
   // Create the measurement set(s). 
   if (!false) {
@@ -5606,10 +5630,10 @@ int main(int argc, char *argv[]) {
     }
 
     /*
-    infostream.str("");
-    infostream << "dd idx " ;
-    v2oss(dataDescriptionIdx2Idx, infostream, "{", "}", ", ");
-    info(infostream.str());
+      infostream.str("");
+      infostream << "dd idx " ;
+      v2oss(dataDescriptionIdx2Idx, infostream, "{", "}", ", ");
+      info(infostream.str());
     */
 
     if (nDataDescription) {
@@ -6364,6 +6388,11 @@ int main(int argc, char *argv[]) {
     errstream.str("");
     error(errstream.str());
   }
+  catch (ConversionException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
 
   //
   // Process the SysCal table.
@@ -6873,20 +6902,22 @@ int main(int argc, char *argv[]) {
     infostream << "The dataset has " << mainT.size() << " main(s)...";
     infostream << v.size() << " of them in the selected exec blocks / scans." << endl;
     info(infostream.str());
-    unsigned int  nMain = v.size();
-
-    const VMSData *vmsDataPtr = 0;
-    // Initialize an UVW coordinates engine.
-    UvwCoords uvwCoords(ds);
-
-    ostringstream oss;
-    EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
-    es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
 
     MSMainRowsInSubscanChecker msMainRowsInSubscanChecker;
-    // For each selected main row.
-    for (unsigned int i = 0; i < nMain; i++) {
-      try {
+
+    try {
+      unsigned int  nMain = v.size();
+      
+      const VMSData *vmsDataPtr = 0;
+      // Initialize an UVW coordinates engine.
+      UvwCoords uvwCoords(ds);
+      
+      ostringstream oss;
+      EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
+      es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
+      
+      // For each selected main row.      
+      for (unsigned int i = 0; i < nMain; i++) {
 	// What's the processor for this Main row ?
 	Tag cdId = v[i]->getConfigDescriptionId();
 	ConfigDescriptionTable& cT = ds->getConfigDescription();
@@ -6984,52 +7015,53 @@ int main(int argc, char *argv[]) {
 	  }
 	}
       }
-      catch ( ConversionException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch ( IllegalAccessException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch ( SDMDataObjectParserException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch ( SDMDataObjectStreamReaderException& e ) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch ( SDMDataObjectReaderException& e ) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch (ConversionException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch (ASDM2MSException& e) {
-	infostream.str("");
-	infostream << e.getMessage();
-	info(infostream.str());
-      }
-      catch ( std::exception & e) {
-       	infostream.str("");
-       	infostream << e.what();
-       	info(infostream.str());      
-      }
-      catch (Error & e) {
-      	infostream.str("");
-      	infostream << e.getErrorMessage();
-      	info(infostream.str());
-      }
     }
+    catch ( ConversionException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( IllegalAccessException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectParserException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectStreamReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( SDMDataObjectReaderException& e ) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch (ConversionException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch (ASDM2MSException& e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
+    catch (Error & e) {
+      errstream.str("");
+      errstream << e.getErrorMessage();
+      error(errstream.str());
+    }
+
 
     // Did we have problem with BDF with data not falling in the time range of their scan/subscan pair ?
     const vector<string>& report = msMainRowsInSubscanChecker.report();
@@ -7063,15 +7095,22 @@ int main(int argc, char *argv[]) {
  
   // Do we also want to store the verbatim copies of some tables of the ASDM dataset ?
   if (vm.count("asis")) {
-    istringstream iss;
-    iss.str(vm["asis"].as<string>());
-    string word;
-    vector<string> tablenames;
-    while (iss>>word)
-      tablenames.push_back(word);
-    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin(); iter != msFillers.end(); ++iter){   
-      ASDMVerbatimFiller avf(const_cast<casa::MS*>(iter->second->ms()), Name2Table::find(tablenames, verbose));
-      avf.fill(*ds);
+    try {
+      istringstream iss;
+      iss.str(vm["asis"].as<string>());
+      string word;
+      vector<string> tablenames;
+      while (iss>>word)
+	tablenames.push_back(word);
+      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin(); iter != msFillers.end(); ++iter){   
+	ASDMVerbatimFiller avf(const_cast<casa::MS*>(iter->second->ms()), Name2Table::find(tablenames, verbose));
+	avf.fill(*ds);
+      }
+    }
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
     }
   }
 
