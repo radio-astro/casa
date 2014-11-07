@@ -41,9 +41,9 @@ class Scan(object):
                                                                      spw_id))
                                      for spw_id in spw_ids)
         self.__exposure_time = dict((spw_id, 
-                                      self.__calculate_exposure_time(sorted_scan_times, 
-                                                                     spw_id))
-                                     for spw_id in spw_ids)
+                                     self.__calculate_exposure_time(sorted_scan_times, 
+                                                                    spw_id))
+                                    for spw_id in spw_ids)
 
     def __repr__(self):
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
@@ -92,13 +92,13 @@ class Scan(object):
                                                            len(dds_with_spw)))
         
         times_for_spw = scan_times[dds_with_spw[0]]
-	exposure_time = 0.0
-	for time in times_for_spw:
+        exposure_time = 0.0
+        for time in times_for_spw:
             start = utils.get_epoch_as_datetime(time[0])
             end = utils.get_epoch_as_datetime(time[1])
-	    diff = end - start
-	    exposure_time = exposure_time + diff.total_seconds()
-	return exposure_time
+            diff = end - start
+            exposure_time = exposure_time + diff.total_seconds()        
+        return exposure_time
 
     def mean_interval(self, spw_id):
         return self.__mean_intervals[spw_id]
