@@ -206,6 +206,26 @@ class ScoringTsysPerAntennaChart(object):
             spw_id = plot.parameters['spw'] 
             stat = self.get_stat(spw_id, antenna_name)            
 
+            # CAS-7009: weblog tsys histogram filtering fails for multi-spw/bb
+            #
+            # A single Tsys window could map to multiple science windows. For
+            # these windows, only one plot will be generated: that for the
+            # corresponding Tsys window. The JSON dictionary uses the plot
+            # filename as the key, resulting in science windows that map to a
+            # single Tsys window only having one entry in the JSON file (the
+            # plot is actually added to the dictionary multiple times, but
+            # each addition overwrites that for the previous spectral window).
+            # 
+            # To work around this, we create a symbolic link to the Tsys plot,
+            # inserting the science spw into the link filename. We then
+            # calculate the score based on the link, giving separate entries
+            # in the JSON dictionary.        
+            (root, ext) = os.path.splitext(plot.abspath)
+            link_abspath = '%s.scispw%s%s' % (root, spw_id, ext)
+            if not os.path.exists(link_abspath):
+                os.link(plot.abspath, link_abspath)
+            plot.abspath = link_abspath
+
             # calculate the relative pathnames as seen from the browser
             thumbnail_relpath = os.path.relpath(plot.thumbnail,
                                                 self.context.report_dir)
