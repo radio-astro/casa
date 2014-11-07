@@ -2817,7 +2817,7 @@ class test_weight_spectrum(test_base):
         self.assertEqual(res['flagged'],31)
         self.assertEqual(res['spw']['0']['flagged'],31)
         
-        #self.addCleanup(shutil.rmtree, 'weight_spectrum.ms',True)
+        self.addCleanup(shutil.rmtree, 'weight_spectrum.ms',True)
 
         
 class test_float_column(test_base):
