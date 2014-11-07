@@ -17,8 +17,8 @@ asdm-imexport+analysis		dpetry eso.org
 alma-titan-ephemeris		dpetry@eso.org
 async-segfault                  dpetry eso.org
 calstat_test                    jmlarsen eso.org
-cleanhelper_test                rindebet nrao.edu
-cleanchan_test                  rindebet nrao.edu
+cleanhelper_test                rurvashi aoc.nrao.edu
+cleanchan_test                  rurvashi aoc.nrao.edu
 coordsystest_regression         dpetry eso.org
 cvel+clean_test                 dpetry eso.org
 #cvel_test2                     dpetry eso.org
