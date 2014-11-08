@@ -33,10 +33,10 @@ namespace sdmbin {
     verbose_ = getenv("ASDM_DEBUG") != NULL;
 
     if(!opendir( execBlockDir.c_str()))
-      Error(FATAL, "Directory " + execBlockDir + " not present present");
+      Error(FATAL, "In SDMBinData::SDMBinData( ASDM* const datasetPtr, string execBlockDir) : Directory " + execBlockDir + " not present present");
     string xmlfile = execBlockDir + "/Main.xml"; //cout << "xmlfile="<< xmlfile<<endl;
     if(!fopen( xmlfile.c_str(),"r"))
-      Error(FATAL, string("Main table not present in the SDM dataset"));
+      Error(FATAL, string("In SDMBinData::SDMBinData( ASDM* const datasetPtr, string execBlockDir) : Main table not present in the SDM dataset"));
 
     execBlockDir_ = execBlockDir;
     mainRowPtr_   = NULL;
