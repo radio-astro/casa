@@ -438,7 +438,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 
 	# Call CASA clean. Clean this up at some point.
         job = casa_tasks.clean(vis=inputs.vis, imagename='%s.iter%s' %
-	    (inputs.imagename, iter), field=inputs.field, spw=inputs.spw,
+#	    (inputs.imagename, iter), field=inputs.field, spw=inputs.spw,
+	    (inputs.imagename, iter), spw=inputs.spw,
 	    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
 	    inputs.intent), scan=scanidlist,
 	    mode=inputs.mode, niter=inputs.niter,
@@ -506,7 +507,8 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Set up dirty image job.
         job = casa_tasks.clean(vis=inputs.vis,
             imagename='%s.iter%s' % (inputs.imagename, iter),
-            field=inputs.field, spw=inputs.spw, selectdata=True,
+#            field=inputs.field, spw=inputs.spw, selectdata=True,
+            spw=inputs.spw, selectdata=True,
 	    scan=scanidlist, intent=utils.to_CASA_intent(inputs.ms[0],
 	    inputs.intent), mode=inputs.mode, niter=0, threshold='0.0mJy',
             imagermode=inputs.imagermode, interactive=False,
