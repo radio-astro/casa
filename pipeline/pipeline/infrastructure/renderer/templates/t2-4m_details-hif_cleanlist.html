@@ -103,8 +103,13 @@ def get_plot(plots, field, spw, i, colname):
                                     </table>
                                 </td>
 
-                                <% final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]%>
-                                <% plot = get_plot(plots_dict, field, str(spw), final_iter, 'image') %>
+                                <% 
+                                try:
+                                    final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]
+                                    plot = get_plot(plots_dict, field, str(spw), final_iter, 'image') 
+                                except:
+                                    plot = None
+                                %>
                                 % if plot is not None:
                                     <%
                                     renderer = hr.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
