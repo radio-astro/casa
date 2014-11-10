@@ -476,6 +476,28 @@ def score_fraction_newly_flagged(filename, summaries):
     longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
     shortmsg = '%0.2f%% data flagged' % percent
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+@log_qa
+
+
+def linear_score_fraction_newly_flagged(filename, summaries):
+    """
+    Calculate a score for the flagging task based on the fraction of
+    data newly flagged.
+    
+    fraction flagged   -> score
+    """    
+    agent_stats = calc_flags_per_agent(summaries)
+
+    # sum the number of flagged rows for the selected agents     
+    frac_flagged = reduce(operator.add, 
+                          [float(s.flagged)/s.total for s in agent_stats[1:]], 0)
+
+    score = 1.0 - frac_flagged        
+
+    percent = 100.0 * frac_flagged
+    longmsg = '%0.2f%% of data in %s was newly flagged' % (percent, filename)
+    shortmsg = '%0.2f%% data flagged' % percent
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 
 @log_qa
