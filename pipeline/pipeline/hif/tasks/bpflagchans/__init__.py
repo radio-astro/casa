@@ -11,6 +11,7 @@ from . import qa
 pipelineqa.registry.add_handler(qa.BandpassQAHandler())
 pipelineqa.registry.add_handler(qa.BandpassListQAHandler())
 
-qaadapter.registry.register_to_calibration_topic(resultobjects.BandpassflagResults)
+qaadapter.registry.register_to_calibration_topic(
+  resultobjects.BandpassflagResults)
 
 weblog.add_renderer(Bandpassflagchans, renderer.T2_4MDetailsBandpassFlagRenderer())
