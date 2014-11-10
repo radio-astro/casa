@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import math
 import os
 import numpy as np
 
@@ -22,6 +23,23 @@ class MatrixFlaggerInputs(basetask.StandardInputs):
 
 class MatrixFlagger(basetask.StandardTaskTemplate):
     Inputs = MatrixFlaggerInputs
+
+    flag_reason_index = {'max abs':1,
+                         'min abs':2,
+                         'nmedian':3,
+                         'outlier':4,
+                         'high outlier':5,
+                         'low outlier':6,
+                         'too many flags':7,
+                         'bad quadrant':8}
+    flag_reason_key = {1:'max abs',
+                       2:'min abs',
+                       3:'nmedian',
+                       4:'outlier',
+                       5:'high outlier',
+                       6:'low outlier',
+                       7:'too many flags',
+                       8:'bad quadrant'}
 
     # override the inherited __init__ method so that references to the
     # task objects can be kept outside self.inputs. Later on self.inputs
@@ -46,6 +64,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
         iter = 1
         flags = []
+        flag_reason_plane = {}
+
         while iter <= niter:
 
             # Get latest data
@@ -59,7 +79,18 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             for description in descriptionlist:
                 image = result.last(description)
                 # get flags for this view according to the rules
-                newflags += self.generate_flags(image, rules)
+                theseflags, this_flag_reason_plane = self.generate_flags(image, rules)
+
+                # update flagging record
+                newflags += theseflags
+                if flag_reason_plane.has_key(description):
+                    # perhaps should add check here that flags are not being set
+                    # twice, which would imply that something inconsistent is 
+                    # happening
+                    flag_reason_plane[description][this_flag_reason_plane > 0] = \
+                      this_flag_reason_plane[this_flag_reason_plane > 0]
+                else:
+                    flag_reason_plane[description] = this_flag_reason_plane
 
             # set any flags raised
             if newflags:
@@ -88,6 +119,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # results object
         flags = list(set(flags))
         result.addflags(flags)
+        result.add_flag_reason_plane(flag_reason_plane, self.flag_reason_key)
+#        result.flag_reason_key = self.flag_reason_key
+#        print 'viewflagger', result.flag_reason_key
         result.table = flagsettertask.inputs.table
 
         return result
@@ -100,11 +134,13 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
       flag_hilo=False, fhl_limit=5.0, fhl_minsample=5, 
       flag_hi=False, fhi_limit=5.0, fhi_minsample=5,
       flag_lo=False, flo_limit=5.0, flo_minsample=5,
-      flag_tmf1=False, tmf1_axis='Time', tmf1_limit=0.5,
-      flag_tmf2=False, tmf2_axis='Time', tmf2_limit=0.5,
+      flag_tmf1=False, tmf1_axis='Time', tmf1_limit=1.0, tmf1_excess_limit=10000000,
+      flag_tmf2=False, tmf2_axis='Time', tmf2_limit=1.0, tmf2_excess_limit=10000000,
       flag_nmedian=False, fnm_lo_limit=0.7, fnm_hi_limit=1.3,
       flag_maxabs=False, fmax_limit=0.1,
-      flag_minabs=False, fmin_limit=0.0):
+      flag_minabs=False, fmin_limit=0.0,
+      flag_bad_quadrant=False, fbq_hilo_limit=7.0,
+      fbq_antenna_frac_limit=0.5, fbq_baseline_frac_limit=0.5):
 
         """
         Generate a list of flagging rules from a set of flagging parameters.
@@ -114,8 +150,12 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # Construct rules from flag properties. If niter is set to curtail
         # the flagging loop then the order that the rules are applied 
         # can be important. For example, 'too many flags' should run after
-        # the other rules.
+        # the other rules, 'bad quadrant' should be run before the others.
         rules = []
+        if flag_bad_quadrant:
+            rules.append({'name':'bad quadrant', 'hilo_limit':fbq_hilo_limit,
+              'frac_limit':fbq_antenna_frac_limit,
+              'baseline_frac_limit':fbq_baseline_frac_limit})
         if flag_maxabs:
             rules.append({'name':'max abs', 'limit':fmax_limit})
         if flag_minabs:
@@ -135,11 +175,13 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         if flag_tmf1:
             rules.append({'name':'too many flags',
               'axis':str.upper(tmf1_axis),
-              'limit':tmf1_limit})
+              'limit':tmf1_limit,
+              'excess limit':tmf1_excess_limit})
         if flag_tmf2:
             rules.append({'name':'too many flags',
               'axis':str.upper(tmf2_axis),
-              'limit':tmf2_limit})
+              'limit':tmf2_limit,
+              'excess limit':tmf2_excess_limit})
 
         return rules
 
@@ -172,299 +214,499 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
         # Initialize flags
         newflags = []
+        flag_reason = np.zeros(np.shape(flag), np.int)
 
         # Index arrays
         i,j = np.indices(np.shape(data))
 
-        # limit_multiplier was added long ago to prevent bad flags being set
-        # because of the view statistics being skewed by extreme outliers.
-        # The idea was to flag lightly to begin with, then
-        # recalculate the view statistics, then flag more severely
-        # until the final 'limit' was reached.
-        # Using robust measures such as medians and MAD it is not
-        # clear that this is necessary (it may have been added before
-        # we were using robust statistics, I forget). So for now
-        # the iteration is commented out and we go straight
-        # to the final 'limit'.
-        # for limit_multiplier in [9, 3, 1]:
+        flagging = True
+        while flagging:
+            flagging = False
 
-        for limit_multiplier in [1]:
-            flagging = True
-            while flagging:
-                flagging = False
+            rdata = np.ravel(data)
+            rflag = np.ravel(flag)
+            valid_data = rdata[np.logical_not(rflag)]
+            data_median, data_mad = arrayflaggerbase.median_and_mad(
+              valid_data)
 
-                rdata = np.ravel(data)
-                rflag = np.ravel(flag)
-                valid_data = rdata[np.logical_not(rflag)]
-                data_median, data_mad = arrayflaggerbase.median_and_mad(
-                  valid_data)
+            # flag data according to each rule in turn
+            for rule in rules:
+                rulename = rule['name']
 
-                # flag data according to each rule in turn
-                for rule in rules:
-                    rulename = rule['name']
-                    if rulename == 'outlier':
+                if rulename == 'outlier':
   
-                        # Sample too small
-                        minsample = rule['minsample']
-                        if len(valid_data) < minsample:
-                            continue
+                    # Sample too small
+                    minsample = rule['minsample']
+                    if len(valid_data) < minsample:
+                        continue
 
-                        # Check limits.
-                        mad_max = limit_multiplier * rule['limit']
-                        i2flag = i[np.logical_and(np.abs(data - data_median) >\
-                          mad_max * data_mad, np.logical_not(flag))]
-                        j2flag = j[np.logical_and(np.abs(data - data_median) >\
-                          mad_max * data_mad, np.logical_not(flag))]
+                    # Check limits.
+                    mad_max = rule['limit']
+                    i2flag = i[np.logical_and(np.abs(data - data_median) >\
+                      mad_max * data_mad, np.logical_not(flag))]
+                    j2flag = j[np.logical_and(np.abs(data - data_median) >\
+                      mad_max * data_mad, np.logical_not(flag))]
 
-                        # No flagged data.
-                        if len(i2flag) <= 0:
-                            continue
+                    # No flagged data.
+                    if len(i2flag) <= 0:
+                        continue
 
-                        # Add new flag command to flag data underlying the
-                        # view.
-                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='outlier',
-                              filename=table, rulename=rulename,
-                              spw=spw, antenna=antenna,
-                              axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol))
+                    # Add new flag command to flag data underlying the
+                    # view.
+                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='outlier',
+                          filename=table, rulename=rulename,
+                          spw=spw, antenna=antenna,
+                          axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol))
   
-                        # Flag the view.
-                        flag[i2flag, j2flag] = True
+                    # Flag the view.
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
 
-                    elif rulename == 'low outlier':
+                elif rulename == 'low outlier':
 
-                        # Sample too small
-                        minsample = rule['minsample']
-                        if len(valid_data) < minsample:
-                            continue
+                    # Sample too small
+                    minsample = rule['minsample']
+                    if len(valid_data) < minsample:
+                        continue
 
-                        # Check limits.
-                        mad_max = limit_multiplier * rule['limit']
-                        i2flag = i[np.logical_and(data_median - data > \
-                          mad_max * data_mad, np.logical_not(flag))]
-                        j2flag = j[np.logical_and(data_median - data > \
-                          mad_max * data_mad, np.logical_not(flag))]
+                    # Check limits.
+                    mad_max = rule['limit']
+                    i2flag = i[np.logical_and(data_median - data > \
+                      mad_max * data_mad, np.logical_not(flag))]
+                    j2flag = j[np.logical_and(data_median - data > \
+                      mad_max * data_mad, np.logical_not(flag))]
 
-                        # No flagged data.
-                        if len(i2flag) <= 0:
-                            continue
+                    # No flagged data.
+                    if len(i2flag) <= 0:
+                        continue
 
-                        # Add new flag commands to flag data underlying the
-                        # view.
-                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='low_outlier',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol))
+                    # Add new flag commands to flag data underlying the
+                    # view.
+                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='low_outlier',
+                          filename=table, rulename=rulename,
+                          spw=spw, axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol))
 
-                        # Flag the view.
-                        flag[i2flag, j2flag] = True
+                    # Flag the view.
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
 
-                    elif rulename == 'high outlier':
+                elif rulename == 'high outlier':
 
-                        # Sample too small
-                        minsample = rule['minsample']
-                        if len(valid_data) < minsample:
-                            continue
+                    # Sample too small
+                    minsample = rule['minsample']
+                    if len(valid_data) < minsample:
+                        continue
 
-                        # Check limits.
-                        mad_max = limit_multiplier * rule['limit']
-                        i2flag = i[np.logical_and(data - data_median > \
-                          mad_max * data_mad, np.logical_not(flag))]
-                        j2flag = j[np.logical_and(data - data_median > \
-                          mad_max * data_mad, np.logical_not(flag))]
+                    # Check limits.
+                    mad_max = rule['limit']
+                    i2flag = i[np.logical_and(data - data_median > \
+                      mad_max * data_mad, np.logical_not(flag))]
+                    j2flag = j[np.logical_and(data - data_median > \
+                      mad_max * data_mad, np.logical_not(flag))]
 
-                        # No flags
-                        if len(i2flag) <= 0:
-                            continue
+                    # No flags
+                    if len(i2flag) <= 0:
+                        continue
 
-                        # Add new flag commands to flag data underlying the
-                        # view.
-                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='high_outlier',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol))
+                    # Add new flag commands to flag data underlying the
+                    # view.
+                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='high_outlier',
+                          filename=table, rulename=rulename,
+                          spw=spw, axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol))
 
-                        # Flag the view.
-                        flag[i2flag, j2flag] = True
+                    # Flag the view.
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
 
-                    elif rulename == 'min abs':
+                elif rulename == 'min abs':
 
-                        # Check limits.
-                        limit = rule['limit']
-                        i2flag = i[np.logical_and(np.abs(data) < limit,
-                          np.logical_not(flag))]
-                        j2flag = j[np.logical_and(np.abs(data) < limit,
-                          np.logical_not(flag))]
+                    # Check limits.
+                    limit = rule['limit']
+                    i2flag = i[np.logical_and(np.abs(data) < limit,
+                      np.logical_not(flag))]
+                    j2flag = j[np.logical_and(np.abs(data) < limit,
+                      np.logical_not(flag))]
 
-                        # No flags
-                        if len(i2flag) <= 0:
-                            continue
+                    # No flags
+                    if len(i2flag) <= 0:
+                        continue
 
-                        # Add new flag commands to flag data underlying the
-                        # view.
-                        flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='min_abs',
-                              filename=table, rulename=rulename, spw=spw,
-                              axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol))
+                    # Add new flag commands to flag data underlying the
+                    # view.
+                    flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='min_abs',
+                          filename=table, rulename=rulename, spw=spw,
+                          axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol))
 
-                        # Flag the view
-                        flag[i2flag, j2flag] = True
+                    # Flag the view
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
 
-                    elif rulename == 'max abs':
+                elif rulename == 'max abs':
 
-                        # Check limits.
-                        limit = rule['limit']
-                        i2flag = i[np.logical_and(np.abs(data) > limit,
-                          np.logical_not(flag))]
-                        j2flag = j[np.logical_and(np.abs(data) > limit,
-                          np.logical_not(flag))]
+                    # Check limits.
+                    limit = rule['limit']
+                    i2flag = i[np.logical_and(np.abs(data) > limit,
+                      np.logical_not(flag))]
+                    j2flag = j[np.logical_and(np.abs(data) > limit,
+                      np.logical_not(flag))]
 
-                        # No flags
-                        if len(i2flag) <= 0:
-                            continue
+                    # No flags
+                    if len(i2flag) <= 0:
+                        continue
 
-                        # Add new flag commands to flag data underlying the
-                        # view.
-                        flagcoords=zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='max_abs',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol))
+                    # Add new flag commands to flag data underlying the
+                    # view.
+                    flagcoords=zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='max_abs',
+                          filename=table, rulename=rulename,
+                          spw=spw, axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol))
 
-                        # Flag the view
-                        flag[i2flag, j2flag] = True
+                    # Flag the view
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
 
-                    elif rulename == 'too many flags':
+                elif rulename == 'too many flags':
  
-                        maxfraction = rule['limit']
-                        axis = rule['axis']
-                        axis = axis.upper().strip()
+                    maxfraction = rule['limit']
+                    maxexcessflags = rule['excess limit']
+                    axis = rule['axis']
+                    axis = axis.upper().strip()
 
-                        if axis == xtitle.upper().strip():
+                    if axis == xtitle.upper().strip():
 
-                            # look along x axis
-                            for iy in np.arange(len(ydata)):
-                                if all(flag[:,iy]):
-                                    continue
+                        # Compute median number flagged
+                        num_flagged = np.zeros([np.shape(data)[1]], np.int)
+                        for iy in np.arange(len(ydata)):
+                            num_flagged[iy] = len(data[:,iy][flag[:,iy]])
+                        median_num_flagged = np.median(num_flagged)
 
-                                # Compute fraction flagged
-                                len_data = len(xdata)
-                                len_no_data = len(data[:,iy][nodata[:,iy]])
-                                len_flagged = len(data[:,iy][flag[:,iy]])
-                                fractionflagged = (
-                                  float(len_flagged - len_no_data) /
-                                  float(len_data - len_no_data))
-                                if fractionflagged <= maxfraction:
-                                    continue
+                        # look along x axis
+                        for iy in np.arange(len(ydata)):
+                            if all(flag[:,iy]):
+                                continue
 
+                            # Compute fraction flagged
+                            len_data = len(xdata)
+                            len_no_data = len(data[:,iy][nodata[:,iy]])
+                            len_flagged = len(data[:,iy][flag[:,iy]])
+                            fractionflagged = (
+                              float(len_flagged - len_no_data) /
+                              float(len_data - len_no_data))
+                            if fractionflagged > maxfraction:
                                 i2flag = i[:,iy][np.logical_not(flag[:,iy])]
                                 j2flag = j[:,iy][np.logical_not(flag[:,iy])]
-  
-                                # Add new flag commands to flag data underlying 
-                                # the view.
-                                flagcoords = zip(xdata[i2flag], ydata[j2flag])
-                                for flagcoord in flagcoords:
-                                    newflags.append(arrayflaggerbase.FlagCmd(
-                                      reason='too_many_flags',
-                                      filename=table, rulename=rulename,
-                                      spw=spw, antenna=antenna, 
-                                      axisnames=[xtitle,ytitle],
-                                      flagcoords=flagcoord, pol=pol))
+                            else:
+                                i2flag = np.zeros([0], np.int)
+                                j2flag = np.zeros([0], np.int)
 
-                                # Flag the view
-                                flag[i2flag, j2flag] = True
+                            # likewise for maxexcessflags
+                            if len_flagged > median_num_flagged + maxexcessflags:
+                                i2flag = np.concatenate((i2flag, i[:,iy][np.logical_not(flag[:,iy])]))
+                                j2flag = np.concatenate((j2flag, j[:,iy][np.logical_not(flag[:,iy])]))
 
-                        elif axis == ytitle.upper().strip():
+                            # Add new flag commands to flag data underlying 
+                            # the view.
+                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                            for flagcoord in flagcoords:
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='too_many_flags',
+                                  filename=table, rulename=rulename,
+                                  spw=spw, antenna=antenna, 
+                                  axisnames=[xtitle,ytitle],
+                                  flagcoords=flagcoord, pol=pol))
 
-                            # look along y axis
-                            for ix in np.arange(len(xdata)):
-                                if all(flag[ix,:]):
-                                    continue
+                            # Flag the view
+                            flag[i2flag, j2flag] = True
+                            flag_reason[i2flag, j2flag] =\
+                              self.flag_reason_index[rulename]
 
-                                # Compute fraction flagged
-                                len_data = len(ydata)
-                                len_no_data = len(data[ix,:][nodata[ix,:]])
-                                len_flagged = len(data[ix,:][flag[ix,:]])
-                                fractionflagged = (
-                                  float(len_flagged - len_no_data) / 
-                                  float(len_data - len_no_data))
-                                if fractionflagged <= maxfraction:
-                                    continue
+                    elif axis == ytitle.upper().strip():
 
+                        # Compute median number flagged
+                        num_flagged = np.zeros([np.shape(data)[0]], np.int)
+                        for ix in np.arange(len(xdata)):
+                            num_flagged[ix] = len(data[ix,:][flag[ix,:]])
+                        median_num_flagged = np.median(num_flagged)
+
+                        # look along y axis
+                        for ix in np.arange(len(xdata)):
+                            if all(flag[ix,:]):
+                                continue
+
+                            len_data = len(ydata)
+                            len_no_data = len(data[ix,:][nodata[ix,:]])
+                            len_flagged = len(data[ix,:][flag[ix,:]])
+                            fractionflagged = (
+                              float(len_flagged - len_no_data) / 
+                              float(len_data - len_no_data))
+                            if fractionflagged > maxfraction:
                                 i2flag = i[ix,:][np.logical_not(flag[ix,:])]
                                 j2flag = j[ix,:][np.logical_not(flag[ix,:])]
+                            else:
+                                i2flag = np.zeros([0], np.int)
+                                j2flag = np.zeros([0], np.int)
 
-                                # Add new flag commands to flag data underlying 
-                                # the view.
-                                flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                            len_flagged = len(data[ix,:][flag[ix,:]])
+                            if len_flagged > median_num_flagged + maxexcessflags:
+                                i2flag = np.concatenate((i2flag, i[ix,:][np.logical_not(flag[ix,:])]))
+                                j2flag = np.concatenate((j2flag, j[ix,:][np.logical_not(flag[ix,:])]))
+
+                            # Add new flag commands to flag data underlying 
+                            # the view.
+                            flagcoords = zip(xdata[i2flag], ydata[j2flag])
+                            for flagcoord in flagcoords:
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='too_many_flags',
+                                  filename=table, rulename=rulename, spw=spw,
+                                  axisnames=[xtitle, ytitle],
+                                  flagcoords=flagcoord, pol=pol))
+
+                            # Flag the view.
+                            flag[i2flag, j2flag] = True
+                            flag_reason[i2flag, j2flag] =\
+                              self.flag_reason_index[rulename]
+
+                elif rulename == 'nmedian':
+
+                    # Check for valid median
+                    if data_median is None:
+                        continue
+
+                    # Check limits.
+                    lo_limit = rule['lo_limit']
+                    hi_limit = rule['hi_limit']
+                    i2flag = i[np.logical_and(
+                      np.logical_or(data < lo_limit * data_median,
+                      data > hi_limit * data_median),
+                      np.logical_not(flag))]
+                    j2flag = j[np.logical_and(
+                      np.logical_or(data < lo_limit * data_median,
+                      data > hi_limit * data_median),
+                      np.logical_not(flag))]
+
+                    # No flags
+                    if len(i2flag) <= 0:
+                        continue
+
+                    # Add new flag commands to flag the data underlying
+                    # the view.
+                    flagcoords=zip(xdata[i2flag], ydata[j2flag])
+                    for flagcoord in flagcoords:
+                        newflags.append(arrayflaggerbase.FlagCmd(
+                          reason='nmedian',
+                          filename=table, rulename=rulename,
+                          spw=spw, axisnames=[xtitle, ytitle],
+                          flagcoords=flagcoord, pol=pol,
+                          extendfields=self.inputs.extendfields))
+
+                    # Flag the view.
+                    flag[i2flag, j2flag] = True
+                    flag_reason[i2flag, j2flag] =\
+                      self.flag_reason_index[rulename]
+
+                elif rulename == 'bad quadrant':
+                    # this test should be run before the others 
+                    # as it depends on no other
+                    # flags having been set by other rules before it
+                    # (because the number of unflagged points
+                    # on entry are part of the test)
+
+                    # a quadrant is one quarter of the extent of the x-axis
+
+                    # Check limits.
+                    hilo_limit = rule['hilo_limit']
+                    frac_limit = rule['frac_limit']
+                    baseline_frac_limit = rule['baseline_frac_limit']
+
+                    # find outlier flags first                 
+                    i2flag = i[np.logical_and(np.abs(data - data_median) >\
+                      hilo_limit * data_mad, np.logical_not(flag))]
+                    j2flag = j[np.logical_and(np.abs(data - data_median) >\
+                      hilo_limit * data_mad, np.logical_not(flag))]
+
+                    # No flagged data.
+                    if len(i2flag) <= 0:
+                        continue
+
+                    # have to be careful here not to corrupt the data view
+                    # as we go through it testing for bad quadrant/antenna.
+                    # Make a copy of the view flags and go though these
+                    # one antenna at a time testing for bad quadrant.
+                    # If bad, copy 'outlier' and 'bad quadrant' flags to
+                    # original view. 'unflagged_flag_copy' is a copy
+                    # of the flags made before the 'outlier' flags are
+                    # applied - it is used to estimate how many 
+                    # _additional_ points have been flagged.
+                    unflagged_flag_copy = np.copy(flag)
+                    flag_copy = np.copy(flag)
+                    flag_reason_copy = np.copy(flag_reason)
+                    flag_copy[i2flag, j2flag] = True
+                    flag_reason_copy[i2flag, j2flag] = \
+                      self.flag_reason_index['outlier']
+
+                    # look for bad antenna/quadrants in view copy
+                    data_shape = np.shape(data)
+                    nchan = data_shape[0]
+                    nbaseline = data_shape[1]
+                    nant = int(math.sqrt(nbaseline))
+
+                    quadrant = [[0,nchan/4-1],
+                      [nchan/4,nchan/2-1],
+                      [nchan/2,nchan*3/4-1],
+                      [nchan*3/4,nchan-1]]
+                        
+                    quadrant_len = nchan/4
+
+                    for ant in range(nant):
+                        # flag based on outliers in flag_copy, will set new flags
+                        # in a further copy so that outlier flags are not corrupted
+                        working_copy_flag = np.copy(flag_copy)
+                        working_copy_flag_reason = np.copy(flag_reason_copy)
+
+                        # baselines involving this antenna
+                        baselines = [baseline for baseline in range(nbaseline) if 
+                          (baseline >= ant*nant and baseline < (ant+1)*nant) or
+                          (baseline%nant == ant)]
+                        baselines = np.array(baselines)
+
+                        for iquad in range(4):
+                            quad_slice = slice(quadrant[iquad][0], quadrant[iquad][1])
+                            ninvalid = np.count_nonzero(
+                              working_copy_flag[quad_slice,baselines])
+                            ninvalid_on_entry = np.count_nonzero(
+                              unflagged_flag_copy[quad_slice,baselines])
+                            nvalid_on_entry = np.count_nonzero(np.logical_not(
+                              unflagged_flag_copy[quad_slice,baselines]))
+                            if nvalid_on_entry:
+                                frac = float(ninvalid - ninvalid_on_entry) /\
+                                  float(nvalid_on_entry)
+                            else:
+                                frac = 0.0
+
+                            if frac > frac_limit:
+                                # Add new flag commands to flag the data 
+                                # underlying the view. These will flag the entire 
+                                # quadrant/antenna. If the quadrant is not
+                                # bad then any 'outlier' points found
+                                # earlier will not be flagged.
+                                flagcoords = []
+                                for chan in range(quadrant[iquad][0], 
+                                  quadrant[iquad][1]):
+                                    flagcoords.append((chan,ant))
                                 for flagcoord in flagcoords:
                                     newflags.append(arrayflaggerbase.FlagCmd(
-                                      reason='too_many_flags',
-                                      filename=table, rulename=rulename, spw=spw,
-                                      axisnames=[xtitle, ytitle],
-                                      flagcoords=flagcoord, pol=pol))
+                                      reason='bad quadrant',
+                                      filename=table, rulename=rulename,
+                                      spw=spw, axisnames=[xtitle, ytitle],
+                                      flagcoords=flagcoord, pol=pol,
+                                      extendfields=self.inputs.extendfields))
 
-                                # Flag the view.
-                                flag[i2flag, j2flag] = True
+                                # update working copy view with 'bad quadrant' flags 
+                                i2flag = i[quad_slice,baselines]\
+                                  [np.logical_not(working_copy_flag[quad_slice,baselines])]
+                                j2flag = j[quad_slice,baselines]\
+                                  [np.logical_not(working_copy_flag[quad_slice,baselines])]
 
-                    elif rulename == 'nmedian':
+                                if len(i2flag) > 0:
+                                    working_copy_flag[i2flag, j2flag] = True
+                                    working_copy_flag_reason[i2flag, j2flag] =\
+                                      self.flag_reason_index['bad quadrant']
+ 
+                                # copy flag state for this antenna 
+                                # back to original
+                                flag[quad_slice,baselines] = \
+                                  working_copy_flag[quad_slice,baselines]
+                                flag_reason[quad_slice,baselines] = \
+                                  working_copy_flag_reason[quad_slice,baselines]
 
-                        # Check for valid median
-                        if data_median is None:
-                            continue
+                                # whole antenna/quadrant flagged, no need to check 
+                                # individual baselines
+                                continue
 
-                        # Check limits.
-                        lo_limit = rule['lo_limit']
-                        hi_limit = rule['hi_limit']
-                        i2flag = i[np.logical_and(
-                          np.logical_or(data < lo_limit * data_median,
-                          data > hi_limit * data_median),
-                          np.logical_not(flag))]
-                        j2flag = j[np.logical_and(
-                          np.logical_or(data < lo_limit * data_median,
-                          data > hi_limit * data_median),
-                          np.logical_not(flag))]
+                            # look for bad quadrant/baseline
+                            for baseline in baselines:
+                                ninvalid = np.count_nonzero(
+                                  working_copy_flag[quad_slice,baseline])
+                                ninvalid_on_entry = np.count_nonzero(
+                                  unflagged_flag_copy[quad_slice,baseline])
+                                nvalid_on_entry = np.count_nonzero(
+                                  np.logical_not(unflagged_flag_copy[
+                                  quad_slice,baseline]))
+                                if nvalid_on_entry:
+                                    frac = float(ninvalid - ninvalid_on_entry) /\
+                                      float(nvalid_on_entry)
+                                else:
+                                    frac = 0.0
 
-                        # No flags
-                        if len(i2flag) <= 0:
-                            continue
+                                if frac > baseline_frac_limit:
 
-                        # Add new flag commands to flag the data underlying
-                        # the view.
-                        flagcoords=zip(xdata[i2flag], ydata[j2flag])
-                        for flagcoord in flagcoords:
-                            newflags.append(arrayflaggerbase.FlagCmd(
-                              reason='nmedian',
-                              filename=table, rulename=rulename,
-                              spw=spw, axisnames=[xtitle, ytitle],
-                              flagcoords=flagcoord, pol=pol,
-                              extendfields=self.inputs.extendfields))
+                                    # Add new flag commands to flag the data 
+                                    # underlying the view. These will flag the entire 
+                                    # quadrant/baseline. If the quadrant is not
+                                    # bad then any 'outlier' points found
+                                    # earlier will not be flagged.
+                                    flagcoords = []
+                                    for chan in range(quadrant[iquad][0], 
+                                      quadrant[iquad][1]):
+                                        flagcoords.append((chan,ydata[baseline]))
+                                    for flagcoord in flagcoords:
+                                        newflags.append(arrayflaggerbase.FlagCmd(
+                                          reason='bad quadrant',
+                                          filename=table, rulename=rulename,
+                                          spw=spw, axisnames=[xtitle, ytitle],
+                                          flagcoords=flagcoord, pol=pol,
+                                          extendfields=self.inputs.extendfields))
 
-                        # Flag the view.
-                        flag[i2flag, j2flag] = True
+                                    # update working copy view with 'bad quadrant' flags 
+                                    i2flag = i[quad_slice,baseline]\
+                                      [np.logical_not(working_copy_flag[quad_slice,baseline])]
+                                    j2flag = j[quad_slice,baseline]\
+                                      [np.logical_not(working_copy_flag[quad_slice,baseline])]
 
-                    else:           
-                        raise NameError, 'bad rule: %s' % rule
+                                    if len(i2flag) > 0:
+                                        working_copy_flag[i2flag, j2flag] = True
+                                        working_copy_flag_reason[i2flag, j2flag] =\
+                                          self.flag_reason_index['bad quadrant']
+
+                                    # copy flag state for this antenna 
+                                    # back to original
+                                    flag[quad_slice,baseline] = \
+                                      working_copy_flag[quad_slice,baseline]
+                                    flag_reason[quad_slice,baseline] = \
+                                      working_copy_flag_reason[quad_slice,baseline]
+
+                else:           
+                    raise NameError, 'bad rule: %s' % rule
 
         # consolidate flagcmds that specify individual channels into fewer
         # flagcmds that specify ranges
         newflags = arrayflaggerbase.consolidate_flagcmd_channels(newflags)
 
-        return newflags
+        return newflags, flag_reason
 
 
 class VectorFlaggerInputs(basetask.StandardInputs):
