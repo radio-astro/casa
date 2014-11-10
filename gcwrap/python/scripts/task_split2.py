@@ -75,10 +75,10 @@ def split2(vis,
         else:
             taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
         
-        config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
-                    spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
-                    uvrange=uvrange,timerange=timerange, intent=intent, observation=observation,
-                    feed=feed, taql=taqlstr)
+        config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=str(field), 
+                    spw=str(spw), array=str(array), scan=str(scan), antenna=str(antenna), correlation=correlation,
+                    uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
+                    feed=str(feed), taql=taqlstr)
 
         config['datacolumn'] = datacolumn
         
