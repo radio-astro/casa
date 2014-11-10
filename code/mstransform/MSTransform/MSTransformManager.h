@@ -405,6 +405,9 @@ protected:
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 
+	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
+	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
+
 	// Methods to transform and write vectors
 
 	template <class T> void transformAndWriteNotReindexableVector(	const Vector<T> &inputVector,
@@ -1118,6 +1121,7 @@ protected:
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;
+	Bool spectrumTransformation_p;
 
 	// Buffer handling parameters
 	Bool bufferMode_p;
@@ -1180,12 +1184,13 @@ protected:
 	Bool inputWeightSpectrumAvailable_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;
 	Cube<Float> weightSpectrumCube_p;
+	Bool weightSpectrumFromSigmaFilled_p;
 
 	// Buffer handling members
 	uInt nRowsToAdd_p;
 	uInt dataBuffer_p;
 	uInt relativeRow_p;
-	Bool noFrequencyTransformations_p;
+	Bool spectrumReshape_p;
 	Bool dataColumnAvailable_p;
 	Bool correctedDataColumnAvailable_p;
 	Bool modelDataColumnAvailable_p;

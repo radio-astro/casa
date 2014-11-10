@@ -593,7 +593,7 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 // -----------------------------------------------------------------------
 const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 {
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->flagCube();
 	}
@@ -638,7 +638,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCube();
 	}
@@ -678,7 +678,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 				<< "visCubeCorrected requested but CORRECTED_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeCorrected();
 	}
@@ -718,7 +718,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 				<< "visCubeModel requested but MODEL_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeModel();
 	}
@@ -758,7 +758,7 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 				<< "visCubeFloat requested but FLOAT_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeFloat();
 	}
@@ -796,7 +796,7 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 	{
 		if (manager_p->inputWeightSpectrumAvailable_p)
 		{
-			if (manager_p->noFrequencyTransformations_p)
+			if (not manager_p->spectrumReshape_p)
 			{
 				return manager_p->getVisBuffer()->weightSpectrum();
 			}
@@ -856,7 +856,7 @@ const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 				<< "FlagCategory requested but FLAG_CATEGORY column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->flagCategory();
 	}

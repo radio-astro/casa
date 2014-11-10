@@ -34,6 +34,11 @@ namespace MSTransformations
 		return wt > 0.0 ? 1.0 / sqrt(wt) : -1.0;
 	}
 
+	Double sigmaToWeight(Double sigma)
+	{
+		return sigma > 0.0 ? 1.0 / (sigma*sigma) : 0;
+	}
+
 	Bool False = False;
 	Bool True = False;
 	Unit Hz(String("Hz"));
@@ -151,6 +156,7 @@ void MSTransformManager::initialize()
 
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
+	spectrumTransformation_p = False;
 
 	// MS-related members
 	dataHandler_p = NULL;
@@ -175,6 +181,7 @@ void MSTransformManager::initialize()
 	// Output MS structure related members
 	inputFlagCategoryAvailable_p = False;
 	inputWeightSpectrumAvailable_p = False;
+	weightSpectrumFromSigmaFilled_p = False;
 	correctedToData_p = False;
 	dataColMap_p.clear();
 	mainColumn_p = MS::CORRECTED_DATA;
@@ -227,7 +234,7 @@ void MSTransformManager::initialize()
 
 	// Buffer handling members
 	bufferMode_p = False;
-	noFrequencyTransformations_p = False;
+	spectrumReshape_p = False;
 	dataColumnAvailable_p = False;
 	correctedDataColumnAvailable_p = False;
 	modelDataColumnAvailable_p = False;
@@ -1084,21 +1091,25 @@ void MSTransformManager::setup()
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::combineCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::combineCubeOfData;
+		spectrumTransformation_p = True;
 	}
 	else if (refFrameTransformation_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::regridCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::regridCubeOfData;
+		spectrumTransformation_p = True;
 	}
 	else if (channelAverage_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::averageCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::averageCubeOfData;
+		spectrumTransformation_p = True;
 	}
 	else if (hanningSmooth_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::smoothCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::smoothCubeOfData;
+		spectrumTransformation_p = True;
 	}
 	else if (nspws_p > 1)
 	{
@@ -1109,7 +1120,7 @@ void MSTransformManager::setup()
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::copyCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::copyCubeOfData;
-		noFrequencyTransformations_p = True;
+		spectrumReshape_p = True;
 	}
 
 	Bool spectralRegridding = combinespws_p or refFrameTransformation_p;
@@ -5062,16 +5073,48 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		// Write WEIGHT_SPECTRUM and SIGMA_SPECTRUM
 		transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL,vb->weightSpectrum());
 
-		// jagonzal (TBD): SIGMA_SPECTRUM is not correct in the general case of spectral regridding
-		transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
-
 		// Go back to normal
 		setWeightBasedTransformations(channelAverage_p,weightmode_p);
+
+		// SIGMA_SPECTRUM is not correct in the general case of spectrum transformation
+		if (spectrumTransformation_p)
+		{
+			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
+		}
+		// Within AveragingTvi2 SIGMA is already re-defined to 1/sqrt(WEIGHT)
+		else if (timeAverage_p)
+		{
+			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
+		}
+		// When CORRECTED becomes DATA, then SIGMA has to be re-defined to 1/sqrt(WEIGHT)
+		else if (correctedToData_p)
+		{
+			// VI/VB only allocates and populates sigmaSpectrum on request
+			// But its contents are not usable for this case
+			// So we should just create a local storage
+			Cube<Float> sigmaSpectrum;
+			sigmaSpectrum = vb->weightSpectrum(); // Copy constructor does not use reference semantics, but deep copy
+			// Apply transformation
+			arrayTransformInPlace(sigmaSpectrum, MSTransformations::wtToSigma);
+			// Write resulting sigmaSpectrum
+			transformCubeOfData(vb,rowRef,sigmaSpectrum,outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
+		}
+		// Pure split operation
+		else
+		{
+			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
+		}
 	}
 
 	ArrayColumn<Bool> *outputFlagCol=NULL;
+	weightSpectrumFromSigmaFilled_p = False;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
 	{
+		// Get applicable *_SPECTRUM (copy constructor uses reference semantics)
+		// If channel average or combine, otherwise no need to copy
+		const Cube<Float> applicableSpectrum = getApplicableSpectrum(vb,iter->first);
+
+		// Apply transformations
 		switch (iter->first)
 		{
 			case MS::DATA:
@@ -5085,7 +5128,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 					outputFlagCol = NULL;
 				}
 
-				transformCubeOfData(vb,rowRef,vb->visCube(),outputMsCols_p->data(), outputFlagCol,vb->weightSpectrum());
+				transformCubeOfData(vb,rowRef,vb->visCube(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 
 				break;
 			}
@@ -5102,11 +5145,11 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (iter->second == MS::DATA)
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->data(), outputFlagCol,vb->weightSpectrum());
+					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->correctedData(), outputFlagCol,vb->weightSpectrum());
+					transformCubeOfData(vb,rowRef,vb->visCubeCorrected(),outputMsCols_p->correctedData(), outputFlagCol,applicableSpectrum);
 				}
 
 				break;
@@ -5124,11 +5167,11 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 				if (iter->second == MS::DATA)
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->data(), outputFlagCol,vb->weightSpectrum());
+					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->data(), outputFlagCol,applicableSpectrum);
 				}
 				else
 				{
-					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->modelData(), outputFlagCol,vb->weightSpectrum());
+					transformCubeOfData(vb,rowRef,vb->visCubeModel(),outputMsCols_p->modelData(), outputFlagCol,applicableSpectrum);
 				}
 				break;
 			}
@@ -5143,7 +5186,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 					outputFlagCol = NULL;
 				}
 
-				transformCubeOfData(vb,rowRef,vb->visCubeFloat(),outputMsCols_p->floatData(), outputFlagCol,vb->weightSpectrum());
+				transformCubeOfData(vb,rowRef,vb->visCubeFloat(),outputMsCols_p->floatData(), outputFlagCol,applicableSpectrum);
 
 				break;
 			}
@@ -5163,7 +5206,7 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     // Special case for flag category
     if (inputFlagCategoryAvailable_p)
     {
-    	if (not noFrequencyTransformations_p)
+    	if (spectrumReshape_p)
     	{
     		IPosition transformedCubeShape = getShape(); //[nC,nF,nR]
     		IPosition inputFlagCategoryShape = vb->flagCategory().shape(); // [nC,nF,nCategories,nR]
@@ -5182,6 +5225,86 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     }
 
 	return;
+}
+
+// -----------------------------------------------------------------------
+// Get *_SPECTRUM column to use depending on the input col
+// -----------------------------------------------------------------------
+const Cube<Float>& MSTransformManager::getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol)
+{
+	switch (datacol)
+	{
+		case MS::DATA:
+		{
+			// NOTE: There is room for optimization here if in the case of
+			// A.- Time average and single column operation
+			// B.- Single column in the input (George denied this)
+			// C.- Time average should not convert SIGMA_SPECTRUM to WEIGHT format if there is chan.avg downstream
+			// D.- SIGMA_SPECTRUM should be in WEIGHT format
+			return getWeightSpectrumFromSigmaSpectrum(vb);
+			break;
+		}
+		case MS::CORRECTED_DATA:
+		{
+			return vb->weightSpectrum();
+			break;
+		}
+		case MS::MODEL_DATA:
+		{
+			dataColMap::iterator iter;
+
+			// Check if we are doing CORRECTED_DATA
+			Bool doingCorrected = False;
+			iter = dataColMap_p.find(MS::CORRECTED_DATA);
+			if (iter != dataColMap_p.end()) doingCorrected = True;
+
+			// Check if we are doing DATA
+			Bool doingData = False;
+			iter = dataColMap_p.find(MS::DATA);
+			if (iter != dataColMap_p.end()) doingData = True;
+
+			// Return either WEIGHT_SPECTRUM or SIGMA_SPECTRUM depending on the other accompany col
+			if (doingCorrected)
+			{
+				return vb->weightSpectrum();
+			}
+			else if (doingData)
+			{
+				return getWeightSpectrumFromSigmaSpectrum(vb);
+			}
+			else
+			{
+				// TODO: By default use WEIGHT_SPCTRUM but this is still TDB
+				return vb->weightSpectrum();
+			}
+
+			break;
+		}
+		default:
+		{
+			return vb->weightSpectrum();
+			break;
+		}
+	}
+}
+
+// -----------------------------------------------------------------------
+// Get *_SPECTRUM column to use depending on the input col
+// -----------------------------------------------------------------------
+const Cube<Float>& MSTransformManager::getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb)
+{
+	if (weightSpectrumFromSigmaFilled_p)
+	{
+		return weightSpectrumCube_p;
+	}
+	else
+	{
+		weightSpectrumCube_p.resize(vb->getShape(),False);
+		weightSpectrumCube_p = vb->sigmaSpectrum(); // = Operator makes a copy
+		arrayTransformInPlace (weightSpectrumCube_p,MSTransformations::sigmaToWeight);
+		weightSpectrumFromSigmaFilled_p = True;
+		return weightSpectrumCube_p;
+	}
 }
 
 // -----------------------------------------------------------------------
