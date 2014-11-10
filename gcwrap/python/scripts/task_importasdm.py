@@ -320,7 +320,7 @@ def importasdm(
         vistoproc = [] # the output MSs to postprocess
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             vistoproc.append(viso)
-        if wvr_corrected_data == 'yes' or wvr_corrected_data == 'both' and os.path.exists(visoc): # it may happen that no MS with corrected data was produced.
+        if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') and os.path.exists(visoc): # it may happen that no MS with corrected data was produced.
             vistoproc.append(visoc)
 
         # If viso+".flagversions" then process differently depending on the value of overwrite..
@@ -397,7 +397,12 @@ def importasdm(
                 bdffexecstring_base = bdffexecstring_base + ' --scans ' + scans
 
             for myviso in vistoproc:
-                bdffexecstring = bdffexecstring_base+' '+ asdm + ' ' + myviso
+                if myviso.find("wvr-corrected") != -1:
+                    options = " --wvr-corrected=True " 
+                else:
+                    options = " "
+
+                bdffexecstring = bdffexecstring_base + options + asdm + ' ' + myviso
 
                 casalog.post('Running '+bdffexecutable+' standalone invoked as:')
                 casalog.post(bdffexecstring)
