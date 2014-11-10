@@ -3,24 +3,13 @@ from __future__ import absolute_import
 import copy
 
 from ..wvrgcal import resultobjects as wvrgcalresults
+from pipeline.hif.tasks.common import flaggableviewresults
 
-class WvrgcalflagResult(wvrgcalresults.WvrgcalResult):
+class WvrgcalflagResult(wvrgcalresults.WvrgcalResult,
+  flaggableviewresults.FlaggableViewResults):
 
-    def addflags(self, flags):
-        self.flagging += flags
-
-    def addview(self, description, viewresult):
-        self.view[description].append(viewresult)
-
-    def descriptions(self):
-        return self.view.keys()
-
-    def first(self, description):
-        return copy.deepcopy(self.view[description][0])
-
-    def flagcmds(self):
-        return copy.deepcopy(self.flagging)
-
-    def last(self, description):
-        return copy.deepcopy(self.view[description][-1])
-
+    def __init__(self, vis, final=[], pool=[], preceding=[],
+      wvrflag=[]):
+        wvrgcalresults.WvrgcalResult.__init__(self, vis, final, pool, 
+          preceding, wvrflag)
+        flaggableviewresults.FlaggableViewResults.__init__(self)
