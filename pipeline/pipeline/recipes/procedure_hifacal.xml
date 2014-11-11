@@ -19,6 +19,44 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_rawflagchans</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">flag_hilo</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fhl_limit</Keyword>
+                <Value xmlns="">20.0</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_bad_quadrant</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fbq_hilo_limit</Keyword>
+                <Value xmlns="">8.0</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fbq_antenna_frac_limit</Keyword>
+                <Value xmlns="">0.2</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fbq_baseline_frac_limit</Keyword>
+                <Value xmlns="">1.0</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_tmf</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">niter</Keyword>
+                <Value xmlns="">1</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_refant</Command>
         <ParameterSet>
         </ParameterSet>
