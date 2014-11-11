@@ -325,11 +325,11 @@ Table TableRecord::asTable (const RecordFieldId& id) const
 }
 
 Table TableRecord::asTable (const RecordFieldId& id,
-			    const TableLock& lockOptions) const
+			                const TableLock& lockOptions) const
 {
     Int whichField = idToNumber (id);
     const Table& tab =
-      ((const TableKeyword*)get_pointer (whichField, TpTable))->table();
+      ((const TableKeyword*)get_pointer (whichField, TpTable))->table(& lockOptions);
     String name = tab.tableName();
     int option = tab.tableOption();
     if (option == Table::New || option == Table::NewNoReplace) {
