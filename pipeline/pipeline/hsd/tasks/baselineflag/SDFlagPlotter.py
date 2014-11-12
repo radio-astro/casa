@@ -10,6 +10,8 @@ import os
 from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
 from matplotlib.font_manager import FontProperties 
 
+from .worker import INVALID_STAT
+
 ## 0:DebugPlot 1:TPlotRADEC 2:TPlotAzEl 3:TPlotCluster 4:TplotFit 5:TPlotMultiSP 6:TPlotSparseSP 7:TPlotChannelMap 8:TPlotFlag 9:TPlotIntermediate
 MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 8913]
 DPIDetail = 130
@@ -114,7 +116,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     for Pflag in PlotData['permanentflag']:
         if Pflag == 0: # Flag-out case
             data[4].append(PlotData['row'][x])
-            if PlotData['data'][x] > ScaleOut[0][0]:
+            if PlotData['data'][x] > ScaleOut[0][0] or PlotData['data'][x] == INVALID_STAT:
                 data[5].append(ScaleOut[0][1])
             elif LowRange and PlotData['data'][x] < ScaleOut[1][0]:
                 data[5].append(ScaleOut[1][1])
@@ -122,7 +124,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
                 data[5].append(PlotData['data'][x])
         elif PlotData['flag'][x] == 0: # Flag-out case
             data[2].append(PlotData['row'][x])
-            if PlotData['data'][x] > ScaleOut[0][0]:
+            if PlotData['data'][x] > ScaleOut[0][0] or PlotData['data'][x] == INVALID_STAT:
                 data[3].append(ScaleOut[0][1])
             elif LowRange and PlotData['data'][x] < ScaleOut[1][0]:
                 data[3].append(ScaleOut[1][1])

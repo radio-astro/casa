@@ -21,6 +21,7 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
+INVALID_STAT = -1
 
 class SDBLFlagWorker(object):
     '''
@@ -327,7 +328,11 @@ class SDBLFlagWorker(object):
         MaskedData = data * mask
         StddevMasked = MaskedData.std()
         MeanMasked = MaskedData.mean()
-        RMS = math.sqrt(abs(Ndata * StddevMasked ** 2 / (Ndata - Nmask) - \
+        if Ndata == Nmask:
+            # all channels are masked
+            RMS = INVALID_STAT
+        else:
+            RMS = math.sqrt(abs(Ndata * StddevMasked ** 2 / (Ndata - Nmask) - \
                             Ndata * Nmask * MeanMasked ** 2 / ((Ndata - Nmask) ** 2)))
         return RMS, Nmask
 
@@ -369,10 +374,17 @@ class SDBLFlagWorker(object):
                     threshold.append([-1, -1])
                     # Leave mask all 1 (no need to modify)
                     continue
+                valid_data_index = numpy.where(stat[x] != INVALID_STAT)
+                LOG.debug('valid_data_index=%s'%(valid_data_index))
+                mask[x][numpy.where(stat[x] == INVALID_STAT)] = 0
                 Unflag = int(numpy.sum(mask[x] * 1.0))
-                FlaggedData = stat[x] * mask[x]
+                if Unflag == 0:
+                    # all data are invalid
+                    threshold.append([-1, -1])
+                    continue
+                FlaggedData = (stat[x] * mask[x]).take(valid_data_index)
                 StddevFlagged = FlaggedData.std()
-                if StddevFlagged == 0: StddevFlagged = stat[x][0] / 100.0
+                if StddevFlagged == 0: StddevFlagged = FlaggedData[0] / 100.0
                 MeanFlagged = FlaggedData.mean()
                 AVE = MeanFlagged / float(Unflag) * float(Ndata)
                 RMS = math.sqrt(abs( Ndata * StddevFlagged ** 2 / Unflag - \
@@ -384,9 +396,11 @@ class SDBLFlagWorker(object):
                     ThreM = 0.0
                 else: ThreM = -1.0
                 threshold.append([ThreM, ThreP])
-                for y in range(Ndata):
+                #for y in range(Ndata):
+                for y in valid_data_index[0]:
                     if ThreM < stat[x][y] <= ThreP: mask[x][y] = 1
                     else: mask[x][y] = 0
+                LOG.debug('threshold=%s'%(threshold))
         return mask, threshold
 
     def _apply_stat_flag(self, DataTable, ids, stat_flag):
