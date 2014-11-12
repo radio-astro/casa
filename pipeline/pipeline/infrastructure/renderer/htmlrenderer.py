@@ -157,7 +157,7 @@ def _get_task_description_for_class(task_cls):
 
 
 def get_task_name(result_obj, include_stage=True):
-    if not isinstance(result_obj, collections.Iterable):
+    if not isinstance(result_obj, (list, basetask.ResultsList)):
         return get_task_name([result_obj, ])
 
     if len(result_obj) is 0:
