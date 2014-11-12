@@ -1004,9 +1004,20 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                         FitData = []
                         ### 2011/05/15 One parameter (Width, Center) for each spectra
                         #Region format:([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
+                        LOG.trace('------02-1---- category=%s, len(category)=%s, Nc=%s' % (category, len(category), Nc))
+                        #LOG.trace('------02-2---- Region=%s' % Region)
+                        for i in xrange(len(category)):
+                            LOG.trace('category[i], i, Nc = %s, %s, %s' % (category[i], i, Nc))
+                            if category[i] == Nc:
+                                LOG.trace('Subplane=%s' % SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)])
                         dummy = [tuple(Region[i][:5]) for i in xrange(len(category))
                                  if category[i] == Nc and Region[i][5] == 1 and SubPlane[int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] > self.Valid]
-                        LOG.trace('------02-2----- len(dummy)=%d' % len(dummy))
+                        LOG.trace('------02-3---- dummy=%s' % dummy)
+                        LOG.trace('------02-4----- len(dummy)=%d' % len(dummy))
+                        ###2014/11/12 in case of len(dummy)==0
+                        if len(dummy) == 0:
+                            SingularMatrix = False
+                            break
                         (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[0]
                         for i in xrange(1,len(dummy)):
                             if Lrow == dummy[i][0]:
