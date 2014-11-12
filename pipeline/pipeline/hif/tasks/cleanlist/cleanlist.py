@@ -172,7 +172,11 @@ class CleanList(basetask.StandardTaskTemplate):
 
 	    if inputs.hm_masking == '':
 	        if 'TARGET' in full_image_target['intent']:
-	            full_image_target['hm_masking'] = 'psfiter'
+                    # For the time being the target imaging uses the
+                    # inner quarter. Other methods will be made available
+                    # later.
+	            #full_image_target['hm_masking'] = 'psfiter'
+	            full_image_target['hm_masking'] = 'centralquarter'
 		else:
 	            full_image_target['hm_masking'] = 'centralquarter'
 	    else:

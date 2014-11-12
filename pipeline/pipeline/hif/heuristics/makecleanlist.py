@@ -242,6 +242,21 @@ class MakeCleanListHeuristics(object):
 
         return [cell], valid_data
 
+    def nchan(self, field_intent, spwspec):
+        if field_intent == 'TARGET':
+            # get the spwids in spwspec
+            p=re.compile(r"[ ,]+(\d+)")
+            spwids = p.findall(' %s' % spwspec)
+            spwids = map(int, spwids)
+            spwids = list(set(spwids))
+            ms = self.context.observing_run.get_ms(name=self.vislist[0])
+            bandwidth = float(ms.get_spectral_window(spwids[0]).bandwidth.to_units(measures.FrequencyUnits.HERTZ))
+            # Currently imaging with a channel width of 15 MHz, but at least
+            # 8 channels
+            return max(int(round(bandwidth / 1.5e7)),8)
+        else:
+            return -1
+
     def has_data(self, field_intent_list, spwspec):
         # reset state of imager
         casatools.imager.done()

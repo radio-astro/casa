@@ -283,6 +283,29 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                 for spwspec in spwlist:
                     imsizes[(field_intent[0],spwspec)] = imsize
 
+        # if nchan is not set then use heuristic code to calculate it
+        # for each field/spwspec
+        nchan = inputs.nchan
+        nchans = {}
+        if nchan == -1:
+            for field_intent in field_intent_list:
+                for spwspec in spwlist:
+                    if not valid_data[spwspec][field_intent]:
+                        continue
+
+                    try:
+                        nchans[(field_intent[0],spwspec)] = self.heuristics.nchan(field_intent=field_intent[1],
+                          spwspec=spwspec)
+                    except Exception, e:
+                        # problem defining nchan
+                        LOG.warn(e)
+                        pass
+
+        else:
+            for field_intent in field_intent_list:
+                for spwspec in spwlist:
+                    nchans[(field_intent[0],spwspec)] = nchan
+
         # construct imagename
         imagename = inputs.imagename
         imagenames = {}
@@ -319,7 +342,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                               'imagename':imagenames[(field_intent,spwspec)],
                               'start':inputs.start,
                               'width':inputs.width,
-                              'nchan':inputs.nchan,
+                              'nchan':nchans[(field_intent[0],spwspec)],
                               'uvrange':inputs.uvrange}
 
                     result.add_target(target)
