@@ -15,13 +15,12 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 from pipeline.hsd.tasks.common import utils as sdutils
 
-from . import SDFlagPlotter as SDP
 from .flagsummary import _get_iteration
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-INVALID_STAT = -1
+from .SDFlagRule import INVALID_STAT
 
 class SDBLFlagWorker(object):
     '''
@@ -193,51 +192,79 @@ class SDBLFlagWorker(object):
             ### 2011/05/26 shrink the size of data on memory
             SpIn = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
             SpOut = numpy.zeros((nrow, NCHAN), dtype=numpy.float32)
+            FlIn = numpy.zeros((nrow, NCHAN), dtype=int)
+            FlOut = numpy.zeros((nrow,NCHAN), dtype=int)
             for index in range(len(chunks[0])):
-                SpIn[index] = tbIn.getcell('SPECTRA', chunks[0][index])
-                if is_baselined: SpOut[index] = tbOut.getcell('SPECTRA', chunks[0][index])
+                data_row = chunks[0][index]
+                SpIn[index] = tbIn.getcell('SPECTRA', data_row)
+                FlIn[index] = tbIn.getcell('FLAGTRA', data_row)
+                if is_baselined: 
+                    SpOut[index] = tbOut.getcell('SPECTRA', data_row)
+                    FlOut[index] = tbOut.getcell('FLAGTRA', data_row)
                 SpIn[index][:edgeL] = 0
                 SpOut[index][:edgeL] = 0
+                FlIn[index][:edgeL] = 128
+                FlOut[index][:edgeL] = 128
                 if edgeR > 0:
                     SpIn[index][-edgeR:] = 0
                     SpOut[index][-edgeR:] = 0
+                    FlIn[index][-edgeR:] = 128
+                    FlOut[index][-edgeR:] = 128
             ### loading of the data for one chunk is done
 
+            # list of valid rows in this chunk
+            valid_indices = numpy.where(numpy.any(FlIn == 0, axis=1))[0]
+            valid_nrow = len(valid_indices)
+            
             for index in range(len(chunks[0])):
                 row = chunks[0][index]
                 idx = chunks[1][index]
+                
+                # check if current row is valid or not
+                isvalid = index in valid_indices
+                
                 # Countup progress timer
                 #Timer.count()
-                START += 1
+
                 # Mask out line and edge channels
                 masklist = DataTable.getcell('MASKLIST',idx)
 
                 stats = DataTable.getcell('STATISTICS',idx)
                 # Calculate Standard Deviation (NOT RMS)
                 ### 2011/05/26 shrink the size of data on memory
-                mask_in = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', row))
-                OldRMS, Nmask = self._calculate_masked_stddev(SpIn[index], mask_in)
-                stats[2] = OldRMS
-                del Nmask
-
-                NewRMS = -1
+                mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index])
                 mask_out = numpy.zeros(NCHAN)
-                if is_baselined:
-                    mask_out = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', row))
-                    NewRMS, Nmask = self._calculate_masked_stddev(SpOut[index], mask_out)
+                if isvalid:
+                    #mask_in = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[index])
+                    OldRMS, Nmask = self._calculate_masked_stddev(SpIn[index], mask_in)
+                    #stats[2] = OldRMS
                     del Nmask
+    
+                    NewRMS = -1
+                    if is_baselined:
+                        mask_out = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[index])
+                        NewRMS, Nmask = self._calculate_masked_stddev(SpOut[index], mask_out)
+                        del Nmask
+                    #stats[1] = NewRMS
+                else:
+                    OldRMS = INVALID_STAT
+                    NewRMS = INVALID_STAT
+                stats[2] = OldRMS
                 stats[1] = NewRMS
 
                 
                 # Calculate Diff from the running mean
                 ### 2011/05/26 shrink the size of data on memory
                 ### modified to calculate Old and New statistics in a single cycle
+                if isvalid:
+                    START += 1
+
                 if nrow == 1:
                     OldRMSdiff = 0.0
                     stats[4] = OldRMSdiff
                     NewRMSdiff = 0.0
                     stats[3] = NewRMSdiff
-                else:
+                elif isvalid:
                     # Mean spectra of row = row+1 ~ row+Nmean
                     if START == 1:
                         RmaskOld = numpy.zeros(NCHAN, numpy.int)
@@ -245,28 +272,30 @@ class SDBLFlagWorker(object):
                         RmaskNew = numpy.zeros(NCHAN, numpy.int)
                         RdataNew0 = numpy.zeros(NCHAN, numpy.float64)
                         NR = 0
-                        for x in range(1, min(Nmean + 1, nrow)):
+                        for _x in range(1, min(Nmean + 1, valid_nrow)):
+                            x = valid_indices[_x]
                             NR += 1
                             RdataOld0 += SpIn[x]
                             masklist = DataTable.getcell('MASKLIST',chunks[1][x])
-                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][x]))
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[x])
                             RmaskOld += mask0
                             RdataNew0 += SpOut[x]
-                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][x])) if is_baselined else numpy.zeros(NCHAN)
+                            mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[x]) if is_baselined else numpy.zeros(NCHAN)
                             RmaskNew += mask0
-                    elif START > (nrow - Nmean):
+                    elif START > (valid_nrow - Nmean):
                         NR -= 1
                         RdataOld0 -= SpIn[index]
                         RmaskOld -= mask_in
                         RdataNew0 -= SpOut[index]
                         RmaskNew -= mask_out
                     else:
-                        masklist = DataTable.getcell('MASKLIST',chunks[1][START + Nmean - 1])
-                        RdataOld0 -= (SpIn[index] - SpIn[START + Nmean - 1])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START + Nmean - 1]))
+                        box_edge = valid_indices[START + Nmean - 1]
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge])
+                        RdataOld0 -= (SpIn[index] - SpIn[box_edge])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge])
                         RmaskOld += (mask0 - mask_in)
-                        RdataNew0 -= (SpOut[index] - SpOut[START + Nmean - 1])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START + Nmean - 1])) if is_baselined else numpy.zeros(NCHAN)
+                        RdataNew0 -= (SpOut[index] - SpOut[box_edge])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge]) if is_baselined else numpy.zeros(NCHAN)
                         RmaskNew += (mask0 - mask_out)
                     # Mean spectra of row = row-Nmean ~ row-1
                     if START == 1:
@@ -277,25 +306,28 @@ class SDBLFlagWorker(object):
                         NL = 0
                     elif START <= (Nmean + 1):
                         NL += 1
-                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2])
-                        LdataOld0 += SpIn[START - 2]
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2]))
+                        box_edge = valid_indices[START - 2]
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge])
+                        LdataOld0 += SpIn[box_edge]
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge])
                         LmaskOld += mask0
-                        LdataNew0 += SpOut[START - 2]
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2])) if is_baselined else numpy.zeros(NCHAN)
+                        LdataNew0 += SpOut[box_edge]
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge]) if is_baselined else numpy.zeros(NCHAN)
                         LmaskNew += mask0
                     else:
-                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2])
-                        LdataOld0 += (SpIn[START - 2] - SpIn[START - 2 - Nmean])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2]))
+                        box_edge_right = valid_indices[START - 2]
+                        box_edge_left = valid_indices[START - 2 - Nmean]
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge_right])
+                        LdataOld0 += (SpIn[box_edge_right] - SpIn[box_edge_left])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_right])
                         LmaskOld += mask0
-                        LdataNew0 += (SpOut[START - 2] - SpOut[START - 2 - Nmean])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2])) if is_baselined else numpy.zeros(NCHAN)
+                        LdataNew0 += (SpOut[box_edge_right] - SpOut[box_edge_left])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_right]) if is_baselined else numpy.zeros(NCHAN)
                         LmaskNew += mask0
-                        masklist = DataTable.getcell('MASKLIST',chunks[1][START - 2 - Nmean])
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbIn.getcell('FLAGTRA', chunks[0][START - 2 - Nmean]))
+                        masklist = DataTable.getcell('MASKLIST',chunks[1][box_edge_left])
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlIn[box_edge_left])
                         LmaskOld -= mask0
-                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), tbOut.getcell('FLAGTRA', chunks[0][START - 2 - Nmean])) if is_baselined else numpy.zeros(NCHAN)
+                        mask0 = self._get_mask_array(masklist, (edgeL, edgeR), FlOut[box_edge_left]) if is_baselined else numpy.zeros(NCHAN)
                         LmaskNew -= mask0
 
                     diffOld0 = (LdataOld0 + RdataOld0) / float(NL + NR) - SpIn[index]
@@ -311,6 +343,13 @@ class SDBLFlagWorker(object):
                         mask0 = (RmaskNew + LmaskNew + mask_out) / (NL + NR + 1)
                         NewRMSdiff, Nmask = self._calculate_masked_stddev(diffNew0, mask0)
                     stats[3] = NewRMSdiff
+                else:
+                    # invalid data
+                    OldRMSdiff = INVALID_STAT
+                    NewRMSdiff = INVALID_STAT
+                    stats[3] = NewRMSdiff
+                    stats[4] = OldRMSdiff
+                    Nmask = NCHAN
 
                 # Fit STATISTICS and NMASK columns in DataTable (post-Fit statistics will be -1 when is_baselined=F)
                 DataTable.putcell('STATISTICS',idx,stats)
@@ -491,11 +530,11 @@ class SDBLFlagWorker(object):
                 stats[6] = expectedRMS * ThreExpectedRMSPreFit
                 DataTable.putcell('STATISTICS',ID,stats)
                 flags = DataTable.getcell('FLAG',ID)
-                if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
+                if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
                     flags[5] = 0
                 else:
                     flags[5] = 1
-                if is_baselined and (PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                if is_baselined and (PreFitRMS == INVALID_STAT or PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
                     flags[6] = 0
                 else:
                     flags[6] = 1

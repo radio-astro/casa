@@ -23,6 +23,8 @@
 # $Date: 2012/04/02 15:32:42 $
 # $Author: tnakazat $
 #
+INVALID_STAT = -1
+
 SDFlagRule = {\
     'WeatherFlag':\
         {'isActive': False, \

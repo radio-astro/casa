@@ -10,7 +10,7 @@ import os
 from matplotlib.ticker import FuncFormatter, MultipleLocator, AutoLocator
 from matplotlib.font_manager import FontProperties 
 
-from .worker import INVALID_STAT
+from .SDFlagRule import INVALID_STAT
 
 ## 0:DebugPlot 1:TPlotRADEC 2:TPlotAzEl 3:TPlotCluster 4:TplotFit 5:TPlotMultiSP 6:TPlotSparseSP 7:TPlotChannelMap 8:TPlotFlag 9:TPlotIntermediate
 MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 8913]
