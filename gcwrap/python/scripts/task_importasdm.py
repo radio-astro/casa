@@ -34,7 +34,8 @@ def importasdm(
     showversion=None,
     useversion=None,
     bdfflags=None,
-    with_pointing_correction=None
+    with_pointing_correction=None,
+    remove_ref_undef=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -151,6 +152,8 @@ def importasdm(
       with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection)
                  to the value to be written in MS::Pointing::direction 
                    default: false
+
+      remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
            
         """
 
@@ -385,7 +388,24 @@ def importasdm(
 
         if mslocal:
             mslocal = None 
-        
+            
+        # 
+        # Do we apply fixspwbackport
+        if remove_ref_undef :
+            casalog.post('remove_ref_undef=True: fixspwbackport will be applied ...')
+            
+            for myviso in vistoproc:
+                cmd = 'fixspwbackport ' + myviso
+                casalog.post('Running fixspwbackport standalone invoked as:')
+                casalog.post(cmd)
+                cmdexitcode = os.system(cmd)
+
+                if cmdexitcode != 0:
+                    casalog.post(cmd
+                                 + ' terminated with exit code '
+                                 + str(cmdexitcode), 'SEVERE')
+                    raise Exception, 'fixspwbackport error.'
+
         # Binary Flag processing
         if bdfflags:
             

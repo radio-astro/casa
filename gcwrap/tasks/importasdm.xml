@@ -191,6 +191,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>False</value>
     </param>
 
+    <param type="bool" name="remove_ref_undef">
+      <description>if set to True then apply fixspwbackport on the resulting MS(es).</description>
+      <value>False</value>
+    </param>
+
     </input>
 
   <returns type="void"/>
@@ -324,6 +329,9 @@ bdfflags -- Set the MS FLAG column according to the ASDM _binary_ flags
 
 with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written 
                             in MS::Pointing::direction 
+
+remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
+	            default: False
            
   </example>
 
