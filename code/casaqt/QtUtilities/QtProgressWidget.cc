@@ -29,6 +29,11 @@
 #include <QCloseEvent>
 #include <QMenu>
 
+#ifdef QT_MAC_USE_COCOA
+#include <objc/runtime.h>
+#include <objc/message.h>
+#endif
+
 namespace casa {
 
 //////////////////////////////////
@@ -74,8 +79,18 @@ void QtProgressWidget::setAllowedOperations(bool background, bool pauseResume,
     if(itsProgress_ != NULL) {
         itsProgress_->backgroundButton->setEnabled(background);
         itsProgress_->pauseButton->setEnabled(pauseResume);
+
+	// CAS-7042 objc Mac error - autorelease with no pool in place
+	// so creating thread pool and draining it.
+#ifdef QT_MAC_USE_COCOA
+        id pool = objc_msgSend(objc_getClass("NSAutoreleasePool"), sel_getUid("new"));
+#endif
         itsProgress_->cancelButton->setEnabled(cancel);
-    } else {
+#ifdef QT_MAC_USE_COCOA
+        objc_msgSend(pool, sel_getUid("drain"));
+#endif
+    }
+    else {
         itsCompactProgress_->menuButton->setVisible(background ||
                 pauseResume || cancel);
         
