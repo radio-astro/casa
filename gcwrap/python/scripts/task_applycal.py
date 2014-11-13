@@ -199,11 +199,11 @@ def reportflags(rec):
 		if (rec.keys().count('origin')==1 and
 		    rec['origin']=='Calibrater::correct' and
 		    rec.keys().count('VisEquation')==1):
-			casalog.post("Calibration apply flagging statistics:")
+			casalog.post("Calibration apply flagging statistics (among calibrateable spws):")
 			VE=rec['VisEquation']
 			nterm=len(VE)
 			if nterm>0:
-				casalog.post("  Total selected visibilities = "+str(VE['*1']['ndata']))
+				casalog.post("  Total selected visibilities (among calibrateable spws) = "+str(VE['*1']['ndata']))
 				casalog.post("  Flags:")
 				for iterm in range(nterm):
 					VEi=VE['*'+str(iterm+1)]
