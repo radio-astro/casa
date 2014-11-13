@@ -242,7 +242,7 @@ class MakeCleanListHeuristics(object):
 
         return [cell], valid_data
 
-    def nchan(self, field_intent, spwspec):
+    def nchan_and_width(self, field_intent, spwspec):
         if field_intent == 'TARGET':
             # get the spwids in spwspec
             p=re.compile(r"[ ,]+(\d+)")
@@ -253,9 +253,17 @@ class MakeCleanListHeuristics(object):
             bandwidth = float(ms.get_spectral_window(spwids[0]).bandwidth.to_units(measures.FrequencyUnits.HERTZ))
             # Currently imaging with a channel width of 15 MHz, but at least
             # 8 channels
-            return max(int(round(bandwidth / 1.5e7)),8)
+            if (bandwidth >= 8.0 * 1.5e7):
+                nchan = int(round(bandwidth / 1.5e7))
+                width = '1.5e7 Hz'
+            else:
+                nchan = 8
+                width = '%f Hz' % (bandwidth / 8.0)
         else:
-            return -1
+            nchan = -1
+            width = -1
+
+        return nchan, width
 
     def has_data(self, field_intent_list, spwspec):
         # reset state of imager

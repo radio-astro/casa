@@ -284,20 +284,24 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                     imsizes[(field_intent[0],spwspec)] = imsize
 
         # if nchan is not set then use heuristic code to calculate it
-        # for each field/spwspec
+        # for each field/spwspec. The channel width needs to be calculated
+        # at the same time.
         nchan = inputs.nchan
         nchans = {}
-        if nchan == -1:
+        width = inputs.width
+        widths = {}
+        if ((nchan == -1) and (width == '')):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     if not valid_data[spwspec][field_intent]:
                         continue
 
                     try:
-                        nchans[(field_intent[0],spwspec)] = self.heuristics.nchan(field_intent=field_intent[1],
+                        nchans[(field_intent[0],spwspec)], widths[(field_intent[0],spwspec)] = \
+                          self.heuristics.nchan_and_width(field_intent=field_intent[1], \
                           spwspec=spwspec)
                     except Exception, e:
-                        # problem defining nchan
+                        # problem defining nchan and width
                         LOG.warn(e)
                         pass
 
@@ -305,6 +309,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
             for field_intent in field_intent_list:
                 for spwspec in spwlist:
                     nchans[(field_intent[0],spwspec)] = nchan
+                    widths[(field_intent[0],spwspec)] = width
 
         # construct imagename
         imagename = inputs.imagename
@@ -341,7 +346,7 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                               'mode':inputs.mode,
                               'imagename':imagenames[(field_intent,spwspec)],
                               'start':inputs.start,
-                              'width':inputs.width,
+                              'width':widths[(field_intent[0],spwspec)],
                               'nchan':nchans[(field_intent[0],spwspec)],
                               'uvrange':inputs.uvrange}
 
