@@ -19,7 +19,12 @@ class ApplycalQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
-        scores = [qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+        #scores = [qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+        
+        #CAS-7059
+        #for applycal, change the column label from After to Additional, 
+        #  and base the QA on that number instead of the total. 
+        scores = [qacalc.score_data_flagged_by_agents(ms, result.summaries, 0.05, 0.6, agents=['applycal'])]
         result.qa.pool[:] = scores
 
 

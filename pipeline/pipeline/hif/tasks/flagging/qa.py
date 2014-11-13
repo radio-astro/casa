@@ -20,8 +20,15 @@ class AgentFlaggerQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
+        #scores = [qacalc.score_online_shadow_agents(ms, result.summaries),
+        #          qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+                  
+        #CAS-7059 base the metric (and warnings) on Shadowing+Online, 
+        #   instead of on the Total
         scores = [qacalc.score_online_shadow_agents(ms, result.summaries),
-                  qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+                  qacalc.score_data_flagged_by_agents(ms, result.summaries, 0.05, 0.6, agents=['online', 'shadow'])]
+                  
+                  
         result.qa.pool[:] = scores
 
 
@@ -45,8 +52,16 @@ class FlagDeterBaseQAHandler(pqa.QAResultHandler):
     
         # calculate QA scores from agentflagger summary dictionary, adopting
         # the minimum score as the representative score for this task
+        #scores = [qacalc.score_online_shadow_agents(ms, result.summaries),
+        #          qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+                  
+        #CAS-7059 base the metric (and warnings) on Shadowing+Online, 
+        #   instead of on the Total
         scores = [qacalc.score_online_shadow_agents(ms, result.summaries),
-                  qacalc.score_total_data_flagged(ms.basename, result.summaries)]
+                  qacalc.score_data_flagged_by_agents(ms, result.summaries, 0.05, 0.6, agents=['online', 'shadow'])]
+        
+        
+                  
         result.qa.pool[:] = scores
 
 class FlagDeterBaseListQAHandler(pqa.QAResultHandler):

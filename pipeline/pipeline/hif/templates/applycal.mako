@@ -12,7 +12,7 @@ import pipeline.infrastructure.utils as utils
 
 agent_description = {
 	'before'   : 'Before',
-	'applycal' : 'After',
+	'applycal' : 'Additional',
 }
 
 total_keys = {
