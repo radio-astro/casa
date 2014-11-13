@@ -1112,8 +1112,8 @@ Calibrater::correct(String mode)
 
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct", 
-				     upmode.contains("STRICT"));
+        retval = summarize_uncalspws(uncalspw, "correct",
+ 				     upmode.contains("STRICT"));
 
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
@@ -1254,22 +1254,43 @@ Calibrater::correct2(String mode)
 	    }
 	    else{
 	      uncalspw[spw] = true;
-	      if (! vi.isAsynchronous()){
 
-		// Asynchronous I/O doesn't have a way to skip
-		// VisBuffers, so only break out when not using
-		// async i/o.
-		
-		break; // Only proceed if spw can be calibrated
+	      // set the flags, if we are being strict
+	      // (don't touch the data/weights, which are initialized)
+	      if (upmode.contains("STRICT")) {
+		// reference (to avoid copy) and set the flags
+		Cube<Bool> fC(vb->flagCube());   // reference
+		fC.set(True);  
+
+		// make dirty for writeChangesBack  (does this do an actual copy?)
+		vb->setFlagCube(vb->flagCube());
+
+		// write back to 
+		vb->writeChangesBack();
+
+	      }
+	      else {
+
+		// Break out of inner VI2 loop, if possible
+		if (! vi.isAsynchronous()){
+		  
+		  // Asynchronous I/O doesn't have a way to skip
+		  // VisBuffers, so only break out when not using
+		  // async i/o.
+		  
+		  break; 
+
+		}
+
 	      }
 	    }
 	  }
         }
 
-
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct",
+ 				     upmode.contains("STRICT"));
 	
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
