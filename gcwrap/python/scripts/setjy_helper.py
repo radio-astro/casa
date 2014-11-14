@@ -202,6 +202,7 @@ class ss_setjy_helper:
 	retdict={} # for returning flux densities?
         ss_setjy=SSsetjy.solar_system_setjy()
 	#for src in srcnames:
+        self.clnamelist=[]
 	for vfid in validfids:
           src=srcnames[vfid]
 	  #mjds=inparams[src]['mjds']
@@ -293,7 +294,6 @@ class ss_setjy_helper:
 
 	    #clpath='/tmp/'
 	    clpath='./'
-            self.clnamelist=[]
             # construct cl name (multiple spws in one componentlist table)
             selreffreqs = [reffreqs[indx] for indx in spwids]
             minfreq = min(selreffreqs)
@@ -464,7 +464,7 @@ class ss_setjy_helper:
               if os.path.exists(tmpclpath):
                  shutil.rmtree(tmpclpath)
               mycl.rename(tmpclpath)
-              mycl.done()
+              mycl.close(False)
 	      self.im.ft(complist=tmpclpath)
 
             # --------------------------------------------------------------------------------------------
