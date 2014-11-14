@@ -61,6 +61,9 @@
 // To apply 1D interpolations
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
+// to compute partial medians
+#include <casa/Arrays/ArrayPartMath.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -90,7 +93,9 @@ namespace MSTransformations
 		spectrum,
 		flags,
 		cumSum,
-		flat
+		flat,
+		flagSpectrum,
+		flagCumSum
 	};
 
 	enum dataCol {
@@ -100,6 +105,13 @@ namespace MSTransformations
 		visCubeFloat,
 		weightSpectrum
 	  };
+
+	enum weightTransformation {
+
+		transformWeight,
+		transformWeightIntoSigma,
+		weightIntoSigma
+	};
 }
 
 // Forward declarations
@@ -373,8 +385,10 @@ protected:
 	void separateSysPowerSubtable();
 
 
-	// Setter for the weight-based average
-	void setWeightBasedTransformations(uInt mode);
+	// Setters for Weight-based transformation
+	void propagateWeights(Bool on);
+	void setBufferMode(Bool on);
+	void setChannelAverageKernel(uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
@@ -404,6 +418,18 @@ protected:
 	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+
+	void fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+	void transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
+									RefRows &rowRef,
+									const Cube<Float> &inputSpectrum,
+									ArrayColumn<Float> &outputCubeCol,
+									ArrayColumn<Float> &outputMatrixCol,
+									MSTransformations::weightTransformation weightTransformation);
+
+	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
+	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
+	const Cube<Float>& getWeightSpectrumFlat(vi::VisBuffer2 *vb);
 
 	// Methods to transform and write vectors
 
@@ -594,34 +620,40 @@ protected:
 								RefRows &rowRef,
 								const Cube<Complex> &inputDataCube,
 								ArrayColumn<Complex> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
+								ArrayColumn<Bool> *outputFlagCol,
+								const Cube<Float> &inputWeightCube);
 	void transformCubeOfData(	vi::VisBuffer2 *vb,
 								RefRows &rowRef,
 								const Cube<Float> &inputDataCube,
 								ArrayColumn<Float> &outputDataCol,
-								ArrayColumn<Bool> *outputFlagCol);
+								ArrayColumn<Bool> *outputFlagCol,
+								const Cube<Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataComplex_p)(	vi::VisBuffer2 *vb,
 																		RefRows &rowRef,
 																		const Cube<Complex> &inputDataCube,
 																		ArrayColumn<Complex> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
+																		ArrayColumn<Bool> *outputFlagCol,
+																		const Cube<Float> &inputWeightCube);
 	void (casa::MSTransformManager::*transformCubeOfDataFloat_p)(	vi::VisBuffer2 *vb,
 																		RefRows &rowRef,
 																		const Cube<Float> &inputDataCube,
 																		ArrayColumn<Float> &outputDataCol,
-																		ArrayColumn<Bool> *outputFlagCol);
+																		ArrayColumn<Bool> *outputFlagCol,
+																		const Cube<Float> &inputWeightCube);
 
 	template <class T> void copyCubeOfData(	vi::VisBuffer2 *vb,
 											RefRows &rowRef,
 											const Cube<T> &inputDataCube,
 											ArrayColumn<T> &outputDataCol,
-											ArrayColumn<Bool> *outputFlagCol);
+											ArrayColumn<Bool> *outputFlagCol,
+											const Cube<Float> &inputWeightCube);
 
 	template <class T> void combineCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 
 	// Methods to transform data in cubes
 
@@ -629,17 +661,17 @@ protected:
 										uInt &pol,
 										uInt &inputChannel,
 										uInt &row,
-										Cube<Float> &inputWeightsCube);
+										const Cube<Float> &inputWeightsCube);
 	void dontAddWeightSpectrumContribution(	Double &weight,
 											uInt &pol,
 											uInt &inputChannel,
 											uInt &row,
-											Cube<Float> &inputWeightsCube);
+											const Cube<Float> &inputWeightsCube);
 	void (casa::MSTransformManager::*addWeightSpectrumContribution_p)(	Double &weight,
 																			uInt &pol,
 																			uInt &inputChannel,
 																			uInt &row,
-																			Cube<Float> &inputWeightsCube);
+																			const Cube<Float> &inputWeightsCube);
 
 
 	void fillWeightsPlane(	uInt pol,
@@ -681,22 +713,26 @@ protected:
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void smoothCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void regridCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 	template <class T> void separateCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
-												ArrayColumn<Bool> *outputFlagCol);
+												ArrayColumn<Bool> *outputFlagCol,
+												const Cube<Float> &inputWeightCube);
 
 	template <class T> void transformAndWriteCubeOfData(	Int inputSpw,
 															RefRows &rowRef,
@@ -950,6 +986,22 @@ protected:
 											uInt startInputPos,
 											uInt outputPos,
 											uInt width);
+	template <class T> void flagWeightAverageKernel(	Vector<T> &inputData,
+														Vector<Bool> &inputFlags,
+														Vector<Float> &inputWeights,
+														Vector<T> &outputData,
+														Vector<Bool> &outputFlags,
+														uInt startInputPos,
+														uInt outputPos,
+														uInt width);
+	template <class T> void flagCumSumKernel(	Vector<T> &inputData,
+												Vector<Bool> &inputFlags,
+												Vector<Float> &,
+												Vector<T> &outputData,
+												Vector<Bool> &,
+												uInt startInputPos,
+												uInt outputPos,
+												uInt width);
 
 	template <class T> void smooth(	Int ,
 									Vector<T> &inputDataStripe,
@@ -1129,6 +1181,9 @@ protected:
 	// Output MS structure related members
 	Bool inputFlagCategoryAvailable_p;
 	Bool correctedToData_p;
+	Bool doingData_p;
+	Bool doingCorrected_p;
+	Bool doingModel_p;
 	dataColMap dataColMap_p;
 	MSMainEnums::PredefinedColumns mainColumn_p;
 
@@ -1167,15 +1222,21 @@ protected:
 	ROScalarMeasColumn<MEpoch> timeMeas_p;
 
 	// Weight Spectrum members
+	Bool spectrumTransformation_p;
+	Bool propagateWeights_p;
 	Bool inputWeightSpectrumAvailable_p;
+	Bool weightSpectrumFlatFilled_p;
+	Bool weightSpectrumFromSigmaFilled_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;
 	Cube<Float> weightSpectrumCube_p;
+	Cube<Float> weightSpectrumCubeFlat_p;
+	Cube<Float> weightSpectrumCubeDummy_p;
 
 	// Buffer handling members
 	uInt nRowsToAdd_p;
 	uInt dataBuffer_p;
 	uInt relativeRow_p;
-	Bool noFrequencyTransformations_p;
+	Bool spectrumReshape_p;
 	Bool dataColumnAvailable_p;
 	Bool correctedDataColumnAvailable_p;
 	Bool modelDataColumnAvailable_p;

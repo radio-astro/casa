@@ -593,7 +593,7 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 // -----------------------------------------------------------------------
 const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 {
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->flagCube();
 	}
@@ -638,7 +638,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCube();
 	}
@@ -658,7 +658,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCube(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeOk_p = True;
 	}
@@ -677,7 +678,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 				<< "visCubeCorrected requested but CORRECTED_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeCorrected();
 	}
@@ -697,7 +698,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 											dummyRefRows,
 											manager_p->getVisBuffer()->visCubeCorrected(),
 											dummyDataCol,
-											NULL);
+											NULL,
+											weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeCorrectedOk_p = True;
 	}
@@ -716,7 +718,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 				<< "visCubeModel requested but MODEL_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeModel();
 	}
@@ -736,7 +738,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCubeModel(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeModelOk_p= True;
 	}
@@ -755,7 +758,7 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 				<< "visCubeFloat requested but FLOAT_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->visCubeFloat();
 	}
@@ -775,7 +778,8 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCubeFloat(),
 										dummyDataCol,
-										NULL);
+										NULL,
+										weightSpectrum_p);
 		flagCubeOk_p = True;
 		visCubeFloatOk_p = True;
 	}
@@ -792,7 +796,7 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 	{
 		if (manager_p->inputWeightSpectrumAvailable_p)
 		{
-			if (manager_p->noFrequencyTransformations_p)
+			if (not manager_p->spectrumReshape_p)
 			{
 				return manager_p->getVisBuffer()->weightSpectrum();
 			}
@@ -804,8 +808,9 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 				RefRows dummyRefRows(0,0);
 				ArrayColumn<Float> dummyDataCol;
 
-		    	// Unset all the weights-based operations
-		    	manager_p->setWeightBasedTransformations(MSTransformations::flat);
+				// Don't propagate auxiliary weight spectrum and use cumSum for average
+		    	manager_p->propagateWeights(False);
+		    	manager_p->setChannelAverageKernel(MSTransformations::cumSum);
 
 		    	// Transform weights
 				manager_p->dataBuffer_p = MSTransformations::weightSpectrum;
@@ -813,10 +818,12 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 												dummyRefRows,
 												manager_p->getVisBuffer()->weightSpectrum(),
 												dummyDataCol,
-												NULL);
+												NULL,
+												weightSpectrum_p);
 
-		    	// Reset all the weights-based operations
-				manager_p->setWeightBasedTransformations(manager_p->weightmode_p);
+				// Go back to normal
+		    	manager_p->propagateWeights(manager_p->propagateWeights_p);
+		    	manager_p->setChannelAverageKernel(manager_p->weightmode_p);
 			}
 		}
 		// Fill WEIGHT_SPECTRUM with transformed WEIGHTS
@@ -851,7 +858,7 @@ const Array<Bool> & MSTransformBufferImpl::flagCategory () const
 				<< "FlagCategory requested but FLAG_CATEGORY column not present in input MS" << LogIO::POST;
 	}
 
-	if (manager_p->noFrequencyTransformations_p)
+	if (not manager_p->spectrumReshape_p)
 	{
 		return manager_p->getVisBuffer()->flagCategory();
 	}
