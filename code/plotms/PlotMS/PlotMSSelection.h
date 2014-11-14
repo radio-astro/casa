@@ -161,10 +161,12 @@ private:
     // Selection field values.
     map<Field, String> itsValues_;
 
-    MSSelection mss;
+
 
     // Force appearance of new selection (even when not new)
     Int forceNew_;
+	Vector<int> selAnts;
+	Vector<int> selAnts2;
     
     // Initializes the values to their defaults.
     void initDefaults();
