@@ -359,15 +359,16 @@ void LatticeApply<T,U>::lineMultiApply (PtrBlock<MaskedLattice<U>*>& latticeOut,
 
 
 template <class T, class U>
-void LatticeApply<T,U>::tiledApply (MaskedLattice<U>& latticeOut,
-				  const MaskedLattice<T>& latticeIn,
-				  TiledCollapser<T,U>& collapser,
-				  const IPosition& collapseAxes,
-				  Int newOutAxis,
-				  LatticeProgress* tellProgress)
-{
-// Make veracity check on input and first output lattice
-// and work out map to translate input and output axes.
+void LatticeApply<T,U>::tiledApply (
+	MaskedLattice<U>& latticeOut,
+	const MaskedLattice<T>& latticeIn,
+	TiledCollapser<T,U>& collapser,
+	const IPosition& collapseAxes,
+	Int newOutAxis,
+	LatticeProgress* tellProgress
+) {
+	// Make veracity check on input and first output lattice
+	// and work out map to translate input and output axes.
 
     uInt i,j;
     IPosition ioMap = prepare (latticeIn.shape(), latticeOut.shape(),
@@ -401,203 +402,198 @@ void LatticeApply<T,U>::tiledApply (MaskedLattice<U>& latticeOut,
     const uInt outDim = outShape.nelements();
     j = 0;
     for (i=0; i<outDim; i++) {
-	if (ioMap(i) >= 0) {
-	    outShape(i) = 1;
-	    iterAxes(j++) = i;
-	}
+    	if (ioMap(i) >= 0) {
+    		outShape(i) = 1;
+    		iterAxes(j++) = i;
+    	}
     }
 
-// Find the first collapse axis which is not immediately after
-// the previous collapse axis.
+    // Find the first collapse axis which is not immediately after
+    // the previous collapse axis.
     uInt collStart;
     for (collStart=1; collStart<collDim; collStart++) {
-	if (collapseAxes(collStart) != 1+collapseAxes(collStart-1)) {
-	    break;
-	}
+    	if (collapseAxes(collStart) != 1+collapseAxes(collStart-1)) {
+    		break;
+    	}
     }
-	
-//    cout << "ioMap      " << ioMap << endl;
-//    cout << "iterAxes   " << iterAxes << endl;
-//    cout << "outShape   " << outShape << endl;
-//    cout << "collStart  " << collStart << endl;
 
-// See if the output lattice has a writable pixelmask.
-// If so, it will later be used to write the resulting mask to.
+    // See if the output lattice has a writable pixelmask.
+    // If so, it will later be used to write the resulting mask to.
 
     Lattice<Bool>* maskOut = 0;
     if (latticeOut.hasPixelMask()) {
         maskOut = &(latticeOut.pixelMask());
-	if (! maskOut->isWritable()) {
-	    maskOut = 0;
-	}
+        if (! maskOut->isWritable()) {
+        	maskOut = 0;
+        }
     }
 
-// Set the number of expected steps.
-// This is the number of tiles to process.
-// Also give the number of resulting output pixels per line, so the
-// collapser can check it.
+    // Set the number of expected steps.
+    // This is the number of tiles to process.
+    // Also give the number of resulting output pixels per line, so the
+    // collapser can check it.
 
     uInt nsteps = 1;
     for (j=0; j<inDim; j++) {
-	nsteps *= 1 + trc(j)/inTileShape(j) - blc(j)/inTileShape(j);
+    	nsteps *= 1 + trc(j)/inTileShape(j) - blc(j)/inTileShape(j);
     }
     collapser.init (outShape.product());
     if (tellProgress != 0) tellProgress->init (nsteps);
-//    cout << "nsteps     " << nsteps << endl;
 
-// Determine the axis where the collapsed values are stored in the output.
-// This is the first unmapped axis (the first axis when all axes are mapped).
+    // Determine the axis where the collapsed values are stored in the output.
+    // This is the first unmapped axis (the first axis when all axes are mapped).
     uInt resultAxis = 0;
     for (j=0; j<outDim; j++) {
-	if (ioMap(j) < 0) {
-	    resultAxis = j;
-	    break;
-	}
+    	if (ioMap(j) < 0) {
+    		resultAxis = j;
+    		break;
+    	}
     }
 
-// Iterate through all the tiles.
-// TileStepper is set up in such a way that the collapse axes are iterated
-// fastest. When all collapse axes are handled, thus when the iter axes
-// position changes, we have to write that part.
+    // Iterate through all the tiles.
+    // TileStepper is set up in such a way that the collapse axes are iterated
+    // fastest. When all collapse axes are handled, thus when the iter axes
+    // position changes, we have to write that part.
 
     Bool firstTime = True;
     IPosition outPos(outDim, 0);
     IPosition iterPos(outDim, 0);
     while (! inIter.atEnd()) {
 
-// Calculate the size of each chunk of output data.
-// Each chunk contains the data of a tile in each IterAxis.
-// Determine the index of the first element to take from the cursor.
+    	// Calculate the size of each chunk of output data.
+    	// Each chunk contains the data of a tile in each IterAxis.
+    	// Determine the index of the first element to take from the cursor.
 
-	const Array<T>& cursor = inIter.cursor();
-	const IPosition& cursorShape = cursor.shape();
-	IPosition pos = inIter.position();
-	IPosition latPos = pos;
-	Array<Bool> mask;
-	if (useMask) {
-	    // Casting const away is innocent.
-	    ((MaskedLattice<T>&)latticeIn).getMaskSlice
-                                          (mask, Slicer(pos, cursorShape));
-	}
-	for (j=0; j<outDim; j++) {
-	    if (ioMap(j) >= 0) {
-		uInt axis = ioMap(j);
-		iterPos(j) = pos(axis);
-	    }
-	}
-	if (firstTime  ||  outPos != iterPos) {
-	    if (!firstTime) {
-		Array<U> result;
-		Array<Bool> resultMask;
-		collapser.endAccumulator (result, resultMask, outShape);
-		latticeOut.putSlice (result, outPos);
-		if (maskOut != 0) {
-		    maskOut->putSlice (resultMask, outPos);
-		}
-	    }
-	    firstTime = False;
-	    outPos = iterPos;
-	    uInt n1 = 1;
-	    uInt n3 = 1;
-	    for (j=0; j<outDim; j++) {
-		if (ioMap(j) >= 0) {
-		    outShape(j) = cursorShape(ioMap(j));
-		    if (j < resultAxis) {
-		        n1 *= outShape(j);
-		    } else {
-		        n3 *= outShape(j);
-		    }
-		}
-	    }
-	    collapser.initAccumulator (n1, n3);
-	}
+    	const Array<T>& cursor = inIter.cursor();
+    	const IPosition& cursorShape = cursor.shape();
+    	IPosition pos = inIter.position();
+    	IPosition latPos = pos;
+    	Array<Bool> mask;
+    	if (useMask) {
+    		// Casting const away is innocent.
+    		((MaskedLattice<T>&)latticeIn).getMaskSlice
+    				(mask, Slicer(pos, cursorShape));
+    	}
+    	for (j=0; j<outDim; j++) {
+    		if (ioMap(j) >= 0) {
+    			uInt axis = ioMap(j);
+    			iterPos(j) = pos(axis);
+    		}
+    	}
+    	if (firstTime  ||  outPos != iterPos) {
+    		if (!firstTime) {
+    			Array<U> result;
+    			Array<Bool> resultMask;
+    			collapser.endAccumulator (result, resultMask, outShape);
+    			latticeOut.putSlice (result, outPos);
+    			if (maskOut != 0) {
+    				maskOut->putSlice (resultMask, outPos);
+    			}
+    		}
+    		firstTime = False;
+    		outPos = iterPos;
+    		uInt n1 = 1;
+    		uInt n3 = 1;
+    		for (j=0; j<outDim; j++) {
+    			if (ioMap(j) >= 0) {
+    				outShape(j) = cursorShape(ioMap(j));
+    				if (j < resultAxis) {
+    					n1 *= outShape(j);
+    				}
+    				else {
+    					n3 *= outShape(j);
+    				}
+    			}
+    		}
+    		collapser.initAccumulator (n1, n3);
+    	}
 
-// Put the collapsed lines into an output buffer
-// Initialize the cursor position needed in the loop.
+    	// Put the collapsed lines into an output buffer
+    	// Initialize the cursor position needed in the loop.
 
-	IPosition curPos (inDim, 0);
+    	IPosition curPos (inDim, 0);
 
-// Determine the increment for the first collapse axes.
-// This is done by taking the difference between the adresses of two pixels
-// in the cursor (if there are 2 pixels).
+    	// Determine the increment for the first collapse axes.
+    	// This is done by taking the difference between the adresses of two pixels
+    	// in the cursor (if there are 2 pixels).
 
-	IPosition chunkShape (inDim, 1);
-	for (j=0; j<collStart; j++) {
-	    const uInt axis = collapseAxes(j);
-	    chunkShape(axis) = cursorShape(axis);
-	}
-	uInt nval = chunkShape.product();
-	const uInt axis = collapseAxes(0);
+    	IPosition chunkShape (inDim, 1);
+    	for (j=0; j<collStart; j++) {
+    		const uInt axis = collapseAxes(j);
+    		chunkShape(axis) = cursorShape(axis);
+    	}
+    	uInt nval = chunkShape.product();
+    	const uInt axis = collapseAxes(0);
 
-	IPosition p0(inDim, 0);
-	IPosition p1(inDim, 0);
-	p1[axis] = 1;
-	// general for Arrays with contiguous or non-contiguous storage.
-	uInt dataIncr = &(cursor(p1)) - &(cursor(p0));
-	uInt maskIncr = useMask ? &(mask(p1)) - &(mask(p0)) : 0;
+    	IPosition p0(inDim, 0);
+    	IPosition p1(inDim, 0);
+    	p1[axis] = 1;
+    	// general for Arrays with contiguous or non-contiguous storage.
+    	uInt dataIncr = &(cursor(p1)) - &(cursor(p0));
+    	uInt maskIncr = useMask ? &(mask(p1)) - &(mask(p0)) : 0;
 
-//	cout << " cursorShape " << cursorShape << endl;
-//	cout << " chunkShape  " << chunkShape << endl;
-//	cout << " incr        " << incr << endl;
-//	cout << " nval        " << nval << endl;
+    	// Iterate in the outer loop through the iterator axes.
+    	// Iterate in the inner loop through the collapse axes.
 
-// Iterate in the outer loop through the iterator axes.
-// Iterate in the inner loop through the collapse axes.
-
-	uInt index1 = 0;
-	uInt index3 = 0;
-	for (;;) {
-	    for (;;) {
-//	        cout << curPos << ' ' << collPos << endl;
-		if (useMask) {
-		    collapser.process (index1, index3,
-				       &(cursor(curPos)), &(mask(curPos)),
-				       dataIncr, maskIncr, nval, latPos, chunkShape);
-		} else {
-		    collapser.process (index1, index3,
-				       &(cursor(curPos)), 0,
-				       dataIncr, maskIncr, nval, latPos, chunkShape);
-		}
-		// Increment a collapse axis until all axes are handled.
-		for (j=collStart; j<collDim; j++) {
-		    uInt axis = collapseAxes(j);
-		    if (++curPos(axis) < cursorShape(axis)) {
-			break;
-		    }
-		    curPos(axis) = 0;               // restart this axis
-		}
-		if (j == collDim) {
-		    break;                          // all axes are handled
-		}
-	    }
+    	uInt index1 = 0;
+    	uInt index3 = 0;
+    	for (;;) {
+    		for (;;) {
+    			if (useMask) {
+    				collapser.process (
+    					index1, index3,
+    					&(cursor(curPos)), &(mask(curPos)),
+    					dataIncr, maskIncr, nval, latPos, chunkShape
+    				);
+    			}
+    			else {
+    				collapser.process (
+    					index1, index3,
+    					&(cursor(curPos)), 0,
+    					dataIncr, maskIncr, nval, latPos, chunkShape
+    				);
+    			}
+    			// Increment a collapse axis until all axes are handled.
+    			for (j=collStart; j<collDim; j++) {
+    				uInt axis = collapseAxes(j);
+    				if (++curPos(axis) < cursorShape(axis)) {
+    					break;
+    				}
+    				curPos(axis) = 0;               // restart this axis
+    			}
+    			if (j == collDim) {
+    				break;                          // all axes are handled
+    			}
+    		}
 	
-// Increment an iteration axis until all iteration axes are handled.
+    		// Increment an iteration axis until all iteration axes are handled.
 	
-	    for (j=0; j<iterDim; j++) {
-		uInt arraxis = iterAxes(j);
-		uInt axis = ioMap(arraxis);
-		++latPos(axis);
-		if (++curPos(axis) < cursorShape(axis)) {
-		    if (arraxis < resultAxis) {
-		        index1++;
-		    } else {
-		        index3++;
-			index1 = 0;
-		    }
-		    break;
-		}
-		curPos(axis) = 0;
-		latPos(axis) = pos(axis);
-	    }
-	    if (j == iterDim) {
-		break;
-	    }
-	}
-	inIter++;
-	if (tellProgress != 0) tellProgress->nstepsDone (inIter.nsteps());
+    		for (j=0; j<iterDim; j++) {
+    			uInt arraxis = iterAxes(j);
+    			uInt axis = ioMap(arraxis);
+    			++latPos(axis);
+    			if (++curPos(axis) < cursorShape(axis)) {
+    				if (arraxis < resultAxis) {
+    					index1++;
+    				}
+    				else {
+    					index3++;
+    					index1 = 0;
+    				}
+    				break;
+    			}
+    			curPos(axis) = 0;
+    			latPos(axis) = pos(axis);
+    		}
+    		if (j == iterDim) {
+    			break;
+    		}
+    	}
+    	inIter++;
+    	if (tellProgress != 0) tellProgress->nstepsDone (inIter.nsteps());
     }
 
-// Write out the last output array.
+    // Write out the last output array.
     Array<U> result;
     Array<Bool> resultMask;
     collapser.endAccumulator (result, resultMask, outShape);
