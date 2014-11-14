@@ -1,7 +1,13 @@
 <ProcessingProcedure>
 
     <ProcessingCommand>
-        <Command xmlns="">hsd_importdata2</Command>
+        <Command xmlns="">hsd_importdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_flagdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>

@@ -9,49 +9,75 @@
 <description>
 </description>
 <input>
-    <param type="stringArray" name="infiles">
-	<description>List of input data</description>
-	<value></value>
+    <param type="stringArray" name="vis">
+    <description>List of input visibility data</description>
+    <value></value>
+    </param>
+
+    <param type="stringArray" name="session">
+    <description>List of visibility data sessions</description>
+    <value></value>
     </param>
 
     <param type="string" name="pipelinemode">
-	<description>The pipeline operating mode</description>
-	<value>automatic</value>
-	<allowed kind="enum">
-	    <value>automatic</value>
-	    <value>interactive</value>
-	    <value>getinputs</value>
-	</allowed>
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+        <value>automatic</value>
+        <value>interactive</value>
+        <value>getinputs</value>
+    </allowed>
+    </param>
+
+    <param type="string" name="asis" subparam="true">
+    <description>ASDM to convert as is</description>
+    <value>CalAtmosphere</value>
+    </param>
+
+    <param type="bool" name="process_caldevice" subparam="true">
+    <description>Import the caldevice table from the ASDM</description>
+    <value>False</value>
     </param>
 
     <param type="bool" name="overwrite" subparam="true">
-	<description>Overwrite existing files on import</description>
-	<value>True</value>
+    <description>Overwrite existing files on import</description>
+    <value>False</value>
+    </param>
+
+    <param type="bool" name="bdfflags" subparam="true">
+    <description>Apply BDF flags on import</description>
+    <value>False</value>
     </param>
 
     <param type="bool" name="dryrun" subparam="true">
-	<description>Run the task (False) or display task command (True)</description>
-	<value>False</value>
+    <description>Run the task (False) or display task command (True)</description>
+    <value>False</value>
     </param>
 
     <param type="bool" name="acceptresults" subparam="true">
-	<description>Add the results into the pipeline context</description>
-	<value>True</value>
+    <description>Add the results into the pipeline context</description>
+    <value>True</value>
     </param>
 
     <constraints>
-	<when param="pipelinemode">
-	    <equals type="string" value="automatic">
-	    </equals>
-	    <equals type="string" value="interactive">
-		<default param="overwrite"><value type="bool">True</value></default>
-		<default param="dryrun"><value type="bool">False</value></default>
-		<default param="acceptresults"><value type="bool">True</value></default>
-	    </equals>
-	    <equals type="string" value="getinputs">
-		<default param="overwrite"><value type="bool">True</value></default>
-	    </equals>
-	</when>
+    <when param="pipelinemode">
+        <equals type="string" value="automatic">
+        </equals>
+        <equals type="string" value="interactive">
+        <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+        <default param="process_caldevice"><value type="bool">False</value></default>
+        <default param="overwrite"><value type="bool">False</value></default>
+        <default param="bdfflags"><value type="bool">False</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+        </equals>
+        <equals type="string" value="getinputs">
+        <default param="asis"><value type="string">Antenna Station Receiver CalAtmosphere</value></default>
+        <default param="process_caldevice"><value type="bool">False</value></default>
+        <default param="overwrite"><value type="bool">False</value></default>
+        <default param="bdfflags"><value type="bool">False</value></default>
+        </equals>
+    </when>
     </constraints>
 
 </input>
@@ -67,21 +93,24 @@
 
 
 <example>
-The hsd_importdata task loads the specified data into the pipeline
+The hsd_importdata task loads the specified visibility data into the pipeline
 context unpacking and / or converting it as necessary.
 
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
-infiles -- List of data files. These may be ASDMs, tar files of ASDMs,
-   MSs, tar files of MSs, Scantables, or other types of single dish 
-   data that can be imported by CASA (ATNF SDFITS, RPFITS, NRO raw data). 
-   Whole data will be converted to Scantable format. If ASDM files are 
-   specified, they will be converted to MS format first, then converted 
-   to Scantable format. 
+vis -- List of visisbility  data files. These may be ASDMs, tar files of ASDMs,
+   MSs, or tar files of MSs, If ASDM files are specified, they will be
+   converted  to MS format.
    default: []
    example: vis=['X227.ms', 'asdms.tar.gz']
+
+session -- List of sessions to which the visibility files belong. Defaults
+   to a single session containing all the visibility files, otherwise
+   a session must be assigned to each vis file.
+   default: []
+   example: session=['Session_1', 'Sessions_2']
 
 pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
    determines the values of all context defined pipeline inputs
@@ -94,8 +123,19 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
 
+asis -- ASDM tables to convert as is
+   default: 'Antenna Station Receiver CalAtmosphere'
+   example: 'Receiver', ''
+
+process_caldevice -- Ingest the ASDM caldevice table
+   default: False
+   example: True
+
 overwrite -- Overwrite existing MSs on output.
-   default: True
+   default: False
+
+bdfflags -- Apply BDF flags on line
+   default: False
 
 --- pipeline task execution modes
 
@@ -117,35 +157,32 @@ Examples
 
 1. Load an ASDM list in the ../rawdata subdirectory into the context.
 
-   hsd_importdata (infiles=['../rawdata/uid___A002_X30a93d_X43e',
+   hsd_importdata (vis=['../rawdata/uid___A002_X30a93d_X43e',
                 '../rawdata/uid_A002_x30a93d_X44e'])
 
 2. Load an MS in the current directory into the context.
 
-   hsd_importdata (infiles=[uid___A002_X30a93d_X43e.ms])
+   hsd_importdata (vis=[uid___A002_X30a93d_X43e.ms])
 
 3. Load a tarred ASDM in ../rawdata into the context.
 
-   hsd_importdata (infiles=['../rawdata/uid___A002_X30a93d_X43e.tar.gz'])
+   hsd_importdata (vis=['../rawdata/uid___A002_X30a93d_X43e.tar.gz'])
 
 4. Check the hsd_importdata inputs, then import the data
 
-   mylist = ['uid___A002_X30a93d_X43e.ms', 'uid_A002_x30a93d_X44e.ms']
-   hsd_importdata(infiles=mylist, pipelinemode='getinputs')
-   hsd_importdata(infiles=mylist)
+   myvislist = ['uid___A002_X30a93d_X43e.ms', 'uid_A002_x30a93d_X44e.ms']
+   hsd_importdata(vis=myvislist, pipelinemode='getinputs')
+   hsd_importdata(vis=myvislist)
 
 5. Load an ASDM but check the results before accepting them into the context.
 
-   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'],
+   results = hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'],
        acceptresults=False)
    results.accept()
 
-6. Run in dryrun mode before running for real
-   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
-   results = hsd_importdata (infiles=['uid___A002_X30a93d_X43e.ms'])
-
-7. Load Scantables
-   results = hsd_importdata (infiles=['X43e.PM01.asap', 'X43e.PM02.asap'])
+6. Run in  dryrun mode before running for real
+   results = hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'], dryrun=True)
+   results = hsd_importdata (vis=['uid___A002_X30a93d_X43e.ms'])
 
 </example>
 </task>

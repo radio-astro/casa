@@ -12,11 +12,16 @@ import pipeline.qa.scorecalculator as qacalc
 import pipeline.hif.tasks.importdata.qa as importdataqa
 
 LOG = logging.get_logger(__name__)
+from . import importdataold
+
 from . import importdata
 
 
 class SDImportDataQAHandler(importdataqa.ImportDataQAHandler):
     result_cls = importdata.SDImportDataResults
+    child_cls = None
+    generating_task = importdata.SDImportData
+    
     def _check_intents(self, mses):
         '''
         Check each measurement set in the list for a set of required intents.
@@ -28,3 +33,19 @@ class SDImportDataQAHandler(importdataqa.ImportDataQAHandler):
 
 class SDImportDataListQAHandler(importdataqa.ImportDataListQAHandler):
     child_cls = importdata.SDImportDataResults
+
+
+
+class SDImportDataOldQAHandler(importdataqa.ImportDataQAHandler):
+    result_cls = importdataold.SDImportDataOldResults
+    def _check_intents(self, mses):
+        '''
+        Check each measurement set in the list for a set of required intents.
+        
+        TODO Should we terminate execution on missing intents?        
+        '''
+        return qacalc.score_missing_intents(mses, array_type='ALMA_TP')
+
+
+class SDImportDataOldListQAHandler(importdataqa.ImportDataListQAHandler):
+    child_cls = importdataold.SDImportDataOldResults

@@ -2,15 +2,14 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_importdata2(vis=None, session=None, pipelinemode=None, asis=None,
-    process_caldevice=None, overwrite=None, bdfflags=None, dryrun=None, 
-    acceptresults=None):
+def hsd_importdataold(infiles=None, pipelinemode=None, overwrite=None, dryrun=None,
+                   acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDImportData2'
+    task_name = 'SDImportDataOld'
     
     ##########################################################################
     #                                                                        #

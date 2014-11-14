@@ -26,8 +26,8 @@ CasaTaskDict = {
                    'hsd_caltsys'      : 'SDCalTsys',
                    'hsd_applycal'     : 'SDApplyCal',
                    'hsd_exportdata'   : 'SDExportData',
-                   'hsd_importdata'   : 'SDImportData',
-                   'hsd_importdata2'  : 'SDImportData2',
+                   'hsd_importdataold'   : 'SDImportDataOld',
+                   'hsd_importdata'  : 'SDImportData',
                    'hsd_mstoscantable'  : 'SDMsToScantable',
                    'hsd_inspectdata'  : 'SDInspectData',
                    'hsd_imaging'      : 'SDImaging',
@@ -115,8 +115,8 @@ classToCASATask = {
     hsd_tasks.SDCalTsys : 'hsd_caltsys',
     hsd_tasks.SDApplyCal : 'hsd_applycal',
     hsd_tasks.SDExportData : 'hsd_exportdata',
+    hsd_tasks.SDImportDataOld : 'hsd_importdataold',
     hsd_tasks.SDImportData : 'hsd_importdata',
-    hsd_tasks.SDImportData2 : 'hsd_importdata2',
     hsd_tasks.SDMsToScantable : 'hsd_mstoscantable',
     hsd_tasks.SDInspectData : 'hsd_inspectdata',
     hsd_tasks.SDImaging : 'hsd_imaging',
@@ -169,7 +169,7 @@ TASK_COMMENTS = {
     (hif_tasks.ImportData,
      hifa_tasks.ALMAImportData, 
      hifv_tasks.VLAImportData,
-     hsd_tasks.SDImportData2,): (
+     hsd_tasks.SDImportData,): (
         'If required, ASDMs are converted to measurement sets.'
     ),
     (hifa_tasks.ALMAAgentFlagger,
@@ -253,7 +253,7 @@ TASK_COMMENTS = {
         'The output data products are computed. '
     ),
     # Single Dish Tasks
-    (hsd_tasks.SDImportData,) : (
+    (hsd_tasks.SDImportDataOld,) : (
         'If required, ASDMs are converted to measurement sets. '
         'Furthermore, measurement sets are converted to scantable '
         'and split by antenna for single dish data reduction. '

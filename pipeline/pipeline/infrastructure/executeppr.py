@@ -187,10 +187,10 @@ def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
 	    cInputs = pipeline.tasks.__dict__[taskname].Inputs
             if taskname == 'ImportData' or taskname == 'RestoreData' or \
 	        taskname == 'ALMAImportData' or taskname == 'VLAImportData' \
-            or taskname == 'SDImportData2':
+            or taskname == 'SDImportData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
-            elif taskname == 'SDImportData':
+            elif taskname == 'SDImportDataOld':
                 task_args['infiles'] = files
 	    
 	    remapped_args = argmapper.convert_args(taskname, task_args,
