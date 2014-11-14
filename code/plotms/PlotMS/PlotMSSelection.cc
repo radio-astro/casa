@@ -118,26 +118,27 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     // Set the selected MeasurementSet to be the same initially as the input
     // MeasurementSet
     selMS = ms;
+    MSSelection mss;
     mssSetData(ms, selMS, chansel,corrsel, "", 
 	       timerange(), antenna(), field(), spw(),
 	       uvrange(), msselect(), corr(), scan(), array(),
 	       "", observation(), 1, &mss );
+    selAnts.resize(0);
+    selAnts2.resize(0);
+    String antennaSel = antenna();
+    if ( antennaSel.length() > 0 ){
+    	selAnts = mss.getAntenna1List();
+    	selAnts2 = mss.getAntenna2List();
+    }
 }
 
 Vector<int> PlotMSSelection::getSelectedAntennas1(){
-	Vector<int> selAnts;
-	if ( ! isEmpty() ){
-		selAnts = mss.getAntenna1List();
-	}
 	return selAnts;
 }
 
 Vector<int> PlotMSSelection::getSelectedAntennas2(){
-	Vector<int> selAnts;
-	if ( ! isEmpty() ){
-		selAnts = mss.getAntenna2List();
-	}
-	return selAnts;
+
+	return selAnts2;
 }
 
 void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
@@ -159,6 +160,7 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
   //cout << "Whole NCT nrows    = " << ct.nrow() << endl;
 
   CTInterface cti(ct);
+  MSSelection mss;
   mss.setTimeExpr(timerange());
   mss.setObservationExpr(observation());
   mss.setScanExpr(scan());
