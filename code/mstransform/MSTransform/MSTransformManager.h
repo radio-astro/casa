@@ -61,6 +61,9 @@
 // To apply 1D interpolations
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
+// to compute partial medians
+#include <casa/Arrays/ArrayPartMath.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
@@ -90,7 +93,9 @@ namespace MSTransformations
 		spectrum,
 		flags,
 		cumSum,
-		flat
+		flat,
+		flagSpectrum,
+		flagCumSum
 	};
 
 	enum dataCol {
@@ -100,6 +105,13 @@ namespace MSTransformations
 		visCubeFloat,
 		weightSpectrum
 	  };
+
+	enum weightTransformation {
+
+		transformWeight,
+		transformWeightIntoSigma,
+		weightIntoSigma
+	};
 }
 
 // Forward declarations
@@ -373,8 +385,10 @@ protected:
 	void separateSysPowerSubtable();
 
 
-	// Setter for the weight-based average
-	void setWeightBasedTransformations(Bool propagateWeights, uInt mode);
+	// Setters for Weight-based transformation
+	void propagateWeights(Bool on);
+	void setBufferMode(Bool on);
+	void setChannelAverageKernel(uInt mode);
 
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
@@ -405,8 +419,17 @@ protected:
 	void fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 	void fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef);
 
+	void fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef);
+	void transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
+									RefRows &rowRef,
+									const Cube<Float> &inputSpectrum,
+									ArrayColumn<Float> &outputCubeCol,
+									ArrayColumn<Float> &outputMatrixCol,
+									MSTransformations::weightTransformation weightTransformation);
+
 	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
 	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
+	const Cube<Float>& getWeightSpectrumFlat(vi::VisBuffer2 *vb);
 
 	// Methods to transform and write vectors
 
@@ -963,6 +986,22 @@ protected:
 											uInt startInputPos,
 											uInt outputPos,
 											uInt width);
+	template <class T> void flagWeightAverageKernel(	Vector<T> &inputData,
+														Vector<Bool> &inputFlags,
+														Vector<Float> &inputWeights,
+														Vector<T> &outputData,
+														Vector<Bool> &outputFlags,
+														uInt startInputPos,
+														uInt outputPos,
+														uInt width);
+	template <class T> void flagCumSumKernel(	Vector<T> &inputData,
+												Vector<Bool> &inputFlags,
+												Vector<Float> &,
+												Vector<T> &outputData,
+												Vector<Bool> &,
+												uInt startInputPos,
+												uInt outputPos,
+												uInt width);
 
 	template <class T> void smooth(	Int ,
 									Vector<T> &inputDataStripe,
@@ -1121,7 +1160,6 @@ protected:
 
 	// Weight Spectrum parameters
 	Bool usewtspectrum_p;
-	Bool spectrumTransformation_p;
 
 	// Buffer handling parameters
 	Bool bufferMode_p;
@@ -1143,6 +1181,9 @@ protected:
 	// Output MS structure related members
 	Bool inputFlagCategoryAvailable_p;
 	Bool correctedToData_p;
+	Bool doingData_p;
+	Bool doingCorrected_p;
+	Bool doingModel_p;
 	dataColMap dataColMap_p;
 	MSMainEnums::PredefinedColumns mainColumn_p;
 
@@ -1181,10 +1222,15 @@ protected:
 	ROScalarMeasColumn<MEpoch> timeMeas_p;
 
 	// Weight Spectrum members
+	Bool spectrumTransformation_p;
+	Bool propagateWeights_p;
 	Bool inputWeightSpectrumAvailable_p;
+	Bool weightSpectrumFlatFilled_p;
+	Bool weightSpectrumFromSigmaFilled_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;
 	Cube<Float> weightSpectrumCube_p;
-	Bool weightSpectrumFromSigmaFilled_p;
+	Cube<Float> weightSpectrumCubeFlat_p;
+	Cube<Float> weightSpectrumCubeDummy_p;
 
 	// Buffer handling members
 	uInt nRowsToAdd_p;

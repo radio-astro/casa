@@ -809,7 +809,8 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 				ArrayColumn<Float> dummyDataCol;
 
 				// Don't propagate auxiliary weight spectrum and use cumSum for average
-		    	manager_p->setWeightBasedTransformations(False,MSTransformations::cumSum);
+		    	manager_p->propagateWeights(False);
+		    	manager_p->setChannelAverageKernel(MSTransformations::cumSum);
 
 		    	// Transform weights
 				manager_p->dataBuffer_p = MSTransformations::weightSpectrum;
@@ -821,7 +822,8 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 												weightSpectrum_p);
 
 				// Go back to normal
-				manager_p->setWeightBasedTransformations(manager_p->channelAverage_p,MSTransformations::spectrum);
+		    	manager_p->propagateWeights(manager_p->propagateWeights_p);
+		    	manager_p->setChannelAverageKernel(manager_p->weightmode_p);
 			}
 		}
 		// Fill WEIGHT_SPECTRUM with transformed WEIGHTS

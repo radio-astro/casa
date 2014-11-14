@@ -157,6 +157,7 @@ void MSTransformManager::initialize()
 	// Weight Spectrum parameters
 	usewtspectrum_p = False;
 	spectrumTransformation_p = False;
+	propagateWeights_p = False;
 
 	// MS-related members
 	dataHandler_p = NULL;
@@ -183,6 +184,9 @@ void MSTransformManager::initialize()
 	inputWeightSpectrumAvailable_p = False;
 	weightSpectrumFromSigmaFilled_p = False;
 	correctedToData_p = False;
+	doingData_p = False;
+	doingCorrected_p = False;
+	doingModel_p = False;
 	dataColMap_p.clear();
 	mainColumn_p = MS::CORRECTED_DATA;
 
@@ -1092,18 +1096,24 @@ void MSTransformManager::setup()
 		transformCubeOfDataComplex_p = &MSTransformManager::combineCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::combineCubeOfData;
 		spectrumTransformation_p = True;
+		propagateWeights_p = True;
+		spectrumReshape_p = True;
 	}
 	else if (refFrameTransformation_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::regridCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::regridCubeOfData;
 		spectrumTransformation_p = True;
+		propagateWeights_p = True;
+		spectrumReshape_p = True;
 	}
 	else if (channelAverage_p)
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::averageCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::averageCubeOfData;
 		spectrumTransformation_p = True;
+		propagateWeights_p = True;
+		spectrumReshape_p = True;
 	}
 	else if (hanningSmooth_p)
 	{
@@ -1115,12 +1125,12 @@ void MSTransformManager::setup()
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::separateCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::separateCubeOfData;
+		spectrumReshape_p = True;
 	}
 	else
 	{
 		transformCubeOfDataComplex_p = &MSTransformManager::copyCubeOfData;
 		transformCubeOfDataFloat_p = &MSTransformManager::copyCubeOfData;
-		spectrumReshape_p = True;
 	}
 
 	Bool spectralRegridding = combinespws_p or refFrameTransformation_p;
@@ -1163,8 +1173,24 @@ void MSTransformManager::setup()
 	}
 
 
-	// If we have a channel average operation then WeightSpectrum has to be propagated to the plane/vector level
-	setWeightBasedTransformations(channelAverage_p,weightmode_p);
+	// Switch weight propagation and set averaging kernel
+	if (inputWeightSpectrumAvailable_p or usewtspectrum_p)
+	{
+		weightmode_p = MSTransformations::flagSpectrum;
+
+	}
+	else
+	{
+		// Weight should not be propagated unless we are combining SPWs
+		// (which may need weights when combining SPWS with different exposure)
+		if (not combinespws_p) propagateWeights_p = False;
+		weightmode_p = MSTransformations::flags;
+		// WEIGHT/SIGMA are not produced by the spectrum transformation using median
+		spectrumTransformation_p = False;
+	}
+
+	propagateWeights(propagateWeights_p);
+	setChannelAverageKernel(weightmode_p);
 
 
 	// Set Regridding kernel
@@ -1346,10 +1372,10 @@ IPosition MSTransformManager::getShape()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void MSTransformManager::setWeightBasedTransformations(Bool propagateWeights, uInt mode)
+void MSTransformManager::propagateWeights(Bool on)
 {
 
-	if (propagateWeights)
+	if (on)
 	{
 		// Used by SPW combination
 		fillWeightsPlane_p = &MSTransformManager::fillWeightsPlane;
@@ -1370,6 +1396,51 @@ void MSTransformManager::setWeightBasedTransformations(Bool propagateWeights, uI
 		setWeightStripeByReference_p = &MSTransformManager::dontSetWeightStripeByReference;
 	}
 
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::setBufferMode(Bool on)
+{
+	bufferMode_p = on;
+
+	if (nspws_p > 1)
+	{
+		if (bufferMode_p)
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::bufferOutputPlanesInSlices;
+			writeOutputPlanesFloat_p = &MSTransformManager::bufferOutputPlanesInSlices;
+		}
+		else
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInSlices;
+			writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInSlices;
+		}
+	}
+	else
+	{
+		if (bufferMode_p)
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::bufferOutputPlanes;
+			writeOutputPlanesFloat_p = &MSTransformManager::bufferOutputPlanes;
+		}
+		else
+		{
+			writeOutputPlanesComplex_p = &MSTransformManager::writeOutputPlanesInBlock;
+			writeOutputPlanesFloat_p = &MSTransformManager::writeOutputPlanesInBlock;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformManager::setChannelAverageKernel(uInt mode)
+{
 	switch (mode)
 	{
 		case MSTransformations::spectrum:
@@ -1388,6 +1459,18 @@ void MSTransformManager::setWeightBasedTransformations(Bool propagateWeights, uI
 		{
 			averageKernelComplex_p = &MSTransformManager::cumSumKernel;
 			averageKernelFloat_p = &MSTransformManager::cumSumKernel;
+			break;
+		}
+		case MSTransformations::flagSpectrum:
+		{
+			averageKernelComplex_p = &MSTransformManager::flagWeightAverageKernel;
+			averageKernelFloat_p = &MSTransformManager::flagWeightAverageKernel;
+			break;
+		}
+		case MSTransformations::flagCumSum:
+		{
+			averageKernelComplex_p = &MSTransformManager::flagCumSumKernel;
+			averageKernelFloat_p = &MSTransformManager::flagCumSumKernel;
 			break;
 		}
 		default:
@@ -4324,6 +4407,21 @@ void MSTransformManager::checkDataColumnsToFill()
 		datacolumn_p += String(",MODEL");
 	}
 
+	// Add shortcuts to be used in the context of WeightSpectrum related transformations
+	dataColMap::iterator iter;
+
+	// Check if we are doing CORRECTED_DATA
+	iter = dataColMap_p.find(MS::CORRECTED_DATA);
+	if (iter != dataColMap_p.end()) doingCorrected_p = True;
+
+	// Check if we are doing DATA
+	iter = dataColMap_p.find(MS::DATA);
+	if (iter != dataColMap_p.end()) doingData_p = True;
+
+	// Check if we are doing DATA
+	iter = dataColMap_p.find(MS::MODEL_DATA);
+	if (iter != dataColMap_p.end()) doingData_p = True;
+
 	return;
 }
 
@@ -4483,6 +4581,7 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 
 		// Fill new rows
 	    fillDataCols(vb,rowRef);
+	    fillWeightCols(vb,rowRef);
 		fillIdCols(vb,rowRef);
 	}
 
@@ -4671,37 +4770,13 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		mapMatrix(vb->uvw(),tmpUvw);
 		writeMatrix(tmpUvw,outputMsCols_p->uvw(),rowRef,nspws_p);
 
-		if (newWeightFactorMap_p.size() > 0)
+		// WEIGHT/SIGMA are defined as the median of WEIGHT_SPECTRUM / SIGMA_SPECTRUM in the case of SPECTRUM transformation
+		if (not spectrumTransformation_p)
 		{
-			mapAndScaleMatrix(vb->weight(),tmpMatrixFloat,newWeightFactorMap_p,vb->spectralWindows());
-			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
-		}
-		else
-		{
-			// jagonzal: According to dpetry we have to copy weights from the first SPW
-			// This is justified since the rows to be combined _must_ be from the
-			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
-			// They could therefore be regarded to also have the same WEIGHT, at least to
-			// a good approximation.
-			mapMatrix(vb->weight(),tmpMatrixFloat);
-			writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
-		}
-
-
-		// Sigma must be redefined to 1/weight when corrected data becomes data
-		if (correctedToData_p)
-		{
-			arrayTransformInPlace(tmpMatrixFloat, MSTransformations::wtToSigma);
-			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
-			writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
-		}
-		else
-		{
-			if (newSigmaFactorMap_p.size() > 0)
+			if (newWeightFactorMap_p.size() > 0)
 			{
-				mapAndScaleMatrix(vb->sigma(),tmpMatrixFloat,newSigmaFactorMap_p,vb->spectralWindows());
-				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
-				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+				mapAndScaleMatrix(vb->weight(),tmpMatrixFloat,newWeightFactorMap_p,vb->spectralWindows());
+				writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
 			}
 			else
 			{
@@ -4710,45 +4785,79 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 				// same baseline and therefore have the same UVW coordinates in the MS (in meters).
 				// They could therefore be regarded to also have the same WEIGHT, at least to
 				// a good approximation.
-				mapMatrix(vb->sigma(),tmpMatrixFloat);
+				mapMatrix(vb->weight(),tmpMatrixFloat);
+				writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+			}
+
+
+			// Sigma must be redefined to 1/weight when corrected data becomes data
+			if (correctedToData_p)
+			{
+				arrayTransformInPlace(tmpMatrixFloat, MSTransformations::wtToSigma);
+				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
+			else
+			{
+				if (newSigmaFactorMap_p.size() > 0)
+				{
+					mapAndScaleMatrix(vb->sigma(),tmpMatrixFloat,newSigmaFactorMap_p,vb->spectralWindows());
+					outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+					writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+				}
+				else
+				{
+					// jagonzal: According to dpetry we have to copy weights from the first SPW
+					// This is justified since the rows to be combined _must_ be from the
+					// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+					// They could therefore be regarded to also have the same WEIGHT, at least to
+					// a good approximation.
+					mapMatrix(vb->sigma(),tmpMatrixFloat);
+					writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+				}
+			}
 		}
+
 	}
 	else
 	{
 		writeMatrix(vb->uvw(),outputMsCols_p->uvw(),rowRef,nspws_p);
 
-		Matrix<Float> weights = vb->weight();
-		if (newWeightFactorMap_p.size() > 0)
+		// WEIGHT/SIGMA are defined as the median of WEIGHT_SPECTRUM / SIGMA_SPECTRUM in the case of SPECTRUM transformation
+		if (not spectrumTransformation_p)
 		{
-			if ( (newWeightFactorMap_p.find(vb->spectralWindows()(0))  != newWeightFactorMap_p.end()) and
-					(newWeightFactorMap_p[vb->spectralWindows()(0)] != 1) )
+			Matrix<Float> weights = vb->weight();
+			if (newWeightFactorMap_p.size() > 0)
 			{
-				weights *= newWeightFactorMap_p[vb->spectralWindows()(0)];
-			}
-		}
-		writeMatrix(weights,outputMsCols_p->weight(),rowRef,nspws_p);
-
-		// Sigma must be redefined to 1/weight when corrected data becomes data
-		if (correctedToData_p)
-		{
-			arrayTransformInPlace(weights, MSTransformations::wtToSigma);
-			writeMatrix(weights,outputMsCols_p->sigma(),rowRef,nspws_p);
-		}
-		else
-		{
-			Matrix<Float> sigma = vb->sigma();
-			if (newSigmaFactorMap_p.size() > 0)
-			{
-				if ( (newSigmaFactorMap_p.find(vb->spectralWindows()(0)) != newSigmaFactorMap_p.end()) and
-						(newSigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+				if ( (newWeightFactorMap_p.find(vb->spectralWindows()(0))  != newWeightFactorMap_p.end()) and
+						(newWeightFactorMap_p[vb->spectralWindows()(0)] != 1) )
 				{
-					sigma *= newSigmaFactorMap_p[vb->spectralWindows()(0)];
+					weights *= newWeightFactorMap_p[vb->spectralWindows()(0)];
 				}
 			}
-			writeMatrix(sigma,outputMsCols_p->sigma(),rowRef,nspws_p);
+			writeMatrix(weights,outputMsCols_p->weight(),rowRef,nspws_p);
+
+			// Sigma must be redefined to 1/weight when corrected data becomes data
+			if (correctedToData_p)
+			{
+				arrayTransformInPlace(weights, MSTransformations::wtToSigma);
+				writeMatrix(weights,outputMsCols_p->sigma(),rowRef,nspws_p);
+			}
+			else
+			{
+				Matrix<Float> sigma = vb->sigma();
+				if (newSigmaFactorMap_p.size() > 0)
+				{
+					if ( (newSigmaFactorMap_p.find(vb->spectralWindows()(0)) != newSigmaFactorMap_p.end()) and
+							(newSigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
+					{
+						sigma *= newSigmaFactorMap_p[vb->spectralWindows()(0)];
+					}
+				}
+				writeMatrix(sigma,outputMsCols_p->sigma(),rowRef,nspws_p);
+			}
 		}
+
 	}
 
 	return;
@@ -5065,54 +5174,12 @@ template <class T> void MSTransformManager::mapAndScaleMatrix(	const Matrix<T> &
 // ----------------------------------------------------------------------------------------
 void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
-	if (inputWeightSpectrumAvailable_p or usewtspectrum_p)
-	{
-		// Don't propagate auxiliary weight spectrum and use cumSum for average
-		setWeightBasedTransformations(False,MSTransformations::cumSum);
-
-		// Write WEIGHT_SPECTRUM and SIGMA_SPECTRUM
-		transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL,vb->weightSpectrum());
-
-		// Go back to normal
-		setWeightBasedTransformations(channelAverage_p,weightmode_p);
-
-		// SIGMA_SPECTRUM is not correct in the general case of spectrum transformation
-		if (spectrumTransformation_p)
-		{
-			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
-		}
-		// Within AveragingTvi2 SIGMA is already re-defined to 1/sqrt(WEIGHT)
-		else if (timeAverage_p)
-		{
-			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
-		}
-		// When CORRECTED becomes DATA, then SIGMA has to be re-defined to 1/sqrt(WEIGHT)
-		else if (correctedToData_p)
-		{
-			// VI/VB only allocates and populates sigmaSpectrum on request
-			// But its contents are not usable for this case
-			// So we should just create a local storage
-			Cube<Float> sigmaSpectrum;
-			sigmaSpectrum = vb->weightSpectrum(); // Copy constructor does not use reference semantics, but deep copy
-			// Apply transformation
-			arrayTransformInPlace(sigmaSpectrum, MSTransformations::wtToSigma);
-			// Write resulting sigmaSpectrum
-			transformCubeOfData(vb,rowRef,sigmaSpectrum,outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
-		}
-		// Pure split operation
-		else
-		{
-			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,vb->weightSpectrum());
-		}
-	}
-
 	ArrayColumn<Bool> *outputFlagCol=NULL;
-	weightSpectrumFromSigmaFilled_p = False;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
 	{
 		// Get applicable *_SPECTRUM (copy constructor uses reference semantics)
 		// If channel average or combine, otherwise no need to copy
-		const Cube<Float> applicableSpectrum = getApplicableSpectrum(vb,iter->first);
+		const Cube<Float> &applicableSpectrum = getApplicableSpectrum(vb,iter->first);
 
 		// Apply transformations
 		switch (iter->first)
@@ -5227,69 +5294,251 @@ void MSTransformManager::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 	return;
 }
 
+// ----------------------------------------------------------------------------------------
+// Fill weight cols (WEIGHT_SPECTRUM and SIGMA_SPECTRUM) as well as WEIGHT/SIGMA which have to be derived from it using median
+// ----------------------------------------------------------------------------------------
+void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
+{
+	weightSpectrumFlatFilled_p = False;
+	weightSpectrumFromSigmaFilled_p = False;
+
+	// WEIGHT_SPECTRUM and SIGMA_SPECTRUM are only filled if requested or when WEIGHT_SPECTRUM is present in the input MS
+	if (inputWeightSpectrumAvailable_p or usewtspectrum_p)
+	{
+		// Switch aux Weight propagation off
+		propagateWeights(False);
+
+		// Switch average and smooth kernels
+		setChannelAverageKernel(MSTransformations::flagCumSum);
+
+		// Dummy auxiliary weightSpectrum
+		const Cube<Float> applicableSpectrum;
+
+		if (spectrumTransformation_p)
+		{
+			// Switch on buffer mode
+			dataBuffer_p = MSTransformations::weightSpectrum;
+			Cube<Float> transformedSpectrum(getShape(),0.0);
+			weightSpectrum_p = &transformedSpectrum;
+			setBufferMode(True);
+
+			// Multiple column operation
+			if (doingData_p and doingCorrected_p)
+			{
+				// Transform WEIGHT_SPECTRUM but don't derive SIGMA_SPECTRUM from it
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->weightSpectrum(),outputMsCols_p->weight(),
+											MSTransformations::transformWeight);
+
+				// Convert SIGMA_SPECTRUM to WEIGHT format, transform it and derive SIGMA_SPECTRUM from it
+				transformAndWriteSpectrum(	vb,rowRef,getWeightSpectrumFromSigmaSpectrum(vb),
+											outputMsCols_p->sigmaSpectrum(),outputMsCols_p->sigma(),
+											MSTransformations::transformWeightIntoSigma);
+			}
+			// In case of time average we can use directly WEIGHT_SPECTRUM because
+			// AveragingTvi2 derives it from the input SIGMA_SPECTRUM or WEIGHT_SPECTRUM
+			// depending on the selected DATA column
+			else if (timeAverage_p)
+			{
+				// Transform WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->weightSpectrum(),outputMsCols_p->weight(),
+											MSTransformations::transformWeight);
+
+				// Derive SIGMA_SPECTRUM from WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->sigmaSpectrum(),outputMsCols_p->sigma(),
+											MSTransformations::weightIntoSigma);
+			}
+			// DATA to DATA: Convert SIGMA_SPECTRUM to WEIGHT format, transform it and derive SIGMA_SPECTRUM from it
+			else if (doingData_p)
+			{
+				// Transform WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,getWeightSpectrumFromSigmaSpectrum(vb),
+											outputMsCols_p->weightSpectrum(),outputMsCols_p->weight(),
+											MSTransformations::transformWeight);
+
+				// Derive SIGMA_SPECTRUM from WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->sigmaSpectrum(),outputMsCols_p->sigma(),
+											MSTransformations::weightIntoSigma);
+			}
+			// CORRECTED to DATA: Transform WEIGHT_SPECTRUM and derive SIGMA_SPECTRUM from it
+			else if (doingCorrected_p) // CORRECTED to DATA
+			{
+				// Transform WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->weightSpectrum(),outputMsCols_p->weight(),
+											MSTransformations::transformWeight);
+
+				// Derive SIGMA_SPECTRUM from WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->sigmaSpectrum(),outputMsCols_p->sigma(),
+											MSTransformations::weightIntoSigma);
+			}
+			// MODEL to DATA: Calculate WEIGHT_SPECTRUM using FLAG and derive SIGMA_SPECTRUM from it
+			else if (doingModel_p)
+			{
+				// Transform WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,getWeightSpectrumFlat(vb),
+											outputMsCols_p->weightSpectrum(),outputMsCols_p->weight(),
+											MSTransformations::transformWeight);
+
+				// Derive SIGMA_SPECTRUM from WEIGHT_SPECTRUM
+				transformAndWriteSpectrum(	vb,rowRef,vb->weightSpectrum(),
+											outputMsCols_p->sigmaSpectrum(),outputMsCols_p->sigma(),
+											MSTransformations::weightIntoSigma);
+			}
+
+			// Switch off buffer mode
+			weightSpectrum_p = NULL;
+			setBufferMode(False);
+		}
+		// Within AveragingTvi2 SIGMA_SPECTRUM is already re-defined to 1/sqrt(WEIGHT_SPECTRUM) if CORRECTED->DATA
+		// or obtained from the input SIGMA_SPECTRUM in the case of DATA->DATA or multiple column operation
+		else if (timeAverage_p)
+		{
+			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
+			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL,applicableSpectrum);
+			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,applicableSpectrum);
+		}
+		// When CORRECTED becomes DATA, then SIGMA_SPECTRUM has to be re-defined to 1/sqrt(WEIGHT_SPECTRUM)
+		else if (correctedToData_p)
+		{
+			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
+			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL,applicableSpectrum);
+			// VI/VB only allocates and populates sigmaSpectrum on request
+			// But its contents are not usable for this case
+			// So we should just create a local storage
+			Cube<Float> sigmaSpectrum;
+			sigmaSpectrum = vb->weightSpectrum(); // Copy constructor does not use reference semantics, but deep copy
+			// Apply transformation
+			arrayTransformInPlace(sigmaSpectrum, MSTransformations::wtToSigma);
+			// Write resulting sigmaSpectrum
+			transformCubeOfData(vb,rowRef,sigmaSpectrum,outputMsCols_p->sigmaSpectrum(),NULL,applicableSpectrum);
+		}
+		// Pure split operation
+		else
+		{
+			// TransformCubeOfData is either copyCubeOfData or separateCubeOfData
+			transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL,applicableSpectrum);
+			transformCubeOfData(vb,rowRef,vb->sigmaSpectrum(),outputMsCols_p->sigmaSpectrum(),NULL,applicableSpectrum);
+		}
+
+		// Switch aux Weight propagation on
+		propagateWeights(propagateWeights_p);
+
+		// Reset average and smooth kernels
+		setChannelAverageKernel(weightmode_p);
+	}
+
+	return;
+}
+
+// ----------------------------------------------------------------------------------------
+//
+// ----------------------------------------------------------------------------------------
+void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
+													RefRows &rowRef,
+													const Cube<Float> &inputSpectrum,
+													ArrayColumn<Float> &outputCubeCol,
+													ArrayColumn<Float> &outputMatrixCol,
+													MSTransformations::weightTransformation weightTransformation)
+{
+	// Dummy auxiliary weightSpectrum
+	const Cube<Float> applicableSpectrum;
+
+	switch (weightTransformation)
+	{
+		case MSTransformations::transformWeight:
+		{
+			transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
+			break;
+		}
+		case MSTransformations::transformWeightIntoSigma:
+		{
+			transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
+			arrayTransformInPlace (*weightSpectrum_p,MSTransformations::wtToSigma);
+			break;
+		}
+		case MSTransformations::weightIntoSigma:
+		{
+			arrayTransformInPlace (*weightSpectrum_p,MSTransformations::wtToSigma);
+			break;
+		}
+	}
+
+	// Write resulting cube
+	writeCube(*weightSpectrum_p,outputCubeCol,rowRef);
+
+	// Extract median matrix (nCorr x nRow)
+	Matrix<Float> medians = partialMedians(*weightSpectrum_p,IPosition(1,1));
+
+	// Write median matrix (nCorr x nRow)
+	writeMatrix(medians,outputMatrixCol,rowRef,nspws_p);
+
+	return;
+}
+
 // -----------------------------------------------------------------------
 // Get *_SPECTRUM column to use depending on the input col
 // -----------------------------------------------------------------------
 const Cube<Float>& MSTransformManager::getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol)
 {
-	switch (datacol)
+	if (propagateWeights_p)
 	{
-		case MS::DATA:
+		switch (datacol)
 		{
-			// NOTE: There is room for optimization here if in the case of
-			// A.- Time average and single column operation
-			// B.- Single column in the input (George denied this)
-			// C.- Time average should not convert SIGMA_SPECTRUM to WEIGHT format if there is chan.avg downstream
-			// D.- SIGMA_SPECTRUM should be in WEIGHT format
-			return getWeightSpectrumFromSigmaSpectrum(vb);
-			break;
-		}
-		case MS::CORRECTED_DATA:
-		{
-			return vb->weightSpectrum();
-			break;
-		}
-		case MS::MODEL_DATA:
-		{
-			dataColMap::iterator iter;
-
-			// Check if we are doing CORRECTED_DATA
-			Bool doingCorrected = False;
-			iter = dataColMap_p.find(MS::CORRECTED_DATA);
-			if (iter != dataColMap_p.end()) doingCorrected = True;
-
-			// Check if we are doing DATA
-			Bool doingData = False;
-			iter = dataColMap_p.find(MS::DATA);
-			if (iter != dataColMap_p.end()) doingData = True;
-
-			// Return either WEIGHT_SPECTRUM or SIGMA_SPECTRUM depending on the other accompany col
-			if (doingCorrected)
+			case MS::DATA:
 			{
-				return vb->weightSpectrum();
-			}
-			else if (doingData)
-			{
+				// NOTE: There is room for optimization here if in the case of
+				// A.- Time average and single column operation
+				// B.- Single column in the input (George denied this)
+				// C.- Time average should not convert SIGMA_SPECTRUM to WEIGHT format if there is chan.avg downstream
+				// D.- SIGMA_SPECTRUM should be in WEIGHT format
 				return getWeightSpectrumFromSigmaSpectrum(vb);
+				break;
 			}
-			else
+			case MS::CORRECTED_DATA:
 			{
-				// TODO: By default use WEIGHT_SPCTRUM but this is still TDB
 				return vb->weightSpectrum();
+				break;
 			}
+			case MS::MODEL_DATA:
+			{
+				// Return either WEIGHT_SPECTRUM or SIGMA_SPECTRUM depending on the other accompany col
+				if (doingCorrected_p)
+				{
+					return vb->weightSpectrum();
+				}
+				else if (doingData_p)
+				{
+					return getWeightSpectrumFromSigmaSpectrum(vb);
+				}
+				// When doing only MODEL_DATA only FLAG cube is used, and applicable weightSpectrum must be flat unit
+				// The same convention is applied in VbAvg::accumulateElementForCubes for time average
+				else
+				{
+					return getWeightSpectrumFlat(vb);
+				}
 
-			break;
+				break;
+			}
+			default:
+			{
+				return vb->weightSpectrum();
+				break;
+			}
 		}
-		default:
-		{
-			return vb->weightSpectrum();
-			break;
-		}
+	}
+	else
+	{
+		return weightSpectrumCubeDummy_p;
 	}
 }
 
 // -----------------------------------------------------------------------
-// Get *_SPECTRUM column to use depending on the input col
+// Pupulate weightSpectrum derived from sigmaSpectrum
 // -----------------------------------------------------------------------
 const Cube<Float>& MSTransformManager::getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb)
 {
@@ -5304,6 +5553,29 @@ const Cube<Float>& MSTransformManager::getWeightSpectrumFromSigmaSpectrum(vi::Vi
 		arrayTransformInPlace (weightSpectrumCube_p,MSTransformations::sigmaToWeight);
 		weightSpectrumFromSigmaFilled_p = True;
 		return weightSpectrumCube_p;
+	}
+}
+
+// -----------------------------------------------------------------------
+// Populate a synthetic flat unit weightSpectrum to be use for MODEL_DATA
+// -----------------------------------------------------------------------
+const Cube<Float>& MSTransformManager::getWeightSpectrumFlat(vi::VisBuffer2 *vb)
+{
+	if (weightSpectrumFlatFilled_p)
+	{
+		return weightSpectrumCubeFlat_p;
+	}
+	else if (weightSpectrumCubeFlat_p.shape().isEqual(vb->getShape()))
+	{
+		weightSpectrumFlatFilled_p = True;
+		return weightSpectrumCubeFlat_p;
+	}
+	else
+	{
+		weightSpectrumCubeFlat_p.resize(vb->getShape(),False);
+		weightSpectrumCubeFlat_p = 1.0f;
+		weightSpectrumFlatFilled_p = True;
+		return weightSpectrumCubeFlat_p;
 	}
 }
 
@@ -5477,7 +5749,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 
 		// Create spw-row map for this baseline and initialize detection of SPWs with different exposure
 		spwRowMap.clear();
-		if (combinationOfSPWsWithDifferentExposure_p)
+		if (combinationOfSPWsWithDifferentExposure_p and (inputWeightCube.shape().isEqual(inputCubeShape)))
 		{
 			combinationOfSPWsWithDifferentExposure = True;
 			addWeightSpectrumContribution_p = &MSTransformManager::addWeightSpectrumContribution;
@@ -5498,7 +5770,8 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 				spw = spws(row);
 				spwRowMap[spw]=row;
 
-				if (abs(exposure - exposures(row)) > FLT_EPSILON)
+				// In the case of *_SPECTRUM inputWeightCube is dummy
+				if ((abs(exposure - exposures(row)) > FLT_EPSILON) and (inputWeightCube.shape().isEqual(inputCubeShape)))
 				{
 					combinationOfSPWsWithDifferentExposure = True;
 				}
@@ -5528,6 +5801,7 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 				addWeightSpectrumContribution_p = &MSTransformManager::dontAddWeightSpectrumContribution;
 			}
 		}
+
 
 		for (uInt outputChannel = 0; outputChannel < numOfCombInputChanMap_p[0]; outputChannel++)
 		{
@@ -5634,6 +5908,8 @@ template <class T> void MSTransformManager::combineCubeOfData(	vi::VisBuffer2 *v
 		transformAndWritePlaneOfData(	0,rowRef.firstRow()+baseline_index*nspws_p,
 										inputPlaneData,inputPlaneFlags,inputPlaneWeights,
 										outputPlaneData,outputPlaneFlags,outputDataCol,outputFlagCol);
+
+
 		relativeRow_p += 1;
 		baseline_index += 1;
 	}
@@ -6502,6 +6778,74 @@ template <class T> void MSTransformManager::cumSumKernel(	Vector<T> &inputData,
 
 	return;
 }
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformManager::flagWeightAverageKernel(	Vector<T> &inputData,
+																		Vector<Bool> &inputFlags,
+																		Vector<Float> &inputWeights,
+																		Vector<T> &outputData,
+																		Vector<Bool> &outputFlags,
+																		uInt startInputPos,
+																		uInt outputPos,
+																		uInt width)
+{
+	uInt samples = 1;
+	uInt pos = startInputPos + 1;
+	Float counts = inputWeights(startInputPos);
+	Float totalWeight = inputWeights(startInputPos)*(!inputFlags(startInputPos));
+	T avg = inputData(startInputPos)*totalWeight;
+	while (samples < width)
+	{
+		totalWeight = inputWeights(pos)*(!inputFlags(pos));
+		avg += inputData(pos)*totalWeight;
+		counts += totalWeight;
+		samples += 1;
+		pos += 1;
+	}
+
+	if (counts > 0)
+	{
+		avg /= counts;
+	}
+	else
+	{
+		outputFlags(outputPos) = True;
+	}
+
+	outputData(outputPos) = avg;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformManager::flagCumSumKernel(	Vector<T> &inputData,
+																Vector<Bool> &inputFlags,
+																Vector<Float> &,
+																Vector<T> &outputData,
+																Vector<Bool> &,
+																uInt startInputPos,
+																uInt outputPos,
+																uInt width)
+{
+	uInt pos = startInputPos + 1;
+	uInt counts = !inputFlags(startInputPos);
+	T avg = inputData(startInputPos)*(!inputFlags(startInputPos));
+	while (counts < width)
+	{
+		avg += inputData(pos)*(!inputFlags(pos));
+		counts += (!inputFlags(pos));
+		pos += 1;
+	}
+
+	outputData(outputPos) = avg;
+
+	return;
+}
+
 
 // -----------------------------------------------------------------------
 //
