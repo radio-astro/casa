@@ -513,6 +513,8 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 		return;
 	}
 
+	// jagonzal: This is now determined by usewtspectrum param and the presence of input WeightSpectrum
+	/*
 	exists = configuration.fieldNumber ("useweights");
 	if (exists >= 0)
 	{
@@ -538,7 +540,7 @@ void MSTransformManager::parseChanAvgParams(Record &configuration)
 			useweights_p = String("flags");
 		}
 	}
-
+	*/
 
 	return;
 }
@@ -4580,8 +4582,8 @@ void MSTransformManager::fillOutputMs(vi::VisBuffer2 *vb)
 		outputMs_p->addRow(nRowsToAdd_p,False);
 
 		// Fill new rows
-	    fillDataCols(vb,rowRef);
 	    fillWeightCols(vb,rowRef);
+	    fillDataCols(vb,rowRef);
 		fillIdCols(vb,rowRef);
 	}
 
@@ -6793,8 +6795,8 @@ template <class T> void MSTransformManager::flagWeightAverageKernel(	Vector<T> &
 {
 	uInt samples = 1;
 	uInt pos = startInputPos + 1;
-	Float counts = inputWeights(startInputPos);
 	Float totalWeight = inputWeights(startInputPos)*(!inputFlags(startInputPos));
+	Float counts = totalWeight;
 	T avg = inputData(startInputPos)*totalWeight;
 	while (samples < width)
 	{
@@ -6831,13 +6833,13 @@ template <class T> void MSTransformManager::flagCumSumKernel(	Vector<T> &inputDa
 																uInt outputPos,
 																uInt width)
 {
+	uInt samples = 1;
 	uInt pos = startInputPos + 1;
-	uInt counts = !inputFlags(startInputPos);
 	T avg = inputData(startInputPos)*(!inputFlags(startInputPos));
-	while (counts < width)
+	while (samples < width)
 	{
 		avg += inputData(pos)*(!inputFlags(pos));
-		counts += (!inputFlags(pos));
+		samples += 1;
 		pos += 1;
 	}
 
