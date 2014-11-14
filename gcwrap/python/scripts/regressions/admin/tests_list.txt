@@ -13,6 +13,7 @@
 3C391polim                      ttsutsum nrao.edu
 accum_test                      scastro eso.org
 alma-m100-analysis		dpetry@eso.org
+alma-m100-sd-regression         masaya.kuniyoshi nao.ac.jp
 asdm-imexport+analysis		dpetry eso.org
 alma-titan-ephemeris		dpetry@eso.org
 async-segfault                  dpetry eso.org
@@ -55,4 +56,3 @@ time_then_chan_avg              rreid nrao.edu
 unit_tests                      scastro eso.org
 wideband                        rurvashi aoc.nrao.edu
 wproject_regression             kgolap aoc.nrao.edu
-
