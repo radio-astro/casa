@@ -1269,9 +1269,8 @@ bool PlotMSPlot::prevIter() {
 	Int nIter = itsCache_->nIter(0);
 	if( nIter > 1 && iter_ > 0 ) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
-
-		//iter_ -= iterStep_;
 		iter_ -= getPageIterationCount( pages.currentPage() );
+		if (iter_ < 0) iter_=0;  // just in case
 		pages.previousPage();
 		recalculateIteration();
 		return true;
@@ -1281,13 +1280,16 @@ bool PlotMSPlot::prevIter() {
 
 bool PlotMSPlot::nextIter() {
 	Int nIter = itsCache_->nIter(0);
-	if( nIter > 1 &&  iter_  < nIter - 1 ) {
+	if( nIter > 1) {
 		PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
 		int pageIterCount = getPageIterationCount( pages.currentPage() );
-		iter_ += pageIterCount;
-		pages.nextPage();
-		recalculateIteration();
-		return true;
+
+		if((iter_+pageIterCount) < nIter ) {
+			iter_ += pageIterCount;
+			pages.nextPage();
+			recalculateIteration();
+			return true;
+		}
 	}
 	return false;
 }
