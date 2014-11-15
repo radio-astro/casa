@@ -114,7 +114,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     data = [[],[],[],[],[],[]]
 
     for Pflag in PlotData['permanentflag']:
-        if Pflag == 0: # Flag-out case
+        if Pflag == 0 or PlotData['data'][x] == INVALID_STAT: # Flag-out case
             data[4].append(PlotData['row'][x])
             if PlotData['data'][x] > ScaleOut[0][0] or PlotData['data'][x] == INVALID_STAT:
                 data[5].append(ScaleOut[0][1])
@@ -124,7 +124,7 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
                 data[5].append(PlotData['data'][x])
         elif PlotData['flag'][x] == 0: # Flag-out case
             data[2].append(PlotData['row'][x])
-            if PlotData['data'][x] > ScaleOut[0][0] or PlotData['data'][x] == INVALID_STAT:
+            if PlotData['data'][x] > ScaleOut[0][0]:
                 data[3].append(ScaleOut[0][1])
             elif LowRange and PlotData['data'][x] < ScaleOut[1][0]:
                 data[3].append(ScaleOut[1][1])
