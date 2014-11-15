@@ -167,20 +167,21 @@ int main(int /*argc*/, char** /*argv[]*/) {
     PlotMSExportParam& exportParams = app.getExportParameters();
     exportParams.setExportRange( PMS::PAGE_ALL );
 
-    String outFile( "/tmp/plotMSMultiplePlotTypes.jpg");
+    String outFile( "/tmp/plotMSMultiplePlotTypes");
+    String outFile1( outFile + "_Scan1,2.jpg");
     //Because of the iteration plot at the end, we should have two more pages.
-    String outFile2( "/tmp/plotMSMultiplePlotTypes2.jpg");
-    String outFile3( "/tmp/plotMSMultiplePlotTypes3.jpg");
-    tUtil::clearFile( outFile );
+    String outFile2( outFile + "_Scan3,4,5,6_2.jpg");
+    String outFile3( outFile + "_Scan7_3.jpg");
+    tUtil::clearFile( outFile1 );
     tUtil::clearFile( outFile2 );
     tUtil::clearFile( outFile3 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg");
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tMultiplePlotTypes:: Result of save="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile, 223000, 224000, -1 );
+	ok = tUtil::checkFile( outFile1, 222000, 224000, -1 );
 	cout << "tMultiplePlotTypes:: Result of first save file check="<<ok<<endl;
 
 	ok = tUtil::checkFile( outFile2, 224000, 225000, -1 );

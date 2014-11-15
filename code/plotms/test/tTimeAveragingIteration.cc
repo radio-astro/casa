@@ -92,15 +92,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotTimeAveragingIterationTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotTimeAveragingIterationTest");
+    String outFile1( outFile + "_Time09:21:44.9994 - 09:50:44.9995,09:50:44.9995 - 10:46:15.0001.jpg");
+    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tTimeAveragingIteration:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 100000, 102000, -1 );
+	ok = tUtil::checkFile( outFile1, 100000, 102000, -1 );
 	cout << "tTimeAveragingIteration:: Result of  save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

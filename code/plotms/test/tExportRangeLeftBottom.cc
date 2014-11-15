@@ -93,24 +93,25 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSExportRangeLeftBottom.jpg");
-    String outFile2( "/tmp/plotMSExportRangeLeftBottom.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotMSExportRangeLeftBottom");
+    String outFile1( outFile+"_Scan1,2,3,4,5,6.jpg");
+    String outFile2( outFile + "_Scan7_2.jpg");
+    tUtil::clearFile( outFile1 );
     tUtil::clearFile( outFile2 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile+".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tExportRangeLeftBottom:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile, 80000, 121000, -1 );
-	cout << "tExportRangeRightTop:: Result of first save file check="<<ok<<endl;
+	ok = tUtil::checkFile( outFile1, 80000, 121000, -1 );
+	cout << "tExportRangeLeftBottom:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
 	if ( ok ){
-		ok = tUtil::checkFile( outFile2, 80000, 121000, -1 );
-		cout << "tExportRangeRightTop:  Result of second save file check="<<ok<<endl;
+		ok = tUtil::checkFile( outFile2, 40000, 50000, -1 );
+		cout << "tExportRangeLeftBottom:  Result of second save file check="<<ok<<endl;
 	}
 	return tUtil::exitMain( false );
 }

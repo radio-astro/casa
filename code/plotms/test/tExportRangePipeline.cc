@@ -86,17 +86,18 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     //Note:  There will be seven plots generated, but we will just
     //check the first.
-    String outFile( "/tmp/plotMSExportRangePipeline.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotMSExportRangePipeline");
+    String outFile1( outFile + "_Scan1.jpg");
+    tUtil::clearFile( outFile1 );
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tExportRangePipeline:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile, 110000, 120000, -1 );
+	ok = tUtil::checkFile( outFile1, 110000, 120000, -1 );
 	cout << "tExportRangePipeline:: Result of first save file check="<<ok<<endl;
 
 	return tUtil::exitMain( false );

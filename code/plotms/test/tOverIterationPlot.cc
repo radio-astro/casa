@@ -116,15 +116,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
 
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotOverIterationTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotOverIterationTest");
+    String outFile1( outFile + "_Antenna1@VLA:N7,2@VLA:W1,3@VLA:W2,4@VLA:E1.jpg");
+    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tOverIterationplot:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 175000, 185000, -1 );
+	ok = tUtil::checkFile( outFile1, 175000, 185000, -1 );
 	cout << "tOverIterationplot:: Result of save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }
