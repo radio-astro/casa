@@ -86,15 +86,16 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Add the plot
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotTimeIterationTest.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotTimeIterationTest");
+    String outFile1( outFile + "_Time09:18:59.9998,09:19:30.0002,09:20:00.000572205,09:20:30.001.jpg");
+    tUtil::clearFile( outFile1 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg");
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tTimeIteration:: Result of save="<<ok<<endl;
     
-	ok = tUtil::checkFile( outFile, 130000, 140000, -1 );
+	ok = tUtil::checkFile( outFile1, 130000, 140000, -1 );
 	cout << "tTimeIteration:: Result of  save file check="<<ok<<endl;
 	return tUtil::exitMain( false );
 }

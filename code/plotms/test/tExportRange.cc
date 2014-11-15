@@ -37,22 +37,22 @@
 #include <QApplication>
 
 
-void exportPlot(PlotMSApp& app, String outFile, String outFile2,
-		PlotExportFormat::Type type, String strType, int minSize, int maxSize ){
-	tUtil::clearFile( outFile );
-	tUtil::clearFile( outFile2 );
+void exportPlot(PlotMSApp& app, String outFile, PlotExportFormat::Type type,
+                String strType, int minSize, int maxSize ){
+	tUtil::clearFile( outFile+"_Scan1,2,3,4" );
+	tUtil::clearFile( outFile+"_Scan5,6,7_2" );
 
 	PlotExportFormat format(type, outFile );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tExportRange:: "<<strType.c_str()<<" Result of save="<<ok<<endl;
 
-	ok = tUtil::checkFile( outFile, minSize, maxSize, -1 );
+	ok = tUtil::checkFile( outFile+"_Scan1,2,3,4", minSize, maxSize, -1 );
 	cout << "tExportRange:: "<<strType.c_str()<<" Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
 	if ( ok ){
-		ok = tUtil::checkFile( outFile2, minSize, maxSize, -1 );
+		ok = tUtil::checkFile( outFile+"_Scan5,6,7_2", minSize, maxSize, -1 );
 		cout << "tExportRange:: "<<strType.c_str()<<" Result of second save file check="<<ok<<endl;
 	}
 }
@@ -60,50 +60,45 @@ void exportPlot(PlotMSApp& app, String outFile, String outFile2,
 void exportAsJPG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangeJPGTest");
-    String outFile2( "/tmp/plotMSExportRangeJPGTest2");
 
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-    exportPlot( app, outFile, outFile2, type, "JPG", 80000, 110000);
+    exportPlot( app, outFile, type, "JPG", 80000, 110000);
 }
 
 void exportAsPNG( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePNGTest");
-    String outFile2( "/tmp/plotMSExportRangePNGTest2");
 
     PlotExportFormat::Type type = PlotExportFormat::PNG;
-    exportPlot(  app, outFile, outFile2, type, "PNG", 20000, 30000 );
+    exportPlot(  app, outFile, type, "PNG", 20000, 30000 );
 
 }
 
 void exportAsPS( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePSTest");
-    String outFile2( "/tmp/plotMSExportRangePSTest2");
 
     PlotExportFormat::Type type = PlotExportFormat::PS;
-    exportPlot(  app, outFile, outFile2, type, "PS", 700000, 920000);
+    exportPlot(  app, outFile, type, "PS", 700000, 920000);
 
 }
 
 void exportAsPDF( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangePDFTest");
-    String outFile2( "/tmp/plotMSExportRangePDFTest2");
 
     PlotExportFormat::Type type = PlotExportFormat::PDF;
     cout << "Exporting PDF"<<endl;
-    exportPlot(  app, outFile, outFile2, type, "PDF", 60000, 75000);
+    exportPlot(  app, outFile, type, "PDF", 60000, 75000);
 
 }
 
 void exportAsText( PlotMSApp& app ){
 
     String outFile( "/tmp/plotMSExportRangeTextTest");
-    String outFile2( "/tmp/plotMSExportRangeTextTest2");
     cout << "Exporting Text"<<endl;
     PlotExportFormat::Type type = PlotExportFormat::TEXT;
-    exportPlot(  app, outFile, outFile2, type, "TEXT", 20000, 30000 );
+    exportPlot(  app, outFile, type, "TEXT", 20000, 30000 );
 
 }
 

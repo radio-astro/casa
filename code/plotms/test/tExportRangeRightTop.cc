@@ -93,18 +93,19 @@ int main(int /*argc*/, char** /*argv[]*/) {
     //Make the plot.
     app.addOverPlot( &plotParams );
 
-    String outFile( "/tmp/plotMSExportRangeRightTop.jpg");
-    String outFile2( "/tmp/plotMSExportRangeRightTop2.jpg");
-    tUtil::clearFile( outFile );
+    String outFile( "/tmp/plotMSExportRangeRightTop");
+    String outFile1( outFile + "_Scan1,2,3,4,5,6.jpg");
+    String outFile2( outFile + "_Scan7_2.jpg");
+    tUtil::clearFile( outFile1 );
     tUtil::clearFile( outFile2 );
     PlotExportFormat::Type type = PlotExportFormat::JPG;
-	PlotExportFormat format(type, outFile );
+	PlotExportFormat format(type, outFile + ".jpg" );
 	format.resolution = PlotExportFormat::SCREEN;
 	bool ok = app.save(format);
 	cout << "tExportRangeRightTop:: Result of save="<<ok<<endl;
     
 
-	ok = tUtil::checkFile( outFile, 80000, 120000, -1 );
+	ok = tUtil::checkFile( outFile1, 80000, 120000, -1 );
 	cout << "tExportRangeRightTop:: Result of first save file check="<<ok<<endl;
 
 	//There should be 2 output files.
