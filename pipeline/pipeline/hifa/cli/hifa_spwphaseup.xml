@@ -34,7 +34,7 @@ Previous calibrations are applied on the fly.
 
    <param type="string" name="intent" subparam="true">
 	<description>Set of data selection observing intents</description>
-	<value></value>
+	<value>BANDPASS</value>
    </param>
 
    <param type="string" name="spw" subparam="true">
@@ -104,7 +104,7 @@ Previous calibrations are applied on the fly.
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="caltable"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
-	        <default param="intent"><value type="string"></value></default>
+	        <default param="intent"><value type="string">BANDPASS</value></default>
 	        <default param="spw"><value type="string"></value></default>
 	        <default param="refant"><value type="string"></value></default>
 	        <default param="dryrun"><value type="bool">False</value></default>
@@ -114,7 +114,7 @@ Previous calibrations are applied on the fly.
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="caltable"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
-	        <default param="intent"><value type="string"></value></default>
+	        <default param="intent"><value type="string">BANDPASS</value></default>
 	        <default param="spw"><value type="string"></value></default>
 	        <default param="antenna"><value type="string"></value></default>
 	        <default param="refant"><value type="string"></value></default>
@@ -192,8 +192,8 @@ field -- The list of field names or field ids for which gain solutions are
     example: '3C279', '3C279, M82'
 
 intent -- A string containing a comma delimited list of intents against
-    which the the selected fields are matched. Defaults to *BANDPASS*.
-    default: '' 
+    which the the selected fields are matched. Defaults to 'BANDPASS'
+    default: 'BANDPASS' 
     example: intent='', intent='*PHASE*'
 
 spw -- The list of spectral windows and channels for which gain solutions are
