@@ -204,7 +204,7 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline parameter arguments which can be set in any pipeline mode
 
 autocorr -- Flag autocorrelation data.
-    default: True
+    default: False
 
 shadow -- Flag shadowed antennas.
     default: True
