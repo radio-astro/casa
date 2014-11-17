@@ -180,9 +180,14 @@ def plotms(vis=None,
         casalog.post('ERROR: DISPLAY environment variable is not set!  Cannot open plotms.', 'SEVERE')
         return False
     
-    if (plotfile and os.path.exists(plotfile) and not overwrite):
-        casalog.post("Plot file " + plotfile + " exists and overwrite is false, cannot write the file", "SEVERE")
-        return False
+    if plotfile:
+        if not os.path.dirname(plotfile):
+            # CAS-7148: Use dir that user cd'ed to in casapy session
+            # instead of dir that 
+            plotfile = os.path.join(os.getcwd(), plotfile)
+        if (os.path.exists(plotfile) and not overwrite):
+            casalog.post("Plot file " + plotfile + " exists and overwrite is false, cannot write the file", "SEVERE")
+            return False
   
     
     try:            
