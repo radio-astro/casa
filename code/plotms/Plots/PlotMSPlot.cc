@@ -983,10 +983,12 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 
 
 	// Log number of points as needed.
+	// resetIter() took care of this already
+	/*
 	if(itsTCLParams_.endCacheLog){
 		logPoints();
 	}
-
+	*/
 
 	// Report we are done
 	if(itsTCLParams_.endCacheLog){
