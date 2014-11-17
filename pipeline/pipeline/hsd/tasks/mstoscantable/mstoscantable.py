@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 import os
 import re
+import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
 import pipeline.domain as domain
 from pipeline.infrastructure import sdtablereader
@@ -191,6 +193,9 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
         scantable_list.extend(to_import_sd)
         if len(st_ms_map) > 0:
             st_ms_map.extend([-1]*len(to_import_sd))
+            
+        # fix for bdfflags issue
+        self.fix_flagrow(scantable_list)
 
         # Now everything is in Scnatable format, import them
         LOG.debug('scantable_list=%s'%(scantable_list))
@@ -285,6 +290,17 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
                             for calfrom in calfroms:
                                 callib.mark_as_applied(calto, calfrom)
                         yield casa_tasks.applycal(**args) 
+    
+    def fix_flagrow(self, scantable_list):
+        for name in scantable_list:
+            with casatools.TableReader(name, nomodify=False) as tb:
+                nrow = tb.nrows()
+                for irow in xrange(nrow):
+                    channel_flag = tb.getcell('FLAGTRA', irow)
+                    row_flag = tb.getcell('FLAGROW', irow)
+                    if row_flag == 0 and numpy.all(channel_flag != 0):
+                        tb.putcell('FLAGROW', 128)
+                        
                             
 def remap_spwmap(spwmap):
     remapped = {}
