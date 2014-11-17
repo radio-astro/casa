@@ -14,11 +14,11 @@ fi
 export CASASRC=$myDir/pipeline
 #
 OSVERS=$(uname -r | awk -F. '{print $1}')
-if [ $OSVERS -lt "12" ]; then
-export PYVERSION=2.6
-else
+#if [ $OSVERS -lt "12" ]; then
+#export PYVERSION=2.6
+#else
 export PYVERSION=2.7
-fi
+#fi
 #
 if [ $distro = "release" ] ; then
 export CASAARCH=$RELEASEDIR/python/$PYVERSION
@@ -28,20 +28,28 @@ fi
 echo $CASAARCH
 OSNAME=`uname -s`
 if [[ $OSNAME = "Linux" ]]; then
+echo OSNAME $OSNAME
 CASAPY=`which casapy`
 TOPLEVEL=`dirname $CASAPY`
-PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
-if [ -x $PYTHONEXEC ]; then
+if [ -x $TOPLEVEL/lib/casa/bin/python ]; then
+   PYTHONEXEC=$TOPLEVEL/lib/casa/bin/python
    echo $PYTHONEXEC
-   else if [ -x $TOPLEVEL/../lib64/casapy/bin/python ]; then
-	   PYTHONEXEC=$TOPLEVEL/../lib64/casapy/bin/python
-	   echo $PYTHONEXEC
-   else
-        PYTHONEXEC=/usr/lib64/casapy/bin/python
-   fi
+elif [ -x $TOPLEVEL/lib64/casapy/bin/python ]; then
+   PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
+   echo $PYTHONEXEC
+elif [ -x /usr/lib/casa/bin/python ]; then
+   PYTHONEXEC=/user/lib/casa/bin/python
+   echo $PYTHONEXEC
+elif [ -x /usr/lib64/casapy/bin/python ]; then
+   PYTHONEXEC=/user/lib64/casapy/bin/python
+   echo $PYTHONEXEC
+else
+   PYTHONEXEC=python
+   echo $PYTHONEXEC
 fi
 else
 PYTHONEXEC=python
+echo $PYTHONEXEC
 fi
 export PYTHONPATH=$CASAARCH
 $PYTHONEXEC setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force
