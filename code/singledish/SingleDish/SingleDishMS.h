@@ -9,7 +9,7 @@
 #include <casa/aipstype.h>
 #include <casa/Containers/Record.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <synthesis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/VisBuffer2.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

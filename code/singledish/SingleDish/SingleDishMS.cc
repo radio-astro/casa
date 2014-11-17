@@ -9,8 +9,8 @@
 #include <casa/Arrays/ArrayMath.h>
 
 #include <ms/MeasurementSets/MSSelectionTools.h>
-#include <synthesis/MSVis/VisibilityIterator2.h>
-#include <synthesis/MSVis/VisSetUtil.h>
+#include <msvis/MSVis/VisibilityIterator2.h>
+#include <msvis/MSVis/VisSetUtil.h>
 
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
