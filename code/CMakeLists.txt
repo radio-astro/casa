@@ -1056,6 +1056,7 @@ casa_find( LOG4CXX
   INCLUDES log4cxx/logger.h
   LIBS log4cxx
   PREFIX_HINTS ${LOG4CXX_ROOT_DIR} /usr /usr/local /opt/log4cxx
+  NO_REQUIRE
 )
 
 # Eigen
@@ -1078,7 +1079,8 @@ casa_find( LIBSAKURA
   LIBS sakura
   PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
-  DEPENDS LOG4CXX EIGEN
+#  DEPENDS LOG4CXX EIGEN
+  DEPENDS EIGEN
   NO_LINK    # The library may depend on newer gcc. Skip generating executable.
 )
 
