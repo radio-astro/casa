@@ -27,6 +27,9 @@ class SDImportDataInputs(importdata.ImportDataInputs):
          bdfflags=None):
         self._init_properties(vars())
 
+    # override bdfflags attribute
+    bdfflags = basetask.property_with_default('bdfflags', False)
+
 class SDImportDataResults(basetask.Results):
     '''
     SDImportDataResults is an equivalent class with ImportDataResults. 

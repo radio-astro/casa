@@ -48,6 +48,30 @@ class FlagDeterALMASingleDishInputs(flagdeterbase.FlagDeterBaseInputs):
 
         self.fracspwfps = fracspwfps
 
+    # autocorr parameter must be overridden since its default 
+    # value must be False
+    @property
+    def autocorr(self):
+        return self._autocorr
+    
+    @autocorr.setter
+    def autocorr(self, value):
+        if value is None:
+            value = False
+        self._autocorr = value
+
+    # flacspw must be overridden since its default value 
+    # must be '1.875GHz'
+    @property
+    def fracspw(self):
+        return self._fracspw
+    
+    @fracspw.setter
+    def fracspw(self, value):
+        if value is None:
+            value = '1.875GHz'
+        self._fracspw = value
+
     @property
     def fracspwfps(self):
         return self._fracspwfps
