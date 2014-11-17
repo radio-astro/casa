@@ -1051,6 +1051,37 @@ casa_find( READLINE
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
+# log4cxx
+casa_find( LOG4CXX
+  INCLUDES log4cxx/logger.h
+  LIBS log4cxx
+  PREFIX_HINTS ${LOG4CXX_ROOT_DIR} /usr /usr/local /opt/log4cxx
+)
+
+# Eigen
+casa_find( EIGEN
+  INCLUDES Eigen/Core
+  INCLUDES_SUFFIXES eigen3
+  #VERSION 3.2.0
+  #CPP_VERSION  ### (NO method to get version number)
+  PREFIX_HINTS ${EIGEN_ROOT_DIR} /opt/eigen
+)
+
+# libsakura
+if( NOT DEFINED LIBSAKURA_ROOT_DIR )
+  # default for NAOJ servers
+  set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+endif()
+casa_find( LIBSAKURA
+  VERSION 0.1
+  INCLUDES libsakura/sakura.h libsakura/config.h
+  LIBS sakura
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  DEPENDS LOG4CXX EIGEN
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
+
 casa_config_end()
 
 # The modules must be defined in dependency order!
@@ -1088,6 +1119,8 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost)
+casa_add_module( casa_sakura CASACORE LIBSAKURA LOG4CXX)
+casa_add_module( singledish CASACORE casa_sakura)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
