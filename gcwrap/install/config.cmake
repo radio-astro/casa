@@ -89,6 +89,7 @@ endmacro()
 #               [ DEPENDS package1 ... ]
 #               [ NO_REQUIRE ]
 #               [ NO_CHECK ]
+#               [ NO_LINK ]
 #               [ IGNORE ]
 #             )
 #
@@ -147,6 +148,9 @@ endmacro()
 #                is not found
 #
 #      NO_CHECK: If defined, the check on whether the headers compile
+#                is skipped
+#
+#       NO_LINK: If defined, the check on whether the libraries link
 #                is skipped
 #
 #        IGNORE: do not consider these directories
@@ -211,6 +215,7 @@ macro( casa_find package )
   set( _ignore "" )
   set( _no_require False )
   set( _no_check False )
+  set( _no_link False )
   foreach ( _a ${ARGN} )
     
     if(${_a} STREQUAL VERSION)
@@ -244,6 +249,9 @@ macro( casa_find package )
       set( _current "illegal" )
     elseif (${_a} STREQUAL NO_CHECK )
       set( _no_check True )
+      set( _current "illegal" )
+    elseif (${_a} STREQUAL NO_LINK )
+      set( _no_link True )
       set( _current "illegal" )
     elseif( ${_a} STREQUAL "illegal" )
       message( FATAL_ERROR "Illegal macro invocation ${ARGN}" )
@@ -605,7 +613,10 @@ macro( casa_find package )
       endforeach()
 
       # Link to program and check runtime version
-      message( STATUS "Checking whether ${package} links")
+      if( _no_link )
+        message( STATUS "Checking whether ${package} links -- skipped")
+      else()
+        message( STATUS "Checking whether ${package} links")
       
       file( WRITE ${_try}
         "/* try_run.cc */\n"
@@ -644,7 +655,7 @@ macro( casa_find package )
         COMPILE_DEFINITIONS ${${package}_DEFINITIONS}
         COMPILE_OUTPUT_VARIABLE _compile_out
         RUN_OUTPUT_VARIABLE _run_out )
-      
+
       if( NOT ${package}_COMPILE )
         file( READ ${_try} _prog )
 	message( SEND_ERROR "Could not link to ${package} libraries:" )
@@ -706,7 +717,8 @@ macro( casa_find package )
         endif()
       endif()
       # end runtime version check
-
+      endif()
+      # end no linkage check
     endif()
     # end if all libraries were found
 
