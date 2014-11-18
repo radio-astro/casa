@@ -300,7 +300,6 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             value = 0.0
         self._tbuff = value
         
-
     @property
     def scan(self):
         return self._scan
@@ -485,18 +484,19 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         #Set the tbuf parameter
         if inputs._hm_tbuff == 'halfint':
-            # compute half of the maximum integration time, see ms.get_median_integration times method (this
+            # compute half of the maximum integration time, see ms.get_median_science_integration times method (this
             # has an intent parameter so it can be restricted to science intents)
             tbuff = 0.0
-            for intent in ['AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK']:
-                try:
-                    time = inputs.ms.get_median_science_integration_time(intent=intent)
-                    tbuff = max (tbuff, time)
-                    LOG.debug("Using tbuff = "+str(tbuff))
-                except:
-                    #LOG.debug('Intent ' + intent + ' not present.')
-                    LOG.debug('Intent ' + intent + ' not present.')
-            tbuff = 0.5 * tbuff
+	    n7mantennas = len([a.id for a in inputs.ms.antennas if a.diameter == 7.0])
+	    if n7mantennas <= 0:
+                for intent in ['AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK']:
+                    try:
+                        time = inputs.ms.get_median_science_integration_time(intent=intent)
+                        tbuff = max (tbuff, time)
+                        LOG.debug("Using tbuff = "+str(tbuff))
+                    except:
+		        LOG.debug('Intent ' + intent + ' not present.')
+                tbuff = 0.5 * tbuff
         elif inputs._hm_tbuff == '1.5int':
             tbuff = 1.5 * inputs.ms.get_median_integration_time()
             
