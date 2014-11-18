@@ -1,11 +1,5 @@
 #include <iostream>
 
-#include <log4cxx/logger.h>
-#include <log4cxx/propertyconfigurator.h>
-#include <log4cxx/appenderskeleton.h>
-#include <log4cxx/helpers/properties.h>
-#include <log4cxx/helpers/exception.h>
-
 #include <libsakura/sakura.h>
 //#include <libsakura/config.h>
 
