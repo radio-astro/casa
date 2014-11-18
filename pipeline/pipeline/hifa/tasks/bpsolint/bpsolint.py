@@ -21,8 +21,8 @@ class BpSolintInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, field=None,
-         intent=None, spw=None, hm_nantennas=None, maxfracflagged=None,
-	 phaseupsnr=None, minphaseupints=None, bpsnr=None, minbpnchan=None): 
+         intent=None, spw=None, phaseupsnr=None, minphaseupints=None,
+	 bpsnr=None, minbpnchan=None, hm_nantennas=None, maxfracflagged=None): 
 
 	 # set the properties to the values given as input arguments
 	 self._init_properties(vars())
@@ -101,31 +101,6 @@ class BpSolintInputs(basetask.StandardInputs):
         self._spw = value
 
     @property
-    def hm_nantennas (self):
-        if self._hm_nantennas is not None:
-	    return self._hm_nantennas
-	return None
-
-    # Options are 'all' and 'unflagged'
-    @hm_nantennas.setter
-    def hm_nantennas (self, value):
-        if value is None:
-	    value = 'unflagged'
-	self._hm_nantennas = value
-
-    @property
-    def maxfracflagged(self):
-        if self._maxfracflagged is not None:
-            return self._maxfracflagged
-        return None
-
-    @maxfracflagged.setter
-    def maxfracflagged(self, value):
-        if value is None:
-            value = 0.90
-        self._maxfracflagged = value
-
-    @property
     def phaseupsnr(self):
         if self._phaseupsnr is not None:
             return self._phaseupsnr
@@ -173,6 +148,31 @@ class BpSolintInputs(basetask.StandardInputs):
             value = 8
         self._minbpnchan = value
 
+    @property
+    def hm_nantennas (self):
+        if self._hm_nantennas is not None:
+	    return self._hm_nantennas
+	return None
+
+    # Options are 'all' and 'unflagged'
+    @hm_nantennas.setter
+    def hm_nantennas (self, value):
+        if value is None:
+	    value = 'unflagged'
+	self._hm_nantennas = value
+
+    @property
+    def maxfracflagged(self):
+        if self._maxfracflagged is not None:
+            return self._maxfracflagged
+        return None
+
+    @maxfracflagged.setter
+    def maxfracflagged(self, value):
+        if value is None:
+            value = 0.90
+        self._maxfracflagged = value
+
 
 class BpSolint(basetask.StandardTaskTemplate):
     Inputs = BpSolintInputs
@@ -194,8 +194,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	LOG.info('Setting requested bandpass snr to %0.1f ' % (inputs.bpsnr))
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
 	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, phaseupsnr=inputs.phaseupsnr,
-	        bpsnr=inputs.bpsnr, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
 
 	# Get the flux dictionary from the pipeline context
 	#    Return if there are no flux values for the bandpass calibrator.
@@ -203,8 +202,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    spwlist)
 	if not flux_dict:
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, phaseupsnr=inputs.phaseupsnr,
-	        bpsnr=inputs.bpsnr, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
 
 	# Get the Tsys dictionary
 	#    This dictionary defines the science to Tsys scan mapping and the
@@ -214,8 +212,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    spwlist)
 	if not tsys_dict:
 	    LOG.info('No Tsys spw for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, phaseupsnr=inputs.phaseupsnr,
-	        bpsnr=inputs.bpsnr, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
 
 	# Construct the Tsys spw list and the associated bandpass scan list.
 	# from the spw dictionary
@@ -243,8 +240,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Construct the results
 	#   Should I just pass the dictionary ?
-	result = self._get_results (inputs.vis, spwlist, inputs.phaseupsnr,
-	    inputs.bpsnr, solint_dict)
+	result = self._get_results (inputs.vis, spwlist, solint_dict)
 
 	# Get the results
 	return result
@@ -917,7 +913,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
 	    solint_dict[spwid]['integration_minutes'] = \
 	        spw_dict[spwid]['integrationtime']
-	    solint_dict[spwid]['sensitivity_per_integration'] = pusensitivity
+	    solint_dict[spwid]['sensitivity_per_integration_mJy'] = pusensitivity
 	    solint_dict[spwid]['snr_per_integration'] = snrPerIntegration
 	    solint_dict[spwid]['exptime_minutes'] = spw_dict[spwid]['exptime']
 	    solint_dict[spwid]['snr_per_channel'] = snrPerChannel
@@ -942,6 +938,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%6.3fsec' (%d time intervals in solution) to reach S/N=%.0f" % \
 	        (asterisks, spwid, solint_dict[spwid]['exptime_minutes'], 60.0 * requiredIntegrations * solint_dict[spwid]['integration_minutes'],
 		solInts,reqPhaseupSnr))
+	    solint_dict[spwid]['nphaseup_solutions'] = solInts
 	    if tooFewIntervals:
 	        LOG.warn("%s This spw would have less than %d time intervals in its solution" % \
 		(asterisks, minBpNintervals))
@@ -961,48 +958,61 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        (asterisks, spwid, solint_dict[spwid]['bandwidth']*1.0e-6,
 		requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6,
 		solChannels, reqBpSnr))
+	    solint_dict[spwid]['nbandpass_solutions'] = solChannels
 	    if tooFewChannels:
 	        LOG.warn("%s This spw would have less than %d channels in its solution" % (asterisks, minBpNchan))
 
 	return solint_dict
 
     # Get final results from the spw dictionary
-    def _get_results (self, vis, spwidlist, phaseupsnr, bpsnr, solint_dict):
+    def _get_results (self, vis, spwidlist, solint_dict):
 
 	# Initialize result structure.
-	result = BpSolintResults(vis=vis, phaseupsnr=phaseupsnr,
-	    bpsnr=bpsnr, spwids=spwidlist)
+	result = BpSolintResults(vis=vis, spwids=spwidlist)
 
 	# Initialize the lists
         phsolints = []
         phintsolints = []
+	nphsolutions = []
 	phsensitivities = []
 	phintsnrs = []
+
         bpsolints = []
         bpchansolints = []
+	nbpsolutions = []
         bpsensitivities = []
         bpchansnrs = []
 
 	# Loop over the spws. Values for spws with
 	# not dictionary entries are set to None
         for spwid in spwidlist:
+
 	    if not solint_dict.has_key(spwid):
+
 		phsolints.append(None)
 		phintsolints.append(None)
+		nphsolutions.append(None)
 		phsensitivities.append(None)
 		phintsnrs.append(None)
+
 	        bpsolints.append(None)
 	        bpchansolints.append(None)
+		nbpsolutions.append(None)
 	        bpsensitivities.append(None)
 	        bpchansnrs.append(None)
+
 	    else:
+
 	        phsolints.append(solint_dict[spwid]['phaseup_solint'])
 	        phintsolints.append(solint_dict[spwid]['nint_phaseup_solint'])
+		nphsolutions.append(solint_dict[spwid]['nphaseup_solutions'])
 	        phsensitivities.append( \
-		    '%fmJy' % solint_dict[spwid]['sensitivity_per_integration'])
+		    '%fmJy' % solint_dict[spwid]['sensitivity_per_integration_mJy'])
 	        phintsnrs.append(solint_dict[spwid]['snr_per_integration'])
+
 	        bpsolints.append(solint_dict[spwid]['bpsolint'])
 	        bpchansolints.append(solint_dict[spwid]['nchan_bpsolint'])
+		nbpsolutions.append(solint_dict[spwid]['nbandpass_solutions'])
 	        bpsensitivities.append( \
 		    '%fmJy' % solint_dict[spwid]['sensitivity_per_channel_mJy'])
 	        bpchansnrs.append(solint_dict[spwid]['snr_per_channel'])
@@ -1010,11 +1020,13 @@ class BpSolint(basetask.StandardTaskTemplate):
 	# Populate the result.
         result.phsolints = phsolints
         result.phintsolints = phintsolints
+	result.nphsolutions = nphsolutions
 	result.phsensitivities = phsensitivities
 	result.phintsnrs = phintsnrs
 
         result.bpsolints = bpsolints
         result.bpchansolints = bpchansolints
+	result.nbpsolutions = nbpsolutions
         result.bpchansensitivities = bpsensitivities
         result.bpchansnrs = bpchansnrs
 
@@ -1024,26 +1036,28 @@ class BpSolint(basetask.StandardTaskTemplate):
 # The results class
 
 class BpSolintResults(basetask.Results):
-    def __init__(self, vis=None, phaseupsnr=None, bpsnr=None, spwids=[],
-        phsolints=[], phintsolints=[], phsensitivities=[], phintsnrs=[],
-        bpsolints=[], bpchansolints=[], bpsensitivities=[], bpchansnrs=[]):
+    def __init__(self, vis=None, spwids=[],
+        phsolints=[], phintsolints=[], nphsolutions=[],
+	phsensitivities=[], phintsnrs=[],
+        bpsolints=[], bpchansolints=[],
+	nbpsolutions=[], bpsensitivities=[], bpchansnrs=[]):
 
         """
         Initialise the results object.
         """
         super(BpSolintResults, self).__init__()
         self.vis=vis
-	self.phaseupsnr = phaseupsnr
-	self.bpsnr = bpsnr
         self.spwids = spwids
 
 	self.phsolints = phsolints
 	self.phintsolints = phintsolints
+	self.nphsolutions = nphsolutions
 	self.phsensitivities = phsensitivities
 	self.phintsnrs = phintsnrs
 
 	self.bpsolints = bpsolints
 	self.bpchansolints = bpchansolints
+	self.nbpsolutions = nbpsolutions
 	self.bpchansensitivities = bpsensitivities
 	self.bpchansnrs = bpchansnrs
 
