@@ -299,7 +299,7 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
                     channel_flag = tb.getcell('FLAGTRA', irow)
                     row_flag = tb.getcell('FLAGROW', irow)
                     if row_flag == 0 and numpy.all(channel_flag != 0):
-                        tb.putcell('FLAGROW', 128)
+                        tb.putcell('FLAGROW', irow, 128)
                         
                             
 def remap_spwmap(spwmap):
