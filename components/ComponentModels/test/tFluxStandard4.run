@@ -1,3 +1,0 @@
-#echo "CASAPATH: \"$CASAPATH\""
-#$casa_checktool ./tFluxStandard4 n
-$casa_checktool ./tFluxStandard4 y
