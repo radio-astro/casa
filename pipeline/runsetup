@@ -1,15 +1,15 @@
 #!/bin/sh
 if [[ -L "$0" ]]; then
-	real_me=$(staty -f %Y "$0")
-	myDir=$(dirname "$real_me")
+   real_me=$(staty -f %Y "$0")
+   myDir=$(dirname "$real_me")
 else
-	myDir=$(dirname "$0")
+   myDir=$(dirname "$0")
 fi
 if [ "$1" = "--release" ]; then
-	distro="release"
-	RELEASEDIR=$2
+   distro="release"
+   RELEASEDIR=$2
 else
-	distro="programmer"
+   distro="programmer"
 fi
 export CASASRC=$myDir/pipeline
 #
@@ -21,35 +21,39 @@ export PYVERSION=2.7
 #fi
 #
 if [ $distro = "release" ] ; then
-export CASAARCH=$RELEASEDIR/python/$PYVERSION
+   export CASAARCH=$RELEASEDIR/python/$PYVERSION
 else 
-export CASAARCH=$myDir
+   export CASAARCH=$myDir
 fi
-echo $CASAARCH
+echo CASAARCH: $CASAARCH
 OSNAME=`uname -s`
 if [[ $OSNAME = "Linux" ]]; then
-echo OSNAME $OSNAME
-CASAPY=`which casapy`
-TOPLEVEL=`dirname $CASAPY`
-if [ -x $TOPLEVEL/lib/casa/bin/python ]; then
-   PYTHONEXEC=$TOPLEVEL/lib/casa/bin/python
-   echo $PYTHONEXEC
-elif [ -x $TOPLEVEL/lib64/casapy/bin/python ]; then
-   PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
-   echo $PYTHONEXEC
-elif [ -x /usr/lib/casa/bin/python ]; then
-   PYTHONEXEC=/user/lib/casa/bin/python
-   echo $PYTHONEXEC
-elif [ -x /usr/lib64/casapy/bin/python ]; then
-   PYTHONEXEC=/user/lib64/casapy/bin/python
-   echo $PYTHONEXEC
+   echo OSNAME: $OSNAME
+   CASAPY=`which casapy`
+   TOPLEVEL=`dirname $CASAPY`
+   if [ "$(basename $TOPLEVEL)" = "bin" ]; then
+      TOPLEVEL=$(dirname $TOPLEVEL)
+   fi
+   echo TOPLEVEL: $TOPLEVEL
+
+   if [ -x $TOPLEVEL/lib/casa/bin/python ]; then
+      PYTHONEXEC=$TOPLEVEL/lib/casa/bin/python
+   elif [ -x $TOPLEVEL/lib64/casapy/bin/python ]; then
+      PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
+   elif [ -x /usr/lib/casa/bin/python ]; then
+      PYTHONEXEC=/usr/lib/casa/bin/python
+   elif [ -x /usr/lib64/casapy/bin/python ]; then
+      PYTHONEXEC=/usr/lib64/casapy/bin/python
+   else
+      PYTHONEXEC=python
+      echo "WARNING: Could not find CASA's Python !"
+   fi
 else
    PYTHONEXEC=python
-   echo $PYTHONEXEC
+   echo "WARNING: Could not find CASA's Python !"
 fi
-else
-PYTHONEXEC=python
-echo $PYTHONEXEC
-fi
+echo PYTHON: $PYTHONEXEC
+
 export PYTHONPATH=$CASAARCH
+export LD_LIBRARY_PATH=$TOPLEVEL/lib
 $PYTHONEXEC setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force
