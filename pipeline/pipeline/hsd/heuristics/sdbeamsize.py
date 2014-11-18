@@ -34,13 +34,15 @@ class SingleDishBeamSize(api.Heuristic):
         calculate beam size in arcsec.
         returned value is rounded, like 33.0 for 32.199992 or
         9.8 for 9.783333331.
+        NOTE: CURRENTLY the rounding is DISABLED to match manual reduction
         
         diameter: antenna diameter in metre 
         frequency: observing frequency in GHz
         """
         accuratesize = self.__accuratebeamsize(diameter, frequency)
         #print 'accurate size=',accuratesize
-        return self.__rounding(accuratesize)
+        #return self.__rounding(accuratesize)
+        return accuratesize
 
     def __accuratebeamsize(self, diameter, frequency):
         """
@@ -50,11 +52,11 @@ class SingleDishBeamSize(api.Heuristic):
         frequency: observing frequency in GHz
 
         Formula:
-          beam size = 1.2 * lambda / D
-                    = 1.2 * (c * pi / 180.0 * 3600.0) / (nu * D) [arcsec]
-                    = 1.2 * 6.188e4 / {(nu [GHz]) * (D [m])} [arcsec]
+          beam size = 1.13 * lambda / D
+                    = 1.13 * (c * pi / 180.0 * 3600.0) / (nu * D) [arcsec]
+                    = 1.13 * 6.188e4 / {(nu [GHz]) * (D [m])} [arcsec]
         """
-        factor = 1.2
+        factor = 1.13
         accurateSize = factor * 6.188e4 / diameter / frequency
         return accurateSize
 
