@@ -760,7 +760,6 @@ else()
   endif()
   set( casacore_libs
        casa_casa 
-       casa_components
        casa_coordinates 
        casa_fits
        casa_images
@@ -775,7 +774,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.254
+           VERSION 1.0.255
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -1049,6 +1048,12 @@ casa_find( READLINE
   RUN_VERSION rl_library_version
 )
 
+#GSL
+find_package ( GSL 1.13)
+if( NOT GSL_FOUND )
+  message (WARNING "GSL package not found")
+endif ( NOT GSL_FOUND )
+
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
 casa_config_end()
@@ -1069,7 +1074,7 @@ endif()
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
-casa_add_module( components stdcasa CASACORE)
+casa_add_module( components stdcasa CASACORE GSL)
 casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )
@@ -1087,7 +1092,7 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
 #casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
-casa_add_module( miriad CASACORE Boost)
+casa_add_module( miriad CASACORE Boost components)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
