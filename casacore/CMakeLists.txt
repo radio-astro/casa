@@ -37,7 +37,6 @@ option (USE_HDF5 "" NO)
 option (USE_FFTW3 "" YES)
 option (USE_THREADS "" NO)
 option (ENABLE_MULTI_THREADING "" NO)
-option (USE_GSL "" YES)
 
 # Define the compiler flags to be used.
 # Note: -Wshadow and -Wunreachable-code give (too) many warnings.
@@ -124,9 +123,6 @@ endif (_usefits STREQUAL YES)
 if (_usewcs STREQUAL YES)
     find_package (WCSLIB REQUIRED)
 endif (_usewcs STREQUAL YES)
-if (USE_GSL)
-    find_package(GSL REQUIRED)
-endif (USE_GSL)
  
 # Set the include directories and HAVE compiler variables
 include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
@@ -153,9 +149,6 @@ endif (DL_FOUND)
 if (READLINE_FOUND)
     add_definitions(-DHAVE_READLINE)
 endif (READLINE_FOUND)
-if (GSL_FOUND)
-    include_directories(${GSL_INCLUDE_DIRS})
-endif (GSL_FOUND)
 
 # Thread support.
 set(_errmsg "FIXME: Don't know how to enable thread support for ")
@@ -215,4 +208,3 @@ message (STATUS "HDF5 library? ......... = ${HDF5_hdf5_LIBRARY}")
 message (STATUS "FFTW3 library? ........ = ${FFTW3_LIBRARIES}")
 message (STATUS "CASA Thread Neutral? .. = ${CASA_THREAD_NEUTRAL}")
 message (STATUS "Boost for CASA? ....... = ${Boost_LIBRARIES}")
-message (STATUS "GSL library? ....... = ${GSL_LIBRARIES}")

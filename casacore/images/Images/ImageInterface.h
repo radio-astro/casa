@@ -344,6 +344,7 @@ protected:
   ImageInterface& operator= (const ImageInterface& other);
 
   // Restore the image info from the record.
+  // FIXME This isn't implmented. Can it be removed?
   Bool restoreImageInfo (const RecordInterface& rec);
 
   // Set the image logger variable.

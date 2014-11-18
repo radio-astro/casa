@@ -44,7 +44,7 @@
 #include <lattices/Lattices/TempLattice.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/MaskedLatticeIterator.h>
-#include <components/SpectralComponents/SpectralElement.h>
+//#include <components/SpectralComponents/SpectralElement.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Unit.h>
