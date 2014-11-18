@@ -20,6 +20,10 @@ __all__ = ['score_polintents',                                # ALMA specific
 	   'score_missing_derived_fluxes',                    # ALMA specific
 	   'score_derived_fluxes_snr',                        # ALMA specific
 	   'score_phaseup_mapping_fraction',                  # ALMA specific
+	   'score_missing_phaseup_snrs',                      # ALMA specific
+	   'score_missing_bandpass_snrs',                     # ALMA specific
+	   'score_poor_phaseup_solutions',                    # ALMA specific
+	   'score_poor_bandpass_solutions',                   # ALMA specific
 	   'score_setjy_measurements',         
            'score_missing_intents',
            'score_ephemeris_coordinates',
@@ -743,6 +747,119 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
 	    score =  float(nunmapped) / float(nexpected) 
             longmsg = 'There are %d mapped narrow science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped narrow science spws'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_missing_phaseup_snrs(ms, spwids, phsolints):
+
+    '''
+    Score is the fraction of spws with phaseup SNR estimates
+    '''
+
+    # Compute the number of expected and missing SNR measurements
+    nexpected = len(spwids)
+    missing_spws = []
+    for i in range (len(spwids)):
+        if not phsolints[i]:
+	    missing_spws.append(spwid[i])
+    nmissing = len(missing_spws) 
+
+    if nmissing <= 0:
+        score = 1.0
+        longmsg = 'No missing phaseup SNR estimates for %s ' % ms.basename
+        shortmsg = 'No missing phaseup SNR estimates'
+    else:
+        score = float (nexpected - nmissing) / nexpected
+        longmsg = 'Missing phaseup SNR estimates for spws %s in %s ' % \
+	    (missing_spws, ms.basename)
+        shortmsg = 'Missing phaseup SNR estimates'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
+
+    '''
+    Score is the fraction of spws with poor phaseup solutions
+    '''
+
+    # Compute the number of expected and poor SNR measurements
+    nexpected = len(spwids)
+    poor_spws = []
+    for i in range (len(spwids)):
+        if not nphsolutions[i]:
+	    poor_spws.append(spwid[i])
+	elif nphsolutions[i] < min_nsolutions:
+	    poor_spws.append(spwid[i])
+    npoor = len(poor_spws) 
+
+    if npoor <= 0:
+        score = 1.0
+        longmsg = 'No poorly determined phaseup solutions for %s ' % ms.basename
+        shortmsg = 'No poorly determined phaseup solutions'
+    else:
+        score = float (nexpected - npoor) / nexpected
+        longmsg = 'Poorly determined phaseup solutions for spws %s in %s ' % \
+	    (poor_spws, ms.basename)
+        shortmsg = 'Poorly determined phaseup solutions'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_missing_bandpass_snrs(ms, spwids, bpsolints):
+
+    '''
+    Score is the fraction of spws with bandpass SNR estimates
+    '''
+
+    # Compute the number of expected and missing SNR measurements
+    nexpected = len(spwids)
+    missing_spws = []
+    for i in range (len(spwids)):
+        if not bpsolints[i]:
+	    missing_spws.append(spwid[i])
+    nmissing = len(missing_spws) 
+
+    if nmissing <= 0:
+        score = 1.0
+        longmsg = 'No missing bandpass SNR estimates for %s ' % ms.basename
+        shortmsg = 'No missing bandpass SNR estimates'
+    else:
+        score = float (nexpected - nmissing) / nexpected
+        longmsg = 'Missing bandpass SNR estimates for spws %s in%s ' % \
+	    (missing_spws, ms.basename)
+        shortmsg = 'Missing bandpass SNR estimates'
+
+    return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
+
+@log_qa
+def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
+
+    '''
+    Score is the fraction of spws with poor bandpass solutions
+    '''
+
+    # Compute the number of expected and poor solutions
+    nexpected = len(spwids)
+    poor_spws = []
+    for i in range (len(spwids)):
+        if not nbpsolutions[i]:
+	    poor_spws.append(spwid[i])
+	elif nbpsolutions[i] < min_nsolutions:
+	    poor_spws.append(spwid[i])
+    npoor = len(poor_spws) 
+
+    if npoor <= 0:
+        score = 1.0
+        longmsg = 'No poorly determined bandpass solutions for %s ' % \
+	    ms.basename
+        shortmsg = 'No poorly determined bandpass solutions'
+    else:
+        score = float (nexpected - npoor) / nexpected
+        longmsg = 'Poorly determined bandpass solutions for spws %s in %s ' % \
+	    (poor_spws, ms.basename)
+        shortmsg = 'Poorly determined bandpass solutions'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
