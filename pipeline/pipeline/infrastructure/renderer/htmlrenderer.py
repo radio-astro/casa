@@ -1768,6 +1768,12 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
                    stats = image.statistics(robust=False)
                    info_dict[(field,spw,pol,'max')] = stats.get('max')[0]
                    beam = image.restoringbeam()
+                   if 'beams' in beam.keys():
+                       # 'beams' dict has results for each channel and
+                       # each pol product. For now, just use the first beam.
+                       beam = beam['beams']['*0']['*0']
+                       LOG.warning('%s has per-plane beam shape, displaying only first' %
+                         r.iterations[maxiter]['image'])
                    major = casatools.quanta.convert(beam['major'], 'arcsec')
                    info_dict[(field,spw,pol,'beam major')] = major
                    minor = casatools.quanta.convert(beam['minor'], 'arcsec')
@@ -1775,7 +1781,7 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
                    pa = casatools.quanta.convert(beam['positionangle'], 'deg')
                    info_dict[(field,spw,pol,'beam pa')] = pa
                    info_dict[(field,spw,pol,'brightness unit')] = image.brightnessunit()
-
+                   
                    stats = image.statistics(robust=False)
                    info_dict[(field,spw,pol,'image rms')] = stats.get('rms')[0]
 
