@@ -159,6 +159,5 @@ DESTINATION include/casacore/images
 
 if (BUILD_TESTING)
     add_subdirectory (Images/test)
-    add_subdirectory (Wnbt/test)
     add_subdirectory (Regions/test)
 endif (BUILD_TESTING)
