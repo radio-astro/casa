@@ -6,30 +6,30 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/tools/xml/casa.xsd">
 
 
-   <tool name="sdms" module="sdms">
+   <tool name="singledishms" module="singledishms">
    <shortdescription>New single dish tool interface to process an MS</shortdescription>
 
 
 <code>
-	<include>tools/singledish/sdms_forward.h</include>
+	<include>tools/singledish/singledishms_forward.h</include>
 <private>
-	<include>tools/singledish/sdms_private.h</include>
+	<include>tools/singledish/singledishms_private.h</include>
 </private>
 </code>
  
-   <method type="constructor" name="sdms">
-   <shortdescription>Construct sdms tool</shortdescription>
+   <method type="constructor" name="singledishms">
+   <shortdescription>Construct singledishms tool</shortdescription>
    
 <description>
-This is used to construct an {\tt sdms} tool.
+This is used to construct an {\tt singledishms} tool.
 </description>
 <input>
 </input>
-<returns type="sdms"/>
+<returns type="singledishms"/>
 <example>
 Manual tool construction is done this way:
 
-ssd = casac.sdms()
+ssd = casac.singledishms()
 
 </example>
 </method>

@@ -90,6 +90,8 @@ at = casac.atmosphere()
 ca = casac.calanalysis()
 mttool = casac.mstransformer
 mt = mttool()
+sdmstool = casac.singledishms
+sdms = sdmstool()
 
 from simple_cluster import simple_cluster
 clustermanager = simple_cluster()

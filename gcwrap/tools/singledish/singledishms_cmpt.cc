@@ -4,7 +4,7 @@
  * @author kana
  * @version 
  ***/
-#include <sdms_cmpt.h>
+#include <singledishms_cmpt.h>
 #include <string>
 #include <iostream>
 
@@ -19,24 +19,24 @@
 
 using namespace std;
 
-#define _ORIGIN LogOrigin("sdms", __func__, WHERE)
+#define _ORIGIN LogOrigin("singledishms", __func__, WHERE)
 
 namespace casac {
 
-sdms::sdms()
+singledishms::singledishms()
 {
   itsSd = 0;
   itsLog = new LogIO();
 }
 
-sdms::~sdms()
+singledishms::~singledishms()
 {
   if (itsSd != 0) delete itsSd;
   delete itsLog;
 }
 
 bool
-sdms::open(string const& ms_name)
+singledishms::open(string const& ms_name)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -55,7 +55,7 @@ sdms::open(string const& ms_name)
 }
 
 bool
-sdms::close()
+singledishms::close()
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -72,20 +72,20 @@ sdms::close()
 }
 
 bool
-sdms::done()
+singledishms::done()
 {
    return close();
 }
 
 void
-sdms::assert_valid_ms()
+singledishms::assert_valid_ms()
 {
   if (itsSd == 0)
     throw(AipsError("No MeasurementSet has been assigned, please run open."));
 }
 
 string
-sdms::name()
+singledishms::name()
 {
   *itsLog << _ORIGIN;
   try {
@@ -99,7 +99,7 @@ sdms::name()
 }
 
 bool
-sdms::scale(float const factor)
+singledishms::scale(float const factor)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
@@ -116,7 +116,7 @@ sdms::scale(float const factor)
 }
 
 bool
-sdms::set_selection(::casac::variant const& spw,
+singledishms::set_selection(::casac::variant const& spw,
 		    ::casac::variant const& field, 
 		    ::casac::variant const& baseline, 
 		    ::casac::variant const& time, 
