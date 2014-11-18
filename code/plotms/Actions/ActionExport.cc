@@ -221,6 +221,9 @@ bool ActionExport::doActionSpecific(PlotMSApp* plotms){
 		// items.  This isn't ideal because it is slow, but for now it's better to
 		// have something that works and is slow than something that doesn't work.
 
+		// Tell parent the format so it can be used in msg to user
+		plotms->setExportFormat(exportFormat);
+
 		if((exportFormat.type == PlotExportFormat::JPG ||
 			exportFormat.type == PlotExportFormat::PNG) &&
 			exportFormat.resolution == PlotExportFormat::SCREEN) {
