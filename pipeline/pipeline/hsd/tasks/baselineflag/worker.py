@@ -413,7 +413,7 @@ class SDBLFlagWorker(object):
                     threshold.append([-1, -1])
                     # Leave mask all 1 (no need to modify)
                     continue
-                valid_data_index = numpy.where(stat[x] != INVALID_STAT)
+                valid_data_index = numpy.where(stat[x] != INVALID_STAT)[0]
                 LOG.debug('valid_data_index=%s'%(valid_data_index))
                 mask[x][numpy.where(stat[x] == INVALID_STAT)] = 0
                 Unflag = int(numpy.sum(mask[x] * 1.0))
