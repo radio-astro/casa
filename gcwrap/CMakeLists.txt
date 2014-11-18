@@ -626,7 +626,6 @@ else()
   endif()
   set( casacore_libs
        casa_casa 
-       casa_components
        casa_coordinates 
        casa_fits
        casa_images
@@ -641,7 +640,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.252
+           VERSION 1.0.255
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
