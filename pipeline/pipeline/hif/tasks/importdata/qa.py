@@ -68,7 +68,8 @@ class ImportDataQAHandler(pqa.QAResultHandler):
             history_table = os.path.join(ms.name, 'HISTORY')
             with casatools.TableReader(history_table) as table:
                 if table.nrows() != 0:
-                    bad_mses.append(ms)
+                    if (not (table.getcol('ORIGIN') == 'importasdm').all()):
+                        bad_mses.append(ms)
     
         return qacalc.score_ms_history_entries_present(mses, bad_mses)
     
