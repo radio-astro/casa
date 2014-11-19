@@ -425,6 +425,8 @@ class SDBLFlagWorker(object):
                 StddevFlagged = FlaggedData.std()
                 if StddevFlagged == 0: StddevFlagged = FlaggedData[0] / 100.0
                 MeanFlagged = FlaggedData.mean()
+                LOG.debug("Ndata = %s, Unflag = %s, shape(FlaggedData) = %s, Std = %s, mean = %s" \
+                      % (str(Ndata), str(Unflag), str(FlaggedData.shape), str(StddevFlagged), str(MeanFlagged)))
                 AVE = MeanFlagged / float(Unflag) * float(Ndata)
                 RMS = math.sqrt(abs( Ndata * StddevFlagged ** 2 / Unflag - \
                                 Ndata * (Ndata - Unflag) * MeanFlagged ** 2 / (Unflag ** 2) ))
@@ -436,7 +438,7 @@ class SDBLFlagWorker(object):
                 else: ThreM = -1.0
                 threshold.append([ThreM, ThreP])
                 #for y in range(Ndata):
-                for y in valid_data_index[0]:
+                for y in valid_data_index:
                     if ThreM < stat[x][y] <= ThreP: mask[x][y] = 1
                     else: mask[x][y] = 0
                 LOG.debug('threshold=%s'%(threshold))
