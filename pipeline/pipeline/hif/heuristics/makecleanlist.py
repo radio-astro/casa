@@ -250,15 +250,27 @@ class MakeCleanListHeuristics(object):
             spwids = map(int, spwids)
             spwids = list(set(spwids))
             ms = self.context.observing_run.get_ms(name=self.vislist[0])
-            bandwidth = float(ms.get_spectral_window(spwids[0]).bandwidth.to_units(measures.FrequencyUnits.HERTZ))
-            # Currently imaging with a channel width of 15 MHz, but at least
-            # 8 channels
-            if (bandwidth >= 8.0 * 1.5e7):
-                nchan = int(round(bandwidth / 1.5e7))
-                width = '1.5e7 Hz'
+            # Use the first spw for the time being. TBD if this needs to be
+            # improved.
+            spw = ms.get_spectral_window(spwids[0])
+            bandwidth = spw.bandwidth
+            chan_widths = [c.getWidth() for c in spw.channels]
+
+            # Currently imaging with a channel width of 15 MHz or the native
+            # width if larger and at least 8 channels
+            image_chan_width = measures.Frequency('15e6', measures.FrequencyUnits.HERTZ)
+            min_nchan = 8
+            if (any([chan_width >= image_chan_width for chan_width in chan_widths])):
+                nchan = -1
+                width = ''
             else:
-                nchan = 8
-                width = '%f Hz' % (bandwidth / 8.0)
+                if (bandwidth >= min_nchan * image_chan_width):
+                    nchan = int(round(float(bandwidth.to_units(measures.FrequencyUnits.HERTZ)) /
+                                      float(image_chan_width.to_units(measures.FrequencyUnits.HERTZ))))
+                    width = str(image_chan_width)
+                else:
+                    nchan = min_nchan
+                    width = str(bandwidth / nchan)
         else:
             nchan = -1
             width = -1
