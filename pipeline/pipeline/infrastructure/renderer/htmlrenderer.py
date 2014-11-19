@@ -148,6 +148,9 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hifv.tasks.Applycals:
         return 'Apply all calibrations'
 
+    if task_cls is hsd.tasks.SDSimpleScale:
+        return 'Apply a scaling factor for non-linearity correction'
+
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'

@@ -13,5 +13,6 @@ pipelineqa.registry.add_handler(qa.SDSimpleScaleListQAHandler())
 qaadapter.registry.register_to_miscellaneous_topic(simplescale.SDSimpleScaleResults)
 
 weblog.add_renderer(SDSimpleScale,
-                    super_renderer.T2_4MDetailsDefaultRenderer(description='Non-linearity correction', 
+                    super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_simplescale.mako',
+                                                               description='Non-linearity correction', 
                                                                always_rerender=True))
