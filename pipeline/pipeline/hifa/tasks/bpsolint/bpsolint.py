@@ -190,11 +190,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 	LOG.info('Setting bandpass intent to %s ' % inputs.intent)
 	LOG.info('Selecting bandpass fields %s ' % fieldlist)
 	LOG.info('Selecting bandpass spws %s ' % spwlist)
-	LOG.info('Setting requested phaseup snr to %0.1f ' % (inputs.phaseupsnr))
+	LOG.info('Setting requested phaseup snr to %0.1f ' % \
+	    (inputs.phaseupsnr))
 	LOG.info('Setting requested bandpass snr to %0.1f ' % (inputs.bpsnr))
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
 	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the flux dictionary from the pipeline context
 	#    Return if there are no flux values for the bandpass calibrator.
@@ -202,7 +203,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    spwlist)
 	if not flux_dict:
 	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the Tsys dictionary
 	#    This dictionary defines the science to Tsys scan mapping and the
@@ -212,19 +213,19 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    spwlist)
 	if not tsys_dict:
 	    LOG.info('No Tsys spw for MS %s' % inputs.ms.basename)
-	    return BpSolintResults(vis=inputs.vis, spwids=spwlist)
+	    return BpSolintResults(vis=inputs.vis)
 
 	# Construct the Tsys spw list and the associated bandpass scan list.
-	# from the spw dictionary
+	# from the Tsys dictionary
 	tsys_spwlist, scan_list = self._make_tsyslists(spwlist, tsys_dict)
 
-	# Get the median Tsys as a function of spw
+	# Get the median Tsys dictionary as a function of Tsys spw
         tsystemp_dict = self._get_mediantemp (inputs.ms, tsys_spwlist,
 	    scan_list, antenna='', temptype='tsys')
 
 	# Get the observing characteristics dictionary as a function of spw
-	#    This includes the spw configuration and time on source
-	#    and integration information
+	#    This includes the spw configuration, time on source and
+	#    integration information
 	obs_dict = self._get_obsinfo (inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
 
@@ -238,11 +239,11 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    inputs.phaseupsnr, inputs.minphaseupints, inputs.bpsnr,
 	    inputs.minbpnchan)
 
-	# Construct the results
+	# Construct the results object
 	#   Should I just pass the dictionary ?
 	result = self._get_results (inputs.vis, spwlist, solint_dict)
 
-	# Get the results
+	# Return the results
 	return result
 
     def analyse(self, result):
@@ -288,8 +289,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	            continue
 
 		# Find the flux for the spw
-		#   Take the last section in the list. Check to
-		#   see if this is necessary.
+		#   Take the last selection in the list.
 		for flux in field.flux_densities:
 		    if flux.spw_id != spw.id:
 		        continue
@@ -351,6 +351,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        atmscans.append(scan)
 
 	# Still no atmospheric scans found
+	#    Return
 	if not atmscans:
 	    return tsysdict
 
@@ -391,7 +392,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        scanspwidlist = [scanspw.id for scanspw in list(atmscan.spws) \
 		    if scanspw.num_channels not in (1,4)]
 
-		# Match the tsys spw to the science spw
+		# Match the Tsys spw to the science spw
 		#   Match first by id then by frequency   
 		bestspwid = None
 		if spw.id in scanspwidlist: 
@@ -416,6 +417,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 		# Create dictionary entry based on first scan matched.
 		ftsysdict['atm_field_name'] = fieldname
 		ftsysdict['intent'] = intent
+
 		# Pick the first obs scan following the Tsys scan
 		#    This should deal with the shared phase / science target
 		#    scans
@@ -423,6 +425,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    if obscan.id > atmscan.id:
 		        ftsysdict['bandpass_scan'] = obscan.id
 			break
+
 		ftsysdict['tsys_scan'] = atmscan.id
 		ftsysdict['tsys_spw'] = bestspwid
 		break
@@ -438,22 +441,22 @@ class BpSolint(basetask.StandardTaskTemplate):
 
     # Get the Tsys spw list and the tsys bandpass scan list.
     # from the spw dictionary
-    def _make_tsyslists (self, spwlist, spw_dict):
+    def _make_tsyslists (self, spwlist, tsys_dict):
 	tsys_spwlist = []; scan_list = []
 	for spw in spwlist:
-	    if not spw_dict.has_key(spw):
+	    if not tsys_dict.has_key(spw):
 	        continue
-	    if not spw_dict[spw].has_key('tsys_spw'):
+	    if not tsys_dict[spw].has_key('tsys_spw'):
 	        continue
-	    tsys_spwlist.append(spw_dict[spw]['tsys_spw'])
-	    scan_list.append(spw_dict[spw]['bandpass_scan'])
+	    tsys_spwlist.append(tsys_dict[spw]['tsys_spw'])
+	    scan_list.append(tsys_dict[spw]['bandpass_scan'])
 
 	return tsys_spwlist, scan_list
 
     # Get the observing information and return a dictionary
     #
     # The observing dictionary keys abd values 
-    #        key: the spw id         value: The bandpass source observing dictionary
+    #        key: the spw id         value: The source observing dictionary
     # The observation dictionary keys and values
     #        key: bandpass_scans     value: The lists of bandpass source scans
     #        key: num_12mantenna     value: The max number of 12 m antennas
@@ -844,6 +847,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	# The ALMA receiver bands defined per pipeline convention
 	#    There is no pipeline interface for this at the moment
 	#
+
 	ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 6', \
 	    'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
 	ALMA_TSYS = [75.0, 86.0, 90.0, 150.0, 387.0, 1200.0, 1515.0]
@@ -913,7 +917,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    solint_dict[spwid]['flux_Jy'] = spw_dict[spwid]['flux']
 	    solint_dict[spwid]['integration_minutes'] = \
 	        spw_dict[spwid]['integrationtime']
-	    solint_dict[spwid]['sensitivity_per_integration_mJy'] = pusensitivity
+	    solint_dict[spwid]['sensitivity_per_integration_mJy'] = \
+	       pusensitivity
 	    solint_dict[spwid]['snr_per_integration'] = snrPerIntegration
 	    solint_dict[spwid]['exptime_minutes'] = spw_dict[spwid]['exptime']
 	    solint_dict[spwid]['snr_per_channel'] = snrPerChannel
@@ -925,9 +930,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        solint_dict[spwid]['nint_phaseup_solint'] = 1
 	    else:
 	        solint_dict[spwid]['phaseup_solint'] = '%fs' % \
-	            (solint_dict[spwid]['integrationtime'] * requiredIntegrations * 60.0)
-	        solint_dict[spwid]['nint_phaseup_solint'] = int(np.ceil(requiredIntegrations))
-	    solInts = int (np.ceil(solint_dict[spwid]['exptime_minutes'] / solint_dict[spwid]['integration_minutes'])) / \
+	            (solint_dict[spwid]['integrationtime'] * \
+		    requiredIntegrations * 60.0)
+	        solint_dict[spwid]['nint_phaseup_solint'] = \
+		    int(np.ceil(requiredIntegrations))
+	    solInts = int (np.ceil(solint_dict[spwid]['exptime_minutes'] / \
+	        solint_dict[spwid]['integration_minutes'])) / \
 	        int(np.ceil(requiredIntegrations))
 	    if solInts < minBpNintervals:
 	        tooFewIntervals = True
@@ -946,8 +954,10 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    # Bandpass solution info
 	    solint_dict[spwid]['bpsolint'] = '%fMHz' % \
 	        (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
-	    solint_dict[spwid]['nchan_bpsolint'] = int(np.ceil(requiredChannels))
-	    solChannels = solint_dict[spwid]['nchan_total'] / int(np.ceil(requiredChannels)) 
+	    solint_dict[spwid]['nchan_bpsolint'] = \
+	        int(np.ceil(requiredChannels))
+	    solChannels = solint_dict[spwid]['nchan_total'] / \
+	        int(np.ceil(requiredChannels)) 
 	    if solChannels  < minBpNchan:
 	        tooFewChannels = True
 		asterisks = '***'
@@ -1039,22 +1049,27 @@ class BpSolintResults(basetask.Results):
     def __init__(self, vis=None, spwids=[],
         phsolints=[], phintsolints=[], nphsolutions=[],
 	phsensitivities=[], phintsnrs=[],
-        bpsolints=[], bpchansolints=[],
-	nbpsolutions=[], bpsensitivities=[], bpchansnrs=[]):
+        bpsolints=[], bpchansolints=[], nbpsolutions=[],
+	bpsensitivities=[], bpchansnrs=[]):
 
         """
         Initialise the results object.
         """
         super(BpSolintResults, self).__init__()
+
         self.vis=vis
+
+	# Spw list
         self.spwids = spwids
 
+	# Phaseup solutions
 	self.phsolints = phsolints
 	self.phintsolints = phintsolints
 	self.nphsolutions = nphsolutions
 	self.phsensitivities = phsensitivities
 	self.phintsnrs = phintsnrs
 
+	# Bandpass solutions
 	self.bpsolints = bpsolints
 	self.bpchansolints = bpchansolints
 	self.nbpsolutions = nbpsolutions
