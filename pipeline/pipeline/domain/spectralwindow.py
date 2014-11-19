@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import decimal
 import itertools
 import operator
 
@@ -75,10 +76,14 @@ class SpectralWindow(object):
         self.baseband = str(baseband)
         
         channels = []
-        for (centre, width) in zip(chan_freqs, chan_widths):
-            f_lo = measures.Frequency(centre[0] - (width[0] / 2.0),
+        for centre, width in zip(chan_freqs, chan_widths):
+            dec_centre = decimal.Decimal(str(centre[0]))
+            dec_width= decimal.Decimal(str(width[0]))
+            delta = dec_width / decimal.Decimal('2') 
+            
+            f_lo = measures.Frequency(dec_centre - delta,
                                       measures.FrequencyUnits.HERTZ)
-            f_hi = measures.Frequency(centre[0] + (width[0] / 2.0),
+            f_hi = measures.Frequency(dec_centre + delta,
                                       measures.FrequencyUnits.HERTZ)
             channels.append(measures.FrequencyRange(f_lo, f_hi))
         self.channels = channels
