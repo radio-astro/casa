@@ -36,6 +36,7 @@ CasaTaskDict = {
                    'hsd_flagbaseline' : 'SDFlagBaseline',
                    'hsd_plotflagbaseline': 'SDPlotFlagBaseline',
                    'hsd_flagdata'    : 'FlagDeterALMASingleDish',
+                   'hsd_simplescale'    : 'SDSimpleScale',
                    'hifa_importdata' : 'ALMAImportData',
                    'hifa_bpsolint'   : 'BpSolint',
                    'hifa_flagdata'    : 'FlagDeterALMA',
@@ -125,6 +126,7 @@ classToCASATask = {
     hsd_tasks.SDFlagBaseline : 'hsd_flagbaseline',
     hsd_tasks.SDPlotFlagBaseline : 'hsd_plotflagbaseline',
     hsd_tasks.FlagDeterALMASingleDish : 'hsd_flagdata',
+    hsd_tasks.SDSimpleScale : 'hsd_simplescale',
     #VLA tasks
     hifv_tasks.VLAImportData       : 'hifv_importdata',
     hifv_tasks.Hanning             : 'hifv_hanning',
@@ -302,6 +304,10 @@ TASK_COMMENTS = {
     (hsd_tasks.SDPlotFlagBaseline,) : (
         'Plot whole spectra before and after baseline subtraction. '
         '' + SILENT_TASK_COMMENT
+    ),
+    (hsd_tasks.SDSimpleScale,) : (
+        'Scale spectra in scantables. This task is used for'
+        'non-linearity correction.'
     ),
 }
 

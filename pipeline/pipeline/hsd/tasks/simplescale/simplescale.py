@@ -39,29 +39,17 @@ class SDSimpleScaleResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(SDSimpleScaleResults, self).merge_with_context(context)
-
-#         # increment iteration counter
-#         # register detected lines to reduction group member
-#         reduction_group = context.observing_run.reduction_group
-#         for b in self.outcome['corrected']:
-#             group_id = b['group_id']
-#             spw = b['spw']
-#             antenna = b['index']
-#             pols = b['pols']
-#             lines = b['lines']
-#             channelmap_range = b['channelmap_range']
-#             group_desc = reduction_group[group_id]
-#             for (ant,spw,pol) in zip(antenna,spw,pols):
-#                 group_desc.iter_countup(ant, spw, pol)
-#                 group_desc.add_linelist(lines, ant, spw, pol,
-#                                         channelmap_range=channelmap_range)
-#                 st = context.observing_run[ant]
-#                 st.work_data = st.baselined_name
+        table_summary = self.outcome['scantable']
+        for (idx, in_name, out_name) in table_summary:
+            st = context.observing_run[idx]
+            # update working scantable
+            st.work_data = out_name
+            # update scantable to be used in baseline subtraction only if not yet BL-ed
+            if not os.path.exists(st.baselined_name):
+                st.baseline_source = out_name
 
     def _outcome_name(self):
-        return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])
-                for b in self.outcome['corrected']
-                for (idx,name) in zip(b['index'], b['name'])]
+        return 'none'
 
 class SDSimpleScale(common.SingleDishTaskTemplate):
     Inputs = SDSimpleScaleInputs
@@ -71,42 +59,46 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
         inputs = self.inputs
         context = inputs.context
         reduction_group = context.observing_run.reduction_group
-        infiles = inputs.infiles
+        infiles = inputs.infiles # will return a list of original scantables if None
         factor = inputs.factor
-        args = inputs.to_casa_args()
+        #args = inputs.to_casa_args()
+        
         # parse infiles
-        file_names = []
-        file_index = [] #Need to get indices too to update blsource
-        for name in infiles:
-            stidx = self._get_index_from_name(name)
-            if not os.path.exists(name):
-                LOG.warn("Could not find '%s'. skipping" % name)
-            elif stidx > -1:
-                file_names.append(name)
-                file_index.append(stidx)
-            else:
-                LOG.warn("Could not find corresponding file index for '%s'" % name)
-#         file_names = [ name for name in infiles if os.path.exists(name) ]
-        # get files from context
-        if len(file_names) == 0:
-            # No selection parse from reduction_group
-            LOG.info("Getting scantables to scale from reduction_group")
-            for (group_id,group_desc) in reduction_group.items():
-                LOG.info('Processing Reduction Group %s'%(group_id))
-                LOG.info('Group Summary:')
-                for m in group_desc:
-                    LOG.info('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
-                    if m.antenna not in file_index:
-                        file_index.append(m.antenna)
-            file_names = [ context.observing_run[idx].work_data for idx in file_index ]
+        file_index = [context.observing_run.st_names.index(infile) for infile in infiles]
+#         file_names = [context.observing_run[idx].work_data for idx in file_index]
+#         file_names = []
+#         file_index = [] #Need to get indices too to update blsource
+#         for name in infiles:
+#             stidx = self._get_index_from_name(name)
+#             if not os.path.exists(name):
+#                 LOG.warn("Could not find '%s'. skipping" % name)
+#             elif stidx > -1:
+#                 file_names.append(name)
+#                 file_index.append(stidx)
+#             else:
+#                 LOG.warn("Could not find corresponding file index for '%s'" % name)
+# #         file_names = [ name for name in infiles if os.path.exists(name) ]
+#         # get files from context
+#         if len(file_names) == 0:
+#             # No selection parse from reduction_group
+#             LOG.info("Getting scantables to scale from reduction_group")
+#             for (group_id,group_desc) in reduction_group.items():
+#                 LOG.info('Processing Reduction Group %s'%(group_id))
+#                 LOG.info('Group Summary:')
+#                 for m in group_desc:
+#                     LOG.info('\tAntenna %s Spw %s Pol %s'%(m.antenna, m.spw, m.pols))
+#                     if m.antenna not in file_index:
+#                         file_index.append(m.antenna)
+#             file_names = [ context.observing_run[idx].work_data for idx in file_index ]
 
-        LOG.info("Selected file names for scaling = %s" % str(file_names))
-        LOG.info("Selected file indices from reduction group = %s" % str(file_index))
+#         LOG.info("Selected file names for scaling = %s" % str(file_names))
+        LOG.info("Selected file indices for scaling = %s" % str(file_index))
         
         # loop over scantable
-        for idx in range(len(file_index)):
-            in_name = file_names[idx]
-            st = context.observing_run[file_index[idx]]
+        table_summary = []
+        for idx in file_index:
+            in_name = context.observing_run[idx].work_data
+            st = context.observing_run[idx]
             out_name = st.scaled_name
             scale_args = {'infile': in_name,
                           'factor': factor,
@@ -119,14 +111,12 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
             scale_job = casa_tasks.sdscale(**scale_args)
             # execute job
             self._executor.execute(scale_job)
-            # update working scantable
-            st.work_data = out_name
-            # update scantable to be used in baseline subtraction only if not yet BL-ed
-            if not os.path.exists(st.baselined_name):
-                st.baseline_source = out_name
+            # update results
+            table_summary.append((idx, in_name, out_name))
 
-        outcome = {'SimpleScaled': baselined,
-                   'factor': factor}
+        outcome = {'scantable': table_summary,
+                   'factor': factor,
+                   'success': ( len(table_summary) == len(infiles) )}
         results = SDSimpleScaleResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)

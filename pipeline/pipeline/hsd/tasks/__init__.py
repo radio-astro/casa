@@ -14,4 +14,5 @@ from .baselineflag import SDBLFlag
 from .flagbaseline import SDFlagBaseline
 from .flagbaseline import SDPlotFlagBaseline
 from .flagging import FlagDeterALMASingleDish
+from .simplescale import SDSimpleScale
 
