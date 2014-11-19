@@ -67,9 +67,10 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
                 bltable_name = namer.get_filename()
                 if not os.path.exists(bltable_name):
                     continue
-                filename = data.baselined_name
-                if not os.path.exists(filename):
-                    filename = data.name
+                filename = data.work_data
+#                 filename = data.baselined_name
+#                 if not os.path.exists(filename):
+#                     filename = data.name
                 srctype = data.calibration_strategy['srctype']
                 self._apply_baseline_flags(filename, index, spwid, srctype)
 
@@ -91,9 +92,10 @@ class SDApplyFlag(common.SingleDishTaskTemplate):
 
     def _apply_apriori_flags(self, data):
         # infile
-        filename = data.baselined_name
-        if not os.path.exists(filename):
-            filename = data.name
+        filename = data.work_data
+#         filename = data.baselined_name
+#         if not os.path.exists(filename):
+#             filename = data.name
             
         # flag by spw id (exclude WVR, SQLD, POINTING, ATMCAL, ...)
         spws = data.spectral_window

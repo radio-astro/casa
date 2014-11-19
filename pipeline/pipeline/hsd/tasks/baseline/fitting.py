@@ -58,7 +58,8 @@ class FittingInputs(common.SingleDishInputs):
         
     @property
     def infile(self):
-        return self.data_object.name
+        #return self.data_object.name
+        return self.data_object.baseline_source
     
     @property
     def outfile(self):
@@ -291,7 +292,8 @@ class FittingBase(common.SingleDishTaskTemplate):
     def analyse(self, result):
         bltable = result.outcome['bltable']
         index_list = result.outcome['index_list']
-        stname = self.inputs.data_object.name
+        stname = self.inputs.infile
+#         stname = self.inputs.data_object.name
         spwid = self.inputs.spwid
         iteration = self.inputs.iteration
         edge = common.parseEdge(self.inputs.edge)

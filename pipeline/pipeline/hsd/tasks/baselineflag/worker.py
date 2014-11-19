@@ -88,14 +88,17 @@ class SDBLFlagWorker(object):
         for (idx,spwid,pollist) in zip(file_index, spwid_list, pols_list):
             LOG.debug('Performing flag for Antenna %s Spw %s'%(idx,spwid))
             st = self.context.observing_run[idx]
-            filename_in = st.name
+#             filename_in = st.name
+            filename_in = st.baseline_source
             filename_out = st.baselined_name
 #             asdm = common.asdm_name(st)
 #             namer.asdm(asdm)
 #             namer.antenna_name(st.antenna.name)
 #             out_table_name = namer.get_filename()
             
-            LOG.info("*** Processing table: %s ***" % (os.path.basename(filename_in)))
+            LOG.info("*** Processing: %s ***" % (os.path.basename(st.name)))
+            LOG.info("\tpre-fit table: %s" % (os.path.basename(filename_in)))
+            LOG.info("\tpost-fit table: %s" % (os.path.basename(filename_out)))
             for pol in pollist:
                 LOG.info("[ POL=%d ]" % (pol))
                 # time_table should only list on scans
@@ -425,8 +428,8 @@ class SDBLFlagWorker(object):
                 StddevFlagged = FlaggedData.std()
                 if StddevFlagged == 0: StddevFlagged = FlaggedData[0] / 100.0
                 MeanFlagged = FlaggedData.mean()
-                LOG.debug("Ndata = %s, Unflag = %s, shape(FlaggedData) = %s, Std = %s, mean = %s" \
-                      % (str(Ndata), str(Unflag), str(FlaggedData.shape), str(StddevFlagged), str(MeanFlagged)))
+                #LOG.debug("Ndata = %s, Unflag = %s, shape(FlaggedData) = %s, Std = %s, mean = %s" \
+                #      % (str(Ndata), str(Unflag), str(FlaggedData.shape), str(StddevFlagged), str(MeanFlagged)))
                 AVE = MeanFlagged / float(Unflag) * float(Ndata)
                 RMS = math.sqrt(abs( Ndata * StddevFlagged ** 2 / Unflag - \
                                 Ndata * (Ndata - Unflag) * MeanFlagged ** 2 / (Unflag ** 2) ))

@@ -224,9 +224,10 @@ class SDImaging(common.SingleDishTaskTemplate):
                 source_name = target_sources[0].name.replace(' ', '_')
 
                 # filenames for gridding
-                data_name = lambda x: x.baselined_name \
-                            if os.path.exists(x.baselined_name) else x.name
-                filenames = [data_name(context.observing_run[i]) for i in indices]
+#                 data_name = lambda x: x.baselined_name \
+#                             if os.path.exists(x.baselined_name) else x.name
+#                 filenames = [data_name(context.observing_run[i]) for i in indices]
+                filenames = [context.observing_run[i].work_data for i in indices]
                 infiles = [context.observing_run[i].basename for i in indices]
 
                 LOG.debug('filenames=%s' % (filenames))
