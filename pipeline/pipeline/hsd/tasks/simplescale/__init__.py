@@ -9,7 +9,7 @@ from . import qa
 #from . import renderer
 
 pipelineqa.registry.add_handler(qa.SDSimpleScaleQAHandler())
-pipelineqa.registry.add_handler(qa.SDSimpleScaleQAHandler())
+pipelineqa.registry.add_handler(qa.SDSimpleScaleListQAHandler())
 qaadapter.registry.register_to_miscellaneous_topic(simplescale.SDSimpleScaleResults)
 
 weblog.add_renderer(SDSimpleScale,
