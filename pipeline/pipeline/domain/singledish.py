@@ -89,6 +89,7 @@ class ScantableList(observingrun.ObservingRun, list):
             self[idx].beam_size = beam_size[idx]
             self[idx].pattern = observing_pattern[idx]
             self[idx].work_data = self[idx].name
+            self[idx].baseline_source = self[idx].name
 
     def add_scantable(self, s):
         if s.basename in self.st_names:
@@ -205,6 +206,10 @@ class ScantableRep(SingleDishBase):
     @property
     def baselined_name(self):
         return self.name + '_work'
+
+    @property
+    def scaled_name(self):
+        return self.name + '_corrected'
 
     def __repr__(self):
         return 'Scantable(%s)'%(self.name)

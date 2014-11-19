@@ -34,10 +34,12 @@ import statwt_cli
 import wvrgcal_cli
 import visstat_cli
 
+import sdbaseline2_cli # for CASA >= 4.3
 import sdcal2_cli
 import sdflag_cli 
 import sdimaging_cli 
 import sdsave_cli 
+import sdscale_cli 
 
 from . import casatools
 from . import logging
@@ -361,6 +363,10 @@ class CASATaskJobGenerator(object):
     def visstat(self, *v, **k):
         return self._get_job(visstat_cli.visstat_cli, *v, **k)
 
+    # for CASA >= 4.3
+    def sdblcal(self, *v, **k):
+        return self._get_job(sdbaseline2_cli.sdbaseline2_cli, *v, **k)
+
     def sdcal2(self, *v, **k):
         return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)
     
@@ -372,6 +378,9 @@ class CASATaskJobGenerator(object):
     
     def sdsave(self, *v, **k):
         return self._get_job(sdsave_cli.sdsave_cli, *v, **k) 
+
+    def sdscale(self, *v, **k):
+        return self._get_job(sdscale_cli.sdscale_cli, *v, **k) 
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)
