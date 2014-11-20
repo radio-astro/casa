@@ -557,6 +557,7 @@ namespace casa {
 		QFileDialog fd( this, tr("Export profile"), currentDirectory );
 		fd.setOption( QFileDialog::DontUseNativeDialog, true );
 		fd.setFileMode( QFileDialog::AnyFile );
+		fd.setAcceptMode( QFileDialog::AcceptSave );
 		fd.setNameFilter( filterString );
 		if ( fd.exec() ) {
 			QStringList fileNames = fd.selectedFiles();
