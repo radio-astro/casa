@@ -1052,13 +1052,13 @@ casa_find( READLINE
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
 # Eigen
-casa_find( EIGEN
-  INCLUDES Eigen/Core
-  INCLUDES_SUFFIXES eigen3
-  #VERSION 3.2.0
-  #CPP_VERSION  ### (NO method to get version number)
-  PREFIX_HINTS ${EIGEN_ROOT_DIR} /opt/eigen
-)
+#casa_find( EIGEN
+#  INCLUDES Eigen/Core
+#  INCLUDES_SUFFIXES eigen3
+#  #VERSION 3.2.0
+#  #CPP_VERSION  ### (NO method to get version number)
+#  PREFIX_HINTS ${EIGEN_ROOT_DIR} /opt/eigen
+#)
 
 # libsakura
 if( NOT DEFINED LIBSAKURA_ROOT_DIR )
@@ -1071,7 +1071,7 @@ casa_find( LIBSAKURA
   LIBS sakura
   PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
-  DEPENDS EIGEN
+#  DEPENDS EIGEN
   NO_LINK    # The library may depend on newer gcc. Skip generating executable.
 )
 
