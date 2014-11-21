@@ -70,7 +70,7 @@ template <class T> SPIIT ImageFactory::createImage(
         );
     }
     ostringstream os;
-    T *x;
+    T *x = 0;
     os << "Created "
        << (blank ? "Temp" : "Paged") << " image "
        << (blank ? "" : "'" + outfile + "'")

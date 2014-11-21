@@ -643,7 +643,7 @@ void ImageFitter::_calculateErrors() {
 		_curConvolvedList.getFlux(fluxQuant, i);
 		// TODO there is probably a better way to get the flux component we want...
 		Vector<String> polarization = _curConvolvedList.getStokes(i);
-		uInt polnum;
+		uInt polnum = 0;
 		for (uInt j=0; j<polarization.size(); j++) {
 			if (polarization[j] == _kludgedStokes) {
 				_fluxDensities[i] = fluxQuant[j];
