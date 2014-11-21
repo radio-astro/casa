@@ -534,9 +534,12 @@ void MosaicFT::finalizeToSky()
     Int npol=1;
     Vector<Int> whichStokes(npol);
     if(stokes_p=="I" || stokes_p=="RR" || stokes_p=="LL" ||stokes_p=="XX" 
-       || stokes_p=="YY" || stokes_p=="Q" || stokes_p=="U"){
+       || stokes_p=="YY" || stokes_p=="Q" || stokes_p=="U" || stokes_p=="V"){
       npol=1;
       whichStokes(0)=Stokes::type(stokes_p);
+      // if single plane Q U or V are used...the weight should be the I weight
+      if(stokes_p=="Q" || stokes_p=="U" || stokes_p=="V")
+	whichStokes(0)=Stokes::type("I");
     }
     else if(stokes_p=="IV"){
       npol=2;
