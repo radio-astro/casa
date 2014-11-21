@@ -43,6 +43,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hsd_simplescale</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hsd_baseline</Command>
         <ParameterSet>
         </ParameterSet>
