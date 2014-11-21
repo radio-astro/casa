@@ -55,17 +55,26 @@ public:
     //Returns the export range (All, Current, etc).
     PlotMSExportParam getExportParams() const;
 
+    // Retrieve selected MS names to use in export filename
+    inline void setMSNames(vector<String> msNames) { MSNames_ = msNames; }
+
 signals:
 	void exportRangeChanged();
 
 private slots:
 	void closeDialog();
 	void doExport();
+	void insertMSNames();
 
 private:
+    String getMsNameFromPath(String msfilepath);
+
     // Widget for file selection.
     QtFileWidget* itsFileWidget_;
     Ui::ExportTab ui;
+
+    // Selected MS names
+    vector<String> MSNames_;
 };
 
 }

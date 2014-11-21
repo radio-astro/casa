@@ -59,6 +59,7 @@ PlotMSExportTab::PlotMSExportTab(QWidget* parent):
     ui.exportRangeCombo->setCurrentIndex( PMS::DEFAULT_EXPORT_RANGE );
 
     //connect(ui.exportRangeCombo, SIGNAL(currentIndexChanged(int)), SIGNAL(exportRangeChanged()));
+    connect( ui.msNamesButton, SIGNAL(clicked()), this, SLOT(insertMSNames()) );
     connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(closeDialog()));
     connect( ui.exportButton, SIGNAL(clicked()), this, SLOT(doExport()));
 }
@@ -70,6 +71,25 @@ PlotMSExportParam PlotMSExportTab::getExportParams() const {
 	QString rangeStr =  ui.exportRangeCombo->currentText();
 	params.setExportRange( rangeStr.toStdString());
 	return params;
+}
+
+void PlotMSExportTab::insertMSNames()
+{
+	String exportName = "";
+	for (uInt i=0; i < MSNames_.size(); i++) {
+		// Extract MS name from full path
+		String msName = getMsNameFromPath(MSNames_[i]);
+		if (exportName.length() > 0) exportName += '_';
+		exportName += msName;
+	}
+    	itsFileWidget_->setFile(exportName);
+}
+
+String PlotMSExportTab::getMsNameFromPath(String msfilepath)
+{
+ 	Int endOfPath = msfilepath.find_last_of('/');
+	Int startOfExt = msfilepath.rfind(".ms");
+	return msfilepath.at(endOfPath+1, startOfExt-endOfPath-1);
 }
 
 void PlotMSExportTab::setExportFormat(PlotExportFormat format)
