@@ -4940,8 +4940,10 @@ Record Imager::setjy(const Vector<Int>& /*fieldid*/,
         // TODO: add polindex, polangle, rm handling
         // for now ignore circular polarization
         //Vector<Double> cppars(1,0.0);
+        Vector<Double> checkfluxes;
         sjy_makeComponentList(os, tempCLs, returnFluxes, fluxUsed[0], selToRawSpwIds, mfreqs, fieldName, fieldDir, 
                             spix, pipars, papars, rotMeas, reffreq, aveEpoch, fldid);
+        returnFluxes[0][0].value(checkfluxes);
       }
       /*** moved to sjy_makeComponentList()
       // make componentlist using flux densities from the user specfied fluxdensity(per-spw) 
@@ -5822,7 +5824,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   spcsys.setReferencePixel(Vector<Double>(1, 0.0));
   spcsys.setWorldAxisUnits(Vector<String>(1,
 					  //mfreqs[selspw][0].getUnit().getName()));
-					  mfreqs[rawspwids[0]][0].getUnit().getName()));
+					  mfreqs[0][0].getUnit().getName()));
   //spcsys.setIncrement(Vector<Double>(1, freqWidth));
   // make a cube model if the model is a cube already
   if(modimage.shape()(freqAxis) >1){
@@ -5832,7 +5834,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
        << LogIO::POST;
     spcsys = SpectralCoordinate(
 				//MFrequency::castType(mfreqs[selspw][0].getRef().getType()),
-				MFrequency::castType(mfreqs[rawspwids[0]][0].getRef().getType()),
+				MFrequency::castType(mfreqs[0][0].getRef().getType()),
                                 freqArray, spcsys.restFrequency());
     imshape(freqAxis)=freqArray.nelements();
     csys.replaceCoordinate(spcsys, icoord);
@@ -5888,8 +5890,8 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   os << LogIO::DEBUG1
      //<< "mfreqs[selspw].get(freqUnit).getValue() = "
      //<< mfreqs[selspw][0].get(freqUnit).getValue()
-     << "mfreqs[rawspwids[0]].get(freqUnit).getValue() = "
-     << mfreqs[rawspwids[0]][0].get(freqUnit).getValue()
+     << "mfreqs[0][0].get(freqUnit).getValue() = "
+     << mfreqs[0][0].get(freqUnit).getValue()
      << LogIO::POST;
 
   // Check direction consistency (reported in log message below)
