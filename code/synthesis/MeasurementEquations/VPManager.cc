@@ -611,6 +611,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   }
+  Bool VPManager::setpbinvpoly(const String& telescope,
+			       const String& othertelescope,
+			       const Bool dopb, const Matrix<Double>& coeff,
+			       const Vector<Double>& freqs,
+			       const Quantity& maxrad,
+			       const Quantity& reffreq,
+			       const String& isthispb,
+			       MDirection& squintdir,
+			       const Quantity& squintreffreq,
+			       const Bool dosquint,
+			       const Quantity& paincrement,
+			       const Bool usesymmetricbeam,
+			       Record& rec) {
+
+    ScopedMutexLock locker(mutex_p);
+
+    rec=Record();
+    rec.define("name", "IPOLY");
+    rec.define("isVP", PBMathInterface::IPOLY);
+    if(telescope=="OTHER"){
+      rec.define("telescope", othertelescope);
+    }
+    else{
+      rec.define("telescope", telescope);
+    }
+    rec.define("dopb", dopb);
+    rec.define("coeff", coeff);
+    rec.define("fitfreqs", freqs);
+    String error;
+    Record tempholder; 
+    QuantumHolder(maxrad).toRecord(error, tempholder);
+    rec.defineRecord("maxrad", tempholder);
+    QuantumHolder(reffreq).toRecord(error, tempholder);
+    rec.defineRecord("reffreq", tempholder);
+    if(isthispb=="PB" || isthispb=="pb"){
+      rec.define("isthisvp", False);
+    }
+    else{
+      rec.define("isthisvp", True);
+    }
+    MeasureHolder(squintdir).toRecord(error, tempholder);
+    rec.defineRecord("squintdir", tempholder);
+    QuantumHolder(squintreffreq).toRecord(error, tempholder);
+    rec.defineRecord("squintreffreq", tempholder);
+    rec.define("dosquint", dosquint);
+    QuantumHolder(paincrement).toRecord(error, tempholder);
+    rec.defineRecord("paincrement", tempholder);
+    rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
+    vplist_p.defineRecord(vplist_p.nfields(), rec); 
+
+    return True;
+
+
+  }
 
   Bool VPManager::setpbnumeric(const String& telescope,
 			       const String& othertelescope,

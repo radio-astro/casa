@@ -118,6 +118,20 @@ public:
 					     Quantity(1.0, "GHz")),
 		Bool useSymmetricBeam=False);
 
+  // Instantiation from arguments; default = no squint
+  // squint is the offset from pointing center if the Stokes R beam
+  // useSymmetricBeam forces a fit to the squinted beam
+  // Each column in coeff corresponds to a frequency in freqs
+  PBMath1DIPoly(const Matrix<Double>& coeff, const Vector<Double>& freqs,
+		Quantity maxRad, 
+		Quantity refFreq, 
+		Bool isThisVP=False,
+		BeamSquint squint=BeamSquint(MDirection(Quantity(0.0, "deg"),
+							Quantity(0.0, "deg"),
+							MDirection::Ref(MDirection::AZEL)),
+					     Quantity(1.0, "GHz")),
+		Bool useSymmetricBeam=False);
+
   // Instantiation from a row in the Beam subTable
   // PBMath1DIPoly(const Table& BeamSubTable, Int row,
   // 	       Bool useSymmetricBeam=False);
@@ -151,6 +165,7 @@ protected:
 private:    
 
   Vector<Double> coeff_p;
+  Matrix<Double> wbcoeff_p;
 
 };
 

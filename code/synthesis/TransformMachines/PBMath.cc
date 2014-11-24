@@ -158,9 +158,6 @@ PBMath::PBMath(const RecordInterface& rec)
 
   } else if (name == "IPOLY") {
 
-
-    Vector<Double> coeff;
-    coeff=rec.asArrayDouble( rec.fieldNumber("coeff"));
     Quantity reffreq;
     getQuantity(rec, "reffreq", reffreq);
     Quantity maxrad;
@@ -173,11 +170,25 @@ PBMath::PBMath(const RecordInterface& rec)
     usesymmetricbeam=rec.asBool( rec.fieldNumber("usesymmetricbeam"));
     Bool isthisvp;
     isthisvp=rec.asBool( rec.fieldNumber("isthisvp"));
+    Bool wide = rec.isDefined("fitfreqs");
+    if (wide) {
+      Matrix <Double> coeff;
+      coeff=rec.asArrayDouble( rec.fieldNumber("coeff"));
+      Vector<Double> freqs;
+      freqs=rec.asArrayDouble( rec.fieldNumber("fitfreqs"));
+      pb_pointer_p = new PBMath1DIPoly( coeff, freqs, maxrad, reffreq,
+				        isthisvp,
+				        BeamSquint(squintdir, squintreffreq),
+				        usesymmetricbeam);
+    } else {
+      Vector<Double> coeff;
+      coeff=rec.asArrayDouble( rec.fieldNumber("coeff"));
+      pb_pointer_p = new PBMath1DIPoly( coeff, maxrad, reffreq,
+				        isthisvp,
+				        BeamSquint(squintdir, squintreffreq),
+				        usesymmetricbeam);
 
-    pb_pointer_p = new PBMath1DIPoly( coeff, maxrad, reffreq,
-				      isthisvp,
-				      BeamSquint(squintdir, squintreffreq),
-				      usesymmetricbeam);
+    }
 
   } else if (name == "COSPOLY") {
 
@@ -506,7 +517,7 @@ PBMath::applyPB(const ImageInterface<Float>& in,
 		const Quantity parAngle,
 		const BeamSquint::SquintType doSquint,
 		Float cutoff)
-{
+{ 
   return pb_pointer_p->applyPB(in, out, sp, parAngle, doSquint, cutoff);
 };
 
@@ -614,6 +625,7 @@ void
 PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq, 
 			   String &band, PBMath::CommonPB &whichPB, String &PBName)
 {
+  LogIO os(LogOrigin("PBMath", "PBMath"));
 
   // note:  these bands are fairly fast and loose,
   // and owe a lot to the fact that the band coverage is sparse!
@@ -671,18 +683,24 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       band = "UNKNOWN";
     }
   } else if (telescope(0,4)=="ATCA") {
-    if (freqGHz > 7.0 && freqGHz < 11.0) {
+    if (freqGHz >= 7.0 && freqGHz < 12.5) {
       whichPB = PBMath::ATCA_X;
       band = "X";
     } else if (freqGHz > 4.0 && freqGHz < 7.0) {
       whichPB = PBMath::ATCA_C;      
       band = "C";
-    } else if (freqGHz > 2.0 && freqGHz < 4.0) {
-      whichPB = PBMath::ATCA_S;
-      band = "S";
-    } else if (freqGHz < 2.0 ) {
-      whichPB = PBMath::ATCA_L1;
-      band = "L1";
+    } else if (freqGHz > 1.0 && freqGHz < 3.5) {
+      whichPB = PBMath::ATCA_16;
+      band = "16"; // 16cm band - combines L+S
+    } else if (freqGHz > 15.0 && freqGHz < 26.0) {
+      whichPB = PBMath::ATCA_K;
+      band = "K";
+    } else if (freqGHz > 30.0 && freqGHz < 50.0) {
+      whichPB = PBMath::ATCA_Q;
+      band = "Q";
+    } else if (freqGHz > 80 && freqGHz < 120.0) {
+      band = "W";
+      whichPB = PBMath::ATCA_W;
     } else {
       whichPB = PBMath::ATCA_L1;
       band = "UNKNOWN";
@@ -691,6 +709,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       // Remy Indebetouw measured PB at 5.5GHz 2011/10/20
       whichPB = PBMath::ATCA_C_RI;
     }
+    os << "Selecting primary beam for ATCA band: "+band<<LogIO::NORMAL;
   } else if (telescope(0,8)=="HATCREEK") {
     whichPB = PBMath::HATCREEK;
     band = "UNKNOWN";
@@ -768,6 +787,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::ATCA_L3:
     str = "ATCA_L3";
     break;
+  case PBMath::ATCA_16:
+    str = "ATCA_16";
+    break;
   case PBMath::ATCA_S:
     str = "ATCA_S";
     break;
@@ -777,8 +799,20 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
   case PBMath::ATCA_C_RI:
     str = "ATCA_C_RI";
     break;
+  case PBMath::ATCA:
+    str = "ATCA";
+    break;
   case PBMath::ATCA_X:
     str = "ATCA_X";
+    break;
+  case PBMath::ATCA_K:
+    str = "ATCA_K";
+    break;
+  case PBMath::ATCA_Q:
+    str = "ATCA_Q";
+    break;
+  case PBMath::ATCA_W:
+    str = "ATCA_W";
     break;
   case PBMath::GBT:
     str = "GBT";
@@ -880,14 +914,24 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::ATCA_L2;
   } else if (str == "ATCA_L3") {
     ipb = PBMath::ATCA_L3;
+  } else if (str == "ATCA_16") {
+    ipb = PBMath::ATCA_16;
   } else if (str == "ATCA_S") {
     ipb = PBMath::ATCA_S;
   } else if (str == "ATCA_C") {
     ipb = PBMath::ATCA_C;
   } else if (str == "ATCA_C_RI") {
     ipb = PBMath::ATCA_C_RI;
+  } else if (str == "ATCA") {
+    ipb = PBMath::ATCA;
   } else if (str == "ATCA_X") {
     ipb = PBMath::ATCA_X;
+  } else if (str == "ATCA_K") {
+    ipb = PBMath::ATCA_K;
+  } else if (str == "ATCA_Q") {
+    ipb = PBMath::ATCA_Q;
+  } else if (str == "ATCA_W") {
+    ipb = PBMath::ATCA_W;
   } else if (str == "HATCREEK") {
     ipb = PBMath::HATCREEK;
   } else if (str == "BIMA") {  //  BIMA is a synonym for HATCREEK
@@ -1039,7 +1083,6 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
  // Remember, these are fit parameters for the PB, not the PB
 
   LogIO os(LogOrigin("PBMath", "initByTelescope"));
-
   Vector<Double> vlacoef(4);
   vlacoef(0)= 1.0;
   vlacoef(1)= -1.300633e-03;
@@ -1342,6 +1385,53 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 					 Quantity(1.0, "GHz"), thisIsVP);
     }
     break;
+  case ATCA_16:
+    {
+      Matrix<Double> coef(5,7);
+      coef(0,0)= 1.0;
+      coef(1,0)=  1.06274e-03;
+      coef(2,0)= 1.32342e-06;
+      coef(3,0)= -8.72013e-10;
+      coef(4,0)= 1.08020e-12;
+      coef(0,1)= 1.0;
+      coef(1,1)= 9.80817e-04;
+      coef(2,1)= 1.17898e-06;
+      coef(3,1)= -7.83160e-10;
+      coef(4,1)= 8.66199e-13;
+      coef(0,2)=1.0;
+      coef(1,2)= 9.53553e-04;
+      coef(2,2)= 9.33233e-07;
+      coef(3,2)= -4.26759e-10;
+      coef(4,2)= 5.63667e-13;
+      coef(0,3)= 1.0;
+      coef(1,3)= 9.78268e-04; 
+      coef(2,3)= 6.63231e-07; 
+      coef(3,3)= 4.18235e-11; 
+      coef(4,3)= 2.62297e-13; 
+      coef(0,4)= 1.0;
+      coef(1,4)= 1.02424e-03;
+      coef(2,4)= 6.12726e-07;
+      coef(3,4)= 2.25733e-10;
+      coef(4,4)= 2.04834e-13;
+      coef(0,5)= 1.0;
+      coef(1,5)= 1.05818e-03;
+      coef(2,5)= 5.37473e-07;
+      coef(3,5)= 4.22386e-10;
+      coef(4,5)= 1.17530e-13;
+      coef(0,6)= 1.0;
+      coef(1,6)= 1.10650e-03;
+      coef(2,6)= 5.11574e-07;
+      coef(3,6)= 5.89732e-10;
+      coef(4,6)= 8.13628e-14;
+      Vector<Double> freqs(7);
+      for (Int i=0; i<7; i++) {
+	freqs(i) = (1332+i*256)*1.e6;
+      }
+      pb_pointer_p = new PBMath1DIPoly(coef, freqs, Quantity(53.0,"'"),
+				       Quantity(1.0,"GHz"));
+    }
+    break;
+  case ATCA:
   case ATCA_L1:    
     {
       Vector<Double> coef(5);
@@ -1401,15 +1491,23 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
     }
     break;
   case ATCA_C:
+  case ATCA_X:
     {
-      Vector<Double> coef(5);
-      coef(0)= 1.0;
-      coef(1)= 1.08e-3;
-      coef(2)= 1.31e-6;
-      coef(3)= -1.17e-9;
-      coef(4)= 1.07e-12;
-
-      pb_pointer_p = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
+      Matrix<Double> coef(5,2);
+      coef(0,0)= 1.0;
+      coef(1,0)= 1.08e-3;
+      coef(2,0)= 1.31e-6;
+      coef(3,0)= -1.17e-9;
+      coef(4,0)= 1.07e-12;
+      coef(0,1)= 1.0;
+      coef(1,1)= 1.04e-3;
+      coef(2,1)= 8.36e-7;
+      coef(3,1)= -4.68e-10;
+      coef(4,1)= 5.50e-13;
+      Vector<Double> freqs(2);
+      freqs(0)=4.8e9;
+      freqs(1)=8.64e9;
+      pb_pointer_p = new PBMath1DIPoly( coef, freqs, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
 					False,
 					BeamSquint(MDirection(Quantity(0.0, "'"),
 							      Quantity(0.0, "'"),
@@ -1417,6 +1515,18 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 						   Quantity(1.0, "GHz")),
 					False);
     }
+    break;
+    {
+      Vector<Double> coef(5);
+
+      pb_pointer_p = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
+					False,
+					BeamSquint(MDirection(Quantity(0.0, "'"),
+							      Quantity(0.0, "'"),
+							      MDirection::Ref(MDirection::AZEL)),
+						   Quantity(1.0, "GHz")),
+				        False);
+     }
     break;
   case ATCA_C_RI:
     // Remy Indebetouw measured the PB through the second sidelobe 20111020
@@ -1456,14 +1566,33 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 					  True);
     }
     break;
-  case ATCA_X:
+  case ATCA_K:
+  case ATCA_Q:
     {
       Vector<Double> coef(5);
       coef(0)= 1.0;
-      coef(1)= 1.04e-3;
-      coef(2)= 8.36e-7;
-      coef(3)= -4.68e-10;
-      coef(4)= 5.50e-13;
+      coef(1)= 9.832e-4;
+      coef(2)= 1.081e-6;
+      coef(3)= -4.676e-10;
+      coef(4)= 6.650e-13;
+
+      pb_pointer_p = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
+					False,
+					BeamSquint(MDirection(Quantity(0.0, "'"),
+							      Quantity(0.0, "'"),
+							      MDirection::Ref(MDirection::AZEL)),
+						   Quantity(1.0, "GHz")),
+				        False);
+     }
+    break;
+  case ATCA_W:
+    {
+      Vector<Double> coef(5);
+      coef(0)= 1.0;
+      coef(1)= 1.271e-3;
+      coef(2)=-3.040e-7;
+      coef(3)= 1.410e-9;
+      coef(4)= 0;
 
       pb_pointer_p = new PBMath1DIPoly( coef, Quantity(53.0,"'"), Quantity(1.0,"GHz"),
 					False,
@@ -1569,4 +1698,3 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 };
 
 } //# NAMESPACE CASA - END
-

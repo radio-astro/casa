@@ -107,6 +107,18 @@ namespace casa {
 			const Bool usesymmetricbeam,
 			Record& rec);
 
+      Bool setpbinvpoly(const String& telescope, const String& othertelescope,
+			const Bool dopb, const Matrix<Double>& coeff,
+			const Vector<Double>& freqs,
+			const Quantity& maxrad,
+			const Quantity& reffreq,
+			const String& isthispb,
+			MDirection& squintdir,
+			const Quantity& squintreffreq, const Bool dosquint,
+			const Quantity& paincrement,
+			const Bool usesymmetricbeam,
+			Record& rec);
+
       Bool setpbnumeric(const String& telescope, const String& othertelescope,
 			const Bool dopb, const Vector<Double>& vect,
 			const Quantity& maxrad,

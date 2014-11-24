@@ -74,7 +74,7 @@ PBMath1D::PBMath1D(Quantity maximumRadius,
 		   BeamSquint squint,
 		   Bool useSymmetricBeam) :
   PBMathInterface(isThisVP, squint, useSymmetricBeam),
-  maximumRadius_p(maximumRadius),
+  wideFit_p(False),maximumRadius_p(maximumRadius),
   refFreq_p(refFreq),
   composite_p(2048)
 {
@@ -379,7 +379,6 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
 		Bool forward)
 {
   LogIO os(LogOrigin("PBMath1D", "apply"));
- 
   // Check that in and out are comparable:
   if (in.shape() != out.shape()) {
     throw(AipsError("PBMath1D::apply(ImageInterface...) - in and out images have different shapes"));    
@@ -503,8 +502,8 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
   LatticeIterator<Complex> oli(out, LatticeStepper(in.shape(), ncs, IPosition(4,0,1,2,3)) );
 
   Complex taper;
-  Float r2=0.0;
-  Float r=0.0;
+  //Float r2=0.0;
+  //Float r=0.0;
 
   Vector<Double> increment = directionCoord.increment();
   Int rrplane = -1;
@@ -519,10 +518,12 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
   */
   Double xPixel;  Double yPixel;
 
-  Int laststokes = -1;  Int ichan;
+  Int laststokes = -1;
+  Int lastChan = -1;
+  Int ichan;
   Int istokes;
   Int ix0, iy0;
-  Int indx;
+  //Int indx;
   for(li.reset(),oli.reset();!li.atEnd();li++,oli++) {
 
     IPosition itsShape(li.matrixCursor().shape());
@@ -558,7 +559,26 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
 
     Double factor = 60.0 * spectralCache(ichan)/1.0e+9 ;  // arcminutes * GHz
     Double rmax2 = square( maximumRadius_p.getValue("'") / factor );
-
+    if (wideFit_p) {
+      // fill vp with interpolated values for current frequency
+      if (ichan!=lastChan) {
+        Int nFreq = wFreqs_p.nelements();
+	Int ifit;
+        for (ifit=0; ifit<nFreq; ifit++) {
+	  if (spectralCache(ichan)<=wFreqs_p(ifit)) break;
+	}
+	if (ifit==0) {
+	  vp_p = wbvp_p.column(0);
+	} else if (ifit==nFreq) {
+	  vp_p = wbvp_p.column(nFreq-1);
+	} else {
+	  Float l = (spectralCache(ichan) - wFreqs_p(ifit-1))/
+	    (wFreqs_p(ifit)-wFreqs_p(ifit-1));
+	  vp_p = wbvp_p.column(ifit-1)*(1-l) + wbvp_p.column(ifit)*l;
+	}
+      }
+    }
+		       
     Vector<Float> rx2(itsShape(0));
     Vector<Float> ry2(itsShape(1));
     for(Int ix=0;ix<itsShape(0);ix++) {
@@ -681,7 +701,8 @@ PBMath1D::apply(const ImageInterface<Complex>& in,
       }
     }
   }
-}
+};
+
 ImageInterface<Float>& 
 PBMath1D::apply(const ImageInterface<Float>& in,
 		ImageInterface<Float>& out,
@@ -799,7 +820,7 @@ PBMath1D::apply(const ImageInterface<Float>& in,
     }
   }
 
- 
+
   // Iterate through in minimum IO/Memory chunks
   IPosition ncs = in.niceCursorShape();
   ncs(2) = 1; ncs(3) = 1;
@@ -819,6 +840,7 @@ PBMath1D::apply(const ImageInterface<Float>& in,
   Double xPixel;  Double yPixel;
 
   Int laststokes = -1;
+  Int lastChan   = -1;
   Int ichan;
   Int istokes;
   Int ix0, iy0;
@@ -847,7 +869,7 @@ PBMath1D::apply(const ImageInterface<Float>& in,
       xPixel = nonSquintedPointingPixel(0);
       yPixel = nonSquintedPointingPixel(1);
     }
-
+  
     if (istokes != laststokes) {
       //      cout << "Stokes = " << istokes << " pix = " << xPixel << ", " << yPixel << endl;
       laststokes = istokes;
@@ -855,6 +877,26 @@ PBMath1D::apply(const ImageInterface<Float>& in,
 
     Double factor = 60.0 * spectralCache(ichan)/1.0e+9 ;  // arcminutes * GHz
     Double rmax2 = square( maximumRadius_p.getValue("'") / factor );
+    if (wideFit_p) {
+      // fill vp with interpolated values for current frequency
+      if (ichan!=lastChan) {
+	Int ifit=0;
+	Int nFreq=wFreqs_p.nelements();
+        for (ifit=0; ifit<nFreq; ifit++) {
+	  if (spectralCache(ichan)<=wFreqs_p(ifit)) break;
+	}
+	if (ifit==0) {
+	  vp_p = wbvp_p.column(0);
+	} else if (ifit==nFreq) {
+	  vp_p = wbvp_p.column(nFreq-1);
+	} else {
+	  Float l = (spectralCache(ichan) - wFreqs_p(ifit-1))/
+	    (wFreqs_p(ifit)-wFreqs_p(ifit-1));
+	  vp_p = wbvp_p.column(ifit-1)*(1-l) + wbvp_p.column(ifit)*l;
+	}
+	lastChan = ichan;
+      }
+    }
 
     Vector<Float> rx2(itsShape(0));
     Vector<Float> ry2(itsShape(1));
@@ -945,7 +987,21 @@ PBMath1D::apply(SkyComponent& in,
   MDirection compDir = in.shape().refDirection();
 
   // Now taper all polarizations appropriately
-
+  
+  // Sort out any frequency interpolation
+  Int ifit=0;
+  Float lfit=0;
+  Int nFreq=wFreqs_p.nelements();
+  if (wideFit_p) {
+    Double freq = frequency.getValue("Hz");
+    for (ifit=0; ifit<nFreq; ifit++) {
+      if (freq<=wFreqs_p(ifit)) break;
+    }
+    if (ifit>0 && ifit<nFreq) {
+      lfit=(freq-wFreqs_p(ifit-1)) / (wFreqs_p(ifit)-wFreqs_p(ifit-1));
+    }
+  }
+  
   MDirection newpointDirE;
   for (Int pol=0;pol<4;pol++) {
     Stokes::StokesTypes stokes=Stokes::type(pol+5);
@@ -964,21 +1020,31 @@ PBMath1D::apply(SkyComponent& in,
     MVDirection mvd2( newpointDirE.getAngle() );
     Quantity sep =  mvd1.separation(mvd2, "'"); 
     double r = sep.getValue("'") * frequency.getValue("Hz") / 1.0e+9;  // arcminutes * GHz
-
+    
     Complex taper;
-
+    Int ir = Int(r*inverseIncrementRadius_p);
+    Complex vpVal = vp_p(ir);
+    if (wideFit_p) {
+      if (ifit==0) {
+	vpVal = wbvp_p(ir,0);
+      } else if (ifit==nFreq) {
+	vpVal = wbvp_p(ir,nFreq-1);
+      } else {
+	vpVal = wbvp_p(ir,ifit-1)*(1-lfit) + wbvp_p(ir,ifit)*lfit;
+      }
+    }
+    
     if (r > maximumRadius_p.getValue("'")) {
       compFlux(pol) = 0.0;
     } else {
-      if (norm(vp_p(Int(r*inverseIncrementRadius_p))) > 0.0) {
+      if (norm(vpVal) > 0.0) {
 	if(iPower>1){
-	  taper=vp_p(Int(r*inverseIncrementRadius_p))*conj(vp_p(Int(r*inverseIncrementRadius_p)));
+	  taper=vpVal*conj(vpVal);
 	  if(iPower==4)
 	    taper*=taper;
-	  
 	}  
 	else{
-	  taper =  vp_p(Int(r*inverseIncrementRadius_p));
+	  taper = vpVal;
 	  //taper = pow( vp_p(Int(r*inverseIncrementRadius_p)), (Float)iPower);
 	}
       } else {

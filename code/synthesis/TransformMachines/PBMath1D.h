@@ -287,6 +287,17 @@ protected:
   Vector<Complex> esvp_p;
   // </group>
 
+  // Tabulated voltage pattern for wide band feed
+  // First axis is radius, 2nd axis is frequency
+  Matrix<Complex> wbvp_p;
+
+  // Switch to use wideband beam fits
+  Bool wideFit_p;
+
+  // Wideband beam fit frequencies.
+  // Equally spaced beam fits across frequency range of the feed 
+  Vector<Double> wFreqs_p;
+
   // Maximum radius allowed in tabulated model
   Quantity maximumRadius_p;
 
