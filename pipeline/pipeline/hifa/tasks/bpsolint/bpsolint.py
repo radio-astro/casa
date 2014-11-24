@@ -187,14 +187,16 @@ class BpSolint(basetask.StandardTaskTemplate):
 	spwlist = [int(spw) for spw in inputs.spw.split(',')]
 
 	# Log the data selection choices
-	LOG.info('Setting bandpass intent to %s ' % inputs.intent)
-	LOG.info('Selecting bandpass fields %s ' % fieldlist)
-	LOG.info('Selecting bandpass spws %s ' % spwlist)
-	LOG.info('Setting requested phaseup snr to %0.1f ' % \
+	LOG.info('Estimating bandpass solution intervals')
+	LOG.info('    Setting bandpass intent to %s ' % inputs.intent)
+	LOG.info('    Selecting bandpass fields %s ' % fieldlist)
+	LOG.info('    Selecting bandpass spws %s ' % spwlist)
+	LOG.info('    Setting requested phaseup snr to %0.1f ' % \
 	    (inputs.phaseupsnr))
-	LOG.info('Setting requested bandpass snr to %0.1f ' % (inputs.bpsnr))
+	LOG.info('    Setting requested bandpass snr to %0.1f ' % \
+	    (inputs.bpsnr))
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
-	    LOG.info('No bandpass data for MS %s' % inputs.ms.basename)
+	    LOG.info('    No bandpass data for MS %s' % inputs.ms.basename)
 	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the flux dictionary from the pipeline context
@@ -263,6 +265,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Initialize as an ordered dictionary
 	fluxdict = collections.OrderedDict()
+	LOG.info('Finding sources fluxes')
 
 	# Loop over the science windows
 	for spwid in spwlist:
@@ -297,7 +300,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    (I, Q, U, V) = flux.casa_flux_density
 		    fluxdict[spw.id]['field_name'] = fieldname
 		    fluxdict[spw.id]['flux'] = I
-	            LOG.info('Setting flux for field %s spw %s to %0.2f Jy' \
+	            LOG.info( \
+		        '    Setting flux for field %s spw %s to %0.2f Jy' \
 		        % (fieldname, spw.id, I))
 
         return fluxdict
@@ -319,6 +323,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Initialize
 	tsysdict = collections.OrderedDict()
+	LOG.info('Matching spws')
 
 	# Get the list of unique field names
 	fieldset = set(fieldnamelist)
@@ -432,10 +437,10 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	    # Update the spw dictinary
 	    if ftsysdict:
-		LOG.info('Matched spw %d to a Tsys spw %d' % (spwid, bestspwid))
+		LOG.info('    Matched spw %d to a Tsys spw %d' % (spwid, bestspwid))
 	        tsysdict[spwid] = ftsysdict
 	    else:
-		LOG.warn('Cannot match spw %d to a Tsys spw' % spwid)
+		LOG.warn('    Cannot match spw %d to a Tsys spw' % spwid)
 
 	return tsysdict
 
@@ -472,6 +477,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     def _get_obsinfo (self, ms, fieldnamelist, intent, spwidlist):
 
         obsdict = collections.OrderedDict()
+	LOG.info ('Observation summary')
 	fieldset = set(fieldnamelist)
 	spwset = set(spwidlist)
 
@@ -550,7 +556,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 		#scanTime = float (scan.time_on_source.total_seconds()) / 60.0
 		scanTime = scan.exposure_time(spw.id) / 60.0
 	        exposureTime = exposureTime + scanTime
-		intTime = scan.mean_interval(spw.id).total_seconds() / 60.0
+		#intTime = scan.mean_interval(spw.id).total_seconds() / 60.0
+		intTime = scan.mean_interval(spw.id)
+		intTime = (intTime.seconds + intTime.microseconds * 1.0e-6) / 60.0
 		meanInterval = meanInterval + intTime
 	    obsdict[spw.id]['exptime'] = exposureTime
 	    obsdict[spw.id]['integrationtime'] = meanInterval / len(fscans)
@@ -569,8 +577,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        chanwidths[i] = (channels[i].high - channels[i].low).value 
 	    obsdict[spwid]['chanwidths'] = np.median(chanwidths) 
 
-	    LOG.info('Field %s spw %2d scans %s have' % (fieldname, spwid, scanids))
-	    LOG.info('    %2d 12m antennas %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' % \
+	    LOG.info('For field %s spw %2d scans %s' % (fieldname, spwid, scanids))
+	    LOG.info('    %2d 12m antennas  %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' % \
 	        (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime, meanInterval))
 
 	return obsdict
@@ -603,6 +611,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     
         # Initialize
         mediantemps = collections.OrderedDict()
+	LOG.info('Estimating Tsys temperatures')
     
         # Temperature type must be one of 'tsys' or 'trx' or 'tsky'
         if (temptype != 'tsys' and temptype != 'trx' and temptype != 'tsky'):
@@ -674,11 +683,13 @@ class BpSolint(basetask.StandardTaskTemplate):
     	                nmatch = nmatch + 1
 
             if nmatch <= 0:
-	        LOG.info ('No SYSCAL table row matches for scans %s tsys spws %s' % (uniqueScans,
-		    tsys_spwlist))
+	        LOG.warn ( \
+		'No SYSCAL table row matches for scans %s tsys spws %s' % \
+		(uniqueScans, tsys_spwlist))
                 return mediantemps
 	    else:
-	        LOG.info ('Number of SYSCAL table row matches for scans %s tsys spws %s %d / %d' %
+	        LOG.info ( \
+		    '    SYSCAL table row matches for scans %s Tsys spws %s %d / %d' % \
 		    (uniqueScans, tsys_spwlist, nmatch, len(tsys_start_times)))
 
 	    # Get the spw ids
@@ -695,7 +706,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         for spw, scan in zip (tsys_spwlist, scan_list):
     
             if (spw not in tsys_uniqueSpws):
-                LOG.info ("tsys spw %d is not in the SYSCAL table: " % spw)
+                LOG.warn ("Tsys spw %d is not in the SYSCAL table: " % spw)
                 return mediantemps
     
             # Loop over the rows
@@ -718,10 +729,11 @@ class BpSolint(basetask.StandardTaskTemplate):
     
             if (len(medians) > 0):
                 mediantemps[spw] = np.median(medians)
-                LOG.info ("Median Tsys %s value for Tsys spw %2d = %.1f K" % \
+                LOG.info ( \
+		    "    Median Tsys %s value for Tsys spw %2d = %.1f K" % \
 		    (temptype, spw, mediantemps[spw]))
             else:
-                LOG.info ("No Tsys data for spw %d scan %d" % (spw, scan))
+                LOG.warn ("    No Tsys data for spw %d scan %d" % (spw, scan))
     
         # Return median temperature per spw and scan.
         return mediantemps 
@@ -844,9 +856,9 @@ class BpSolint(basetask.StandardTaskTemplate):
     def _compute_bpsolint(self, spwlist, spw_dict, reqPhaseupSnr,
         minBpNintervals, reqBpSnr, minBpNchan):
 
-	# The ALMA receiver bands defined per pipeline convention
-	#    There is no pipeline interface for this at the moment
-	#
+	# The ALMA receiver band, nominal tsys, and sensitivity info.
+	#    This information should go elsewhere in the next release
+	#    The ALMA receiver bands are defined per pipeline convention
 
 	ALMA_BANDS = ['ALMA Band 3', 'ALMA Band 4', 'ALMA Band 6', \
 	    'ALMA Band 7', 'ALMA Band 8', 'ALMA Band 9', 'ALMA Band 10']
@@ -854,6 +866,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	ALMA_SENSITIVITIES = [0.20, 0.24, 0.27, 0.50, 1.29, 5.32, 8.85] \
 	    # mJy (for 16*12 m antennas, 1 minute, 8 GHz, 2pol)
 
+	# Initialize
         solint_dict = collections.OrderedDict()
 
 	for spwid in spwlist:
@@ -944,11 +957,16 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        tooFewIntervals = False
 	        asterisks = ''
 	    LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%6.3fsec' (%d time intervals in solution) to reach S/N=%.0f" % \
-	        (asterisks, spwid, solint_dict[spwid]['exptime_minutes'], 60.0 * requiredIntegrations * solint_dict[spwid]['integration_minutes'],
-		solInts,reqPhaseupSnr))
+	        (asterisks,
+		spwid,
+		solint_dict[spwid]['exptime_minutes'],
+		60.0 * requiredIntegrations * solint_dict[spwid]['integration_minutes'],
+		solInts,
+		reqPhaseupSnr))
 	    solint_dict[spwid]['nphaseup_solutions'] = solInts
 	    if tooFewIntervals:
-	        LOG.warn("%s This spw would have less than %d time intervals in its solution" % \
+	        LOG.warn( \
+		"%s This spw would have less than %d time intervals in its solution" % \
 		(asterisks, minBpNintervals))
 
 	    # Bandpass solution info
@@ -965,9 +983,12 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        tooFewChannels = False
 	        asterisks = ''
 	    LOG.info("%sspw %2d (%4.0fMHz) requires solint='%.2fMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
-	        (asterisks, spwid, solint_dict[spwid]['bandwidth']*1.0e-6,
+	        (asterisks,
+		spwid,
+		solint_dict[spwid]['bandwidth']*1.0e-6,
 		requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6,
-		solChannels, reqBpSnr))
+		solChannels,
+		reqBpSnr))
 	    solint_dict[spwid]['nbandpass_solutions'] = solChannels
 	    if tooFewChannels:
 	        LOG.warn("%s This spw would have less than %d channels in its solution" % (asterisks, minBpNchan))
