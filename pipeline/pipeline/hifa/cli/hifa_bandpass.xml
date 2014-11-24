@@ -84,6 +84,12 @@ window in each measurement set.
        </allowed>
   </param>
 
+  <param type="any" name="solint" subparam="true">
+    <description>Solution intervals</description>
+    <any type="variant"/>
+    <value type="string">inf</value>
+  </param>
+
   <param type="int" name="maxchannels" subparam="true">
     <description>The smoothing factor in channels</description>
     <value>240</value>
@@ -97,12 +103,6 @@ window in each measurement set.
   <param type="int" name="bpnsols" subparam="true">
     <description>Minimum number of bandpass solutions</description>
     <value>8</value>
-  </param>
-
-  <param type="any" name="solint" subparam="true">
-    <description>Solution intervals</description>
-    <any type="variant"/>
-    <value type="string">inf</value>
   </param>
 
   <param type="string" name="hm_bandtype">
