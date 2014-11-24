@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.58 2014/09/16 14:54:09 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.59 2014/11/24 15:42:04 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.58 2014/09/16 14:54:09 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.59 2014/11/24 15:42:04 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -128,7 +128,6 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
             if (os.path.exists(directory)==False):
                 casalogPost(debug,"Making directory = %s" % (directory))
                 os.system("mkdir -p %s" % directory)
-    debug = False
     if (debug):
         print "makeplot(%d): pagectr=%d, len(pages)=%d, len(spwsToPlot)=%d, pages=" % (locationCalledFrom,
                                                               pagectr, len(pages),len(spwsToPlot)), pages
@@ -146,14 +145,18 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
         plotfilename = figfile + '.%03d' % (figfileNumber)
     else:
         if (msFound):
-            if (overlayAntennas):
+            if (overlayAntennas and overlayTimes):
+                plotfilename = figfile+'.spw%02d'%(ispw)
+            elif (overlayAntennas):
                 plotfilename = figfile+'.spw%02d'%(ispw)+'.t%02d'%(t)
             elif (overlayTimes):
                 plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)
             else:
                 plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)+'.t%02d'%(t)
         else:
-            if (overlayAntennas):
+            if (overlayAntennas and overlayTimes):
+                plotfilename = figfile+'.spw%02d'%(ispw)
+            elif (overlayAntennas):
                 plotfilename = figfile+'.spw%02d'%(ispw)+'.t%02d'%(t)
             elif (overlayTimes):
                 plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)
@@ -4086,10 +4089,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                else:
                                    pagectr += 1
                                    if (pagectr >= len(pages)):
-                                     pages.append([xctr,spwctr,mytime,1])
-                                     if (debug):
-                                         print "amp: appending [%d,%d,%d,%d]" % (xctr,spwctr,mytime,1)
-                                     newpage = 0
+                                       if (xframe == lastFrame and overlayTimes and overlayAntennas and xctr+1==len(antennasToPlot) and
+                                           yaxis=='amp'): 
+                                           # I'm not sure why this works, but is needed to fix CAS-7154
+                                           myspwctr = spwctr+1
+                                       else:
+                                           myspwctr = spwctr
+                                       pages.append([xctr,myspwctr,mytime,1])
+                                       if (debug):
+                                           print "amp: appending [%d,%d,%d,%d]" % (xctr,myspwctr,mytime,1)
+                                       newpage = 0
                                pb.clf()
                                if (debug):
                                    print "3)Setting xframe to %d" % xframeStart
