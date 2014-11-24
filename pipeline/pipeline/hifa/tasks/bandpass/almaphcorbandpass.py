@@ -84,12 +84,15 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             phaseup_result = self._do_phaseup(phaseupsolint=phaseupsolint)
 
         # Now perform the bandpass
-	if inputs.hm_bandpass == 'fixed':
-            result = self._do_bandpass()
+	if inputs.hm_bandpass == 'snr':
+	    LOG.info('Using SNR based solint estimates')
+            result = self._do_snr_bandpass(snr_result)
 	elif inputs.hm_bandpass == 'smoothed':
+	    LOG.info('Using simple bandpass smoothing solint estimates')
             result = self._do_smoothed_bandpass()
 	else:
-            result = self._do_snr_bandpass(snr_result)
+	    LOG.info('Using fixed solint estimates')
+            result = self._do_bandpass()
         
         # Attach the preparatory result to the final result so we have a
         # complete log of all the executed tasks. 
@@ -212,7 +215,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     continue
                 ncorr = len(dd.corr_axis)
                 if ncorr not in set([1,2,4]):
-                    LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
+                    LOG.debug(\
+		    'Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
                     continue
 
 		# Smooth if FDM and if it makes sense
@@ -274,7 +278,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 		# Find the best solint for that window
 		try:
 		    solindex = snr_result.spwids.index(spw.id)
-		    if snr_result.nbpsolutions[solindex] < inputs.minbpnsols:
+		    if snr_result.nbpsolutions[solindex] < inputs.bpnsols:
 		        solindex = -1
 		except:
 		    solindex = -1
@@ -284,7 +288,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 		if solindex >= 0:
 
 		    inputs.solint = orig_solint + ',' +  \
-		        snr_results.bpsolints[solindex]
+		        snr_result.bpsolints[solindex]
                     LOG.info('Setting bandpass solint to %s for spw %s ' % \
 		        (inputs.solint, spw.id))
 

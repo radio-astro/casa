@@ -12,10 +12,10 @@ from .almaphcorbandpass import ALMAPhcorBandpass
 
 #from . import qa
 #from . import common
-#from . import renderer
+from . import renderer
 from pipeline.hif.tasks.bandpass import qa
 from pipeline.hif.tasks.bandpass import common
-from pipeline.hif.tasks.bandpass import renderer
+#from pipeline.hif.tasks.bandpass import renderer
 
 pipelineqa.registry.add_handler(qa.BandpassQAHandler())
 pipelineqa.registry.add_handler(qa.BandpassListQAHandler())
