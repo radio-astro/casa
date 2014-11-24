@@ -8,6 +8,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
+import decimal
 
 from pipeline.hif.tasks.flagging import flagdeterbase 
 
@@ -102,9 +103,66 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                 # <= 256 channels per correlation
                 dd = self.inputs.ms.get_data_description(spw=spw)
                 ncorr = len(dd.corr_axis)
+                
+                
                 if ncorr*spw.num_channels > 256:
                     raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)
 	
+	
+	
+	def _get_edgespw_cmds(self):
+	        #Append to the default _get_edgespw_cmds method, and flag 
+	        #the portions of any FDM spw that extend beyond a total 
+	        #width of 1875 MHz, that is, all channels that lie 
+	        #beyond +-937.5 MHz from the mean frequency (CAS-5231)
+	        to_flag = super(FlagDeterALMA, self)._get_edgespw_cmds()
+	
+		inputs = self.inputs
+
+		# loop over the spectral windows, generate a flagging command for each
+		# spw in the ms. Calling get_spectral_windows() with no arguments
+		# returns just the science windows, which is exactly what we want.
+		for spw in inputs.ms.get_spectral_windows():
+		    try:
+			# test that this spw should be flagged by assessing number of
+			# correlations, TDM/FDM mode etc.
+			self.verify_spw(spw)
+		    except ValueError as e:
+		        LOG.debug(e.message)
+			# this spw has more than 256 chns per corr.  Proceed with FDM flagging.
+			
+		        #Calculate the range outside the FDM spws for all channels that lie 
+	                #beyond +-937.5 MHz from the mean frequency
+
+			quanta = casatools.quanta
+			bwinput = str(spw.bandwidth.to_units(otherUnits=measures.FrequencyUnits.HERTZ))
+			bw_quantity = quanta.convert(quanta.quantity(bwinput), 'Hz')        
+			bandwidth = measures.Frequency(quanta.getvalue(bw_quantity)[0], 
+					    measures.FrequencyUnits.HERTZ)
+			cen_freq = spw.centre_frequency
+			
+			#LOG.info(str(bandwidth))
+			#LOG.info(str(cen_freq))
+			
+			if (float(bandwidth.value)/1.e6 > 1875.0):
+			    #lower range outside of -937.5 MHz
+			    LOG.info('Bandwidth greater than 1875 MHz.  FDM edge channel flagging')
+			    lo_freq = cen_freq - bandwidth / 2.0
+			    hi_freq = cen_freq - measures.Frequency(937.5e6, measures.FrequencyUnits.HERTZ)
+			    minchan, maxchan = spw.channel_range(lo_freq, hi_freq)
+			    cmd = '{0}:{1}~{2}'.format(spw.id, minchan, maxchan)
+			    to_flag.append(cmd)
+			    
+			    #upper range outside of +937.5 MHz
+			    lo_freq = cen_freq + measures.Frequency(937.5e6, measures.FrequencyUnits.HERTZ)
+			    hi_freq = cen_freq + bandwidth / 2.0
+			    minchan, maxchan = spw.channel_range(lo_freq, hi_freq)
+			    cmd = '{0}:{1}~{2}'.format(spw.id, minchan, maxchan)
+			    to_flag.append(cmd)
+
+		return to_flag
+
+
 	
 	
         '''
