@@ -76,6 +76,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 	    # are the same
 	    if inputs.hm_phaseup == 'snr':
 		if len(snr_result.spwids) <= 0:
+	            LOG.warn('SNR based phaseup solint estimates are unavailable')
 	            phaseupsolint = inputs.phaseupsolint
 		else:
 	            phaseupsolint = self._get_best_phaseup_solint(snr_result)
@@ -85,7 +86,10 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 
         # Now perform the bandpass
 	if inputs.hm_bandpass == 'snr':
-	    LOG.info('Using SNR based solint estimates')
+	    if len(snr_result.spwids) <= 0:
+	        LOG.warn('SNR based bandpass solint estimates are unavailable')
+	    else:
+	        LOG.info('Using SNR based solint estimates')
             result = self._do_snr_bandpass(snr_result)
 	elif inputs.hm_bandpass == 'smoothed':
 	    LOG.info('Using simple bandpass smoothing solint estimates')
