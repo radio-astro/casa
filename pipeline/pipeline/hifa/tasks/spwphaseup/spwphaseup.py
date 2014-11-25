@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 
+import types
+
 from pipeline.hif.tasks.gaincal import common
 from pipeline.hif.tasks.gaincal import gaincalmode
 from pipeline.hif.tasks.gaincal import gaincalworker
 from pipeline.hif.tasks.gaincal import gtypegaincal
 
 from pipeline.hifa.heuristics.phasespwmap import simple_w2nspwmap
+from pipeline.hif.heuristics import caltable as gcaltable
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -22,12 +25,31 @@ class SpwPhaseupInputs(gaincalmode.GaincalModeInputs):
     samebb = basetask.property_with_default('samebb', True)
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, mode=None, intent=None, maxnarrowbw=None,
-        minfracmaxbw=None, samebb=None, **parameters):
+    def __init__(self, context, mode=None, caltable=None, intent=None,
+        maxnarrowbw=None, minfracmaxbw=None, samebb=None, **parameters):
         super(SpwPhaseupInputs, self).__init__(context, mode='gtype',
-            intent=intent,
+            caltable=caltable, intent=intent,
             maxnarrowbw=maxnarrowbw, minfracmaxbw=minfracmaxbw, samebb=samebb,
             **parameters)
+
+    @property
+    def caltable(self):
+        # The value of caltable is ms-dependent, so test for multiple
+        # measurement sets and listify the results if necessary
+
+        if self._caltable is not None:
+            return self._caltable
+
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('caltable')
+
+        return gcaltable.GaincalCaltable()
+
+    @caltable.setter
+    def caltable(self, value):
+        self._caltable = value
+
+
 
 class SpwPhaseup(gaincalworker.GaincalWorker):
     Inputs = SpwPhaseupInputs
