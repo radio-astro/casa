@@ -153,7 +153,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
           
                 ia.close()
 
-        #elif mode != 'merge':
         else:
            #DEBUG
            #print "mode=",mode
@@ -230,15 +229,21 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                (outparentim, outbmask)=extractmaskname(output)
                if outbmask!='':
                    (parentimexist,maskexist)=checkinmask(outparentim,outbmask)    
-                   if parentimexist and maskexist and not overwrite:
-                       raise Exception, "output=%s exists. If you want to overwrite it, please set overwrite=True" % output
+                   if parentimexist and maskexist: 
+                       if not overwrite:
+                           raise Exception, "output=%s exists. If you want to overwrite it, please set overwrite=True" % output
+                       else:
+                        casalog.post("Will overwrite the existing internal mask, %s in %s" % (outbmask,outparentim))
+                        storeinmask=True
+
                    #if parentimexist and not maskexist:
-                   if not maskexist:
+                   else:
                        storeinmask=True
                else:
                   outparentim=output
                
            #print "param checks before branching out for mode=========="
+           #print "storeinmask = ",storeinmask
            #print "output=",output, " is exist?=",os.path.isdir(output)
            #print "outparentim=",outparentim, " is exist?=",os.path.isdir(outparentim)
 
@@ -526,6 +531,7 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                       ia.set(1) 
                       # if output image exist its image pixel values will not be normalized the region
                       # outside input mask will be masked.
+                   
                     ia.maskhandler('copy',[tmp_outmaskimage+':'+outbmask, outbmask])
                     ia.maskhandler('set',outbmask)
                     ia.done()
@@ -580,9 +586,10 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
             usedbmasks=[]
             usedrgfiles=[]
             usedrglist=[]
+            #print "outparentim=",outparentim
             try:
                 # check outparentim - image part of output and set as a template image
-		if not os.path.isdir(outparentim) or (outparentim==inpimage):
+		if not (os.path.isdir(outparentim) or (outparentim==inpimage)):
                     # figure out which input mask to be used as template
                     # if inpimage is defined use the first one else try the first one
                     # inpmask
@@ -615,8 +622,12 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		else:
                     #use output image - does not do zeroeing out, so output image is only modified     
 		    shutil.copytree(outparentim,sum_tmp_outfile)
-                    #print "Using outparentim=",outparentim, " as sum_tmp_outfile=",sum_tmp_outfile
-     
+                    # temporary clear out the internal masks from the working image
+                    ia.open(sum_tmp_outfile)
+                    origmasks = ia.maskhandler('get') 
+                    ia.maskhandler('delete',origmasks)
+                    ia.close()
+                     
                 #if type(inpimage)==str:
                 #    inpimage=[inpimage]
                 #if type(inpmask)==str:
@@ -629,7 +640,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         tmpregrid='__tmp_regrid.'+img
                         # regrid to output image coords
 			regridmask(img,sum_tmp_outfile,tmpregrid)
-                        #print "addimagemask... for ",tmpregrid
 			addimagemask(sum_tmp_outfile,tmpregrid)
                         usedimfiles.append(img)
                         shutil.rmtree(tmpregrid)
@@ -647,25 +657,26 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 			ia.open(imname)
 			inmasks=ia.maskhandler('get')
                         ia.close()
-                        #print "inmasks=",str(inmasks)
 			if not inmasks.count(mskname):
 			    raise TypeError, mskname+" does not exist in "+imname+" -available masks:"+str(inmasks)
 			# move T/F mask to image mask
                         # changed to usemasked=False as of CAS-5443  
+
 			pixelmask2cleanmask(imname, mskname, tmp_inmask, False)    
 			regridmask(tmp_inmask,sum_tmp_outfile,'__tmp_fromTFmask')
 			addimagemask(sum_tmp_outfile,'__tmp_fromTFmask')
                         usedbmasks.append(msk)
                         shutil.rmtree('__tmp_fromTFmask') 
-                        # if overwriting to inpimage, delete the boolean mask
+                        shutil.rmtree(tmp_inmask) 
+                        # if overwriting to inpimage and if not writing to in-mask, delete the boolean mask
                         if outparentim==inpimage and inpimage==imname:
-                            ia.open(imname)
-                            ia.maskhandler('delete',[mskname])
-                            ia.close()
+                            if outbmask=="":
+                                ia.open(imname)
+                                ia.maskhandler('delete',[mskname])
+                                ia.close()
                         ia.open(imname)
                         ia.close()
                       
-
                 if len(rgfiles)>0 or len(rglist)>0:
                     # create an empty image with input image coords.
                     #print "Using %s as a template for regions" % inpimage 
@@ -771,6 +782,9 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     ia.open(outparentim)
                     #if isNewfile: 
                     #  ia.set(1)
+                    # using maskexist at the initial test before branching out for each mode
+                    if maskexist and overwrite: 
+                      ia.maskhandler('delete',outbmask)    
                     ia.maskhandler('copy',[sum_tmp_outfile+':'+outbmask, outbmask])    
                     ia.maskhandler('set',outbmask)
                     ia.done()
