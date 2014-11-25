@@ -163,6 +163,9 @@ class Fluxboot(basetask.StandardTaskTemplate):
         except Exception as e:
             LOG.warning(e.message)
             LOG.warning("A problem was detected while running fluxscale.  Please review the CASA log.")
+            powerfit_results = []
+            weblog_results = []
+            spindex_results = []
 
         return FluxbootResults(sources=self.inputs.sources, flux_densities=self.inputs.flux_densities, spws=self.inputs.spws, weblog_results=weblog_results, spindex_results=spindex_results)                        
 
