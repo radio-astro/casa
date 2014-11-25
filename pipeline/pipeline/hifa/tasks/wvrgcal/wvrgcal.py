@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import collections
 import numpy as np
 import os
@@ -309,6 +310,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spwids = [spw.id for spw in science_spws]
+	wvr_spwids = sorted([spw.id for spw in ms.spectral_windows if \
+	    spw.num_channels==4 and 'WVR' in spw.intents])
 
         smooths_done = set()
         callist = []
@@ -341,7 +344,9 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                                           wvrflag=wvrflag, smooth=smooth,
                                           scale=scale, maxdistm=maxdistm,
                                           minnumants=minnumants,
-                                          mingoodfrac=mingoodfrac)
+                                          mingoodfrac=mingoodfrac,
+					  spw=science_spwids,
+					  wvrspw=[wvr_spwids[0]])
                 jobs.append(task)
 
                 smooths_done.add(smooth)
@@ -353,6 +358,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
             caltables.append(caltable)
+
 
         # execute the jobs
         for job in jobs:
@@ -414,7 +420,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             qa_spw_list = atmheuristics.spwid_rank_by_opacity()
         else:
             qa_spw_list = inputs.qa_spw.split(',')
-      
+
         for qa_spw in qa_spw_list:
             LOG.info('qa: %s attempting to calculate wvrgcal QA using spw %s' %
               (os.path.basename(inputs.vis), qa_spw))
@@ -436,6 +442,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 break
             except:
                 LOG.warning('qa: wvrgcal QA calculation failed')
+
 
         # accept this result object, thus adding the WVR table to the 
         # callibrary
