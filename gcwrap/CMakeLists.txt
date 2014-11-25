@@ -615,7 +615,7 @@ casa_find( LIBSAKURA
   VERSION 0.1
   INCLUDES libsakura/sakura.h libsakura/config.h
   LIBS sakura
-  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR}
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
   CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
   NO_LINK    # The library may depend on newer gcc. Skip generating executable.
 )
