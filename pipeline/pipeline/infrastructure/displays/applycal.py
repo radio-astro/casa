@@ -96,8 +96,7 @@ class PlotmsLeaf(object):
         self._plotfile = self._get_plotfile()
 
     def plot(self):
-        plots = [self._get_plot_wrapper()]
-        return [p for p in plots if p is not None]
+        return [(self._get_plot_task(), self._get_plot_wrapper())]
             
     def _get_plotfile(self):
         fileparts = {
@@ -136,15 +135,14 @@ class PlotmsLeaf(object):
                             png)
 
     def _get_plot_wrapper(self):
-        if not os.path.exists(self._plotfile):
-            LOG.trace('Creating new plot: %s' % self._plotfile)
-            try:
-                self._create_plot()
-            except Exception as ex:
-                LOG.error('Could not create plot %s' % self._plotfile)
-                LOG.exception(ex)
-                return None
-
+#         if not os.path.exists(self._plotfile):
+#             LOG.trace('Creating new plot: %s' % self._plotfile)
+#             try:
+#                 self._create_plot()
+#             except Exception as ex:
+#                 LOG.error('Could not create plot %s' % self._plotfile)
+#                 LOG.exception(ex)
+#                 return None
         parameters={'vis' : self._vis}
 
         if self._field != '':
@@ -165,7 +163,7 @@ class PlotmsLeaf(object):
             
         return wrapper
 
-    def _create_plot(self):
+    def _get_plot_task(self):
         task_args = {'vis'             : self._ms.name,
                      'xaxis'           : self._xaxis,
                      'yaxis'           : self._yaxis,
@@ -180,12 +178,12 @@ class PlotmsLeaf(object):
         task_args.update(**self._plot_args)
         
         task = casa_tasks.plotms(**task_args)
-        task.execute(dry_run=False)
-        
-        if not os.path.exists(self._plotfile):
-            LOG.info('The last plotms call did not generate an output file. '
-                     'If the data selection was flagged, this is to be ' 
-                     'expected.')
+        return task
+
+#         if not os.path.exists(self._plotfile):
+#             LOG.info('The last plotms call did not generate an output file. '
+#                      'If the data selection was flagged, this is to be ' 
+#                      'expected.')
 
 
 class SpwComposite(common.LeafComposite):
@@ -248,7 +246,7 @@ class BasebandComposite(common.LeafComposite):
             children.append(leaf_obj)
 
         super(BasebandComposite, self).__init__(children)
-
+    
 
 class AntComposite(common.LeafComposite):
     """
@@ -393,18 +391,42 @@ class CalappFieldSpwComposite(common.LeafComposite):
 
 class PlotmsAntComposite(AntComposite):
     leaf_class = PlotmsLeaf
+    
+    def plot(self):
+        # merge separate ant jobs into one job using plotms iterator
+        jobs_and_wrappers = super(PlotmsAntComposite, self).plot()        
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'antenna')
+        return successful_wrappers
 
 
 class PlotmsSpwComposite(SpwComposite):
     leaf_class = PlotmsLeaf
 
+    def plot(self):
+        # merge separate spw jobs into one job using plotms iterator
+        jobs_and_wrappers = super(PlotmsSpwComposite, self).plot()        
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
+        return successful_wrappers
+
 
 class PlotmsBasebandComposite(BasebandComposite):
     leaf_class = PlotmsLeaf
 
+    def plot(self):
+        # merge separate spw jobs into one job using plotms iterator
+        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()        
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
+        return successful_wrappers
+
 
 class PlotmsFieldComposite(FieldComposite):
     leaf_class = PlotmsLeaf
+
+    def plot(self):
+        # merge separate spw jobs into one job using plotms iterator
+        jobs_and_wrappers = super(PlotmsFieldComposite, self).plot()        
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'field')
+        return successful_wrappers
 
 
 class PlotmsCalappComposite(CalappComposite):

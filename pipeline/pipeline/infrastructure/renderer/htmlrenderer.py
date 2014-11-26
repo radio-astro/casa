@@ -2,9 +2,7 @@ from __future__ import absolute_import, division
 import collections
 import contextlib
 import datetime
-import json
 import math
-import operator
 import os
 import pydoc
 import re
@@ -21,14 +19,12 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.clean as clean
-import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
-import pipeline.infrastructure.renderer.rendererutils as rendererutils
 from pipeline.infrastructure.renderer.templates import resources
 from . import logger
 from . import qaadapter
@@ -87,9 +83,6 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hif.tasks.ExportData:
         return 'Export data products'
-
-    if task_cls is hif.tasks.Rawflagchans:
-        return 'Flag channels in raw data'
 
     if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportDataOld):
         return 'Register measurement sets with the pipeline'
@@ -1376,55 +1369,6 @@ class CleanPlotsRenderer(object):
         return t.render(**display_context)
 
 
-class T2_4MDetailsRawflagchansRenderer(T2_4MDetailsDefaultRenderer):
-    '''
-    Renders detailed HTML output for the Rawflagchans task.
-    '''
-    def __init__(self, template='t2-4m_details-hif_rawflagchans.html',
-            always_rerender=False):
-        super(T2_4MDetailsRawflagchansRenderer, self).__init__(template,
-                always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsRawflagchansRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        htmlreports = self.get_htmlreports(context, results)
-        
-        ctx.update({'htmlreports' : htmlreports})
-        return ctx
-
-    def get_htmlreports(self, context, results):
-        report_dir = context.report_dir
-        weblog_dir = os.path.join(report_dir,
-                                  'stage%s' % results.stage_number)
-
-        htmlreports = {}
-        for result in results:
-#            if not hasattr(result, 'flagcmdfile'):
-#                continue
-
-            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-            table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath,)
-
-        return htmlreports
-
-    def write_flagcmd_to_disk(self, weblog_dir, result):
-        tablename = os.path.basename(result.table)
-        filename = os.path.join(weblog_dir, '%s.html' % tablename)
-        if os.path.exists(filename):
-            return filename
-
-        rendererutils.renderflagcmds(result.flagcmds(), filename)
-        return filename
-
-
-
-
-#-----------------------------------------------------------------------
-
 class T2_4MDetailsfinalcalsRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_finalcals.html', 
                  always_rerender=False):
@@ -2201,7 +2145,6 @@ renderer_map = {
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.ExportData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_exportdata.html'),
-        hif.tasks.Rawflagchans   : T2_4MDetailsRawflagchansRenderer(),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),

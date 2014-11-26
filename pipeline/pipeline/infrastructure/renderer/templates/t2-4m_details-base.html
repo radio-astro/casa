@@ -27,7 +27,7 @@ def get_qascores(pool, lo, hi):
 		<%
 			relurl = url_fn(ms)
 			subpage_abspath = os.path.join(pcontext.report_dir, dirname, relurl)
-			subpage_path = os.path.relpath(os.path.join(dirname, relurl), pcontext.report_dir)
+			subpage_path = os.path.relpath(subpage_abspath, pcontext.report_dir)
 			subpage_exists = os.path.exists(subpage_abspath)
 		%>
 		<h4>

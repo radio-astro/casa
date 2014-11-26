@@ -1,16 +1,12 @@
 from __future__ import absolute_import
 
-import collections
 import numpy as np 
 import os
-import re
 import types
 
-#import casa
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 from pipeline.hif.tasks.common import commonhelpermethods
 from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
@@ -102,7 +98,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @metric.setter
     def metric(self, value):
         if value is None:
-           value = 'combined'
+            value = 'combined'
         self._metric = value
 
     @property
@@ -262,11 +258,11 @@ class Rawflagchans(basetask.StandardTaskTemplate):
           rules=rules, niter=inputs.niter)
         flaggertask = flagger(flaggerinputs)
 
-	# Execute it to flag the data view
-        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        # Execute it to flag the data view
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='before')
         stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
-        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
+        summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary', name='after')
         stats_after = self._executor.execute(summary_job)
 
         result.summaries = [stats_before, stats_after]

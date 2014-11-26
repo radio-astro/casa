@@ -250,7 +250,7 @@ class PhaseOffsetPlot(object):
                             LOG.info('No data to plot for antenna %s scan %s corr %s' % (antenna.name, scan.id, corr_axis))
                             continue
                         
-                        phase_for_corr = data.data[corr_idx]
+                        phase_for_corr = data.data[corr_idx][0]
                         rad_phase = numpy.deg2rad(phase_for_corr)
                         unwrapped_phase = numpy.unwrap(rad_phase)
                         offset_rad = unwrapped_phase - numpy.ma.median(unwrapped_phase)

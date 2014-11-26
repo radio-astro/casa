@@ -14,9 +14,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script>
 $(document).ready(function () {
-    // push JSON directly into page, avoiding XHR cross-site domain problems
-	var json='${json}';
-	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+	var scores_dict = $('#scores').data('scores');	
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -30,25 +28,8 @@ $(document).ready(function () {
     // created, and add them to the filter pipeline, filtering on the appropriate
     // dictionary key
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
-    filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
+    filterPipeline.addFilter(FILTERS.createMatchFilter('pol', '#select-pol'));
 
-    // get the X-axis label for Tsys
-    var xAxis = PLOTS.xAxisLabels["qa"];
-
-    // create histograms and histogram filters for the three distributions we want
-    // to highlight
-    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_XY", "#histogram-xy", xAxis),
-		  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_X2X1", "#histogram-x2x1", xAxis)]
-
-    // link histogram ranges to the range checkbox
-    var rangeCheckbox = $("input#rangeCheckbox");
-	rangeCheckbox.click(function() {
-		var state = rangeCheckbox.prop("checked");
-		charts.forEach(function(chart) {
-			chart.histogram.duration(1000).plotExtent(state);
-		});
-	});
-    
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
     $("ul.thumbnails li div a").click(function (evt) {
@@ -63,36 +44,20 @@ $(document).ready(function () {
 });
 </script>
 
+<div data-scores="${json}" id="scores"></div>
+
 <div class="page-header">
 	<h1>${plot_title}<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <div class="column-fluid">
-	<label class="checkbox"> 
-		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
-	</label>
 	<div class="row-fluid">
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>X-Y phase deviation</legend>
-				<div id="histogram-xy" class="span12">
-			</fieldset>
-		</div>
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>X2-X1 phase deviation</legend>
-				<div id="histogram-x2x1" class="span12">
-			</fieldset>
-		</div>
-	</div>
-	
-	<div class="row-fluid">
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
 				<legend>Spectral Window Filter</legend>
 				<select id="select-spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
-					% for spw in sorted(list(set([p.parameters['spw'] for p in plots]))):
+					% for spw in sorted(list(set([int(p.parameters['spw']) for p in plots]))):
 					<option>${spw}</option>
 					% endfor
 		       	</select>
@@ -100,40 +65,39 @@ $(document).ready(function () {
 			</div>
 		</div>		
 	
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
-				<legend>Antenna Filter</legend>
-				<select id="select-ant" class="select2" multiple style="width:100%" placeholder="Show all antennas">
-					% for ant in sorted(list(set([p.parameters['ant'] for p in plots]))):
-					<option>${ant}</option>
+				<legend>Polarisation Filter</legend>
+				<select id="select-pol" class="select2" multiple style="width:100%" placeholder="Show all polarisations">
+					% for pol in sorted(list(set([p.parameters['pol'] for p in plots]))):
+					<option>${pol}</option>
 					% endfor
 		       	</select>
 			</fieldset>
 			</div>
 		</div>		
-
 	</div>
-	
 </div>
 
 <br>
 
 <div class="column-fluid">
 	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+	% for plot in sorted(plots, key=lambda p: p.parameters['spw']):
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}}"
+				   title="Spw ${plot.parameters['spw']} ${plot.parameters['pol']}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}"
+						 title="Spw ${plot.parameters['spw']} ${plot.parameters['pol']}"
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">Antenna ${plot.parameters['ant']} spw ${plot.parameters['spw']}</p>
+					<p class="text-center">Spw ${plot.parameters['spw']}
+					${plot.parameters['pol']}</p>
 			</div>
 		</li>
 	% endfor

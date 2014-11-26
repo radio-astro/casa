@@ -109,7 +109,7 @@ class JsonPlotRenderer(CommonRenderer):
             # push the most commonly used filter parameters directly into the
             # JSON dictionary to save the extending classes from doing it in
             # update_json_dict 
-            for param in ('spw', 'scan', 'ant', 'baseband', 'field'):
+            for param in ('spw', 'scan', 'ant', 'baseband', 'field', 'pol'):
                 if param in plot.parameters:
                     json_dict_for_plot[param] = str(plot.parameters[param])                    
             self.update_json_dict(json_dict_for_plot, plot)
@@ -121,7 +121,7 @@ class JsonPlotRenderer(CommonRenderer):
             for k, v in json_dict_for_plot.items():
                 if isinstance(v, float):
                     if math.isnan(v) or math.isinf(v):
-                        json_dict_for_plot[k] = v
+                        json_dict_for_plot[k] = 'null'
 
             d[image_relpath] = json_dict_for_plot
 
@@ -136,7 +136,10 @@ class JsonPlotRenderer(CommonRenderer):
         pass
          
     def update_mako_context(self, mako_context):
+        super(JsonPlotRenderer, self).update_mako_context(mako_context)
+        well_formed = self.json.replace("'", "\\'").replace('"', '&quot;')
+        
         mako_context.update({'plots'      : self.plots,
-                            # Javascript parser requires \" -> \\" conversion 
-                             'json'       : self.json.replace('\"', '\\"'),
+                             'json'       : well_formed,
                              'plot_title' : self.title})
+        

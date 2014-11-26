@@ -1,6 +1,7 @@
 <%!
 rsc_path = ""
 import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
@@ -13,9 +14,7 @@ import os
 
 <script>
 $(document).ready(function () {
-    // push JSON directly into page, avoiding XHR cross-site domain problems
-	var json='${json}';
-	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+	var scores_dict = $('#scores').data('scores');
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -28,18 +27,16 @@ $(document).ready(function () {
     // create filters that listen for events on the .select2 input fields we just
     // created, and add them to the filter pipeline, filtering on the appropriate
     // dictionary key
-    filterPipeline.addFilter(FILTERS.createMatchFilter('tsys_spw', '#select-tsys_spw'));
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
-    filterPipeline.addFilter(FILTERS.createMatchFilter('antenna', '#select-ant'));
+    filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
 
     // get the X-axis label for Tsys
-    var xAxis = PLOTS.xAxisLabels["K"];
+    var xAxis = PLOTS.xAxisLabels["qa"];
 
     // create histograms and histogram filters for the three distributions we want
-    // to highlight: RMS, average median, and maximum median reached.
-    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median", "#histogram-tsysmedian", xAxis),
-    			  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median_max", "#histogram-tsysmedianmax", xAxis),
-				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "rms", "#histogram-tsysrms", xAxis)]
+    // to highlight
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_XY", "#histogram-xy", xAxis),
+		  		  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "PHASE_SCORE_X2X1", "#histogram-x2x1", xAxis)]
 
     // link histogram ranges to the range checkbox
     var rangeCheckbox = $("input#rangeCheckbox");
@@ -64,6 +61,8 @@ $(document).ready(function () {
 });
 </script>
 
+<div data-scores="${json}" id="scores"></div>
+
 <div class="page-header">
 	<h1>${plot_title}<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
@@ -73,44 +72,25 @@ $(document).ready(function () {
 		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
 	</label>
 	<div class="row-fluid">
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<fieldset>
-				<legend>Average of Median T<sub>sys</sub> over time</legend>
-				<div id="histogram-tsysmedian" class="span12">
+				<legend>X-Y phase deviation</legend>
+				<div id="histogram-xy" class="span12">
 			</fieldset>
 		</div>
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<fieldset>
-				<legend>Maximum of Median T<sub>sys</sub> over time</legend>
-				<div id="histogram-tsysmedianmax"  class="span12">
-			</fieldset>
-		</div>
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>RMS deviation from Average Median T<sub>sys</sub></legend>
-				<div id="histogram-tsysrms"  class="span12">
+				<legend>X2-X1 phase deviation</legend>
+				<div id="histogram-x2x1" class="span12">
 			</fieldset>
 		</div>
 	</div>
 	
 	<div class="row-fluid">
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
-				<legend>Tsys Spectral Window Filter</legend>
-				<select id="select-tsys_spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
-					% for spw in sorted(list(set([p.parameters['tsys_spw'] for p in plots]))):
-					<option>${spw}</option>
-					% endfor
-		       	</select>
-			</fieldset>
-			</div>
-		</div>		
-
-		<div class="column-fluid span4">
-			<div>
-			<fieldset>
-				<legend>Science Spectral Window Filter</legend>
+				<legend>Spectral Window Filter</legend>
 				<select id="select-spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
 					% for spw in sorted(list(set([p.parameters['spw'] for p in plots]))):
 					<option>${spw}</option>
@@ -120,7 +100,7 @@ $(document).ready(function () {
 			</div>
 		</div>		
 	
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
 				<legend>Antenna Filter</legend>
@@ -132,30 +112,38 @@ $(document).ready(function () {
 			</fieldset>
 			</div>
 		</div>		
+
 	</div>
+	
 </div>
 
 <br>
 
 <div class="column-fluid">
 	<ul class="thumbnails">
+	<%
+	score_map = {'PHASE_SCORE_XY'   : 'X-Y',
+				 'PHASE_SCORE_X2X1' : 'X2-X1'}
+	%>
 	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+		<%
+		score_text = ', '.join(sorted(['%s=%s' % (score_map[k],v) for k,v in plot.scores.items()]))
+		%>
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="${plot.parameters['ant']} Tsys spw ${plot.parameters['tsys_spw']}"
+				   title="${plot.parameters['ant']} spw ${plot.parameters['spw']}<br />Scores: ${score_text}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="${plot.parameters['ant']} Tsys spw ${plot.parameters['tsys_spw']}"
+						 title="Scores: ${score_text}"
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">${plot.parameters['ant']} Tsys spw 
-					${plot.parameters['tsys_spw']} Science spw 
-					${plot.parameters['spw']}</p>
+					<p class="text-center">${plot.parameters['ant']} spw ${plot.parameters['spw']}</p>
 			</div>
 		</li>
 	% endfor
 	</ul>
 </div>
+

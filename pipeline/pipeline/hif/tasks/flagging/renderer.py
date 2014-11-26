@@ -3,19 +3,16 @@ Created on 9 Sep 2014
 
 @author: sjw
 '''
-import collections
 import os
 import shutil
 
+from ..common import flagging_renderer_utils as flagutils
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
-
-FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
-
 
 class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self, uri='agentflagger.mako', 
@@ -30,7 +27,7 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
         flag_totals = {}
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
-                                           self.flags_for_result(r, pipeline_context))
+                                           flagutils.flags_for_result(r, pipeline_context))
 
             # copy template files across to weblog directory
             toggle_to_filenames = {'online'   : 'fileonline',
@@ -81,72 +78,3 @@ class T2_4MDetailsAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRenderer
     def flagplot(self, result, context):
         plotter = flagging.PlotAntsChart(context, result)
         return plotter.plot()
-
-    def flags_for_result(self, result, context):
-        ms = context.observing_run.get_ms(result.inputs['vis'])
-        summaries = result.summaries
-
-        by_intent = self.flags_by_intent(ms, summaries)
-        by_spw = self.flags_by_science_spws(ms, summaries)
-
-        return {ms.basename : utils.dict_merge(by_intent, by_spw)}
-
-    def flags_by_intent(self, ms, summaries):
-        # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
-        intent_scans = {}
-        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
-            # convert IDs to strings as they're used as summary dictionary keys
-            intent_scans[intent] = [str(s.id) for s in ms.scans
-                                    if intent in s.intents]
-
-        # while we're looping, get the total flagged by looking in all scans 
-        intent_scans['TOTAL'] = [str(s.id) for s in ms.scans]
-
-        total = collections.defaultdict(dict)
-
-        previous_summary = None
-        for summary in summaries:
-
-            for intent, scan_ids in intent_scans.items():
-                flagcount = 0
-                totalcount = 0
-    
-                for i in scan_ids:
-                    flagcount += int(summary['scan'][i]['flagged'])
-                    totalcount += int(summary['scan'][i]['total'])
-        
-                    if previous_summary:
-                        flagcount -= int(previous_summary['scan'][i]['flagged'])
-    
-                ft = FlagTotal(flagcount, totalcount)
-                total[summary['name']][intent] = ft
-                
-            previous_summary = summary
-                
-        return total 
-    
-    def flags_by_science_spws(self, ms, summaries):
-        science_spws = ms.get_spectral_windows(science_windows_only=True)
-    
-        total = collections.defaultdict(dict)
-    
-        previous_summary = None
-        for summary in summaries:
-    
-            flagcount = 0
-            totalcount = 0
-    
-            for spw in science_spws:
-                spw_id = str(spw.id)
-                flagcount += int(summary['spw'][spw_id]['flagged'])
-                totalcount += int(summary['spw'][spw_id]['total'])
-        
-                if previous_summary:
-                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
-
-            ft = FlagTotal(flagcount, totalcount)
-            total[summary['name']]['SCIENCE SPWS'] = ft
-                
-            previous_summary = summary
-                
-        return total

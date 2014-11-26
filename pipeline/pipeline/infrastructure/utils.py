@@ -6,6 +6,7 @@ import datetime
 import decimal
 import errno
 import functools
+import glob
 import inspect
 import itertools
 import math
@@ -777,11 +778,18 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
         merged_job.kw['exprange'] = 'all'
         iter_job = casa_tasks.plotms(iteraxis=iteraxis, **merged_job.kw)
         
-        # plotms with iterator writes files as file.png, file2.png, file3.png,
-        # etc.
-        iter_indexes = ['%s' % (n+1) for n in range(len(component_jobs))]
+        iter_indexes = ['_%s' % (n+1) for n in range(len(component_jobs))]
         iter_indexes[0] = ''
-        src_filenames = ['%s%s%s' % (root, idx, ext) for idx in iter_indexes]
+
+        if iteraxis == 'antenna':
+            src_filenames = ['%s_Antenna%s@*%s%s' % (root, job.kw['antenna'], idx, ext)
+                             for idx, job in zip(iter_indexes, component_jobs)]
+        elif iteraxis == 'spw':
+            src_filenames = ['%s_Spw%s%s%s' % (root, job.kw['spw'], idx, ext)
+                             for idx, job in zip(iter_indexes, component_jobs)]
+        else:
+            raise NotImplementedError('Plotms mapping not known for iteraxis=%s' % iteraxis)
+
         dest_filenames = [job.kw['plotfile'] for job in component_jobs]
 
         # execute merged job if some of the output files are missing
@@ -792,8 +800,9 @@ def plotms_iterate(jobs_and_wrappers, iteraxis):
             # filename containing ant, spw, field components.
             for src, dest, job in zip(src_filenames, dest_filenames, 
                                       component_jobs):
-                if os.path.exists(src):
-                    os.rename(src, dest)
+                matching_files = glob.glob(src)
+                if len(matching_files) is 1:
+                    os.rename(matching_files[0], dest)
                 else:
                     LOG.info('%s not found. plotms iterator did not generate any '
                              'output for equivalent of %s', src, job)

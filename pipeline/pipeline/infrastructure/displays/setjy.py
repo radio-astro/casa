@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import callibrary
+import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.utils as utils
 from . import applycal
 
 LOG = infrastructure.get_logger(__name__)
@@ -32,6 +33,12 @@ class BasebandComposite(applycal.BasebandComposite):
 
 class PlotmsBasebandComposite(BasebandComposite):
     leaf_class = applycal.PlotmsLeaf
+
+    def plot(self):
+        # merge separate spw jobs into one job using plotms iterator
+        jobs_and_wrappers = super(PlotmsBasebandComposite, self).plot()        
+        successful_wrappers = utils.plotms_iterate(jobs_and_wrappers, 'spw')
+        return successful_wrappers
         
 
 class BasebandSummaryChart(PlotmsBasebandComposite):

@@ -13,9 +13,7 @@ import os
 
 <script>
 $(document).ready(function () {
-    // push JSON directly into page, avoiding XHR cross-site domain problems
-	var json='${json}';
-	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+	var scores_dict = $('#scores').data('scores');
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -29,17 +27,14 @@ $(document).ready(function () {
     // created, and add them to the filter pipeline, filtering on the appropriate
     // dictionary key
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
-    filterPipeline.addFilter(FILTERS.createMatchFilter('antenna', '#select-ant'));
-    filterPipeline.addFilter(FILTERS.createMatchFilter('pol', '#select-pol'));
+    filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
 
     // get the X-axis label for Tsys
     var xAxis = PLOTS.xAxisLabels["qa"];
 
     // create histograms and histogram filters for the three distributions we want
     // to highlight
-    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "AMPLITUDE_SCORE_DD", "#histogram-dd", xAxis),
-    			  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "AMPLITUDE_SCORE_FN", "#histogram-fn", xAxis),
-				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "AMPLITUDE_SCORE_SNR", "#histogram-snr", xAxis)]
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "AMPLITUDE_SCORE_SNR", "#histogram-snr", xAxis)];
 
     // link histogram ranges to the range checkbox
     var rangeCheckbox = $("input#rangeCheckbox");
@@ -64,6 +59,8 @@ $(document).ready(function () {
 });
 </script>
 
+<div data-scores="${json}" id="scores"></div>
+
 <div class="page-header">
 	<h1>Bandpass amplitude for ${vis}<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
@@ -73,34 +70,16 @@ $(document).ready(function () {
 		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
 	</label>
 	<div class="row-fluid">
-                <!--A Disabled for bandpass solutions -->
-                <!--
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>Flatness (Wiener Entropy)</legend>
-				<div id="histogram-fn"  class="span12">
-			</fieldset>
-		</div>
-                -->
-		<div class="column-fluid span4">
+		<div class="column-fluid span12">
 			<fieldset>
 				<legend>SNR (Error Function)</legend>
 				<div id="histogram-snr"  class="span12">
 			</fieldset>
 		</div>
-                <!--A Disabled for bandpass solutions -->
-                <!--
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>Derivative</legend>
-				<div id="histogram-dd" class="span12">
-			</fieldset>
-		</div>
-                -->
 	</div>
 	
 	<div class="row-fluid">
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
 				<legend>Spectral Window Filter</legend>
@@ -113,26 +92,13 @@ $(document).ready(function () {
 			</div>
 		</div>		
 	
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
 				<legend>Antenna Filter</legend>
 				<select id="select-ant" class="select2" multiple style="width:100%" placeholder="Show all antennas">
 					% for ant in sorted(list(set([p.parameters['ant'] for p in plots]))):
 					<option>${ant}</option>
-					% endfor
-		       	</select>
-			</fieldset>
-			</div>
-		</div>		
-
-		<div class="column-fluid span4">
-			<div>
-			<fieldset>
-				<legend>Polarization</legend>
-				<select id="select-pol" class="select2" multiple style="width:100%" placeholder="Show all polarizations">
-					% for pol in sorted(list(set([p.parameters['pol'] for p in plots]))):
-					<option>${pol}</option>
 					% endfor
 		       	</select>
 			</fieldset>
@@ -147,18 +113,21 @@ $(document).ready(function () {
 <div class="column-fluid">
 	<ul class="thumbnails">
 	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+		<%
+		score_text = ', '.join(sorted(['%s=%s' % (k,v) for k,v in plot.scores['AMPLITUDE_SCORE_SNR'].items()]))
+		%>
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="${plot.parameters['ant']} spw ${plot.parameters['spw']} ${plot.parameters['pol']}"
+				   title="${plot.parameters['ant']} spw ${plot.parameters['spw']}<br />Scores: ${score_text}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="${plot.parameters['ant']} spw ${plot.parameters['spw']} ${plot.parameters['pol']}"
+						 title="Scores: ${score_text}"
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">${plot.parameters['ant']} spw ${plot.parameters['spw']} ${plot.parameters['pol']}</p>
+					<p class="text-center">${plot.parameters['ant']} spw ${plot.parameters['spw']}</p>
 			</div>
 		</li>
 	% endfor

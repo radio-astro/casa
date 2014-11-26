@@ -14,11 +14,9 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script>
 $(document).ready(function () {
-    // push JSON directly into page, avoiding XHR cross-site domain problems
-	var json='${json}';
-	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+	var scores_dict = $('#scores').data('scores');
 
-    // activate the input fields for spw, antenna, etc.
+	// activate the input fields for spw, antenna, etc.
     $('.select2').select2();
 
     // create a new filter pipeline, and tell it to filter based on the scores
@@ -30,14 +28,14 @@ $(document).ready(function () {
     // created, and add them to the filter pipeline, filtering on the appropriate
     // dictionary key
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
-    filterPipeline.addFilter(FILTERS.createMatchFilter('antenna', '#select-ant'));
+    filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
 
     // get the X-axis label for WVR
     var xAxis = PLOTS.xAxisLabels["WVR phase RMS"];
 
     // create histograms and histogram filters for the three distributions we want
     // to highlight: RMS, average median, and maximum median reached.
-    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "ratio", "#histogram-phase_rms", xAxis),]
+    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "ratio", "#histogram-phase_rms", xAxis)];
 
     // link histogram ranges to the range checkbox
     var rangeCheckbox = $("input#rangeCheckbox");
@@ -61,6 +59,8 @@ $(document).ready(function () {
     UTILS.fixThumbnailMargins();
 });
 </script>
+
+<div data-scores="${json}" id="scores"></div>
 
 <div class="page-header">
 	<h1>${plot_title}<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
@@ -98,7 +98,7 @@ $(document).ready(function () {
 			<fieldset>
 				<legend>Antenna Filter</legend>
 				<select id="select-ant" class="select2" multiple style="width:100%" placeholder="Show all antennas">
-					% for ant in antennas:
+					% for ant in sorted(list(set([p.parameters['ant'] for p in plots]))):
 					<option>${ant}</option>
 					% endfor
 		       	</select>
@@ -113,18 +113,21 @@ $(document).ready(function () {
 <div class="column-fluid">
 	<ul class="thumbnails">
 	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+		<%
+		score_text = 'Score: %s' % plot.score
+		%>
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="${plot.parameters['ant']} spw ${plot.parameters['spw']}"
+				   title="${plot.parameters['ant']} spw ${plot.parameters['spw']}<br />${score_text}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="${plot.parameters['ant']} spw ${plot.parameters['spw']}"
+						 title="${score_text}"
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">${plot.parameters['ant'][0]} spw ${plot.parameters['spw']}</p>
+					<p class="text-center">${plot.parameters['ant']} spw ${plot.parameters['spw']}</p>
 			</div>
 		</li>
 	% endfor

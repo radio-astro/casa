@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import collections
+import itertools
 import re
 import os
 
@@ -8,6 +10,7 @@ import numpy
 
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.logger as logger
@@ -16,6 +19,89 @@ from pipeline.infrastructure import casa_tasks
 LOG = infrastructure.get_logger(__name__)
 
 COLSHAPE_FORMAT = re.compile(r'\[(?P<num_pols>\d+), (?P<num_rows>\d+)\]')
+
+
+class PlotbandpassDetailBase(object):
+    def __init__(self, context, result, xaxis, yaxis, pol='', **kwargs):
+        # identify the bandpass solution for the target
+        calapps = [c for c in result.final
+                   if (c.intent == '' or 'TARGET' in c.intent)]
+
+        assert len(calapps) is 1, 'Target bandpass solutions != 1'
+        calapp = calapps[0]
+
+        self._vis = calapp.vis
+        self._vis_basename = os.path.basename(self._vis)
+        self._caltable = calapp.gaintable
+        
+        self._xaxis = xaxis
+        self._yaxis = yaxis        
+        self._kwargs = kwargs
+
+        # we should only request plots for the antennas and spws in the
+        # caltable, which may be a subset of those in the measurement set
+        caltable_wrapper = CaltableWrapperFactory.from_caltable(self._caltable)
+        antenna_ids = set(caltable_wrapper.antenna)
+        spw_ids = set(caltable_wrapper.spw)
+        
+        # use antenna name rather than ID where possible
+        antenna_arg = ','.join([str(i) for i in antenna_ids])
+        ms = context.observing_run.get_ms(self._vis)
+        antennas = ms.get_antenna(antenna_arg)
+        self._antmap = dict((a.id, a.name) for a in antennas)
+
+        # the number of polarisations for a spw may not be equal to the number
+        # of shape of the column. For example, X403 has XX,YY for some spws 
+        # but XX for the science data.
+        num_pols = numpy.ma.shape(caltable_wrapper.data)[0]
+        self._pols = {}
+        for spw in spw_ids:
+            dd = ms.get_data_description(spw=int(spw))
+            num_pols = dd.num_polarizations
+            pols = ','.join([dd.get_polarization_label(p)
+                             for p in range(num_pols)])
+            self._pols[spw] = pols
+        
+        overlay = self._kwargs.get('overlay', '')
+        fileparts = {
+            'caltable' : os.path.basename(calapp.gaintable),
+            'x'        : self._xaxis,
+            'y'        : self._yaxis,
+            'overlay'  : '-%s' % overlay if overlay else ''
+        }
+        png = '{caltable}-{y}_vs_{x}{overlay}.png'.format(**fileparts)
+
+        self._figroot = os.path.join(context.report_dir, 
+                                     'stage%s' % result.stage_number,
+                                     png)
+        
+        # plotbandpass injects spw ID and antenna name into every plot filename
+        self._figfile = collections.defaultdict(dict)
+        root, ext = os.path.splitext(self._figroot)
+        time = '.t00' if 'time' not in overlay else ''
+        for spw_id, ant_id in itertools.product(spw_ids, antenna_ids):
+            ant_name = self._antmap[ant_id]
+            real_figfile = '%s.%s.spw%0.2d%s%s' % (root, ant_name, spw_id, 
+                                                   time, ext)
+            self._figfile[spw_id][ant_id] = real_figfile
+
+    def create_plot(self, spw_arg, antenna_arg):
+        task_args = {'vis'         : self._vis,
+                     'caltable'    : self._caltable,
+                     'xaxis'       : self._xaxis,
+                     'yaxis'       : self._yaxis,
+                     'interactive' : False,
+                     'spw'         : spw_arg,
+                     'antenna'     : antenna_arg,
+                     'subplot'     : 11,
+                     'figfile'     : self._figroot}
+        task_args.update(**self._kwargs)
+
+        task = casa_tasks.plotbandpass(**task_args)
+        task.execute(dry_run=False)
+
+    def plot(self):
+        pass
 
 
 class PlotcalLeaf(object):
@@ -403,31 +489,94 @@ class PlotbandpassAntSpwPolComposite(AntSpwPolComposite):
     leaf_class = PlotbandpassSpwPolComposite
 
 
-class CaltableWrapper(object):
+class CaltableWrapperFactory(object):
     @staticmethod
     def from_caltable(filename):
-        LOG.trace('CaltableWrapper.from_caltable(%r)', filename)
-        with casatools.TableReader(filename) as tb:
+        LOG.trace('CaltableWrapperFactory.from_caltable(%r)', filename)
+        with utils.open_table(filename) as tb:
+            viscal = tb.getkeyword('VisCal')            
+            caltype = callibrary.CalFrom.get_caltype_for_viscal(viscal) 
+        if caltype == 'gaincal':
+            return CaltableWrapperFactory.create_gaincal_wrapper(filename)
+        if caltype == 'tsys':
+            return CaltableWrapperFactory.create_fparam_wrapper(filename)            
+        if caltype == 'bandpass':
+            return CaltableWrapperFactory.create_bandpass_wrapper(filename)            
+        raise NotImplementedError('Unhandled caltype: %s', caltype)
+    
+    @staticmethod    
+    def create_gaincal_wrapper(path):
+        with utils.open_table(path) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')
-            gain = tb.getcol('CPARAM')
             spw = tb.getcol('SPECTRAL_WINDOW_ID')
             scan = tb.getcol('SCAN_NUMBER')
             flag = tb.getcol('FLAG')
-            phase = numpy.arctan2(numpy.imag(gain),
-                                  numpy.real(gain)) * 180.0 / numpy.pi
-
-            # shape of phase and flag arrays is number of corrs, 1, number of
-            # rows. Remove the middle dimension.
-            phases = phase[:,0]
-            flags = flag[:,0]
-            data = numpy.ma.MaskedArray(phases, mask=flags)
-
+                
             # convert MJD times stored in caltable to matplotlib equivalent
             time_unix = utils.mjd_seconds_to_datetime(time_mjd)
             time_matplotlib = matplotlib.dates.date2num(time_unix)
 
-            return CaltableWrapper(filename, data, time_matplotlib, antenna1, spw, scan)
+            gain = tb.getcol('CPARAM')            
+            phase = numpy.arctan2(numpy.imag(gain),
+                                  numpy.real(gain)) * 180.0 / numpy.pi
+            data = numpy.ma.MaskedArray(phase, mask=flag)
+
+            return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
+                                   scan)
+
+    @staticmethod    
+    def create_bandpass_wrapper(path):
+        with utils.open_table(path) as tb:
+            time_mjd = tb.getcol('TIME')
+            antenna1 = tb.getcol('ANTENNA1')
+            spw = tb.getcol('SPECTRAL_WINDOW_ID')
+            scan = tb.getcol('SCAN_NUMBER')
+                
+            # convert MJD times stored in caltable to matplotlib equivalent
+            time_unix = utils.mjd_seconds_to_datetime(time_mjd)
+            time_matplotlib = matplotlib.dates.date2num(time_unix)
+
+            gain = tb.getvarcol('CPARAM')
+            temp = [gain['r%s' % (k+1)] for k in range(len(gain))]
+            gain = zip(*itertools.chain(*temp))
+
+            flag = tb.getvarcol('FLAG')
+            temp = [flag['r%s' % (k+1)] for k in range(len(flag))]
+            flag = zip(*itertools.chain(*temp))
+
+            data = numpy.ma.MaskedArray(gain, mask=flag)
+
+            return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
+                                   scan)
+
+    @staticmethod    
+    def create_fparam_wrapper(path):
+        with utils.open_table(path) as tb:
+            time_mjd = tb.getcol('TIME')
+            antenna1 = tb.getcol('ANTENNA1')
+            spw = tb.getcol('SPECTRAL_WINDOW_ID')
+            scan = tb.getcol('SCAN_NUMBER')
+            flag = tb.getcol('FLAG')
+
+            # convert MJD times stored in caltable to matplotlib equivalent
+            time_unix = utils.mjd_seconds_to_datetime(time_mjd)
+            time_matplotlib = matplotlib.dates.date2num(time_unix)
+            
+            tsys = tb.getcol('FPARAM')            
+
+            # shape of tsys and flag arrays is number of corrs, number of
+            # channels, number of rows. Remove the middle dimension.
+            data = numpy.ma.MaskedArray(tsys, mask=flag)
+
+            return CaltableWrapper(path, data, time_matplotlib, antenna1, spw,
+                                   scan)
+        
+
+class CaltableWrapper(object):
+    @staticmethod
+    def from_caltable(filename):
+        return CaltableWrapperFactory.from_caltable(filename)            
 
     def __init__(self, filename, data, time, antenna, spw, scan):
         # tag the extra metadata columns onto our data array 
@@ -468,7 +617,7 @@ class CaltableWrapper(object):
         mask = (antenna_mask==1) & (spw_mask==1) & (scan_mask==1)
 
         # find data for the selection mask 
-        data = self.data[:,mask]
+        data = self.data[:,:,mask]
         time = self.time[mask]
         antenna = self.antenna[mask]
         spw = self.spw[mask]

@@ -22,7 +22,6 @@ FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
 
 class T2_4MDetailsApplycalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-
     def __init__(self, uri='applycal.mako', 
                  description='Apply calibrations from context',
                  always_rerender=False):

@@ -14,9 +14,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <script>
 $(document).ready(function () {
-    // push JSON directly into page, avoiding XHR cross-site domain problems
-	var json='${json}';
-	var scores_dict = JSON && JSON.parse(json) || $.parseJSON(json);
+	var scores_dict = $('#scores').data('scores');
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -46,8 +44,10 @@ $(document).ready(function () {
 });
 </script>
 
+<div data-scores="${json}" id="scores"></div>
+
 <div class="page-header">
-	<h1>${plot_title}Phase offset vs average baseline<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>${plot_title}<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <div class="column-fluid">

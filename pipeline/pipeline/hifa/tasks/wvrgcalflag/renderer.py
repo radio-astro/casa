@@ -227,12 +227,10 @@ class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
         title = 'WVR Phase Offset Plots for %s' % vis
         outfile = filenamer.sanitize('phase_offsets-%s.html' % vis)
 
-        # put this code here to save overcomplicating the template
-        antenna_names = set()
+        # HACK! ant parameter is a list, but for these plots we know there's
+        # only one plot.
         for plot in plots:
-            antenna_names.update(set(plot.parameters['ant']))
-        antenna_names = sorted(list(antenna_names))
-        self.antenna_names = antenna_names        
+            plot.parameters['ant'] = plot.parameters['ant'][0]
 
         super(WvrgcalflagPhaseOffsetPlotRenderer, self).__init__(
                 'wvrgcalflag_phase_offset_plots.mako', 
@@ -240,10 +238,7 @@ class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):
          
     def update_json_dict(self, d, plot):
         d['ratio'] = 1.0 / plot.qa_score
-         
-    def update_mako_context(self, mako_context):
-        super(WvrgcalflagPhaseOffsetPlotRenderer, self).update_mako_context(mako_context)
-        mako_context['antennas'] = self.antenna_names
+        plot.score = d['ratio']
 
 
 class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(basetemplates.JsonPlotRenderer):

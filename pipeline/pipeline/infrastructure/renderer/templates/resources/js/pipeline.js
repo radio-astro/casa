@@ -39,7 +39,7 @@ UTILS = (function () {
                         return fullsizeToThumbs[href];
                     }
                 }
-            }
+            },
         });
     };
 
@@ -142,17 +142,35 @@ UTILS = (function () {
         };
     };
 
-    module.getData = function(scores_dict, key, filter) {
+    module.getScoresForKey = function (scores_dict, key) {
+    	var scores = [],
+    	    score = scores_dict[key];
+
+		// value can be a number or a dict mapping correlation 
+    	// axis to score
+    	if (score !== "null") {
+        	if (typeof(score) === "number") {
+        		scores.push(score);
+        	} else {
+            	for (var corr_axis in score) {
+            		scores.push(score[corr_axis]);
+            	}
+        	}
+    	}
+    	
+    	return scores;
+    };
+    
+    module.getData = function (scores_dict, key, filter) {
         var scores = [];
+
         for (var png in scores_dict) {
             var anchor = $("a[href='" + png + "']"),
                 score;
 
-            // Generate a histogram for those plots present in this page by checking
-            // whether the image is present before adding the score.
-            if ($(anchor).is(filter)) {
-                score = scores_dict[png][key];
-                scores.push(score);
+            if ((filter === undefined) || ($(anchor).is(filter))) {
+            	png_scores_dict = scores_dict[png];            	
+            	scores = scores.concat(module.getScoresForKey(png_scores_dict, key));
             }
         }
         return scores;
@@ -261,13 +279,18 @@ FILTERS = (function () {
         	if (!that.enabled) {
         		return true;
         	}
+
+        	var scores, 
+        		score;
         	
-        	var score = pngScoreDict[scoreType];
-            if ((score >= min) && (score <= max)) {
-                return true;
-            } else {
-                return false;
-            }
+        	scores = UTILS.getScoresForKey(pngScoreDict, scoreType);
+        	for (var i=0; i<scores.length; i++) {
+        		score = scores[i];
+                if ((score >= min) && (score <= max)) {
+                    return true;
+                }        		
+        	};
+        	return false;
         };
     };
 
@@ -672,25 +695,8 @@ PLOTS = function () {
 ALL_IN_ONE = function() {
     var module = {};
 
-    var getData = function (scores_dict, key, filter) {
-        var scores = [];
-
-        for (var png in scores_dict) {
-            var anchor = $("a[href='" + png + "']"),
-                score;
-
-            if ((filter === undefined) || ($(anchor).is(filter))) {
-                score = scores_dict[png][key];
-                if (score !== "null") {
-                	scores.push(score);
-            	}
-            }
-        }
-        return scores;
-    };
-
     var createHistogramGetter = function(scores_dict, key, nBins) {
-        var allScores = getData(scores_dict, key);        
+        var allScores = UTILS.getData(scores_dict, key);        
         var extent = d3.extent(allScores);
         if ((extent[1] - extent[0]) === 0.0) {
         	extent[0] = Math.min(extent[0], 0.9);
@@ -701,7 +707,7 @@ ALL_IN_ONE = function() {
         var that = {};
 
         that.getSelectedDataHistogram = function() {
-            var visibleScores = getData(scores_dict, key, ":visible");
+            var visibleScores = UTILS.getData(scores_dict, key, ":visible");
             var visibleHistogram = histogram(visibleScores);
             return visibleHistogram;
         };
