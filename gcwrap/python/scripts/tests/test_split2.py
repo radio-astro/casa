@@ -566,27 +566,29 @@ class split_test_cav5(SplitChecker):
 
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
-        check_eq(self.records['']['weight'],
-                 numpy.array([5.0, 5.0]),
-                 0.001)
+        # jagonzal: New WEIGHT calculation based on median
+        # check_eq(self.records['']['weight'],numpy.array([5.0, 5.0]),0.001)
+        check_eq(self.records['']['weight'],numpy.array([4.5, 4.5]),0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
-        check_eq(self.records['ll']['weight'],
-                 numpy.array([5.]),
-                 0.001)
+        # jagonzal: New WEIGHT calculation based on median
+        # check_eq(self.records['ll']['weight'],numpy.array([5.]),0.001)
+        check_eq(self.records['ll']['weight'],numpy.array([4.5]),0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
-        check_eq(self.records['']['sigma'],
-                 numpy.array([0.44721359, 0.44721359]), 0.0001)
+        # jagonzal: New SIGMA calculation based on median
+        #check_eq(self.records['']['sigma'],numpy.array([0.44721359, 0.44721359]), 0.0001)
+        check_eq(self.records['']['sigma'],numpy.array([0.4736068,  0.4736068]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
-        check_eq(self.records['ll']['sigma'],
-                 numpy.array([0.44721359]), 0.0001)
+        # jagonzal: New SIGMA calculation based on median
+        # check_eq(self.records['ll']['sigma'],numpy.array([0.44721359]), 0.0001)
+        check_eq(self.records['ll']['sigma'],numpy.array([0.4736068]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):

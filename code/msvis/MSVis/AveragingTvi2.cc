@@ -355,7 +355,7 @@ protected:
           sigmaIn (rowInput->sigma()),
           sigmaOut (rowAveraged->sigma()),
           flagCubeIn (rowInput->flags()),
-          flagCubeOut (rowInput->flags()),
+          flagCubeOut (rowAveraged->flags()),
           sigmaSpectrumIn (doing.sigmaSpectrumIn_p ? rowInput->sigmaSpectrum() : Matrix<Float> ()),
           sigmaSpectrumOut (doing.sigmaSpectrumOut_p ? rowAveraged->sigmaSpectrum() : Matrix<Float> ()),
           weightSpectrumIn (doing.weightSpectrumIn_p ? rowInput->weightSpectrum() : Matrix<Float> ()),
@@ -877,6 +877,19 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     return std::make_pair (rowFlagged, adjustedWeight);
 }
 
+// jagonzal: Since these methods are not members of any class they must de declared before using them
+float
+weightToSigma (Float weight)
+{
+    return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
+}
+
+float
+sigmaToWeight (Float sigma)
+{
+    return sigma > FLT_MIN ? 1.0 / std::pow (sigma,2) : 0.0; // bad sample
+}
+
 void
 VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameters,
                                   Bool zeroAccumulation,
@@ -908,7 +921,8 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
 	if (doing_p.observedData_p)
 	{
 		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
-		weightObserved = 1/pow(accumulationParameters->sigmaSpectrumIn (correlation, channel),2);
+		// This has to
+		weightObserved = sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
 
 		// Accumulate weighted average contribution (normalization will come at the end)
 		accumulateElementForCube (	accumulationParameters->observedIn (correlation, channel),
@@ -1217,26 +1231,21 @@ VbAvg::finalizeCubeData (MsRowAvg * msRow)
     return;
 }
 
-float
-weightToSigma (Float weight)
-{
-    return abs (weight) > 1e-9 ? 1.0 / std::sqrt (weight)
-                               : -1; // bogosity indicator
-}
-
 void
 VbAvg::finalizeRowData (MsRowAvg * msRow)
 {
     Int n = msRow->countsBaseline ();
 
     // Obtain row-level WEIGHT by calculating the median of WEIGHT_SPECTRUM
-    msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1)));
+    msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1),True));
 
     // If doing both DATA and CORRECTED_DATA then SIGMA_SPECTRUM contains the weight
     // (not sigma) accumulation for DATA, and we have to derive SIGMA from it
     if (doing_p.correctedData_p and doing_p.observedData_p)
     {
-    	Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1));
+    	// jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from the median of the
+    	// WEIGHT format of SIGMA_SPECTRUM turned into SIGMA by using 1/pow(weight,2)
+    	Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1),True);
     	arrayTransformInPlace (weight, weightToSigma);
     	msRow->setSigma (weight);
 
@@ -1249,7 +1258,8 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
     // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
     else
     {
-    	// Derive SIGMA from computed WEIGHT
+    	// jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM
+    	// but from WEIGHT turned into SIGMA by using 1/pow(weight,2)
     	Vector<Float> sigma = msRow->sigma(); // Reference copy
     	sigma = msRow->weight(); // Normal copy (transfer Weight values to Sigma)
     	arrayTransformInPlace (sigma, weightToSigma);
