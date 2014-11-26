@@ -3302,7 +3302,8 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
     {
     	MSFeed feedTable_0 = ms_0.feed();
 
-    	if (feedTable_0.nrow() > 0)
+    	// CAS-7167. The WVR spw has no FEED content.
+    	if (feedTable_0.nrow() >= 0)
     	{
         	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
         			<< "Merging FEED sub-tables from all sub-MSs to form MMS-level FEED sub-table" << LogIO::POST;
