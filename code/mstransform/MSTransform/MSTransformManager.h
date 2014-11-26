@@ -75,6 +75,7 @@ namespace MSTransformations
 {
 	// Returns 1/sqrt(wt) or -1, depending on whether wt is positive..
 	Double wtToSigma(Double wt);
+	Double sigmaToWeight(Double wt);
 
 	enum InterpolationMethod {
 	    // nearest neighbour
@@ -95,7 +96,10 @@ namespace MSTransformations
 		cumSum,
 		flat,
 		flagSpectrum,
-		flagCumSum
+		flagCumSum,
+		flagsNonZero,
+		flagSpectrumNonZero,
+		flagCumSumNonZero
 	};
 
 	enum dataCol {
@@ -425,7 +429,8 @@ protected:
 									const Cube<Float> &inputSpectrum,
 									ArrayColumn<Float> &outputCubeCol,
 									ArrayColumn<Float> &outputMatrixCol,
-									MSTransformations::weightTransformation weightTransformation);
+									MSTransformations::weightTransformation weightTransformation,
+									Bool flushSpectrumCube);
 
 	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
 	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
@@ -773,27 +778,19 @@ protected:
 																		Matrix<Float> &inputWeightsPlane,
 																		Vector<Float> &inputWeightsStripe);
 
-	void bufferOutputPlanes(	uInt row,
-								Matrix<Complex> &outputDataPlane,
-								Matrix<Bool> &outputFlagsPlane,
-								ArrayColumn<Complex> &outputDataCol,
-								ArrayColumn<Bool> &outputFlagCol);
-	void bufferOutputPlanes(	uInt row,
-								Matrix<Float> &outputDataPlane,
-								Matrix<Bool> &outputFlagsPlane,
-								ArrayColumn<Float> &outputDataCol,
-								ArrayColumn<Bool> &outputFlagCol);
-	void bufferOutputPlanesInSlices(	uInt row,
-										Matrix<Complex> &outputDataPlane,
-										Matrix<Bool> &outputFlagsPlane,
-										ArrayColumn<Complex> &outputDataCol,
-										ArrayColumn<Bool> &outputFlagCol);
-	void bufferOutputPlanesInSlices(	uInt row,
-										Matrix<Float> &outputDataPlane,
-										Matrix<Bool> &outputFlagsPlane,
-										ArrayColumn<Float> &outputDataCol,
-										ArrayColumn<Bool> &outputFlagCol);
+	void setOutputbuffer(Cube<Complex> *& bufferPointer);
+	void setOutputbuffer(Cube<Float> *& bufferPointer);
 
+	template <class T> void bufferOutputPlanes(	uInt row,
+												Matrix<T> &outputDataPlane,
+												Matrix<Bool> &outputFlagsPlane,
+												ArrayColumn<T> &outputDataCol,
+												ArrayColumn<Bool> &outputFlagCol);
+	template <class T> void bufferOutputPlanesInSlices(	uInt row,
+														Matrix<T> &outputDataPlane,
+														Matrix<Bool> &outputFlagsPlane,
+														ArrayColumn<T> &outputDataCol,
+														ArrayColumn<Bool> &outputFlagCol);
 
 	void writeOutputPlanes(	uInt row,
 							Matrix<Complex> &outputDataPlane,
@@ -1002,6 +999,31 @@ protected:
 												uInt startInputPos,
 												uInt outputPos,
 												uInt width);
+
+	template <class T> void flagNonZeroAverageKernel(	Vector<T> &inputData,
+														Vector<Bool> &inputFlags,
+														Vector<Float> &,
+														Vector<T> &outputData,
+														Vector<Bool> &,
+														uInt startInputPos,
+														uInt outputPos,
+														uInt width);
+	template <class T> void flagWeightNonZeroAverageKernel(	Vector<T> &inputData,
+															Vector<Bool> &inputFlags,
+															Vector<Float> &,
+															Vector<T> &outputData,
+															Vector<Bool> &,
+															uInt startInputPos,
+															uInt outputPos,
+															uInt width);
+	template <class T> void flagCumSumNonZeroKernel(	Vector<T> &inputData,
+														Vector<Bool> &inputFlags,
+														Vector<Float> &,
+														Vector<T> &outputData,
+														Vector<Bool> &,
+														uInt startInputPos,
+														uInt outputPos,
+														uInt width);
 
 	template <class T> void smooth(	Int ,
 									Vector<T> &inputDataStripe,
@@ -1225,6 +1247,7 @@ protected:
 	Bool spectrumTransformation_p;
 	Bool propagateWeights_p;
 	Bool inputWeightSpectrumAvailable_p;
+	Bool flushWeightSpectrum_p;
 	Bool weightSpectrumFlatFilled_p;
 	Bool weightSpectrumFromSigmaFilled_p;
 	Bool combinationOfSPWsWithDifferentExposure_p;

@@ -2,6 +2,7 @@ import shutil
 import unittest
 import os
 import numpy
+import math
 import exceptions
 from tasks import *
 from taskinit import mstool, tbtool, msmdtool, aftool
@@ -18,6 +19,19 @@ from unittest.case import expectedFailure
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
 
 aflocal = aftool()
+
+def weighToSigma(weight):
+    if weight > sys.float_info.min:
+        return 1.0/math.sqrt(weight)
+    else:
+        return -1.0
+
+def sigmaToWeight(sigma):
+    if sigma > sys.float_info.min:
+        return 1.0/math.pow(sigma,2)
+    else:
+        return 0.0
+
 
 def check_eq(val, expval, tol=None):
     """Checks that val matches expval within tol."""
@@ -1231,6 +1245,10 @@ class test_channelAverageByDefault(test_base_compare):
         cvel(vis=self.vis,outputvis=self.refvis,interpolation="linear",mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1
+        
         self.post_process()
 
 
@@ -1421,10 +1439,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:9.50',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5                  
 
         self.post_process()
 
@@ -1433,10 +1456,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:11.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1", timerange='14:45:08.50~14:45:11.50',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5          
 
         self.post_process()
 
@@ -1445,10 +1473,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:9.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:9.50',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5          
 
         self.post_process()
 
@@ -1457,10 +1490,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:11.50',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2", timerange='14:45:08.50~14:45:11.50',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5          
 
         self.post_process()
 
@@ -1469,10 +1507,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2",
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2",
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5     
 
         self.post_process()
 
@@ -1481,10 +1524,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',antenna="0&&1~2",
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',antenna="0&&1~2",
-                    datacolumn='DATA',timeaverage=True,timebin='30s')
+                    datacolumn='DATA',timeaverage=True,timebin='30s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5          
 
         self.post_process()
 
@@ -1493,10 +1541,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5        
 
         self.post_process()
 
@@ -1505,10 +1558,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='9,10',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='9,10',
-                    datacolumn='DATA',timeaverage=True,timebin='30s')
+                    datacolumn='DATA',timeaverage=True,timebin='30s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5         
 
         self.post_process()
 
@@ -1517,11 +1575,15 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='8~15',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='2s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='8~15',
-                    datacolumn='DATA',timeaverage=True,timebin='2s')
+                    datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
-
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5  
         self.post_process()
 
     def test_timeaverage_30x_and_combine_seven_spws_four_baselines(self):
@@ -1529,20 +1591,30 @@ class test_multiple_transformations(test_base_compare):
         mstransform(vis=self.vis,outputvis=self.outvis,spw='8~15',
                     datacolumn='DATA',combinespws=True,timeaverage=True,timebin='30s')
         mstransform(vis=self.vis,outputvis=self.tmpvis,spw='8~15',
-                    datacolumn='DATA',timeaverage=True,timebin='30s')
+                    datacolumn='DATA',timeaverage=True,timebin='30s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',combinespws=True)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5  
 
         self.post_process()
 
     def test_timeaverage_and_channel_average(self):
 
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn='DATA',timeaverage=True,timebin='2s',chanaverage=True,chanbin=2)
-        mstransform(vis=self.vis,outputvis=self.tmpvis,datacolumn='DATA',timeaverage=True,timebin='2s')
+        mstransform(vis=self.vis,outputvis=self.tmpvis,datacolumn='DATA',timeaverage=True,timebin='2s',usewtspectrum=True)
         mstransform(vis=self.tmpvis,outputvis=self.refvis,datacolumn='DATA',chanaverage=True,chanbin=2)
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1E-5  
+        self.mode['SIGMA'] = "absolute"
+        self.tolerance['SIGMA'] = 1E-5          
 
         self.post_process()
 
@@ -1606,7 +1678,7 @@ class test_regridms_multiple_spws(test_base_compare):
         self.generate_tolerance_map()
         
         self.mode['WEIGHT'] = "absolute"
-        self.tolerance['WEIGHT'] = 1E-5
+        self.tolerance['WEIGHT'] = 50
         
         # Exlude FEED from the list of sub-tables to compare because cvel does not remove duplicates
         self.subtables=['/ANTENNA','/DATA_DESCRIPTION','/FIELD','/FLAG_CMD',
@@ -2133,6 +2205,10 @@ class test_radial_velocity_correction(test_base_compare):
                     mode = 'velocity', width = '0.1km/s',restfreq = '354.50547GHz')        
 
         self.generate_tolerance_map()
+        
+        self.mode['WEIGHT'] = "absolute"
+        self.tolerance['WEIGHT'] = 1
+                
         self.post_process()     
         
 class test_vla_mixed_polarizations(test_base):
@@ -2199,8 +2275,2542 @@ class test_alma_wvr_correlation_products(test_base):
         # Check that flagdata can run properly with output MS
         summary = flagdata(vis=self.outputms,mode='summary')
         self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')         
- 
         
+        
+class test_spectrum_transformations_median(test_base):
+    '''Check that WEIGHT/SIGMA are equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)          
+        
+    def test_chanavg_median_corrected(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_chanavg_median_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_median_corrected(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_median_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+    
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        # jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from WEIGHT turned into SIGMA by using 1/pow(weight
+        # self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_chanavg_median_corrected(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_chanavg_median_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')  
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')    
+        
+    def test_chanavg_median_data(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_chanavg_median_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_median_data(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_median_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')  
+        # jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from WEIGHT turned into SIGMA by using 1/pow(weight,2)
+        #self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_chanavg_median_data(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_chanavg_median_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')              
+                   
+    def test_chanavg_median_model(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_chanavg_median_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_median_model(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_median_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        # jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from WEIGHT turned into SIGMA by using 1/pow(weight     
+        #self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')     
+        
+    def test_timeavg_chanavg_median_model(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_chanavg_median_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')   
+                           
+    def test_chanavg_median_all(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_chanavg_median_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_timeavg_median_all(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_median_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM') 
+        # jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from the median of the
+        #           WEIGHT format of SIGMA_SPECTRUM turned into SIGMA by using 1/pow(weight,2)        
+        #self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')    
+        
+    def test_timeavg_chanavg_median_all(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_timeavg_chanavg_median_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()  
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')       
+        
+    def test_spw_separation_median_corrected(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_spw_separation_median_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    regridms=True, nspw=4)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')
+        
+    def test_spw_separation_median_data(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_spw_separation_median_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    regridms=True, nspw=4)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')        
+        
+    def test_spw_separation_median_model(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_spw_separation_median_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    regridms=True, nspw=4)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')        
+        
+    def test_spw_separation_median_all(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
+        
+        self.outvis = 'test_spw_separation_median_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    regridms=True, nspw=4)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        weightSpectrumMedian = numpy.median(weightSpectrum,1)
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        sigmaSpectrumMedian = numpy.median(sigmaSpectrum,1)        
+        
+        mytb.open(self.outvis)
+        weight = mytb.getcol('WEIGHT')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        sigma = mytb.getcol('SIGMA')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')          
+        
+        
+class test_spectrum_transformations_sigma_from_weight(test_base):
+    '''Check that WEIGHT/SIGMA and WEIGHT_SPECTRUM/SIGMA_SPECTRUM follow the relation sigma = 1 sqrt(weight) '''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)   
+        
+    def test_chanavg_sigma_from_weight_corrected(self):
+        '''mstransform: Check that after chan avg CORRECTED SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_chanavg_sigma_from_weight_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')      
+        
+    def test_timeavg_sigma_from_weight_corrected(self):
+        '''mstransform: Check that after time avg CORRECTED SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_sigma_from_weight_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')    
+        
+    def test_timeavg_chanavg_sigma_from_weight_corrected(self):
+        '''mstransform: Check that after time + chan avg CORRECTED SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_chanavg_sigma_from_weight_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')                 
+        
+    def test_chanavg_sigma_from_weight_data(self):
+        '''mstransform: Check that after chan avg DATA SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_chanavg_sigma_from_weight_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')       
+        
+    def test_timeavg_sigma_from_weight_data(self):
+        '''mstransform: Check that after time avg DATA SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_sigma_from_weight_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')      
+        
+    def test_timeavg_chanavg_sigma_from_weight_data(self):
+        '''mstransform: Check that after time + chan avg DATA SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_chanavg_sigma_from_weight_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')               
+        
+    def test_chanavg_sigma_from_weight_model(self):
+        '''mstransform: Check that after chan avg MODEL SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_chanavg_sigma_from_weight_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')            
+        
+    def test_timeavg_sigma_from_weight_model(self):
+        '''mstransform: Check that after time avg MODEL SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_sigma_from_weight_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')                 
+        
+    def test_timeavg_chanavg_sigma_from_weight_model(self):
+        '''mstransform: Check that after time + chan avg MODEL SIGMA=1/sqrt(WEIGHT)'''
+        
+        self.outvis = 'test_timeavg_chanavg_sigma_from_weight_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        (ncorr,nchan,nrow) = weightSpectrum.shape
+        for row in range(0,nrow): 
+            for chan in range(0,nchan):
+                for corr in range(0,ncorr):
+                    weightSpectrum[corr,chan,row] = weighToSigma(weightSpectrum[corr,chan,row])
+        
+        mytb.open(self.outvis)
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum - sigmaSpectrum) < 1E-4).all(), 'SIGMA_SPECTRUM not derived from WEIGHT_SPECTRUM')                                             
+        
+        
+class test_spectrum_transformations_2_steps_vs_1_step(test_base):
+    '''Check that the result of chan/time average applied in 1 step is the same as applied in 2 steps'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)
+        
+    def test_timeavg_chanavg_2_steps_vs_1_step_corrected(self):
+        '''mstransform: Check that the result of time/chan average CORRECTED applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_timeavg_chanavg_2_steps_vs_1_step_corrected-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.outvis = 'test_timeavg_chanavg_2_steps_vs_1_step_corrected-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    # Also CORRECTED was already renamed to DATA so there is no need to use CORRECTED
+                    datacolumn='DATA',
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_timeavg_chanavg_2_steps_vs_1_step_corrected-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')     
+        
+    def test_chanavg_timeavg_2_steps_vs_1_step_corrected(self):
+        '''mstransform: Check that the result of chan/time average CORRECTED applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_chanavg_timeavg_2_steps_vs_1_step_corrected-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.outvis = 'test_chanavg_timeavg_2_steps_vs_1_step_corrected-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    # Also CORRECTED was already renamed to DATA so there is no need to use CORRECTED
+                    datacolumn='DATA',
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_2_steps_vs_1_step_corrected-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')     
+        
+    def test_timeavg_chanavg_2_steps_vs_1_step_data(self):
+        '''mstransform: Check that the result of time/chan average DATA applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_timeavg_chanavg_2_steps_vs_1_step_data-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.outvis = 'test_timeavg_chanavg_2_steps_vs_1_step_data-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    datacolumn='DATA',
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_timeavg_chanavg_2_steps_vs_1_step_data-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')        
+        
+    def test_chanavg_timeavg_2_steps_vs_1_step_data(self):
+        '''mstransform: Check that the result of chan/time average DATA applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_chanavg_timeavg_2_steps_vs_1_step_data-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.outvis = 'test_chanavg_timeavg_2_steps_vs_1_step_data-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    datacolumn='DATA',
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_2_steps_vs_1_step_data-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')     
+                
+    def test_timeavg_chanavg_2_steps_vs_1_step_model(self):
+        '''mstransform: Check that the result of time/chan average MODEL applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_timeavg_chanavg_2_steps_vs_1_step_model-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.outvis = 'test_timeavg_chanavg_2_steps_vs_1_step_model-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    # Also MODEL was already renamed to DATA so there is no need to use CORRECTED
+                    datacolumn='DATA',
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_timeavg_chanavg_2_steps_vs_1_step_model-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')        
+        
+    def test_chanavg_timeavg_2_steps_vs_1_step_model(self):
+        '''mstransform: Check that the result of chan/time average MODEL applied in 1 step is the same as applied in 2 steps '''
+        
+        self.auxvis = 'test_chanavg_timeavg_2_steps_vs_1_step_model-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.outvis = 'test_chanavg_timeavg_2_steps_vs_1_step_model-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    # Also MODEL was already renamed to DATA so there is no need to use CORRECTED
+                    datacolumn='DATA',
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_2_steps_vs_1_step_model-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')     
+        
+    def test_chanavg_timeavg_2_steps_vs_1_step_all(self):
+        '''mstransform: Check that the result of chan/time average ALL applied in 1 step is the same as applied in 2 steps'''
+        
+        self.auxvis = 'test_chanavg_timeavg_2_steps_vs_1_step_all-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.outvis = 'test_chanavg_timeavg_2_steps_vs_1_step_all-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    datacolumn='ALL',
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_2_steps_vs_1_step_all-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')            
+        
+    def test_timeavg_chanavg_2_steps_vs_1_step_all(self):
+        '''mstransform: Check that the result of time/chan average ALL applied in 1 step is the same as applied in 2 steps'''
+        
+        self.auxvis = 'test_timeavg_chanavg_2_steps_vs_1_step_all-1st_step.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.outvis = 'test_timeavg_chanavg_2_steps_vs_1_step_all-2nd_step.ms'
+        
+        mstransform(vis=self.auxvis,outputvis=self.outvis,
+                    # No need to set usewtspectrum=True because it already exists
+                    datacolumn='ALL',
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_timeavg_chanavg_2_steps_vs_1_step_all-together.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s',
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')                
+
+class test_spectrum_transformations_chanavg_useWeightSpectrum_false_vs_true(test_base):
+    '''Check that WEIGHT/SIGMA and WEIGHT_SPECTRUM/SIGMA_SPECTRUM follow the relation sigma = 1 sqrt(weight) '''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)                 
+            
+    def test_chanavg_useWeightSpectrum_false_vs_true_corrected(self):
+        '''mstransform: When there are no input SPECTRUM cols chan avg result is the same regardless of useWeightSpectrum because VI/VB fills a cte. weightSpectrum/sigmaSpectrum across channels'''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_corrected-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_corrected-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        dataTrue = mytb.getcol('DATA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        dataFalse = mytb.getcol('DATA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(dataTrue - dataFalse) < 1E-6).all(), 'CORRECTED improperly averaged')
+        
+    def test_chanavg_useWeightSpectrum_false_vs_true_data(self):
+        '''mstransform: When there are no input SPECTRUM cols chan avg result is the same regardless of useWeightSpectrum because VI/VB fills a cte. weightSpectrum/sigmaSpectrum across channels'''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_data-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_data-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        dataTrue = mytb.getcol('DATA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        dataFalse = mytb.getcol('DATA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(dataTrue - dataFalse) < 1E-6).all(), 'DATA improperly averaged')          
+            
+    def test_chanavg_useWeightSpectrum_false_vs_true_model(self):
+        '''mstransform: When there are no input SPECTRUM cols chan avg result is the same regardless of useWeightSpectrum because VI/VB fills a cte. weightSpectrum/sigmaSpectrum across channels'''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_model-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_model-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        dataTrue = mytb.getcol('DATA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        dataFalse = mytb.getcol('DATA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(dataTrue - dataFalse) < 1E-6).all(), 'MODEL improperly averaged')                        
+            
+    def test_chanavg_useWeightSpectrum_false_vs_true_all(self):
+        '''mstransform: When there are no input SPECTRUM cols chan avg result is the same regardless of useWeightSpectrum because VI/VB fills a cte. weightSpectrum/sigmaSpectrum across channels'''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_all-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_all-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        cols = ['DATA','CORRECTED_DATA','MODEL_DATA']
+        for col in cols:
+            mytb.open(self.outvis)
+            dataTrue = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            dataFalse = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(dataTrue - dataFalse) < 1E-6).all(), col + ' improperly generated')
+            
+            
+class test_spectrum_transformations_multiple_col(test_base):
+    '''Check the result of multiple column operation vs single column operation'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)        
+        
+    def test_chanavg_all_vs_data_and_corrected(self):
+        '''mstransform: Check that the result of chan avg ALL is equivalent to the results of DATA/CORRECTED stand-alone'''
+        
+        self.outvis = 'test_chanavg_all_vs_data_and_corrected-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.auxvis = 'test_chanavg_all_vs_data_and_corrected-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_all_vs_data_and_corrected-all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrumData = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumData = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.auxvis)
+        weightSpectrumCorrected = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumCorrected = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumAll = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumAll = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumAll-weightSpectrumCorrected) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrumAll-sigmaSpectrumData) < 1E-4).all(), 'Sigma Spectrum improperly generated')  
+        
+    def test_timeavg_all_vs_data_and_corrected(self):
+        '''mstransform: Check that the result of time avg ALL is equivalent to the results of DATA/CORRECTED stand-alone'''
+        
+        self.outvis = 'test_timeavg_all_vs_data_and_corrected-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.auxvis = 'test_timeavg_all_vs_data_and_corrected-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_all_vs_data_and_corrected-all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrumData = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumData = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.auxvis)
+        weightSpectrumCorrected = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumCorrected = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumAll = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumAll = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()        
+        
+        self.assertTrue((numpy.abs(weightSpectrumAll-weightSpectrumCorrected) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrumAll-sigmaSpectrumData) < 1E-4).all(), 'Sigma Spectrum improperly generated')       
+        
+    def test_timeavg_chanavg_all_vs_data_and_corrected(self):
+        '''mstransform: Check that the result of time+chan avg ALL is equivalent to the results of DATA/CORRECTED stand-alone'''
+        
+        self.outvis = 'test_timeavg_chanavg_all_vs_data_and_corrected-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.auxvis = 'test_timeavg_chanavg_all_vs_data_and_corrected-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.auxvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_chanavg_all_vs_data_and_corrected-all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrumData = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumData = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.auxvis)
+        weightSpectrumCorrected = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumCorrected = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumAll = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumAll = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()        
+               
+        self.assertTrue((numpy.abs(weightSpectrumAll-weightSpectrumCorrected) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrumAll-sigmaSpectrumData) < 1E-4).all(), 'Sigma Spectrum improperly generated')  
+        
+class test_spectrum_transformations_weight_zero_flag_set(test_base):
+    '''mstransform: Check that flags are set when the resulting weight is zero'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)      
+    
+    def test_timeavg_weight_zero_flag_set_corrected(self):
+        '''mstransform: Check that flags are set when the weight resulting from time avg is zero'''
+        
+        self.outvis = 'test_timeavg_weight_zero_flag_set_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        flag = mytb.getcol('FLAG')
+        mytb.close()
+        
+        indexZeroSpectrum = weightSpectrum < 1E-6
+        indexFlagSet = flag == True
+        self.assertTrue((indexZeroSpectrum == indexFlagSet).all(), 'WEIGHT_SPECTRUM not consistent with FLAG cube')
+        
+    def test_chanavg_weight_zero_flag_set_corrected(self):
+        '''mstransform: Check that flags are set when the weight resulting from time avg is zero'''
+        
+        self.outvis = 'test_chanavg_weight_zero_flag_set_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        flag = mytb.getcol('FLAG')
+        mytb.close()
+        
+        indexZeroSpectrum = weightSpectrum < 1E-6
+        indexFlagSet = flag == True
+        self.assertTrue((indexZeroSpectrum == indexFlagSet).all(), 'WEIGHT_SPECTRUM not consistent with FLAG cube')        
+        
+    def test_timeavg_chanavg_weight_zero_flag_set_corrected(self):
+        '''mstransform: Check that flags are set when the weight resulting from time avg is zero'''
+        
+        self.outvis = 'test_timeavg_chanavg_weight_zero_flag_set_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.outvis)
+        flag = mytb.getcol('FLAG')
+        mytb.close()
+        
+        indexZeroSpectrum = weightSpectrum < 1E-6
+        indexFlagSet = flag == True
+        self.assertTrue((indexZeroSpectrum == indexFlagSet).all(), 'WEIGHT_SPECTRUM not consistent with FLAG cube')  
+        
+        
+class test_spectrum_transformations_weight_constant(test_base):
+    '''mstransform: Check that the result of avg CORRECTED with constant WEIGHT'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)
+        
+    def test_timeavg_corrected_vs_model_with_weight_constant(self):
+        '''mstransform: Check that the result of time/chan avg CORRECTED is the same as time avg MODEL multiplied by input WEIGHT'''
+        
+        self.outvis = 'test_timeavg_corrected_vs_model_with_weight_constant-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_corrected_vs_model_with_weight_constant-model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    timeaverage=True,timebin='10s')
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        # Get input WEIGHT
+        mytb.open(self.vis)
+        inputWeight = mytb.getcol('WEIGHT')
+        mytb.close()
+        # Transform WEIGHT_SPECTRUM from MODEL multipling by input WEIGHT
+        weightSpectrumRef[0,:,:] = inputWeight[0,0]*weightSpectrumRef[0,:,:]
+        weightSpectrumRef[1,:,:] = inputWeight[1,0]*weightSpectrumRef[1,:,:]
+        weightSpectrumRef[2,:,:] = inputWeight[2,0]*weightSpectrumRef[2,:,:]
+        weightSpectrumRef[3,:,:] = inputWeight[3,0]*weightSpectrumRef[3,:,:]
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        
+    def test_chanavg_corrected_vs_model_with_weight_constant(self):
+        '''mstransform: Check that the result of chan avg CORRECTED is the same as time avg MODEL multiplied by input WEIGHT'''
+        
+        self.outvis = 'test_chanavg_corrected_vs_model_with_weight_constant-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_corrected_vs_model_with_weight_constant-model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    chanaverage=True,chanbin=2)
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        # Get input WEIGHT
+        mytb.open(self.vis)
+        inputWeight = mytb.getcol('WEIGHT')
+        mytb.close()
+        # Transform WEIGHT_SPECTRUM from MODEL multipling by input WEIGHT
+        weightSpectrumRef[0,:,:] = inputWeight[0,0]*weightSpectrumRef[0,:,:]
+        weightSpectrumRef[1,:,:] = inputWeight[1,0]*weightSpectrumRef[1,:,:]
+        weightSpectrumRef[2,:,:] = inputWeight[2,0]*weightSpectrumRef[2,:,:]
+        weightSpectrumRef[3,:,:] = inputWeight[3,0]*weightSpectrumRef[3,:,:]
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')                                                              
+ 
+ 
+class test_spectrum_transformations_sigma_unit(test_base):
+    '''stransform: Check that the result of avg with sigma 1'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)
+        
+    def test_timeavg_data_vs_model_with_sigma_unit(self):
+        '''mstransform: Check that the result of time avg DATA with sigma 1 is the same as averaging MODEL'''
+        
+        self.outvis = 'test_timeavg_data_vs_model_with_sigma_unit-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_data_vs_model_with_sigma_unit-model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')
+        
+    def test_chanavg_data_vs_model_with_sigma_unit(self):
+        '''mstransform: Check that the result of chan avg DATA with sigma 1 is the same as averaging MODEL'''
+        
+        self.outvis = 'test_chanavg_data_vs_model_with_sigma_unit-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_data_vs_model_with_sigma_unit-model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrum = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        sigmaSpectrumRef = mytb.getcol('SIGMA_SPECTRUM')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+        self.assertTrue((numpy.abs(sigmaSpectrum-sigmaSpectrumRef) < 1E-4).all(), 'Sigma Spectrum improperly generated')  
+        
+    def test_timeavg_corrected_vs_data_with_sigma_unit(self):
+        '''mstransform: Check that the result of time avg CORRECTED is the same as time avg DATA with sigma 1 multiplied by input WEIGHT'''
+        
+        self.outvis = 'test_timeavg_corrected_vs_data_with_sigma_unit-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_corrected_vs_data_with_sigma_unit-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    timeaverage=True,timebin='10s')
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        # Get input WEIGHT
+        mytb.open(self.vis)
+        inputWeight = mytb.getcol('WEIGHT')
+        mytb.close()
+        # Transform WEIGHT_SPECTRUM from MODEL multipling by input WEIGHT
+        weightSpectrumRef[0,:,:] = inputWeight[0,0]*weightSpectrumRef[0,:,:]
+        weightSpectrumRef[1,:,:] = inputWeight[1,0]*weightSpectrumRef[1,:,:]
+        weightSpectrumRef[2,:,:] = inputWeight[2,0]*weightSpectrumRef[2,:,:]
+        weightSpectrumRef[3,:,:] = inputWeight[3,0]*weightSpectrumRef[3,:,:]
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+    
+    def test_chanavg_corrected_vs_data_with_sigma_unit(self):
+        '''mstransform: Check that the result of chan avg CORRECTED is the same as time avg DATA with sigma 1 multiplied by input WEIGHT'''
+        
+        self.outvis = 'test_chanavg_corrected_vs_data_with_sigma_unit-corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_corrected_vs_data_with_sigma_unit-data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    antenna='0&&1',spw='0',timerange='<14:45:52.50', # Limit data selection to gurantee constant WEIGHT
+                    chanaverage=True,chanbin=2)
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightSpectrumRef = mytb.getcol('WEIGHT_SPECTRUM')
+        mytb.close()
+        
+        # Get input WEIGHT
+        mytb.open(self.vis)
+        inputWeight = mytb.getcol('WEIGHT')
+        mytb.close()
+        # Transform WEIGHT_SPECTRUM from MODEL multipling by input WEIGHT
+        weightSpectrumRef[0,:,:] = inputWeight[0,0]*weightSpectrumRef[0,:,:]
+        weightSpectrumRef[1,:,:] = inputWeight[1,0]*weightSpectrumRef[1,:,:]
+        weightSpectrumRef[2,:,:] = inputWeight[2,0]*weightSpectrumRef[2,:,:]
+        weightSpectrumRef[3,:,:] = inputWeight[3,0]*weightSpectrumRef[3,:,:]
+        
+        self.assertTrue((numpy.abs(weightSpectrum-weightSpectrumRef) < 1E-4).all(), 'Weight Spectrum improperly generated')
+               
+        
+class test_spectrum_transformations_useWeightSpectrum_false_vs_true(test_base):
+    '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)                 
+            
+    def test_chanavg_useWeightSpectrum_false_vs_true_corrected (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_corrected-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_corrected-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')
+        
+    def test_chanavg_useWeightSpectrum_false_vs_true_data (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_data-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_data-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')     
+        
+    def test_chanavg_useWeightSpectrum_false_vs_true_model (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_model-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_model-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA') 
+        
+    def test_chanavg_useWeightSpectrum_false_vs_true_all (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_useWeightSpectrum_false_vs_true_all-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2)
+        
+        self.refvis = 'test_chanavg_useWeightSpectrum_false_vs_true_all-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')        
+        
+    def test_timeavg_useWeightSpectrum_false_vs_true_corrected (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_timeavg_useWeightSpectrum_false_vs_true_corrected-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=False,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_useWeightSpectrum_false_vs_true_corrected-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')
+        
+    def test_timeavg_useWeightSpectrum_false_vs_true_data (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_timeavg_useWeightSpectrum_false_vs_true_data-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=False,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_useWeightSpectrum_false_vs_true_data-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')     
+        
+    def test_timeavg_useWeightSpectrum_false_vs_true_model (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_timeavg_useWeightSpectrum_false_vs_true_model-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=False,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_useWeightSpectrum_false_vs_true_model-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA') 
+        
+    def test_timeavg_useWeightSpectrum_false_vs_true_all (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_timeavg_useWeightSpectrum_false_vs_true_all-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=False,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_timeavg_useWeightSpectrum_false_vs_true_all-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')                  
+        
+    def test_chanavg_timeavg_useWeightSpectrum_false_vs_true_corrected (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_corrected-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=False,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_corrected-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')
+        
+    def test_chanavg_timeavg_useWeightSpectrum_false_vs_true_data (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_data-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=False,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_data-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')     
+        
+    def test_chanavg_timeavg_useWeightSpectrum_false_vs_true_model (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_model-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_model-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA') 
+        
+    def test_chanavg_timeavg_useWeightSpectrum_false_vs_true_all (self):
+        '''Check that WEIGHT/SIGMA are generated in the same way regardless of the useWeightSpectrum parameter '''
+        
+        self.outvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_all-false.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=False,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        self.refvis = 'test_chanavg_timeavg_useWeightSpectrum_false_vs_true_all-true.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        mytb= tbtool()
+        
+        mytb.open(self.outvis)
+        weightFalse = mytb.getcol('WEIGHT')
+        sigmaFalse = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        mytb.open(self.refvis)
+        weightTrue = mytb.getcol('WEIGHT')
+        sigmaTrue = mytb.getcol('SIGMA')
+        mytb.close()
+        
+        self.assertTrue((numpy.abs(weightTrue - weightFalse) < 1E-6).all(), 'Error calculating WEIGHT')
+        self.assertTrue((numpy.abs(sigmaTrue - sigmaFalse) < 1E-6).all(), 'Error calculating SIGMA')     
+        
+        
+        
+class test_spectrum_transformations_flagged_average(test_base):
+    '''Check that when all the samples are flagged the avg. and spectrum correspond to the avg./spectrum of all the flagged samples '''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)                 
+            
+    def test_chanavg_spectrum_transformations_flagged_average_corrected (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_spectrum_transformations_flagged_average_corrected-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_spectrum_transformations_flagged_average_corrected-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')
+            
+    def test_chanavg_spectrum_transformations_flagged_average_data (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_spectrum_transformations_flagged_average_data-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_spectrum_transformations_flagged_average_data-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')     
+            
+    def test_chanavg_spectrum_transformations_flagged_average_model (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_spectrum_transformations_flagged_average_model-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_spectrum_transformations_flagged_average_model-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')                    
+            
+    def test_chanavg_spectrum_transformations_flagged_average_all (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_spectrum_transformations_flagged_average_all-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_spectrum_transformations_flagged_average_all-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)        
+
+        
+        mytb = tbtool()
+        cols = ['CORRECTED_DATA','DATA','MODEL_DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')             
+            
+    def test_timeavg_spectrum_transformations_flagged_average_corrected (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_timeavg_spectrum_transformations_flagged_average_corrected-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_timeavg_spectrum_transformations_flagged_average_corrected-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')
+            
+    def test_timeavg_spectrum_transformations_flagged_average_data (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_timeavg_spectrum_transformations_flagged_average_data-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_timeavg_spectrum_transformations_flagged_average_data-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')     
+            
+    def test_timeavg_spectrum_transformations_flagged_average_model (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_timeavg_spectrum_transformations_flagged_average_model-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_timeavg_spectrum_transformations_flagged_average_model-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')                    
+            
+    def test_timeavg_spectrum_transformations_flagged_average_all (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_timeavg_spectrum_transformations_flagged_average_all-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_timeavg_spectrum_transformations_flagged_average_all-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['CORRECTED_DATA','DATA','MODEL_DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')                                   
+            
+    def test_chanavg_timeavg_spectrum_transformations_flagged_average_corrected (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_corrected-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_corrected-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')
+            
+    def test_chanavg_timeavg_spectrum_transformations_flagged_average_data (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_data-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_data-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')     
+            
+    def test_chanavg_timeavg_spectrum_transformations_flagged_average_model (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_model-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_model-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')                    
+            
+    def test_chanavg_timeavg_spectrum_transformations_flagged_average_all (self):
+        
+        # Flag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='manual')
+        
+        self.outvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_all-flagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        # Unflag the entire MS
+        flagdata(self.vis, flagbackup=False, mode='unflag')
+        
+        self.refvis = 'test_chanavg_timeavg_spectrum_transformations_flagged_average_all-unflagged.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.refvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')        
+
+        
+        mytb = tbtool()
+        cols = ['CORRECTED_DATA','DATA','MODEL_DATA','WEIGHT','SIGMA','WEIGHT_SPECTRUM','SIGMA_SPECTRUM']
+        for col in cols:
+            mytb.open(self.outvis)
+            testCol = mytb.getcol(col)
+            mytb.close()
+            mytb.open(self.refvis)
+            refCol = mytb.getcol(col)
+            mytb.close()            
+            self.assertTrue((numpy.abs(testCol - refCol) < 1E-6).all(), col + ' improperly generated')  
+
+                                                
 # Cleanup class
 class Cleanup(test_base):
 
@@ -2244,4 +4854,18 @@ def suite():
             test_radial_velocity_correction,
             test_vla_mixed_polarizations,
             test_alma_wvr_correlation_products,
+            test_spectrum_transformations_median,
+            test_spectrum_transformations_sigma_from_weight,
+            test_spectrum_transformations_2_steps_vs_1_step,
+            test_spectrum_transformations_useWeightSpectrum_false_vs_true,
+            test_spectrum_transformations_multiple_col,
+            test_spectrum_transformations_weight_constant,
+            test_spectrum_transformations_sigma_unit,
+            test_spectrum_transformations_flagged_average,   
+            # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 
+            #           there are no iput SPECTRUM cols because VI/VB generates constant SPECTRUM 
+            # test_spectrum_transformations_chanavg_useWeightSpectrum_false_vs_true,
+            # jagonzal: According to George M. chan. avg should generated teh average of the flagged data
+            #           when all the samples are flagged just like time avg.       
+            # test_spectrum_transformations_weight_zero_flag_set,
             Cleanup]
