@@ -4,7 +4,6 @@ Created on 11 Sep 2014
 @author: sjw
 '''
 import collections
-import json
 import os
 
 import pipeline.infrastructure.filenamer as filenamer
@@ -105,7 +104,8 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                                                        phase_details[vis])            
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())    
-                phase_vs_time_subpages[ms.basename] = renderer.basename
+                outfile = os.path.basename(renderer.path)
+                phase_vs_time_subpages[ms.basename] = outfile
 
             plotter = bandpass.BandpassAmpVsFreqDetailChart(context, result)
             amp_details[vis] = plotter.plot()            
@@ -115,7 +115,8 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())    
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
-                amp_vs_time_subpages[ms.basename] = renderer.basename
+                outfile = os.path.basename(renderer.path)
+                amp_vs_time_subpages[ms.basename] = outfile
 
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
@@ -135,10 +136,11 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def get_phaseup_applications(self, context, result, ms):
         # return early if phase-up was not activated
         #if result.inputs.get('phaseup', False) != True:
-            #return []
+        #    return []
         hm_phaseup = result.inputs.get('hm_phaseup', 'N/A')
-	if not hm_phaseup:
+        if not hm_phaseup:
             return []
+
         
         calmode_map = {'p':'Phase only',
                        'a':'Amplitude only',
@@ -217,113 +219,82 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         return applications
 
 
-class BaseJsonPlotRenderer(basetemplates.CommonRenderer):
-    def __init__(self, uri, context, result, basename, plots, scores):
-        super(BaseJsonPlotRenderer, self).__init__(uri, context, result)
-        
-        self.plots = plots
-        self.vis = os.path.basename(self.result.inputs['vis']) 
-        self.json = json.dumps(scores)
-        
-        self.basename = basename
-        self.path = os.path.join(self.dirname, self.basename)
-         
-    def update_mako_context(self, mako_context):
-        mako_context.update({'plots'      : self.plots,
-                             'vis'        : self.vis,
-                             'json'       : self.json})        
+class BaseBandpassPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, uri, context, result, plots, title, outfile,
+                 score_types):
+        self._vis = os.path.basename(result.inputs['vis'])
+        self._ms = context.observing_run.get_ms(self._vis)
 
+        caltable = result.final[0].gaintable
+        self._num_pols = utils.get_num_caltable_polarizations(caltable)
+        self._qa_data = result.qa.rawdata
+        self._score_types = score_types
+                
+        super(BaseBandpassPlotRenderer, self).__init__(
+                uri, context, result, plots, title, outfile)        
 
-class BandpassAmpVsFreqPlotRenderer(BaseJsonPlotRenderer):
-    def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis']) 
-        basename = filenamer.sanitize('amp_vs_freq-%s.html' % vis)                 
-        
-        ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_amp_qa_scores(ms, result, plots,
-                                            context.report_dir)
-
-        super(BandpassAmpVsFreqPlotRenderer, self).__init__('bandpass-amp_vs_freq_plots.mako',
-                                                            context, result, basename, plots, scores)
-
-
-class BandpassPhaseVsFreqPlotRenderer(BaseJsonPlotRenderer):
-    def __init__(self, context, result, plots):
-        vis = os.path.basename(result.inputs['vis'])
-        basename = filenamer.sanitize('phase_vs_freq-%s.html' % vis)                 
-
-        ms = context.observing_run.get_ms(vis)
-        scores = get_bandpass_phase_qa_scores(ms, result, plots,
-                                              context.report_dir)
-
-        super(BandpassPhaseVsFreqPlotRenderer, self).__init__('bandpass-phase_vs_freq_plots.mako',
-                                                              context, result, basename, plots, scores)
-
-
-def get_bandpass_amp_qa_scores(ms, result, plots, rootdir):
-    # .. and because the caltable name is a heuristic and resolved at child 
-    # taske execution time, the stage number doesn't map to the input! 
-    #caltable = result.inputs['caltable']
-    caltable = result.final[0].gaintable
-    num_pols = utils.get_num_caltable_polarizations(caltable)
-    score_types = ['AMPLITUDE_SCORE_DD',
-                   'AMPLITUDE_SCORE_FN',
-                   'AMPLITUDE_SCORE_SNR']
-    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)
-
-
-def get_bandpass_phase_qa_scores(ms, result, plots, rootdir):
-    # .. and because the caltable name is a heuristic and resolved at child 
-    # taske execution time, the stage number doesn't map to the input! 
-    #caltable = result.inputs['caltable']
-    caltable = result.final[0].gaintable
-    num_pols = utils.get_num_caltable_polarizations(caltable)
-    score_types = ['PHASE_SCORE_DD',
-                   'PHASE_SCORE_FN',
-                   'PHASE_SCORE_RMS']
-    return get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_pols)    
-
-def get_bandpass_qa_scores(ms, result, plots, score_types, rootdir, num_polarizations):
-    qa_data = result.qa.rawdata
-    
-    scores = {}
-    for plot in plots:
-        spw = ms.get_spectral_window(plot.parameters['spw'])
-        spw_str = str(spw.id)        
-        dd = ms.get_data_description(spw=spw)
+    def update_json_dict(self, json_dict, plot):
+        spw = int(plot.parameters['spw'])
+        dd = self._ms.get_data_description(spw=spw)
         if dd is None:
-            continue
+            return
 
-        antennas = ms.get_antenna(plot.parameters['ant'])
+        antennas = self._ms.get_antenna(plot.parameters['ant'])
         assert len(antennas) is 1, 'plot antennas != 1'
         antenna = antennas[0]
 
-        pol = plot.parameters['pol']
-        pol_id = dd.get_polarization_id(pol)
-
-        png = os.path.relpath(plot.abspath, rootdir)
-        thumbnail = os.path.relpath(plot.thumbnail, rootdir)
+        scores_dict = collections.defaultdict(dict)
+        for corr_axis in dd.corr_axis:
+            pol_id = dd.get_polarization_id(corr_axis)
+            # QA dictionary keys are a function of both antenna and feed.
+            qa_id = int(antenna.id) * self._num_pols + pol_id
+            qa_str = str(qa_id)
+    
+            for score_type in self._score_types:            
+                if 'QASCORES' in self._qa_data:
+                    try:
+                        score = self._qa_data['QASCORES'][score_type][str(spw)][qa_str]
+                    except KeyError:
+                        LOG.error('Could not get %s score for %s (%s) spw %s '
+                                  'pol %s (id=%s)', score_type, antenna.name,
+                                  antenna.id, spw, corr_axis, qa_str)
+                        score = None 
+                else:
+                    score = 1.0
+                    
+                scores_dict[score_type][corr_axis] = score
         
-        png_scores = {'antenna'   : antenna.name,
-                      'spw'       : spw.id,
-                      'pol'       : pol,
-                      'thumbnail' : thumbnail}
-        scores[png] = png_scores
+        json_dict.update(scores_dict)
+        plot.scores = scores_dict
+            
+    def update_mako_context(self, mako_context):
+        super(BaseBandpassPlotRenderer, self).update_mako_context(mako_context)
+        mako_context['vis'] = self._vis
 
-        # QA dictionary keys are peculiar, in that their index is a
-        # function of both antenna and feed.
-        qa_id = int(antenna.id) * num_polarizations + pol_id
-        qa_str = str(qa_id)
 
-        for score_type in score_types:            
-            if 'QASCORES' in qa_data:
-                try:
-                    score = qa_data['QASCORES'][score_type][spw_str][qa_str]
-                except KeyError:
-                    LOG.error('Could not get %s score for %s (%s) spw %s pol %s (id=%s)' % (score_type, antenna.name, antenna.id, spw_str, pol, qa_str))
-                    score = None 
-            else:
-                score = 1.0
-            png_scores[score_type] = score
+class BandpassAmpVsFreqPlotRenderer(BaseBandpassPlotRenderer):
+    def __init__(self, context, result, plots):
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'Calibrated amplitude vs frequency for %s' % vis
+        outfile = filenamer.sanitize('amp_vs_freq-%s.html' % vis)
+        score_types = frozenset(['AMPLITUDE_SCORE_DD',
+                                 'AMPLITUDE_SCORE_FN',
+                                 'AMPLITUDE_SCORE_SNR'])
         
-    return scores
+        super(BandpassAmpVsFreqPlotRenderer, self).__init__(
+                'bandpass-amp_vs_freq_plots.mako', context, 
+                result, plots, title, outfile, score_types)
+
+
+class BandpassPhaseVsFreqPlotRenderer(BaseBandpassPlotRenderer):
+    def __init__(self, context, result, plots):
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'Calibrated phase vs frequency for %s' % vis
+        outfile = filenamer.sanitize('phase_vs_freq-%s.html' % vis)
+        score_types = frozenset(['PHASE_SCORE_DD',
+                                 'PHASE_SCORE_FN',
+                                 'PHASE_SCORE_RMS'])
+        
+        super(BandpassPhaseVsFreqPlotRenderer, self).__init__(
+                'bandpass-phase_vs_freq_plots.mako', context, 
+                result, plots, title, outfile, score_types)
