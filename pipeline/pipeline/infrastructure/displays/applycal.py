@@ -227,7 +227,7 @@ class BasebandComposite(common.LeafComposite):
                  intent='', **kwargs):
         ms = context.observing_run.get_ms(calto.vis)
         
-        basebands = collections.defaultdict(list)        
+        basebands = utils.OrderedDefaultdict(list)
         for spw in ms.get_spectral_windows(calto.spw):
             if intent != '':
                 wanted = set(intent.split(','))
@@ -235,6 +235,7 @@ class BasebandComposite(common.LeafComposite):
                     continue
                 
             basebands[spw.baseband].append(spw.id)
+        print basebands
 
         children = []
         for baseband_id, spw_ids in basebands.items():
