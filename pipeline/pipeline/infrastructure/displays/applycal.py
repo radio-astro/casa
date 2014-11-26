@@ -235,7 +235,6 @@ class BasebandComposite(common.LeafComposite):
                     continue
                 
             basebands[spw.baseband].append(spw.id)
-        print basebands
 
         children = []
         for baseband_id, spw_ids in basebands.items():
