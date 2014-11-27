@@ -963,11 +963,6 @@ void Importmiriad::fillMSMainTable()
       cout << endl;
     } // Debug(3) for timeline monitoring
 
-    interval = inttime_p;
-    //msc.interval().put(0,interval);
-    //msc.exposure().put(0,interval);
-
-
     // for MIRIAD, this would always cause a single array dataset,
     // but we need to count the antpos occurences to find out
     // which array configuration we're in.
@@ -1073,6 +1068,7 @@ void Importmiriad::fillMSMainTable()
 	  msc.sigma().put(row,tmp);
 	}
       }
+      interval = inttime_p;
       msc.exposure().put(row,interval);
       msc.interval().put(row,interval);
 #if 1
@@ -1864,7 +1860,6 @@ void Importmiriad::Tracking(int record)
   if (vupd) {
     uvgetvr_c(uv_handle_p,H_REAL,"inttime",(char *)&inttime_p,1);
   }
-
   uvprobvr_c(uv_handle_p,"antpos",vtype,&vlen,&vupd);
   if (vupd && record) {
     if (Qarrays_p) 
