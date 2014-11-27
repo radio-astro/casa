@@ -46,7 +46,8 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/PlainTable.h>
 #include <casa/Utilities/Regex.h>
-
+// jagonzal: Needed for ISM error detection tool
+#include <tables/Tables/DataManError.h>
 
 using namespace std;
 using namespace casa;
@@ -2287,6 +2288,57 @@ bool table::testincrstman(const std::string& column)
 	{
 		try
 		{
+			Record columnDescription = itsTable->getColumnDescription(column, True);
+
+			int pos;
+
+			// Get data manager type
+			pos = -1;
+			String dataManagerType;
+			pos = columnDescription.fieldNumber ("dataManagerType");
+			if (pos >= 0)
+			{
+				columnDescription.get (pos, dataManagerType);
+
+				// Check that data manager type is IncrementalStMan
+				if (dataManagerType != "IncrementalStMan")
+				{
+					*itsLog << LogIO::WARN
+							<< "Data manager type of column "
+							<< column
+							<< " is not Incremental Store Manager"
+							<< LogIO::POST;
+
+					if (column == "FLAG_ROW")
+					{
+						*itsLog << LogIO::NORMAL	<< "Starting at 4.2.2 the default store manager for FLAG_ROW is Standard Store Manager " << endl
+													<< "Therefore a MS imported with CASA version >= 4.2.2 is not exposed to the Incremental Store Manager problem"
+													<< LogIO::POST;
+					}
+
+					return True;
+				}
+			}
+			else
+			{
+				*itsLog << LogIO::WARN << "Data manager type not found for column: " << column << LogIO::POST;
+				return False;
+			}
+
+			// Get data manager group
+			pos = -1;
+			String dataManagerGroup;
+			pos = columnDescription.fieldNumber ("dataManagerGroup");
+			if (pos >= 0)
+			{
+				columnDescription.get (pos, dataManagerGroup);
+			}
+			else
+			{
+				*itsLog << LogIO::SEVERE << "Data manager group not found for column: " << column << LogIO::POST;
+				return False;
+			}
+
 			uInt offenndingCursor = 0;
 			uInt offendingBucketStartRow = 0;
 			uInt offendingBucketNrow = 0;
@@ -2296,8 +2348,7 @@ bool table::testincrstman(const std::string& column)
 			uInt offendingRow = 0;
 			uInt offendingPrevRow = 0;
 
-			String ismName(column);
-			ROIncrementalStManAccessor acc(itsTable->table(), ismName);
+			ROIncrementalStManAccessor acc(itsTable->table(), dataManagerGroup);
 			ok = acc.checkBucketLayout (	offenndingCursor,
 											offendingBucketStartRow,
 											offendingBucketNrow,
@@ -2321,13 +2372,25 @@ bool table::testincrstman(const std::string& column)
 											<< " preRowId=" << offendingPrevRow
 											<< LogIO::POST;
 			}
+			else
+			{
+				*itsLog << LogIO::NORMAL 	<< "Incremental Store Manager corruption not detected in column "
+											<< column
+											<<  LogIO::POST;
+			}
 
 
 		}
 		catch (AipsError x)
 		{
-			RETHROW(x);
+			*itsLog << LogIO::SEVERE << x.getMesg() << LogIO::POST;
+			return False;
 		}
+	}
+	else
+	{
+		*itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
+		return False;
 	}
 
 	return ok;
