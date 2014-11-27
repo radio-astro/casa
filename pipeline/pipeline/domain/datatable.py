@@ -463,13 +463,10 @@ class DataTableImpl( object ):
                     continue
                 
                 for ifno_to in ifmap[ifno_from]:
-                    atsys = [calculate_average_tsys(spectral_windows[ifno_from].nchan,
-                                                    spectral_windows[ifno_from].freq_min,
-                                                    spectral_windows[ifno_from].freq_max,
-                                                    spectral_windows[ifno_to].freq_min,
-                                                    spectral_windows[ifno_to].freq_max,
-                                                    spectral_windows[ifno_from].increment,
-                                                    tsys[i]) for i in indices]
+                    start_chan, end_chan = map_spwchans(spectral_windows[ifno_from], 
+                                                        spectral_windows[ifno_to])
+                    atsys = [numpy.mean(tsys[i][start_chan:end_chan])
+                             for i in indices]
                     LOG.debug('atsys = %s' % atsys)
                     rows = self.get_row_index(ant, ifno_to, polno)
                     if len(atsys) == 1:
@@ -482,46 +479,71 @@ class DataTableImpl( object ):
                             itsys = _interpolate(atsys, tsys_time, tref)
                             self.tb1.putcell('TSYS', row, itsys)                
         
-def calculate_average_tsys(atm_nchan,atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,tsyslist) :
-    
-    if atm_increment < 0: # LSB
+def map_spwchans(atm_spw, science_spw):
+    atm_nchan = atm_spw.nchan
+    atm_freq_min, atm_freq_max, atm_incr = atm_spw.freq_min, atm_spw.freq_max, atm_spw.increment
+    science_freq_min, science_freq_max = atm_spw.freq_min, atm_spw.freq_max
+    if atm_incr < 0: # LSB
         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
         LOG.trace('--- LSB ----')
-        if atm_freq_min < target_freq_min and target_freq_max < atm_freq_max:
-            # start_atmchan
-            start_atmchan = get_channel(atm_freq_max, target_freq_max, atm_increment, 0.5)
-            LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-                
-            # end_atmchan
-            end_atmchan = get_channel(atm_freq_max, target_freq_min, atm_increment, -0.5)
-            LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan) + 1
-        else:
-            start_atmchan = 0
-            end_atmchan = atm_nchan
-        
-    elif(atm_increment > 0): # USB)
+        start_atmchan = max(0, get_channel(atm_freq_max, science_freq_max, atm_incr, 0.5))
+        end_atmchan = min(atm_nchan, get_channel(atm_freq_max, science_freq_min, atm_incr, -0.5) + 1)
+    elif(atm_incr > 0): # USB
         get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
         LOG.trace('--- USB ----')
-        if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
-            # start_atmchan
-            start_atmchan = get_channel(atm_freq_min, target_freq_min, atm_increment, 0.5)
-            LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
-                
-            # end_atmchan
-            end_atmchan = get_channel(atm_freq_min, target_freq_max, atm_increment, -0.5) + 1
-            LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
-        else:
-            start_atmchan = 0
-            end_atmchan = atm_nchan
+        start_atmchan = max(0, get_channel(atm_freq_min, science_freq_min, atm_incr, 0.5))
+        end_atmchan = min(atm_nchan, get_channel(atm_freq_min, science_freq_max, atm_incr, -0.5) + 1)
     else:
-        raise RuntimeError, 'internal logic error: atm_increment should not be 0'
-        
-    LOG.debug('calculate_average_tsys:   end_atmchan - start_atmchan = %d ' % (end_atmchan - start_atmchan))
-    if start_atmchan - end_atmchan > 1:
-        averaged_tsys = numpy.mean(tsyslist[start_atmchan:end_atmchan])
-    else:
-        averaged_tsys = numpy.mean(tsyslist)
-    return averaged_tsys
+        raise RuntimeError, 'error: atm_increment should not be 0'
+    
+    LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+    LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+
+    if end_atmchan == start_atmchan:
+        end_atmchan = start_atmchan + 1
+    
+    return start_atmchan, end_atmchan
+    
+# def calculate_average_tsys(atm_nchan,atm_freq_min,atm_freq_max,target_freq_min,target_freq_max,atm_increment,tsyslist) :
+#     
+#     if atm_increment < 0: # LSB
+#         get_channel = lambda ref, freq, incr, offset: int(math.floor((ref - freq)/abs(incr) + offset))
+#         LOG.trace('--- LSB ----')
+#         if atm_freq_min < target_freq_min and target_freq_max < atm_freq_max:
+#             # start_atmchan
+#             start_atmchan = get_channel(atm_freq_max, target_freq_max, atm_increment, 0.5)
+#             LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+#                 
+#             # end_atmchan
+#             end_atmchan = get_channel(atm_freq_max, target_freq_min, atm_increment, -0.5)
+#             LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan) + 1
+#         else:
+#             start_atmchan = 0
+#             end_atmchan = atm_nchan
+#         
+#     elif(atm_increment > 0): # USB)
+#         get_channel = lambda ref, freq, incr, offset: math.floor((freq - ref)/abs(incr) + offset)
+#         LOG.trace('--- USB ----')
+#         if(atm_freq_min < target_freq_min and target_freq_max < atm_freq_max):
+#             # start_atmchan
+#             start_atmchan = get_channel(atm_freq_min, target_freq_min, atm_increment, 0.5)
+#             LOG.trace('calculate_average_tsys:   satrt_atmchan == %d' % start_atmchan)
+#                 
+#             # end_atmchan
+#             end_atmchan = get_channel(atm_freq_min, target_freq_max, atm_increment, -0.5) + 1
+#             LOG.trace('calculate_average_tsys:   end_atmchan == %d' % end_atmchan)
+#         else:
+#             start_atmchan = 0
+#             end_atmchan = atm_nchan
+#     else:
+#         raise RuntimeError, 'error: atm_increment should not be 0'
+#         
+#     LOG.debug('calculate_average_tsys:   end_atmchan - start_atmchan = %d ' % (end_atmchan - start_atmchan))
+#     if start_atmchan - end_atmchan > 1:
+#         averaged_tsys = numpy.mean(tsyslist[start_atmchan:end_atmchan])
+#     else:
+#         averaged_tsys = numpy.mean(tsyslist)
+#     return averaged_tsys
 
 
 class RODataTableColumn( object ):
