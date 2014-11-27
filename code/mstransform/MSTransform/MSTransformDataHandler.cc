@@ -3516,7 +3516,7 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 	{
 		MSSysCal syscalTable_0 = ms_0.sysCal();
 
-		if (syscalTable_0.nrow() > 0)
+		if (syscalTable_0.nrow() >= 0)
 		{
 	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "Merging SYSCAL sub-tables from all sub-MSs to form MMS-level SYSCAL sub-table" << LogIO::POST;
@@ -3985,7 +3985,7 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 		if (subtable_0.nrow() > 0)
 		{
 	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-	    			<< "Merging SYS_POWER sub-tables from all sub-MSs to form MMS-level SYS_POWER sub-table" << LogIO::POST;
+	    			<< "Merging SYSPOWER sub-tables from all sub-MSs to form MMS-level SYSPOWER sub-table" << LogIO::POST;
 
 	        // Get RW access to columns
 			ScalarColumn<Int> antennaIdCol_0(subtable_0, "ANTENNA_ID");
