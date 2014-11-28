@@ -134,6 +134,11 @@ class Clean(cleanbase.CleanBase):
                 self._empty_pointing_table()
 	        LOG.info('Temporarily remove pointing table')
 
+            # delete any old files with this naming root. One of more
+            # of these (don't know which) will interfere with this run.
+            LOG.info('deleting %s*.iter*' % inputs.imagename)
+            os.system('rm -fr %s*.iter*' % inputs.imagename)
+
             # Get an empirical noise estimate by generating Q or V image.
             #    Assumes presence of XX and YY, or RR and LL
             #    Assumes source is unpolarized
