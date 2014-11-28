@@ -22,7 +22,7 @@ class SDSimpleScaleInputs(common.SingleDishInputs):
 #     def __init__(self, context, infiles=None, spw=None, pol=None, factor=None):
     def __init__(self, context, infiles=None, factor=None):
         self._init_properties(vars())
-        self._to_numeric('factor')
+        self._to_numeric(['factor'])
 
     @property
     def antennalist(self):
@@ -32,6 +32,13 @@ class SDSimpleScaleInputs(common.SingleDishInputs):
             return list(set(antennas))
         else:
             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
+    @property
+    def factor(self):
+        return self._factor
+
+    @factor.setter
+    def factor(self, value):
+        self._factor = 1.25 if value is None else value
 
 class SDSimpleScaleResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
