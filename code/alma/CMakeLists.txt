@@ -239,6 +239,7 @@ Enumerations/CCorrelatorType.cc
 Enumerations/CDataContent.cc
 Enumerations/CDataScale.cc
 Enumerations/CDetectorBandType.cc
+Enumerations/CDifferenceType.cc
 Enumerations/CDirectionReferenceCode.cc
 Enumerations/CDopplerReferenceCode.cc
 Enumerations/CDopplerTrackingMode.cc
@@ -273,6 +274,7 @@ Enumerations/CStokesParameter.cc
 Enumerations/CSubscanIntent.cc
 Enumerations/CSwitchingMode.cc
 Enumerations/CSyscalMethod.cc
+Enumerations/CSynthProf.cc
 Enumerations/CTimeSampling.cc
 Enumerations/CTimeScale.cc
 Enumerations/CWeightType.cc
@@ -304,6 +306,7 @@ Enumtcl/CorrelatorType.cc
 Enumtcl/DataContent.cc
 Enumtcl/DataScale.cc
 Enumtcl/DetectorBandType.cc
+Enumtcl/DifferenceType.cc
 Enumtcl/DirectionReferenceCode.cc
 Enumtcl/DopplerReferenceCode.cc
 Enumtcl/DopplerTrackingMode.cc
@@ -337,6 +340,7 @@ Enumtcl/StationType.cc
 Enumtcl/StokesParameter.cc
 Enumtcl/SubscanIntent.cc
 Enumtcl/SwitchingMode.cc
+Enumtcl/SynthProf.cc
 Enumtcl/SyscalMethod.cc
 Enumtcl/TimeSampling.cc
 Enumtcl/TimeScale.cc
@@ -705,8 +709,8 @@ casa_add_executable( alma asdmSummary
   apps/asdmSummary/asdmSummary.cc 
   )
 
-casa_add_executable( alma bdflags2MS
-  apps/asdm2MS/bdflags2MS.cc
+ casa_add_executable( alma bdflags2MS
+   apps/asdm2MS/bdflags2MS.cc
   )
 
 #casa_add_executable( alma parasdm2MS
@@ -725,6 +729,7 @@ casa_add_assay(alma ASDMBinaries/test/tReadAllBDFs.cc)
 casa_add_assay(alma ASDM/test/tTableStreamReader.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadSeqBDFs.cc)
 casa_add_assay(alma ASDMBinaries/test/tReadParBDFs.cc)
+#casa_add_assay(alma test/tEmptyMS.cc)
 
 #
 # The Python <- C++ binding generated with swig
