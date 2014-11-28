@@ -326,13 +326,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 #ichan = self.lines[icluster][0] + 0.5
                 (frequency, width) = self.__line_property(icluster)
                 pl.title('Cluster%s: Center=%.4f GHz Width=%.1f km/s'%(icluster,frequency,width), fontsize=tick_size+1)
-                if self.lines[icluster][2] != False:
-                    for i in xrange(len(threshold)):
-                        plot_objects.extend(
-                            pl.plot(xdata[i], ydata[i], marks[4 - len(threshold) + i], markersize=marker_size)
-                        )
-
-                if self.lines[icluster][2] != True:
+                if self.lines[icluster][2] == False and mode == 'final':
                     if num_panel_h > 2:
                         _tick_size = tick_size
                     else:
@@ -344,6 +338,12 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                                 verticalalignment='center',
                                 size=_tick_size)
                         )
+                else:
+                    for i in xrange(len(threshold)):
+                        plot_objects.extend(
+                            pl.plot(xdata[i], ydata[i], marks[4 - len(threshold) + i], markersize=marker_size)
+                        )
+
                 pl.axis([xmax, xmin, ymin, ymax])
 
                 # Legends
