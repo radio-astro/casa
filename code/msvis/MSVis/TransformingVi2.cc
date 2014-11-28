@@ -664,7 +664,7 @@ TransformingVi2::weightSpectrumExists ()  const
 Bool
 TransformingVi2::sigmaSpectrumExists ()  const
 {
-    return getVii()->weightSpectrumExists ();
+    return getVii()->sigmaSpectrumExists ();
 }
 
 void
