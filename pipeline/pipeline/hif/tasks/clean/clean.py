@@ -3,17 +3,18 @@ import shutil
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-from .basicboxworker import BasicBoxWorker
-from .iterboxworker import IterBoxWorker
+from .basecleansequence import BaseCleanSequence
+from .imagecentrethresholdsequence import ImageCentreThresholdSequence
+from .iterativesequence import IterativeSequence
 from . import cleanbase
 
 from pipeline.hif.heuristics import cleanbox as cbheuristic
+from pipeline.hif.heuristics import makecleanlist
 
 LOG = infrastructure.get_logger(__name__)
 
 
 class CleanInputs(cleanbase.CleanBaseInputs):
-
 
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
        intent=None, field=None, spw=None, uvrange=None, mode=None,
@@ -62,7 +63,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
     @property
     def hm_masking(self):
         if self._hm_masking is None:
-            return 'none'
+            return 'centralquarter'
         return self._hm_masking
 
     @hm_masking.setter
@@ -72,7 +73,7 @@ class CleanInputs(cleanbase.CleanBaseInputs):
     @property
     def hm_cleaning(self):
         if self._hm_cleaning is None:
-            return 'psf'
+            return 'rms'
         return self._hm_cleaning
 
     @hm_cleaning.setter
@@ -102,7 +103,8 @@ class CleanInputs(cleanbase.CleanBaseInputs):
     @property
     def maxncleans(self):
         if self._maxncleans is None:
-            return 1
+            return 10
+        return 10
         return self._maxncleans
 
     @maxncleans.setter
@@ -125,46 +127,42 @@ class Clean(cleanbase.CleanBase):
         LOG.info('')
 
 	try:
-
-            # Remove rows in POINTING table - bug workaround.
-	    #    May no longer be necesssary
 	    result = None
-	    bestrms = None
             if inputs.imagermode == 'mosaic':
+                # Remove rows in POINTING table - bug workaround.
+                #    May no longer be necesssary
                 self._empty_pointing_table()
 	        LOG.info('Temporarily remove pointing table')
-	    else:
-                # Get an empirical noise estimate by generating Q or V image.
-		#    This heuristics is ALMA specific
-	        #    Assumes presence of XX and YY correlations
-	        #    Assumes source is unpolarized
-	        #    Make code more efficient (use MS XX and YY correlations) directly.
-	        #    Update / replace  code when sensitity function is working.
-	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	            residual_min, rms2d, image_max = \
-		    self._do_noise_estimate(stokes=inputs.noiseimage, iter=0)
-	        bestrms = non_cleaned_rms
-	        LOG.info('Best rms estimate from %s image is %s' % 
-                  (inputs.noiseimage, bestrms))
-	    LOG.info('Best rms estimate for cleaning is %s' % bestrms)
 
-            # Compute the dirty image.
-	    result = self._do_clean (iter=0, stokes='I', cleanmask='', niter=0,
-	        threshold='0.0mJy', result=None) 
-	    if result.empty():
-	        return result
+            # Get an empirical noise estimate by generating Q or V image.
+            #    Assumes presence of XX and YY, or RR and LL
+            #    Assumes source is unpolarized
+            #    Make code more efficient (use MS XX and YY correlations) directly.
+            #    Update / replace  code when sensitity function is working.
+            model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+              residual_min, rms2d, image_max = \
+              self._do_noise_estimate(stokes=inputs.noiseimage)
+            noise_rms = non_cleaned_rms
+            LOG.info('Noise rms estimate from %s image is %s' % 
+              (inputs.noiseimage, noise_rms))
 
-	    # Return dirty image if cleaning is disabled.
-            if inputs.maxncleans == 0 or inputs.niter <= 0:
-	        return result
+	    # Choose cleaning method.
+            if inputs.hm_masking == 'centralquarter':
+                if inputs.hm_cleaning == 'manual':
+	            threshold = inputs.threshold
+                elif inputs.hm_cleaning == 'sensitivity':
+                    raise Exception, 'sensitivity threshold not yet implemented'
+                elif inputs.hm_cleaning == 'rms':
+                    threshold = '%sJy' % (inputs.tlimit * noise_rms)
+                sequence_manager = ImageCentreThresholdSequence(
+                  imagermode=inputs.imagermode, threshold=threshold)
 
-	    # Choose between simple cleaning and iterative cleaning.
-	    #   More code cleanup needed here.
-	    #   Not good if bestrms not properly defined but ...
-	    if inputs.hm_masking == 'psfiter':
-	        result = self._do_iterative_imaging(bestrms=bestrms, result=result)
-	    else:
-	        result = self._do_simple_imaging(bestrms=bestrms, result=result)
+            elif inputs.hm_masking == 'psfiter':
+                sequence_manager = IterativeSequence(
+                  maxncleans=inputs.maxncleans)
+    
+            result = self._do_iterative_imaging(
+              sequence_manager=sequence_manager, result=result)
 
 	except Exception, e:
 	    LOG.error('Iterative imaging error: %s' % (str(e)))
@@ -172,197 +170,91 @@ class Clean(cleanbase.CleanBase):
             if inputs.imagermode == 'mosaic':
                 # restore POINTING table to input state
                 self._restore_pointing_table()
-	        LOG.info('Restored pointing table')
+                LOG.info('Restored pointing table')
 
 	return result
 
     def analyse(self, result):
         return result
 
-    def _do_iterative_imaging (self, bestrms, result):
+    def _do_iterative_imaging (self, sequence_manager, result):
         inputs = self.inputs
 
-	try:
+        # Compute the dirty image.
+        LOG.info('Compute the dirty image')
+        iter = 0
+        result = self._do_clean (iter=iter, stokes='I', cleanmask='',
+          niter=0, threshold='0.0mJy', result=None) 
 
-	    # Create the box worker.
-	    boxworker = IterBoxWorker(maxncleans=inputs.maxncleans)
+	# Give the result to the sequence_manager for analysis
+	model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
+	  residual_min, rms2d, image_max = \
+	  sequence_manager.iteration_result(iter=0,
+	  psf=result.psf, model= result.model,
+	  restored=result.image,
+	  residual=result.residual, flux=result.flux,
+          cleanmask=None, threshold=None)
 
-	    # Determine iteration status
+        LOG.info('Dirty image stats')
+	LOG.info('    Rms %s', non_cleaned_rms)
+	LOG.info('    Residual max %s', residual_max)
+	LOG.info('    Residual min %s', residual_min)
+
+	iterating = True
+        iter = 1
+	while iterating:
+
+            # Create the name of the next clean mask from the root of the 
+            # previous residual image.
+	    rootname, ext = os.path.splitext(result.residual)
+	    rootname, ext = os.path.splitext(rootname)
+	    new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
+	    try:
+	        shutil.rmtree (new_cleanmask)
+	    except:
+                pass
+
+	    # perform an iteration.
+	    seq_result = sequence_manager.iteration(new_cleanmask)
+
+	    # Check the iteration status.
+	    if not seq_result.iterating:
+	        break
+
+	    # Determine the cleaning threshold
+            threshold = seq_result.threshold
+
+	    LOG.info('Iteration %s: Clean control parameters' % iter)
+	    LOG.info('    Mask %s', new_cleanmask)
+	    LOG.info('    Threshold %s', seq_result.threshold)
+	    LOG.info('    Niter %s', seq_result.niter)
+
+	    result = self._do_clean (iter=iter, stokes='I',
+              cleanmask=new_cleanmask, niter=seq_result.niter, 
+              threshold=threshold, result=result) 
+
+            # Give the result to the clean 'sequencer'
 	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	        residual_min, rms2d, image_max = \
-	        boxworker.iteration_result(iter=0, \
-	        psf=result.psf, model= result.model, \
-	        restored=result.image, \
-	        residual=result.residual, fluxscale=result.flux, \
-	        cleanmask=None, threshold=None)
+	      residual_min, rms2d, image_max = \
+	      sequence_manager.iteration_result(iter=iter, \
+	      psf=result.psf, model= result.model, restored=result.image, residual= \
+	      result.residual, flux=result.flux, cleanmask=new_cleanmask, \
+	      threshold=seq_result.threshold)
 
-	    LOG.info('Dirty image stats')
-	    LOG.info('    Rms %s', non_cleaned_rms)
+	    LOG.info('Clean image iter %s stats' % iter)
+	    LOG.info('    Clean rms %s', cleaned_rms)
+	    LOG.info('    Nonclean rms %s', non_cleaned_rms)
 	    LOG.info('    Residual max %s', residual_max)
 	    LOG.info('    Residual min %s', residual_min)
-	    if not bestrms:
-	        LOG.info('Rms estimate from dirty image is %s' * bestrms)
-	        LOG.info('    This is a ver poor estimage')
-	        bestrms = non_cleaned_rms
 
-	    iterating = True; iter = 1
-	    while iterating and iter <= inputs.maxncleans:
-
-		# Create the clean mask from the root of the previous
-		# residual image.
-		rootname, ext = os.path.splitext(result.residual)
-		rootname, ext = os.path.splitext(rootname)
-	        new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
-		try:
-		    shutil.rmtree (new_cleanmask)
-		except:
-		    pass
-		boxworker.new_cleanmask(new_cleanmask)
-
-		# perform an interation.
-		box_result = boxworker.iteration()
-
-		# Check the iteration status.
-		iterating = boxworker.iterating()
-		if not iterating:
-		    break
-
-		# Determine the cleaning threshold
-		#    Note this is different than the masking threshold
-		threshold = self._do_threshold(iter=iter, bestrms=bestrms,
-		    hm_cleaning=inputs.hm_cleaning)
-
-	        LOG.info('Clean control parameters')
-	        LOG.info('    Mask %s', new_cleanmask)
-	        LOG.info('    Mask threshold %s', box_result.threshold)
-	        LOG.info('    Iter %s', iter)
-	        LOG.info('    Clean threshold %s', threshold)
-	        #LOG.info('    Threshold %s', box_result.threshold)
-	        LOG.info('    Niter %s', inputs.niter)
-
-		# Clean
-		#    First time through use cleaning threshold based on RMS.    
-		#    
-		if iter == 1:
-		    clthreshold = min (box_result.threshold, threshold)
-		else:
-		    clthreshold = box_result.threshold
-	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
-		    niter=inputs.niter, threshold=clthreshold, result=result) 
-
-	        # Determine iteration status
-	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	            residual_min, rms2d, image_max = \
-		    boxworker.iteration_result(iter=iter, \
-		    psf=result.psf, model= result.model, restored=result.image, residual= \
-		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask, \
-		    threshold=box_result.threshold)
-		best_rms = cleaned_rms
-
-	        LOG.info('Clean image iter %s stats' % iter)
-	        LOG.info('    Clean rms %s', cleaned_rms)
-	        LOG.info('    Nonclean rms %s', non_cleaned_rms)
-	        LOG.info('    Residual max %s', residual_max)
-	        LOG.info('    Residual min %s', residual_min)
-
-		# Up the iteration counter
-		iter = iter + 1
-
-        finally:
-	    pass
+	    # Up the iteration counter
+	    iter += 1
 
         return result
 
-    # Do non iterative cleaning, i.e. simple cleaning.
-    #    Clean iteration hooks have been left in place
-    #    but are not used.
-    def _do_simple_imaging (self, bestrms, result):
-        inputs = self.inputs
-
-	try:
-
-	    # Create the box worker.
-	    boxworker = BasicBoxWorker()
-
-	    # Determine iteration status
-	    model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	        residual_min, rms2d, image_max = \
-	        boxworker.iteration_result(iter=0, \
-	        psf=result.psf, model= result.model, \
-	        restored=result.image, \
-	        residual=result.residual, fluxscale=result.flux, \
-	        cleanmask=None)
-
-	    LOG.info('Dirty image stats')
-	    LOG.info('    Rms %s', non_cleaned_rms)
-	    LOG.info('    Residual max %s', residual_max)
-	    LOG.info('    Residual min %s', residual_min)
-	    if not bestrms:
-	        LOG.info('Rms estimate from dirty image is %s' % bestrms)
-	        bestrms = non_cleaned_rms
-
-	    iterating = True; iter = 1
-	    while iterating and iter <= inputs.maxncleans:
-
-		# Create the clean mask from the root of the previous
-		# residual image.
-		rootname, ext = os.path.splitext(result.residual)
-		rootname, ext = os.path.splitext(rootname)
-	        new_cleanmask = '%s.iter%s.cleanmask' % (rootname, iter)
-		try:
-		    shutil.rmtree (new_cleanmask)
-		except:
-		    pass
-
-		iterating = boxworker.iterating()
-		if not iterating:
-		    break
-
-		# Create the mask
-		#    The niter return is temporary until the controller is
-		#    fully refactored
-		niter  = self._do_mask(psf=result.psf, image=result.residual, \
-                    cleanmask=new_cleanmask, usermask=inputs.mask,
-		    hm_mask=inputs.hm_masking)
-
-		# Determine the cleaning threshold
-		threshold = self._do_threshold(iter=iter, bestrms=bestrms,
-		    hm_cleaning=inputs.hm_cleaning)
-
-	        LOG.info('Clean control parameters')
-	        LOG.info('    Mask %s', new_cleanmask)
-	        LOG.info('    Iter %s', iter)
-	        LOG.info('    Threshold %s', threshold)
-	        LOG.info('    Niter %s', niter)
-
-		# Clean
-	        result = self._do_clean (iter=iter, stokes='I', cleanmask=new_cleanmask,
-		    niter=niter, threshold=threshold, result=result) 
-
-	        # Determine iteration status
-	        model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	            residual_min, rms2d, image_max = \
-		    boxworker.iteration_result(iter=iter, \
-		    psf=result.psf, model= result.model, restored=result.image, residual= \
-		    result.residual, fluxscale=result.flux, cleanmask=new_cleanmask)
-		best_rms = cleaned_rms
-
-	        LOG.info('Clean image iter %s stats' % iter)
-	        LOG.info('    Clean rms %s', cleaned_rms)
-	        LOG.info('    Nonclean rms %s', non_cleaned_rms)
-	        LOG.info('    Residual max %s', residual_max)
-	        LOG.info('    Residual min %s', residual_min)
-
-		# Up the iteration counter
-		iter = iter + 1
-
-        finally:
-	    pass
-
-        return result
-
-    # Compute a noise estimage from the Q or V image
-    def _do_noise_estimate (self, stokes, iter=0):
+    def _do_noise_estimate (self, stokes):
+        """Compute a noise estimate from the specified stokes image.
+        """
 
         model_sum = None,
         cleaned_rms = None
@@ -374,25 +266,26 @@ class Clean(cleanbase.CleanBase):
 
         # Compute the dirty Q or V image.
 	try:
-            result = self._do_clean (iter=0, stokes=stokes, cleanmask='', niter=0,
-                threshold='0.0mJy', result=None) 
+            LOG.info("Compute the 'noise' image")
+            result = self._do_clean (iter=0, stokes=stokes, 
+              cleanmask='', niter=0, threshold='0.0mJy', result=None)
 	    if result.empty():
+                LOG.error('Error creating stokes %s noise image: %s' % stokes)
                 return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	            residual_min, rms2d, image_max 
+                  residual_min, rms2d, image_max 
 	except Exception, e:
-            LOG.error('Error creating stokes %s noise image: %s' % (stokes, str(e)))
+            LOG.error('Error creating stokes %s noise image: %s' % (stokes,
+              str(e)))
             return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	        residual_min, rms2d, image_max 
+              residual_min, rms2d, image_max 
 
-	# Create the box worker.
-	boxworker = BasicBoxWorker()
-
-        # Determine iteration status
+	# Create the base sequence manager and use it to get noise stats
+	sequence_manager = BaseCleanSequence()
         model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-            residual_min, rms2d, image_max = \
-	    boxworker.iteration_result(iter=0, \
-	    psf=result.psf, model= result.model, restored=result.image, \
-	    residual=result.residual, fluxscale=result.flux, cleanmask=None)
+          residual_min, rms2d, image_max = \
+          sequence_manager.iteration_result(iter=0, \
+          psf=result.psf, model= result.model, restored=result.image, \
+          residual=result.residual, flux=result.flux, cleanmask=None)
 
         LOG.info('Noise image stats')
         LOG.info('    Rms %s', non_cleaned_rms)
@@ -400,81 +293,14 @@ class Clean(cleanbase.CleanBase):
         LOG.info('    Residual min %s', residual_min)
 
         return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-	    residual_min, rms2d, image_max 
+          residual_min, rms2d, image_max 
 
-    # Create the mask for simple imaging.
-    def _do_mask(self, psf, image, cleanmask, usermask, hm_mask='none'):
-
-        inputs = self.inputs
-	niter = inputs.niter
-	island_threshold = None
-	island_peaks = None
-
-	# Make new clean mask
-	if hm_mask == 'none':
-
-	    cm  = casatools.image.newimagefromimage( infile=image,
-	        outfile=cleanmask, overwrite=True)
-	    cm.set(pixels='1')
-	    cm.done()
-
-	elif hm_mask == 'centralquarter':
-
-	    cm  = casatools.image.newimagefromimage( infile=image,
-	        outfile=cleanmask, overwrite=True)
-	    cm.set(pixels='0')
-	    shape = cm.shape()
-	    rg = casatools.regionmanager
-	    region = rg.box([shape[0]/4, shape[1]/4],
-	        [shape[0]-shape[0]/4, shape[1]-shape[1]/4])
-	    cm.set(pixels='1', region=region)
-	    rg.done()
-	    cm.done()
-
-	elif hm_mask == 'psf':
-	    niter = cbheuristic.niter_and_mask(psf=psf,
-	        residual=image, new_mask=cleanmask)
-
-	elif hm_mask == 'manual':
-	     if os.path.exists(usermask):
-	        cm  = casatools.image.newimagefromimage( infile=usermask,
-	              outfile=cleanmask, overwrite=True)
-	        cm.done()
-	     else:
-	        cm  = casatools.image.newimagefromimage( infile=image,
-	              outfile=cleanmask, overwrite=True)
-	        cm.set(pixels='1')
-	        cm.done()
-	else:
-	    cm  = casatools.image.newimagefromimage( infile=image,
-	      outfile=cleanmask, overwrite=True)
-	    cm.set(pixels='1')
-	    cm.done()
-
-	# temporary untils controller is working.
-        return niter
-
-    # Compute clean threshold.
-    def _do_threshold (self, iter, bestrms, hm_cleaning='manual'):
-        inputs = self.inputs
-	if hm_cleaning == 'manual':
-	    threshold = inputs.threshold
-	elif hm_cleaning == 'sensitivity':
-	    # Alias to rms option for now
-	    threshold = '%sJy' % (inputs.tlimit * bestrms)
-	    #threshold = inputs.threshold
-	elif hm_cleaning == 'rms':
-	    threshold = '%sJy' % (inputs.tlimit * bestrms)
-	elif hm_cleaning == 'timesmask':
-	    threshold = '0.0mJy'
-	else:
-	    threshold = inputs.threshold
-
-	return threshold
-
-    # Do basic cleaning.
     def _do_clean(self, iter, stokes, cleanmask, niter, threshold, result):
+        """Do basic cleaning.
+        """
+
         inputs = self.inputs
+
 	clean_inputs = cleanbase.CleanBase.Inputs(inputs.context,
 	    output_dir=inputs.output_dir,
 	    vis=inputs.vis,
@@ -505,7 +331,7 @@ class Clean(cleanbase.CleanBase):
 	    result=result)
 	clean_task = cleanbase.CleanBase(clean_inputs)
 
-	return self._executor.execute (clean_task)
+	return self._executor.execute(clean_task)
 
     # Remove pointing table.
     def _empty_pointing_table(self):
@@ -531,3 +357,4 @@ class Clean(cleanbase.CleanBase):
                 LOG.debug('Copying back into POINTING table')
                 original = table.copy('%s/POINTING' % vis, valuecopy=True)
                 original.done()
+
