@@ -87,7 +87,8 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
 
     # method2, is there a big overlap between the range of peak values
     # from this loop and the last one?
-    if loop > 0:
+#    if loop > 0:
+    if loop > 1:
         peaks = np.array(island_peaks_list[-2].values())
         previous_max_peak = max(peaks)
         previous_min_peak = min(peaks)
@@ -142,7 +143,7 @@ def niter_and_mask(psf, residual, new_mask):
     old_mask         -- Name of file to contain mask.
     peak_threshold   -- threshold for island peaks.
     sidelobe_ratio   -- ratio of peak to first sidelobe in psf.
-    fluxscale        -- Fluxscale map from mosaic clean. If set, used to locate
+    flux             -- sky sensitivity map. If set, used to locate
                         edges of map where spikes may occur.
     """
 
@@ -254,7 +255,7 @@ def niter_and_mask(psf, residual, new_mask):
     return niter
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
-  npeak=30, fluxscale=None):
+  npeak=30, flux=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
 
     Starting with peak in image, find islands; contiguous pixels above
@@ -271,8 +272,8 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     old_mask         -- Name of file to contain mask.
     peak_threshold   -- threshold for island peaks.
     sidelobe_ratio   -- ratio of peak to first sidelobe in psf.
-    fluxscale        -- Fluxscale map from mosaic clean. If set, used to locate
-                        edges of map where spikes may occur.
+    flux             -- sensitivity map from clean. If set, used 
+                        to locate edges of map where spikes may occur.
     """
 
     # Get a searchmask to be used in masking image during processing.
@@ -283,10 +284,10 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
       outfile='searchmask', overwrite=True)
     searchmask.calc('1') 
 
-    # Ignore parts of image where fluxscale map is less than 0.1
+    # Ignore parts of image where flux map is less than 0.1
     # NOTE: logic may appear strange because the LEL 'replace'
     # function replaces masked pixels (i.e. bad pixels) 
-    searchmask.calc('replace(searchmask["%s" > 0.1], 0)' % fluxscale)
+    searchmask.calc('replace(searchmask["%s" > 0.1], 0)' % flux)
  
     # Ignore edges of image in an effort to prevent divergence; spikes
     # sometimes appear there
@@ -480,9 +481,8 @@ def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
         # searched for peaks, initially all pixels above the 
         # 'island threshold'.
         # get mask
-        searchmask = image.getregion(mask='%s/"%s" > %s' %
-          (os.path.dirname(psf), os.path.basename(psf), island_threshold),
-          getmask=True)[:,:,0,target_chan]
+        searchmask = image.getregion(mask='"%s" > %s' %
+          (psf, island_threshold), getmask=True)[:,:,0,target_chan]
 
         # get pixels
         pixels = image.getregion()[:,:,0,target_chan]
@@ -556,11 +556,11 @@ def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
             sidelobe_ratio = islandpeak[1] / islandpeak[0]
             LOG.info('Psf peak:%s first sidelobe:%s sidelobe ratio:%s' % (
               islandpeak[0], islandpeak[1], sidelobe_ratio))
-            if sidelobe_ratio > 0.7:
-                # too high a value leads to problems with small clean
-                # islands and slow convergence
-                sidelobe_ratio = 0.7
-                LOG.warning('Sidelobe ratio too high, reset to 0.7')
+#            if sidelobe_ratio > 0.7:
+#                # too high a value leads to problems with small clean
+#                # islands and slow convergence
+#                sidelobe_ratio = 0.7
+#                LOG.warning('Sidelobe ratio too high, reset to 0.7')
         else:
             sidelobe_ratio = 0.5
             LOG.warning('Psf analysis failure, sidelobe ratio set to 0.5')
@@ -675,95 +675,94 @@ def find_island(searchmask, pixels, grid):
 
     return peak, peak_x, peak_y, island_pix
 
-def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
+def analyse_clean_result(model, restored, residual, flux, cleanmask):
 
-        # get the sum of the model image to find how much flux has been
-        # cleaned
-        model_sum = None
-        with casatools.ImageReader(model) as image:
-            model_stats = image.statistics(robust=False)
-            model_sum = model_stats['sum'][0]
-            LOG.debug('Sum of model: %s' % model_sum)
+    # get the sum of the model image to find how much flux has been
+    # cleaned
+    model_sum = None
+    with casatools.ImageReader(model) as image:
+        model_stats = image.statistics(robust=False)
+        model_sum = model_stats['sum'][0]
+        LOG.debug('Sum of model: %s' % model_sum)
 
-        LOG.debug('Fixing coordsys of fluxscale and cleanmask')
-        with casatools.ImageReader(residual) as image:
-            csys = image.coordsys()
-        if fluxscale is not None:
-            with casatools.ImageReader(fluxscale) as image:
-                image.setcoordsys(csys.torecord())
+    LOG.debug('Fixing coordsys of flux and cleanmask')
+    with casatools.ImageReader(residual) as image:
+        csys = image.coordsys()
+    if flux is not None:
+        with casatools.ImageReader(flux) as image:
+            image.setcoordsys(csys.torecord())
+    if cleanmask is not None and os.path.exists(cleanmask):
+        with casatools.ImageReader(cleanmask) as image:
+            image.setcoordsys(csys.torecord())
+
+    with casatools.ImageReader(residual) as image:
+        # get the rms of the residual image inside the cleaned area
+        LOG.todo('Cannot use dirname in mask')
+        clean_rms = None
         if cleanmask is not None and os.path.exists(cleanmask):
-            with casatools.ImageReader(cleanmask) as image:
-                image.setcoordsys(csys.torecord())
-
-        with casatools.ImageReader(residual) as image:
-            # get the rms of the residual image inside the cleaned area
-            LOG.todo('Cannot use dirname in mask')
-            clean_rms = None
-            if cleanmask is not None and os.path.exists(cleanmask):
-                if fluxscale is not None and os.path.exists(fluxscale):
-                    statsmask = '"%s" > 0.1 && "%s" > 0.1' % (
-                      os.path.basename(cleanmask), os.path.basename(fluxscale))
-                else:
-                    statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
-                resid_clean_stats = image.statistics(mask=statsmask, 
-                  robust=False)
-                try:
-                    clean_rms = resid_clean_stats['rms'][0]
-                    LOG.info('Residual rms inside cleaned area: %s' %
-                      clean_rms)
-                except:
-                    pass
-
-            # and the rms of the residual image outside the cleaned area
-            non_clean_rms = None
-            if cleanmask is not None and os.path.exists(cleanmask):
-                if fluxscale is not None and os.path.exists(fluxscale):
-                    statsmask = '"%s" < 0.1 && "%s" > 0.1' % (
-                      os.path.basename(cleanmask), os.path.basename(fluxscale))
-                else:
-                    statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
+            if flux is not None and os.path.exists(flux):
+                statsmask = '"%s" > 0.1 && "%s" > 0.1' % (
+                  os.path.basename(cleanmask), os.path.basename(flux))
             else:
-                if fluxscale is not None and os.path.exists(fluxscale):
-                    statsmask = '"%s" > 0.1' % os.path.basename(fluxscale)
-                else:
-                    statsmask = ''
-            resid_stats = image.statistics(mask=statsmask, robust=False)
+                statsmask = '"%s" > 0.1' % (os.path.basename(cleanmask))
+            resid_clean_stats = image.statistics(mask=statsmask, 
+              robust=False)
             try:
-                non_clean_rms = resid_stats['rms'][0]
-                if cleanmask is not None:
-                    LOG.info('Residual rms outside cleaned area: %s' % 
-                      non_clean_rms)
-                else:
-                    LOG.info('Residual rms: %s' %  non_clean_rms)
+                clean_rms = resid_clean_stats['rms'][0]
+                LOG.info('Residual rms inside cleaned area: %s' %
+                  clean_rms)
             except:
                 pass
 
-            # get the max, min of the residual image (avoiding the edges
-            # where spikes can occur)
-            if fluxscale is not None and os.path.exists(fluxscale):
-                residual_stats = image.statistics(
-                  mask='"%s" > 0.1' % os.path.basename(fluxscale),
-                  robust=False)
+        # and the rms of the residual image outside the cleaned area
+        non_clean_rms = None
+        if cleanmask is not None and os.path.exists(cleanmask):
+            if flux is not None and os.path.exists(flux):
+                statsmask = '"%s" < 0.1 && "%s" > 0.1' % (
+                  os.path.basename(cleanmask), os.path.basename(flux))
             else:
-                residual_stats = image.statistics(robust=False)
-            try:
-                residual_max = residual_stats['max'][0]
-                residual_min = residual_stats['min'][0]
-            except:
-                residual_max = None
-                residual_min = None
-            LOG.info('Residual max:%s min:%s' % (residual_max, residual_min))
+                statsmask = '"%s" < 0.1' % (os.path.basename(cleanmask))
+        else:
+            if flux is not None and os.path.exists(flux):
+                statsmask = '"%s" > 0.1' % os.path.basename(flux)
+            else:
+                statsmask = ''
+        resid_stats = image.statistics(mask=statsmask, robust=False)
+        try:
+            non_clean_rms = resid_stats['rms'][0]
+            if cleanmask is not None:
+                LOG.info('Residual rms outside cleaned area: %s' % 
+                  non_clean_rms)
+            else:
+                LOG.info('Residual rms: %s' %  non_clean_rms)
+        except:
+            pass
 
-            # get 2d rms of residual
-            pixels = image.getregion(axes=[3])
-            rms2d = np.std(pixels)
-            LOG.debug('2d rms of residual:%s' % rms2d)
+        # get the max, min of the residual image (avoiding the edges
+        # where spikes can occur)
+        if flux is not None and os.path.exists(flux):
+            residual_stats = image.statistics(
+              mask='"%s" > 0.1' % os.path.basename(flux), robust=False)
+        else:
+            residual_stats = image.statistics(robust=False)
+        try:
+            residual_max = residual_stats['max'][0]
+            residual_min = residual_stats['min'][0]
+        except:
+            residual_max = None
+            residual_min = None
+        LOG.info('Residual max:%s min:%s' % (residual_max, residual_min))
 
-        # get max of cleaned result
-        with casatools.ImageReader(restored) as image:
-            clean_stats = image.statistics()
-            image_max = clean_stats['max'][0]
-            LOG.debug('Clean image max: %s' % image_max)
+        # get 2d rms of residual
+        pixels = image.getregion(axes=[3])
+        rms2d = np.std(pixels)
+        LOG.debug('2d rms of residual:%s' % rms2d)
 
-        return model_sum, clean_rms, non_clean_rms, residual_max,\
-          residual_min, rms2d, image_max
+    # get max of cleaned result
+    with casatools.ImageReader(restored) as image:
+        clean_stats = image.statistics()
+        image_max = clean_stats['max'][0]
+        LOG.debug('Clean image max: %s' % image_max)
+
+    return model_sum, clean_rms, non_clean_rms, residual_max,\
+      residual_min, rms2d, image_max
