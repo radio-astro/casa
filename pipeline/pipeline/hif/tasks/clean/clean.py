@@ -135,7 +135,7 @@ class Clean(cleanbase.CleanBase):
 	        LOG.info('Temporarily remove pointing table')
 
             # delete any old files with this naming root. One of more
-            # of these (don't know which) will interfere with this run.
+            # of these (don't know which) will interfere with this run.
             LOG.info('deleting %s*.iter*' % inputs.imagename)
             os.system('rm -fr %s*.iter*' % inputs.imagename)
 
