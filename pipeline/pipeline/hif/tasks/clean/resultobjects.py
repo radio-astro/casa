@@ -56,7 +56,8 @@ class CleanResult(basetask.Results):
         return imageplot
 
     def set_flux(self, image):
-        self._flux = image
+        if self._flux is None:
+            self._flux = image
 
     @property
     def cleanmask(self, iter, image):
@@ -99,7 +100,8 @@ class CleanResult(basetask.Results):
         return self._psf
 
     def set_psf(self, image):
-        self._psf = image
+        if self._psf is None:
+            self._psf = image
 
     @property
     def residual(self):
