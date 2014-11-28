@@ -112,6 +112,8 @@ class sdplot_worker(sdutil.sdtask_template):
         colbydict = {"t": "type", "s": "scan", "i": "if",
                      "p": "pol", "b": "beam", "r": ""}
         colorby = colbydict[self.stack[0].lower()]
+        if colorby == "":
+            raise ValueError, ("stack mode = '%s' is not suported by plottype='%s'" % (self.stack, self.plottype))
         sd.plotter.plottp(self.scan, colorby)
 
         self.__print_header(asaplot=False)
