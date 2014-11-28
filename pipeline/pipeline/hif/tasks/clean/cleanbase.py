@@ -18,6 +18,7 @@ LOG = infrastructure.get_logger(__name__)
 
 # The basic clean tasks classes. Clean performs a single clean run.
 
+
 class CleanBaseInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context, output_dir=None, vis=None, imagename=None,
@@ -282,6 +283,7 @@ class CleanBaseInputs(basetask.StandardInputs):
     def mask(self, value):
          self._mask = value
 
+
 class CleanBase(basetask.StandardTaskTemplate):
 
     Inputs = CleanBaseInputs
@@ -352,7 +354,6 @@ class CleanBase(basetask.StandardTaskTemplate):
 	# Not CASA clean now supports intent selectin but leave
 	# this logic in place and use it to eliminate vis that
 	# don't contain the requested data.
-	#
         scanidlist = []
 	vislist = []
         for vis in inputs.vis:
@@ -400,46 +401,50 @@ class CleanBase(basetask.StandardTaskTemplate):
 	    result = inputs.result
 
 	try:
-	    # Compute dirty image only
-            if inputs.iter == 0:
-	        result = self._do_dirty_cycle(scanidlist, result)
-	    # Compute nth clean image
-	    else:
-	        result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
+            result = self._do_clean_cycle (scanidlist, result, iter=inputs.iter)
 	except Exception, e:
             LOG.error('%s/%s/spw%s clean error: %s' % (field, intent, spw, str(e)))
-	finally:
-	    pass
 
 	return result
 
     def analyse(self, result):
         return result
 
-    # Compute the clean image. Iter > 0
     def _do_clean_cycle (self, scanidlist=[], result=None, iter=1):
+        """Compute a clean image.
+        """
 
 	inputs = self.inputs
 
-        LOG.info('Iteration %s threshold %s' % (iter, inputs.threshold))
-        LOG.info('Iteration %s niter %s' % (iter, inputs.niter))
+#        LOG.info('Stokes %s' % (inputs.stokes))
+#        LOG.info('Iteration %s threshold %s niter %s' % (iter, 
+#          inputs.threshold, inputs.niter))
 
         # Derive names of clean products for this iteration, remove
         # old clean products with the name name,
-        #old_model_name = model_name
         old_model_name = result.model
-        model_name = purge('%s.iter%s.model' % (inputs.imagename, iter))
+        model_name = '%s.%s.iter%s.model' % (
+          inputs.imagename, inputs.stokes, iter)
         rename_image(old_name=old_model_name, new_name=model_name)
-        image_name = purge(name='%s.iter%s.image' % ( inputs.imagename, iter))
-        residual_name = purge(name='%s.iter%s.residual' % (
-             inputs.imagename, iter))
-        psf_name = purge('%s.iter%s.psf' % (inputs.imagename, iter))
-        flux_name = purge('%s.iter%s.flux' % (inputs.imagename, iter))
+        image_name = '%s.%s.iter%s.image' % (
+          inputs.imagename, inputs.stokes, iter)
+        residual_name = '%s.%s.iter%s.residual' % (
+          inputs.imagename, inputs.stokes, iter)
+        psf_name = '%s.%s.iter%s.psf' % (
+          inputs.imagename, inputs.stokes, iter)
+        flux_name = '%s.%s.iter%s.flux' % (
+          inputs.imagename, inputs.stokes, iter)
 
-	# Call CASA clean. Clean this up at some point.
-        job = casa_tasks.clean(vis=inputs.vis, imagename='%s.iter%s' %
-#	    (inputs.imagename, iter), field=inputs.field, spw=inputs.spw,
-	    (inputs.imagename, iter), spw=inputs.spw,
+        # delete any old files with this naming root
+        try:
+            shutil.rmtree('%s.%s.iter%s*' % (inputs.imagename,
+              inputs.stokes, iter))
+        except:
+            pass
+
+	# Call CASA clean.
+        job = casa_tasks.clean(vis=inputs.vis, imagename='%s.%s.iter%s' %
+	    (inputs.imagename, inputs.stokes, iter), spw=inputs.spw,
 	    selectdata=True, intent=utils.to_CASA_intent(inputs.ms[0],
 	    inputs.intent), scan=scanidlist,
 	    mode=inputs.mode, niter=inputs.niter,
@@ -454,26 +459,30 @@ class CleanBase(basetask.StandardTaskTemplate):
             mask=inputs.mask, usescratch=True)
         self._executor.execute(job)
 
-        # Store the  model image.
+        # Store the model.
         set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-	    type='model', iter=iter)
+          type='model', iter=iter)
         result.set_model(iter=iter, image=model_name)
 
-	# Store the image as model. 
-	# Is this necessary.
+	# Store the image.
         set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-	    type='model', iter=iter)
-        result.set_model(iter=iter, image=model_name)
-
-	# Store the image as image.
-        set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-	    type='image', iter=iter)
+          type='image', iter=iter)
         result.set_image(iter=iter, image=image_name)
 
 	# Store the residual.
         set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-	    type='residual', iter=iter)
+          type='residual', iter=iter)
         result.set_residual(iter=iter, image=residual_name)
+
+	# Store the PSF.
+        set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
+          type='psf', iter=iter)
+        result.set_psf(image=psf_name)
+
+	# Store the flux image.
+        set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
+          type='flux', iter=iter)
+        result.set_flux(image=flux_name)
 
 	# Make sure mask has path name
         if os.path.exists(inputs.mask):
@@ -483,91 +492,16 @@ class CleanBase(basetask.StandardTaskTemplate):
 
         return result
 
-    # Compute the dirty image. Iter is always 0
-    def _do_dirty_cycle (self, scanidlist, result, iter=0):
-
-        inputs = self.inputs
-
-        # Remove previous images if any.
-        model_name = purge(name='%s.iter%s.model' % (inputs.imagename, iter))
-        image_name = purge(name='%s.iter%s.image' % (inputs.imagename, iter))
-        residual_name = purge(name='%s.iter%s.residual' %
-	     (inputs.imagename, iter))
-        psf_name = purge('%s.iter%s.psf' % (inputs.imagename, iter))
-        flux_name = purge('%s.iter%s.flux' % (inputs.imagename, iter))
-
-        # Occasionally an old file confuses the clean so that clean starts
-	# in a corrupted state. This is not understood. For now, delete all
-	# <imagename>.iter* files.
-	try:
-	    shutil.rmtree('%s.iter*' * inputs.imagenmae)
-	except:
-	    pass
-
-	# Set up dirty image job.
-        job = casa_tasks.clean(vis=inputs.vis,
-            imagename='%s.iter%s' % (inputs.imagename, iter),
-#            field=inputs.field, spw=inputs.spw, selectdata=True,
-            spw=inputs.spw, selectdata=True,
-	    scan=scanidlist, intent=utils.to_CASA_intent(inputs.ms[0],
-	    inputs.intent), mode=inputs.mode, niter=0, threshold='0.0mJy',
-            imagermode=inputs.imagermode, interactive=False,
-            outframe=inputs.outframe, nchan=inputs.nchan, start=inputs.start,
-            width=inputs.width, imsize=inputs.imsize, cell=inputs.cell,
-            phasecenter=inputs.phasecenter, weighting=inputs.weighting,
-	    stokes=inputs.stokes,
-            robust=inputs.robust, noise=inputs.noise,
-            npixels=inputs.npixels, restoringbeam=inputs.restoringbeam,
-            uvrange=inputs.uvrange, mask=None, usescratch=True)
-
-	# Execute
-        self._executor.execute(job)
-
-        # Store the model image information.
-        set_miscinfo(name=model_name, spw=inputs.spw, field=inputs.field,
-            type='model', iter=iter)
-        result.set_model(iter=iter, image=model_name)
-
-	# Store the dirty image.
-        set_miscinfo(name=image_name, spw=inputs.spw, field=inputs.field,
-            type='image', iter=iter)
-        result.set_image(iter=iter, image=image_name)
-
-	# Store the residual image. Why do we need to keep this ?
-        set_miscinfo(name=residual_name, spw=inputs.spw, field=inputs.field,
-            type='residual', iter=iter)
-        result.set_residual(iter=iter, image=residual_name)
-
-	# Store the PSF image.
-        set_miscinfo(name=psf_name, spw=inputs.spw, field=inputs.field,
-            type='psf', iter=iter)
-        result.set_psf(image=psf_name)
-
-	# Store the flux image.
-        set_miscinfo(name=flux_name, spw=inputs.spw, field=inputs.field,
-            type='flux', iter=iter)
-        result.set_flux(image=flux_name)
-
-	return result
-
-# Some utility routines.
-
-# Remove a directory 
-def purge(name):
-    #os.system('rm -fr %s' % name)
-    try:
-        shutil.rmtree(name)
-    except:
-        pass
-    return name
-
-# Rename an image
 def rename_image(old_name, new_name):
-    with casatools.ImageReader(old_name) as image:
-        image.rename(name=new_name, overwrite=True)
+    """Rename an image
+    """
+    if old_name is not None:
+        with casatools.ImageReader(old_name) as image:
+            image.rename(name=new_name, overwrite=True)
 
-# Define miscellaneous image information
 def set_miscinfo(name, spw=None, field=None, type=None, iter=None):
+    """Define miscellaneous image information
+    """
     with casatools.ImageReader(name) as image:
         info = image.miscinfo()
         if spw:
