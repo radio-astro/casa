@@ -215,9 +215,9 @@ class DetectLine(common.SingleDishTaskTemplate):
                             Chan0 = protected[i][0]*BINN+offset
                             Chan1 = protected[i][1]*BINN-1+offset
                             if(EdgeMin < Chan0) and (Chan1 < EdgeMax):
-                                Protected.append([Chan0, Chan1])
+                                Protected.append([Chan0, Chan1, BINN])
                         else:
-                            Protected.append([-1,-1])
+                            Protected.append([-1,-1, BINN])
 
                 # plot to check detected lines
                 #self.plot_detectrange(spectra[row], Protected, 'SpPlot0%04d.png' % row)

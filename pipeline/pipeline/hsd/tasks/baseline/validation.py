@@ -300,7 +300,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                 # Bug fix 2008/5/29
                 if (line[0] != line[1]) and ((len(grid_table) == 0 and tSFLAG[row] == 1) or len(grid_table) != 0):
                     #Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
-                    Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
+                    #Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag])
+                    #2014/11/28 add Binning info into Region
+                    Region.append([row, line[0], line[1], detect_signal[row][0], detect_signal[row][1], flag, line[2]])
                     ### 2011/05/17 make cluster insensitive to the line width
                     dummy.append([float(line[1] - line[0]) / self.CLUSTER_WHITEN, 0.5 * float(line[0] + line[1])])
                     #dummy.append([float(line[1] - line[0]), (line[0] + line[1]) / 2.0])
@@ -407,7 +409,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         ProcStartTime = time.time()
         LOG.info('Clustering: Detection Stage Start')
 
-        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal)
+        (GridCluster, GridMember) = self.detection_stage(Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal, nchan)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Detection Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -623,6 +625,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
                     ### 2011/05/12 modified for (distance==0)
                     Score = ((distance * numpy.transpose(numpy.array(Region))[5]).mean() + MedianWidth/2.0) * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
+                    ### 2014/11/28 further modified for (distance==0)
+                    Score = math.sqrt(((distance * numpy.transpose(numpy.array(Region))[5]).mean())**2.0 + (MedianWidth/2.0)**2.0) * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
                     # 2007/09/10 More sensitive to the number of lines clipped out
                     #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) * (((1.0 - MemberRate)**0.5 + 1.0)**2.0)
                     #Score = (distance * numpy.transpose(numpy.array(Region))[5]).mean() * (NclusterNew+ 1.0/NclusterNew) / MemberRate**2.0
@@ -674,8 +678,11 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         return (BestNcluster, Bestlines, BestCategory, BestRegion)
 
-    def detection_stage(self, Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal):
+    def detection_stage(self, Ncluster, nra, ndec, x0, y0, grid_ra, grid_dec, category, Region, detect_signal, nchan):
         # Create Grid Parameter Space (Ncluster * nra * ndec)
+        MinChanBinSp = 50.0
+        BinningVariation = 1 + int(math.ceil(math.log(nchan/MinChanBinSp)/math.log(4)))
+        GridClusterWithBinning = numpy.zeros((Ncluster, BinningVariation, nra, ndec), dtype=numpy.float32)
         GridCluster = numpy.zeros((Ncluster, nra, ndec), dtype=numpy.float32)
         GridMember = numpy.zeros((nra, ndec))
 
@@ -692,11 +699,28 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             GridMember[int((detect_signal[row][0] - x0)/grid_ra)][int((detect_signal[row][1] - y0)/grid_dec)] += 1
         for i in xrange(len(category)):
             if Region[i][5] == 1:
+                n = int(math.log(Region[i][6])/math.log(4.) + 0.1)
+                if n == 0: m = 1.0
+                else: m = 0.5
                 try:
-                    GridCluster[category[i]][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += 1.0
+                    #2014/11/28 Counting is done for each binning separately
+                    GridClusterWithBinning[category[i]][n][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += m
+                    #GridCluster[category[i]][int((Region[i][3] - x0)/grid_ra)][int((Region[i][4] - y0)/grid_dec)] += 1.0
                 except IndexError:
                     pass
+        #2014/11/28 select the largest value among different Binning
+        for i in xrange(Ncluster):
+            for j in xrange(nra):
+                for k in xrange(ndec):
+                    m = 0
+                    for l in xrange(BinningVariation):
+                        if GridClusterWithBinning[i][l][j][k] > m: m = GridClusterWithBinning[i][l][j][k]
+                    GridCluster[i][j][k] = m
 
+        LOG.trace('GridClusterWithBinning = %s' % GridClusterWithBinning)
+        LOG.trace('GridCluster = %s' % GridCluster)
+        LOG.trace('GridMember = %s' % GridMember)
+        del GridClusterWithBinning
         # 2013/05/29 TN
         # cluster_flag is data for plotting clustering analysis results.
         # It stores GridCluster quantized by given thresholds.
@@ -727,7 +751,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         (Ncluster,nra,ndec) = GridCluster.shape
         MinChanBinSp = 50.0
-        BinningVariation = 1 + int(2*math.log(nchan/MinChanBinSp)/math.log(4))
+        BinningVariation = 1 + int(math.ceil(math.log(nchan/MinChanBinSp)/math.log(4)))
 
         for Nc in range(Ncluster):
             LOG.trace('GridCluster[Nc]: %s' % GridCluster[Nc])
@@ -750,8 +774,9 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
                     #elif iteration == 0:
                     #    GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     ### 2014/10/30 detections were done with various binning: *2: half of the binning setting can detect the feature
-                    else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) / BinningVariation * 2.0, 3.0)
-                    ###else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
+                    #else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) / BinningVariation * 2.0, 3.0)
+                    ### 2014/11/28 Binning valiation is taken into account in the previous stage
+                    else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
                     #else: GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / GridMember[x][y]**0.5 - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     # normarize validity
                     #else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
@@ -760,8 +785,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
-        #LOG.trace('GridCluster %s' % GridCluster)
-        #LOG.trace('GridMember %s' % GridMember)
+        LOG.trace('GridCluster %s' % GridCluster)
+        LOG.trace('GridMember %s' % GridMember)
         self.GridClusterValidation = GridCluster.copy()
         
         return (GridCluster, GridMember, lines)
@@ -775,6 +800,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # Rating = 1.0 / (Dx**2 + Dy**2)**(0.5) : if (Dx, Dy) == (0, 0) rating = 6.0
         (Ncluster,nra,ndec) = GridCluster.shape
         GridScore = numpy.zeros((2, nra, ndec), dtype=numpy.float32)
+        LOG.trace('GridCluster = %s' % GridCluster)
+        LOG.trace('lines = %s' % lines)
         for Nc in xrange(Ncluster):
             if lines[Nc][2] != False:
                 GridScore[:] = 0.0
@@ -823,7 +850,8 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
-        #LOG.info('GridCluster %s' % GridCluster)
+        LOG.trace('threshold = %s' % threshold)
+        LOG.trace('GridCluster = %s' % GridCluster)
         
         return (GridCluster, lines)
 
@@ -832,6 +860,10 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         (Ncluster, nra, ndec) = GridCluster.shape
         xorder0 = xorder
         yorder0 = yorder
+
+        LOG.trace('GridCluster = %s' % GridCluster)
+        LOG.trace('GridMember = %s' % GridMember)
+        LOG.trace('lines = %s' % lines)
 
         # Dictionary for final output
         RealSignal = {}
@@ -849,6 +881,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             LOG.trace('------00------ Exec for Nth Cluster: Nc=%d' % Nc)
+            LOG.trace('lines[Nc] = %s' % lines[Nc])
             #print '\nNc=', Nc
             if lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
@@ -1349,6 +1382,7 @@ class ValidateLineRaster(common.SingleDishTaskTemplate):
             cluster_flag = cluster_flag + factor * (GridCluster > t)
         self.cluster_info['cluster_flag'] = cluster_flag
         self.cluster_info['%s_threshold'%(stage)] = threshold
+        LOG.trace('cluster_flag = %s' % cluster_flag)
         
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """
