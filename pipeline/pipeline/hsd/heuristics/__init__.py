@@ -16,3 +16,4 @@ from .sdcaltype import CalibrationTypeHeuristics
 from .fitorder import FitOrderHeuristics
 from .fragmentation import FragmentationHeuristics
 from .sdsrctype import SrcTypeHeuristics
+from .tsysspwmap import TsysSpwMapHeuristics

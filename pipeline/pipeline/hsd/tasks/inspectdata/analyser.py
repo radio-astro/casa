@@ -77,10 +77,17 @@ class DataTableAnalyser(object):
 
     def analyse_calibration(self):
         self.calibration_strategy = []
+        spwmap_per_ms = {}
         for item in self.scantablelist:
             # strategy for tsys transfer
+            myms = item.ms
             if item.tsys_transfer:
-                tsys_strategy = item.tsys_transfer_list
+                #tsys_strategy = item.tsys_transfer_list
+                if not spwmap_per_ms.has_key(myms):
+                    LOG.debug('Examining Tsys spw mapping for %s'%(myms.basename))
+                    h_spwmap = heuristics.TsysSpwMapHeuristics()
+                    spwmap_per_ms[myms] = h_spwmap.calculate(myms, item.tsys_transfer_list)
+                tsys_strategy = spwmap_per_ms[myms]
             else:
                 tsys_strategy = None
 
