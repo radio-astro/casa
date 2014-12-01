@@ -107,6 +107,10 @@ bool Name2Table::init() {
 	
 	  name2Table_["DelayModel"] = ASDM_DELAYMODEL::instance();	
 	
+	  name2Table_["DelayModelFixedParameters"] = ASDM_DELAYMODELFIXEDPARAMETERS::instance();	
+	
+	  name2Table_["DelayModelVariableParameters"] = ASDM_DELAYMODELVARIABLEPARAMETERS::instance();	
+	
 	  name2Table_["Doppler"] = ASDM_DOPPLER::instance();	
 	
 	  name2Table_["Ephemeris"] = ASDM_EPHEMERIS::instance();	
