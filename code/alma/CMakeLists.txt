@@ -105,6 +105,10 @@ ASDM/DataDescriptionRow.cc
 ASDM/DataDescriptionTable.cc
 ASDM/DelayModelRow.cc
 ASDM/DelayModelTable.cc
+ASDM/DelayModelFixedParametersRow.cc	
+ASDM/DelayModelFixedParametersTable.cc
+ASDM/DelayModelVariableParametersRow.cc
+ASDM/DelayModelVariableParametersTable.cc
 ASDM/DopplerRow.cc
 ASDM/DopplerTable.cc
 ASDM/DoubleWrapper.cc
@@ -422,6 +426,10 @@ install (FILES
 	ASDM/DataDescriptionTable.h
 	ASDM/DelayModelRow.h
 	ASDM/DelayModelTable.h
+	ASDM/DelayModelFixedParametersRow.h
+	ASDM/DelayModelFixedParametersTable.h
+	ASDM/DelayModelVariableParametersRow.h
+	ASDM/DelayModelVariableParametersTable.h
 	ASDM/DopplerRow.h
 	ASDM/DopplerTable.h
 	ASDM/DoubleWrapper.h
