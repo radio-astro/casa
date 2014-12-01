@@ -12,10 +12,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class SakuraUtils {
 public:
-  static Bool InitializeSakura(const std::string &loglevel="WARN");
+  static Bool InitializeSakura();
   static void CleanUpSakura();
   static Bool IsSakuraInitialized();
-  static void SetLogLevel(const std::string &loglevel);
 private:
   static Bool is_initialized_;
 };

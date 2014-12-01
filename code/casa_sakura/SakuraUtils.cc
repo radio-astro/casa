@@ -12,7 +12,7 @@
 namespace casa {
 Bool SakuraUtils::is_initialized_ = False;
   
-Bool SakuraUtils::InitializeSakura(const std::string &level) {
+Bool SakuraUtils::InitializeSakura() {
   // return if already initialized
   if (is_initialized_) {
     return True;
@@ -56,24 +56,22 @@ int SakuraDriver::num_instances_ = 0;
 // InitlaizeSakura is called if num_instances_ is 0 (i.e. first instantiation)
 // or Sakura is not initialized yet.
 SakuraDriver::SakuraDriver() {
-  //LogIO os(LogOrigin("SakuraDriver", "SakuraDriver", WHERE));
   if (num_instances_ == 0 || !(SakuraUtils::IsSakuraInitialized())) {
-    std::cout << "Initialize Sakura: num_instances_ = " << num_instances_ << endl;
+    std::cerr << "Initialize Sakura: num_instances_ = " << num_instances_ << endl;
     SakuraUtils::InitializeSakura();
   }
   num_instances_++;
-  std::cout << "num_instances_ = " << num_instances_ << std::endl;
+  std::cerr << "num_instances_ = " << num_instances_ << std::endl;
 }
 
 // Destructor decrements num_instances_
 // FinalizeSakura is called when num_instances_ is 0 (i.e. the last
 // instance is to be destructed). 
 SakuraDriver::~SakuraDriver() {
-  //LogIO os(LogOrigin("SakuraDriver", "~SakuraDriver", WHERE));
-  std::cout << "num_instances_ = " << num_instances_ << std::endl;
+  std::cerr << "num_instances_ = " << num_instances_ << std::endl;
   num_instances_--;
   if (num_instances_ == 0 && SakuraUtils::IsSakuraInitialized()) {
-    std::cout << "Finalize Sakura: num_instances_ = " << num_instances_ << std::endl;
+    std::cerr << "Finalize Sakura: num_instances_ = " << num_instances_ << std::endl;
     SakuraUtils::CleanUpSakura();
   }
 }
