@@ -350,7 +350,7 @@ class sdtask_template(sdtask_interface):
                         casalog.post('taql_for_raster=\'%s\''%(taql_for_raster))
                         query_org = selector.get_query()
                         if len(query_org) > 0:
-                            selector.set_query(' && '.join(in_parenthesis, [query_org, taql_for_raster]))
+                            selector.set_query(' && '.join(map(in_parenthesis, [query_org, taql_for_raster])))
                         else:
                             selector.set_query(taql_for_raster)
                         casalog.post('taql: \'%s\''%(selector.get_query()), priority='INFO')
