@@ -90,6 +90,10 @@
 
 #include <DelayModelTable.h>
 
+#include <DelayModelFixedParametersTable.h>
+
+#include <DelayModelVariableParametersTable.h>
+
 #include <DopplerTable.h>
 
 #include <EphemerisTable.h>
@@ -220,6 +224,10 @@ using asdm::CorrelatorModeTable;
 using asdm::DataDescriptionTable;
 
 using asdm::DelayModelTable;
+
+using asdm::DelayModelFixedParametersTable;
+
+using asdm::DelayModelVariableParametersTable;
 
 using asdm::DopplerTable;
 
@@ -441,6 +449,14 @@ namespace asdm {
 		delayModel = new DelayModelTable (*this);
 		table.push_back(delayModel);
 		tableEntity["DelayModel"] = emptyEntity;
+
+		delayModelFixedParameters = new DelayModelFixedParametersTable (*this);
+		table.push_back(delayModelFixedParameters);
+		tableEntity["DelayModelFixedParameters"] = emptyEntity;
+
+		delayModelVariableParameters = new DelayModelVariableParametersTable (*this);
+		table.push_back(delayModelVariableParameters);
+		tableEntity["DelayModelVariableParameters"] = emptyEntity;
 
 		doppler = new DopplerTable (*this);
 		table.push_back(doppler);
@@ -852,6 +868,22 @@ namespace asdm {
 	 */
 	DelayModelTable & ASDM::getDelayModel () const {
 		return *delayModel;
+	}
+
+	/**
+	 * Get the table DelayModelFixedParameters.
+	 * @return The table DelayModelFixedParameters as a DelayModelFixedParametersTable.
+	 */
+	DelayModelFixedParametersTable & ASDM::getDelayModelFixedParameters () const {
+		return *delayModelFixedParameters;
+	}
+
+	/**
+	 * Get the table DelayModelVariableParameters.
+	 * @return The table DelayModelVariableParameters as a DelayModelVariableParametersTable.
+	 */
+	DelayModelVariableParametersTable & ASDM::getDelayModelVariableParameters () const {
+		return *delayModelVariableParameters;
 	}
 
 	/**
@@ -1313,6 +1345,10 @@ namespace asdm {
 		
 		result->delayModel = *(this->delayModel->toIDL());
 		
+		result->delayModelFixedParameters = *(this->delayModelFixedParameters->toIDL());
+		
+		result->delayModelVariableParameters = *(this->delayModelVariableParameters->toIDL());
+		
 		result->doppler = *(this->doppler->toIDL());
 		
 		result->ephemeris = *(this->ephemeris->toIDL());
@@ -1445,6 +1481,10 @@ namespace asdm {
 		this->dataDescription->fromIDL(x->dataDescription);
 		
 		this->delayModel->fromIDL(x->delayModel);
+		
+		this->delayModelFixedParameters->fromIDL(x->delayModelFixedParameters);
+		
+		this->delayModelVariableParameters->fromIDL(x->delayModelVariableParameters);
 		
 		this->doppler->fromIDL(x->doppler);
 		
@@ -2667,6 +2707,80 @@ namespace asdm {
 			
 			// And finally parse the XML document to populate the table.	
 			dataset->getDelayModel().fromXML(tableDoc);						
+		}
+
+		entity = dataset->tableEntity["DelayModelFixedParameters"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/DelayModelFixedParameters.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "DelayModelFixedParameters");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getDelayModelFixedParameters().fromXML(tableDoc);						
+		}
+
+		entity = dataset->tableEntity["DelayModelVariableParameters"];
+		if (entity.getEntityId().getId().length()  != 0) {
+			// Which file must we read ?
+			string tablename = xmlDirectory + "/DelayModelVariableParameters.xml";
+
+			// Determine the file size
+			ifstream::pos_type size;	
+			ifstream tablein (tablename.c_str() , ios::in|ios::binary|ios::ate);
+  			if (tablein.is_open()) { 
+  				size = tablein.tellg(); 
+  			}
+			else {
+				throw ConversionException("Could not open file " + tablename, "DelayModelVariableParameters");
+			}
+			
+			// Read the file in a string
+			string tableDoc;
+
+			tableDoc.reserve(size);
+			tablein.seekg (0);	
+			int nread = BLOCKSIZE;	
+			while (nread == BLOCKSIZE) {
+				tablein.read(c, BLOCKSIZE);
+				if (tablein.rdstate() == istream::failbit || tablein.rdstate() == istream::badbit) {
+					throw ConversionException("Error reading file " + tablename,"ASDM");
+				}
+				nread = tablein.gcount();
+				tableDoc.append(c, nread);
+			}
+			tablein.close();
+			if (tablein.rdstate() == istream::failbit)
+				throw ConversionException("Could not close file " + tablename,"ASDM");
+			
+			// And finally parse the XML document to populate the table.	
+			dataset->getDelayModelVariableParameters().fromXML(tableDoc);						
 		}
 
 		entity = dataset->tableEntity["Doppler"];
@@ -4127,6 +4241,14 @@ namespace asdm {
 			getDelayModel().toFile(directory);
 		}
 	
+		if (getDelayModelFixedParameters().size() > 0) {
+			getDelayModelFixedParameters().toFile(directory);
+		}
+	
+		if (getDelayModelVariableParameters().size() > 0) {
+			getDelayModelVariableParameters().toFile(directory);
+		}
+	
 		if (getDoppler().size() > 0) {
 			getDoppler().toFile(directory);
 		}
@@ -4508,6 +4630,16 @@ namespace asdm {
 				getDelayModel().setFromFile(directory_);
 			}
 	
+			entity = tableEntity["DelayModelFixedParameters"];
+			if (entity.getEntityId().getId().length()  != 0) {
+				getDelayModelFixedParameters().setFromFile(directory_);
+			}
+	
+			entity = tableEntity["DelayModelVariableParameters"];
+			if (entity.getEntityId().getId().length()  != 0) {
+				getDelayModelVariableParameters().setFromFile(directory_);
+			}
+	
 			entity = tableEntity["Doppler"];
 			if (entity.getEntityId().getId().length()  != 0) {
 				getDoppler().setFromFile(directory_);
@@ -4743,6 +4875,10 @@ namespace asdm {
 			getDataDescription().presentInMemory = tableEntity["DataDescription"].getEntityId().getId().length() == 0;	
 	
 			getDelayModel().presentInMemory = tableEntity["DelayModel"].getEntityId().getId().length() == 0;	
+	
+			getDelayModelFixedParameters().presentInMemory = tableEntity["DelayModelFixedParameters"].getEntityId().getId().length() == 0;	
+	
+			getDelayModelVariableParameters().presentInMemory = tableEntity["DelayModelVariableParameters"].getEntityId().getId().length() == 0;	
 	
 			getDoppler().presentInMemory = tableEntity["Doppler"].getEntityId().getId().length() == 0;	
 	
@@ -5065,6 +5201,20 @@ namespace asdm {
 			container->getDelayModel().setEntity(entity);
 			xml = getXMLEntity(entity.getEntityId());
 			container->getDelayModel().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["DelayModelFixedParameters"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getDelayModelFixedParameters().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getDelayModelFixedParameters().fromXML(xml);
+		}
+			
+		entity = container->tableEntity["DelayModelVariableParameters"];
+		if (entity.getEntityId().getId().size() != 0) {
+			container->getDelayModelVariableParameters().setEntity(entity);
+			xml = getXMLEntity(entity.getEntityId());
+			container->getDelayModelVariableParameters().fromXML(xml);
 		}
 			
 		entity = container->tableEntity["Doppler"];
