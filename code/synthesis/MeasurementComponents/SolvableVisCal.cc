@@ -5146,6 +5146,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
 
   Int nFld=max(fldList)+1;
 
+  //get Antenna names
+  ROMSAntennaColumns antcol(ct_->antenna());
+  Vector<String> antNames(antcol.name().getColumn());
+
   Vector<Double> solFreq(nSpw(),-1.0);
   Vector<Double> mgreft(nFld,0);
  
@@ -5505,17 +5509,30 @@ void SolvableVisJones::fluxscale(const String& outfile,
         mgnall.reference(*(MGNALL[iFld]));
       }
 
+      // References to PBs for syntactical convenience
       // TBD: Handle "iFitwt" from NewCalTable?
       // Double wt=cs().iFitwt(iSpw)(iAnt,islot);
       Double wt=1;
 	      
       // amps, flags  [npar]  (one channel, one antenna)
-      Vector<Float> amp(amplitude(ctiter.cparam()));
+      // check for data shape (e.g. duplicated entries)
+      Cube<Complex> CParam(ctiter.cparam());
+      IPosition testShape=CParam.shape();
+      if (testShape[2]!=1) {
+        if (testShape[2]>1) { 
+          // possible cause: append=True in gaincal
+          throw(AipsError("Found multiple gain solutions in a single timestamp for fieldid="+String::toString(iFld)+". Please check the input Caltable."));
+        }
+        else {
+          throw(AipsError("Found gain solution array shape, "+String::toString(testShape)+" while expected [2,1,1]. Please check the input Caltable."));
+        }
+      } 
+      //Vector<Float> amp(amplitude(ctiter.cparam())[0]);
+      Vector<Float> amp(amplitude(CParam));
       Vector<Bool> fl(ctiter.flag());
       for (Int ipar=0; ipar<nPar(); ipar++) {
 	if (!fl(ipar)) {
 	  Double gn=amp(ipar); // converts to Double
-          //cerr<<"gn="<<gn<<" median="<<medianGains(iFld,iSpw)<<endl;
           // evaluate input gain to be within the threshold
           Float lowbound= (inGainThres >0 and inGainThres <1.0)? 1.0 - inGainThres : 0.0;
           if (inGainThres==0) lowbound=1.0;
@@ -5532,11 +5549,19 @@ void SolvableVisJones::fluxscale(const String& outfile,
                   continue;
                }
             } 
+            //cerr<<"fld="<<iFld<<" spw="<<iSpw<<" ant="<<iAnt<<" gn="<<gn<<" median="<<medianGains(iFld,iSpw)<<endl;
 	    mgok(ipar,iAnt,iSpw)=True;
 	    mg(ipar,iAnt,iSpw) += (wt*gn);
 	    mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
 	    mgn(ipar,iAnt,iSpw)++;
 	    mgwt(ipar,iAnt,iSpw)+=wt;
+          }
+          else {
+            String debugMsg( "" ); 
+            debugMsg+="Rejected field="+String::toString(iFld)+" spw="+String::toString(iSpw)+" antenna="+String::toString(iAnt)+
+                      "; gain(amp)="+String::toString(gn)+" is outside the accepted range:"+String::toString(lowbound*medianGains(iFld,iSpw))+
+                      " ~ "+String::toString((1.0 + inGainThres) * medianGains(iFld,iSpw));
+            logSink() << LogIO::DEBUG1 << debugMsg << LogIO::POST;
           }
           mgnall(ipar,iAnt,iSpw)++;
 	}
@@ -5551,6 +5576,7 @@ void SolvableVisJones::fluxscale(const String& outfile,
       String oMsg( "" );
       oMsg+=" Applying gain threshold="+String::toString(inGainThres);
       logSink() << oMsg << LogIO::POST;
+      Bool hasFlaggedData(false);
       //for (Int iFld=0; iFld<nFld; iFld++) {
       Int iFld;
       for (int idx=0; idx < (int) allfields.size(); idx++) {
@@ -5564,32 +5590,40 @@ void SolvableVisJones::fluxscale(const String& outfile,
           //cerr<<"mgnall shape="<<mgnall.shape()<<endl;
           for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
             //cerr<<"median gain="<<medianGains(iFld,iSpw)<<endl;
-            //cerr<<"ntrue(mgok) per spw="<<ntrue(mgok.xyPlane(iSpw))<<endl;
             for (Int iAnt=0; iAnt<nElem(); iAnt++) {
               IPosition start(3,0,iAnt,iSpw);
               IPosition length(3,nPar(),1,1);
               IPosition stride(3,1,1,1);
               Slicer slicer(start,length,stride);
-              if (ntrue(mgok(slicer))) {
-                //cerr<<"iAnt:"<<iAnt<<"sum(mgn)="<<sum(mgn(slicer))<<" sum(mgnall(slicer))="<<sum(mgnall(slicer))<<endl;
+              //if (ntrue(mgok(slicer))) {
+              if ( sum(mgn(slicer))<sum(mgnall(slicer)) ) {
+                //cerr<<"iFld:"<<iFld<<" iAnt:"<<iAnt<<"  sum(mgn)="<<sum(mgn(slicer))<<" sum(mgnall(slicer))="<<sum(mgnall(slicer))<<endl;
                 Float frac=Float (sum(mgn(slicer)))/Float (sum(mgnall(slicer)));
                 ostringstream fracstream;
                 fracstream.precision(3);
                 if (frac<1.0) {
-                  fracstream << frac*100.0;
+                  // report a fraction flagged
+                  fracstream << (1.0-frac)*100.0;
                   oMsg="";
-                  //cerr<<"iFld="<<iFld<<" iAnt="<<iAnt<<": "<<frac*100.0<<"% of "<<sum(mgnall(slicer))<<" will be used"<<endl;
+                  //cerr<<"iFld="<<iFld<<" iAnt="<<iAnt<<": "<<frac*100.0<<"% of "<<sum(mgnall(slicer))<<" will be excluded"<<endl;
                   //oMsg+="  Field ID="+String::toString(tranField(iFld))+" Antenna ID="+String::toString(iAnt)+": ";
-                  oMsg+="  Field ID="+String::toString(allfields[idx])+" Antenna ID="+String::toString(iAnt)+": ";
+                  //oMsg+="  Field ID="+String::toString(allfields[idx])+" Antenna ID="+String::toString(iAnt)+": ";
+                  oMsg+="  "+fldNames(allfields[idx])+"(id="+String::toString(allfields[idx])+") Antenna:"+antNames(iAnt)+"(id="+String::toString(iAnt)+"): ";
                   oMsg+=fracstream.str()+" % of ";
-                  oMsg+=String::toString(sum(mgnall(slicer)) )+" solutions will be used";
+                  //oMsg+=String::toString(sum(mgnall(slicer)) )+" solutions will be used";
+                  oMsg+=String::toString(sum(mgnall(slicer)) )+" solution(s) will be excluded";
                   logSink() << oMsg << LogIO::POST;
                 }
+                hasFlaggedData=true;
               }//ntrue()
             } //iAnt 
           } //iSpw
         }
       }//iFld
+      if (!hasFlaggedData) {
+        oMsg=" None of the gains were exceeded the threshold.";
+        logSink() << oMsg << LogIO::POST;
+      }
     }//gainthreshold 
   /*
 
