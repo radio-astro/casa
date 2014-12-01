@@ -64,6 +64,8 @@ class TagType {
 	
 
 	
+
+	
 	/**
 	  * The TagType for a CalData Tag.
 	  */
@@ -130,16 +132,25 @@ class TagType {
 
 	
 	/**
+	  * The TagType for a DelayModelFixedParameters Tag.
+	  */
+	static const TagType*  DelayModelFixedParameters ;
+	
+
+	
+	/**
+	  * The TagType for a DelayModelVariableParameters Tag.
+	  */
+	static const TagType*  DelayModelVariableParameters ;
+	
+
+	
+	/**
 	  * The TagType for a Doppler Tag.
 	  */
 	static const TagType*  Doppler ;
 	
 
-	
-	/**
-	  * The TagType for a Ephemeris Tag.
-	  */
-	static const TagType*  Ephemeris ;
 	
 
 	
@@ -339,6 +350,8 @@ class TagType {
 	
 
 	
+
+	
 	if (TagType:: CalData) { delete TagType::CalData; TagType::CalData = 0; }
 	
 
@@ -389,11 +402,17 @@ class TagType {
 	
 
 	
-	if (TagType:: Doppler) { delete TagType::Doppler; TagType::Doppler = 0; }
+	if (TagType:: DelayModelFixedParameters) { delete TagType::DelayModelFixedParameters; TagType::DelayModelFixedParameters = 0; }
 	
 
 	
-	if (TagType:: Ephemeris) { delete TagType::Ephemeris; TagType::Ephemeris = 0; }
+	if (TagType:: DelayModelVariableParameters) { delete TagType::DelayModelVariableParameters; TagType::DelayModelVariableParameters = 0; }
+	
+
+	
+	if (TagType:: Doppler) { delete TagType::Doppler; TagType::Doppler = 0; }
+	
+
 	
 
 	
