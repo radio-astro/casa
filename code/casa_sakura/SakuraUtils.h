@@ -20,6 +20,14 @@ private:
   static Bool is_initialized_;
 };
 
+class SakuraDriver {
+public:
+  SakuraDriver();
+  ~SakuraDriver();
+private:
+  static int num_instances_;
+};    
+
 } //# NAMESPACE CASA - END
   
 #endif /* _CASA_SAKURA_UTILS_H_ */
