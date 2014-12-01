@@ -111,7 +111,10 @@ def tsysspwmap(ms, tsystable, trim=True, relax=False, tsysChanTol=1):
         for i in measuredTsysSpw:
             spwMap = SpwMap(i)
             chanFreqs = table.getcell("CHAN_FREQ",i)
-            chanWidth = abs(chanFreqs[1]-chanFreqs[0])
+            if len(chanFreqs) > 1:
+                chanWidth = abs(chanFreqs[1]-chanFreqs[0])
+            else:
+                chanWidth = table.getcell('EFFECTIVE_BW',i)
             spwMap.chanWidth = chanWidth
             spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,\
                                  chanFreqs.max()+0.5*chanWidth]
