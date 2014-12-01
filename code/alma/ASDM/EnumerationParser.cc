@@ -15195,6 +15195,286 @@ vector<vector<vector<WeightTypeMod::WeightType> > > EnumerationParser::getWeight
 
 
 		
+string EnumerationParser::toXML(const string& elementName, DifferenceTypeMod::DifferenceType e) {
+	return "<"+elementName+">"+CDifferenceType::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<DifferenceTypeMod::DifferenceType>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CDifferenceType::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<DifferenceTypeMod::DifferenceType> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CDifferenceType::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<DifferenceTypeMod::DifferenceType> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CDifferenceType::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+DifferenceTypeMod::DifferenceType EnumerationParser::getDifferenceType(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	DifferenceType result;
+	try {
+		result = CDifferenceType::newDifferenceType(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a DifferenceType.", tableName);
+	}
+	return result;
+}
+
+vector<DifferenceTypeMod::DifferenceType> EnumerationParser::getDifferenceType1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<DifferenceTypeMod::DifferenceType>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CDifferenceType::newDifferenceType(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DifferenceType.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<DifferenceTypeMod::DifferenceType> > EnumerationParser::getDifferenceType2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<DifferenceTypeMod::DifferenceType> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<DifferenceTypeMod::DifferenceType> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CDifferenceType::newDifferenceType(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a DifferenceType.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<DifferenceTypeMod::DifferenceType> > > EnumerationParser::getDifferenceType3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<DifferenceTypeMod::DifferenceType> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<DifferenceTypeMod::DifferenceType> v_aux;
+		vector<vector<DifferenceTypeMod::DifferenceType> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CDifferenceType::newDifferenceType(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a DifferenceType.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
 string EnumerationParser::toXML(const string& elementName, CalibrationModeMod::CalibrationMode e) {
 	return "<"+elementName+">"+CCalibrationMode::name(e)+"</"+elementName+">";
 }
@@ -18266,6 +18546,286 @@ vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > > Enumeratio
 	}
 	catch (...) {
 		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a DopplerTrackingMode.", tableName);
+	}
+	
+	return result;	
+}					
+
+
+
+
+		
+string EnumerationParser::toXML(const string& elementName, SynthProfMod::SynthProf e) {
+	return "<"+elementName+">"+CSynthProf::name(e)+"</"+elementName+">";
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<SynthProfMod::SynthProf>& v_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">" 
+		<< " 1" 
+		<< " " << v_e.size();
+
+	for (unsigned int i = 0; i < v_e.size(); i++) 
+		oss << " " << CSynthProf::name(v_e.at(i));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<SynthProfMod::SynthProf> >& vv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 2"
+		<< " " <<vv_e.size()
+		<< " " <<vv_e.at(0).size();
+		
+	for (unsigned int i = 0; i < vv_e.size(); i++)
+		for (unsigned int j = 0; j < vv_e.at(i).size(); j++) 
+			oss << " " << CSynthProf::name(vv_e.at(i).at(j));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+string EnumerationParser::toXML(const string& elementName, const vector<vector<vector<SynthProfMod::SynthProf> > >& vvv_e) {
+	ostringstream oss;
+	oss << "<" << elementName << ">"  
+		<< " 3"
+		<< " " <<vvv_e.size()
+		<< " " <<vvv_e.at(0).size()
+		<< " " <<vvv_e.at(0).at(0).size();
+		
+	for (unsigned int i = 0; i < vvv_e.size(); i++)
+		for (unsigned int j = 0; j < vvv_e.at(i).size(); j++)
+			for (unsigned int k = 0; k < vvv_e.at(i).at(j).size(); k++)
+				oss << " " << CSynthProf::name(vvv_e.at(i).at(j).at(k));
+	oss << "</" << elementName << ">";
+	return oss.str();
+}
+
+SynthProfMod::SynthProf EnumerationParser::getSynthProf(const string &name, const string &tableName, const string &xmlDoc) {
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+				
+	SynthProf result;
+	try {
+		result = CSynthProf::newSynthProf(s);
+	}
+	catch (...) {
+			throw ConversionException("Error: could not convert '"+s+"' into a SynthProf.", tableName);
+	}
+	return result;
+}
+
+vector<SynthProfMod::SynthProf> EnumerationParser::getSynthProf1D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<SynthProfMod::SynthProf>	result;
+	
+	string s = getField(xmlDoc,name);
+		if (s.length() == 0)
+			throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+	
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 2 at the minimum (there may be an empty array)
+	if (tokens.size() < 2) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+
+	
+	
+	// The number of dimension should be 1.
+	if (tokens.at(0) != "1")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	// Then parse the size of the unique dimension
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 < 0)
+		throw ConversionException("Error: wrong size for the unique dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	if (tokens.size() != (unsigned int) (size1 + 2))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 2;
+	try {
+		for (unsigned int i = 0 ; i < (unsigned int) size1; i++) {
+			 result.push_back(CSynthProf::newSynthProf(tokens.at(k).c_str()));
+			 k++;
+		}
+	} 
+	catch (...) {
+			throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a SynthProf.", tableName);
+	}
+
+	return result;
+}
+
+vector<vector<SynthProfMod::SynthProf> > EnumerationParser::getSynthProf2D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<SynthProfMod::SynthProf> >	result;
+	
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 3 at the minimum (there may be an empty array)
+	if (tokens.size() < 3) 
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	
+		
+		
+	// The number of dimension should be 2.
+	if (tokens.at(0) != "2")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+	
+	// Then parse the size of the two dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+	errno = 0;
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2 + 3))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+		
+	int k = 3;
+	try {
+		vector<SynthProfMod::SynthProf> v_aux;
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			v_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.push_back(CSynthProf::newSynthProf(tokens.at(k).c_str()));
+				k++;
+			}
+			result.push_back(v_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error: in '" + s + "' could not convert '"+tokens.at(k)+"' into a SynthProf.", tableName);
+	}	
+	return result;	
+}
+
+
+vector<vector<vector<SynthProfMod::SynthProf> > > EnumerationParser::getSynthProf3D(const string &name, const string &tableName, const string &xmlDoc) {
+	vector<vector<vector<SynthProfMod::SynthProf> >	>result;
+		
+	string s = getField(xmlDoc,name);
+	if (s.length() == 0)
+		throw ConversionException("Error: Missing field \"" + 
+				name + "\" or invalid syntax",tableName);
+	
+	istringstream iss;
+	iss.str(s);
+	vector<string> tokens;
+
+	// Tokenize.
+	string buf;
+	while (iss >> buf) {
+		tokens.push_back(buf);
+	}
+	
+	// The length must be 4 at the minimum (there may be an empty array)
+	if (tokens.size() < 4)
+		throw ConversionException("Error: missing values in field \"" + 
+				name + "\" or invalid syntax(" + s +"')",tableName);	 
+
+		
+	// The number of dimension should be 3.
+	if (tokens.at(0) != "3")
+		throw ConversionException("Error: wrong dimensionality in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);	
+	
+	// Then parse the size of the three dimensions
+	errno = 0;
+	int size1 = atoi(tokens.at(1).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size1 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;		
+	int size2 = atoi(tokens.at(2).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	if (size2 <= 0)
+		throw ConversionException("Error: wrong size for the first dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+
+	errno = 0;
+	int size3 = atoi(tokens.at(3).c_str());
+	if (errno != 0) throw ConversionException("Error: Field \"" + 
+					name + "\": Invalid XML syntax ('" + s +"')", tableName);	
+	
+	
+	if (size3 < 0)
+		throw ConversionException("Error: wrong size for the second dimension \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName); 
+		
+	if (tokens.size() != (unsigned int) (size1*size2*size3 + 4))
+		throw ConversionException("Error: incorrect number of values in field \"" + 
+				name + "\" or invalid syntax('" + s +"')",tableName);
+				
+	int k = 4;
+	try {
+		vector<SynthProfMod::SynthProf> v_aux;
+		vector<vector<SynthProfMod::SynthProf> > vv_aux;	
+		for (unsigned int i = 0; i < (unsigned int) size1; i++) {
+			vv_aux.clear();
+			for (unsigned int j = 0; j < (unsigned int) size2; j++) {
+				v_aux.clear();
+				for (unsigned int l = 0; l < (unsigned int) size3; l++) {
+					v_aux.push_back(CSynthProf::newSynthProf(tokens.at(k).c_str()));
+					k++;
+				}
+				vv_aux.push_back(v_aux);
+			}
+			result.push_back(vv_aux);
+		}
+	}
+	catch (...) {
+		throw ConversionException("Error:in '" + s + "' could not convert '"+tokens.at(k)+"' into a SynthProf.", tableName);
 	}
 	
 	return result;	
