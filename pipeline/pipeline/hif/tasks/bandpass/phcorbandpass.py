@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import os
+
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
@@ -161,8 +163,9 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 		self.inputs.spw=spw.id
                 bandpass_task = bandpassmode.BandpassMode(self.inputs)
                 result = self._executor.execute(bandpass_task)
-		self.inputs.append=True
-		self.inputs.caltable=result.final[-1].gaintable
+		if os.path.exists(self.inputs.caltable):
+		    self.inputs.append=True
+		    self.inputs.caltable=result.final[-1].gaintable
 
 	    # Reset the calto spw list
 	    result.pool[0].calto.spw = orig_spw
