@@ -141,7 +141,6 @@ QwtText QPScaleDraw::label(double value) const {
 	if (m_referenceSet && (value < 0.0)) 
 		value = 0.0;
 	String dateString = Plotter::formattedDateString(m_referenceSet ? m_relativeDateFormat : m_dateFormat, value, m_scale, m_referenceSet);
-	cout << "PDEBUG: QPScaleDraw::label value=" << value << " date string = " << dateString << endl;
         return QString(Plotter::formattedDateString(
                 m_referenceSet ? m_relativeDateFormat : m_dateFormat, value,
                 m_scale, m_referenceSet).c_str());        
