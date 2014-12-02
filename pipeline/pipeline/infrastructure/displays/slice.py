@@ -99,6 +99,7 @@ class SliceDisplay(object):
               parameters={ 'spw': results.first(description).spw,
               'pol': results.first(description).pol,
               'ant': ant,
+              'intent' : results.first(description).intent,
               'type': results.first(description).datatype,
               'file': os.path.basename(results.first(description).filename)})
             plots.append(plot)

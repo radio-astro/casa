@@ -3,16 +3,20 @@ Created on 9 Sep 2014
 
 @author: sjw
 '''
-import contextlib
+import collections
 import os
 
+import numpy
+
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.renderer.weblog as weblog
-import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.displays.tsys as displays
 
 LOG = logging.get_logger(__name__)
+
+TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
 
 
 class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -34,69 +38,79 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
 
-            # generate the per-antenna charts and JSON file
-            plotter = displays.ScoringTsysPerAntennaChart(pipeline_context, result)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(pipeline_context, result, plots, json_path)
+            # generate per-antenna plots
+            renderer = TsyscalPlotRenderer(pipeline_context, result)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
+                subpages[ms] = renderer.path
 
         mako_context.update({'summary_plots'   : summary_plots,
                              'summary_subpage' : subpages,
                              'dirname'         : weblog_dir})
 
 
-class TsyscalPlotRenderer(object):
-    uri = 'tsyscal_plots.mako'
+class TsyscalPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result):
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'T<sub>sys</sub> plots for %s' % vis
+        outfile = filenamer.sanitize('tsys-%s.html' % vis)
 
-    def __init__(self, context, result, plots, json_path):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
+        plotter = displays.TsysPerAntennaChart(context, result)
+        plots = plotter.plot()
+        
+        self._caltable = result.final[0].gaintable
+        self._spwmap = result.final[0].spwmap
+        
+        super(TsyscalPlotRenderer, self).__init__(
+                'tsyscal_plots.mako', context, 
+                result, plots, title, outfile)
 
-        if os.path.exists(json_path):
-            with open(json_path, 'r') as json_file:
-                self.json = json_file.readlines()[0]
-        else:
-            self.json = '{}'
-         
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : 'T<sub>sys</sub> plots for %s' % self.ms}
+    def update_json_dict(self, d, plot):
+        antenna_name = plot.parameters['ant']
+        tsys_spw_id = plot.parameters['tsys_spw'] 
+        stat = self.get_stat(tsys_spw_id, antenna_name)            
 
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('tsys-%s.html' % self.ms)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self):
-        if not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
+        d.update({'tsys_spw'   : str(tsys_spw_id),
+                  'median'     : stat.median,
+                  'median_max' : stat.median_max,
+                  'rms'        : stat.rms})                
             
-        file_obj = open(self.path, 'w')
-        return contextlib.closing(file_obj)
+    def get_stat(self, spw, antenna):
+        tsys_spw = self._spwmap[spw]
+        with casatools.CalAnalysis(self._caltable) as ca:
+            args = {'spw'     : tsys_spw,
+                    'antenna' : antenna,
+                    'axis'    : 'TIME',
+                    'ap'      : 'AMPLITUDE'}
     
-    def render(self):
-        display_context = self._get_display_context()
-        t = weblog.TEMPLATE_LOOKUP.get_template(self.uri)
-        return t.render(**display_context)
+            LOG.trace('Retrieving caltable data for %s spw %s'
+                      '' % (antenna, spw))
+            ca_result = ca.get(**args)
+            return self.get_stat_from_calanalysis(ca_result)
+
+    def get_stat_from_calanalysis(self, ca_result):
+        '''
+        Calculate the median and RMS for a calanalysis result. The argument
+        supplied to this function should be a calanalysis result for ONE
+        spectral window and ONE antenna only!
+        ''' 
+        # get the unique timestamps from the calanalysis result
+        times = set([v['time'] for v in ca_result.values()])
+        mean_tsyses = []
+        for timestamp in sorted(times):
+            # get the dictionary for each timestamp, giving one dictionary per
+            # feed
+            vals = [v for v in ca_result.values() if v['time'] is timestamp]                        
+            # get the median Tsys for each feed at this timestamp 
+            medians = [numpy.median(v['value']) for v in vals]
+            # use the average of the medians per antenna feed as the typical
+            # tsys for this antenna at this timestamp
+            mean_tsyses.append(numpy.mean(medians))
+    
+        median = numpy.median(mean_tsyses)
+        rms = numpy.std(mean_tsyses)
+        median_max = numpy.max(mean_tsyses)
+
+        return TsysStat(median, rms, median_max)

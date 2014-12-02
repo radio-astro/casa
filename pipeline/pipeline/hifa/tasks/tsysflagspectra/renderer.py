@@ -5,7 +5,7 @@ Created on 10 Sep 2014
 '''
 import os
 
-from ..tsyscal import TsyscalPlotRenderer
+from ..tsyscal import renderer as tsyscalrenderer
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
@@ -18,7 +18,7 @@ class T2_4MDetailsTsysflagspectraRenderer(basetemplates.T2_4MDetailsDefaultRende
     '''
     Renders detailed HTML output for the Tsysflagspectra task.
     '''
-    def __init__(self, uri='tsysflagspectral.mako',
+    def __init__(self, uri='tsysflagspectra.mako',
                  description='Flag spectra in Tsys calibration',
                  always_rerender=False):
         super(T2_4MDetailsTsysflagspectraRenderer, self).__init__(uri=uri,
@@ -41,18 +41,13 @@ class T2_4MDetailsTsysflagspectraRenderer(basetemplates.T2_4MDetailsDefaultRende
             ms = os.path.basename(result.inputs['vis'])
             summary_plots[ms] = plots
 
-            # generate the per-antenna charts and JSON file
-            plotter = displays.ScoringTsysPerAntennaChart(context, result)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            # generate per-antenna plots
+            renderer = tsyscalrenderer.TsyscalPlotRenderer(context, result)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
+                subpages[ms] = renderer.path
 
         ctx.update({'summary_plots'   : summary_plots,
                     'summary_subpage' : subpages,

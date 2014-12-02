@@ -6,9 +6,10 @@ Created on 9 Sep 2014
 import collections
 import os
 
-from ..tsyscal import TsyscalPlotRenderer
+from ..tsyscal import renderer as tsyscalrenderer
 import pipeline.hif.tasks.common.calibrationtableaccess as caltableaccess
 import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.renderer.rendererutils as rendererutils
@@ -17,6 +18,16 @@ import pipeline.infrastructure.utils as utils
 LOG = logging.get_logger(__name__)
 
 FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
+
+std_templates = {'nmedian'    : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                 'derivative' : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                 'edgechans'  : 'generic_x_vs_y_spw_intent_plots.mako',
+                 'fieldshape' : 'generic_x_vs_y_spw_intent_plots.mako',
+                 'birdies'    : 'generic_x_vs_y_spw_ant_plots.mako'}
+
+extra_templates = {'nmedian'    : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                   'derivative' : 'generic_x_vs_y_per_spw_and_pol_plots.mako',
+                   'fieldshape' : 'generic_x_vs_y_spw_intent_plots.mako'}
 
 
 class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -29,69 +40,110 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         super(T2_4MDetailsTsysflagRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
 
+    
+
+    def _do_standard_plots(self, context, result, component):
+        if component in ('nmedian','derivative','fieldshape'):
+            renderer = ImageDisplayPlotRenderer(context, result, component)
+        elif component in ('edgechans', 'birdies'):
+            renderer = SliceDisplayPlotRenderer(context, result, component)
+        else:
+            raise NotImplementedError('Unhandled Tsys flagging component: %s', component)
+
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+            
+        return renderer
+
+    def _do_extra_plots(self, context, result, component):
+        if component in ('nmedian','derivative','fieldshape'):
+            renderer = TsysSpectraPlotRenderer(context, result, component)
+        else:
+            raise NotImplementedError('Unhandled Tsys flagging component: %s', component)
+
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+            
+        return renderer
+
+        
     def update_mako_context(self, ctx, context, results):
         weblog_dir = os.path.join(context.report_dir,
                                   'stage%s' % results.stage_number)
 
-        flag_totals = {}
-        components = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
-        for msresult in results:
-            table = os.path.basename(msresult.inputs['caltable'])
-            flag_totals[table] = {}
+        stdplots = collections.defaultdict(dict)
+        extraplots = collections.defaultdict(dict)
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            for component, r in result.components.items():
+                if not r.view:
+                    continue
+                try:
+                    renderer = self._do_standard_plots(context, result, component)
+                    stdplots[component][vis] = renderer
+                except TypeError:
+                    continue
+
+                try:
+                    renderer = self._do_extra_plots(context, result, component)
+                    extraplots[component][vis] = renderer
+                except (TypeError, NotImplementedError):
+                    continue
+
+        flag_totals = collections.defaultdict(dict)
+        for result in results:
+            table = os.path.basename(result.inputs['caltable'])
 
             # summarise flag state on entry
-            flag_totals[table]['before'] = self.flags_for_result(msresult, context,
-              summary='first')
+            flag_totals[table]['before'] = self.flags_for_result(result, 
+                    context, summary='first')
 
             # summarise flagging by each step
-            for component in components:
-                if component not in msresult.components.keys():
-                    flag_totals[table][component] = None
-                else:
-                    flag_totals[table][component] = self.flags_for_result(
-                      msresult.components[component], context)
+            for component, r in result.components.items():
+                flag_totals[table][component] = self.flags_for_result(r, 
+                                                                      context)
 
             # summarise flag state on exit
-            flag_totals[table]['after'] = self.flags_for_result(msresult, context,
-              summary='last')
+            flag_totals[table]['after'] = self.flags_for_result(result, 
+                    context, summary='last')
+
 
         htmlreports = self.get_htmlreports(context, results)
         
         summary_plots = {}
         subpages = {}
-        for msresult in results:
+        for result in results:
             # summary plots at end of flagging sequence, beware empty
             # sequence
-            lastflag = msresult.components.keys()
+            lastflag = result.components.keys()
             if lastflag:
                 lastflag = lastflag[-1]
-            lastresult = msresult.components[lastflag]
+            lastresult = result.components[lastflag]
 
             plotter = displays.TsysSummaryChart(context, lastresult)
             plots = plotter.plot()
-            ms = os.path.basename(lastresult.inputs['vis'])
-            summary_plots[ms] = plots
+            vis = os.path.basename(lastresult.inputs['vis'])
+            summary_plots[vis] = plots
 
-            # generate the per-antenna charts and JSON file
-            plotter = displays.ScoringTsysPerAntennaChart(context, lastresult)
-            plots = plotter.plot() 
-            json_path = plotter.json_filename
-
-            # write the html for each MS to disk
-            renderer = TsyscalPlotRenderer(context, lastresult, plots, json_path)
+            # generate per-antenna plots
+            renderer = tsyscalrenderer.TsyscalPlotRenderer(context, lastresult)
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.filename
+                subpages[vis] = renderer.path
+
+        components = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
 
         ctx.update({'flags'           : flag_totals,
                     'components'      : components,
                     'summary_plots'   : summary_plots,
                     'summary_subpage' : subpages,
                     'dirname'         : weblog_dir,
+                    'stdplots'        : stdplots,
+                    'extraplots'      : extraplots,
                     'htmlreports'     : htmlreports})
-
+        
     def get_htmlreports(self, context, results):
         report_dir = context.report_dir
         weblog_dir = os.path.join(report_dir,
@@ -151,9 +203,9 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         ms = context.observing_run.get_ms(name=tsystable.vis) 
 
         summaries = result.summaries
-        if summary=='first':
+        if summary == 'first':
             summaries = summaries[:1]
-        elif summary=='last':
+        elif summary == 'last':
             summaries = summaries[-1:]
 
         by_intent = self.flags_by_intent(ms, summaries)
@@ -169,7 +221,7 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             # in the summaries dict (not sometimes enclosed in "..."). Better
             # perhaps to fix the summaries dict.
             intent_fields[intent] = [f._name for f in ms.fields
-                                    if intent in f.intents]
+                                     if intent in f.intents]
 
         # while we're looping, get the total flagged by looking in all scans 
         intent_fields['TOTAL'] = [f._name for f in ms.fields]
@@ -225,3 +277,138 @@ class T2_4MDetailsTsysflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             previous_summary = summary
                 
         return total
+
+
+class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, component):
+        r = result.components[component]
+
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'Time vs Antenna plots for %s' % vis
+        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
+
+        stage = 'stage%s' % result.stage_number
+        dirname = os.path.join(context.report_dir, stage)
+
+        plotter = displays.image.ImageDisplay()
+        plots = plotter.plot(context, r, reportdir=dirname, prefix=component)
+        
+        super(TimeVsAntennaPlotRenderer, self).__init__(
+                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+                result, plots, title, outfile)
+
+
+class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, component):
+        r = result.components[component]
+
+        stage = 'stage%s' % result.stage_number
+        dirname = os.path.join(context.report_dir, stage)
+
+        plotter = displays.image.ImageDisplay()
+        plots = plotter.plot(context, r, reportdir=dirname, prefix=component)
+        if not plots:
+            raise TypeError('No plots generated for %s component' % component)
+
+        x_axis = plots[0].x_axis
+        y_axis = plots[0].y_axis
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
+
+        vis = os.path.basename(result.inputs['vis'])
+        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
+        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
+
+        self.shorttitle = '%s vs %s' % (y_axis, x_axis)
+
+        super(ImageDisplayPlotRenderer, self).__init__(
+                'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
+                result, plots, title, outfile)
+
+
+class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, component):
+        r = result.components[component]
+
+        stage = 'stage%s' % result.stage_number
+        dirname = os.path.join(context.report_dir, stage)
+
+        plotter = displays.slice.SliceDisplay()
+        plots = plotter.plot(context, r, reportdir=dirname, plotbad=False,
+                             plot_only_flagged=True, prefix=component)
+        if not plots:
+            raise TypeError('No plots generated for %s component' % component)
+
+        x_axis = plots[0].x_axis
+        y_axis = plots[0].y_axis
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
+
+        vis = os.path.basename(result.inputs['vis'])
+        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
+        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))        
+        self.shorttitle = '%s vs %s' % (y_axis, x_axis)
+
+        template = std_templates[component]
+        super(SliceDisplayPlotRenderer, self).__init__(
+                template, context, result, plots, title, outfile)
+
+    def update_json_dict(self, d, plot):
+        if 'intent' in plot.parameters:
+            d['intent'] = plot.parameters['intent']
+
+
+class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, component):
+        stage = 'stage%s' % result.stage_number
+        dirname = os.path.join(context.report_dir, stage)
+
+        plots = []
+        r = result.components[component]
+        # plot Tsys spectra that were flagged
+        for flagcmd in r.flagcmds():
+            for description in r.descriptions():
+                tsysspectra = r.first(description).children.get('tsysspectra')
+                if tsysspectra is None:
+                    continue
+        
+                for tsys_desc in tsysspectra.descriptions():
+                    tsysspectrum = tsysspectra.first(tsys_desc)
+        
+                    if not flagcmd.match(tsysspectrum):
+                        continue
+        
+                    # have found flagged spectrum, now get
+                    # associated median spectrum
+                    medians = r.last(description).children.get('tsysmedians')
+        
+                    for median_desc in medians.descriptions():
+                        median_spectrum = medians.first(median_desc)
+                        if median_spectrum.ant is None or \
+                          median_spectrum.ant[0]==tsysspectrum.ant[0]:
+                            # do the plot
+                            plots.extend(displays.SliceDisplay().plot(
+                              context=context, results=tsysspectra,
+                              description_to_plot=tsys_desc,
+                              overplot_spectrum=median_spectrum,
+                              reportdir=dirname, plotbad=False))
+                            break
+
+        if not plots:
+            raise TypeError('No spectra found for %s component' % component)
+
+        x_axis = plots[0].x_axis
+        y_axis = plots[0].y_axis
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
+        
+        vis = os.path.basename(result.inputs['vis'])
+        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
+        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
+        self.shorttitle = '%s vs %s' % (y_axis, x_axis)
+
+        template = extra_templates[component]
+        super(TsysSpectraPlotRenderer, self).__init__(
+                template, context, result, plots, title, outfile)
+        
+    def update_json_dict(self, d, plot):
+        if 'intent' in plot.parameters:
+            d['intent'] = plot.parameters['intent']
+

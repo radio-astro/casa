@@ -1,22 +1,7 @@
 <%!
 rsc_path = ""
-
-import collections
-import os.path
-import pydoc
-import numpy as np
-import sys
-
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays as displays
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.renderer.logger as logger
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.renderer.rendererutils as hrutils
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
-
-LOG = infrastructure.get_logger(__name__)
+import os
+import pipeline.infrastructure.utils as utils
 
 # method to output flagging percentages neatly
 def percent_flagged(flagsummary):
@@ -27,6 +12,25 @@ def percent_flagged(flagsummary):
         return 'N/A'
     else:
         return '%0.1f%%' % (100.0 * flagged / total)
+
+steps = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
+
+comp_descriptions = {'nmedian'    : 'Flag T<sub>sys</sub> spectra with high median values.',
+                 	 'derivative' : 'Flag T<sub>sys</sub> spectra with high median derivative (ringing).',
+                 	 'fieldshape' : 'Flag T<sub>sys</sub> spectra whose shape differs from those associated with BANDPASS data.',
+                 	 'edgechans'  : 'Flag edge channels of T<sub>sys</sub> spectra.',
+                 	 'birdies'    : 'Flag spikes or birdies in T<sub>sys</sub> spectra.'}
+
+std_plot_desc = {'nmedian'    : 'shows the images used to flag',
+                 'derivative' : 'shows the images used to flag',
+                 'fieldshape' : 'shows the images used to flag',
+                 'edgechans'  : 'shows the views used to flag',
+                 'birdies'    : 'shows the views used to flag'}
+
+extra_plot_desc = {'nmedian'    : ' shows the spectra flagged in',
+     	   		   'derivative' : ' shows the spectra flagged in',
+            	   'fieldshape' : ' shows the spectra flagged in'}
+
 %>
 
 <%inherit file="t2-4m_details-base.html"/>
@@ -40,7 +44,7 @@ $(document).ready(function() {
     var createSpwSetter = function(spw) {
         return function() {
             // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
+            $("#select-tsys_spw").select2("val", [spw]).trigger("change");
         };
     };
 
@@ -70,132 +74,34 @@ $(document).ready(function() {
 });
 </script>
 
+<%self:plot_group plot_dict="${summary_plots}"
+				  url_fn="${lambda x: summary_subpage[x]}"
+				  data_tsysspw="${True}">
 
-## generate the plots
-<%
-steps = ['nmedian', 'derivative', 'edgechans', 'fieldshape', 'birdies']
+	<%def name="title()">
+		T<sub>sys</sub> vs frequency after flagging
+	</%def>
 
-try:
-    r = result[0]
-    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
-    plots_dir = stage_dir
-    if not os.path.exists(plots_dir):
-        os.mkdir(plots_dir)
+	<%def name="preamble()">
+		<p>Plots of time-averaged T<sub>sys</sub> vs frequency, colored by antenna.</p>
+	</%def>
 
-    plot_groups = collections.OrderedDict()
-    components = r.components.keys()
+	<%def name="mouseover(plot)">Click to show Tsys vs frequency for Tsys spw ${plot.parameters['tsys_spw']}</%def>
 
-    LOG.info('Plotting')
-    for component in components:
+	<%def name="fancybox_caption(plot)">
+		T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}<br/>
+		Science spws: ${', '.join([str(i) for i in plot.parameters['spw']])}
+	</%def>
 
-        # generate the plots
-        plots = []
-        for msresult in result:
-            r = msresult.components[component]
+	<%def name="caption_title(plot)">
+		T<sub>sys</sub> spw ${plot.parameters['tsys_spw']}
+	</%def>
 
-            if component in ['nmedian','derivative','fieldshape'] and r.view:
-                # image to display
-                # plot() returns the list of Plots it has generated
-                plots.append(displays.ImageDisplay().plot(pcontext, r,
-                  reportdir=plots_dir, prefix=component))
+	<%def name="caption_text(plot, _)">
+		Science spw${utils.commafy(plot.parameters['spw'], quotes=False, multi_prefix='s')}.
+	</%def>
 
-                # plot Tsys spectra that were flagged
-                for flagcmd in r.flagcmds():
-                    for description in r.descriptions():
-                        tsysspectra = r.first(description).children.get(
-                          'tsysspectra')
-                        if tsysspectra is None:
-                            continue
-
-                        for tsys_desc in tsysspectra.descriptions():
-                            tsysspectrum = tsysspectra.first(tsys_desc)
-
-                            if not flagcmd.match(tsysspectrum):
-                                continue
-
-                            # have found flagged spectrum, now get
-                            # associated median spectrum
-                            medians = r.last(description).children.get(
-                              'tsysmedians')
-
-                            for median_desc in medians.descriptions():
-                                median_spectrum = medians.first(median_desc)
-                                if median_spectrum.ant is None or \
-                                  median_spectrum.ant[0]==tsysspectrum.ant[0]:
-                                    # do the plot
-                                    plots.append(displays.SliceDisplay().plot(
-                                      context=pcontext, results=tsysspectra,
-                                      description_to_plot=tsys_desc,
-                                      overplot_spectrum=median_spectrum,
-                                      reportdir=plots_dir, plotbad=False))
-                                    break
-
-            elif component in ['edgechans','birdies'] and r.view:
-                plots.append(displays.SliceDisplay().plot(pcontext, r,
-                  reportdir=plots_dir, plotbad=False, plot_only_flagged=True,
-                  prefix=component))
-
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup
-        plot_groups[component] = logger.PlotGroup.create_plot_groups(plots)
-        # Write the thumbnail pages for each plot grouping to disk
-        for plot_group in plot_groups[component]:
-            renderer = sharedrenderer.PlotGroupRenderer(pcontext, r, plot_group,
-              prefix=component)
-            plot_group.filename = renderer.basename
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-
-except Exception, e:
-    print 'hif_tsysflag html template exception:', e
-    raise e
-%>
-
-## web display of Tsys after flagging
-
-% if len(summary_plots) > 0:
-<h3>T<sub>sys</sub> after flagging</h3>
-
-    % for ms in summary_plots:
-    <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
-    </h4>
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="tsys-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="T<sub>sys</sub> summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                    	<h4>
-							<a href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}"
-	                       	   class="replace"
-	                           data-spw="${plot.parameters['spw']}">
-	                           Spectral Window ${plot.parameters['spw']}
-	                        </a>
-                        </h4>
-
-                        <p>Plot of time-averaged T<sub>sys</sub> for spectral
-                            window ${plot.parameters['spw']} (T<sub>sys</sub>
-                            window
-                        ${plot.parameters['tsys_spw']}), coloured by antenna.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-    % endfor
-% endif
+</%self:plot_group>
 
 <div class="row-fluid">
   <h2>Flagging steps</h2>
@@ -276,22 +182,9 @@ except Exception, e:
 <h2>Flag Step Details</h2>
 <ul>
 % for component in components: 
- <li>
-  <h3>${component}</h3>
-
-    % if component=='birdies':
-        Flag spikes or birdies in Tsys spectra
-    % elif component=='derivative':
-        Flag Tsys spectra with high median derivative (ringing)
-    % elif component=='edgechans':
-        Flag edge channels of Tsys spectra
-    % elif component=='fieldshape':
-        Flag Tsys spectra whose shape differs from those associated with BANDPASS data
-    % elif component=='nmedian':
-        Flag Tsys spectra with high median values
-    % else:
-        Purpose unknown
-    % endif
+	<li>
+	<h3>${component}</h3>
+	${comp_descriptions[component]}
 
     % if htmlreports[component]:
   <h4>Flags</h4>
@@ -316,35 +209,18 @@ except Exception, e:
   </table>
     % endif
  
-    % if plot_groups[component]:
-  <h4>Plots</h4>
-  <ul>
-        % for plot_group in plot_groups[component]:
-            % if component in ['nmedian','derivative','fieldshape'] and r.view:
-                % if plot_group.title == 'Time vs Antenna1':
-	<li>
-			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
-               shows the images used for flagging.
-        </li>
-                % elif 'Tsys vs Channel' in plot_group.title:
-	<li>
-			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
-               shows the T<sub>sys</sub> spectra flagged in each image.
-        </li>
-   	        % endif
-            % elif component in ['edgechans','birdies'] and r.view:
-	<li>
-			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
-               shows the views used for flagging.
-        </li>
-            % else:
-	<li>
-			<a class="replace" href="${os.path.relpath(os.path.join(dirname, plot_group.filename), pcontext.report_dir)}">${plot_group.title}</a>
-               shows the plots generated.
-        </li>
-            % endif
-        % endfor
-  </ul>
+    % if component in stdplots:
+	<h4>Plots</h4>
+	<ul>
+		% for vis, renderer in stdplots[component].items():
+		<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${std_plot_desc[component]} ${vis}.</li>
+	    % if component in extraplots:
+			% for vis, renderer in extraplots[component].items():
+			<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${extra_plot_desc[component]} ${vis}.</li>
+			% endfor
+		% endif
+		% endfor
+	</ul>
     % endif
  </li>
 % endfor

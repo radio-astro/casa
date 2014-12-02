@@ -1,6 +1,8 @@
 <%!
 rsc_path=''
 import os
+import pipeline.infrastructure.utils as utils
+
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -14,7 +16,7 @@ $(document).ready(function() {
     var createSpwSetter = function(spw) {
         return function() {
             // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
+            $("#select-tsys_spw").select2("val", [spw]).trigger("change");
         };
     };
 
@@ -55,7 +57,7 @@ frequency.</p>
 
 <%self:plot_group plot_dict="${summary_plots}"
 				  url_fn="${lambda x: summary_subpage[x]}"
-				  data_spw="${True}">
+				  data_tsysspw="${True}">
 
 	<%def name="title()">
 		T<sub>sys</sub> vs frequency
@@ -65,19 +67,19 @@ frequency.</p>
 		<p>Plots of time-averaged T<sub>sys</sub> vs frequency, colored by antenna.</p>
 	</%def>
 
-	<%def name="mouseover(plot)">Click to show Tsys vs frequency for spw ${plot.parameters['spw']}</%def>
+	<%def name="mouseover(plot)">Click to show Tsys vs frequency for Tsys spw ${plot.parameters['tsys_spw']}</%def>
 
 	<%def name="fancybox_caption(plot)">
-		Spw: ${plot.parameters['spw']}<br />
-		T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}
+		T<sub>sys</sub> spw: ${plot.parameters['tsys_spw']}<br/>
+		Science spws: ${', '.join([str(i) for i in plot.parameters['spw']])}
 	</%def>
 
 	<%def name="caption_title(plot)">
-		Spectral Window ${plot.parameters['spw']}
+		T<sub>sys</sub> spw ${plot.parameters['tsys_spw']}
 	</%def>
 
 	<%def name="caption_text(plot, _)">
-		T<sub>sys</sub> spw ${plot.parameters['tsys_spw']}
+		Science spw${utils.commafy(plot.parameters['spw'], quotes=False, multi_prefix='s')}.
 	</%def>
 
 </%self:plot_group>

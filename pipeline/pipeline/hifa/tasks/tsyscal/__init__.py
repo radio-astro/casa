@@ -8,7 +8,7 @@ from . import qa
 from . import renderer
 from . import resultobjects
 # import to module level required for Tsysflagchans etc.
-from .renderer import T2_4MDetailsTsyscalRenderer, TsyscalPlotRenderer
+from .renderer import T2_4MDetailsTsyscalRenderer
 
 pipelineqa.registry.add_handler(qa.TsyscalQAHandler())
 pipelineqa.registry.add_handler(qa.TsyscalListQAHandler())

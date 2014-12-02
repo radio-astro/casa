@@ -1,6 +1,7 @@
 <%!
 rsc_path = ""
 import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
@@ -13,7 +14,7 @@ import os
 
 <script>
 $(document).ready(function () {
-	var scores_dict = $('#scores').data('scores');
+	var scores_dict = $('#scores').data('scores');	
 
     // activate the input fields for spw, antenna, etc.
     $('.select2').select2();
@@ -26,28 +27,9 @@ $(document).ready(function () {
     // create filters that listen for events on the .select2 input fields we just
     // created, and add them to the filter pipeline, filtering on the appropriate
     // dictionary key
-    filterPipeline.addFilter(FILTERS.createMatchFilter('tsys_spw', '#select-tsys_spw'));
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
     filterPipeline.addFilter(FILTERS.createMatchFilter('ant', '#select-ant'));
 
-    // get the X-axis label for Tsys
-    var xAxis = PLOTS.xAxisLabels["K"];
-
-    // create histograms and histogram filters for the three distributions we want
-    // to highlight: RMS, average median, and maximum median reached.
-    var charts = [ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median", "#histogram-tsysmedian", xAxis),
-    			  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "median_max", "#histogram-tsysmedianmax", xAxis),
-				  ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict, "rms", "#histogram-tsysrms", xAxis)]
-
-    // link histogram ranges to the range checkbox
-    var rangeCheckbox = $("input#rangeCheckbox");
-	rangeCheckbox.click(function() {
-		var state = rangeCheckbox.prop("checked");
-		charts.forEach(function(chart) {
-			chart.histogram.duration(1000).plotExtent(state);
-		});
-	});
-    
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
     $("ul.thumbnails li div a").click(function (evt) {
@@ -69,50 +51,13 @@ $(document).ready(function () {
 </div>
 
 <div class="column-fluid">
-	<label class="checkbox"> 
-		<input type="checkbox" id="rangeCheckbox" checked></input>Clip histogram range to match data
-	</label>
 	<div class="row-fluid">
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>Average of Median T<sub>sys</sub> over time</legend>
-				<div id="histogram-tsysmedian" class="span12">
-			</fieldset>
-		</div>
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>Maximum of Median T<sub>sys</sub> over time</legend>
-				<div id="histogram-tsysmedianmax"  class="span12">
-			</fieldset>
-		</div>
-		<div class="column-fluid span4">
-			<fieldset>
-				<legend>RMS deviation from Average Median T<sub>sys</sub></legend>
-				<div id="histogram-tsysrms"  class="span12">
-			</fieldset>
-		</div>
-	</div>
-	
-	<div class="row-fluid">
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
-				<legend>Tsys Spectral Window Filter</legend>
-				<select id="select-tsys_spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
-					% for spw in sorted(list(set([p.parameters['tsys_spw'] for p in plots]))):
-					<option>${spw}</option>
-					% endfor
-		       	</select>
-			</fieldset>
-			</div>
-		</div>		
-
-		<div class="column-fluid span4">
-			<div>
-			<fieldset>
-				<legend>Science Spectral Window Filter</legend>
+				<legend>Spectral Window Filter</legend>
 				<select id="select-spw" class="select2" multiple style="width:100%" placeholder="Show all spectral windows">
-					% for spw in sorted(list(set([p.parameters['spw'] for p in plots]))):
+					% for spw in sorted(list(set([int(p.parameters['spw']) for p in plots]))):
 					<option>${spw}</option>
 					% endfor
 		       	</select>
@@ -120,7 +65,7 @@ $(document).ready(function () {
 			</div>
 		</div>		
 	
-		<div class="column-fluid span4">
+		<div class="column-fluid span6">
 			<div>
 			<fieldset>
 				<legend>Antenna Filter</legend>
@@ -139,21 +84,20 @@ $(document).ready(function () {
 
 <div class="column-fluid">
 	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+	% for plot in sorted(plots, key=lambda p: p.parameters['spw']):
 		<li class="span2">
 			<div class="thumbnail">
 				<a class="fancybox"
 				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="${plot.parameters['ant']} Tsys spw ${plot.parameters['tsys_spw']}"
+				   title="${plot.parameters['ant']} Spw ${plot.parameters['spw']}"
 				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
 					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="${plot.parameters['ant']} Tsys spw ${plot.parameters['tsys_spw']}"
+						 title="${plot.parameters['ant']} Spw ${plot.parameters['spw']}"
 						   alt="">
 					</img>
 				</a>
-					<p class="text-center">${plot.parameters['ant']} Tsys spw 
-					${plot.parameters['tsys_spw']} Science spw 
-					${plot.parameters['spw']}</p>
+					<p class="text-center">${plot.parameters['ant']}
+					Spw ${plot.parameters['spw']}</p>
 			</div>
 		</li>
 	% endfor

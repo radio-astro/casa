@@ -30,14 +30,20 @@ class TsysSummaryChart(object):
         self._spwmap = dict((spw, tsys) for (spw, tsys) in enumerate(calto.spwmap)
                             if spw in science_spw_ids)
 
+        tsysmap = collections.defaultdict(list)
+        for sci, tsys in self._spwmap.items():
+            tsysmap[tsys].append(sci)
+        self._tsysmap = dict((k, sorted(v)) for k, v in tsysmap.items())
+
         self._figroot = os.path.join(context.report_dir, 
                                      'stage%s' % result.stage_number, 
                                      'tsys-%s-summary.png' % self._vis_basename)
 
         # plotbandpass injects spw ID into every plot filename
         root, ext = os.path.splitext(self._figroot)
-        self._real_figfiles = dict((spw, '%s.spw%0.2d%s' % (root, tsys_spw, ext))
-                                   for (spw, tsys_spw) in self._spwmap.items())
+        self._real_figfiles = dict((tsys_spw, '%s.spw%0.2d%s' % (root, tsys_spw, ext))
+                                   for tsys_spw in self._tsysmap)
+
 
     def create_plot(self):
         unique_tsys_spws = set(self._spwmap.values())
@@ -60,15 +66,16 @@ class TsysSummaryChart(object):
 
     def plot(self):
         wrappers = []
-        for science_spw, tsys_spw in self._spwmap.items():         
-            wrapper = logger.Plot(self._real_figfiles[science_spw],
+        
+        for tsys_spw, science_spws in self._tsysmap.items():
+            wrapper = logger.Plot(self._real_figfiles[tsys_spw],
                                   x_axis='freq',
                                   y_axis='tsys',
                                   parameters={'vis'      : self._vis_basename,
-                                              'spw'      : science_spw,
+                                              'spw'      : science_spws,
                                               'tsys_spw' : tsys_spw})
             wrappers.append(wrapper)
-            
+        
         if not all([os.path.exists(w.abspath) for w in wrappers]):
             LOG.trace('Tsys summary plots not found. Creating new plots.')
             try:
@@ -141,97 +148,6 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
                               '%s antenna %s: %s not found', 
                               self._vis_basename, spw_id, ant_name, figfile)
         return wrappers
-
-
-TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
-
-class ScoringTsysPerAntennaChart(object):
-    def __init__(self, context, result):
-        self.context = context
-        self.result = result
-        self.plotter = TsysPerAntennaChart(context, result)
-        ms = os.path.basename(result.inputs['vis'])
-        
-        self.json = {}
-        self.json_filename = os.path.join(context.report_dir, 
-                                          'stage%s' % result.stage_number, 
-                                          'tsys-%s.json' % ms)
-        
-    def plot(self):
-        plots = self.plotter.plot()
-
-        # calculate scores and write them to a JSON file if not done already
-        if not os.path.exists(self.json_filename):
-            scores = self.get_scores(plots)
-            with open(self.json_filename, 'w') as f:
-                LOG.trace('Writing Tsys JSON data to %s' % self.json_filename)
-                json.dump(scores, f)
-            
-        return plots
-    
-    def get_scores(self, plots):
-        d = {}
-        for plot in plots:
-            antenna_name = plot.parameters['ant']
-            tsys_spw_id = plot.parameters['tsys_spw'] 
-            science_spw_ids = plot.parameters['spw'] 
-            stat = self.get_stat(tsys_spw_id, antenna_name)            
-
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-
-            # all values set on this dictionary will be written to the JSON file
-            d[image_relpath] = {'antenna'    : antenna_name,
-                                'tsys_spw'   : str(tsys_spw_id),
-                                'spw'        : science_spw_ids,
-                                'median'     : stat.median,
-                                'median_max' : stat.median_max,
-                                'rms'        : stat.rms,
-                                'thumbnail'  : thumbnail_relpath}
-        return d
-            
-    def get_stat(self, spw, antenna):    
-        caltable = self.result.final[0].gaintable
-        tsys_spw = self.result.final[0].spwmap[spw]
-        
-        with casatools.CalAnalysis(caltable) as ca:
-            args = {'spw'     : tsys_spw,
-                    'antenna' : antenna,
-                    'axis'    : 'TIME',
-                    'ap'      : 'AMPLITUDE'}
-    
-            LOG.trace('Retrieving caltable data for %s spw %s'
-                      '' % (antenna, spw))
-            ca_result = ca.get(**args)
-            return self.get_stat_from_calanalysis(ca_result)
-
-    def get_stat_from_calanalysis(self, ca_result):
-        '''
-        Calculate the median and RMS for a calanalysis result. The argument
-        supplied to this function should be a calanalysis result for ONE
-        spectral window and ONE antenna only!
-        ''' 
-        # get the unique timestamps from the calanalysis result
-        times = set([v['time'] for v in ca_result.values()])
-        mean_tsyses = []
-        for timestamp in sorted(times):
-            # get the dictionary for each timestamp, giving one dictionary per
-            # feed
-            vals = [v for v in ca_result.values() if v['time'] is timestamp]                        
-            # get the median Tsys for each feed at this timestamp 
-            medians = [numpy.median(v['value']) for v in vals]
-            # use the average of the medians per antenna feed as the typical
-            # tsys for this antenna at this timestamp
-            mean_tsyses.append(numpy.mean(medians))
-    
-        median = numpy.median(mean_tsyses)
-        rms = numpy.std(mean_tsyses)
-        median_max = numpy.max(mean_tsyses)
-
-        return TsysStat(median, rms, median_max)
 
 
 def get_chanrange(ms, tsys_spw):
