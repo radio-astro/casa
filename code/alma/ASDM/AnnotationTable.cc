@@ -537,7 +537,12 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		// Look for a version information in the schemaVersion of the XML
 		//
 		xmlDoc *doc;
-		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
+		#if LIBXML_VERSION >= 20703
+doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
+#else
+doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+#endif
+
 		if ( doc == NULL )
 			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Annotation");
 		
@@ -743,7 +748,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
     //
     string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
     xmlDoc *doc;
-    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
     if ( doc == NULL ) 
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Annotation");
     
@@ -1016,7 +1021,7 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 	// We have the xmlHeader , let's parse it.
 	//
 	xmlDoc *doc;
-    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
     if ( doc == NULL ) 
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Annotation");
     
