@@ -160,7 +160,7 @@ def niter_and_mask(psf, residual, new_mask):
         # Set all its values to 1 (=True=good).
         searchmask = casatools.image.newimagefromimage(infile='collapsed',
           outfile='searchmask', overwrite=True)
-        searchmask.calc('1') 
+        searchmask.calc('1', verbose=False) 
 
         # find the max pixel value and derive the threshold for the clean mask
         # 'islands' that lie half way between the peak and the first sidelobe.
@@ -172,7 +172,7 @@ def niter_and_mask(psf, residual, new_mask):
         # Update the mask to show only pixels above the threshold for island
         # membership
         searchmask.calc('replace(searchmask["%s" > %s], 0)' % (residual,
-          island_threshold))
+          island_threshold), verbose=False)
 
         island_pix = {}
         island_peaks = {}
@@ -282,20 +282,25 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     # Set all its values to 1 (=True=good).
     searchmask = casatools.image.newimagefromimage(infile=residual,
       outfile='searchmask', overwrite=True)
-    searchmask.calc('1') 
+    searchmask.calc('1', verbose=False) 
 
     # Ignore parts of image where flux map is less than 0.1
     # NOTE: logic may appear strange because the LEL 'replace'
     # function replaces masked pixels (i.e. bad pixels) 
-    searchmask.calc('replace(searchmask["%s" > 0.1], 0)' % flux)
+    searchmask.calc('replace(searchmask["%s" > 0.1], 0)' % flux,
+      verbose=False)
  
     # Ignore edges of image in an effort to prevent divergence; spikes
     # sometimes appear there
     shape = searchmask.shape()
-    searchmask.calc('replace(searchmask[indexin(0,[5:%s])], 0)' % shape[0])
-    searchmask.calc('replace(searchmask[indexin(0,[0:%s])], 0)' % (shape[0]-5))
-    searchmask.calc('replace(searchmask[indexin(1,[5:%s])], 0)' % shape[1])
-    searchmask.calc('replace(searchmask[indexin(1,[0:%s])], 0)' % (shape[1]-5))
+    searchmask.calc('replace(searchmask[indexin(0,[5:%s])], 0)' % shape[0],
+      verbose=False)
+    searchmask.calc('replace(searchmask[indexin(0,[0:%s])], 0)' % (shape[0]-5),
+      verbose=False)
+    searchmask.calc('replace(searchmask[indexin(1,[5:%s])], 0)' % shape[1],
+      verbose=False)
+    searchmask.calc('replace(searchmask[indexin(1,[0:%s])], 0)' % (shape[1]-5),
+      verbose=False)
 
     with casatools.ImageReader(residual) as image:
         # find the max pixel value and derive the threshold for the clean mask
@@ -308,7 +313,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
         # Update the mask to show only pixels above the threshold for island
         # membership
         searchmask.calc('replace(searchmask["%s" > %s], 0)' % (residual,
-          island_threshold))
+          island_threshold), verbose=False)
 
         island_pix = {}
         island_peaks = {}
