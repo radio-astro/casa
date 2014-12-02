@@ -149,16 +149,29 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 			    LOG.info('Bandwidth greater than 1875 MHz.  FDM edge channel flagging')
 			    lo_freq = cen_freq - bandwidth / 2.0
 			    hi_freq = cen_freq - measures.Frequency(937.5e6, measures.FrequencyUnits.HERTZ)
-			    minchan, maxchan = spw.channel_range(lo_freq, hi_freq)
-			    cmd = '{0}:{1}~{2}'.format(spw.id, minchan, maxchan)
-			    to_flag.append(cmd)
+			    minchan_lo, maxchan_lo = spw.channel_range(lo_freq, hi_freq)
+			    ##cmd = '{0}:{1}~{2}'.format(spw.id, minchan, maxchan)
+			    ##to_flag.append(cmd)
 			    
 			    #upper range outside of +937.5 MHz
 			    lo_freq = cen_freq + measures.Frequency(937.5e6, measures.FrequencyUnits.HERTZ)
 			    hi_freq = cen_freq + bandwidth / 2.0
-			    minchan, maxchan = spw.channel_range(lo_freq, hi_freq)
-			    cmd = '{0}:{1}~{2}'.format(spw.id, minchan, maxchan)
+			    minchan_hi, maxchan_hi = spw.channel_range(lo_freq, hi_freq)
+			    
+			    #Append to flag list
+			    #Clean up order of channel ranges high to low
+			    chan1 = '{0}~{1}'.format(minchan_lo, maxchan_lo)
+			    chan2 = '{0}~{1}'.format(minchan_hi, maxchan_hi)
+			    chans = [chan1, chan2]
+			    chans.sort()
+			    cmd = '{0}:{1};{2}'.format(spw.id, chans[0], chans[1])
 			    to_flag.append(cmd)
+
+                #Combine spw/channels, ie:
+                # 16:0~119,16:3960~4079,18:0~119,18:3960~4079,20:3960~4079,20:0~119,22:3960~4079,22:0~119
+                #  needs to be combined as:
+                # 16:0~119;3960~4079,18:0~119;3960~4079,20:0~119;3960~4079,22:0~119;3960~4079
+                        
 
 		return to_flag
 
