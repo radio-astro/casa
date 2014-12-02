@@ -515,7 +515,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		// Look for a version information in the schemaVersion of the XML
 		//
 		xmlDoc *doc;
-		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+		doc = xmlReadMemory(tableInXML.data(), tableInXML.size(), "XMLTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
 		if ( doc == NULL )
 			throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Polarization");
 		
@@ -710,7 +710,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
     //
     string xmlHeader = mimeMsg.substr(loc0, loc1-loc0);
     xmlDoc *doc;
-    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
     if ( doc == NULL ) 
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Polarization");
     
@@ -961,7 +961,7 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 	// We have the xmlHeader , let's parse it.
 	//
 	xmlDoc *doc;
-    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS);
+    doc = xmlReadMemory(xmlHeader.data(), xmlHeader.size(), "BinaryTableHeader.xml", NULL, XML_PARSE_NOBLANKS|XML_PARSE_HUGE);
     if ( doc == NULL ) 
       throw ConversionException("Failed to parse the xmlHeader into a DOM structure.", "Polarization");
     
