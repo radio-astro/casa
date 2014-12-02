@@ -1732,6 +1732,16 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
                    stats = image.statistics(robust=False)
                    info_dict[(field,spw,pol,'image rms')] = stats.get('rms')[0]
 
+                   summary = image.summary()
+                   nchan = summary['shape'][3]
+                   width = casatools.quanta.quantity(summary['incr'][3],
+                     summary['axisunits'][3])
+                   width = casatools.quanta.convert(width, 'MHz')
+                   width = casatools.quanta.tos(width, 2)
+
+                   info_dict[(field,spw,pol,'nchan')] = nchan
+                   info_dict[(field,spw,pol,'width')] = width
+
                 with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
                    stats = image.statistics(robust=False)
                    info_dict[(field,spw,pol,'residual rms')] = stats.get('rms')[0]
