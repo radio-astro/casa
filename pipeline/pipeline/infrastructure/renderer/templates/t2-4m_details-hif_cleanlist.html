@@ -58,43 +58,55 @@ def get_plot(plots, field, spw, i, colname):
                                 <td rowspan="2">${pol}</td>
                                 <td>
                                     <table>
-                                    <thead>
-                                        <tr>
-                                            <th>frequency</th>
-                                            <th>beam major axis</th>
-                                            <th>beam minor axis</th>
-                                            <th>beam p.a.</th> 
-                                            <th>image maximum </th>
-                                            <th>image rms</th>
-                                        </tr>
-                                    </thead>
                                     <tbody>
                                         <tr>
+                                            <th>frequency</th>
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>beam</th>
                                 %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)}</td>
+                                    <%
+                                    beam_major = casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)
+                                    beam_major = beam_major.replace('arcsec', '')
+                                    %>
+                                            <td>${beam_major}x${
+                                            casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
-                                %if info_dict.get((field,str(spw),pol,'beam minor')) is not None:
-                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
+                                        </tr>
+                                        <tr>
+                                            <th>beam p.a.</th> 
                                 %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
                                             <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
+                                        </tr>
+                                        <tr>
+                                            <th>image maximum </th>
                                 %if info_dict.get((field,str(spw),pol,'max')) is not None:
                                             <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'max')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
-                                %if info_dict.get((field,str(spw),pol,'image rms')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'image rms')],
+                                        </tr>
+                                        <tr>
+                                            <th>residual rms</th>
+                                %if info_dict.get((field,str(spw),pol,'residual rms')) is not None:
+                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'residual rms')],
                                                 info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                                        </tr>
+                                        <tr>
+                                            <th>channels</th>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                            <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
+                                                info_dict[(field,str(spw),pol,'width')])}</td>
                                 %else:
                                             <td>-</td>
                                 %endif
