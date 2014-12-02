@@ -285,7 +285,7 @@ class TimeVsAntennaPlotRenderer(basetemplates.JsonPlotRenderer):
 
         vis = os.path.basename(result.inputs['vis'])
         title = 'Time vs Antenna plots for %s' % vis
-        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
+        outfile = filenamer.sanitize('%s-time_vs_ant-%s.html' % (vis, component))
 
         stage = 'stage%s' % result.stage_number
         dirname = os.path.join(context.report_dir, stage)
@@ -312,12 +312,13 @@ class ImageDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
 
         x_axis = plots[0].x_axis
         y_axis = plots[0].y_axis
-        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
 
         vis = os.path.basename(result.inputs['vis'])
-        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
-        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
+        outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
+        outfile = filenamer.sanitize(outfile)
 
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
+        title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
 
         super(ImageDisplayPlotRenderer, self).__init__(
@@ -340,11 +341,13 @@ class SliceDisplayPlotRenderer(basetemplates.JsonPlotRenderer):
 
         x_axis = plots[0].x_axis
         y_axis = plots[0].y_axis
-        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
 
         vis = os.path.basename(result.inputs['vis'])
+        outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
+        outfile = filenamer.sanitize(outfile)
+        
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
         title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
-        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))        
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
 
         template = std_templates[component]
@@ -397,11 +400,13 @@ class TsysSpectraPlotRenderer(basetemplates.JsonPlotRenderer):
 
         x_axis = plots[0].x_axis
         y_axis = plots[0].y_axis
-        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
-        
+
         vis = os.path.basename(result.inputs['vis'])
+        outfile = '%s-%s_vs_%s-%s.html' % (vis, y_axis, x_axis, component)
+        outfile = filenamer.sanitize(outfile)
+        
+        y_axis = y_axis.replace('Tsys', 'T<sub>sys</sub>')
         title = '%s vs %s plots for %s' % (y_axis, x_axis, vis)
-        outfile = filenamer.sanitize('%s-%s.html' % (vis, component))
         self.shorttitle = '%s vs %s' % (y_axis, x_axis)
 
         template = extra_templates[component]
