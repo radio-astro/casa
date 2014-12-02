@@ -244,7 +244,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
     def _generate_storage_for_baselined(self, context, reduction_group):
         for antenna in xrange(len(context.observing_run)):
-            reference = context.observing_run[antenna].name
+#             reference = context.observing_run[antenna].name
+            reference = context.observing_run[antenna].baseline_source
 #             storage = context.observing_run[antenna].baselined_name
             storage = self._get_dummy_name(context, antenna)
             if not os.path.exists(storage):
