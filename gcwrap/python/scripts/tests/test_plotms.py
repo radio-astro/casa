@@ -1212,9 +1212,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           plotfile = self.plotfile_jpg, exprange='all')
         self.assertTrue( self.res )
         self._checkPlotFile( 95000, self.plotfile_jpg1 )
-        self._checkPlotFile( 95000, self.plotfile_jpg2 )
-        self._checkPlotFile( 94000, self.plotfile_jpg3 )
-        self._checkPlotFile( 95000, self.plotfile_jpg4 )
+        self._checkPlotFile( 92000, self.plotfile_jpg2 )
+        self._checkPlotFile( 91000, self.plotfile_jpg3 )
+        self._checkPlotFile( 92000, self.plotfile_jpg4 )
         print
                 
         
@@ -1285,9 +1285,9 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
                           plotfile = self.plotfile_jpg, exprange='all')
         self.assertTrue( self.res )
-        self._checkPlotFile( 130000, self.plotfile_jpg1 )
-        self._checkPlotFile( 130000, self.plotfile_jpg2 )
-        self._checkPlotFile( 130000, self.plotfile_jpg3 )
+        self._checkPlotFile( 125000, self.plotfile_jpg1 )
+        self._checkPlotFile( 125000, self.plotfile_jpg2 )
+        self._checkPlotFile( 125000, self.plotfile_jpg3 )
         fileCount = self._getFileCount( self.outputDir, "testPlot044_" )
         self.assertTrue( fileCount == 3 )
         print 
@@ -1312,7 +1312,7 @@ minorstyle="",minorcolor="D0D0D0",plotfile=self.plotFile2,expformat="", highres=
                           showgui=False,iteraxis='antenna',clearplots=True,avgantenna=True,
                           plotfile = self.plotfile_jpg, exprange='all')
         self.assertTrue( self.res )
-        self._checkPlotFile( 70000, self.plotfile_jpg1 )
+        self._checkPlotFile( 69000, self.plotfile_jpg1 )
         fileCount = self._getFileCount( self.outputDir, "testPlot045_" )
         self.assertTrue( fileCount == 1 )
         print 
