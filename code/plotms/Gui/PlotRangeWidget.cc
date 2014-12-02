@@ -258,7 +258,7 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
     
     stackedWidget->setCurrentIndex(isDate ? 1 : 0);
     custom->setChecked(isCustom);
-    
+   
     bool changed = isDate != this->isDate() || isCustom != this->isCustom();
     if(!changed) {
         prange_t range = getRange();

@@ -657,6 +657,25 @@ String PlotMSCacheBase::getTimeBounds( int iterValue ){
 	return formattedTime;
 }
 
+pair<Double,Double> PlotMSCacheBase::getTimeBounds() const {
+	pair<Double,Double> timeBounds;
+	timeBounds.first = timeBounds.second = 0.0;
+	int dataCount = getDataCount();
+	for ( int i = 0; i < dataCount; i++ ){
+		if (PMS::axis(currentY_[i]) == "Time") {
+			timeBounds.first = yminG_;
+			timeBounds.second = ymaxG_;
+			break;
+		}
+		else if (PMS::axis(currentX_[i]) == "Time") {
+			timeBounds.first = xminG_;
+			timeBounds.second = xmaxG_;
+			break;
+		}
+	}
+	return timeBounds;
+}
+
 bool PlotMSCacheBase::isIndexerInitialized( PMS::Axis iteraxis, Bool globalXRange,
 		Bool globalYRange, int dataIndex ) const {
 	bool initialized = true;

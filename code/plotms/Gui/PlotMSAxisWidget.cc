@@ -185,6 +185,10 @@ prange_t PlotMSAxisWidget::range() const {
     return itsRangeWidget_->getRange();
 }
 
+void PlotMSAxisWidget::setRange(bool isDate, double from, double to) {
+	itsRangeWidget_->setRange(isDate, false, from, to); 
+}
+
 void PlotMSAxisWidget::setAttachAxis(PlotAxis attachAxis ){
 	switch(attachAxis) {
 	case X_BOTTOM:
@@ -236,8 +240,8 @@ void PlotMSAxisWidget::axisChanged(const QString& value) {
   dataChooser->setVisible( dataAxis );
 
   // Revise the range widget to zero
-  itsRangeWidget_->setRange(PMS::axisType(currAxis) == PMS::TTIME, 
-			    false,0,0);
+  //itsRangeWidget_->setRange(PMS::axisType(currAxis) == PMS::TTIME, 
+  //			    false,0,0);
   emit axisIdentifierChanged(this);
 }
 

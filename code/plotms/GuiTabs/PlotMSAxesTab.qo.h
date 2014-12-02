@@ -97,6 +97,9 @@ private:
 	//Relabel based on the new y-axis index.
 	void setYAxisLabel( PlotMSAxisWidget* yWidget, int index );
 
+	// Get cache data for manual range
+	void setRangeFromCache(bool foundInCache, bool isDate);
+
     // Widgets for the x axis and y axis, respectively.
     PlotMSAxisWidget* itsXWidget_;
     QList<PlotMSAxisWidget*> itsYWidgets_;

@@ -71,6 +71,9 @@ public:
     bool rangeCustom() const;
     prange_t range() const;
     // </group>
+
+    // set default custom range according to chosen MS
+    void setRange(bool isDate, double from, double to);
     
     // Sets the displayed value to the given.
     void setValue(PMS::Axis axis, PMS::DataColumn data, PlotAxis attachAxis,

@@ -231,6 +231,8 @@ public:
 
   //Return a formatted string for time iteration plots giving the time range.
   String getTimeBounds( int iterValue );
+  // Return the time as doubles 
+  pair<Double,Double> getTimeBounds() const;
 
 protected:
     

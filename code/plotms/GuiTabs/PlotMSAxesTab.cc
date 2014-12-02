@@ -40,7 +40,7 @@ namespace casa {
 PlotMSAxesTab::PlotMSAxesTab(PlotMSPlotTab* plotTab, PlotMSPlotter* parent) :
         PlotMSPlotSubtab(plotTab, parent) {
     setupUi(this);
-    
+
     // Setup x-axis widget.
     itsXWidget_ = new PlotMSAxisWidget(PMS::DEFAULT_XAXIS, X_BOTTOM | X_TOP);
     itsXWidget_->axisLabel()->setText("X Axis:");
@@ -200,7 +200,6 @@ void PlotMSAxesTab::getValue(PlotMSPlotParameters& params) const {
     //the x-axis properties here.
     int yAxisCount = itsYWidgets_.size();
 
-
     PMS::Axis xAxis = itsXWidget_->axis();
     c->resize( yAxisCount );
     a->resize( yAxisCount );
@@ -256,7 +255,7 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
     
     // shouldn't happen
     if(d == NULL || c == NULL || c2 == NULL || a == NULL || a2 == NULL) return;
-    
+
     // Update "in cache" for widgets.
     vector<pair<PMS::Axis,unsigned int> > laxes = plot.cache().loadedAxes();
     bool found = false;
@@ -267,7 +266,7 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
         }
     }
     itsXWidget_->setInCache(found);
-    
+   
     int yAxisCount = itsYWidgets_.size();
     for ( int j = 0; j < yAxisCount; j++ ){
     	found = false;
@@ -315,6 +314,36 @@ void PlotMSAxesTab::update(const PlotMSPlot& plot) {
                 (a->yRangeSet(i) && a->yRange(i) != a2->yRange(i))));
     }
 
+    // If the user hasn't set a custom range, set defaults for time axis.
+    // For time axis, get bounds from cache; else use 0 for other axes types
+    pair<Double,Double> timebounds;
+    bool isDate;
+
+    if (!itsXWidget_->rangeCustom()) {
+    	isDate = (c2->xAxis() == PMS::TIME);
+    	if (isDate) {
+		timebounds = plot.cache().getTimeBounds();
+		itsXWidget_->setRange(isDate, timebounds.first, timebounds.second); 
+    	}
+    	else {
+		itsXWidget_->setRange(isDate, 0.0, 0.0);
+    	}
+    }
+
+    for (int i = 0; i < yAxisCount; i++ ){
+	if (!itsYWidgets_[i]->rangeCustom()) {
+    		PMS::Axis yData = c2->yAxis(i);
+    		isDate = (yData == PMS::TIME);
+    		if (isDate) {
+			timebounds = plot.cache().getTimeBounds();
+			itsYWidgets_[i]->setRange(isDate, timebounds.first, timebounds.second); 
+			break;
+    		}
+        	else {
+	    	itsYWidgets_[i]->setRange(isDate, 0.0, 0.0);
+        	}
+    	}
+    }
 }
 
 }
