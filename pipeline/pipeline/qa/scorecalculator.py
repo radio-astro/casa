@@ -594,11 +594,11 @@ def score_tsysspwmap (ms, unmappedspws):
         shortmsg = 'Tsys spw map is complete'
     else:
         nscispws = len([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
-	if nscispws <= 0:
-	    score = 0.0
-	else:
-	    score = float(nscispws - len (unmappedspws)) / float(nscispws)
-        longmsg = 'Tsys spw map is incomplete for %s science windows %s ' % (ms.basename, unmappedspws)
+        if nscispws <= 0:
+            score = 0.0
+        else:
+            score = float(nscispws - len (unmappedspws)) / float(nscispws)
+        longmsg = 'Tsys spw map is incomplete for %s science window%s ' % (ms.basename, utils.commafy(unmappedspws, False, 's'))
         shortmsg = 'Tsys spw map is incomplete'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)

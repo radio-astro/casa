@@ -1,12 +1,8 @@
 from __future__ import absolute_import
 import collections
-import json
 import os
 
-import numpy
-
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from pipeline.infrastructure import casa_tasks
@@ -27,8 +23,10 @@ class TsysSummaryChart(object):
         ms = context.observing_run.get_ms(self._vis)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spw_ids = [spw.id for spw in science_spws]
+        # check for 'spw is not tsys' so that we only have mapped Tsys windows,
+        # which have different IDs from the science windows they map to. 
         self._spwmap = dict((spw, tsys) for (spw, tsys) in enumerate(calto.spwmap)
-                            if spw in science_spw_ids)
+                            if spw in science_spw_ids and spw is not tsys)
 
         tsysmap = collections.defaultdict(list)
         for sci, tsys in self._spwmap.items():
@@ -108,6 +106,10 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
 
         spwmap = collections.defaultdict(list)
         for science_spw_id, tsys_spw_id in enumerate(calto.spwmap):
+            # unmapped science windows have a Tsys mapping equal to their
+            # window ID
+            if science_spw_id is tsys_spw_id:
+                continue
             if science_spw_id in science_spw_ids:
                 spwmap[tsys_spw_id].append(science_spw_id)                    
         self._tsys_map = dict((tsys_id, ','.join([str(i) for i in science_ids]))
@@ -131,7 +133,8 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
 
         wrappers = []
         for tsys_spw_id in self._figfile.keys():
-            science_spws = self._tsys_map[tsys_spw_id]
+            # some science windows may not have a Tsys window
+            science_spws =self._tsys_map.get(tsys_spw_id, 'N/A')
             for antenna_id, figfile in self._figfile[tsys_spw_id].items():
                 ant_name = self._antmap[antenna_id]
                 if os.path.exists(figfile):                    
