@@ -6640,6 +6640,441 @@ void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
 	table_p_->flush();
 }
 	 
+ASDM_DELAYMODELFIXEDPARAMETERS::ASDM_DELAYMODELFIXEDPARAMETERS() {
+  name_ = "ASDM_DELAYMODELFIXEDPARAMETERS";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset DelayModelFixedParameters table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("delayModelFixedParametersId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("delayModelVersion", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("execBlockId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("gaussConstant", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("newtonianConstant", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("gravity", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("earthFlattening", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("earthRadius", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("moonEarthMassRatio", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("ephemerisEpoch", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("earthTideLag", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("earthGM", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("moonGM", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("sunGM", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("loveNumberH", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("loveNumberL", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("precessionConstant", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("lightTime1AU", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("speedOfLight", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("delayModelFlags", "blabla"));
+  		  		
+}
+
+ASDM_DELAYMODELFIXEDPARAMETERS::~ASDM_DELAYMODELFIXEDPARAMETERS() {
+}
+
+const TableDesc& ASDM_DELAYMODELFIXEDPARAMETERS::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "DelayModelFixedParametersTable.h"
+#include "DelayModelFixedParametersRow.h"
+
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
+void ASDM_DELAYMODELFIXEDPARAMETERS::fill(const ASDM& asdm) {
+	vector<DelayModelFixedParametersRow*> rows = asdm.getDelayModelFixedParameters().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> delayModelFixedParametersId(*table_p_, "delayModelFixedParametersId");             
+  		
+  		
+    ScalarColumn<String> delayModelVersion(*table_p_, "delayModelVersion");             
+  		
+    ScalarColumn<String> execBlockId(*table_p_, "execBlockId");             
+  		
+  		
+    ScalarColumn<double> gaussConstant(*table_p_, "gaussConstant");             
+  		
+    ScalarColumn<double> newtonianConstant(*table_p_, "newtonianConstant");             
+  		
+    ScalarColumn<double> gravity(*table_p_, "gravity");             
+  		
+    ScalarColumn<double> earthFlattening(*table_p_, "earthFlattening");             
+  		
+    ScalarColumn<double> earthRadius(*table_p_, "earthRadius");             
+  		
+    ScalarColumn<double> moonEarthMassRatio(*table_p_, "moonEarthMassRatio");             
+  		
+    ScalarColumn<String> ephemerisEpoch(*table_p_, "ephemerisEpoch");             
+  		
+    ScalarColumn<double> earthTideLag(*table_p_, "earthTideLag");             
+  		
+    ScalarColumn<double> earthGM(*table_p_, "earthGM");             
+  		
+    ScalarColumn<double> moonGM(*table_p_, "moonGM");             
+  		
+    ScalarColumn<double> sunGM(*table_p_, "sunGM");             
+  		
+    ScalarColumn<double> loveNumberH(*table_p_, "loveNumberH");             
+  		
+    ScalarColumn<double> loveNumberL(*table_p_, "loveNumberL");             
+  		
+    ScalarColumn<double> precessionConstant(*table_p_, "precessionConstant");             
+  		
+    ScalarColumn<double> lightTime1AU(*table_p_, "lightTime1AU");             
+  		
+    ScalarColumn<double> speedOfLight(*table_p_, "speedOfLight");             
+  		
+    ScalarColumn<String> delayModelFlags(*table_p_, "delayModelFlags");             
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	delayModelFixedParametersId.put(rowIndex, rows.at(i)->getDelayModelFixedParametersId().toString());
+	
+
+		
+	
+	delayModelVersion.put(rowIndex, rows.at(i)->getDelayModelVersion());
+	
+
+	
+	execBlockId.put(rowIndex, rows.at(i)->getExecBlockId().toString());
+	
+
+		
+	
+	if (rows.at(i)->isGaussConstantExists())
+		gaussConstant.put(rowIndex, rows.at(i)->getGaussConstant().get());
+	
+
+	
+	if (rows.at(i)->isNewtonianConstantExists())
+		newtonianConstant.put(rowIndex, rows.at(i)->getNewtonianConstant());
+	
+
+	
+	if (rows.at(i)->isGravityExists())
+		gravity.put(rowIndex, rows.at(i)->getGravity());
+	
+
+	
+	if (rows.at(i)->isEarthFlatteningExists())
+		earthFlattening.put(rowIndex, rows.at(i)->getEarthFlattening());
+	
+
+	
+	if (rows.at(i)->isEarthRadiusExists())
+		earthRadius.put(rowIndex, rows.at(i)->getEarthRadius().get());
+	
+
+	
+	if (rows.at(i)->isMoonEarthMassRatioExists())
+		moonEarthMassRatio.put(rowIndex, rows.at(i)->getMoonEarthMassRatio());
+	
+
+	
+	if (rows.at(i)->isEphemerisEpochExists())
+		ephemerisEpoch.put(rowIndex, rows.at(i)->getEphemerisEpoch());
+	
+
+	
+	if (rows.at(i)->isEarthTideLagExists())
+		earthTideLag.put(rowIndex, rows.at(i)->getEarthTideLag());
+	
+
+	
+	if (rows.at(i)->isEarthGMExists())
+		earthGM.put(rowIndex, rows.at(i)->getEarthGM());
+	
+
+	
+	if (rows.at(i)->isMoonGMExists())
+		moonGM.put(rowIndex, rows.at(i)->getMoonGM());
+	
+
+	
+	if (rows.at(i)->isSunGMExists())
+		sunGM.put(rowIndex, rows.at(i)->getSunGM());
+	
+
+	
+	if (rows.at(i)->isLoveNumberHExists())
+		loveNumberH.put(rowIndex, rows.at(i)->getLoveNumberH());
+	
+
+	
+	if (rows.at(i)->isLoveNumberLExists())
+		loveNumberL.put(rowIndex, rows.at(i)->getLoveNumberL());
+	
+
+	
+	if (rows.at(i)->isPrecessionConstantExists())
+		precessionConstant.put(rowIndex, rows.at(i)->getPrecessionConstant().get());
+	
+
+	
+	if (rows.at(i)->isLightTime1AUExists())
+		lightTime1AU.put(rowIndex, rows.at(i)->getLightTime1AU());
+	
+
+	
+	if (rows.at(i)->isSpeedOfLightExists())
+		speedOfLight.put(rowIndex, rows.at(i)->getSpeedOfLight().get());
+	
+
+	
+	if (rows.at(i)->isDelayModelFlagsExists())
+		delayModelFlags.put(rowIndex, rows.at(i)->getDelayModelFlags());
+	
+
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
+ASDM_DELAYMODELVARIABLEPARAMETERS::ASDM_DELAYMODELVARIABLEPARAMETERS() {
+  name_ = "ASDM_DELAYMODELVARIABLEPARAMETERS";
+  tableDesc_.comment() = "The verbatim copy of the ASDM's dataset DelayModelVariableParameters table";
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("delayModelVariableParametersId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("time", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("ut1_utc", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("iat_utc", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("timeType", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("gstAtUt0", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("earthRotationRate", "blabla"));
+  		
+  tableDesc_.addColumn(ArrayColumnDesc<double>("polarOffsets", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("polarOffsetsType", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<String>("delayModelFixedParametersId", "blabla"));
+  		
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("nutationInLongitude", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("nutationInLongitudeRate", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("nutationInObliquity", "blabla"));
+  		
+  tableDesc_.addColumn(ScalarColumnDesc<double>("nutationInObliquityRate", "blabla"));
+  		  		
+}
+
+ASDM_DELAYMODELVARIABLEPARAMETERS::~ASDM_DELAYMODELVARIABLEPARAMETERS() {
+}
+
+const TableDesc& ASDM_DELAYMODELVARIABLEPARAMETERS::tableDesc() const {
+  return tableDesc_;
+}
+
+#include "DelayModelVariableParametersTable.h"
+#include "DelayModelVariableParametersRow.h"
+
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DifferenceTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DifferenceTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
+void ASDM_DELAYMODELVARIABLEPARAMETERS::fill(const ASDM& asdm) {
+	vector<DelayModelVariableParametersRow*> rows = asdm.getDelayModelVariableParameters().get();
+	unsigned int rowIndex = table_p_->nrow();
+	table_p_->addRow(rows.size());
+  		
+    ScalarColumn<String> delayModelVariableParametersId(*table_p_, "delayModelVariableParametersId");             
+  		
+  		
+    ScalarColumn<double> time(*table_p_, "time");             
+  		
+    ScalarColumn<double> ut1_utc(*table_p_, "ut1_utc");             
+  		
+    ScalarColumn<double> iat_utc(*table_p_, "iat_utc");             
+  		
+    ScalarColumn<String> timeType(*table_p_, "timeType");             
+  		
+    ScalarColumn<double> gstAtUt0(*table_p_, "gstAtUt0");             
+  		
+    ScalarColumn<double> earthRotationRate(*table_p_, "earthRotationRate");             
+  		
+    ArrayColumn<double> polarOffsets(*table_p_, "polarOffsets");             
+  		
+    ScalarColumn<String> polarOffsetsType(*table_p_, "polarOffsetsType");             
+  		
+    ScalarColumn<String> delayModelFixedParametersId(*table_p_, "delayModelFixedParametersId");             
+  		
+  		
+    ScalarColumn<double> nutationInLongitude(*table_p_, "nutationInLongitude");             
+  		
+    ScalarColumn<double> nutationInLongitudeRate(*table_p_, "nutationInLongitudeRate");             
+  		
+    ScalarColumn<double> nutationInObliquity(*table_p_, "nutationInObliquity");             
+  		
+    ScalarColumn<double> nutationInObliquityRate(*table_p_, "nutationInObliquityRate");             
+  		  	
+
+	for (unsigned int i = 0; i < rows.size(); i++) {
+		
+	
+	delayModelVariableParametersId.put(rowIndex, rows.at(i)->getDelayModelVariableParametersId().toString());
+	
+
+		
+	
+	time.put(rowIndex, rows.at(i)->getTime().get()/(1.0e9));
+	
+
+	
+	ut1_utc.put(rowIndex, rows.at(i)->getUt1_utc());
+	
+
+	
+	iat_utc.put(rowIndex, rows.at(i)->getIat_utc());
+	
+
+	
+	timeType.put(rowIndex, CDifferenceType::name(rows.at(i)->getTimeType()));
+	
+
+	
+	gstAtUt0.put(rowIndex, rows.at(i)->getGstAtUt0().get());
+	
+
+	
+	earthRotationRate.put(rowIndex, rows.at(i)->getEarthRotationRate().get());
+	
+
+	
+	polarOffsets.put(rowIndex, basic2CASA1D<double,double>(rows.at(i)->getPolarOffsets()));
+	
+
+	
+	polarOffsetsType.put(rowIndex, CDifferenceType::name(rows.at(i)->getPolarOffsetsType()));
+	
+
+	
+	delayModelFixedParametersId.put(rowIndex, rows.at(i)->getDelayModelFixedParametersId().toString());
+	
+
+		
+	
+	if (rows.at(i)->isNutationInLongitudeExists())
+		nutationInLongitude.put(rowIndex, rows.at(i)->getNutationInLongitude().get());
+	
+
+	
+	if (rows.at(i)->isNutationInLongitudeRateExists())
+		nutationInLongitudeRate.put(rowIndex, rows.at(i)->getNutationInLongitudeRate().get());
+	
+
+	
+	if (rows.at(i)->isNutationInObliquityExists())
+		nutationInObliquity.put(rowIndex, rows.at(i)->getNutationInObliquity().get());
+	
+
+	
+	if (rows.at(i)->isNutationInObliquityRateExists())
+		nutationInObliquityRate.put(rowIndex, rows.at(i)->getNutationInObliquityRate().get());
+	
+
+		rowIndex++;		
+	}
+	table_p_->flush();
+}
+	 
 ASDM_DOPPLER::ASDM_DOPPLER() {
   name_ = "ASDM_DOPPLER";
   tableDesc_.comment() = "The verbatim copy of the ASDM's dataset Doppler table";

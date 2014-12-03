@@ -59,6 +59,8 @@ const TagType* TagType::Antenna = new TagType("Antenna") ;
 	
 
 	
+
+	
 const TagType* TagType::CalData = new TagType("CalData") ;
 	
 
@@ -109,11 +111,17 @@ const TagType* TagType::DataDescription = new TagType("DataDescription") ;
 	
 
 	
-const TagType* TagType::Doppler = new TagType("Doppler") ;
+const TagType* TagType::DelayModelFixedParameters = new TagType("DelayModelFixedParameters") ;
 	
 
 	
-const TagType* TagType::Ephemeris = new TagType("Ephemeris") ;
+const TagType* TagType::DelayModelVariableParameters = new TagType("DelayModelVariableParameters") ;
+	
+
+	
+const TagType* TagType::Doppler = new TagType("Doppler") ;
+	
+
 	
 
 	
@@ -248,6 +256,8 @@ map<string, const TagType*> fillName2TagType_m() {
 	
 
 	
+
+	
 	result["CalData"] = TagType::CalData ;
 	
 
@@ -298,11 +308,17 @@ map<string, const TagType*> fillName2TagType_m() {
 	
 
 	
-	result["Doppler"] = TagType::Doppler ;
+	result["DelayModelFixedParameters"] = TagType::DelayModelFixedParameters ;
 	
 
 	
-	result["Ephemeris"] = TagType::Ephemeris ;
+	result["DelayModelVariableParameters"] = TagType::DelayModelVariableParameters ;
+	
+
+	
+	result["Doppler"] = TagType::Doppler ;
+	
+
 	
 
 	

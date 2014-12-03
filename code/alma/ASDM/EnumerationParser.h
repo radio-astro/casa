@@ -201,6 +201,9 @@
  #include "CWeightType.h"
  using namespace WeightTypeMod;
  
+ #include "CDifferenceType.h"
+ using namespace DifferenceTypeMod;
+ 
  #include "CCalibrationMode.h"
  using namespace CalibrationModeMod;
  
@@ -233,6 +236,9 @@
  
  #include "CDopplerTrackingMode.h"
  using namespace DopplerTrackingModeMod;
+ 
+ #include "CSynthProf.h"
+ using namespace SynthProfMod;
  
  
  namespace asdm {
@@ -4086,6 +4092,77 @@
 	 * with name 'elementName' and a content equal to 
 	 * the string associated to 'e'
 	 * @param elementName a string.
+	 * @param e  DifferenceTypeMod::DifferenceType value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, DifferenceTypeMod::DifferenceType e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<DifferenceTypeMod::DifferenceType>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<DifferenceTypeMod::DifferenceType>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<DifferenceTypeMod::DifferenceType> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<DifferenceTypeMod::DifferenceType> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<DifferenceTypeMod::DifferenceType> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<DifferenceTypeMod::DifferenceType> > >& vvv_e); 
+
+	/**
+	 * Returns a DifferenceTypeMod::DifferenceType from a string.
+	 * @param xml the string to be converted into a DifferenceTypeMod::DifferenceType
+	 * @return a DifferenceTypeMod::DifferenceType.
+	 */
+	static DifferenceTypeMod::DifferenceType getDifferenceType(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<DifferenceTypeMod::DifferenceType> from a string.
+	 * @param xml the string to be converted into a vector<DifferenceTypeMod::DifferenceType>
+	 * @return a vector<DifferenceTypeMod::DifferenceType>.
+	 */
+	static vector<DifferenceTypeMod::DifferenceType> getDifferenceType1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<DifferenceTypeMod::DifferenceType> > from a string.
+	 * @param xml the string to be converted into a vector<vector<DifferenceTypeMod::DifferenceType> >
+	 * @return a vector<vector<DifferenceTypeMod::DifferenceType> >.
+	 */
+	static vector<vector<DifferenceTypeMod::DifferenceType> > getDifferenceType2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<DifferenceTypeMod::DifferenceType> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<DifferenceTypeMod::DifferenceType> > >
+	 * @return a vector<vector<vector<DifferenceTypeMod::DifferenceType> > >.
+	 */
+	static vector<vector<vector<DifferenceTypeMod::DifferenceType> > > getDifferenceType3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
 	 * @param e  CalibrationModeMod::CalibrationMode value.
 	 * @return a string.
 	 */
@@ -4861,6 +4938,77 @@
 	 * @return a vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > >.
 	 */
 	static vector<vector<vector<DopplerTrackingModeMod::DopplerTrackingMode> > > getDopplerTrackingMode3D(const string &name, const string &tableName, const string &xmlDoc);								
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and a content equal to 
+	 * the string associated to 'e'
+	 * @param elementName a string.
+	 * @param e  SynthProfMod::SynthProf value.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, SynthProfMod::SynthProf e);
+	 
+	 
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'v_e' followed by sequence of strings associated to each element of 'v_e'
+	 * @param elementName a string.
+	 * @param v_e  a const reference to a vector<SynthProfMod::SynthProf>.
+	 * @return a string.
+	 */
+	 static string toXML(const string& elementName, const vector<SynthProfMod::SynthProf>& v_e);
+	
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vv_e' followed by sequence of strings associated to each element of 'vv_e'.
+	 * @param elementName a string.
+	 * @param vv_e  a const reference to a vector<vector<SynthProfMod::SynthProf> >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<SynthProfMod::SynthProf> >& vv_e); 
+	 
+
+
+	/**
+	 * Returns a string which represents a XML element 
+	 * with name 'elementName' and of content equal to 
+	 * the number of elements of 'vvv_e' followed by sequence of strings associated to each element of 'vvv_e'.
+	 * @param elementName a string.
+	 * @param vvv_e  a const reference to a vector<vector<vector<SynthProfMod::SynthProf> > >.
+	 * @return a string.
+	 */	
+	 static string toXML(const string& elementName, const vector<vector<vector<SynthProfMod::SynthProf> > >& vvv_e); 
+
+	/**
+	 * Returns a SynthProfMod::SynthProf from a string.
+	 * @param xml the string to be converted into a SynthProfMod::SynthProf
+	 * @return a SynthProfMod::SynthProf.
+	 */
+	static SynthProfMod::SynthProf getSynthProf(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<SynthProfMod::SynthProf> from a string.
+	 * @param xml the string to be converted into a vector<SynthProfMod::SynthProf>
+	 * @return a vector<SynthProfMod::SynthProf>.
+	 */
+	static vector<SynthProfMod::SynthProf> getSynthProf1D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<SynthProfMod::SynthProf> > from a string.
+	 * @param xml the string to be converted into a vector<vector<SynthProfMod::SynthProf> >
+	 * @return a vector<vector<SynthProfMod::SynthProf> >.
+	 */
+	static vector<vector<SynthProfMod::SynthProf> > getSynthProf2D(const string &name, const string &tableName, const string &xmlDoc);
+	
+	/**
+	 * Returns a vector<vector<vector<SynthProfMod::SynthProf> > > from a string.
+	 * @param xml the string to be converted into a vector<vector<vector<SynthProfMod::SynthProf> > >
+	 * @return a vector<vector<vector<SynthProfMod::SynthProf> > >.
+	 */
+	static vector<vector<vector<SynthProfMod::SynthProf> > > getSynthProf3D(const string &name, const string &tableName, const string &xmlDoc);								
 
 	
 	};

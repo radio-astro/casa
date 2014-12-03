@@ -145,6 +145,12 @@ class DataDescriptionTable;
 //class asdm::DelayModelTable;
 class DelayModelTable;
 
+//class asdm::DelayModelFixedParametersTable;
+class DelayModelFixedParametersTable;
+
+//class asdm::DelayModelVariableParametersTable;
+class DelayModelVariableParametersTable;
+
 //class asdm::DopplerTable;
 class DopplerTable;
 
@@ -443,6 +449,18 @@ public:
 	 * @return The table DelayModel as a DelayModelTable.
 	 */
 	DelayModelTable & getDelayModel () const;
+
+	/**
+	 * Get the table DelayModelFixedParameters.
+	 * @return The table DelayModelFixedParameters as a DelayModelFixedParametersTable.
+	 */
+	DelayModelFixedParametersTable & getDelayModelFixedParameters () const;
+
+	/**
+	 * Get the table DelayModelVariableParameters.
+	 * @return The table DelayModelVariableParameters as a DelayModelVariableParametersTable.
+	 */
+	DelayModelVariableParametersTable & getDelayModelVariableParameters () const;
 
 	/**
 	 * Get the table Doppler.
@@ -1125,6 +1143,16 @@ private:
 	 * The table DelayModel
 	 */
 	DelayModelTable * delayModel;
+
+	/**
+	 * The table DelayModelFixedParameters
+	 */
+	DelayModelFixedParametersTable * delayModelFixedParameters;
+
+	/**
+	 * The table DelayModelVariableParameters
+	 */
+	DelayModelVariableParametersTable * delayModelVariableParameters;
 
 	/**
 	 * The table Doppler
