@@ -23,7 +23,6 @@ class RawflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, spw=None,
       intent=None,
       metric=None, flag_hilo=None, fhl_limit=None, fhl_minsample=None,
-      flag_tmf=None, tmf_axis=None, tmf_excess_limit=None,
       flag_bad_quadrant=None, fbq_hilo_limit=None,
       fbq_antenna_frac_limit=None, fbq_baseline_frac_limit=None,
       niter=None):
@@ -118,7 +117,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @fhl_limit.setter
     def fhl_limit(self, value):
         if value is None:
-            value = 10.0
+            value = 20.0
         self._fhl_limit = value
 
     @property
@@ -130,36 +129,6 @@ class RawflagchansInputs(basetask.StandardInputs):
         if value is None:
             value = 5
         self._fhl_minsample = value
-
-    @property
-    def flag_tmf(self):
-        if self._flag_tmf is None:
-            return True
-        return self._flag_tmf
-
-    @flag_tmf.setter
-    def flag_tmf(self, value):
-        self._flag_tmf = value
-
-    @property
-    def tmf_axis(self):
-        if self._tmf_axis is None:
-            return 'Baseline'
-        return self._tmf_axis
-
-    @tmf_axis.setter
-    def tmf_axis(self, value):
-        self._tmf_axis = value
-
-    @property
-    def tmf_excess_limit(self):
-        if self._tmf_excess_limit is None:
-            return 2
-        return self._tmf_excess_limit
-
-    @tmf_excess_limit.setter
-    def tmf_excess_limit(self, value):
-        self._tmf_excess_limit = value
 
     @property
     def flag_bad_quadrant(self):
@@ -178,7 +147,7 @@ class RawflagchansInputs(basetask.StandardInputs):
     @fbq_hilo_limit.setter
     def fbq_hilo_limit(self, value):
         if value is None:
-            value = 10.0
+            value = 8.0
         self._fbq_hilo_limit = value
 
     @property
@@ -198,17 +167,17 @@ class RawflagchansInputs(basetask.StandardInputs):
     @fbq_baseline_frac_limit.setter
     def fbq_baseline_frac_limit(self, value):
         if value is None:
-            value = 0.2
+            value = 1.0
         self._fbq_baseline_frac_limit = value
 
     @property
     def niter(self):
-        if self._niter is None:
-            return 2
         return self._niter
 
     @niter.setter
     def niter(self, value):
+        if value is None:
+            value = 1
         self._niter = value
 
 
@@ -236,9 +205,6 @@ class Rawflagchans(basetask.StandardTaskTemplate):
         rules = viewflaggers.MatrixFlagger.make_flag_rules (
           flag_hilo=inputs.flag_hilo, fhl_limit=inputs.fhl_limit,
           fhl_minsample=inputs.fhl_minsample,
-#          flag_tmf1=inputs.flag_tmf, tmf1_axis='Antenna2',
-          flag_tmf1=inputs.flag_tmf, tmf1_axis=inputs.tmf_axis,
-          tmf1_limit=1.0, tmf1_excess_limit=inputs.tmf_excess_limit,
           flag_bad_quadrant=inputs.flag_bad_quadrant,
           fbq_hilo_limit=inputs.fbq_hilo_limit,
           fbq_antenna_frac_limit=inputs.fbq_antenna_frac_limit,
