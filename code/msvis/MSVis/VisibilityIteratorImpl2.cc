@@ -2035,17 +2035,19 @@ VisibilityIteratorImpl2::setTileCache ()
     uInt startrow = msIter_p->table ().rowNumbers ()(0); // Get the first row number for this DDID.
 
     vector<String> columns;
+    columns.push_back (MS::columnName (MS::DATA));  // complex
     columns.push_back (MS::columnName (MS::CORRECTED_DATA));  // complex
     columns.push_back (MS::columnName (MS::MODEL_DATA));      // complex
     columns.push_back (MS::columnName (MS::FLAG));            // boolean
     columns.push_back (MS::columnName (MS::WEIGHT_SPECTRUM)); // float
+    columns.push_back (MS::columnName (MS::SIGMA_SPECTRUM)); // float
     columns.push_back (MS::columnName (MS::WEIGHT));          // float
     columns.push_back (MS::columnName (MS::SIGMA));           // float
     columns.push_back (MS::columnName (MS::UVW));             // double
 
     if (tileCacheIsSet_p.nelements () != columns.size()) {
 
-        tileCacheIsSet_p.resize (8);
+        tileCacheIsSet_p.resize (columns.size());
         tileCacheIsSet_p.set (False);
     }
 
@@ -2064,7 +2066,7 @@ VisibilityIteratorImpl2::setTileCache ()
             if (theMs.tableInfo ().subType () == "CONCATENATED" &&
                 msIterAtOrigin_p &&
                 ! tileCacheIsSet_p[k]) {
-
+#warning "*** VII2::setTileCache needs to reexamine the handling of concatenated tables."
                 Block<String> refTables = theMs.getPartNames (True);
 
                 for (uInt kk = 0; kk < refTables.nelements (); ++kk) {
@@ -2081,34 +2083,42 @@ VisibilityIteratorImpl2::setTileCache ()
                     }
 
                     ROTiledStManAccessor tacc (elms, columns[k], True);
-                    tacc.setCacheSize (0, 1);
+
+		    const IPosition tileShape(tacc.tileShape(startrow));
+		    const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+
+		    float nTiles0 = hypercubeShape [0] / (float) (tileShape [0]);
+		    float nTiles1 = hypercubeShape [1] / (float) (tileShape [1]);
+
+		    uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1));
+
+		    tacc.clearCaches (); //One tile only for now ...seems to work faster
+		    tacc.setCacheSize (startrow, cacheSize);
+
                     tileCacheIsSet_p[k] = True;
                 }
             }
             else {
 
+                // For the big columns always set the tile cache so that it
+                // holds enough tiles to cover a complete row.  This could be
+                // optimized further (to reduce memory footprint but not I/O) by basing the
+                // cache size on the number of tiles needed to span the selected
+                // channels.  
+
                 ROTiledStManAccessor tacc (theMs, columns[k], True);
+
+                const IPosition tileShape(tacc.tileShape(startrow));
+                const IPosition hypercubeShape(tacc.hypercubeShape(startrow));
+
+                float nTiles0 = hypercubeShape [0] / (float) (tileShape [0]);
+                float nTiles1 = hypercubeShape [1] / (float) (tileShape [1]);
+
+                uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1));
+
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
+                tacc.setCacheSize (startrow, cacheSize);
 
-                Bool setCache = True;
-
-                for (uInt jj = 0 ; jj <  tacc.nhypercubes (); ++jj) {
-                    if (tacc.getBucketSize (jj) == 0) {
-                        setCache = False;
-                    }
-                }
-
-                /// If some bucketSize is 0...there is trouble in setting cache
-                /// but if slicer is used it gushes anyways if one does not set cache
-                /// need to fix the 0 bucket size in the filler anyways...then this is not needed
-
-                if (setCache) {
-                    if (tacc.nhypercubes () == 1) {
-                        tacc.setCacheSize (0, 1);
-                    } else {
-                        tacc.setCacheSize (startrow, 1);
-                    }
-                }
             }
         }
         catch (AipsError x) {
