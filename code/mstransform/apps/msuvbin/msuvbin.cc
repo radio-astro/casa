@@ -41,6 +41,7 @@
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <mstransform/MSTransform/MSUVBin.h>
 #include <tables/Tables/TableIter.h>
+#include <tables/Tables/TableColumn.h>
 #include <casa/Inputs/Input.h>
 #include <casa/namespace.h>
 
@@ -48,7 +49,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2014/08/06 by CM MLLN, HTST");
+  inp.version("2014/12/02 by CM MLLN, HTST");
   // Title of CM  i.e Code Monkey is
   //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
   inp.create("vis", "ngc5921.ms", "MS to be binned");
@@ -64,6 +65,7 @@ int main(int argc, char **argv) {
   inp.create("nchan","1", "number of output channel");
   inp.create("fstart", "1.420GHz", "frequency of first channel in LSRK");
   inp.create("fstep", "1KHz", "channel width");
+  inp.create("memfrac", "0.5", "Fraction of ram to try to use");
   inp.create("fdb", "False", "Force to go through disk and not use ram");
   inp.readArguments(argc, argv);
   String msname=inp.getString("vis");
@@ -110,10 +112,11 @@ int main(int argc, char **argv) {
   
   cerr << "field  " << field << " spw " << spw << endl;
 
+  Float memFrac=Float(inp.getDouble("memfrac"));
   Bool forceDisk=inp.getBool("fdb");
   
   MSUVBin binner(phaseCenter, nx,
-		 ny, nchan, ncorr, cellx, celly, fstart, fstep);
+		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac);
   binner.selectData(msname, spw, field);
   binner.setOutputMS(outMS);
   binner.fillOutputMS(forceDisk);

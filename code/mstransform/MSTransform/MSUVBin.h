@@ -48,7 +48,7 @@ public:
 	MSUVBin();
 	//npol should be only 1, 2 (parallel hands)  or 4
 	MSUVBin(const MDirection& phaseCenter, const Int nx,
-			const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep);
+		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5);
 	//Constructor to bin into an existing gridded ms
 	MSUVBin (MeasurementSet& ms);
 	//The following can be called multiple times to setup multiple input MS
@@ -71,6 +71,7 @@ private:
 	static Int sepCommaEmptyToVectorStrings(Vector<String>& retStr,
 			  const String& str);
 	Bool fillSmallOutputMS();
+	Bool fillNewBigOutputMS();
 	Bool fillBigOutputMS();
 	Int recoverGridInfo(const String& msname);
 	void storeGridInfo();
@@ -82,10 +83,10 @@ private:
 			Matrix<Float>& wght, Cube<Float>& wghtSpec,
 			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			Vector<Int>& ant2, Vector<Double>& time, const Matrix<Int>& locuv);
-	void gridData(const VisBuffer& vb, Cube<Complex>& grid,
+	void gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 			Matrix<Float>& wght, Cube<Float>& wghtSpec,
 			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
-			Vector<Int>& ant2, Vector<Double>& time, const Matrix<Int>& locuv);
+			Vector<Int>& ant2, Vector<Double>& time, const Int startchan, const Int endchan);
 	void inplaceGridData(const vi::VisBuffer2& vb);
 	void inplaceLargeBW(const vi::VisBuffer2& vb);
 	void inplaceSmallBW(const vi::VisBuffer2& vb);
@@ -95,14 +96,20 @@ private:
 	Bool datadescMap(const vi::VisBuffer2& vb, Double& fracbw);
 	Bool datadescMap(const VisBuffer& vb);
 	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
-				const Cube<Float>&wghtSpec, const Matrix<Float>& wght,
-				const Matrix<Double>& uvw, const Vector<Int>& ant1,
-				const Vector<Int>& ant2, const Vector<Double>& time);
+					const Cube<Float>&wghtSpec, const Matrix<Float>& wght,
+					const Matrix<Double>& uvw, const Vector<Int>& ant1,
+					const Vector<Int>& ant2, const Vector<Double>& time);
+
+	Bool saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
+					const Cube<Float>&wghtSpec,
+					const Matrix<Double>& uvw, const Vector<Int>& ant1,
+					const Vector<Int>& ant2, const Vector<Double>& time, const Int startchan, const Int endchan);
 	void fillSubTables();
 	void fillFieldTable();
 	void copySubtable(const String& tabName, const Table& inTab,
 	                    const Bool noRows=False);
 	void fillDDTables();
+	void setTileCache();
 	CoordinateSystem csys_p;
 	Int nx_p, ny_p, nchan_p, npol_p;
 	Double freqStart_p, freqStep_p;
@@ -115,6 +122,7 @@ private:
 	CountedPtr<MeasurementSet> outMsPtr_p;
 	Block<const MeasurementSet *> mss_p;
 	VisBufferUtil vbutil_p;
+	Float memFraction_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END

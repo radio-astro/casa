@@ -71,9 +71,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 MSUVBin::MSUVBin():nx_p(0), ny_p(0), nchan_p(0), npol_p(0),existOut_p(False){
 	outMsPtr_p=NULL;
 	outMSName_p="OutMS.ms";
+	memFraction_p=0.5;
 }
 MSUVBin::MSUVBin(const MDirection& phaseCenter,
-		const Int nx, const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep):
+		 const Int nx, const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction):
 		existOut_p(False)
 
 {
@@ -89,6 +90,7 @@ MSUVBin::MSUVBin(const MDirection& phaseCenter,
 	freqStep_p=freqStep.getValue("Hz");
 	outMsPtr_p=NULL;
 	outMSName_p="OutMS.ms";
+	memFraction_p=memFraction;
 
 }
 
@@ -169,6 +171,7 @@ void MSUVBin::createOutputMS(const Int nrrow){
 	msc.flagRow().fillColumn(True);
 	msc.flag().fillColumn(Matrix<Bool>(npol_p, nchan_p, True));
 	msc.weight().fillColumn(Vector<Float>(npol_p, 0.0));
+	msc.sigma().fillColumn(Vector<Float>(npol_p, 0.0));
 	msc.weightSpectrum().fillColumn(Matrix<Float>(npol_p, nchan_p, 0.0));
 	//change array id for every 2000 rows
 	Vector<Int> arrayID(nrrow,0);
@@ -224,21 +227,177 @@ void MSUVBin::storeGridInfo(){
 
 
 }
+void MSUVBin::setTileCache()
+{
+	if(outMsPtr_p->tableType() ==Table::Memory){
+		return;
+	}
+	const ColumnDescSet & cds = outMsPtr_p->tableDesc ().columnDescSet ();
+
+	//uInt startrow = 0;
+
+
+
+	Vector<String> columns (6);
+	columns (0) = MS::columnName (MS::DATA);            // complex
+	columns (1) = MS::columnName (MS::FLAG);            // boolean
+	columns (2) = MS::columnName (MS::WEIGHT_SPECTRUM); // float
+	columns (3) = MS::columnName (MS::WEIGHT);          // float
+	columns (4) = MS::columnName (MS::SIGMA);           // float
+	columns (5) = MS::columnName (MS::UVW);             // double
+
+	for (uInt k = 0; k < columns.nelements (); ++k) {
+
+		if (! cds.isDefined (columns (k)))
+		{
+			continue;
+		}
+
+		try {
+			//////////////////
+			//////Temporary fix for virtual ms of multiple real ms's ...miracle of statics
+			//////setting the cache size of hypercube at row 0 of each ms.
+			///will not work if each subms of a virtual ms has multi hypecube being
+			///accessed.
+
+			{
+				Bool usesTiles=False;
+				String dataManType = RODataManAccessor (*outMsPtr_p, columns[k], True).dataManagerType ();
+				//cerr << "column " << columns[k] << " dataman "<< dataManType << endl;
+				usesTiles = dataManType.contains ("Tiled");
+				if(usesTiles){
+					ROTiledStManAccessor tacc (*outMsPtr_p, columns[k], True);
+					tacc.clearCaches (); //One tile only for now ...seems to work faster
+
+
+
+
+
+					/// If some bucketSize is 0...there is trouble in setting cache
+					/// but if slicer is used it gushes anyways if one does not set cache
+					/// need to fix the 0 bucket size in the filler anyways...then this is not needed
+
+
+					tacc.setCacheSize (0, 1);
+
+
+				}
+			}
+		}
+		catch (AipsError x) {
+			//  cerr << "Data man type " << dataManType << "  " << dataManType.contains ("Tiled") << "  && " << (!String (cdesc.dataManagerGroup ()).empty ()) << endl;
+			//  cerr << "Failed to set settilecache due to " << x.getMesg () << " column " << columns[k]  <<endl;
+			//It failed so leave the caching as is
+			continue;
+	    }
+	}
+
+}
 
 Bool MSUVBin::fillOutputMS(const Bool forceDisk){
-  Double imagevol=Double(nx_p)*Double(ny_p)*Double(npol_p)*Double(nchan_p)*8.0/1e6; //in MB
+  Double imagevol=Double(nx_p)*Double(ny_p)*Double(npol_p)*Double(nchan_p)*12.0/1e6; //in MB
   Double memoryMB=Double(HostInfo::memoryFree())/1024.0 ;
   Bool retval;
   //forcing disk version for testing
-  if( (imagevol > 0.5*memoryMB) || forceDisk){
-    cerr << "Filling via disk " << endl;
-    retval= fillBigOutputMS();
+  if( (imagevol > memFraction_p*memoryMB) || forceDisk){
+    cerr << "Filling via disk multipass" << endl;
+    retval= fillNewBigOutputMS();
   }
   else{
     cerr << "Filling via ram " << endl;
     retval=fillSmallOutputMS();
   }
   return retval;
+}
+
+Bool MSUVBin::fillNewBigOutputMS(){
+	if(mss_p.nelements()==0)
+		throw(AipsError("No valid input MSs defined"));
+	Vector<Double> incr;
+	Vector<Int> cent;
+	Matrix<Double> uvw;
+	//need to build or recover csys at this stage
+	makeCoordsys();
+	Double reffreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+	Int nrrows=makeUVW(reffreq, incr, cent, uvw);
+	Vector<Bool> rowFlag(nrrows);
+	Vector<Int> ant1(nrrows);
+	Vector<Int> ant2(nrrows);
+	Vector<Double> timeCen(nrrows);
+	Matrix<Float> wght(npol_p, nrrows);
+	createOutputMS(nrrows);
+	setTileCache();
+	ROMSColumns msc(*outMsPtr_p);
+	vi::VisibilityIterator2 iter(mss_p, vi::SortColumns(), False);
+	vi::VisBuffer2* vb=iter.getVisBuffer();
+	iter.originChunks();
+	iter.origin();
+	if(existOut_p){
+		msc.weight().getColumn(wght);
+		msc.flagRow().getColumn(rowFlag);
+		msc.antenna1().getColumn(ant1);
+		msc.antenna2().getColumn(ant2);
+		msc.time().getColumn(timeCen);
+		msc.uvw().getColumn(uvw);
+	}
+	else{
+		wght.set(0.0);
+		rowFlag.set(True);
+		timeCen.set(vb->time()(0));
+	}
+	Int usableNchan=Int(Double(HostInfo::memoryFree())*memFraction_p*1024.0/Double(npol_p)/Double(nx_p*ny_p)/12.0);
+	cerr << "nchan per pass " << usableNchan << endl;
+	Int npass=nchan_p%usableNchan==0 ? nchan_p/usableNchan : nchan_p/usableNchan+1;
+	cerr << "Due to lack of memory will be doing  " << npass << " passes through data"<< endl;
+	for (Int pass=0; pass < npass; ++pass){
+		Int startchan=pass*usableNchan;
+		Int endchan=pass==nchan_p/usableNchan ? nchan_p%usableNchan+ startchan-1 : (pass+1)*usableNchan -1 ;
+
+		Cube<Complex> grid(npol_p, endchan-startchan+1, nrrows);
+		//cerr << "shape " << grid.shape() << endl;
+		Cube<Float> wghtSpec(npol_p, endchan-startchan+1, nrrows);
+		Cube<Bool> flag(npol_p, endchan-startchan+1, nrrows);
+		//Matrix<Int> locuv;
+
+
+		iter.originChunks();
+		iter.origin();
+		vbutil_p=VisBufferUtil(*vb);
+		if(existOut_p){
+			//recover the previous data for summing
+			Slicer elslice(IPosition(2, 0, startchan), IPosition(2,npol_p, endchan-startchan+1));
+			msc.data().getColumn(elslice, grid);
+			msc.weightSpectrum().getColumn(elslice, wghtSpec);
+			msc.flag().getColumn(elslice, flag);
+
+		}
+		else{
+			grid.set(Complex(0));
+			wghtSpec.set(0);
+			flag.set(True);
+			//cerr << "SETTING time to val" << vb->time()(0) << endl;
+
+			//outMsPtr_p->addRow(nrrows, True);
+		}
+		cerr <<"Pass " << pass ;
+		ProgressMeter pm(1.0, Double(nrrows),"Gridding data",
+                         "", "", "", True);
+		Double rowsDone=0.0;
+		for (iter.originChunks(); iter.moreChunks(); iter.nextChunk()){
+	  for(iter.origin(); iter.more(); iter.next()){
+	    //locateuvw(locuv, incr, cent, vb->uvw());
+		  gridData(*vb, grid, wght, wghtSpec,flag, rowFlag, uvw,
+				  ant1,ant2,timeCen, startchan, endchan);
+		  rowsDone+=Double(vb->nRows());
+		  pm.update(rowsDone);
+	  }
+
+	}
+
+	saveData(grid, flag, rowFlag, wghtSpec, uvw, ant1, ant2, timeCen, startchan, endchan);
+	}
+	storeGridInfo();
+	return True;
 }
 
 Bool MSUVBin::fillSmallOutputMS(){
@@ -1117,7 +1276,167 @@ void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
 
 }
 
+  void MSUVBin::gridData(const vi::VisBuffer2& vb, Cube<Complex>& grid,
+		Matrix<Float>& /*wght*/, Cube<Float>& wghtSpec,
+		Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+		Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan){
+	//all pixel that are touched the flag and flag Row shall be unset and the w be assigned
+		//later we'll deal with multiple w for the same uv
+		//we need polmap and chanmap;
 
+  Double fracbw;
+  if(!datadescMap(vb, fracbw)) return;
+  //cerr << "fracbw " << fracbw << endl;
+    SpectralCoordinate spec=csys_p.spectralCoordinate(2);
+    DirectionCoordinate thedir=csys_p.directionCoordinate(0);
+    Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(nchan_p/2));
+    //Double refFreq=SpectralImageUtil::worldFreq(csys_p, Double(0));
+    Vector<Float> scale(2);
+    scale(0)=fabs(nx_p*thedir.increment()(0))/C::c;
+    scale(1)=fabs(ny_p*thedir.increment()(1))/C::c;
+    //Dang i thought the new vb will return Data or FloatData if correctedData was
+	    //not there
+	    Bool hasCorrected=!(ROMSMainColumns(vb.getVi()->ms()).correctedData().isNull());
+		//locateuvw(locuv, vb.uvw());
+	    Vector<Double> visFreq=vb.getFrequencies(0, MFrequency::LSRK);
+		for (Int k=0; k < vb.nRows(); ++k){
+		  if(!vb.flagRow()[k]){
+		  Int locu, locv;
+		  {
+		    locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*refFreq*scale(1)+0.5);
+		    locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*refFreq*scale(0)+0.5);
+
+		  }
+		  //cerr << "fracbw " << fracbw << " pixel u " << Double(locu-nx_p/2)/refFreq/scale(0) << " data u" << vb.uvw()(0,k) <<
+		//		  " pixel v "<< Double(locv-ny_p/2)/refFreq/scale(1) << " data v "<< vb.uvw()(1,k) << endl;
+		    //Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+		    //Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+		    //Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+		    //Double phaseCorr=((newU-vb.uvw()(0,k))+(newV-vb.uvw()(1,k)))*2.0*C::pi*refFreq/C::c;
+		    //cerr << "fracbw " << fracbw << " pixel u " << Double(locu-nx_p/2)/refFreq/scale(0) << " data u" << vb.uvw()(0,k) <<
+		    //				  " pixel v "<< Double(locv-ny_p/2)/refFreq/scale(1) << " data v "<< vb.uvw()(1,k) << " phase " << phaseCorr << endl;
+		  for(Int chan=0; chan < vb.nChannels(); ++chan ){
+		    if(chanMap_p(chan) >=startchan && chanMap_p(chan) <=endchan){
+		      //Double outChanFreq;
+		      //spec.toWorld(outChanFreq, Double(chanMap_p(chan)));
+		      if(fracbw > 0.05)
+		      {
+		    	  locv=Int(Double(ny_p)/2.0+vb.uvw()(1,k)*visFreq(chan)*scale(1)+0.5);
+		    	  locu=Int(Double(nx_p)/2.0+vb.uvw()(0,k)*visFreq(chan)*scale(0)+0.5);
+		      }
+		      if(locv < ny_p && locu < nx_p){
+				  Int newrow=locv*nx_p+locu;
+				  if(rowFlag(newrow) && !(vb.flagRow()(k))){
+				    rowFlag(newrow)=False;
+				    /////TEST
+				    //uvw(0,newrow)=vb.uvw()(0,k);
+				    //uvw(1,newrow)=vb.uvw()(1,k);
+				    /////
+				    uvw(2,newrow)=vb.uvw()(2,k);
+				    //cerr << newrow << " rowids " << vb.rowIds()[k]  << " uvw2 " << uvw(2 ,newrow) << endl;
+				    ant1(newrow)=vb.antenna1()(k);
+				    ant2(newrow)=vb.antenna2()(k);
+				    timeCen(newrow)=vb.time()(k);
+
+				  }
+				  for(Int pol=0; pol < vb.nCorrelations(); ++pol){
+				    if((!vb.flagCube()(pol,chan, k)) && (polMap_p(pol)>=0) && (vb.weight()(pol,k)>0.0)){
+				  //  Double newU=	Double(locu-nx_p/2)/refFreq/scale(0);
+				 //   Double newV= Double(locv-ny_p/2)/refFreq/scale(1);
+				 //   Double phaseCorr=((newU/vb.uvw()(0,k)-1)+(newV/vb.uvw()(1,k)-1))*vb.uvw()(2,k)*2.0*C::pi*refFreq/C::c;
+				      Complex toB=hasCorrected ? vb.visCubeCorrected()(pol,chan,k)*vb.weight()(pol,k):
+					vb.visCube()(pol,chan,k)*vb.weight()(pol,k);
+				    //  Double s, c;
+				    //SINCOS(phaseCorr, s, c);
+				    //  toB=toB*Complex(c,s);
+				      grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)
+					= (grid(polMap_p(pol),chanMap_p(chan)-startchan, newrow)*wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow)
+					   + toB)/(vb.weight()(pol,k)+wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan,newrow));
+				      flag(polMap_p(pol),chanMap_p(chan)-startchan, newrow)=False;
+				      //cerr << "weights " << max(vb.weight()) << "  spec " << max(vb.weightSpectrum()) << endl;
+				      //wghtSpec(polMap_p(pol),chanMap_p(chan), newrow)+=vb.weightSpectrum()(pol, chan, k);
+				      wghtSpec(polMap_p(pol),chanMap_p(chan)-startchan, newrow) += vb.weight()(pol,k);
+				    }
+				    ///We should do that at the end totally
+				    //wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+				  }
+		      }//locu && locv
+		    }
+		  }
+			//sum wgtspec along channels for weight
+			/*for (Int pol=0; pol < wght.shape()(0); ++pol){
+				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
+				wght(pol,newrow)=median(wghtSpec.xyPlane(newrow).row(pol));
+				//cerr << "pol " << pol << " newrow "<< newrow << " weight "<< wght(pol, newrow) << endl;
+			}
+			*/
+		  }
+		}
+
+
+
+
+}
+
+
+Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
+				const Cube<Float>&wghtSpec,
+				const Matrix<Double>& uvw, const Vector<Int>& ant1,
+				const Vector<Int>& ant2, const Vector<Double>& timeCen, const Int startchan, const Int endchan){
+	Bool retval=True;
+	MSColumns msc(*outMsPtr_p);
+	if(!existOut_p && startchan==0){
+		fillSubTables();
+		msc.uvw().putColumn(uvw);
+
+	}
+
+	Slicer elslice(IPosition(2, 0, startchan), IPosition(2,npol_p, endchan-startchan+1));
+	//lets put ny_p slices
+	Int nchan=endchan-startchan+1;
+	Slice polslice(0,npol_p);
+	Slice chanslice(0,nchan);
+	for (Int k=0; k <ny_p; ++k){
+		//Slicer rowslice(IPosition(1, k*nx_p), IPosition(1,nx_p));
+		RefRows rowslice(k*nx_p, (k+1)*nx_p-1);
+		msc.data().putColumnCells(rowslice, elslice, grid(polslice, chanslice, Slice(k*nx_p, nx_p)));
+		//msc.data().putColumnRange(rowslice, elslice, grid(polslice, chanslice, Slice(k*nx_p, nx_p)));
+		msc.weightSpectrum().putColumnCells(rowslice, elslice, wghtSpec(polslice,chanslice, Slice(k*nx_p, nx_p)));
+		//msc.weightSpectrum().putColumnRange(rowslice, elslice, wghtSpec(polslice,chanslice, Slice(k*nx_p, nx_p)));
+		//////msc.weight().putColumn(wght);
+		msc.flag().putColumnCells(rowslice, elslice,flag(polslice, chanslice, Slice(k*nx_p,nx_p)));
+		//msc.flag().putColumnRange(rowslice, elslice,flag(polslice, chanslice, Slice(k*nx_p,nx_p)));
+	}
+	if(endchan==nchan_p-1){
+		msc.flagRow().putColumn(rowFlag);
+		msc.antenna1().putColumn(ant1);
+		msc.antenna2().putColumn(ant2);
+		Cube<Float> spectralweight;
+		msc.weightSpectrum().getColumn(spectralweight);
+		Matrix<Float> weight(npol_p, wghtSpec.shape()[2]);
+		for (Int row=0; row < wghtSpec.shape()[2]; ++row){
+				for (Int pol=0; pol < npol_p; ++pol){
+				//cerr << "shape min max "<< median(wghtSpec.xyPlane(newrow).row(pol)) << " " << min(wghtSpec.xyPlane(newrow).row(pol)) << "  "<< max(wghtSpec.xyPlane(newrow).row(pol)) << endl;
+				weight(pol,row)=max(spectralweight.xyPlane(row).row(pol));
+	    //if(!rowFlag(row))
+	    //  cerr << "pol " << pol << " row "<< row << " median  "<< weight(pol, row) << " min-max " << (min(wghtSpec.xyPlane(row).row(pol))+max(wghtSpec.xyPlane(row).row(pol)))/2.0 << " mean " << mean(wghtSpec.xyPlane(row).row(pol)) << endl;
+			}
+		}
+
+		msc.weight().putColumn(weight);
+		Matrix<Float> sigma(weight.shape());
+		for (uInt k=0; k<weight.shape()[1]; ++k)
+			for (uInt j=0; j<weight.shape()[0]; ++j)
+				sigma(j,k)=weight(j,k)>0.0 ? 1/sqrt(weight(j,k)) :0.0;
+		msc.sigma().putColumn(sigma);
+
+		msc.time().putColumn(timeCen);
+		msc.timeCentroid().putColumn(timeCen);
+	}
+	return retval;
+
+
+}
 Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const Vector<Bool>& rowFlag,
 				const Cube<Float>&wghtSpec, const Matrix<Float>& /*wght*/,
 				const Matrix<Double>& uvw, const Vector<Int>& ant1,
@@ -1147,7 +1466,7 @@ Bool MSUVBin::saveData(const Cube<Complex>& grid, const Cube<Bool>&flag, const V
 	    //  cerr << "pol " << pol << " row "<< row << " median  "<< weight(pol, row) << " min-max " << (min(wghtSpec.xyPlane(row).row(pol))+max(wghtSpec.xyPlane(row).row(pol)))/2.0 << " mean " << mean(wghtSpec.xyPlane(row).row(pol)) << endl;
 	  }
 	}
-	msc.weight().putColumn(weight);	
+	msc.weight().putColumn(weight);
 	Matrix<Float> sigma(weight.shape());
 	for (uInt k=0; k<weight.shape()[1]; ++k)
 		for (uInt j=0; j<weight.shape()[0]; ++j)
