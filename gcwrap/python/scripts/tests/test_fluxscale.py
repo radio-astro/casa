@@ -119,7 +119,7 @@ class fluxscale1_test(unittest.TestCase):
         diff_fluxd=abs(refdict['1']['0']['fluxd'][0]-thisdict['1']['0']['fluxd'][0])/refdict['1']['0']['fluxd'][0]
         #self.assertTrue(diff_fluxd<1.5e-8)
 	# increase the tolerance level
-        self.assertTrue(diff_fluxd<1.5e-7)
+        self.assertTrue(diff_fluxd<1e-5)
         
             
     def test_incremental(self): 
@@ -242,6 +242,9 @@ class fluxscale2_test(unittest.TestCase):
         # Output
         outtable = self.msfile + '.fcal'
         
+        # torelance for value tests
+        tol = 1.e-5
+
         thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='3C273-F0',
                              transfer=['1310+323-F0'],refspwmap=[0,0])
         self.assertTrue(os.path.exists(outtable))
@@ -294,7 +297,7 @@ class fluxscale2_test(unittest.TestCase):
 
         diff_fluxd=abs(refdict['1']['1']['fluxd'][0]-thisdict['1']['1']['fluxd'][0])/refdict['1']['1']['fluxd'][0]
 
-        self.assertTrue(diff_fluxd<1.e-8)
+        self.assertTrue(diff_fluxd<tol)
 
 
 class fluxscale3_test(unittest.TestCase):
@@ -342,6 +345,9 @@ class fluxscale3_test(unittest.TestCase):
         # Output
         outtable = self.prefix + '.flagFld1.fcal'
 
+        # torelance for value test
+        tol = 1.e-5
+
         thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1,3,4',
                              transfer='2')
         self.assertTrue(os.path.exists(outtable))
@@ -366,7 +372,7 @@ class fluxscale3_test(unittest.TestCase):
 
         diff_fluxd=abs(refdict['2']['0']['fluxd'][0]-thisdict['2']['0']['fluxd'][0])/refdict['2']['0']['fluxd'][0]
 
-        self.assertTrue(diff_fluxd<1.e-8)
+        self.assertTrue(diff_fluxd<tol)
 
  
     def test_flaggedref2(self):
@@ -377,6 +383,9 @@ class fluxscale3_test(unittest.TestCase):
 
         # Output
         outtable = self.prefix + '.flagPartFld3.fcal'
+
+        # torelance for value test
+        tol = 1.e-5
 
         thisdict = fluxscale(vis=self.msfile, caltable=gtable, fluxtable=outtable, reference='1,3,4',
                              transfer='2')
@@ -402,7 +411,7 @@ class fluxscale3_test(unittest.TestCase):
 
         diff_fluxd=abs(refdict['2']['0']['fluxd'][0]-thisdict['2']['0']['fluxd'][0])/refdict['2']['0']['fluxd'][0]
 
-        self.assertTrue(diff_fluxd<1.e-8)
+        self.assertTrue(diff_fluxd<tol)
 
 def suite():
     return [fluxscale1_test, fluxscale2_test, fluxscale3_test]
