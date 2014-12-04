@@ -133,6 +133,9 @@ namespace casa {
 		//Show the display options for this image view.
 		void showDataOptions();
 
+		//Reset the rest frequency back to its original value.
+		void resetRestFrequency();
+
 	private:
 		ImageView( const ImageView& other );
 		ImageView operator=( const ImageView& other );
@@ -167,6 +170,12 @@ namespace casa {
 		//Drag and drop
 		QImage* makeDragImage();
 		void makeDrag( QMouseEvent* event );
+
+		//Resetting the original rest frequency
+		void _sendRestFrequencyChange( String comboStr );
+		QString updateRestUI( String& restStr );
+		void updateFreqUnitCombo();
+		void selectRestUnits( const QString& restUnits );
 
 		//Custom color for RGB image combination
 		//void setButtonColor( QColor color );
@@ -222,6 +231,9 @@ namespace casa {
 		int minimumSize;
 		const int SIZE_COLLAPSED;
 		const int SIZE_EXPANDED;
+
+		//Store original rest frequney value & units.
+		String originalFreq;
 
 		const int VIEWED_BORDER_SIZE;
 		const int NOT_VIEWED_BORDER_SIZE;

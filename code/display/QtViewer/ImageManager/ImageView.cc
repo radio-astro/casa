@@ -101,11 +101,31 @@ namespace casa {
 		//Display type of the image
 		initDisplayType();
 
+		connect( ui.resetFreqButton, SIGNAL(clicked()), this, SLOT(resetRestFrequency()));
+
 		//Open close the image view.
 		minimizeDisplay();
 		connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
 
 		rgbModeChanged();
+	}
+
+	void ImageView::resetRestFrequency(){
+		ui.frequencyRadio->blockSignals( true );
+		ui.wavelengthRadio->blockSignals( true );
+		ui.restLineEdit->blockSignals( true );
+		ui.restUnitsCombo->blockSignals( true );
+		//Change the frequency/wavelength selection, if necessary & update the text field.
+		restUnits = updateRestUI( originalFreq );
+		//Update the unit combo
+		this->updateFreqUnitCombo();
+		//Select the appropriate unit from the unit combo.
+		this->selectRestUnits( restUnits );
+		ui.frequencyRadio->blockSignals( false );
+		ui.wavelengthRadio->blockSignals( false );
+		ui.restLineEdit->blockSignals( false );
+		ui.restUnitsCombo->blockSignals( false );
+		_sendRestFrequencyChange( originalFreq );
 	}
 
 
@@ -317,42 +337,53 @@ namespace casa {
 		Record options = imageData->getOptions();
 		if ( options.isDefined( REST_FREQUENCY_KEY)){
 			Record restRecord = options.asRecord( REST_FREQUENCY_KEY);
-			String restValueStr = restRecord.asString( VALUE_KEY);
-			QString restUnits;
-			String restValue;
-			int unitsIndex = -1;
-			for ( int i = 0; i < frequencyUnits.size(); i++ ){
-				unitsIndex = restValueStr.index( frequencyUnits[i].toStdString());
-				if ( unitsIndex >= 0 ){
-					restValue = restValueStr.before(unitsIndex );
-					restUnits = frequencyUnits[i];
-					ui.frequencyRadio->setChecked( true );
-					restType = REST_FREQUENCY;
-					break;
-				}
-			}
-			if ( unitsIndex < 0 ){
-				for ( int i = 0; i < wavelengthUnits.size(); i++ ){
-					unitsIndex = restValueStr.index( wavelengthUnits[i].toStdString());
-					if ( unitsIndex >= 0 ){
-						restValue = restValueStr.before( unitsIndex );
-						restUnits = wavelengthUnits[i];
-						ui.wavelengthRadio->setChecked( true );
-						restType = REST_WAVELENGTH;
-						break;
-					}
-				}
-			}
-			if ( unitsIndex >= 0 ){
-				ui.restLineEdit->setText( restValue.c_str());
-				int index = ui.restUnitsCombo->findText( restUnits );
-				ui.restUnitsCombo->setCurrentIndex( index );
-			}
+			originalFreq = restRecord.asString( VALUE_KEY);
+			updateRestUI( originalFreq );
 		}
 		//cout << options << endl;
 		connect( ui.restLineEdit, SIGNAL(textChanged(const QString&)), this, SLOT(restFrequencyChanged()));
 		connect( ui.restUnitsCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(restUnitsChanged()));
 		restChanged();
+	}
+
+	QString ImageView::updateRestUI( String& restStr ){
+		QString restUnits;
+		String restValue;
+		int unitsIndex = -1;
+		for ( int i = 0; i < frequencyUnits.size(); i++ ){
+			unitsIndex = restStr.index( frequencyUnits[i].toStdString());
+			if ( unitsIndex >= 0 ){
+				restValue = restStr.before(unitsIndex );
+				restUnits = frequencyUnits[i];
+				ui.frequencyRadio->setChecked( true );
+				restType = REST_FREQUENCY;
+				break;
+			}
+		}
+		if ( unitsIndex < 0 ){
+			for ( int i = 0; i < wavelengthUnits.size(); i++ ){
+				unitsIndex = restStr.index( wavelengthUnits[i].toStdString());
+				if ( unitsIndex >= 0 ){
+					restValue = restStr.before( unitsIndex );
+					restUnits = wavelengthUnits[i];
+					ui.wavelengthRadio->setChecked( true );
+					restType = REST_WAVELENGTH;
+					break;
+				}
+			}
+		}
+		if ( unitsIndex >= 0 ){
+			ui.restLineEdit->setText( restValue.c_str());
+			selectRestUnits( restUnits );
+		}
+		return restUnits;
+	}
+
+	void ImageView::selectRestUnits( const QString& restUnits ){
+		int index = ui.restUnitsCombo->findText( restUnits );
+		if ( index >= 0 ){
+			ui.restUnitsCombo->setCurrentIndex( index );
+		}
 	}
 
 	bool ImageView::isCategoryMatch( const QString& newUnits, const QString& oldUnits ) const {
@@ -400,21 +431,25 @@ namespace casa {
 		if ( valueStr.length() > 0 ){
 			String comboStr(valueStr.toStdString());
 			comboStr.append( unitStr.toStdString());
-			Record dataOptions = imageData->getOptions();
-			Record restRecord = dataOptions.asRecord( REST_FREQUENCY_KEY );
-			restRecord.define( VALUE_KEY, comboStr );
-			dataOptions.defineRecord( REST_FREQUENCY_KEY, restRecord );
-			//An AipsError occurs if we do not remove region and mask;
-			const String REGION_RECORD = "region";
-			if ( dataOptions.isDefined( REGION_RECORD)){
-				dataOptions.removeField( REGION_RECORD);
-			}
-			const String MASK_RECORD = "mask";
-			if ( dataOptions.isDefined( MASK_RECORD)){
-				dataOptions.removeField( MASK_RECORD);
-			}
-			imageData->setOptions( dataOptions );
+			_sendRestFrequencyChange( comboStr );
 		}
+	}
+
+	void ImageView::_sendRestFrequencyChange( String comboStr ){
+		Record dataOptions = imageData->getOptions();
+		Record restRecord = dataOptions.asRecord( REST_FREQUENCY_KEY );
+		restRecord.define( VALUE_KEY, comboStr );
+		dataOptions.defineRecord( REST_FREQUENCY_KEY, restRecord );
+		//An AipsError occurs if we do not remove region and mask;
+		const String REGION_RECORD = "region";
+		if ( dataOptions.isDefined( REGION_RECORD)){
+			dataOptions.removeField( REGION_RECORD);
+		}
+		const String MASK_RECORD = "mask";
+		if ( dataOptions.isDefined( MASK_RECORD)){
+			dataOptions.removeField( MASK_RECORD);
+		}
+		imageData->setOptions( dataOptions );
 	}
 
 
@@ -667,8 +702,7 @@ namespace casa {
 	//----------------------------------------------------------------
 	//            Slots
 	//----------------------------------------------------------------
-
-	void ImageView::restChanged(){
+	void ImageView::updateFreqUnitCombo(){
 		ui.restUnitsCombo->clear();
 		if ( ui.frequencyRadio->isChecked()){
 			for ( int i = 0; i < frequencyUnits.size(); i++ ){
@@ -680,6 +714,10 @@ namespace casa {
 				ui.restUnitsCombo->addItem( wavelengthUnits[i]);
 			}
 		}
+	}
+
+	void ImageView::restChanged(){
+		updateFreqUnitCombo();
 
 		QString restValueStr = ui.restLineEdit->text();
 		if ( restValueStr.trimmed().length() > 0 ){
