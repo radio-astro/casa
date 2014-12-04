@@ -170,7 +170,8 @@ class Clean(cleanbase.CleanBase):
               sequence_manager=sequence_manager, result=result)
 
 	except Exception, e:
-	    LOG.error('Iterative imaging error: %s' % (str(e)))
+            raise Exception, '%s/%s/SpW%s Iterative imaging error: %s' % (
+              inputs.intent, inputs.field, inputs.spw, str(e))
 	finally:
             if inputs.imagermode == 'mosaic':
                 # restore POINTING table to input state
@@ -260,29 +261,17 @@ class Clean(cleanbase.CleanBase):
     def _do_noise_estimate (self, stokes):
         """Compute a noise estimate from the specified stokes image.
         """
-
-        model_sum = None,
-        cleaned_rms = None
-        non_cleaned_rms = None
-        residual_max = None
-        residual_min = None
-        rms2d = None
-        image_max = None
-
         # Compute the dirty Q or V image.
 	try:
             LOG.info("Compute the 'noise' image")
             result = self._do_clean (iter=0, stokes=stokes, 
               cleanmask='', niter=0, threshold='0.0mJy', result=None)
 	    if result.empty():
-                LOG.error('Error creating stokes %s noise image: %s' % stokes)
-                return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-                  residual_min, rms2d, image_max 
+                raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image' % (
+                  inputs.intent, inputs.field, inputs.spw, stokes)
 	except Exception, e:
-            LOG.error('Error creating stokes %s noise image: %s' % (stokes,
-              str(e)))
-            return model_sum, cleaned_rms, non_cleaned_rms, residual_max, \
-              residual_min, rms2d, image_max 
+            raise Exception, '%s/%s/SpW%s Error creating Stokes %s noise image: %s' % (
+              inputs.intent, inputs.field, inputs.spw, stokes, str(e))
 
 	# Create the base sequence manager and use it to get noise stats
 	sequence_manager = BaseCleanSequence()
