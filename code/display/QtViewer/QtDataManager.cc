@@ -105,6 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		setupUi(this);
 
         setupVO( );
+		tabs->setTabEnabled(tabs->indexOf(virtual_obs),false);
 
 		connect( vo_action_timeout, SIGNAL(timeout( )), SLOT(vo_action_timed_out( )) );
 
