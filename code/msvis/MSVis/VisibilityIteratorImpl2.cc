@@ -2114,7 +2114,8 @@ VisibilityIteratorImpl2::setTileCache ()
                 float nTiles0 = hypercubeShape [0] / (float) (tileShape [0]);
                 float nTiles1 = hypercubeShape [1] / (float) (tileShape [1]);
 
-                uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1));
+#warning "*** Doubled the tile cache size to see if it fixes a problem with an ALMA data set; remove later!"
+                uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1)) * 2;
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
                 tacc.setCacheSize (startrow, cacheSize);
