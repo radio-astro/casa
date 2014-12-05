@@ -53,7 +53,6 @@ Images/ImageFITS2Converter.cc
 Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
-Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
 )
@@ -64,8 +63,8 @@ endif()
 
 target_link_libraries (
 casa_images
+casa_coordinates
 casa_mirlib
-casa_components
 casa_lattices
 )
 
@@ -160,6 +159,5 @@ DESTINATION include/casacore/images
 
 if (BUILD_TESTING)
     add_subdirectory (Images/test)
-    add_subdirectory (Wnbt/test)
     add_subdirectory (Regions/test)
 endif (BUILD_TESTING)
