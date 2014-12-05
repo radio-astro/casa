@@ -78,7 +78,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 	    # are the same
 	    if inputs.hm_phaseup == 'snr':
 		if len(snr_result.spwids) <= 0:
-	            LOG.warn('SNR based phaseup solint estimates are unavailable')
+	            LOG.warn('SNR based phaseup solint estimates are unavailable for MS %s' \
+		        % inputs.ms.basename)
 	            phaseupsolint = inputs.phaseupsolint
 		else:
 	            phaseupsolint = self._get_best_phaseup_solint(snr_result)
@@ -89,7 +90,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         # Now perform the bandpass
 	if inputs.hm_bandpass == 'snr':
 	    if len(snr_result.spwids) <= 0:
-	        LOG.warn('SNR based bandpass solint estimates are unavailable')
+	        LOG.warn('SNR based bandpass solint estimates are unavailable for MS %s' % \
+		    inputs.ms.basename)
 	    else:
 	        LOG.info('Using SNR based solint estimates')
             result = self._do_snr_bandpass(snr_result)
@@ -136,13 +138,13 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 	for i in range(len(snr_result.spwids)):
 	    if not snr_result.phsolints[i]:
 	       nmissing = nmissing + 1
-               LOG.warn('No phaseup solint estimate for spw %s ' % \
-	          snr_result.spwids[i])
+               LOG.warn('No phaseup solint estimate for spw %s in MS %s' % \
+	          (snr_result.spwids[i], inputs.ms.basename))
 
 	# If any missing values return default value.
 	if nmissing > 1:
-            LOG.warn('Reverting to phaseup solint default %s ' % \
-	          inputs.phaseupsolint)
+            LOG.warn('Reverting to phaseup solint default %s for MS %s' % \
+	          (inputs.phaseupsolint, inputs.ms.basename))
 	    return inputs.phaseupsolint
 
 	# Look for bad solutions.
@@ -150,13 +152,13 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 	for i in range(len(snr_result.spwids)):
 	    if snr_result.nphsolutions[i] < inputs.phaseupnsols:
 	        npoor = npoor + 1
-                LOG.warn('Phaseup solint for spw %s has %d points ' % \
-	           (snr_result.spwids[i], snr_result.nphsolutions[i]))
+                LOG.warn('Phaseup solint for spw %s has %d points in MS %s' % \
+	           (snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename))
 
 	# If any bad solutions return default value.
 	if npoor > 1:
-            LOG.warn('Reverting to phaseup solint default %s ' % \
-	          inputs.phaseupsolint)
+            LOG.warn('Reverting to phaseup solint default %s for MS %s' % \
+	          (inputs.phaseupsolint, inputs.ms.basename))
 	    return inputs.phaseupsolint
 
 	# If phaseup solints are all the same return the first one
@@ -310,8 +312,8 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 		            str(bandwidth / inputs.maxchannels) + 'MHz'
                 else:
 		    inputs.solint=orig_solint
-                    LOG.warn('Reverting to default bandpass solint %s for spw %s ' % \
-		        (inputs.solint, spw.id))
+                    LOG.warn('Reverting to default bandpass solint %s for spw %s in MS %s' % \
+		        (inputs.solint, spw.id, inputs.ms.basename))
 
 		# Compute and append bandpass solution
 		inputs.spw=spw.id
