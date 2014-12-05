@@ -2225,11 +2225,15 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
     }
     Int outRow = -1;
 
-    //  ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
-    //  ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
-    //  cout << "restfreq = " << restfreq.getColumn() << endl;
-    //  cout << "sysvel   = " << sysvel.getColumn() << endl;
-
+    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117 but the CASA implementation makes them Scalar
+    ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+    ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+    //Matrix<Double> restFreq(nIF_p, suTab.nrow());
+    //Matrix<Double> sysVel(nIF_p, suTab.nrow());
+    restFreq_p.resize(suTab.nrow());
+    sysVel_p.resize(suTab.nrow());
+    restfreq.getColumn(restFreq_p);
+    sysvel.getColumn(sysVel_p);
 
     // set the DIRECTION MEASURE REFERENCE for appropriate columns
 
@@ -2422,7 +2426,7 @@ void MSFitsInput::fillExtraTables() {
     // table entries for each field/spw combination
 
     if (addSourceTable_p)
-        itsLog << LogOrigin("MSFitsInput", "fillExtraable")
+        itsLog << LogOrigin("MSFitsInput", "fillExtraTables")
                << LogIO::NORMAL << "Filling SOURCE table." << LogIO::POST;
 
     Int nrow = ms_p.nrow();
@@ -2511,19 +2515,27 @@ void MSFitsInput::fillExtraTables() {
                     mss.interval().put(j, DBL_MAX);
                     mss.spectralWindowId().put(j, spwId);
                     Vector<Double> sysVel(1);
-                    sysVel(0) = 0.;
+		    // sysVel was extracted from LSRVEL in SU table
+		    if(0<=lastFieldId && lastFieldId<sysVel_p.size()){
+		      sysVel(0) = sysVel_p(lastFieldId);
+		    }
+		    else{
+		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
+			     << LogIO::WARN << "Array of systemic velocities has no entry for field " << lastFieldId << LogIO::POST;
+		    }		      
                     mss.sysvel().put(j, sysVel);
                     mss.numLines().put(j, 1);
                     Vector<String> transition(1);
                     transition(0) = "";
                     mss.transition().put(j, transition);
                     Vector<Double> restFreqs(1);
-                    restFreqs(0) = restfreq_p;
-                    if (restFreqs(0) <= 0.0) {
-                        // put in the reference freq as default for the rest frequency
-                        restFreqs(0) = msc_p->spectralWindow().refFrequency()(
-                                spwId);
-                    }
+		    if(0<=lastFieldId && lastFieldId<restFreq_p.size()){
+		      restFreqs(0) = restFreq_p(lastFieldId);
+		    }
+		    else{
+		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
+			     << LogIO::WARN << "Array of rest frequencies has no entry for field " << lastFieldId << LogIO::POST;
+		    }		      
                     mss.restFrequency().put(j, restFreqs);
                     mss.calibrationGroup().put(j, -1);
                 }
@@ -3591,10 +3603,17 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt) {
     }
     Int outRow = -1;
 
-    //  ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
-    //  ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
-    //  cout << "restfreq = " << restfreq.getColumn() << endl;
-    //  cout << "sysvel   = " << sysvel.getColumn() << endl;
+    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117 but the CASA implementation makes them Scalar
+    ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+    ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+    //Matrix<Double> restFreq(nIF_p, suTab.nrow());
+    //Matrix<Double> sysVel(nIF_p, suTab.nrow());
+    restFreq_p.resize(suTab.nrow());
+    sysVel_p.resize(suTab.nrow());
+    restfreq.getColumn(restFreq_p);
+    sysvel.getColumn(sysVel_p);
+    cout << "restfreq = " << restFreq_p << endl;
+    cout << "sysvel   = " << sysVel_p << endl;
 
     // set the DIRECTION MEASURE REFERENCE for appropriate columns
     MDirection::Types epochRefZero = getDirectionFrame(epoch(0));

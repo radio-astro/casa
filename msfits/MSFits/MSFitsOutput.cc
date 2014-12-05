@@ -469,7 +469,8 @@ FitsOutput *MSFitsOutput::writeMain(Int& refPixelFreq, Double& refFreq,
                 return 0;
             }
             if (numchan(s) != numchan0) {
-                os << LogIO::SEVERE << "Number of channels varies in the MS"
+                os << LogIO::SEVERE << "Number of channels varies in the MS, i.e. the is more than one SPW shape!"
+		   << endl << "Please split out SPWs of identical shape and export them separately."
                         << LogIO::POST;
                 return 0;
             }
@@ -2020,8 +2021,14 @@ Bool MSFitsOutput::writeSU(FitsOutput *output, const MeasurementSet &ms,
         if (fieldnum < fieldidMap.nelements() && fieldidMap[fieldnum] >= 0) {
             *idno = 1 + fieldidMap[fieldnum];
             dir = msfc.phaseDirMeas(fieldnum);
-            //*source = inname(fieldnum) + "                ";
-            *source = inname(fieldnum) + String::toString(fieldnum) + "    ";
+            *source = inname(fieldnum);
+	    // check if name is unique
+	    *qual = 0;
+	    for(uInt ifld=0; ifld<nrow; ifld++){
+	      if(ifld!=fieldnum && *source==inname(ifld)){
+		*qual = fieldnum; // not unique, set qual such that name+qual is unique
+	      }
+	    }
 
             if (dir.type() == MDirection::B1950) {
                 *epoch = 1950.;
