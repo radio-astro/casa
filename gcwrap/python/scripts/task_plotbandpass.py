@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.59 2014/11/24 15:42:04 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.60 2014/12/04 21:41:40 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.59 2014/11/24 15:42:04 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.60 2014/12/04 21:41:40 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -3959,7 +3959,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
 #       #                  (xant==antennasToPlot[-1] and doneOverlayTime) # support showatm with overlay='antenna,time'
                           (overlayTimes and overlayAntennas and  # Aug 5, 2013
-                           xant==antennasToPlot[-1] and doneOverlayTime and mytime==nUniqueTimes-1)
+                           xant==antennasToPlot[-1] and doneOverlayTime and mytime==nUniqueTimes-1
+                           and not drewAtmosphere)  # added on 2014-12-04 to support case of a flagged antenna CAS-7187
                           ):
                           if ((showatm or showtsky) and len(atmString) > 0): 
                               drewAtmosphere = True
