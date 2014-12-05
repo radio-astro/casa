@@ -406,7 +406,7 @@ private:
   Int nArray_p;
   Vector<Double> receptorAngle_p;
   MFrequency::Types freqsys_p;
-  Double restfreq_p;
+  Double restfreq_p; // used for images
   Bool addSourceTable_p;
   LogIO itsLog;
   Record header;
@@ -415,6 +415,10 @@ private:
   Vector<Double> chanFreq_p;
   Bool newNameStyle;
   Vector<Double> obsTime;
+
+  Vector<Double> restFreq_p; // used for UVFITS
+  Vector<Double> sysVel_p;
+
 };
 
 
