@@ -187,7 +187,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	spwlist = [int(spw) for spw in inputs.spw.split(',')]
 
 	# Log the data selection choices
-	LOG.info('Estimating bandpass solution intervals')
+	LOG.info('Estimating bandpass solution intervals for MS %s' % \
+	    inputs.ms.basename)
 	LOG.info('    Setting bandpass intent to %s ' % inputs.intent)
 	LOG.info('    Selecting bandpass fields %s ' % fieldlist)
 	LOG.info('    Selecting bandpass spws %s ' % spwlist)
@@ -196,7 +197,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	LOG.info('    Setting requested bandpass snr to %0.1f ' % \
 	    (inputs.bpsnr))
 	if len(fieldlist) <= 0 or len(spwlist) <= 0:
-	    LOG.info('    No bandpass data for MS %s' % inputs.ms.basename)
+	    LOG.info('    No bandpass data')
 	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the flux dictionary from the pipeline context
@@ -204,7 +205,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	flux_dict = self._get_fluxinfo(inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
 	if not flux_dict:
-	    LOG.info('No flux values for MS %s' % inputs.ms.basename)
+	    LOG.info('No flux values')
 	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the Tsys dictionary
@@ -214,7 +215,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	tsys_dict = self._get_tsysinfo(inputs.ms, fieldlist, inputs.intent,
 	    spwlist)
 	if not tsys_dict:
-	    LOG.info('No Tsys spw for MS %s' % inputs.ms.basename)
+	    LOG.info('No Tsys spws')
 	    return BpSolintResults(vis=inputs.vis)
 
 	# Construct the Tsys spw list and the associated bandpass scan list.
@@ -440,7 +441,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 		LOG.info('    Matched spw %d to a Tsys spw %d' % (spwid, bestspwid))
 	        tsysdict[spwid] = ftsysdict
 	    else:
-		LOG.warn('    Cannot match spw %d to a Tsys spw' % spwid)
+		LOG.warn('    Cannot match spw %d to a Tsys spw in MS %s' % (spwid, ms.basename))
 
 	return tsysdict
 
@@ -625,7 +626,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	for scan in uniqueScans:
             reqscan = ms.get_scans(scan_id=scan)
 	    if not reqscan:
-                LOG.warn ('Cannot find observation scan %d' % scan)
+                LOG.warn ('Cannot find observation scan %d in MS %s' % (scan, ms.basename))
                 return mediantemps
 	    startTime = reqscan[0].start_time 
 	    endTime = reqscan[0].end_time 
@@ -638,7 +639,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    # Get the antenna ids
             tsys_antennas = table.getcol('ANTENNA_ID')
             if (len(tsys_antennas) < 1):
-                LOG.warn("The SYSCAL table is blank")
+                LOG.warn('The SYSCAL table is blank in MS %s' % ms.basename)
                 return mediantemps
 
             # Get columns and tools needed to understand the tsys times
@@ -684,8 +685,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 
             if nmatch <= 0:
 	        LOG.warn ( \
-		'No SYSCAL table row matches for scans %s tsys spws %s' % \
-		(uniqueScans, tsys_spwlist))
+		'No SYSCAL table row matches for scans %s tsys spws %s in MS %s' % \
+		(uniqueScans, tsys_spwlist, ms.basename))
                 return mediantemps
 	    else:
 	        LOG.info ( \
@@ -706,7 +707,8 @@ class BpSolint(basetask.StandardTaskTemplate):
         for spw, scan in zip (tsys_spwlist, scan_list):
     
             if (spw not in tsys_uniqueSpws):
-                LOG.warn ("Tsys spw %d is not in the SYSCAL table: " % spw)
+                LOG.warn ('Tsys spw %d is not in the SYSCAL table for MS %s' % \
+		    (spw, ms.basename))
                 return mediantemps
     
             # Loop over the rows
@@ -733,7 +735,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    "    Median Tsys %s value for Tsys spw %2d = %.1f K" % \
 		    (temptype, spw, mediantemps[spw]))
             else:
-                LOG.warn ("    No Tsys data for spw %d scan %d" % (spw, scan))
+                LOG.warn ('    No Tsys data for spw %d scan %d in MS %s' % \
+		    (spw, scan, ms.basename))
     
         # Return median temperature per spw and scan.
         return mediantemps 
@@ -966,8 +969,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    solint_dict[spwid]['nphaseup_solutions'] = solInts
 	    if tooFewIntervals:
 	        LOG.warn( \
-		"%s This spw would have less than %d time intervals in its solution" % \
-		(asterisks, minBpNintervals))
+		'%s This spw would have less than %d time intervals in its solution in MS %s' % \
+		(asterisks, minBpNintervals, ms.basename))
 
 	    # Bandpass solution info
 	    solint_dict[spwid]['bpsolint'] = '%fMHz' % \
@@ -991,7 +994,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		reqBpSnr))
 	    solint_dict[spwid]['nbandpass_solutions'] = solChannels
 	    if tooFewChannels:
-	        LOG.warn("%s This spw would have less than %d channels in its solution" % (asterisks, minBpNchan))
+	        LOG.warn('%s This spw would have less than %d channels in its solution in MS %s' % \
+		    (asterisks, minBpNchan, ms.basename))
 
 	return solint_dict
 
