@@ -125,6 +125,7 @@ casa_add_library( synthesis
   CalTables/CTEnums.cc
   CalTables/CTGlobals.cc
   CalTables/CTInterface.cc
+#  CalTables/CTSelection.cc
   CalTables/CTIter.cc
   CalTables/CTMainColumns.cc
   CalTables/CTMainRecord.cc
@@ -320,6 +321,7 @@ install (FILES
 	CalTables/CTDesc.h
 	CalTables/CTEnums.h
 	CalTables/CTInterface.h
+#	CalTables/CTSelection.h
 	CalTables/CTMainColInterface.h
 	CalTables/CTIter.h
 	CalTables/CTMainColumns.h
@@ -656,6 +658,7 @@ casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCFCache.cc )
 #casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
 #casa_add_assay( synthesis TransformMachines/test/tInitMaps.cc )
+#casa_add_assay( synthesis TransformMachines/test/tAWP.cc )
 casa_add_assay( synthesis DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis IDL/test/tIDL.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tALMAAperture.cc )

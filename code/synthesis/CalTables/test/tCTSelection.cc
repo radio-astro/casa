@@ -29,6 +29,7 @@
 #include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTInterface.h>
 #include <ms/MeasurementSets/MSSelection.h>
+//#include <synthesis/CalTables/CTSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <casa/OS/Timer.h>
 #include <casa/Exceptions/Error.h>
@@ -41,7 +42,7 @@
 // </summary>
 
 // Control verbosity
-#define CTSELECTION_VERBOSE False
+#define CTSELECTION_VERBOSE True
 
 void doTest1 (Bool verbose=False) {
 
@@ -116,6 +117,7 @@ void doTest1 (Bool verbose=False) {
 
   NewCalTable selnct(tnct);
   CTInterface cti(tnct);
+  //  CTSelection mss;
   MSSelection mss;
   mss.setFieldExpr(fieldsel);
   mss.setSpwExpr(spwsel);
@@ -145,7 +147,10 @@ void doTest1 (Bool verbose=False) {
   getSelectedTable(selnct,tnct,ten,"");
 
   if (verbose)
-    cout << "selected: nrow=" << selnct.nrow() << endl;
+    {
+      cout << "selected: nrow=" << selnct.nrow()<< " ";
+      cout << "(should be " << antids.nelements()*nTime*spwids.nelements()*fldids.nelements() << ")" << endl;
+    }
   AlwaysAssert( (selnct.nrow()==antids.nelements()*nTime*spwids.nelements()*fldids.nelements()), AipsError);
 
 
@@ -271,6 +276,7 @@ void doTest2 (Bool verbose=False) {
 
   NewCalTable selnct(tnct);
   CTInterface cti(tnct);
+  //  CTSelection mss;
   MSSelection mss;
   mss.setObservationExpr(obssel);
   mss.setScanExpr(scansel);
