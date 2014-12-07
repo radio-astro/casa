@@ -2486,6 +2486,12 @@ void MSFitsInput::fillExtraTables() {
              }
              */
             if (addSourceTable_p) {
+
+	        if(!msc_p->source().sourceModel().isNull()){
+		  // we don't have source models
+		  ms_p.source().removeColumn("SOURCE_MODEL");
+		}
+
                 lastDDId = ddId(i);
                 Int spwId = msc_p->dataDescription().spectralWindowId()(
                         lastDDId);
@@ -2516,26 +2522,29 @@ void MSFitsInput::fillExtraTables() {
                     mss.spectralWindowId().put(j, spwId);
                     Vector<Double> sysVel(1);
 		    // sysVel was extracted from LSRVEL in SU table
-		    if(0<=lastFieldId && lastFieldId<sysVel_p.size()){
+		    if(0<=lastFieldId && (uInt)lastFieldId<sysVel_p.size()){
 		      sysVel(0) = sysVel_p(lastFieldId);
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
 			     << LogIO::WARN << "Array of systemic velocities has no entry for field " << lastFieldId << LogIO::POST;
 		    }		      
+
                     mss.sysvel().put(j, sysVel);
                     mss.numLines().put(j, 1);
                     Vector<String> transition(1);
                     transition(0) = "";
                     mss.transition().put(j, transition);
                     Vector<Double> restFreqs(1);
-		    if(0<=lastFieldId && lastFieldId<restFreq_p.size()){
+
+		    if(0<=lastFieldId && (uInt)lastFieldId<restFreq_p.size()){
 		      restFreqs(0) = restFreq_p(lastFieldId);
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
 			     << LogIO::WARN << "Array of rest frequencies has no entry for field " << lastFieldId << LogIO::POST;
 		    }		      
+
                     mss.restFrequency().put(j, restFreqs);
                     mss.calibrationGroup().put(j, -1);
                 }
