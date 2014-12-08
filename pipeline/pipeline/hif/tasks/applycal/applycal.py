@@ -232,6 +232,9 @@ class Applycal(basetask.StandardTaskTemplate):
 
             # set the on-the-fly calibration state for the data selection.  
             calapp = callibrary.CalApplication(calto, calfroms)
+	    ### Note this is a temporary workaround ### 
+            args['antenna'] = '*&*'
+	    ### Note this is a temporary workaround ### 
             args['gaintable'] = calapp.gaintable
             args['gainfield'] = calapp.gainfield
             args['spwmap']    = calapp.spwmap
