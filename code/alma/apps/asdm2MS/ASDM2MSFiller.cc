@@ -659,7 +659,7 @@ int ASDM2MSFiller::addAntenna( const string& name_,
   msantCol.dishDiameter().put(crow, dish_diam_);
   msantCol.flagRow().put(crow, False);
   
-  msant.flush(True);
+  //msant.flush(True);
   // cout << "addAntenna : table flushed \n";
   // cout << "addAntenna : exiting \n";
   // cout << "\n";
@@ -1171,7 +1171,7 @@ int  ASDM2MSFiller::addUniqueDataDescription( int spectral_window_id_,
   msddCol.polarizationId().put(crow, polarization_id_);
   msddCol.flagRow().put(crow, False);
     
-  msdd.flush(True);
+  //msdd.flush(True);
   return crow;
 }
 
@@ -1287,7 +1287,7 @@ void ASDM2MSFiller::addFeed(int      antenna_id_,
   msfeedCol.position().put(crow, position);
   msfeedCol.receptorAngle().put(crow, receptorAngle); 
 
-  msfeed.flush();
+  //msfeed.flush();
   // cout << "\n Exiting addFeed";
 }
 	     
@@ -1350,7 +1350,7 @@ void ASDM2MSFiller::addField(const string&		name_,
 
   msfieldCol.flagRow().put(crow, False);
   //cout << "\naddField : exiting";
-  msfield.flush();
+  //msfield.flush();
 }
 
 
@@ -1364,7 +1364,7 @@ void ASDM2MSFiller::updateEphemerisIdInField(vector<pair<int, int> >& idxEphemer
     msfieldCol.ephemerisId().put(p.first, p.second);
   }
 
-  msfield.flush();
+  //msfield.flush();
 }	       
 
 // Add a record in the table FLAG_CMD;
@@ -1392,7 +1392,7 @@ void ASDM2MSFiller::addFlagCmd(double		time_,
   msflagcmdCol.applied().put(crow, 0);
   msflagcmdCol.command().put(crow, "");
   
-  msflagcmd.flush(True);
+  //msflagcmd.flush(True);
   // cout << "\n";
 }
 			  
@@ -1430,7 +1430,7 @@ void ASDM2MSFiller::addHistory( double		time_,
   mshistoryCol.cliCommand().put(crow, cliCommand);
   mshistoryCol.appParams().put(crow, appParms);
   
-  mshistory.flush(True);
+  //mshistory.flush(True);
   // cout << "\n";
 }
 	     
@@ -1492,7 +1492,7 @@ void ASDM2MSFiller::addObservation(const string&		telescopeName_,
   msobsCol.project().put(crow, String(project_));
   msobsCol.releaseDate().put(crow, release_date_);
   msobsCol.flagRow().put(crow, False);
-  msobs.flush();
+  //msobs.flush();
 
   // cout << "\n addObservation: exiting";
   // cout << "\n";
@@ -1569,7 +1569,7 @@ void ASDM2MSFiller::addPointingSlice(unsigned int                 n_row_,
     }
   }
 
-  mspointing.flush();
+  //mspointing.flush();
 }
 
 
@@ -1602,7 +1602,7 @@ int ASDM2MSFiller::addPolarization(int num_corr_,
   mspolarCol.corrType().put(crow,corrType);
   mspolarCol.corrProduct().put(crow, corrProduct);
 
-  mspolar.flush();
+  //mspolar.flush();
   // cout << "\n";
   return crow;
 }
@@ -1650,7 +1650,7 @@ int ASDM2MSFiller::addUniquePolarization(int num_corr_,
   mspolarCol.corrType().put(crow,corrType);
   mspolarCol.corrProduct().put(crow, corrProduct);
 
-  mspolar.flush(True);
+  //mspolar.flush(True);
   return crow;
 }
 
@@ -1674,7 +1674,7 @@ void ASDM2MSFiller::addProcessor(string& type_,
   
   msprocCol.flagRow().put(crow, False);
 
-  msproc.flush();
+  //msproc.flush();
   // cout << "\n";
 }
 
@@ -1878,7 +1878,7 @@ int ASDM2MSFiller::addSpectralWindow(int			num_chan_,
 
   msspwinCol.flagRow().put(crow, False);
 
-  msspwin.flush();
+  //msspwin.flush();
   // cout << "\n";
   return crow;
 }
@@ -1905,7 +1905,7 @@ void ASDM2MSFiller::addState(bool    sig_,
   msstateCol.subScan().put(crow, sub_scan_);
   msstateCol.obsMode().put(crow, obs_mode_);
   msstateCol.flagRow().put(crow, False);
-  msstate.flush();
+  //msstate.flush();
 
   // cout << "\n";
 }
@@ -1984,7 +1984,7 @@ void ASDM2MSFiller:: addSysCal(int    antenna_id,
       mssyscalCol.tantTsysFlag().put(crow, tant_tsys_flag_pair.second);
   }
 
-  mssyscal.flush();
+  //mssyscal.flush();
 }
 
 // Adds a  record weather in the table WEATHER.
@@ -2024,7 +2024,7 @@ void ASDM2MSFiller:: addSysCal(int    antenna_id,
   ArrayColumn<double> nsWXStationPosition(msweather, "NS_WX_STATION_POSITION");
   nsWXStationPosition.put(crow, Vector<double>(IPosition(1, 3), &wx_station_position_[0], SHARE));
 
-  msweather.flush();
+  //msweather.flush();
 }
 
 
@@ -2085,7 +2085,7 @@ void ASDM2MSFiller::addSysPower(int		antennaId,
     }
   }
   
-  mssyspower.flush();
+  //mssyspower.flush();
 }
 
 void ASDM2MSFiller::addSysPowerSlice(unsigned int	nRow,
@@ -2150,7 +2150,7 @@ void ASDM2MSFiller::addSysPowerSlice(unsigned int	nRow,
     requantizerGainCol.putColumnRange(slicer, requantizerGainMS);
   }
 
-  mssyspower.flush();
+  //mssyspower.flush();
 }
 				     
 
@@ -2229,7 +2229,7 @@ void ASDM2MSFiller::addCalDevice(int				antennaId,
     temperatureLoadCol.put(rowIndex, Vector<Double>(IPosition(1, numCalLoad), &temperatureLoad[0], SHARE));
   }    
 
-  mscaldevice.flush();
+  //mscaldevice.flush();
 }
 
 void ASDM2MSFiller::end(double time_) {
