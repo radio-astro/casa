@@ -97,6 +97,8 @@
 #include <casa/iomanip.h>
 #include <casa/OS/Directory.h>
 
+using std::make_pair;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern void showBinaryTable(BinaryTableExtension &x);
@@ -599,7 +601,7 @@ void MSFitsInput::readFitsFile(Int obsType) {
         }
         catch(AipsError ex) {
            itsLog << LogOrigin("MSFitsInput", "readFitsFile")
-                  << "" //<< ex.getMesg() 
+                  << ex.getMesg() 
                   << LogIO::EXCEPTION;
         }
     } else if (infile_p->hdutype() == FITS::PrimaryTableHDU) {
@@ -2198,6 +2200,13 @@ MDirection::Types MSFitsInput::getDirectionFrame(Double epoch) {
 
 void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
     MSFieldColumns& msField(msc_p->field());
+
+    TableRecord btKeywords = bt.getKeywords();
+    if (!btKeywords.isDefined("NO_IF")) {
+        throw(AipsError("MSFitsInput: Illegal SU file: no number of IFs"));
+    }
+    uInt noif = bt.getKeywords().asuInt("NO_IF");
+
     // Table suTab=bt.fullTable("",Table::Scratch);
     Table suTab = bt.fullTable();
     ROScalarColumn<Int> id(suTab, "ID. NO.");
@@ -2225,15 +2234,32 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt, Int nField) {
     }
     Int outRow = -1;
 
-    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117 but the CASA implementation makes them Scalar
-    ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
-    ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
-    //Matrix<Double> restFreq(nIF_p, suTab.nrow());
-    //Matrix<Double> sysVel(nIF_p, suTab.nrow());
-    restFreq_p.resize(suTab.nrow());
-    sysVel_p.resize(suTab.nrow());
-    restfreq.getColumn(restFreq_p);
-    sysvel.getColumn(sysVel_p);
+    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117
+    restFreq_p.resize(noif, suTab.nrow());
+    sysVel_p.resize(noif, suTab.nrow());
+    try{
+      ROArrayColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+      ROArrayColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+      restfreq.getColumn(restFreq_p);
+      sysvel.getColumn(sysVel_p);
+    }
+    catch (std::exception x) {
+      if(noif>1){
+	itsLog << LogOrigin("MSFitsInput", "fillFieldTable") << LogIO::WARN
+	       << x.what() << ": " << "Inconsistent setup of RESTFREQ and LSRVEL columns." << endl
+	       << "With NO_IF>1, they should be arrays not scalars." << LogIO::POST;
+      }
+      ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+      ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+      Vector<Double> tmprf(suTab.nrow());
+      Vector<Double> tmpsv(suTab.nrow());
+      restfreq.getColumn(tmprf);
+      sysvel.getColumn(tmpsv);
+      for(uInt ii=0; ii<suTab.nrow(); ii++){
+	restFreq_p(0,ii) = tmprf(ii);
+	sysVel_p(0,ii) = tmpsv(ii);
+      }
+    }      
 
     // set the DIRECTION MEASURE REFERENCE for appropriate columns
 
@@ -2436,8 +2462,16 @@ void MSFitsInput::fillExtraTables() {
     Double lastTime = 0;
     Vector<Int> fieldId = msc_p->fieldId().getColumn();
     Vector<Int> ddId;
-    if (addSourceTable_p)
-        ddId = msc_p->dataDescId().getColumn();
+    if (addSourceTable_p){
+      ddId = msc_p->dataDescId().getColumn();
+
+      if(!msc_p->source().sourceModel().isNull()){
+	// we don't have source models
+	ms_p.source().removeColumn("SOURCE_MODEL");
+      }
+    }
+
+    SimpleOrderedMap <pair<Int,Int>, Int> sourceFieldIndex(-1); // for the case we need to write the source table
 
     ProgressMeter meter(0.0, nrow * 1.0, "UVFITS Filler", "rows copied",
                 "", "", True, nrow / 100);
@@ -2465,7 +2499,7 @@ void MSFitsInput::fillExtraTables() {
                     msc_p->pointing().interval().put(np - j - 1, interval);
                 }
             }
-            /* Damn this is not right for concatenating later for mosaicing
+            /* This is not right for concatenating later for mosaicing
              As it is a useless piece of info copy from Field...field table will
              do
 
@@ -2487,21 +2521,15 @@ void MSFitsInput::fillExtraTables() {
              */
             if (addSourceTable_p) {
 
-	        if(!msc_p->source().sourceModel().isNull()){
-		  // we don't have source models
-		  ms_p.source().removeColumn("SOURCE_MODEL");
-		}
-
                 lastDDId = ddId(i);
-                Int spwId = msc_p->dataDescription().spectralWindowId()(
-                        lastDDId);
+                Int spwId = msc_p->dataDescription().spectralWindowId()(lastDDId);
                 // now check if we've seen this field for this spectral window
                 // Use indexed access to the SOURCE sub-table
-                MSSourceIndex sourceIndex(ms_p.source());
-                sourceIndex.sourceId() = lastFieldId;
-                sourceIndex.spectralWindowId() = spwId;
-                Vector<uInt> rows = sourceIndex.getRowNumbers();
-                if (rows.nelements() == 0) {
+		pair<Int, Int> myfldspw = make_pair<Int, Int>(lastFieldId, spwId);
+		if(!sourceFieldIndex.isDefined(myfldspw)){
+
+		    sourceFieldIndex.define(myfldspw, 1); 
+
                     ms_p.source().addRow();
                     Int j = ms_p.source().nrow() - 1;
                     MSSourceColumns & mss = msc_p->source();
@@ -2522,8 +2550,8 @@ void MSFitsInput::fillExtraTables() {
                     mss.spectralWindowId().put(j, spwId);
                     Vector<Double> sysVel(1);
 		    // sysVel was extracted from LSRVEL in SU table
-		    if(0<=lastFieldId && (uInt)lastFieldId<sysVel_p.size()){
-		      sysVel(0) = sysVel_p(lastFieldId);
+		    if(0<=lastFieldId && (uInt)lastFieldId<sysVel_p.ncolumn()){
+		      sysVel(0) = sysVel_p(0, lastFieldId);
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
@@ -2537,8 +2565,8 @@ void MSFitsInput::fillExtraTables() {
                     mss.transition().put(j, transition);
                     Vector<Double> restFreqs(1);
 
-		    if(0<=lastFieldId && (uInt)lastFieldId<restFreq_p.size()){
-		      restFreqs(0) = restFreq_p(lastFieldId);
+		    if(0<=lastFieldId && (uInt)lastFieldId<restFreq_p.ncolumn()){
+		      restFreqs(0) = restFreq_p(0, lastFieldId);
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
@@ -3584,6 +3612,13 @@ void MSFitsInput::fillSourceTable() {
 
 void MSFitsInput::fillFieldTable(BinaryTable& bt) {
     Int nField = bt.nrows();
+
+    TableRecord btKeywords = bt.getKeywords();
+    if (!btKeywords.isDefined("NO_IF")) {
+        throw(AipsError("MSFitsInput: Illegal SU file: no number of IFs"));
+    }
+    uInt noif = bt.getKeywords().asuInt("NO_IF");
+
     MSFieldColumns& msField(msc_p->field());
     // Table suTab=bt.fullTable("",Table::Scratch);
     Table suTab = bt.fullTable();
@@ -3612,17 +3647,32 @@ void MSFitsInput::fillFieldTable(BinaryTable& bt) {
     }
     Int outRow = -1;
 
-    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117 but the CASA implementation makes them Scalar
-    ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
-    ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
-    //Matrix<Double> restFreq(nIF_p, suTab.nrow());
-    //Matrix<Double> sysVel(nIF_p, suTab.nrow());
-    restFreq_p.resize(suTab.nrow());
-    sysVel_p.resize(suTab.nrow());
-    restfreq.getColumn(restFreq_p);
-    sysvel.getColumn(sysVel_p);
-    cout << "restfreq = " << restFreq_p << endl;
-    cout << "sysvel   = " << sysVel_p << endl;
+    // RESTFREQ and LSRVEL are 2D columns according to the AIPS Memo 117
+    restFreq_p.resize(noif, suTab.nrow());
+    sysVel_p.resize(noif, suTab.nrow());
+    try{
+      ROArrayColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+      ROArrayColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+      restfreq.getColumn(restFreq_p);
+      sysvel.getColumn(sysVel_p);
+    }
+    catch (std::exception x) {
+      if(noif>1){
+	itsLog << LogOrigin("MSFitsInput", "fillFieldTable") << LogIO::WARN
+	       << x.what() << ": " << "Inconsistent setup of RESTFREQ and LSRVEL columns." << endl
+	       << "With NO_IF>1, they should be arrays not scalars." << LogIO::POST;
+      }
+      ROScalarColumn<Double> restfreq(suTab,"RESTFREQ");  // Hz
+      ROScalarColumn<Double> sysvel(suTab,"LSRVEL"); // m/s
+      Vector<Double> tmprf(suTab.nrow());
+      Vector<Double> tmpsv(suTab.nrow());
+      restfreq.getColumn(tmprf);
+      sysvel.getColumn(tmpsv);
+      for(uInt ii=0; ii<suTab.nrow(); ii++){
+	restFreq_p(0,ii) = tmprf(ii);
+	sysVel_p(0,ii) = tmpsv(ii);
+      }
+    }      
 
     // set the DIRECTION MEASURE REFERENCE for appropriate columns
     MDirection::Types epochRefZero = getDirectionFrame(epoch(0));
