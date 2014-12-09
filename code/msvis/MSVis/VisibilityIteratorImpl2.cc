@@ -2118,7 +2118,7 @@ VisibilityIteratorImpl2::setTileCache ()
                 uInt cacheSize = (uInt) (ceil (nTiles0) * ceil (nTiles1)) * 2;
 
                 tacc.clearCaches (); //One tile only for now ...seems to work faster
-                tacc.setCacheSize (startrow, cacheSize);
+		tacc.setCacheSize (startrow, cacheSize);
 
             }
         }
@@ -2594,7 +2594,7 @@ VisibilityIteratorImpl2::weight (Matrix<Float> & wt) const
 Bool
 VisibilityIteratorImpl2::weightSpectrumExists () const
 {
-    if (msIter_p->newMS ()) { // Cache to avoid testing unnecessarily.
+    if (msIter_p->newSpectralWindow ()) { // Cache to avoid testing unnecessarily.
 
         cache_p.msHasWeightSpectrum_p = columns_p.weightSpectrum_p.hasContent ();
 
