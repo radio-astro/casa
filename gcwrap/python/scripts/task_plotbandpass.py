@@ -13,7 +13,7 @@
 #
 # To test:  see plotbandpass_regression.py
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.60 2014/12/04 21:41:40 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.61 2014/12/09 15:42:09 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -89,7 +89,7 @@ def version(showfile=True):
     """
     Returns the CVS revision number.
     """
-    myversion = "$Id: task_plotbandpass.py,v 1.60 2014/12/04 21:41:40 thunter Exp $" 
+    myversion = "$Id: task_plotbandpass.py,v 1.61 2014/12/09 15:42:09 thunter Exp $" 
     if (showfile):
         print "Loaded from %s" % (__file__)
     return myversion
@@ -4049,6 +4049,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                      figfileNumber += 1
         
                                donetime = timeUtilities.time()
+                               drewAtmosphere = False # needed for CAS-7187 (subplot=11)
                                if (interactive):
                                   pb.draw()
 # #     # #                        myinput = raw_input(":(%.1f sec) Press return for next page (b for backwards, q to quit): "%(donetime-mytimestamp))
@@ -4874,6 +4875,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                           figfileNumber += 1
                       myinput = ''
                       donetime = timeUtilities.time()
+                      drewAtmosphere = False # needed for CAS-7187 (subplot=11)
                       if (interactive):
                           pb.draw()
 # #     # #                myinput = raw_input("(%.1f sec) Press return for next screen (b for backwards, q to quit): "%(donetime-mytimestamp))
