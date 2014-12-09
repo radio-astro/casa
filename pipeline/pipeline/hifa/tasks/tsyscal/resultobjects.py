@@ -15,7 +15,7 @@ class TsyscalResults(basetask.Results):
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
-	self.unmappedspws=unmappedspws
+        self.unmappedspws = unmappedspws[:]
         self.error = set()
 
     def merge_with_context(self, context):
@@ -36,4 +36,3 @@ class TsyscalResults(basetask.Results):
                 spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
                 name=calapplication.gaintable)
         return s
-

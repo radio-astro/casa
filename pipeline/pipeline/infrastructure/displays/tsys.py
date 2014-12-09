@@ -23,10 +23,12 @@ class TsysSummaryChart(object):
         ms = context.observing_run.get_ms(self._vis)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spw_ids = [spw.id for spw in science_spws]
-        # check for 'spw is not tsys' so that we only have mapped Tsys windows,
-        # which have different IDs from the science windows they map to. 
+        
+        wrapper = common.CaltableWrapperFactory.from_caltable(self._caltable)
+        tsys_in_caltable = set(wrapper.spw) 
         self._spwmap = dict((spw, tsys) for (spw, tsys) in enumerate(calto.spwmap)
-                            if spw in science_spw_ids and spw is not tsys)
+                            if spw in science_spw_ids 
+                            and tsys in tsys_in_caltable)
 
         tsysmap = collections.defaultdict(list)
         for sci, tsys in self._spwmap.items():
@@ -104,11 +106,12 @@ class TsysPerAntennaChart(common.PlotbandpassDetailBase):
         science_spws = ms.get_spectral_windows(science_windows_only=True)
         science_spw_ids = [spw.id for spw in science_spws]
 
+        wrapper = common.CaltableWrapperFactory.from_caltable(self._caltable)
+        tsys_in_caltable = set(wrapper.spw) 
+
         spwmap = collections.defaultdict(list)
         for science_spw_id, tsys_spw_id in enumerate(calto.spwmap):
-            # unmapped science windows have a Tsys mapping equal to their
-            # window ID
-            if science_spw_id is tsys_spw_id:
+            if tsys_spw_id not in tsys_in_caltable:
                 continue
             if science_spw_id in science_spw_ids:
                 spwmap[tsys_spw_id].append(science_spw_id)                    
