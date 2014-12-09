@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <libsakura/sakura.h>
+//#include <libsakura/sakura.h>
 //#include <libsakura/config.h>
 
 #include <casa/Logging/LogIO.h>
@@ -14,6 +14,15 @@
 
 #include <casa_sakura/SakuraUtils.h>
 #include <singledish/SingleDish/SingleDishMS.h>
+
+//---for measuring elapse time------------------------
+#include <sys/time.h>
+double gettimeofday_sec() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + (double)tv.tv_usec*1.0e-6;
+}
+//----------------------------------------------------
 
 #define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
 
@@ -335,6 +344,17 @@ void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
     out_data[i] = static_cast<float>(data_cube(plane, i, row));
 }
 
+void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
+					  size_t const row,
+					  size_t const plane,
+					  size_t const num_data,
+					  SakuraAlignedArray<float> &out_data)
+{
+  float *ptr = out_data.data;
+  for (size_t i=0; i < num_data; ++i) 
+    ptr[i] = static_cast<float>(data_cube(plane, i, row));
+}
+
 void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
@@ -348,6 +368,99 @@ void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
+
+void SingleDishMS::subtract_baseline(int const order, 
+				     float const clip_threshold_sigma, 
+				     int const num_fitting_max)
+{
+  LogIO os(_ORIGIN);
+  os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
+  // in_ms = out_ms
+  // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
+  // no iteration is necessary for the processing.
+  // procedure
+  // 1. iterate over MS
+  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+  // 3. fit a polynomial to each spectrum and subtract it
+  // 4. put single spectrum (or a block of spectra) to out_column
+
+  // initializing Sakura -- temporarily placed here, though this should be done in start-up of casapy eventually
+  SakuraUtils::InitializeSakura();
+
+  double tstart = gettimeofday_sec();
+
+  prepare_for_process();
+  Block<Int> columns(1);
+  columns[0] = MS::DATA_DESC_ID;
+  vi::SortColumns sc(columns,False);
+  vi::VisibilityIterator2 vi(*mssel_,sc,True);
+  vi::VisBuffer2 *vb = vi.getVisBuffer();
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+    for (vi.origin(); vi.more(); vi.next()) {
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      Matrix<Float> data_row(num_pol,num_chan);
+      SakuraAlignedArray<float> spec(num_chan);
+      SakuraAlignedArray<bool> mask(num_chan);
+      // set all elements of mask true as channel flag info 
+      // is not used for now (2014/12/01 WK)
+      for (size_t ichan=0; ichan < num_chan; ++ichan) {
+	mask.data[ichan] = true;
+      }
+      // create baseline context
+      LIBSAKURA_SYMBOL(BaselineContext) *bl_context;
+      status = 
+	LIBSAKURA_SYMBOL(CreateBaselineContext)(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
+						static_cast<uint16_t>(order), 
+						num_chan, 
+						&bl_context);
+      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	std::cout << "   -- error occured in CreateBaselineContext()." << std::flush;
+      }
+      // get a data cube (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      // loop over MS rows
+      for (size_t irow=0; irow < num_row; ++irow) {
+	// loop over polarization
+	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  // get a spectrum from data cube
+	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+	  // actual execution of single spectrum
+	  status = 
+	    LIBSAKURA_SYMBOL(SubtractBaseline)(num_chan, spec.data, mask.data, bl_context, 
+					       clip_threshold_sigma, num_fitting_max, 
+					       true, mask.data, spec.data, &bl_status);
+	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	    //raise exception?
+	    std::cout << "   -- error occured in SubtractBaseline()." << std::flush;
+	  }
+	  // set back a spectrum to data cube
+	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	} // end of polarization loop
+      } // end of MS row loop
+      // write back data cube to VisBuffer
+      set_data_cube_float(*vb, data_chunk);
+      vb->writeChangesBack();
+      // destroy baseline context
+      status =
+        LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_context);
+      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	//raise exception?
+	std::cout << "   -- error occured in DestroyBaselineContext()." << std::flush;
+      }
+    } // end of vi loop
+  } // end of chunk loop
+
+  double tend = gettimeofday_sec();
+  std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+  // clean-up Sakura -- temporarily placed here, though this should be done in casapy-side
+  SakuraUtils::CleanUpSakura();
+}
 
 void SingleDishMS::scale(float const factor)
 {

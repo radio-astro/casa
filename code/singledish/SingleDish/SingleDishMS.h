@@ -4,10 +4,11 @@
 #include <iostream>
 #include <string>
 
-//#include <libsakura/sakura.h>
+#include <libsakura/sakura.h>
 
 #include <casa/aipstype.h>
 #include <casa/Containers/Record.h>
+#include <casa_sakura/SakuraAlignedArray.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <msvis/MSVis/VisBuffer2.h>
 
@@ -42,7 +43,10 @@ public:
   // Set channel mask to process
 
   // Invoke baseline subtraction
-
+  // (polynomial, no mask, write results in CORRECTED_DATA column)
+  void subtract_baseline(int const order, 
+			 float const clip_threshold_sigma=3.0, 
+			 int const num_fitting_max=1);
 
 private:
   /////////////////////////
@@ -76,6 +80,11 @@ private:
 			      size_t const plane,
 			      size_t const num_data,
 			      float out_data[/*num_data*/]);
+  void get_spectrum_from_cube(Cube<Float> &data_cube,
+			      size_t const row,
+			      size_t const plane,
+			      size_t const num_data,
+			      SakuraAlignedArray<float> &out_data);
   // set a spectrum at the row and plane (polarization) from data cube
   void set_spectrum_to_cube(Cube<Float> &data_cube,
 			    size_t const row,
