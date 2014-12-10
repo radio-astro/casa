@@ -2551,7 +2551,8 @@ void MSFitsInput::fillExtraTables() {
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
-			     << LogIO::WARN << "Array of systemic velocities has no entry for field " << lastFieldId << LogIO::POST;
+			     << LogIO::WARN << "No systemic velocity for field " << lastFieldId << LogIO::POST;
+		      sysVel(0) = 0.;
 		    }		      
 
                     mss.sysvel().put(j, sysVel);
@@ -2566,7 +2567,8 @@ void MSFitsInput::fillExtraTables() {
 		    }
 		    else{
 		      itsLog << LogOrigin("MSFitsInput", "fillExtraTable")
-			     << LogIO::WARN << "Array of rest frequencies has no entry for field " << lastFieldId << LogIO::POST;
+			     << LogIO::WARN << "No rest frequency for field " << lastFieldId << LogIO::POST;
+		      restFreqs(0) = 0.;
 		    }		      
 
                     mss.restFrequency().put(j, restFreqs);
