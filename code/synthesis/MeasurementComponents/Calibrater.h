@@ -39,7 +39,9 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
+#include <ms/MeasurementSets/MSSelection.h>
 #include <msvis/MSVis/VisibilityProcessing.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -343,6 +345,10 @@ class Calibrater
   MeasurementSet* ms_p;
   MeasurementSet* mssel_p;
   MeasurementSet* msselRaw_p;
+
+  // MSSelection object
+  MSSelection mss_p;
+  vi::FrequencySelections* frequencySelections_p;
 
   // VisSet and VisEquation derived from the input MeasurementSet
   VisSet* vs_p;

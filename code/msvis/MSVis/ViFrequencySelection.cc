@@ -98,7 +98,8 @@ FrequencySelectionUsingChannels::add (Int spectralWindow, Int firstChannel,
 }
 
 void
-FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
+FrequencySelectionUsingChannels::add (const MSSelection & msSelectionConst,
+                                      const MeasurementSet * ms)
 {
     // Add in the frequency selection from the provided MSSelection object
     //
@@ -106,11 +107,14 @@ FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
 
     enum {SpectralWindowId, FirstChannel, StopChannel, Step};
 
-    Matrix<Int> channelList = const_cast <MSSelection &> (msSelection).getChanList();
+    MSSelection & msSelection = const_cast <MSSelection &> (msSelectionConst);
+        // Needed because many msSelection methods are not const for some reason
+
+    Matrix<Int> channelList = msSelection.getChanList();
 
     for (Int row = 0; row < (Int) channelList.nrow(); row ++){
 
-        Int nChannels = channelList (row, StopChannel) - channelList (row, Step);
+        Int nChannels = channelList (row, StopChannel) - channelList (row, FirstChannel);
         nChannels = nChannels / channelList (row, Step) + 1;
 
         add (channelList (row, SpectralWindowId),
@@ -122,7 +126,7 @@ FrequencySelectionUsingChannels::add (const MSSelection & msSelection)
     // Extract and add the correlation selection.
 
     Vector <Vector<Slice> > correlationSlices;
-    const_cast <MSSelection &> (msSelection).getCorrSlices (correlationSlices);
+    msSelection.getCorrSlices (correlationSlices, ms);
 
     addCorrelationSlices (correlationSlices);
 
