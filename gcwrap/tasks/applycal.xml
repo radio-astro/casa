@@ -279,7 +279,7 @@ another visibility file.
                         gainfield=['0~3','4~6']  (for multiple gaintables)
        interp -- Interpolation type (in time[,freq]) to use for each gaintable.
                 When frequency interpolation is relevant (bandpass solutions, 
-                frequency-dependent polcal solutions)
+                frequency-dependent polcal solutions, ALMA Tsys)
                 separate time-dependent and freq-dependent interp
                 types with a comma (freq _after_ the comma).                
                 Specifications for frequency are ignored when the
