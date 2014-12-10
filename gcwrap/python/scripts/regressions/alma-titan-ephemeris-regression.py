@@ -187,6 +187,18 @@ mystep = 5
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
+    passed = True
+
+    # verify MS frame
+    mytb = tbtool()
+    mytb.open('cvel_titan.ms/SPECTRAL_WINDOW')
+    theframe = mytb.getcell('MEAS_FREQ_REF', 0)
+    mytb.close()
+    if (theframe!=0):
+        print "ERROR: reference frame of SPW 0 in cvel_titan.ms should be REST==0 but is ", theframe
+        passed = False
+
+    # verify image properties 
 
     exppeakm = 3.36615992 
     exprmsm = 1.13404071 
@@ -235,8 +247,6 @@ if(mystep in thesteps):
     casalog.post( "------------------------------------------------------------------------------------------")
     casalog.post( str(respeakchan)+ "("+str(exppeakchan)+")")
 
-
-    passed = True
 
     if (respeakchan!=exppeakchan):
         casalog.post( 'ERROR: Peak flux in titan cube should be at channel '+str(exppeakchan)+' but is at '+str(exppeakchan),'WARN')
