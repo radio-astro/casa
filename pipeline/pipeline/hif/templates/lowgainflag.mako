@@ -1,86 +1,47 @@
 <%!
-rsc_path = ""
-
 import os.path
-import pydoc
-import numpy as np
-import sys
 
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.displays as displays
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.renderer.logger as logger
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.renderer.rendererutils as hrutils
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
-
-LOG = infrastructure.get_logger(__name__)
+def num_lines(report_dir, relpath):
+	abspath = os.path.join(report_dir, relpath)
+	if os.path.exists(abspath):
+		return sum(1 for line in open(abspath) if not line.startswith('#'))
+	else:
+		return 'N/A'
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
 <%block name="title">Flag antennas with low gain</%block>
-
-## generate the plots
-<%
-try:
-    r = result[0]
-    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
-    plots_dir = stage_dir
-    if not os.path.exists(plots_dir):
-        os.mkdir(plots_dir)
-
-    plots = []
-    for r in result:
-        if r.view:
-            # display the view first
-            # plot() returns the list of Plots it has generated
-            LOG.info('Plotting')
-            plots.append(displays.ImageDisplay().plot(pcontext, r,
-              reportdir=plots_dir))
-
-    # Group the Plots by axes and plot types; each logical grouping will
-    # be contained in a PlotGroup
-    plot_groups = logger.PlotGroup.create_plot_groups(plots)
-    # Write the thumbnail pages for each plot grouping to disk
-    for plot_group in plot_groups:
-        renderer = sharedrenderer.PlotGroupRenderer(pcontext, r, plot_group)
-        plot_group.filename = renderer.basename
-        with renderer.get_file() as fileobj:
-            fileobj.write(renderer.render())
-
-except Exception, e:
-    print 'hif_lowgainflag html template exception:', e
-    raise e
-%>
  
-% if plot_groups:
+% if plots:
 <h2>Plots</h2>
 <ul>
-        % for plot_group in plot_groups:
-	        % if plot_group.title == 'Time vs Antenna1':
-		   <li><a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
-                   shows the images used for flagging.</li>
-                % endif
-        % endfor
+    % for vis, relpath in plots.items():
+        <li>
+               <a class="replace" href="${relpath}">${vis}</a>
+               shows the images used for flagging.
+    % endfor
 </ul>
 % endif
 
 % if htmlreports:
 <h2>Flags</h2>
-<table class="table table-bordered">
+<table class="table table-bordered table-striped">
+	<caption>Report Files</caption>
 	<thead>
-	    <tr>
-    	    <th>Flagcmds</th>
-    	</tr>
-    </thead>
-    <tbody>
-	    % for file,reports in htmlreports.items():
-	    <tr>
-	        <td><a class="replace-pre" href=${reports[0]}>${file}</a></td>
-	    </tr>
-	    % endfor
+		<tr>
+			<th>Measurement Set</th>
+			<th>Flagging Commands</th>
+			<th>Number of Statements</th>
+		</tr>
+	</thead>
+	<tbody>
+		% for msname, relpath in htmlreports.items():
+		<tr>
+			<td>${msname}</td>
+			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
+			<td>${num_lines(pcontext.report_dir, relpath)}</td>
+		</tr>
+		% endfor
 	</tbody>
 </table>
 % endif
-
