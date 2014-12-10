@@ -98,6 +98,10 @@ public:
 
   // Return a reference to an imageinterface for the mask.
   void makeAutoMask(CountedPtr<SIImageStore> imstore);
+  // Top level autoMask interface...
+  void autoMask(CountedPtr<SIImageStore> imstore, String alg="");
+  // automask algorithms...  
+  void autoMaskByThreshold();
 
   void makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit);
 

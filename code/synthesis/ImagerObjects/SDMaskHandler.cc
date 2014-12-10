@@ -36,6 +36,7 @@
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
@@ -618,32 +619,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SDMaskHandler","makeAutoMask",WHERE) );
 
     Array<Float> localres;
-    imstore->residual()->get( localres , True );
+    // Modification to be able to work with a cube (TT 2014-12-09)
+    //imstore->residual()->get( localres , True );
+    imstore->residual()->get( localres );
 
     Array<Float> localmask;
-    imstore->mask()->get( localmask , True );
-    
-    IPosition posMaxAbs( localmask.shape().nelements(), 0);
-    Float maxAbs=0.0;
-    Float minVal;
-    IPosition posmin(localmask.shape().nelements(), 0);
-    minMax(minVal, maxAbs, posmin, posMaxAbs, localres);
+    //imstore->mask()->get( localmask , True );
+    imstore->mask()->get( localmask );
+   
+    Int specAxis = CoordinateUtil::findSpectralAxis(imstore->mask()->coordinates());
+    IPosition maskShape = localmask.shape();
+    Int ndim = maskShape.nelements();
+    IPosition pos(ndim,0);
+    IPosition blc(ndim,0);
+    IPosition trc(ndim,0);
+    trc[0] = maskShape[0]-1; 
+    trc[1] = maskShape[1]-1;
+    // added per channel mask setting
+    for (pos[specAxis] = 0; pos[specAxis]<localmask.shape()[specAxis]; pos[specAxis]++) 
+      { 
+        IPosition posMaxAbs( localmask.shape().nelements(), 0);
+        blc[specAxis]=pos[specAxis];
+        trc[specAxis]=pos[specAxis];
+        Float maxAbs=0.0;
+        Float minVal;
+        IPosition posmin(localmask.shape().nelements(), 0);
+        //minMax(minVal, maxAbs, posmin, posMaxAbs, localres);
+        minMax(minVal, maxAbs, posmin, posMaxAbs, localres(blc,trc));
 
     //    cout << "Max position : " << posMaxAbs << endl;
 
-    Int dist=5;
-    IPosition pos(2,0,0); // Deal with the input shapes properly......
-    for (pos[0]=posMaxAbs[0]-dist; pos[0]<posMaxAbs[0]+dist; pos[0]++)
-      {
-	for (pos[1]=posMaxAbs[1]-dist; pos[1]<posMaxAbs[1]+dist; pos[1]++)
-	  {
-	    if( pos[0]>0 && pos[0]<localmask.shape()[0] && pos[1]>0 && pos[1]<localmask.shape()[1] )
+        Int dist=5;
+     
+        //IPosition pos(2,0,0); // Deal with the input shapes properly......
+        for (pos[0]=posMaxAbs[0]-dist; pos[0]<posMaxAbs[0]+dist; pos[0]++)
+          {
+	    for (pos[1]=posMaxAbs[1]-dist; pos[1]<posMaxAbs[1]+dist; pos[1]++)
 	      {
-		localmask( pos ) = 1.0;
+	        if( pos[0]>0 && pos[0]<localmask.shape()[0] && pos[1]>0 && pos[1]<localmask.shape()[1] )
+	          {
+		    localmask( pos ) = 1.0;
+	          }
 	      }
-	  }
-      }
-
+          }
+      } // over channels
     //cout << "Sum of mask : " << sum(localmask) << endl;
     Float summask = sum(localmask);
     if( summask==0.0 ) { localmask=1.0; summask = sum(localmask); }
@@ -655,6 +674,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    cout << "Sum of imstore mask : " << sum( localmask ) << endl;
 
   }
+
+  void SDMaskHandler::autoMask(CountedPtr<SIImageStore> imstore, String alg) 
+  {
+    LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
+    
+    TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
+    Array<Float> resdata;
+    Array<Float> maskdata;
+    imstore->residual()->get(resdata);
+    tempres->put(resdata);
+    TempImage<Float>* tempmask = new TempImage<Float>(imstore->mask()->shape(), imstore->mask()->coordinates());
+    imstore->mask()->get(maskdata);
+    tempmask->put(maskdata);
+
+    //do statistics
+    std::tr1::shared_ptr<casa::ImageInterface<float> > tempres_ptr(tempres);
+    ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
+    Vector<Int> axes(2);
+    axes[0] = 0;
+    axes[1] = 1;
+    imcalc.setAxes(axes);
+    Record thestats = imcalc.statistics();
+    Array<Double> max, min;
+    thestats.get(RecordFieldId("max"), max);
+    //cerr<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<endl;
+    if (alg==String("")) {
+      makeAutoMask(imstore);
+    }
+
+    delete tempmask; tempmask=0;
+  }
+
 
   void SDMaskHandler::makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit)
   {
