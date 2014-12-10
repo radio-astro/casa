@@ -54,6 +54,7 @@
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
+#include <msvis/MSVis/ViFrequencySelection.h>
 #include <casa/Quanta/MVTime.h>
 
 #include <casa/Logging/LogMessage.h>
@@ -74,6 +75,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Calibrater::Calibrater(): 
   ms_p(0), 
   mssel_p(0), 
+  mss_p(),
+  frequencySelections_p(0),
   vs_p(0), 
   ve_p(0),
   vc_p(),
@@ -343,7 +346,7 @@ void Calibrater::selectvis(const String& time,
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
-			   "",scan,"",intent, obsIDs);
+			   "",scan,"",intent, obsIDs,&mss_p);
 
     // Keep any MR status for the MS
     mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
@@ -947,6 +950,7 @@ Bool Calibrater::cleanup() {
   // Delete derived dataset stuff
   if(vs_p) delete vs_p; vs_p=0;
   if(mssel_p) delete mssel_p; mssel_p=0;
+  if (frequencySelections_p)  delete frequencySelections_p;  frequencySelections_p=0;
 
   // Delete the current VisEquation
   if(ve_p) delete ve_p; ve_p=0;
@@ -1112,8 +1116,8 @@ Calibrater::correct(String mode)
 
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct", 
-				     upmode.contains("STRICT"));
+        retval = summarize_uncalspws(uncalspw, "correct",
+ 				     upmode.contains("STRICT"));
 
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
@@ -1183,6 +1187,11 @@ Calibrater::correct2(String mode)
 
       vi::SortColumns sc(columns);
       vi::VisibilityIterator2 vi(*mssel_p,sc,True);
+
+      // Apply channel selection (see selectChannel(spw))
+      if (frequencySelections_p)
+	vi.setFrequencySelection(*frequencySelections_p);
+
       vi::VisBuffer2 *vb = vi.getVisBuffer();
 
       // Detect if we will be setting WEIGHT_SPECTRUM, and arrange for this
@@ -1197,6 +1206,8 @@ Calibrater::correct2(String mode)
       
       Vector<Bool> uncalspw(vi.nSpectralWindows());  // Used to accumulate error messages
       uncalspw.set(False);		             // instead of bombing the user
+
+      uInt nvb(0);
 
         for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
 
@@ -1249,32 +1260,57 @@ Calibrater::correct2(String mode)
 		
 		// Push the calibrated data etc. back to the MS
 		vb->writeChangesBack();
+		nvb+=1;  // increment vb counter
 	      }
 
 	    }
 	    else{
 	      uncalspw[spw] = true;
-	      if (! vi.isAsynchronous()){
 
-		// Asynchronous I/O doesn't have a way to skip
-		// VisBuffers, so only break out when not using
-		// async i/o.
-		
-		break; // Only proceed if spw can be calibrated
+	      // set the flags, if we are being strict
+	      // (don't touch the data/weights, which are initialized)
+	      if (upmode.contains("STRICT")) {
+		// reference (to avoid copy) and set the flags
+		Cube<Bool> fC(vb->flagCube());   // reference
+		fC.set(True);  
+
+		// make dirty for writeChangesBack  (does this do an actual copy?)
+		vb->setFlagCube(vb->flagCube());
+
+		// write back to 
+		vb->writeChangesBack();
+
+	      }
+	      else {
+
+		// Break out of inner VI2 loop, if possible
+		if (! vi.isAsynchronous()){
+		  
+		  // Asynchronous I/O doesn't have a way to skip
+		  // VisBuffers, so only break out when not using
+		  // async i/o.
+		  
+		  break; 
+
+		}
+
 	      }
 	    }
 	  }
         }
 
-
         // Now that we're out of the loop, summarize any errors.
 
-        retval = summarize_uncalspws(uncalspw, "correct");
+        retval = summarize_uncalspws(uncalspw, "correct",
+ 				     upmode.contains("STRICT"));
 	
 	actRec_=Record();
 	actRec_.define("origin","Calibrater::correct");
 	actRec_.defineRecord("VisEquation",ve_p->actionRec());
 	
+
+	//cout << "Number of VisBuffers corrected: " << nvb << endl;
+
     }
     catch (AipsError x) {
         logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
@@ -2684,6 +2720,24 @@ void Calibrater::selectChannel(const String& spw) {
 
   // Initialize the chanmask_
   initChanMask();
+
+  {
+
+    // Refresh the frequencySelections object to feed to VI2, if relevant
+    if (frequencySelections_p) {
+      delete frequencySelections_p;
+      frequencySelections_p=NULL;
+    }
+    frequencySelections_p = new vi::FrequencySelections();
+
+    vi::FrequencySelectionUsingChannels usingChannels;
+    usingChannels.add(mss_p,mssel_p);
+    frequencySelections_p->add(usingChannels);
+
+    //    cout << usingChannels.toString() << endl;
+    //    cout << "FS.size() = " << frequencySelections_p->size() << endl;
+
+  }
 
   Matrix<Int> chansel = getChanIdx(spw);
   uInt nselspw=chansel.nrow();

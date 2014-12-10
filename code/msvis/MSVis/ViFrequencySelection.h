@@ -42,6 +42,7 @@ using std::vector;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+class MeasurementSet;
 class MSSelection;
 
 namespace vi {
@@ -136,7 +137,7 @@ public:
     FrequencySelectionUsingChannels () : FrequencySelection (ByChannel) {}
 
     void add (Int spectralWindow, Int firstChannel, Int nChannels, Int increment = 1);
-    void add (const MSSelection & msSelection);
+    void add (const MSSelection & msSelection, const MeasurementSet * ms);
     const_iterator begin () const;
     FrequencySelection * clone () const;
     Bool empty () const;
