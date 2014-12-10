@@ -45,6 +45,7 @@
 
 // TVI framework
 #include <msvis/MSVis/AveragingVi2Factory.h>
+#include <msvis/MSVis/AveragingTvi2.h>
 
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
@@ -778,8 +779,8 @@ protected:
 																		Matrix<Float> &inputWeightsPlane,
 																		Vector<Float> &inputWeightsStripe);
 
-	void setOutputbuffer(Cube<Complex> *& bufferPointer);
-	void setOutputbuffer(Cube<Float> *& bufferPointer);
+	void setOutputbuffer(Cube<Complex> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer);
+	void setOutputbuffer(Cube<Float> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer);
 
 	template <class T> void bufferOutputPlanes(	uInt row,
 												Matrix<T> &outputDataPlane,

@@ -795,7 +795,6 @@ VbAvg::accumulateElementForCube (const T & unweightedValue,
     accumulator = accumulation + unweightedValue * weight;
 }
 
-
 pair<Bool, Vector<Double> >
 VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
 {
@@ -868,26 +867,13 @@ VbAvg::accumulateCubeData (MsRow * rowInput, MsRowAvg * rowAveraged)
     {
         for (Int correlation = 0; correlation < nCorrelations; correlation ++)
         {
-        	adjustedWeight(correlation) = 1.0/pow(accumulationParameters->sigmaIn(correlation),2);
+        	adjustedWeight(correlation) = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaIn(correlation));
         }
     }
 
     delete accumulationParameters;
 
     return std::make_pair (rowFlagged, adjustedWeight);
-}
-
-// jagonzal: Since these methods are not members of any class they must de declared before using them
-float
-weightToSigma (Float weight)
-{
-    return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
-}
-
-float
-sigmaToWeight (Float sigma)
-{
-    return sigma > FLT_MIN ? 1.0 / std::pow (sigma,2) : 0.0; // bad sample
 }
 
 void
@@ -922,7 +908,7 @@ VbAvg::accumulateElementForCubes (AccumulationParameters * accumulationParameter
 	{
 		// The weight corresponding to DATA is that derived from the rms stored in SIGMA
 		// This has to
-		weightObserved = sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
+		weightObserved = AveragingTvi2::sigmaToWeight(accumulationParameters->sigmaSpectrumIn (correlation, channel));
 
 		// Accumulate weighted average contribution (normalization will come at the end)
 		accumulateElementForCube (	accumulationParameters->observedIn (correlation, channel),
@@ -1236,38 +1222,40 @@ VbAvg::finalizeRowData (MsRowAvg * msRow)
 {
     Int n = msRow->countsBaseline ();
 
-    // Obtain row-level WEIGHT by calculating the median of WEIGHT_SPECTRUM
-    msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1),True));
+    // Obtain row-level WEIGHT by calculating the mean of WEIGHT_SPECTRUM
+    // msRow->setWeight(partialMedians(msRow->weightSpectrum(),IPosition(1,1),True));
+    msRow->setWeight(AveragingTvi2::average(msRow->weightSpectrum(),msRow->flags()));
 
     // If doing both DATA and CORRECTED_DATA then SIGMA_SPECTRUM contains the weight
     // (not sigma) accumulation for DATA, and we have to derive SIGMA from it
     if (doing_p.correctedData_p and doing_p.observedData_p)
     {
-    	// jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM but from the median of the
-    	// WEIGHT format of SIGMA_SPECTRUM turned into SIGMA by using 1/pow(weight,2)
-    	Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1),True);
-    	arrayTransformInPlace (weight, weightToSigma);
+    	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM but from the mean
+    	// of the WEIGHT format of SIGMA_SPECTRUM turned into SIGMA by using 1/pow(weight,2)
+    	// Vector<Float> weight = partialMedians(msRow->sigmaSpectrum(),IPosition(1,1),True);
+    	Vector<Float> weight = AveragingTvi2::average(msRow->sigmaSpectrum(),msRow->flags());
+    	arrayTransformInPlace (weight, AveragingTvi2::weightToSigma);
     	msRow->setSigma (weight);
 
     	// Now convert the DATA weight accumulation stored in sigmaSpectrum into the real SIGMA_SPECTRUM
     	// TODO: This should happen only if we are writing out SIGMA_SPECTRUM but
     	//       multiple column operation is rare and might be forbidden in the future
     	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
-    	arrayTransformInPlace (sigmaSpectrun, weightToSigma);
+    	arrayTransformInPlace (sigmaSpectrun, AveragingTvi2::weightToSigma);
     }
     // Otherwise (doing only DATA or CORRECTED_DATA) we can derive SIGMA from WEIGHT directly
     else
     {
-    	// jagonzal: SIGMA is not derived from the median of SIGMA_SPECTRUM
+    	// jagonzal: SIGMA is not derived from the mean of SIGMA_SPECTRUM
     	// but from WEIGHT turned into SIGMA by using 1/pow(weight,2)
     	Vector<Float> sigma = msRow->sigma(); // Reference copy
     	sigma = msRow->weight(); // Normal copy (transfer Weight values to Sigma)
-    	arrayTransformInPlace (sigma, weightToSigma);
+    	arrayTransformInPlace (sigma, AveragingTvi2::weightToSigma);
 
     	// Derive SIGMA_SPECTRUM from computed WEIGHT_SPECTRUM
     	Matrix<Float> sigmaSpectrun = msRow->sigmaSpectrum(); // Reference copy
     	sigmaSpectrun = msRow->weightSpectrum(); // Normal copy (transfer WeightSpectrum values to SigmaSpectrum)
-    	arrayTransformInPlace (sigmaSpectrun, weightToSigma);
+    	arrayTransformInPlace (sigmaSpectrun, AveragingTvi2::weightToSigma);
     }
 
     // Get the normalization factor for this baseline, containing
@@ -2125,6 +2113,76 @@ AveragingTvi2::validateInputVi (ViImplementation2 *)
 {
     // Validate that the input VI is compatible with this VI.
 #warning "Implement AveragingTvi2::validateInputVi"
+}
+
+Float AveragingTvi2::weightToSigma (Float weight)
+{
+    return weight > FLT_MIN ? 1.0 / std::sqrt (weight) : -1.0; // bogosity indicator
+}
+
+Float AveragingTvi2::sigmaToWeight (Float sigma)
+{
+    return sigma > FLT_MIN ? 1.0 / std::pow (sigma,2) : 0.0; // bad sample
+}
+
+Vector<Float> AveragingTvi2::average (const Matrix<Float> &data, const Matrix<Bool> &flags)
+{
+	IPosition shape = data.shape();
+	Vector<Float> result(shape(0),0);
+	Vector<uInt> samples(shape(0),0);
+
+	// Initialize accumulator flag
+	Vector<Bool> accumulatorFlag(shape(0),False);
+	for (uInt corr=0;corr<shape(0);corr++)
+	{
+		accumulatorFlag(corr) = flags(corr,0);
+	}
+
+	// Business logic
+    for (uInt corr=0;corr<shape(0);corr++)
+    {
+    	for (uInt chan=0;chan<shape(1);chan++)
+    	{
+    		// True/True or False/False
+    		if (accumulatorFlag(corr) == flags(corr,chan))
+    		{
+        		samples(corr) += 1;
+        		result(corr) += data(corr,chan);
+    		}
+    		// True/False: Reset accumulation when accumulator switches from flagged to unflag
+    		else if ( (accumulatorFlag(corr) == True) and (flags(corr,chan) == False) )
+    		{
+    			accumulatorFlag(corr) = False;
+        		samples(corr) = 1;
+        		result(corr) = data(corr,chan);
+    		}
+
+    	}
+    }
+
+    // Normalize
+    for (uInt corr=0;corr<shape(0);corr++)
+    {
+    	if (samples(corr) > 0)
+    	{
+    		result(corr) /= samples(corr);
+    	}
+    }
+
+    return result;
+}
+
+Matrix<Float> AveragingTvi2::average (const Cube<Float> &data, const Cube<Bool> &flags)
+{
+	IPosition shape = data.shape();
+	Matrix<Float> result(shape(0),shape(2),0);
+
+	for (uInt row=0;row<shape(2);row++)
+	{
+		result.column(row) = AveragingTvi2::average (data.xyPlane(row), flags.xyPlane(row));
+	}
+
+    return result;
 }
 
 } // end namespace vi
