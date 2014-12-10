@@ -982,6 +982,7 @@ void MSFitsInput::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     MSSource::addColumnToDesc(sourceTD, MSSource::REST_FREQUENCY);
     MSSource::addColumnToDesc(sourceTD, MSSource::SYSVEL);
     MSSource::addColumnToDesc(sourceTD, MSSource::TRANSITION);
+    MSSource::addColumnToDesc(sourceTD, MSSource::SOURCE_MODEL);
     SetupNewTable sourceSetup(ms.sourceTableName(), sourceTD, option);
     ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE), Table(
             sourceSetup, 0));
@@ -2464,11 +2465,6 @@ void MSFitsInput::fillExtraTables() {
     Vector<Int> ddId;
     if (addSourceTable_p){
       ddId = msc_p->dataDescId().getColumn();
-
-      if(!msc_p->source().sourceModel().isNull()){
-	// we don't have source models
-	ms_p.source().removeColumn("SOURCE_MODEL");
-      }
     }
 
     SimpleOrderedMap <pair<Int,Int>, Int> sourceFieldIndex(-1); // for the case we need to write the source table
@@ -2575,6 +2571,7 @@ void MSFitsInput::fillExtraTables() {
 
                     mss.restFrequency().put(j, restFreqs);
                     mss.calibrationGroup().put(j, -1);
+		    // sourceModel is left as is (we have no model information to fill in)
                 }
             }
         }
