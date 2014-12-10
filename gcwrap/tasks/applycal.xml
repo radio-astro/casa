@@ -106,7 +106,7 @@ another visibility file.
 	</param>
 
 	<param type="stringArray" name="interp" subparam="true">
-		<description>Interp type in time[,freq], per gaintable.  default=linear,linear</description>
+		<description>Interp type in time[,freq], per gaintable. default==linear,linear</description>
 		<value></value>
 	</param>
 
@@ -278,7 +278,8 @@ another visibility file.
                example: gainfield='0~3'
                         gainfield=['0~3','4~6']  (for multiple gaintables)
        interp -- Interpolation type (in time[,freq]) to use for each gaintable.
-                When frequency interpolation is relevant (B, Df, Xf),
+                When frequency interpolation is relevant (bandpass solutions, 
+                frequency-dependent polcal solutions)
                 separate time-dependent and freq-dependent interp
                 types with a comma (freq _after_ the comma).                
                 Specifications for frequency are ignored when the
