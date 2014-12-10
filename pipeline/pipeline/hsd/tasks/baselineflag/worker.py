@@ -267,7 +267,7 @@ class SDBLFlagWorker(object):
                     stats[4] = OldRMSdiff
                     NewRMSdiff = 0.0
                     stats[3] = NewRMSdiff
-                    Nmask = NCHAN
+                    Nmask = NCHAN - numpy.sum(mask_out)
                 elif isvalid:
                     # Mean spectra of row = row+1 ~ row+Nmean
                     if START == 1:
