@@ -59,8 +59,12 @@ class T2_4MDetailsBandpassFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
     def _write_flagcmd_to_disk(self, weblog_dir, result):
         tablename = os.path.basename(result.table)
         filename = os.path.join(weblog_dir, '%s-flag_commands.txt' % tablename)
+        flagcmds = [l.flagcmd for l in result.flagcmds()]
         with open(filename, 'w') as flagfile:
-            flagfile.writelines(['%s\n' % l.flagcmd for l in result.flagcmds()])
+            flagfile.writelines(['# Flag commands for %s\n#\n' % tablename])
+            flagfile.writelines(['%s\n' % cmd for cmd in flagcmds])
+            if not flagcmds:
+                flagfile.writelines(['#\n# No flag commands generated\n'])
         return filename
     
     
