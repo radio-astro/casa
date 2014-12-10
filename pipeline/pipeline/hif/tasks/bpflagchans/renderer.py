@@ -64,7 +64,7 @@ class T2_4MDetailsBandpassFlagRenderer(basetemplates.T2_4MDetailsDefaultRenderer
             flagfile.writelines(['# Flag commands for %s\n#\n' % tablename])
             flagfile.writelines(['%s\n' % cmd for cmd in flagcmds])
             if not flagcmds:
-                flagfile.writelines(['#\n# No flag commands generated\n'])
+                flagfile.writelines(['# No flag commands generated\n'])
         return filename
     
     
