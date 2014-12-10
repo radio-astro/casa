@@ -53,6 +53,28 @@ $(document).ready(function() {
 science spectral window to the T<sub>sys</sub> window that overlaps in 
 frequency.</p>
 
+<h2>T<sub>sys</sub> window mapping</h2>
+<table class="table table-bordered table-striped">
+	<caption>Mapping of T<sub>sys</sub> window to science window</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>T<sub>sys</sub> window</th>
+			<th>Science windows</th>
+		</tr>
+	</thead>
+	<tbody>
+	% for tr in tsysmap:
+		<tr>
+		% for td in tr:
+			${td}
+		% endfor
+		</tr>
+	% endfor
+	</tbody>
+</table>
+
+
 <h2>Plots</h2>
 
 <%self:plot_group plot_dict="${summary_plots}"

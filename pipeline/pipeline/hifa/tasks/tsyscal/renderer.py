@@ -9,14 +9,16 @@ import os
 import numpy
 
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.displays.tsys as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.displays.tsys as displays
+import pipeline.infrastructure.utils as utils
 
 LOG = logging.get_logger(__name__)
 
 TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
+TsysMapTR = collections.namedtuple('TsysMapTR', 'vis tsys science')
 
 
 class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
@@ -35,8 +37,8 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             plotter = displays.TsysSummaryChart(pipeline_context, result)
             plots = plotter.plot()
-            ms = os.path.basename(result.inputs['vis'])
-            summary_plots[ms] = plots
+            vis = os.path.basename(result.inputs['vis'])
+            summary_plots[vis] = plots
 
             # generate per-antenna plots
             renderer = TsyscalPlotRenderer(pipeline_context, result)
@@ -44,11 +46,41 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 fileobj.write(renderer.render())
                 # the filename is sanitised - the MS name is not. We need to
                 # map MS to sanitised filename for link construction.
-                subpages[ms] = renderer.path
+                subpages[vis] = renderer.path
+
+        tsysmap = self._get_tsysmap_table_rows(pipeline_context, results)
 
         mako_context.update({'summary_plots'   : summary_plots,
                              'summary_subpage' : subpages,
+                             'tsysmap'         : tsysmap,
                              'dirname'         : weblog_dir})
+
+    def _get_tsysmap_table_rows(self, pipeline_context, results):
+        rows = []
+
+        for result in results:
+            vis = os.path.basename(result.inputs['vis'])
+            calto = result.final[0]
+            
+            ms = pipeline_context.observing_run.get_ms(vis)
+            science_spws = ms.get_spectral_windows(science_windows_only=True)
+            science_spw_ids = [spw.id for spw in science_spws]
+            
+            sci2tsys = dict((spw, tsys) for (spw, tsys) in enumerate(calto.spwmap)
+                            if spw in science_spw_ids 
+                            and spw not in result.unmappedspws)
+    
+            tsys2sci = collections.defaultdict(list)
+            for sci, tsys in sci2tsys.items():
+                tsys2sci[tsys].append(sci)
+                
+            tsysmap = dict((k, sorted(v)) for k, v in tsys2sci.items())            
+
+            for tsys, sci in tsysmap.items():
+                tr = TsysMapTR(vis, tsys, ', '.join([str(w) for w in sci]))
+                rows.append(tr)
+            
+        return utils.merge_td_columns(rows)
 
 
 class TsyscalPlotRenderer(basetemplates.JsonPlotRenderer):
