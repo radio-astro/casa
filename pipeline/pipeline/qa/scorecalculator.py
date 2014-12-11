@@ -164,11 +164,11 @@ def score_ms_history_entries_present(all_mses, mses_with_history):
         basenames = utils.commafy([ms.basename for ms in mses_with_history],
                                   quotes=False)
         if len(mses_with_history) is 1:
-            longmsg = ('Entries were found in the HISTORY table of %s. '
+            longmsg = ('Unexpected entries were found in the HISTORY table of %s. '
                         'This measurement set may already be processed.'
                         '' % basenames)
         else:
-            longmsg = ('Entries were found in the HISTORY tables of %s. '
+            longmsg = ('Unexpected entries were found in the HISTORY tables of %s. '
                        'These measurement sets may already be processed.'
                         '' % basenames)                
         shortmsg = '%s/%s have HISTORY' % (num_with, num_all) 
