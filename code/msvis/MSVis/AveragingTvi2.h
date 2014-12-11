@@ -65,6 +65,11 @@ public:
     void next ();
     Bool more () const;
 
+    static Float weightToSigma (Float weight);
+    static Float sigmaToWeight (Float sigma);
+    static Vector<Float> average (const Matrix<Float> &data, const Matrix<Bool> &flags);
+    static Matrix<Float> average (const Cube<Float> &data, const Cube<Bool> &flags);
+
 protected:
 
     void advanceInputVii ();

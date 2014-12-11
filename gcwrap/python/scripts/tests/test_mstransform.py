@@ -836,7 +836,7 @@ class test_Columns(test_base):
           mkeys = mcol.keys()
           self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
           
-#    @unittest.skip('Skip until seg fault in msvis is fixed.')          
+    @unittest.skip('Skip until seg fault in msvis is fixed.')          
     def test_col2(self):
           """mstransform: make real a virtual MODEL column """
           self.setUp_ngc5921()
@@ -1375,7 +1375,7 @@ class test_timeaverage(test_base_compare):
         self.generate_tolerance_map()
         
         self.mode['WEIGHT'] = "absolute"
-        self.tolerance['WEIGHT'] = 1E-5
+        self.tolerance['WEIGHT'] = 1E-3
         
         self.mode['EXPOSURE'] = "absolute"
         self.tolerance['EXPOSURE'] = 1E-4    
@@ -1646,7 +1646,7 @@ class test_regridms_single_spw(test_base_compare):
         self.generate_tolerance_map()
         
         self.mode['WEIGHT'] = "absolute"
-        self.tolerance['WEIGHT'] = 1E-5        
+        self.tolerance['WEIGHT'] = 1E-3        
 
         self.post_process()
         
@@ -2277,6 +2277,365 @@ class test_alma_wvr_correlation_products(test_base):
         self.assertTrue(summary.has_key('correlation'), 'Flagdata failure due to missformated MS')         
         
         
+class test_spectrum_transformations_mean(test_base):
+    '''Check that WEIGHT/SIGMA are equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+    
+    def setUp(self):
+                
+        self.vis = ''
+        self.outvis = ''
+        self.auxvix = ''
+        self.refvis = ''                
+        self.setUp_4ants()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.auxvix)
+        os.system('rm -rf '+ self.refvis)          
+        
+    def test_chanavg_mean_corrected(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_chanavg_mean_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+
+        
+    def test_timeavg_mean_corrected(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_mean_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_timeavg_chanavg_mean_corrected(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_chanavg_mean_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')  
+        
+    def test_chanavg_mean_data(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_chanavg_mean_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_timeavg_mean_data(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_mean_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_timeavg_chanavg_mean_data(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_chanavg_mean_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')            
+                   
+    def test_chanavg_mean_model(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_chanavg_mean_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_timeavg_mean_model(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_mean_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')     
+        
+    def test_timeavg_chanavg_mean_model(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_chanavg_mean_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+                           
+    def test_chanavg_mean_all(self):
+        '''mstransform: Check that after chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_chanavg_mean_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_timeavg_mean_all(self):
+        '''mstransform: Check that after time avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_mean_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')  
+        
+    def test_timeavg_chanavg_mean_all(self):
+        '''mstransform: Check that after time/chan avg WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_timeavg_chanavg_mean_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    chanaverage=True,chanbin=2,
+                    timeaverage=True,timebin='10s')
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')     
+        
+    def test_spw_separation_mean_corrected(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_spw_separation_mean_corrected.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='CORRECTED',usewtspectrum=True,
+                    regridms=True, spw='0,1,2,3,4,5,6,7', nspw=4)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')
+        
+    def test_spw_separation_mean_data(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_spw_separation_mean_data.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='DATA',usewtspectrum=True,
+                    regridms=True, spw='0,1,2,3,4,5,6,7', nspw=4)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')     
+        
+    def test_spw_separation_mean_model(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_spw_separation_mean_model.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='MODEL',usewtspectrum=True,
+                    regridms=True, spw='0,1,2,3,4,5,6,7', nspw=4)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')    
+        
+    def test_spw_separation_mean_all(self):
+        '''mstransform: Check that after spw separation WEIGHT/SIGMA is equivalent to the mean of the unflagged WEIGHT_SPECTRUM samples'''
+        
+        self.outvis = 'test_spw_separation_mean_all.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,
+                    datacolumn='ALL',usewtspectrum=True,
+                    regridms=True, spw='0,1,2,3,4,5,6,7', nspw=4)
+        
+        mytb= tbtool()
+        mytb.open(self.outvis)
+        flag = mytb.getcol("FLAG")
+        weight  = mytb.getcol("WEIGHT")
+        weightSpectrum  = mytb.getcol("WEIGHT_SPECTRUM")
+        
+        allSamplesFlagged = numpy.all(flag == True,1)
+        weightSpectrumSamples = numpy.sum((flag == False),1) + allSamplesFlagged* numpy.sum(flag == True,1)
+        weightSpectrumCumSum = numpy.sum(weightSpectrum*(flag==False),1) + allSamplesFlagged* numpy.sum(weightSpectrum*(flag == True),1)
+        weightSpectrumMean = weightSpectrumCumSum / weightSpectrumSamples
+        self.assertTrue((numpy.abs(weightSpectrumMean - weight ) < 1E-4).all(), 'WEIGHT is not mean of WEIGHT_SPECTRUM')               
+
+
 class test_spectrum_transformations_median(test_base):
     '''Check that WEIGHT/SIGMA are equivalent to the median of WEIGHT_SPECTRUM/SIGMA_SPECTRUM'''
     
@@ -2813,9 +3172,9 @@ class test_spectrum_transformations_median(test_base):
         mytb.close()        
         
         self.assertTrue((numpy.abs(weightSpectrumMedian - weight) < 1E-5).all(), 'WEIGHT is not median of WEIGHT_SPECTRUM')
-        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')          
-        
-        
+        self.assertTrue((numpy.abs(sigmaSpectrumMedian - sigma) < 1E-5).all(), 'SIGMA is not median of SIGMA_SPECTRUM')                  
+
+
 class test_spectrum_transformations_sigma_from_weight(test_base):
     '''Check that WEIGHT/SIGMA and WEIGHT_SPECTRUM/SIGMA_SPECTRUM follow the relation sigma = 1 sqrt(weight) '''
     
@@ -4854,7 +5213,6 @@ def suite():
             test_radial_velocity_correction,
             test_vla_mixed_polarizations,
             test_alma_wvr_correlation_products,
-            test_spectrum_transformations_median,
             test_spectrum_transformations_sigma_from_weight,
             test_spectrum_transformations_2_steps_vs_1_step,
             test_spectrum_transformations_useWeightSpectrum_false_vs_true,
@@ -4862,6 +5220,9 @@ def suite():
             test_spectrum_transformations_weight_constant,
             test_spectrum_transformations_sigma_unit,
             test_spectrum_transformations_flagged_average,   
+            test_spectrum_transformations_mean,
+            # jagonzal: Replace median with mean to capture overall behaviour
+            # test_spectrum_transformations_median,
             # jagonzal: mstransform has been optimized to not use weight spectrum for chan. avg. DATA when 
             #           there are no iput SPECTRUM cols because VI/VB generates constant SPECTRUM 
             # test_spectrum_transformations_chanavg_useWeightSpectrum_false_vs_true,

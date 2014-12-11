@@ -477,34 +477,34 @@ class split_test_cav(SplitChecker):
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
         check_eq(self.records['']['weight'],
-                 numpy.array([3.0, 3.0]), 0.001)
+                 numpy.array([ 2.75,  2.75]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_rr(self):
         """WEIGHT[5], chan avg. RR"""
         check_eq(self.records['rr']['weight'],
-                 numpy.array([3.0]), 0.001)
+                 numpy.array([2.75]), 0.001)
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
         check_eq(self.records['ll']['weight'],
-                 numpy.array([3.0]), 0.001)
+                 numpy.array([ 2.75]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([0.57735026, 0.57735026]), 0.0001)
+                 numpy.array([ 0.60978937,  0.60978937]), 0.0001)
         
     def test_sigma_rr(self):
         """SIGMA[7], chan avg. RR"""
         check_eq(self.records['rr']['sigma'],
-                 numpy.array([0.57735026]), 0.0001)
+                 numpy.array([0.60978937]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([0.57735026]), 0.0001)
+                 numpy.array([ 0.60978937]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cav5(SplitChecker):

@@ -4805,7 +4805,7 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			// Sigma must be redefined to 1/weight when corrected data becomes data
 			if (correctedToData_p)
 			{
-				arrayTransformInPlace(tmpMatrixFloat, MSTransformations::wtToSigma);
+				arrayTransformInPlace(tmpMatrixFloat, vi::AveragingTvi2::weightToSigma);
 				outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
 				writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
@@ -4852,7 +4852,7 @@ void MSTransformManager::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			// Sigma must be redefined to 1/weight when corrected data becomes data
 			if (correctedToData_p)
 			{
-				arrayTransformInPlace(weights, MSTransformations::wtToSigma);
+				arrayTransformInPlace(weights, vi::AveragingTvi2::weightToSigma);
 				writeMatrix(weights,outputMsCols_p->sigma(),rowRef,nspws_p);
 			}
 			else
@@ -5335,6 +5335,8 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			dataBuffer_p = MSTransformations::weightSpectrum;
 			Cube<Float> transformedSpectrum(getShape(),0.0);
 			weightSpectrum_p = &transformedSpectrum;
+			Cube<Bool> transformedFlag(getShape(),False);
+			flagCube_p = &transformedFlag;
 			setBufferMode(True);
 
 			// Multiple column operation
@@ -5428,7 +5430,7 @@ void MSTransformManager::fillWeightCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			Cube<Float> sigmaSpectrum;
 			sigmaSpectrum = vb->weightSpectrum(); // Copy constructor does not use reference semantics, but deep copy
 			// Apply transformation
-			arrayTransformInPlace(sigmaSpectrum, MSTransformations::wtToSigma);
+			arrayTransformInPlace(sigmaSpectrum, vi::AveragingTvi2::weightToSigma);
 			// Write resulting sigmaSpectrum
 			transformCubeOfData(vb,rowRef,sigmaSpectrum,outputMsCols_p->sigmaSpectrum(),NULL,applicableSpectrum);
 		}
@@ -5474,12 +5476,12 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 		case MSTransformations::transformWeightIntoSigma:
 		{
 			transformCubeOfData(vb,rowRef,inputSpectrum,outputCubeCol,NULL,applicableSpectrum);
-			arrayTransformInPlace (*weightSpectrum_p,MSTransformations::wtToSigma);
+			arrayTransformInPlace (*weightSpectrum_p,vi::AveragingTvi2::weightToSigma);
 			break;
 		}
 		case MSTransformations::weightIntoSigma:
 		{
-			arrayTransformInPlace (*weightSpectrum_p,MSTransformations::wtToSigma);
+			arrayTransformInPlace (*weightSpectrum_p,vi::AveragingTvi2::weightToSigma);
 			break;
 		}
 	}
@@ -5488,11 +5490,12 @@ void MSTransformManager::transformAndWriteSpectrum(	vi::VisBuffer2 *vb,
 	if (flushWeightSpectrum_p) writeCube(*weightSpectrum_p,outputCubeCol,rowRef);
 
 	// Extract median matrix (nCorr x nRow)
-	// When separating SPWs this procedure computes the median of each separated SPW
-	Matrix<Float> medians = partialMedians(*weightSpectrum_p,IPosition(1,1),True);
+	// When separating SPWs this procedure computes the mean of each separated SPW
+	// Matrix<Float> medians = partialMedians(*weightSpectrum_p,IPosition(1,1),True);
+	Matrix<Float> means = vi::AveragingTvi2::average(*weightSpectrum_p,*flagCube_p);
 
 	// Write median matrix (nCorr x nRow)
-	writeMatrix(medians,outputMatrixCol,rowRef,1);
+	writeMatrix(means,outputMatrixCol,rowRef,1);
 
 	return;
 }
@@ -5567,7 +5570,7 @@ const Cube<Float>& MSTransformManager::getWeightSpectrumFromSigmaSpectrum(vi::Vi
 	{
 		weightSpectrumCube_p.resize(vb->getShape(),False);
 		weightSpectrumCube_p = vb->sigmaSpectrum(); // = Operator makes a copy
-		arrayTransformInPlace (weightSpectrumCube_p,MSTransformations::sigmaToWeight);
+		arrayTransformInPlace (weightSpectrumCube_p,vi::AveragingTvi2::sigmaToWeight);
 		weightSpectrumFromSigmaFilled_p = True;
 		return weightSpectrumCube_p;
 	}
@@ -6264,23 +6267,26 @@ void MSTransformManager::writeOutputPlanes(	uInt row,
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void MSTransformManager::setOutputbuffer(Cube<Complex> *& bufferPointer)
+void MSTransformManager::setOutputbuffer(Cube<Complex> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer)
 {
 	switch (dataBuffer_p)
 	{
 		case MSTransformations::visCube:
 		{
-			bufferPointer=visCube_p;
+			dataBufferPointer=visCube_p;
+			flagBufferPointer = NULL;
 			break;
 		}
 		case MSTransformations::visCubeCorrected:
 		{
-			bufferPointer=visCubeCorrected_p;
+			dataBufferPointer=visCubeCorrected_p;
+			flagBufferPointer = NULL;
 			break;
 		}
 		case MSTransformations::visCubeModel:
 		{
-			bufferPointer=visCubeModel_p;
+			dataBufferPointer=visCubeModel_p;
+			flagBufferPointer = NULL;
 			break;
 		}
 		default:
@@ -6288,7 +6294,8 @@ void MSTransformManager::setOutputbuffer(Cube<Complex> *& bufferPointer)
 			logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< " Data buffer not specified"
 					<< LogIO::POST;
-			bufferPointer=NULL;
+			dataBufferPointer=NULL;
+			flagBufferPointer=NULL;
 			break;
 		}
 	}
@@ -6299,18 +6306,20 @@ void MSTransformManager::setOutputbuffer(Cube<Complex> *& bufferPointer)
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
-void MSTransformManager::setOutputbuffer(Cube<Float> *& bufferPointer)
+void MSTransformManager::setOutputbuffer(Cube<Float> *& dataBufferPointer,Cube<Bool> *& flagBufferPointer)
 {
 	switch (dataBuffer_p)
 	{
 		case MSTransformations::visCubeFloat:
 		{
-			bufferPointer=visCubeFloat_p;
+			dataBufferPointer=visCubeFloat_p;
+			flagBufferPointer = NULL;
 			break;
 		}
 		case MSTransformations::weightSpectrum:
 		{
-			bufferPointer=weightSpectrum_p;
+			dataBufferPointer=weightSpectrum_p;
+			flagBufferPointer=flagCube_p;
 			break;
 		}
 		default:
@@ -6318,7 +6327,8 @@ void MSTransformManager::setOutputbuffer(Cube<Float> *& bufferPointer)
 			logger_p << LogIO::SEVERE << LogOrigin("MSTransformManager", __FUNCTION__)
 					<< " Data buffer not specified"
 					<< LogIO::POST;
-			bufferPointer=NULL;
+			dataBufferPointer=NULL;
+			flagBufferPointer = NULL;
 			break;
 		}
 	}
@@ -6335,12 +6345,19 @@ template <class T> void  MSTransformManager::bufferOutputPlanes(	uInt ,
 																	ArrayColumn<T> &,
 																	ArrayColumn<Bool> &)
 {
-	// Get buffer pointer
-	Cube<T> *bufferPointer;
-	setOutputbuffer(bufferPointer);
+	// Get buffer pointers
+	Cube<T> *dataBufferPointer;
+	Cube<Bool> *flagBufferPointer;
+	setOutputbuffer(dataBufferPointer,flagBufferPointer);
 
 	// Copy data to buffer
-	bufferPointer->xyPlane(relativeRow_p) = outputDataPlane;
+	dataBufferPointer->xyPlane(relativeRow_p) = outputDataPlane;
+
+	// Copy flags to buffer
+	if (flagBufferPointer != NULL)
+	{
+		flagBufferPointer->xyPlane(relativeRow_p) = outputFlagsPlane;
+	}
 
 	return;
 }
@@ -6354,9 +6371,10 @@ template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt row
 																		ArrayColumn<T> &outputDataCol,
 																		ArrayColumn<Bool> &outputFlagCol)
 {
-	// Get buffer pointer
-	Cube<T> *bufferPointer;
-	setOutputbuffer(bufferPointer);
+	// Get buffer pointers
+	Cube<T> *dataBufferPointer;
+	Cube<Bool> *flagBufferPointer;
+	setOutputbuffer(dataBufferPointer,flagBufferPointer);
 
 	// Copy data to buffer
 	IPosition outputPlaneShape = outputDataPlane.shape();
@@ -6371,14 +6389,27 @@ template <class T> void MSTransformManager::bufferOutputPlanesInSlices(	uInt row
 		uInt outRow = relativeRow_p+spw_i;
 		Slice sliceY(chansPerOutputSpw_p*spw_i,chansPerOutputSpw_p);
 		Matrix<T> outputPlane_i = outputDataPlane(sliceX,sliceY);
-		bufferPointer->xyPlane(outRow) = outputPlane_i;
+		dataBufferPointer->xyPlane(outRow) = outputPlane_i;
+
+		if (flagBufferPointer != NULL)
+		{
+			Matrix<Bool> outputFlagPlane_i = outputFlagsPlane(sliceX,sliceY);
+			flagBufferPointer->xyPlane(outRow) = outputFlagPlane_i;
+		}
 	}
 
 	uInt outRow = relativeRow_p+spw_i;
 	Slice sliceY(chansPerOutputSpw_p*spw_i,tailOfChansforLastSpw_p);
 	Matrix<T> outputPlane_i = outputDataPlane(sliceX,sliceY);
 	outputPlane_i.resize(outputPlaneShape_i,True);
-	bufferPointer->xyPlane(outRow) = outputPlane_i;
+	dataBufferPointer->xyPlane(outRow) = outputPlane_i;
+
+	if (flagBufferPointer != NULL)
+	{
+		Matrix<Bool> outputFlagPlane_i = outputFlagsPlane(sliceX,sliceY);
+		outputFlagPlane_i.resize(outputPlaneShape_i,True);
+		flagBufferPointer->xyPlane(outRow) = outputFlagPlane_i;
+	}
 
 	return;
 }
@@ -6904,7 +6935,6 @@ template <class T> void MSTransformManager::flagNonZeroAverageKernel(	Vector<T> 
 	}
 
 
-
 	// Set output flag (it is initialized to False)
 	if (accumulatorFlag)
 	{
@@ -7011,6 +7041,12 @@ template <class T> void MSTransformManager::flagCumSumNonZeroKernel(	Vector<T> &
 	}
 
 	outputData(outputPos) = avg;
+
+	// Set output flag (it is initialized to False)
+	if (accumulatorFlag)
+	{
+		outputFlags(outputPos) = True;
+	}
 
 	return;
 }
