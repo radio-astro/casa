@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 Calibrater::Calibrater(): 
   ms_p(0), 
   mssel_p(0), 
-  mss_p(),
+  mss_p(0),
   frequencySelections_p(0),
   vs_p(0), 
   ve_p(0),
@@ -341,12 +341,16 @@ void Calibrater::selectvis(const String& time,
     // Apply user-supplied selection
     Bool nontrivsel=False;
     // gmoellen 2012/01/30    nontrivsel= mssSetData(MeasurementSet(sorted, ms_p),
+
+    // Ensure use of a fresh MSSelection object
+    if (mss_p) { delete mss_p; mss_p=NULL; }
+    mss_p=new MSSelection();
     nontrivsel= mssSetData(*ms_p,
 			   *mssel_p,"",
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
-			   "",scan,"",intent, obsIDs,&mss_p);
+			   "",scan,"",intent, obsIDs,mss_p);
 
     // Keep any MR status for the MS
     mssel_p->setMemoryResidentSubtables(ms_p->getMrsEligibility());
@@ -950,6 +954,7 @@ Bool Calibrater::cleanup() {
   // Delete derived dataset stuff
   if(vs_p) delete vs_p; vs_p=0;
   if(mssel_p) delete mssel_p; mssel_p=0;
+  if(mss_p) delete mss_p; mss_p=0;
   if (frequencySelections_p)  delete frequencySelections_p;  frequencySelections_p=0;
 
   // Delete the current VisEquation
@@ -2721,7 +2726,7 @@ void Calibrater::selectChannel(const String& spw) {
   // Initialize the chanmask_
   initChanMask();
 
-  {
+  if (mss_p && mssel_p) {
 
     // Refresh the frequencySelections object to feed to VI2, if relevant
     if (frequencySelections_p) {
@@ -2731,7 +2736,7 @@ void Calibrater::selectChannel(const String& spw) {
     frequencySelections_p = new vi::FrequencySelections();
 
     vi::FrequencySelectionUsingChannels usingChannels;
-    usingChannels.add(mss_p,mssel_p);
+    usingChannels.add(*mss_p,mssel_p);
     frequencySelections_p->add(usingChannels);
 
     //    cout << usingChannels.toString() << endl;
