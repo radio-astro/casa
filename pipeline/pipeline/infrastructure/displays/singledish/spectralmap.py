@@ -13,6 +13,7 @@ import pipeline.infrastructure.renderer.logger as logger
 from .utils import DDMMSSs, HHMMSSss
 from .utils import sd_polmap as polmap
 from .common import DPIDetail, SDImageDisplay, ShowPlot
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -65,9 +66,55 @@ class SDSpectralMapDisplay(SDImageDisplay):
     MaxNvPanel = 5
     
     def plot(self):
+#         imagename = self.imagename
+#         regridname = self.imagename + "_temp"
+#         self.__regrid(imagename, regridname)
+#         self.imagename = regridname
         self.init()
+#         self.imagename = imagename
         
         return self.__plot_spectral_map()
+
+#     def __regrid(self, inname, outname):
+#         import pipeline.infrastructure.utils as utils
+#         import pipeline.infrastructure.casatools as casatools
+#         qa = casatools.quanta
+#         # calculate grid size
+#         ant_index = self.inputs.antennaid_list[0]
+#         beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.inputs.spwid_list[0]], 'deg')['value']
+#         grid_size = beam_size / 3.0
+#         
+#         with utils.open_image(inname) as ia:
+#             csys = ia.coordsys()
+#             dir_ax = csys.findcoordinate('direction')['pixel']
+#             increment = csys.increment()
+#             units = csys.units()
+#             ref_pix = csys.referencepixel()['numeric']
+#             shape = ia.shape()
+#             for i in dir_ax:
+#                 cell = qa.convert(qa.quantity(increment['numeric'][i],units[i]),'deg')['value']
+#                 factor = abs(grid_size / cell)
+#                 if factor > 1.0:
+#                     interpolation = "nearest"
+#                 else:
+#                     interpolation = "linear"
+#                 increment['numeric'][i] *= factor
+#                 shape[i] = int(pl.ceil(shape[i]/factor))
+#                 ref_pix[i] /= factor
+#             csys.setreferencepixel(value=ref_pix)
+#             csys.setincrement(increment)
+#             gridim = ia.regrid(outfile=outname, overwrite=True, method=interpolation, shape=shape, csys=csys.torecord())
+#             gridim.close()
+
+    def __get_strides(self):
+        qa = casatools.quanta
+        increment = self.image.coordsys.increment()
+        units = self.image.coordsys.units()
+        factors = []
+        for idx in self.image.id_direction:
+            cell = qa.convert(qa.quantity(increment['numeric'][idx],units[idx]),'deg')['value']
+            factors.append( int( numpy.round( abs(self.grid_size / cell) ) ) )
+        return factors
 
     def __plot_spectral_map(self):
         #if ShowPlot: pl.ion()
@@ -107,22 +154,26 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
         # read data to storage
         masked_data = self.data * self.mask
+        (STEPX, STEPY) = self.__get_strides()
 
         # Raster Case: re-arrange spectra to match RA-DEC orientation
         mode = 'raster'
         if mode.upper() == 'RASTER':
-            NhPanel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxNhPanel)
-            NvPanel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxNvPanel)
-            NH = int((self.x_max - self.x_min) / NhPanel + 1)
-            NV = int((self.y_max - self.y_min) / NvPanel + 1)
+            # the number of panels in each page
+            NhPanel = min( max((self.x_max - self.x_min + 1)/STEPX, (self.y_max - self.y_min + 1)/STEPY), self.MaxNhPanel )
+            NvPanel = min( max((self.x_max - self.x_min + 1)/STEPX, (self.y_max - self.y_min + 1)/STEPY), self.MaxNvPanel )
+            # total number of pages in horizontal and vertical directions
+            NH = int((self.x_max - self.x_min) / STEPX / NhPanel + 1)
+            NV = int((self.y_max - self.y_min) / STEPY / NvPanel + 1)
+            # an array with length of total number of spectra to be plotted (initialized by -1)
             ROWS = numpy.zeros(NH * NV * NhPanel * NvPanel, dtype=numpy.int) - 1
             # 2010/6/15 GK Change the plotting direction: UpperLeft->UpperRight->OneLineDown repeat...
-            for x in xrange(self.nx):
-                posx = (self.x_max - x) / NhPanel
-                offsetx = (self.x_max - x) % NhPanel
-                for y in xrange(self.ny):
-                    posy = (self.y_max - y) / NvPanel
-                    offsety = NvPanel - 1 - (self.y_max - y) % NvPanel
+            for x in xrange(0,self.nx,STEPX):
+                posx = (self.x_max - x)/STEPX / NhPanel
+                offsetx = ( (self.x_max - x)/STEPX ) % NhPanel
+                for y in xrange(0,self.ny,STEPY):
+                    posy = (self.y_max - y)/STEPY / NvPanel
+                    offsety = NvPanel - 1 - (self.y_max - y)/STEPY % NvPanel
                     row = (self.nx - x - 1) * self.ny + y
                     ROWS[(posy*NH+posx)*NvPanel*NhPanel + offsety*NhPanel + offsetx] = row
         else:
@@ -132,6 +183,12 @@ class SDSpectralMapDisplay(SDImageDisplay):
             if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
             else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
 
+        LOG.debug("Generating spectral map")
+        LOG.debug("- Stride: [%d, %d]" % (STEPX, STEPY))
+        LOG.debug("- Number of panels: [%d, %d]" % (NhPanel, NvPanel))
+        LOG.debug("- Number of pages: [%d, %d]" % (NH, NV))
+        LOG.debug("- Number of spcetra to be plotted: %d" % (len(ROWS)))
+        
         NSpFit = NhPanel * NvPanel
         NSp = 0
         Npanel = 0
