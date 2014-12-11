@@ -362,6 +362,7 @@ FrequencySelectionUsingFrame::toString () const
 }
 
 FrequencySelections::FrequencySelections ()
+: filterWindow_p (-1)
 {}
 
 FrequencySelections::FrequencySelections (const FrequencySelections & other)

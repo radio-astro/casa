@@ -1568,6 +1568,8 @@ Weighting::nextSubchunk (VisibilityIterator2 & vi, VisBuffer2 * vb)
                 sum = sum + weightSpectrum (correlation, channel, row);
             }
 
+            sum /= nChannels; // Weight is now defined as per channel
+
             Float delta = abs ((sum - weight (correlation, row)) / weight (correlation, row));
             TestErrorIf (delta > 1e-5,
                          String::format ("Sum of weight spectrum != weight at"

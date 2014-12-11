@@ -68,7 +68,7 @@ class FrequencySelection {
 
 public:
 
-    typedef enum {ByChannel = -10} SpecialFrames;
+    typedef enum {Unknown = -11, ByChannel = -10} SpecialFrames;
 
     virtual ~FrequencySelection (){}
 
@@ -89,7 +89,9 @@ public:
 
 protected:
 
-    FrequencySelection (Int referenceFrame) : referenceFrame_p (referenceFrame) {}
+    FrequencySelection (Int referenceFrame)
+    : filterWindowId_p (-1),
+      referenceFrame_p (referenceFrame) {}
     Int filterWindow() const;
 
 private:
