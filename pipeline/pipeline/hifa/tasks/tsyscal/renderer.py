@@ -79,7 +79,11 @@ class T2_4MDetailsTsyscalRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             for tsys, sci in tsysmap.items():
                 tr = TsysMapTR(vis, tsys, ', '.join([str(w) for w in sci]))
                 rows.append(tr)
-            
+
+            if result.unmappedspws:
+                tr = TsysMapTR(vis, 'Unmapped', ', '.join([str(w) for w in result.unmappedspws]))
+                rows.append(tr)
+                
         return utils.merge_td_columns(rows)
 
 
