@@ -347,7 +347,7 @@ class Calibrater
   MeasurementSet* msselRaw_p;
 
   // MSSelection object
-  MSSelection mss_p;
+  MSSelection* mss_p;
   vi::FrequencySelections* frequencySelections_p;
 
   // VisSet and VisEquation derived from the input MeasurementSet
