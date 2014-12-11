@@ -97,10 +97,10 @@ def getmem(pid):
     if errorcode != 0:
         numoffile = -1
 
-    (errorcode, mem_virtual)  = commands.getstatusoutput('ps -p ' + str(pid) + ' -o vsz | tail -1')
+    (errorcode, mem_virtual)  = commands.getstatusoutput('env -i ps -p ' + str(pid) + ' -o vsz | tail -1')
     if errorcode != 0:
         mem_virtual = -1
-    (errorcode, mem_resident) = commands.getstatusoutput('ps -p ' + str(pid) + ' -o rss | tail -1')
+    (errorcode, mem_resident) = commands.getstatusoutput('env -i ps -p ' + str(pid) + ' -o rss | tail -1')
     if errorcode != 0:
         mem_resident = -1
 

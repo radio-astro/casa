@@ -106,7 +106,7 @@ class MemTest(nose.plugins.xunit.Xunit):
         else:
             self._openfiles = 0
 
-        (errorcode, n) = commands.getstatusoutput('ps -p ' + str(self._pid) + ' -o rss | tail -1')
+        (errorcode, n) = commands.getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
         if errorcode == 0:
             self._resident_memory = n
         else:
@@ -129,7 +129,7 @@ class MemTest(nose.plugins.xunit.Xunit):
         else:
             self._fileleak = -1
 
-        (errorcode, n) = commands.getstatusoutput('ps -p ' + str(self._pid) + ' -o rss | tail -1')
+        (errorcode, n) = commands.getstatusoutput('env -i ps -p ' + str(self._pid) + ' -o rss | tail -1')
         if errorcode == 0:
             self._memoryleak = int(n) - int(self._resident_memory)
         else:
