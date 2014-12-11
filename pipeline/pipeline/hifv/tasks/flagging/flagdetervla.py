@@ -63,6 +63,11 @@
 # -------
 
 from __future__ import absolute_import
+import os
+import types
+import string
+
+import flaghelper
 
 #import casac
 
@@ -365,10 +370,77 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
     def _get_flag_commands(self):
         """ Adding quack and clip
         """
-        flag_cmds = super(FlagDeterVLA, self)._get_flag_commands()
+        #flag_cmds = super(FlagDeterVLA, self)._get_flag_commands()
+        
+        flag_cmds = []
 
         inputs = self.inputs
 
+
+        # flag online?
+        if inputs.online:
+            if not os.path.exists(inputs.fileonline):
+                LOG.warning('Online flag file \'%s\' was not found. Online '
+                            'flagging for %s disabled.' % (inputs.fileonline, 
+                                                           inputs.ms.basename))
+            else:
+                #ANTENNA_NOT_ON_SOURCE FLAG
+                cmdlist = self._read_flagfile(inputs.fileonline)
+                flag_cmds.extend([cmd for cmd in cmdlist if ('ANTENNA_NOT_ON_SOURCE' in cmd)])
+                flag_cmds.append('mode=summary name=anos')
+                
+                #All other online flags
+                flag_cmds.extend([cmd for cmd in cmdlist if not ('ANTENNA_NOT_ON_SOURCE' in cmd)])
+                flag_cmds.append('mode=summary name=online')
+        
+        # flag template?
+        if inputs.template:
+            if not os.path.exists(inputs.filetemplate):
+                LOG.warning('Template flag file \'%s\' was not found. Template '
+                            'flagging for %s disabled.' % (inputs.filetemplate, 
+                                                           inputs.ms.basename))
+            else:
+                flag_cmds.extend(self._read_flagfile(inputs.filetemplate))
+                flag_cmds.append('mode=summary name=template')
+                
+        # Flag autocorrelations?
+        #if inputs.autocorr:
+        #    #flag_cmds.append('mode=manual antenna=*&&&')
+        #    flag_cmds.append(self._get_autocorr_cmd())
+    
+        # Flag autocorrelations?
+        if inputs.autocorr:
+            flag_cmds.append('mode=manual autocorr=True reason=autocorr')
+            flag_cmds.append('mode=summary name=autocorr')
+    
+        # Flag shadowed antennas?
+        if inputs.shadow:
+            flag_cmds.append('mode=shadow reason=shadow')
+            flag_cmds.append('mode=summary name=shadow')
+            
+        # Flag according to scan numbers and intents?
+        if inputs.scan and inputs.scannumber != '':
+            flag_cmds.append('mode=manual scan=%s reason=scans' % inputs.scannumber)
+            flag_cmds.append('mode=summary name=scans')
+
+        # These must be separated due to the way agent flagging works
+        if inputs.intents != '':
+            for intent in inputs.intents.split(','):
+                if '*' not in intent:
+                    intent = '*%s*' % intent
+                flag_cmds.append('mode=manual intent=%s reason=intents' % intent)
+            flag_cmds.append('mode=summary name=intents')
+            
+        # Flag end 5 percent of each spw or minimum of 3 channels
+        if inputs.edgespw:
+            to_flag = self._get_edgespw_cmds()
+            if to_flag:
+                spw_arg = ','.join(to_flag)
+                flag_cmds.append(spw_arg)
+                flag_cmds.append('mode=summary name=edgespw')
+
+        #############
+        #VLA specific commands
 
         # Flag mode clip
         if inputs.clip:
@@ -380,12 +452,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             flag_cmds.append(self._get_quack_cmds())
             flag_cmds.append('mode=summary name=quack')
             
-        # Flag end 5 percent of each spw or minimum of 3 channels
-        if inputs.edgespw:
-            to_flag = self._get_edgespw_cmds()
-            if to_flag:
-                spw_arg = ','.join(to_flag)
-                flag_cmds.append(spw_arg)
+        
             
         # Flag 10 end channels at edges of basebands
         if inputs.baseband:
@@ -396,11 +463,24 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         
         if (flag_cmds[-1]== '') : flag_cmds=flag_cmds[0:-1]
         
+        # summarise the state before flagging rather than assuming the initial
+        # state is unflagged
+        if flag_cmds:
+            flag_cmds.insert(0, 'mode=summary name=before')
             
         #print flag_cmds
         
         return flag_cmds
-            
+
+
+
+    def _get_autocorr_cmd (self):
+        #return 'mode=manual antenna=*&&&'
+        return 'mode=manual autocorr=True'
+
+
+
+
     '''
     def _get_edgespw_cmds(self):
         """
@@ -589,7 +669,9 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             baseband_cmd = 'mode=manual spw=' + SPWtoflag + ' reason=baseband name=baseband'
 
         return baseband_cmd
-        
+
+
+
     def verify_spw(self, spw):
         # override the default verifier, adding an extra test that bypasses
         # flagging of TDM windows
@@ -601,4 +683,30 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
         ncorr = len(dd.corr_axis)
         if ncorr*spw.num_channels > 256:
             raise ValueError('Skipping edge flagging for FDM spw %s' % spw.id)            
+
+
+    def _add_file(self, filename):
+        """
+        Read and return the contents of a file or list of files.
+        """
+        # If the input is a list of flagging command file names, call this
+        # function recursively.  Otherwise, read in the file and return its
+        # contents
+        if type(filename) is types.ListType:
+            return ''.join([self._add_file(f) for f in filename])
+        else:
+            with open(filename) as stream:
+                return stream.read().rstrip('\n')
+                
+    def _read_flagfile(self, filename):
+        if not os.path.exists(filename):
+            LOG.warning('%s does not exist' % filename)
+            return []
+
+        # strip out comments and empty lines to leave the real commands.
+        # This is so we can compare the number of valid commands to the number
+        # of commands specified in the file and complain if they differ
+        return [cmd for cmd in flaghelper.readFile(filename) 
+                if not cmd.strip().startswith('#')
+                and not all(c in string.whitespace for c in cmd)]
 
