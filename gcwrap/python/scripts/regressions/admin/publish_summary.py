@@ -168,7 +168,7 @@ class runTest:
                 try:
                     self.op_init(CPP_PROFILE)
                     time1=time.time()
-                    mem1 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
+                    mem1 = commands.getoutput('env -i ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                     if prof:
                         #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", globals(), locals())
                         #prof.runctx("(leResult, leImages)=self.tester.runtests(testName, k, dry)", gl, lo)
@@ -185,7 +185,7 @@ class runTest:
                     print >> sys.stderr, "%s failed, dumping traceback:" % testName
                     traceback.print_exc() # print and swallow exception
 
-                mem2 = commands.getoutput('ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
+                mem2 = commands.getoutput('env -i ps -p ' + str(os.getpid()) + ' -o rss | tail -1')
                 time2=time.time()
                 time2=(time2-time1)/60.0
 
