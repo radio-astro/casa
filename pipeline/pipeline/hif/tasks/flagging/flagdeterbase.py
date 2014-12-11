@@ -529,7 +529,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
  
         summary_reps = []
-        pseudoagents = ['before','online', 'template', 'autocorr', 'shadow', 'intents', 'edgespw',
+        pseudoagents = ['before', 'anos', 'online', 'template', 'autocorr', 'shadow', 'intents', 'edgespw',
                         'clip', 'quack', 'baseband']
 
         for agent in pseudoagents:
