@@ -367,18 +367,18 @@ C norm will be the value we would get for the peak
 C at the phase center. We will want to normalize 
 C the final image by this term.
                         norm=0.0
-C                        msupporty=-rsupport
-C                        psupporty=rsupport
-C                        psupportx=rsupport
-C                        msupportx=-rsupport
-C                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
-C     $                       msupportx=  -(loc(1, ichan, irow)-x0)
-C                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
-C     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
-C                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
-C     $                       msupporty=  -(loc(2, ichan, irow)-y0)
-C                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
-C     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
+                        msupporty=-rsupport
+                        psupporty=rsupport
+                        psupportx=rsupport
+                        msupportx=-rsupport
+                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
+     $                       msupportx=  -(loc(1, ichan, irow)-x0)
+                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
+     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
+                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
+     $                       msupporty=  -(loc(2, ichan, irow)-y0)
+                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
+     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
                         do iy=msupporty,psupporty
                            posy=loc(2, ichan, irow)+iy
                            iloc(2)=1+abs(iy*sampling+off(2, ichan,irow))
@@ -388,9 +388,7 @@ C     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1
      $                             off(1,ichan,irow))
                               cwt=convfunc(iloc(1),
      $                                iloc(2), iloc(3))
-                              if(uvw(3,irow).gt.0.0) cwt=conjg(
-     $                             convfunc(iloc(1),
-     $                                iloc(2), iloc(3)))
+                              if(uvw(3,irow).gt.0.0) cwt=conjg(cwt)
 C                              else
 C                                 cwt=convfunc(iloc(1),
 C     $                                iloc(2), iloc(3))
