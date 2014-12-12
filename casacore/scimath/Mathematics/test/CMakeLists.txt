@@ -2,6 +2,7 @@ set (tests
 dAutoDiff
 dSparseDiff
 tAutoDiff
+tClassicalStatistics
 tCombinatorics
 tConvolver
 tInterpolateArray1D
@@ -16,6 +17,7 @@ tMedianSlider
 tSmooth
 tSparseDiff
 tStatAcc
+tStatisticsUtilities
 tVanVleck
 tVectorKernel
 )
