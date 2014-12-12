@@ -65,8 +65,8 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
 #         agents = [s for s in order if s in agent_names]
 
         # return all agents so we get ticks and crosses against each one
-        agents = ['before', 'anos', 'shadow', 'online', 'template', 'autocorr', 
-                  'intents', 'edgespw', 'clip', 'quack', 'baseband']
+        agents = ['before', 'anos', 'shadow', 'intents', 'online', 'template', 'autocorr', 
+                   'edgespw', 'clip', 'quack', 'baseband']
 
         flagplots = [self.flagplot(r, context) for r in result]
         # plot object may be None if plot failed to generate

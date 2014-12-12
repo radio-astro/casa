@@ -9,11 +9,11 @@ agent_description = {
 	'before'   : 'Before Task',
 	'anos'     : 'ANOS',
 	'shadow'   : 'Shadowed Antennas',
+	'intents'  : 'Unwanted Intents',
 	'online'   : 'Other Online Flags',
 	'template' : 'Flagging Template',
 	'autocorr' : 'Autocorr',
 	'edgespw'  : 'Edge Channels',
-	'intents'  : 'Unwanted Intents',
 	'clip'     : 'Clipping',
 	'quack'    : 'Quack',
 	'baseband' : 'Baseband'
@@ -61,14 +61,16 @@ def total_for_mses(mses, row):
 	flagged = 0
 	total = 0
 	for ms in mses:
-		total += flags[ms]['before'][row].total
+		total = flags[ms]['shadow'][row].total
 		for agent in flags[ms].keys():
 			fs = flags[ms][agent][row]
-			flagged += fs.flagged
+			if not (agent == 'before' or agent == 'anos' or agent == 'shadow' or agent == 'intents'):
+			    flagged += fs.flagged
 	if total is 0:
 		return 'N/A'
-	else:
-		return '%0.1f%%' % (100.0 * flagged / total)
+	else: 
+		return '%0.2f%%' % (100.0 * flagged / total)
+		#return '%0.1f%%' % (total)
 
 def total_for_agent(agent, row, mses=flags.keys()):
 	flagged = 0
@@ -84,7 +86,8 @@ def total_for_agent(agent, row, mses=flags.keys()):
 	if total is 0:
 		return 'N/A'
 	else:
-		return '%0.1f%%' % (100.0 * flagged / total)
+		return '%0.2f%%' % (100.0 * flagged / total)
+		#return '%0.1f%%' % (total)
 
 def scivis_for_agent(agent, row, mses=flags.keys()):
 	flagged = 0
@@ -93,15 +96,16 @@ def scivis_for_agent(agent, row, mses=flags.keys()):
 		if agent in flags[ms]:
 			fs = flags[ms][agent][row]
 			flagged += fs.flagged
-			total += fs.total
+			total = flags[ms]['intents'][row].total
 		else:
 			# agent was not activated for this MS. 
 			total += flags[ms]['before'][row].total
 	if total is 0:
 		return 'N/A'
 	else:
-	        total = total - flags[ms]['anos'][row].total - flags[ms]['shadow'][row].total
-		return '%0.1f%%' % (100.0 * flagged / total)
+
+		return '%0.2f%%' % (100.0 * flagged / total)
+		#return '%0.1f%%' % (total)
 		
 
 def agent_data(agent, ms):
@@ -219,7 +223,7 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 				<!-- flags before task is always first agent -->
 				<th rowspan="2">${agent_description[agents[0]]}</th>
 				<th colspan="${len(agents)-1}">Flagging Agent</th>
-				<th rowspan="2">Total</th>
+				<th rowspan="2">Total Science</th>
 				<th colspan="${len(flags)}">Measurement Set</th>
 			</tr>
 			<tr>
@@ -236,10 +240,10 @@ mses = [m for m in flags.keys() if 'online' in flags[m] or 'template' in flags[m
 			<tr>
 				<th>${total_keys[k]}</th>		
 		% for agent in agents:
-		                % if not (agent == 'anos' or agent == 'shadow'):
-				    <td>${total_for_agent(agent, k)}</td>
+		                % if not (agent == 'anos' or agent == 'shadow' or agent == 'before' or agent == 'intents'):
+				    <td>${scivis_for_agent(agent, k)}</td>
 				% endif
-				% if (agent == 'anos' or agent == 'shadow'):
+				% if (agent == 'anos' or agent == 'shadow' or agent == 'before' or agent == 'intents'):
 				    <td>${total_for_agent(agent, k)}</td>
 				% endif
 				
