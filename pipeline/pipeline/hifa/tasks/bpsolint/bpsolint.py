@@ -230,7 +230,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	#    This includes the spw configuration, time on source and
 	#    integration information
 	obs_dict = self._get_obsinfo (inputs.ms, fieldlist, inputs.intent,
-	    spwlist)
+	    spwlist, hm_nantennas=inputs.hm_nantennas,
+	    max_fracflagged=inputs.maxfracflagged)
 
 	# Combine all the dictionariies
 	spw_dict = self._join_dicts (spwlist, tsys_dict, flux_dict,
@@ -475,7 +476,8 @@ class BpSolint(basetask.StandardTaskTemplate):
     #        key: nchan              value: The number of channels
     #        key: chanwidths         value: The median channel width in Hz
     #
-    def _get_obsinfo (self, ms, fieldnamelist, intent, spwidlist):
+    def _get_obsinfo (self, ms, fieldnamelist, intent, spwidlist, hm_nantennas='all',
+        max_fracflagged=0.90):
 
         obsdict = collections.OrderedDict()
 	LOG.info ('Observation summary')
@@ -519,7 +521,6 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    if not spwscans:
 	        continue
 
-
 	    # Limit the scans per spw to those for the first field
 	    #    in the scan sequence.
 	    fieldnames = [field.name for field in spwscans[0].fields]
@@ -542,10 +543,16 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    #   Flagging not taken into account here
 	    n7mant = 0; n12mant = 0
 	    for scan in fscans:
-	        n7mant = max (n7mant, len ([a for a in scan.antennas \
-		    if a.diameter == 7.0]))
-	        n12mant = max (n12mant, len ([a for a in scan.antennas \
-		    if a.diameter == 12.0]))
+		if hm_nantennas == 'all':
+	            n7mant = max (n7mant, len ([a for a in scan.antennas \
+		        if a.diameter == 7.0]))
+	            n12mant = max (n12mant, len ([a for a in scan.antennas \
+		        if a.diameter == 12.0]))
+                else:
+		    ant7m = [a.name for a in scan.antennas if a.diameter == 7.0]
+		    ant12m = [a.name for a in scan.antennas if a.diameter == 12.0]
+		    n12mant, n7mant = self._get_unflagged_antennas(ms.name, scan, ant12m, ant7m,
+		        max_fracflagged=max_fracflagged)
 	    obsdict[spwid]['num_12mantenna'] = n12mant
 	    obsdict[spwid]['num_7mantenna'] = n7mant
 
@@ -806,33 +813,46 @@ class BpSolint(basetask.StandardTaskTemplate):
     # Loop over the scans in scanlist. Compute the list and number of unflagged
     # and flagged antennas for each scan. In most cases there will be only one
     # scan.
-    def _get_unflagged_antennas(self, vis, scanlist=[], maxfracflagged = 0.90):
+    def _get_unflagged_antennas(self, vis, scan, ants12m, ants7m, max_fracflagged = 0.90):
 
 	# Loop over the bandpass scans
-	nunflagged_antennas = [], nflagged_antennas = []
-        for scan in scanlist:
+	nunflagged_12mantennas = 0; nflagged_12mantennas = 0
+	nunflagged_7mantennas = 0; nflagged_7mantennas = 0
 
-	    # Execute the CASA flagdata task for each bandpass scan
-	    flagdata_task = casa_tasks.flagdata(vis=vis, scan=str(scan.id),
-	        mode='summary')
-	    flagdata_result = flagdata_task.execute(dry_run=False)
+	# Execute the CASA flagdata task for each bandpass scan
+	flagdata_task = casa_tasks.flagdata(vis=vis, scan=str(scan.id),
+	    mode='summary')
+	flagdata_result = flagdata_task.execute(dry_run=False)
 
-	    # Add up the antennas
-	    unflagged_antennas = []; flagged_antennas = []
-	    antennas = flagdata_result['report0']['antenna'].keys()
-	    for antenna in sorted(antennas):
-	        points = flagdata_result['antenna'][antenna]
-		fraction = points['flagged']/points['total']
-		if (fraction < maxfracflagged):
-		    unflagged_antennas.append(antenna)
+	# Initialize the statistics per scan
+	unflagged_12mantennas = []; flagged_12mantennas = []
+	unflagged_7mantennas = []; flagged_7mantennas = []
+
+	# Add up the antennas
+	antennas = flagdata_result['antenna'].keys()
+	for antenna in sorted(antennas):
+	    points = flagdata_result['antenna'][antenna]
+	    fraction = points['flagged']/points['total']
+	    if antenna in ants12m:
+		if (fraction < max_fracflagged):
+		    unflagged_12mantennas.append(antenna)
 		else:
-		    flagged_antennas.append(antenna)
+		    flagged_12mantennas.append(antenna)
+	    elif antenna in ants7m:
+		if (fraction < max_fracflagged):
+		    unflagged_7mantennas.append(antenna)
+		else:
+		    flagged_7mantennas.append(antenna)
 
-	    # Compute the lengtjs
-	    nunflagged_antennas.append(len(unflagged_antennas))
-	    nflagged_antennas.append(len(flagged_antennas))
+	# Compute the number of unflagged antennas per scan
+	nunflagged_12mantennas = len(unflagged_12mantennas)
+	nunflagged_7mantennas = len(unflagged_7mantennas)
 
-        return nunflagged_antennas, nflagged_antennas
+	#nflagged_12mantennas = len(flagged_12mantennas)
+	#nflagged_7mantennas = len(flagged_7mantennas)
+
+	# Return the number of unflagged antennas
+        return nunflagged_12mantennas, nunflagged_7mantennas
 
     # Compute the bandpass frequency solution interval given the
     # spw list and the spw dictionary 
