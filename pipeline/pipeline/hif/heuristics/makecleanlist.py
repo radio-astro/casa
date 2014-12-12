@@ -428,19 +428,10 @@ class MakeCleanListHeuristics(object):
                 else:
                     field_names = field
 
-                # 'escape' regexp control characters in field name, except for
-                # * which people use as a wildcard character - replace * by .*
-                # to convert it to regexp form
-                for i,fld in enumerate(field_names):
-                    for char in '()+?.^$[]{}|': 
-                        fld = fld.replace(char, '\%s' % char)
-                    fld = fld.replace('*', '.*')
-                    field_names[i] = fld
-
                 # convert to field ids
                 for field_name in field_names:
-                    field_list += [fld.id for fld in fields if re.search(
-                      pattern=field_name, string=fld.name)]
+                    field_list += [fld.id for fld in fields if 
+                      field_name.replace(' ','')==fld.name.replace(' ','')]
 
             if intent is not None:
                 # pattern matching to allow intents of form *TARGET* to work
