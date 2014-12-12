@@ -27,6 +27,7 @@ tLatticeLocker
 tLatticeRegion
 tLatticeSlice1D
 tLatticeStatistics
+tLatticeStatsDataProvider
 tLatticeStepper
 tLatticeTwoPtCorr
 tLatticeUtilities

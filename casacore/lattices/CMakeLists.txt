@@ -187,6 +187,10 @@ Lattices/LatticeSlice1D.tcc
 Lattices/LatticeStatistics.h
 Lattices/LatticeStatistics.tcc
 Lattices/LatticeStatsBase.h
+Lattices/LatticeStatsDataProviderBase.h
+Lattices/LatticeStatsDataProviderBase.tcc
+Lattices/LatticeStatsDataProvider.h
+Lattices/LatticeStatsDataProvider.tcc
 Lattices/LatticeStepper.h
 Lattices/LatticeTwoPtCorr.h
 Lattices/LatticeTwoPtCorr.tcc
@@ -198,6 +202,8 @@ Lattices/MaskedLattice.h
 Lattices/MaskedLattice.tcc
 Lattices/MaskedLatticeIterator.h
 Lattices/MaskedLatticeIterator.tcc
+Lattices/MaskedLatticeStatsDataProvider.h
+Lattices/MaskedLatticeStatsDataProvider.tcc
 Lattices/MultiTermLatticeCleaner.h
 Lattices/MultiTermLatticeCleaner.tcc
 Lattices/PagedArrIter.h
