@@ -321,7 +321,6 @@ class imstat_test(unittest.TestCase):
             myia.coordsys().torecord(), shape,
             box=box, chans=chans
         )
-        
         bb = myia.statistics(region=reg)
         self.assertTrue(bb["npts"][0] == 126)
         bb = imstat(imagename=myia.name(), chans=chans, box=box)
@@ -331,7 +330,6 @@ class imstat_test(unittest.TestCase):
         rg.tofile(rfilename, reg)
         bb = myia.statistics(region=rfilename)
         self.assertTrue(bb["npts"][0] == 126)
-        
             
     def test012(self):
         """ Test multi beam support"""
@@ -401,7 +399,7 @@ class imstat_test(unittest.TestCase):
     def test_CAS4545(self):
         """verify CAS-4545 fix: full support for >2Gpixel images"""
         myia = self._myia
-        myia.fromshape("", [1290, 1290, 1290])
+        myia.fromshape("", [1291, 1290, 1290])
         stats = myia.statistics()
         self.assertTrue(stats['npts'][0] == myia.shape().prod())
         
@@ -412,8 +410,35 @@ class imstat_test(unittest.TestCase):
         res = myia.statistics()
         self.assertTrue(abs(res['flux']/65265.98528085 - 1) < 1e-9)
         
+    def test_ranges(self):
+        """test specifying ranges works correctly for median, medabsdevmed, and iqr"""
+        data = []
+        for i in range(1000):
+            if i % 2 == 0:
+                datum = i
+            else:
+                datum = -(i*i)
+            data.append(datum)
+        data = numpy.reshape(data, [10, 10, 10])
+        myia = self._myia
+        myia.fromarray("", data)
+        stats = myia.statistics(robust=True)
+        self.assertTrue(stats['median'][0] == -0.5)
+        self.assertTrue(stats['medabsdevmed'][0] == 967.5)
+        self.assertTrue(stats['quartile'][0] == 251499)
+        stats = myia.statistics(robust=True, includepix=[0.1, 1001] )
+        self.assertTrue(stats['median'][0] == 500)
+        self.assertTrue(stats['medabsdevmed'][0] == 250)
+        self.assertTrue(stats['quartile'][0] == 500)
+        stats = myia.statistics(robust=True, excludepix=[0.1, 1001] )
+        self.assertTrue(stats['median'][0] == -249001)
+        self.assertTrue(stats['medabsdevmed'][0] == 216240)
+        self.assertTrue(stats['quartile'][0] == 499000)
+
+        myia.done()
  
 def suite():
     return [imstat_test]
+    
 
 
