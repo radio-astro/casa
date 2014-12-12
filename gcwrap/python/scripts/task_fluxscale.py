@@ -98,6 +98,7 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                       param_vals = [eval(p) for p in param_names]
                       write_history(mstool(), vis, 'fluxscale', param_names,
                                     param_vals, casalog)
+                      writeResultsHistory(mstool(), vis, casalog, output)
                except Exception, instance:
                       casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                                    'WARN')
@@ -108,3 +109,92 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
                raise Exception, instance
 
        return output
+
+
+def writeResultsHistory(myms, vis, mycasalog, indict):
+    """                                                 
+      write returned output of fluxscale to HISTORY subtable of the parent ms
+    """                                                                      
+    isOpen = False                                                           
+    try:                                                                     
+        myms.open(vis)                                                       
+        isOpen = True                                                        
+
+        mainkeys = indict.keys()
+
+        spwids = indict['spwID']
+        freqs = indict['freq']  
+        msg0 = "Fluxscale results *****"
+        myms.writehistory(message=msg0, origin='fluxscale')
+        for ky in mainkeys:                                
+            try:                                           
+                fieldid = int(ky)                          
+            except:                                        
+                fieldid = None                             
+
+            if fieldid!=None:
+                fdict = indict[ky]
+                fname = fdict['fieldName']   
+                fitF = fdict['fitFluxd']     
+                fitFerr = fdict['fitFluxdErr']
+                fitRefFreq = fdict['fitRefFreq']
+                spix = fdict['spidx']           
+                spixerr = fdict['spidxerr']     
+                msg1 = fname+"(field id="+ky+") " 
+                myms.writehistory(message=msg1, origin='fluxscale')
+                for ispw in spwids:                                
+                    strspw = str(ispw)                             
+                    spwfdict = fdict[strspw]                       
+                    flux = spwfdict['fluxd']                       
+                    fluxerr = spwfdict['fluxdErr']                 
+                    freq = freqs[ispw]                             
+                    fvalbase = 1.0                                 
+                    funit=''                                       
+                    if freq>1.e9:
+                        fvalbase = 1.e9
+                        funit = 'GHz'
+                    elif freq>1.e6:
+                        fvalbase = 1.e6
+                        funit = 'MHz'
+                    elif freq>1.e3:
+                        fvalbase = 1.e3
+                        funit = 'kHz'
+                    else:
+                        if freq > 0.0:
+                            funit = 'Hz'
+                    freq = freq/fvalbase
+                    if funit!='':
+                        funitlast=funit
+                        fvalbaselast=fvalbase
+                    if freq  < 0.0:
+                      msg2 = "  Spw "+strspw+" insufficient data, flux density is not determined."
+                    else:
+                      msg2 = "  Spw "+strspw+"(freq = {:7.3f}".format(freq)+funit+") Flux density = {:10.6f}".format(flux[0])+\
+                             "+/-{:10.6f}".format(fluxerr[0])+" Jy"
+                    myms.writehistory(message=msg2, origin='fluxscale')
+                if len(spwids) > 1:
+                    msg3 = "  Spectral index fitting coefficients [zero-point, alpha, beta] with errors :"
+                    msg3a = "["
+                    msg3b = "["
+                    nspix = len(spix)
+                    for ispix in range(nspix):
+                        msg3a += "{:5.3f}".format(spix[ispix])
+                        msg3b += "{:5.3f}".format(spixerr[ispix])
+                        if ispix!=nspix-1:
+                           msg3a += ","
+                           msg3b += ","
+                    msg3a += "]"
+                    msg3b += "]"
+                    msg3 += msg3a + "+/-" + msg3b
+                    fitreffreq = fitRefFreq/fvalbaselast
+                    msg4 = "  Fitted flux density = {:10.6f}".format(fitF)+"+/-{:10.6f}".format(fitFerr)+\
+                           " Jy (reference freq = {:7.3f}".format(fitreffreq)+funitlast+")"
+                    myms.writehistory(message=msg3, origin='fluxscale')
+                    myms.writehistory(message=msg4, origin='fluxscale')
+    except Exception, instance:
+        mycasalog.post("*** Error \'%s\' updating fluxscale results in HISTORY of %s" % (instance, vis), 'WARN' )
+
+    finally:
+        if isOpen:
+            myms.close()
+
