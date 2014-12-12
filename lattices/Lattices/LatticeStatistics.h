@@ -46,6 +46,9 @@
 #include <vector>
 #include <list>
 
+#include <scimath/Mathematics/ClassicalStatistics.h>
+
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
@@ -559,9 +562,6 @@ private:
    );
 };
 
-
-
-
 // <summary> Generate statistics, tile by tile, from a masked lattice </summary>
 //
 // <use visibility=export>
@@ -674,23 +674,12 @@ private:
     Bool noInclude_p, noExclude_p, fixedMinMax_p;
     IPosition minPos_p, maxPos_p;
 
-// Accumulators for sum, sum squared, number of points
-// minimum, and maximum
-
-    Block<U> *pSum_p;
-    Block<U> *pSumSq_p;
-    Block<U>* pNPts_p;
-    Block<U>* pMean_p;
-
-    Block<U>* pVariance_p;
-    Block<U>* pNVariance_p;
-
-    Block<T>* pMin_p;
-    Block<T>* pMax_p;
-    Block<Bool>* pInitMinMax_p;
-//
     uInt n1_p;
     uInt n3_p;
+    vector<ClassicalStatistics<U, const T*, const Bool*> > _cs;
+    vector<std::pair<U, U> > _ranges;
+    DataType _type;
+    vector<Bool> _first;
 };
 
 } //# NAMESPACE CASA - END
