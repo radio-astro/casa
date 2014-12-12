@@ -1142,7 +1142,7 @@ endif()
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
 
-casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS ATM READLINE DL XERCES CASACODE )
+casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS ATM READLINE DL XERCES LIBSAKURA CASACODE )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

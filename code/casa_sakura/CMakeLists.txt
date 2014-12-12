@@ -26,6 +26,7 @@ casa_add_library( casa_sakura
 
 install (FILES
         SakuraAlignedArray.h
+        SakuraAlignedArray.tcc
         SakuraUtils.h
         SakuraArrayConverter.h
 	DESTINATION include/casacode/casa_sakura
