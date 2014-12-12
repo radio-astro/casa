@@ -3302,72 +3302,75 @@ Bool MSTransformDataHandler::mergeFeedSubTables(Vector<String> filenames, Vector
     {
     	MSFeed feedTable_0 = ms_0.feed();
 
-    	if (feedTable_0.nrow() > 0)
-    	{
-        	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-        			<< "Merging FEED sub-tables from all sub-MSs to form MMS-level FEED sub-table" << LogIO::POST;
+    	// CAS-7167. The WVR spw has no FEED content.
+//    	if (feedTable_0.nrow() >= 0)
+//    	{
+        os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+                << "Merging FEED sub-tables from all sub-MSs to form MMS-level FEED sub-table" << LogIO::POST;
 
-        	MSFeedColumns feedCols_0(feedTable_0);
+        MSFeedColumns feedCols_0(feedTable_0);
 
-        	uInt rowIndex = feedTable_0.nrow();
-           	for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+        uInt rowIndex = feedTable_0.nrow();
+        for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+        {
+            String filename_i = filenames(subms_index);
+            MeasurementSet ms_i(filename_i);
+            MSFeed feedtable_i = ms_i.feed();
+
+            if (feedtable_i.nrow() > 0)
             {
-            	String filename_i = filenames(subms_index);
-            	MeasurementSet ms_i(filename_i);
-            	MSFeed feedtable_i = ms_i.feed();
+                MSFeedColumns feedcols_i(feedtable_i);
 
-            	if (feedtable_i.nrow() > 0)
-            	{
-                	MSFeedColumns feedcols_i(feedtable_i);
+                feedTable_0.addRow(feedtable_i.nrow());
 
-                	feedTable_0.addRow(feedtable_i.nrow());
+                // Prepare row reference object
+                RefRows refRow(rowIndex,rowIndex+feedtable_i.nrow()-1);
 
-                   	// Prepare row reference object
-                   	RefRows refRow(rowIndex,rowIndex+feedtable_i.nrow()-1);
+                // Re-index SPW col
+                Vector<Int> spectralWindowId_output(feedtable_i.nrow(),mapSubmsSpwid[subms_index]);
+                spectralWindowId_output += feedcols_i.spectralWindowId().getColumn();
+                feedCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
 
-                   	// Re-index SPW col
-                   	Vector<Int> spectralWindowId_output(feedtable_i.nrow(),mapSubmsSpwid[subms_index]);
-                   	spectralWindowId_output += feedcols_i.spectralWindowId().getColumn();
-                   	feedCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+                // Columns that can be just copied
+                feedCols_0.position().putColumnCells(refRow,feedcols_i.position().getColumn());
+                feedCols_0.beamOffset().putColumnCells(refRow,feedcols_i.beamOffset().getColumn());
+                feedCols_0.polarizationType().putColumnCells(refRow,feedcols_i.polarizationType().getColumn());
+                feedCols_0.polResponse().putColumnCells(refRow,feedcols_i.polResponse().getColumn());
+                feedCols_0.receptorAngle().putColumnCells(refRow,feedcols_i.receptorAngle().getColumn());
+                feedCols_0.antennaId().putColumnCells(refRow,feedcols_i.antennaId().getColumn());
+                feedCols_0.beamId().putColumnCells(refRow,feedcols_i.beamId().getColumn());
+                feedCols_0.feedId().putColumnCells(refRow,feedcols_i.feedId().getColumn());
+                feedCols_0.interval().putColumnCells(refRow,feedcols_i.interval().getColumn());
+                feedCols_0.numReceptors().putColumnCells(refRow,feedcols_i.numReceptors().getColumn());
+                feedCols_0.time().putColumnCells(refRow,feedcols_i.time().getColumn());
 
-                   	// Columns that can be just copied
-                	feedCols_0.position().putColumnCells(refRow,feedcols_i.position().getColumn());
-                	feedCols_0.beamOffset().putColumnCells(refRow,feedcols_i.beamOffset().getColumn());
-                	feedCols_0.polarizationType().putColumnCells(refRow,feedcols_i.polarizationType().getColumn());
-                	feedCols_0.polResponse().putColumnCells(refRow,feedcols_i.polResponse().getColumn());
-                	feedCols_0.receptorAngle().putColumnCells(refRow,feedcols_i.receptorAngle().getColumn());
-                	feedCols_0.antennaId().putColumnCells(refRow,feedcols_i.antennaId().getColumn());
-                	feedCols_0.beamId().putColumnCells(refRow,feedcols_i.beamId().getColumn());
-                	feedCols_0.feedId().putColumnCells(refRow,feedcols_i.feedId().getColumn());
-                	feedCols_0.interval().putColumnCells(refRow,feedcols_i.interval().getColumn());
-                	feedCols_0.numReceptors().putColumnCells(refRow,feedcols_i.numReceptors().getColumn());
-                	feedCols_0.time().putColumnCells(refRow,feedcols_i.time().getColumn());
+                // optional columns
+                if (columnOk(feedcols_i.focusLength()))
+                {
+                    feedCols_0.focusLength().putColumnCells(refRow,feedcols_i.focusLength().getColumn());
+                }
 
-                	// optional columns
-                	if (columnOk(feedcols_i.focusLength()))
-                	{
-                		feedCols_0.focusLength().putColumnCells(refRow,feedcols_i.focusLength().getColumn());
-                	}
+                if (columnOk(feedcols_i.phasedFeedId()))
+                {
+                    feedCols_0.phasedFeedId().putColumnCells(refRow,feedcols_i.phasedFeedId().getColumn());
+                }
 
-                	if (columnOk(feedcols_i.phasedFeedId()))
-                	{
-                		feedCols_0.phasedFeedId().putColumnCells(refRow,feedcols_i.phasedFeedId().getColumn());
-                	}
-
-                	// Increment row offset
-                   	rowIndex += feedtable_i.nrow();
-            	}
+                // Increment row offset
+                rowIndex += feedtable_i.nrow();
             }
+        }
 
-        	// Flush changes
-            feedTable_0.flush(True,True);
-    	}
+        // Flush changes
+        feedTable_0.flush(True,True);
+//    	}
+/*
 		else
 		{
 	    	os << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	    			<< "FEED sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
+*/
     }
     else
     {
@@ -3515,148 +3518,150 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 	{
 		MSSysCal syscalTable_0 = ms_0.sysCal();
 
-		if (syscalTable_0.nrow() > 0)
-		{
-	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-	    			<< "Merging SYSCAL sub-tables from all sub-MSs to form MMS-level SYSCAL sub-table" << LogIO::POST;
+		// CAS-7167. The WVR spw has no FEED content.
+//		if (syscalTable_0.nrow() >= 0)
+//		{
+        os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+                << "Merging SYSCAL sub-tables from all sub-MSs to form MMS-level SYSCAL sub-table" << LogIO::POST;
 
-			MSSysCalColumns syscalCols_0(syscalTable_0);
+        MSSysCalColumns syscalCols_0(syscalTable_0);
 
-	    	uInt rowIndex = syscalTable_0.nrow();
-			for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
-			{
-				String filename_i = filenames(subms_index);
-				MeasurementSet ms_i(filename_i);
-				MSSysCal syscaltable_i = ms_i.sysCal();
+        uInt rowIndex = syscalTable_0.nrow();
+        for (uInt subms_index=1;subms_index < filenames.size();subms_index++)
+        {
+            String filename_i = filenames(subms_index);
+            MeasurementSet ms_i(filename_i);
+            MSSysCal syscaltable_i = ms_i.sysCal();
 
-				if (syscaltable_i.nrow() > 0)
-				{
-					MSSysCalColumns syscalcols_i(syscaltable_i);
+            if (syscaltable_i.nrow() > 0)
+            {
+                MSSysCalColumns syscalcols_i(syscaltable_i);
 
-					syscalTable_0.addRow(syscaltable_i.nrow());
+                syscalTable_0.addRow(syscaltable_i.nrow());
 
-		        	// Prepare row reference object
-		        	RefRows refRow(rowIndex,rowIndex+syscaltable_i.nrow()-1);
+                // Prepare row reference object
+                RefRows refRow(rowIndex,rowIndex+syscaltable_i.nrow()-1);
 
-		        	// Re-index SPW col
-		        	Vector<Int> spectralWindowId_output(syscaltable_i.nrow(),mapSubmsSpwid[subms_index]);
-		        	spectralWindowId_output += syscalcols_i.spectralWindowId().getColumn();
-		        	syscalCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
+                // Re-index SPW col
+                Vector<Int> spectralWindowId_output(syscaltable_i.nrow(),mapSubmsSpwid[subms_index]);
+                spectralWindowId_output += syscalcols_i.spectralWindowId().getColumn();
+                syscalCols_0.spectralWindowId().putColumnCells(refRow,spectralWindowId_output);
 
-		        	// Columns that can be just copied
-		    		syscalCols_0.antennaId().putColumnCells(refRow,syscalcols_i.antennaId().getColumn());
-		    		syscalCols_0.feedId().putColumnCells(refRow,syscalcols_i.feedId().getColumn());
-		    		syscalCols_0.interval().putColumnCells(refRow,syscalcols_i.interval().getColumn());
-		    		syscalCols_0.time().putColumnCells(refRow,syscalcols_i.time().getColumn());
+                // Columns that can be just copied
+                syscalCols_0.antennaId().putColumnCells(refRow,syscalcols_i.antennaId().getColumn());
+                syscalCols_0.feedId().putColumnCells(refRow,syscalcols_i.feedId().getColumn());
+                syscalCols_0.interval().putColumnCells(refRow,syscalcols_i.interval().getColumn());
+                syscalCols_0.time().putColumnCells(refRow,syscalcols_i.time().getColumn());
 
-		    		// Optional columns
-		    		if (columnOk(syscalcols_i.phaseDiff()))
-		    		{
-		    			syscalCols_0.phaseDiff().putColumnCells(refRow,syscalcols_i.phaseDiff().getColumn());
-		    		}
+                // Optional columns
+                if (columnOk(syscalcols_i.phaseDiff()))
+                {
+                    syscalCols_0.phaseDiff().putColumnCells(refRow,syscalcols_i.phaseDiff().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.phaseDiffFlag()))
-		        	{
-		        		syscalCols_0.phaseDiffFlag().putColumnCells(refRow,syscalcols_i.phaseDiffFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.phaseDiffFlag()))
+                {
+                    syscalCols_0.phaseDiffFlag().putColumnCells(refRow,syscalcols_i.phaseDiffFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tant()))
-		        	{
-		        		syscalCols_0.tant().putColumnCells(refRow,syscalcols_i.tant().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tant()))
+                {
+                    syscalCols_0.tant().putColumnCells(refRow,syscalcols_i.tant().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tantFlag()))
-		        	{
-		        		syscalCols_0.tantFlag().putColumnCells(refRow,syscalcols_i.tantFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tantFlag()))
+                {
+                    syscalCols_0.tantFlag().putColumnCells(refRow,syscalcols_i.tantFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tantSpectrum()))
-		        	{
-		        		syscalCols_0.tantSpectrum().putColumnCells(refRow,syscalcols_i.tantSpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tantSpectrum()))
+                {
+                    syscalCols_0.tantSpectrum().putColumnCells(refRow,syscalcols_i.tantSpectrum().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tantTsys()))
-		        	{
-		        		syscalCols_0.tantTsys().putColumnCells(refRow,syscalcols_i.tantTsys().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tantTsys()))
+                {
+                    syscalCols_0.tantTsys().putColumnCells(refRow,syscalcols_i.tantTsys().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tantTsysFlag()))
-		        	{
-		        		syscalCols_0.tantTsysFlag().putColumnCells(refRow,syscalcols_i.tantTsysFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tantTsysFlag()))
+                {
+                    syscalCols_0.tantTsysFlag().putColumnCells(refRow,syscalcols_i.tantTsysFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tantTsysSpectrum()))
-		        	{
-		        		syscalCols_0.tantTsysSpectrum().putColumnCells(refRow,syscalcols_i.tantTsysSpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tantTsysSpectrum()))
+                {
+                    syscalCols_0.tantTsysSpectrum().putColumnCells(refRow,syscalcols_i.tantTsysSpectrum().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tcal()))
-		        	{
-		        		syscalCols_0.tcal().putColumnCells(refRow,syscalcols_i.tcal().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tcal()))
+                {
+                    syscalCols_0.tcal().putColumnCells(refRow,syscalcols_i.tcal().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tcalFlag()))
-		        	{
-		        		syscalCols_0.tcalFlag().putColumnCells(refRow,syscalcols_i.tcalFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tcalFlag()))
+                {
+                    syscalCols_0.tcalFlag().putColumnCells(refRow,syscalcols_i.tcalFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tcalSpectrum()))
-		        	{
-		        		syscalCols_0.tcalSpectrum().putColumnCells(refRow,syscalcols_i.tcalSpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tcalSpectrum()))
+                {
+                    syscalCols_0.tcalSpectrum().putColumnCells(refRow,syscalcols_i.tcalSpectrum().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.trx()))
-		        	{
-		        		syscalCols_0.trx().putColumnCells(refRow,syscalcols_i.trx().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.trx()))
+                {
+                    syscalCols_0.trx().putColumnCells(refRow,syscalcols_i.trx().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.trxFlag()))
-		        	{
-		        		syscalCols_0.trxFlag().putColumnCells(refRow,syscalcols_i.trxFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.trxFlag()))
+                {
+                    syscalCols_0.trxFlag().putColumnCells(refRow,syscalcols_i.trxFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.trxSpectrum()))
-		        	{
-		        		syscalCols_0.trxSpectrum().putColumnCells(refRow,syscalcols_i.trxSpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.trxSpectrum()))
+                {
+                    syscalCols_0.trxSpectrum().putColumnCells(refRow,syscalcols_i.trxSpectrum().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tsky()))
-		        	{
-		        		syscalCols_0.tsky().putColumnCells(refRow,syscalcols_i.tsky().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tsky()))
+                {
+                    syscalCols_0.tsky().putColumnCells(refRow,syscalcols_i.tsky().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tskyFlag()))
-		        	{
-		        		syscalCols_0.tskyFlag().putColumnCells(refRow,syscalcols_i.tskyFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tskyFlag()))
+                {
+                    syscalCols_0.tskyFlag().putColumnCells(refRow,syscalcols_i.tskyFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tskySpectrum()))
-		        	{
-		        		syscalCols_0.tskySpectrum().putColumnCells(refRow,syscalcols_i.tskySpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tskySpectrum()))
+                {
+                    syscalCols_0.tskySpectrum().putColumnCells(refRow,syscalcols_i.tskySpectrum().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tsys()))
-		        	{
-		        		syscalCols_0.tsys().putColumnCells(refRow,syscalcols_i.tsys().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tsys()))
+                {
+                    syscalCols_0.tsys().putColumnCells(refRow,syscalcols_i.tsys().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tsysFlag()))
-		        	{
-		        		syscalCols_0.tsysFlag().putColumnCells(refRow,syscalcols_i.tsysFlag().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tsysFlag()))
+                {
+                    syscalCols_0.tsysFlag().putColumnCells(refRow,syscalcols_i.tsysFlag().getColumn());
+                }
 
-		    		if (columnOk(syscalcols_i.tsysSpectrum()))
-		        	{
-		        		syscalCols_0.tsysSpectrum().putColumnCells(refRow,syscalcols_i.tsysSpectrum().getColumn());
-		        	}
+                if (columnOk(syscalcols_i.tsysSpectrum()))
+                {
+                    syscalCols_0.tsysSpectrum().putColumnCells(refRow,syscalcols_i.tsysSpectrum().getColumn());
+                }
 
-		        	// Increment row offset
-		        	rowIndex += syscalcols_i.nrow();
-				}
-			}
+                // Increment row offset
+                rowIndex += syscalcols_i.nrow();
+            }
+        }
 
-			// Flush changes
-			syscalTable_0.flush(True,True);
+        // Flush changes
+        syscalTable_0.flush(True,True);
+/*
 		}
 		else
 		{
@@ -3664,6 +3669,7 @@ Bool MSTransformDataHandler::mergeSyscalSubTables(Vector<String> filenames, Vect
 	    			<< "SYSCAL sub-table found but has no valid content" << LogIO::POST;
 	    	return False;
 		}
+*/
 	}
 	else
 	{
@@ -3984,7 +3990,7 @@ Bool MSTransformDataHandler::mergeSysPowerSubtables(Vector<String> filenames, Ve
 		if (subtable_0.nrow() > 0)
 		{
 	    	os << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-	    			<< "Merging SYS_POWER sub-tables from all sub-MSs to form MMS-level SYS_POWER sub-table" << LogIO::POST;
+	    			<< "Merging SYSPOWER sub-tables from all sub-MSs to form MMS-level SYSPOWER sub-table" << LogIO::POST;
 
 	        // Get RW access to columns
 			ScalarColumn<Int> antennaIdCol_0(subtable_0, "ANTENNA_ID");
