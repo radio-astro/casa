@@ -20,7 +20,6 @@ foreach (file ${datafiles})
     configure_file (${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file} COPYONLY)
 endforeach (file)
 
-
 set (tests
 dImageInterface
 dImageStatistics
@@ -34,6 +33,7 @@ tFITSExtImage
 tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
+tImageBeamSet
 tImageConcat
 tImageEmpty
 tImageExpr2Gram
@@ -43,6 +43,7 @@ tImageExprParse_addDir
 tImageInfo
 tImageRegrid
 tImageStatistics
+tImageStatistics2
 tImageUtilities
 tLELSpectralIndex
 tMIRIADImage
@@ -51,7 +52,6 @@ tPagedImage
 tRebinImage
 tSubImage
 tTempImage
-tImageBeamSet
 )
 
 foreach (test ${tests})
