@@ -48,26 +48,37 @@ namespace casa {
 // between adding data and calculating statistics, the updated values are used when
 // calculating statistics. Derived classes may override this behavior.
 //
-// PROVIDING DATA
-// Data may be provided in one of two mutually exclusive ways. The first way is simpler,
-// and that is to use the setData()/addData() methods. Calling setData() will clear
-// any previous data that was added via these methods or via a data provider (see below).
-// Calling addData() subsequently to setData() will add a data set to the set of data sets
-// on which statistics will be calculated. In order for this to work correctly, the
-// iterators which are passed into these methods must still be valid when statistics are
-// calculated (although note that some derived classes allow certain statistics to be
-// updated as data sets are added via these methods. See specific classes for details).
+// PRECISION CONSIDERATIONS
+// Many statistics are computed via accumulators. This can lead to precision issues,
+// especially for large datasets. For this reason, it is highly recommended that the
+// data type one uses as the AccumType be of higher precision, if possible, than the
+// data type pointed to by input iterator. So for example, if one has a data set of
+// Float values (to which the InputIterator type points to), then one should use type
+// Double for the AccumType. In this case, the Float data values will be converted to
+// Doubles before they are accumulated.
+//
+// METHODS OF PROVIDING DATA
+// Data may be provided in one of two mutually exclusive ways. The first way is
+// simpler, and that is to use the setData()/addData() methods. Calling setData() will
+// clear any previous data that was added via these methods or via a data provider (see
+// below). Calling addData() subsequently to setData() will add a data set to the set
+// of data sets on which statistics will be calculated. In order for this to work
+// correctly, the iterators which are passed into these methods must still be valid when
+// statistics are calculated (although note that some derived classes allow certain
+// statistics to be updated as data sets are added via these methods. See specific
+// classes for details).
 //
 // The second way to provide data is via a data provider. This takes the form of
 // a derived class of StatsDataProvider, in which various methods are implemented for
 // retrieving various information about the data sets. Such an interface is necessary for
-// data which does not easily lend itself to be provided via the setData()/addData() methods.
-// For example, in the case of iterating through a lattice, a lattice iterator will overwrite
-// the memory location of the previous chunk of data with the current chunk of data. Therefore,
-// if one does not wish to load data from the entire lattice into memory (which is why
-// LatticeIterator was designed in this way), one must the LatticeStatsDataProvider class, which
-// the statistics framework will use to iteratate through the lattice, only keeping one chunk
-// of the data of the lattice in memory at one time.
+// data which does not easily lend itself to be provided via the setData()/addData()
+// methods. For example, in the case of iterating through a lattice, a lattice iterator
+// will overwrite the memory location of the previous chunk of data with the current chunk
+// of data. Therefore, if one does not wish to load data from the entire lattice into
+// memory (which is why LatticeIterator was designed in this way), one must the
+// LatticeStatsDataProvider class, which the statistics framework will use to iteratate
+// through the lattice, only keeping one chunk of the data of the lattice in memory at one
+// time.
 //
 // QUANTILES
 // A quantile is a value contained in a data set, such that, it has a zero-based
