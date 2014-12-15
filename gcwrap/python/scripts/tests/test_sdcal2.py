@@ -1528,7 +1528,7 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
     """
     rawfile='sdcal2_testflag.asap'
     prefix = 'sdcal2_applycal_flag'
-    
+
     def setUp(self):
         self.res=None
         for f in [self.rawfile]:
@@ -1559,6 +1559,122 @@ class sdcal2_applycal_flag(sdcal2_flag_base):
                               self._expected_caltable(10, 'TSYS', average),
                               expected_flagrow)
     
+class sdcal2_applycal_flag2(sdcal2_flag_base):
+    """
+    Test list
+    """
+    rawfile='sd_analytic_type1-3.asap'
+    prefix = 'sdcal2_applycal_flag2'
+    sky_valid = 'sd_analytic_type1-3.asap_sky'
+    sky_empty = 'sd_analytic_type1-3.asap_sky.empty'
+    sky_invalid = 'sd_analytic_type1-3.asap_sky.invalid'
+    tsys_valid = 'sd_analytic_type1-3.asap_tsys'
+    tsys_empty = 'sd_analytic_type1-3.asap_tsys.empty'
+    tsys_invalid = 'sd_analytic_type1-3.asap_tsys.invalid'
+    spwmap = {'24': [25], '20': [21], '22': [23]}
+    
+    def setUp(self):
+        self.res=None
+        for f in [self.rawfile]:
+            copytree_ignore_subversion(self.datapath, f)
+
+        default(sdcal2)
+
+    def tearDown(self):
+        if (os.path.exists(self.rawfile)):
+            shutil.rmtree(self.rawfile)
+        os.system( 'rm -rf '+self.prefix+'*' )
+        os.system('rm -rf sd_analytic_type1-3*')
+
+    def _expected_flagrow(self):
+        with tbmanager(self.rawfile) as tb:
+            tsel = tb.query('SRCTYPE==0', sortlist='TIME')
+            flagrow = tsel.getcol('FLAGROW')
+        return flagrow
+
+    def applytable(self, sky_stat, tsys_stat=None):
+        skyname = 'sky_%s'%(sky_stat)
+        _getattr = lambda x: getattr(self, x)
+        self.assertTrue(hasattr(self, skyname))
+        if tsys_stat is None:
+            tables = map(_getattr, [skyname])
+        else:
+            tsysname = 'tsys_%s'%(tsys_stat)
+            tables = map(_getattr, [skyname, tsysname])
+        for table in tables:
+            copytree_ignore_subversion(self.datapath, table)
+            self.assertTrue(os.path.exists(table))
+        return tables 
+
+    def get_flag(self, table):
+        with tbmanager(table) as tb:
+            tsel = tb.query('SRCTYPE==0')
+            flag = tsel.getcol('FLAGTRA')
+            flagrow = tsel.getcol('FLAGROW')
+            tsel.close()
+        return flagrow, flag
+        
+    def _verify_flag(self, infile, outfile, flagged):
+        frref, flref = self.get_flag(infile)
+        fr, fl = self.get_flag(outfile)
+        if flagged:
+            self.assertTrue(all(fl.flatten() == 128))
+            self.assertTrue(all(fr == 1))
+        else:
+            self.assertTrue(all(fl.flatten() == flref.flatten()))
+            self.assertTrue(all(fr == frref))
+
+    def _test(self, sky_stat, tsys_stat, flagged):
+        outfile = self.prefix + '_cal'
+        applytable = self.applytable(sky_stat, tsys_stat)
+        sdcal2(infile=self.rawfile, outfile=outfile, calmode='apply',
+               spwmap=self.spwmap, applytable=applytable)
+        self._verify_flag(self.rawfile, outfile, flagged)
+        
+    def test_validsky_validtsys(self):
+        """test_validsky_validtsys:"""
+        #outfile = self.prefix + '_cal'
+        #applytable = self.applytable('valid', 'valid')
+        #sdcal2(infile=self.rawfile, outfile=outfile, calmode='apply',
+        #       spwmap=self.spwmap, applytable=applytable)
+        #self._verify_flag(self.rawfile, outfile, False)
+        self._test('valid', 'valid', False)
+
+    def test_validsky_notsys(self):
+        """test_validsky_notsys:"""
+        self._test('valid', None, False)
+
+    def test_validsky_emptytsys(self):
+        """test_validsky_emptytsys"""
+        self._test('valid', 'empty', True)
+    
+    def test_validsky_invalidtsys(self):
+        """test_validsky_invalidtsys"""
+        self._test('valid', 'invalid', True)
+
+    def test_invalidsky_validtsys(self):
+        """test_invalidsky_validtsys"""
+        self._test('invalid', 'valid', True)
+
+    def test_invalidsky_emptytsys(self):
+        """test_invalidsky_emptytsys"""
+        self._test('invalid', 'empty', True)
+
+    def test_invalidsky_invalidtsys(self):
+        """test_invalidsky_invalidtsys"""
+        self._test('invalid', 'invalid', True)
+        
+    def test_emptysky_validtsys(self):
+        """test_emptysky_validtsys"""
+        self._test('empty', 'valid', True)
+
+    def test_emptysky_emptytsys(self):
+        """test_emptysky_emptytsys"""
+        self._test('empty', 'empty', True)
+
+    def test_emptysky_emptytsys(self):
+        """test_emptysky_emptytsys"""
+        self._test('empty', 'empty', True)
 
 def suite():
     return [sdcal2_exceptions, sdcal2_skycal_ps,
@@ -1566,4 +1682,5 @@ def suite():
             sdcal2_tsyscal, sdcal2_tsyscal_average,
             sdcal2_applycal,
             sdcal2_test_selection,
-            sdcal2_skycal_flag, sdcal2_tsyscal_flag, sdcal2_applycal_flag]
+            sdcal2_skycal_flag, sdcal2_tsyscal_flag,
+            sdcal2_applycal_flag, sdcal2_applycal_flag2]
