@@ -7,6 +7,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.displays.vla.targetflagdisplay as targetflagdisplay
+import pipeline.hif.tasks.common.flagging_renderer_utils as fru
 
 LOG = logging.get_logger(__name__)
 
@@ -28,9 +29,11 @@ class T2_4MDetailsVLAAgentFlaggerRenderer(basetemplates.T2_4MDetailsDefaultRende
                                   'stage%s' % result.stage_number)
 
         flag_totals = {}
+        non_science_agents = ['before', 'anos','shadow', 'intents']
+        #Note that the call to common.flagging_renderer_utils.flags_for_result
         for r in result:
             flag_totals = utils.dict_merge(flag_totals, 
-                                           self.flags_for_result(r, context))
+                                           fru.flags_for_result(r, context, non_science_agents))
 
             # copy template files across to weblog directory
             toggle_to_filenames = {'online'   : 'fileonline',
