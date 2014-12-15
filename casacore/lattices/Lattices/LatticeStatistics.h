@@ -670,7 +670,7 @@ public:
 
 
 private:
-    Vector<T> range_p;
+   // Vector<T> range_p;
     Bool noInclude_p, noExclude_p, fixedMinMax_p;
     IPosition minPos_p, maxPos_p;
 

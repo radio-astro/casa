@@ -577,7 +577,6 @@ Bool LatticeStatistics<T>::getStats(
 	//                  The non-display axis values will be ignored.
 	//                  Otherwise the position should be for the
 	//                  display axes only.
-
 	// Check class status
 	if (!goodParameterStatus_p) {
 		return False;
@@ -840,6 +839,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     LatticeApply<T,AccumType>::tiledApply(outLatt, *pInLattice_p, 
                                           collapser, IPosition(cursorAxes_p),
                                           newOutAxis, pProgressMeter);
+
     if (pProgressMeter) {
        delete pProgressMeter;
        pProgressMeter = 0;
@@ -2817,7 +2817,6 @@ Bool LatticeStatistics<T>::retrieveStorageStatistic(
    Array<AccumType> tSlice;
    pStoreLattice_p->getSlice(tSlice, slicePos, sliceShape, 
                            IPosition(nDim+1,1), False);
-
 // Copy to vector      
 
    slicePos = 0;
@@ -3133,7 +3132,7 @@ template <class T, class U>
 StatsTiledCollapser<T,U>::StatsTiledCollapser(const Vector<T>& pixelRange, 
                                               Bool noInclude, Bool noExclude,
                                               Bool fixedMinMax)
-: range_p(pixelRange),
+: /*range_p(pixelRange), */
   noInclude_p(noInclude),
   noExclude_p(noExclude),
   fixedMinMax_p(fixedMinMax),
@@ -3294,7 +3293,10 @@ void StatsTiledCollapser<T,U>::endAccumulator(Array<U>& result,
     		StatisticsData::toString(StatisticsData::VARIANCE), u
     	);
     	variances.push_back(u);
-    	if (stats.isDefined(StatisticsData::toString(StatisticsData::MAX))) {
+    	if (fixedMinMax_p && ! noInclude_p) {
+    		t = _ranges[0].second;
+    	}
+    	else if (stats.isDefined(StatisticsData::toString(StatisticsData::MAX))) {
     		stats.get(
     			StatisticsData::toString(StatisticsData::MAX), t
     		);
@@ -3303,7 +3305,10 @@ void StatsTiledCollapser<T,U>::endAccumulator(Array<U>& result,
     		t = T(0);
     	}
     	maxes.push_back(t);
-    	if (stats.isDefined(StatisticsData::toString(StatisticsData::MIN))) {
+    	if (fixedMinMax_p && ! noInclude_p) {
+    		t = _ranges[0].first;
+    	}
+    	else if (stats.isDefined(StatisticsData::toString(StatisticsData::MIN))) {
     		stats.get(
     			StatisticsData::toString(StatisticsData::MIN), t
     		);
