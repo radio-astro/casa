@@ -1275,6 +1275,24 @@ int main() {
     		Double medabsdevmed = cs.getMedianAbsDevMed(NULL, NULL, NULL, 100);
     		AlwaysAssert(medabsdevmed == 999001, AipsError);
     	}
+    	{ // large array with all the same values, getMedianAndQuartile()
+    		vector<Float> big(100000, 0);
+    		ClassicalStatistics<Double, vector<Float>::const_iterator, vector<Bool>::const_iterator> cs;
+    		cs.addData(big.begin(), big.size());
+    		std::set<Double> quantiles;
+    		quantiles.insert(0.25);
+    		quantiles.insert(0.75);
+    		CountedPtr<uInt64> npts;
+    		CountedPtr<Double> mymin, mymax;
+    		std::map<Double, Double> quantileToValue;
+    		Double median = cs.getMedianAndQuantiles(
+    			quantileToValue, quantiles, npts, mymin, mymax, 99999
+    		);
+    		AlwaysAssert(median == 0, AipsError);
+    		AlwaysAssert(quantileToValue[0.25] == 0, AipsError);
+    		AlwaysAssert(quantileToValue[0.75] == 0, AipsError);
+
+    	}
     }
 
     catch (const AipsError& x) {
