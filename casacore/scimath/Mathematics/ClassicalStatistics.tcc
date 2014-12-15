@@ -100,20 +100,6 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	return *_median;
 }
 
-/*
-template <class AccumType, class InputIterator, class MaskIterator>
-static AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_medianFromSet(
-	const std::map<uInt64, AccumType>& values
-) {
-	uInt size = values.size();
-	if (size == 1) {
-		return
-	}
-
-}
-*/
-
-
 template <class AccumType, class InputIterator, class MaskIterator>
 std::set<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_medianIndices(
 	CountedPtr<uInt64> knownNpts
@@ -179,7 +165,6 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	if (_median.null()) {
 		medianIndices = _medianIndices(mynpts);
 	}
-
 	std::map<Double, uInt64> quantileToIndex = StatisticsAlgorithm<
 			AccumType, InputIterator, MaskIterator
 		>::_indicesFromQuantiles(
@@ -1517,6 +1502,7 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 		std::set<uInt64>::const_iterator end=indices.end();
 		while(iter != end) {
 			indexToValue[*iter] = mymin;
+			++iter;
 		}
 		return indexToValue;
 	}
