@@ -48,6 +48,11 @@
 	<description>Apply BDF flags on import</description>
 	<value>True</value>
     </param>
+    
+    <param type="bool" name="dbservice" subparam="true">
+	<description>Use the online flux catalog</description>
+	<value>True</value>
+    </param>
 
     <param type="bool" name="dryrun" subparam="true">
 	<description>Run the task (False) or display task command (True)</description>
@@ -68,6 +73,7 @@
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
+		<default param="dbservice"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -76,6 +82,7 @@
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
+		<default param="dbservice"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>
@@ -135,6 +142,9 @@ overwrite -- Overwrite existing MSs on output.
    default: False
 
 bdfflags -- Apply BDF flags on import
+   default: True
+   
+dbservice -- Use online flux catalog on import
    default: True
 
 --- pipeline task execution modes

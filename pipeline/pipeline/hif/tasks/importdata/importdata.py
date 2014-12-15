@@ -9,26 +9,31 @@ import shutil
 import string
 import tarfile
 import types
+import datetime
+import urllib
 import xml.etree.ElementTree as ElementTree
+from xml.dom import minidom
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.tablereader as tablereader
+import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
+
 
 from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
-
+USEFLUXSERVICE = True
 
 class ImportDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
 		 session=None, overwrite=None, save_flagonline=None,
-		 bdfflags=None):
+		 bdfflags=None, dbservice=None):
         self._init_properties(vars())
 
     # This are ALMA specific settings. Make them generic at some point.
@@ -37,6 +42,7 @@ class ImportDataInputs(basetask.StandardInputs):
     save_flagonline = basetask.property_with_default('save_flagonline', True)
     bdfflags = basetask.property_with_default('bdfflags', True)
     process_caldevice = basetask.property_with_default('process_caldevice', False)
+    dbservice = basetask.property_with_default('dbservice', True)
 
     @property
     def session(self):
@@ -373,12 +379,18 @@ def read_fluxes(ms):
     if not os.path.exists(source_table):
         LOG.info('No Source XML found at %s. No flux import performed.'
                  % source_table)
+                 
+        result = flux_nosourcexml(ms)
+                 
         return result
 
     source_element = ElementTree.parse(source_table)
     if not source_element:
         LOG.info('Could not parse Source XML at %s. No flux import performed' 
                  % source_table)
+        
+        result = flux_nosourcexml(ms)
+        
         return result
 
     for row in source_element.findall('row'):
@@ -389,7 +401,11 @@ def read_fluxes(ms):
 
         # all elements must contain data to proceed
         if None in (flux_text, frequency_text, source_id, spw_id):
-            continue
+            LOG.info("Not enough field elements in Source XML.  Querying online web service")
+            result = flux_nosourcexml(ms)
+            return result
+            #continue
+
 
         # spws can overlap, so rather than looking up spw by frequency,
         # extract the spw id from the element text. I assume the format uses
@@ -402,9 +418,146 @@ def read_fluxes(ms):
         # one flux density. 
         iquv = to_jansky(flux_text)[0]
         m = domain.FluxMeasurement(spw_id, *iquv)
+        
+        # At this point we take:
+        #  - the frequency of the spw_id in Hz
+        #  - the source name string
+        #  - The observation date
+        #  and attempt to call the online flux catalog web service, and use the flux result
+        #  and spectral index
+        if USEFLUXSERVICE:
+        
+	    try:
+	        frequencyobject = to_hertz(frequency_text)[0]
+	        frequency = str(frequencyobject.value)  #In Hertz
+		fluxdict = fluxservice(ms, frequency, source.name)
+		f = fluxdict['fluxdensity']
+		iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
+			iquv[1], iquv[2], iquv[3])
+		m = domain.FluxMeasurement(spw_id, *iquv_db)
+		
+		LOG.info("Flux was: " + str(iquv[0].value) + " Jy      Now using: "+str(f) + " Jy from online flux catalog.")
+		
+	    except:
+		LOG.warn("Unable to obtain some online flux catalog values for source " + str(source.name))
+        
+        
+        
         result[source].append(m)
 
     return result
+
+
+def flux_nosourcexml(ms):
+
+    '''
+    Call the flux service and get the frequencies from the ms if no Source.xml is available
+    
+    '''
+    
+    result = collections.defaultdict(list)
+    
+    if USEFLUXSERVICE:
+    
+        spws = ms.get_spectral_windows()
+        
+        for source in ms.sources:
+            for spw in spws:
+                sourcename = source.name
+                frequency= str(spw.centre_frequency.value)
+                spw_id = spw.id
+                print 'freq/sourcename',frequency, sourcename
+                
+                try:
+                    
+                    fluxdict = fluxservice(ms, frequency, sourcename)
+                    f = fluxdict['fluxdensity']
+                    iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY),
+                               measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
+                    m = domain.FluxMeasurement(spw_id, *iquv_db)
+                    result[source].append(m)
+                except:
+                    LOG.warn("Unable to obtain some online flux catalog values for source " + str(source.name))
+                    
+    return result
+
+
+def fluxservice(ms, frequency, sourcename):
+    '''
+        Usage of this online service requires:
+         - ms - for getting the date
+         - frequency_text - we will get the frequency out of this in Hz
+         - source - we will get source.name from this object
+    '''
+    #serviceurl = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
+    serviceurl =  'http://asa-test.alma.cl/bfs/'
+    
+    
+    
+    qt = casatools.quanta
+    mt = casatools.measures
+    s = qt.time(mt.getvalue(ms.start_time)['m0'], form=['fits'])
+    dt = datetime.datetime.strptime(s[0], '%Y-%m-%dT%H:%M:%S')
+    year = dt.year
+    month = dt.strftime("%B")
+    day = dt.day
+    date = str(day) + '-' + month + '-' + str(year)
+    
+    sourcename = sanitize_string(sourcename)
+    
+    urlparams = buildparams(sourcename, date, frequency)
+    dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams))
+    
+    print 'url: ', serviceurl + '?%s' % urlparams
+    
+    domtable = dom.getElementsByTagName('TR')
+    
+    rowdict = {}
+    
+    for node in domtable:
+        row = node.getElementsByTagName('TD')
+        rowdict['sourcename']         = row[0].childNodes[0].nodeValue
+        rowdict['dbfrequency']        = row[1].childNodes[0].nodeValue
+        rowdict['date']               = row[2].childNodes[0].nodeValue
+        rowdict['fluxdensity']        = row[3].childNodes[0].nodeValue
+        rowdict['fluxdensityerror']   = row[4].childNodes[0].nodeValue
+        rowdict['spectralindex']      = row[5].childNodes[0].nodeValue
+        rowdict['spectralindexerror'] = row[6].childNodes[0].nodeValue
+        rowdict['error2']             = row[7].childNodes[0].nodeValue
+        rowdict['error3']             = row[8].childNodes[0].nodeValue
+        rowdict['error4']             = row[9].childNodes[0].nodeValue
+        rowdict['warning']            = row[10].childNodes[0].nodeValue
+        rowdict['notms']              = row[11].childNodes[0].nodeValue
+        rowdict['verbose']            = row[12].childNodes[0].nodeValue
+        rowdict['url']                = serviceurl + '?%s' % urlparams
+    
+    return rowdict
+    
+    
+
+def buildparams(sourcename, date, frequency):
+    '''
+       Inputs are all strings, in the format:
+       NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
+    '''
+    params = {'NAME' : sourcename,
+              'DATE' : date,
+              'FREQUENCY' : frequency}
+
+    urlparams = urllib.urlencode(params)
+
+    return urlparams
+
+def sanitize_string(name):
+    '''
+        sanitize source name if needed
+    '''
+    
+    namereturn = name.split(';')
+    
+    return namereturn[0]
 
 
 def get_flux_density(frequency_text, flux_text):
@@ -425,14 +578,14 @@ def to_jansky(flux_text):
     return get_atoms(flux_text, flux_fn)
 
 
-def to_hertz(flux_text):
+def to_hertz(freq_text):
     '''
     Convert a string extracted from an ASDM XML element to Frequency domain 
     objects.
     '''
     freq_fn = lambda f : measures.Frequency(float(f), 
                                             measures.FrequencyUnits.HERTZ)
-    return get_atoms(flux_text, freq_fn)
+    return get_atoms(freq_text, freq_fn)
 
 
 def get_atoms(text, conv_fn=lambda x: x):

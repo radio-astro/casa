@@ -94,27 +94,39 @@ $(document).ready(function() {
 
 <h2>Results</h2>
 
-<h4>Flux cal db</h4>
 
 <p>Flux calibration database connection</p>
 
-
+<p><font color="red">Red columns</font> are from the ms and are used as inputs.</p>
+<p><b>Black values</b> are from the DB flux service response.</p>
+<p><font color="blue">Blue values</font> are from Todd Hunter's analysisUtils (au).</p>
 
 
 <table class="table table-bordered table-striped" summary="Flux calibration database">
 	<caption>Results from database request</caption>
         <thead>
 	    <tr>
-	        <th scope="col">Field ID</th>
-	        <th scope="col">Field Name</th>
-	        <th scope="col">Frequency</th>
-	        <th scope="col">Field Flux I</th>
+	        <th scope="col"><font color="red">Field ID</font></th>
+	        <th scope="col"><font color="red">Field Name</font></th>
+	        <th scope="col"><font color="red">spw</font></th>
+	        <th scope="col"><font color="red">Centre Frequency (Hz)</font></th>
+	        <th scope="col"><font color="red">Field Flux I</font></th>
+	        <th scope="col">DB Link</th>
 	        <th scope="col">DB Source Name</th>
-	        <th scope="col">DB Frequency</th>
-	        <th scope="col">DB Flux Estimation</th>
+	        <th scope="col">DB/<font color="blue">au</font> Frequency</th>
 	        <th scope="col">DB Date</th>
-	        <th scope="col">DB Upper Error</th>
-	        <th scope="col">DB Lower Error</th>
+	        <th scope="col">DB/<font color="blue">au</font> Flux Density</th>
+	        <th scope="col">DB/<font color="blue">au</font> Flux Density Error/<font color="blue">Uncertainty</font></th>
+	        <th scope="col">DB/<font color="blue">au</font> Spectral Index</th>
+	        <th scope="col">DB/<font color="blue">au</font> Spectral Index Error/<font color="blue">Uncertainty</font></th>
+	        <th scope="col"><font color="blue">au</font> mean Age</th>
+	        <th scope="col">DB Error2</th>
+	        <th scope="col">DB Error3</th>
+	        <th scope="col">DB Error4</th>
+	        <th scope="col">DB Warning</th>
+	        <th scope="col">DB Notms</th>
+	        <th scope="col">DB Verbose</th>
+	        
 	    </tr>
 	</thead>
 	<tbody>
@@ -123,21 +135,29 @@ $(document).ready(function() {
       <tr>
           <td>${row['fieldid']}</td>
           <td>${row['fieldname']}</td>
+          <td>${row['spw']}</td>
           <td>${row['frequency']}</td>
           <td>${row['fieldfluxI']}</td>
+          <td><a href="${row['url']}">URL</a></td>
           <td>${row['sourcename']}</td>
-          <td>${row['dbfrequency']}</td>
-          <td>${row['fluxestimation']}</td>
+          <td>${row['dbfrequency']}<br><font color="blue">${row['aufrequency']}</font></td>
           <td>${row['date']}</td>
-          <td>${row['uppererror']}</td>
-          <td>${row['lowererror']}</td>
+          <td>${row['fluxdensity']}<br><font color="blue">${row['aufluxDensity']}</font></td>
+          <td>${row['fluxdensityerror']}<br><font color="blue">${row['aufluxDensityUncertainty']}</font></td>
+          <td>${row['spectralindex']}<br><font color="blue">${row['auspectralIndex']}</font></td>
+          <td>${row['spectralindexerror']}<br><font color="blue">${row['auspectralIndexUncertainty']}</font></td>
+          <td><font color="blue">${row['aumeanAge']}</font></td>
+          <td>${row['error2']}</td>
+          <td>${row['error3']}</td>
+          <td>${row['error4']}</td>
+          <td>${row['warning']}</td>
+          <td>${row['notms']}</td>
+          <td>${row['verbose']}</td>
       </tr>
     %endfor
 %endfor
 	</tbody>
 </table>
-
-
 
 
 

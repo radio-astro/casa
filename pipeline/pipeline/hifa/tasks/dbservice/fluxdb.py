@@ -12,6 +12,9 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 
+#execfile('analysisUtils.py')
+#import analysisUtils as au
+
 LOG = infrastructure.get_logger(__name__)
 
 
@@ -24,7 +27,7 @@ https://bugs.nrao.edu/browse/CAS-6869
 '''
 
 #Sample URL
-# http://bender.csrg.cl:2121/bfs-0.1/ssap?NAME=J2258-279&DATE=29-Jul-2014&FREQUENCY=271.6215E9    
+# http://bender.csrg.cl:2121/bfs-0.2/ssap?NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
 #Documentation
 # http://twiki.csrg.cl/twiki/bin/view/LIRAE/SourceCatalogueVO
 
@@ -42,7 +45,8 @@ class FluxdbInputs(basetask.StandardInputs):
     @serviceurl.setter
     def serviceurl(self, value):
         if value is None:
-            value = 'http://bender.csrg.cl:2121/bfs-0.1/ssap'
+            #value = 'http://bender.csrg.cl:2121/bfs-0.2/ssap'
+            value = 'http://asa-test.alma.cl/bfs/'
         self._serviceurl = value
         
     
@@ -80,10 +84,10 @@ class Fluxdb(basetask.StandardTaskTemplate):
                     LOG.info(str(field.id) + '  ' + field.name + '  ' + str(I))
                     
                     try:
-			frequency = str(flux.spw_id.ref_frequency.value)
+			frequency = str(flux.spw_id.centre_frequency.value)
 			LOG.info(frequency)
 	            except:
-	                LOG.warn("Unable to parse frequency")
+	                LOG.warn("Unable to parse frequency for some fields.")
 		
 		    try:
 			#From domain/observingrun.py
@@ -112,26 +116,56 @@ class Fluxdb(basetask.StandardTaskTemplate):
 			    for node in domtable:
 				row = node.getElementsByTagName('TD')
 				rowdict = {}
-				rowdict['sourcename']      = row[0].childNodes[0].nodeValue
-				rowdict['dbfrequency']     = row[1].childNodes[0].nodeValue
-				rowdict['fluxestimation']  = row[2].childNodes[0].nodeValue
-				rowdict['date']            = row[3].childNodes[0].nodeValue
-				rowdict['uppererror']      = row[4].childNodes[0].nodeValue
-				rowdict['lowererror']      = row[5].childNodes[0].nodeValue
+				rowdict['sourcename']         = row[0].childNodes[0].nodeValue
+				rowdict['dbfrequency']        = row[1].childNodes[0].nodeValue
+				rowdict['date']               = row[2].childNodes[0].nodeValue
+				rowdict['fluxdensity']        = row[3].childNodes[0].nodeValue
+				rowdict['fluxdensityerror']   = row[4].childNodes[0].nodeValue
+				rowdict['spectralindex']      = row[5].childNodes[0].nodeValue
+				rowdict['spectralindexerror'] = row[6].childNodes[0].nodeValue
+				rowdict['error2']             = row[7].childNodes[0].nodeValue
+				rowdict['error3']             = row[8].childNodes[0].nodeValue
+				rowdict['error4']             = row[9].childNodes[0].nodeValue
+				rowdict['warning']            = row[10].childNodes[0].nodeValue
+				rowdict['notms']              = row[11].childNodes[0].nodeValue
+				rowdict['verbose']            = row[12].childNodes[0].nodeValue
+				rowdict['url']                = inputs.serviceurl + '?%s' % urlparams
 				
 				rowdict['fieldid']         = str(field.id)
 				rowdict['fieldname']       = field.name
 				rowdict['fieldfluxI']      = str(I)
 				rowdict['frequency']       = str(frequency)
+				rowdict['spw']             = str(flux.spw_id.id)
+				
+				rowdict['aufluxDensity'] = ' '
+				rowdict['aufluxDensityUncertainty'] = ' '
+				rowdict['aufrequency'] = ' '
+				rowdict['aumeanAge'] = ' ' 
+				rowdict['auspectralIndex'] = ' '
+				rowdict['auspectralIndexUncertainty'] = ' '
+				
+				#Compare to Todd's values
+				try:
+				    audict = au.getALMAFluxForMS(vis=inputs.vis, field=str(field.id), spw=str(flux.spw_id.id))
+				    for key in audict.keys():
+				        rowdict['aufluxDensity'] = str(audict[key]['fluxDensity'])
+				        rowdict['aufluxDensityUncertainty'] = str(audict[key]['fluxDensityUncertainty'])
+				        rowdict['aufrequency'] = str(audict[key]['frequency'])
+				        rowdict['aumeanAge'] = str(audict[key]['meanAge'])
+				        rowdict['auspectralIndex'] = str(audict[key]['spectralIndex'])
+				        rowdict['auspectralIndexUncertainty'] = str(audict[key]['spectralIndexUncertainty'])
+				        
+				except:
+				    LOG.info("Unable to use analysisUtils")
 				
 				fluxtable.append(rowdict)
 		            LOG.info("Successful web service call")
 		            LOG.info(" ")
 		        except:
-			     LOG.warn("Unable to parse XML service response.")
+			     LOG.warn("Unable to parse some XML service field or null results.")
 
                     except:
-                        LOG.warn("Unable to form URL request")
+                        LOG.warn("Warning received - data might be unavailable for some fields.")
 
         return FluxdbResults(fluxtable=fluxtable)
 
