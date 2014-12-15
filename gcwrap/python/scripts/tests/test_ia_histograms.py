@@ -172,7 +172,9 @@ class ia_histograms_test(unittest.TestCase):
         hists = myim.histograms(list=F, includepix=[-5,5], nbins=25)
         self.assertTrue(hists, 'Histograms failed (4)')
         ok = hists['counts'][idx-1]==(imshape[0]*imshape[1]-(imshape[1]+imshape[1]))
+        self.assertTrue(ok, 'Histograms values are wrong (4)')
         ok = ok and alleqnum(hists['counts'][0:(idx-2)],0,tolerance=0.0001)
+        self.assertTrue(ok, 'Histograms values are wrong (4)')
         ok = ok and alleqnum(hists['counts'][idx:nbins],0,tolerance=0.0001)
         self.assertTrue(ok, 'Histograms values are wrong (4)')
         
