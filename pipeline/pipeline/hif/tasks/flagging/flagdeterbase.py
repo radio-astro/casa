@@ -115,68 +115,24 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         The filename of the ASCII file that has the flagging template (for 
         RFI, birdies, telluric lines, etc.).    
     """    
+
+    autocorr = basetask.property_with_default('autocorr', True)
+    edgespw = basetask.property_with_default('edgespw', False)
+    flagbackup = basetask.property_with_default('flagbackup', False)
+    fracspw = basetask.property_with_default('fracspw', 0.05)
+    online = basetask.property_with_default('online', True)
+    scan = basetask.property_with_default('scan', True)
+    scannumber = basetask.property_with_default('scannumber', '')
+    shadow = basetask.property_with_default('shadow', True)
+    template = basetask.property_with_default('template', False)
+
     def __init__(self, context, vis=None, output_dir=None, flagbackup=None,
                  autocorr=None, shadow=None, scan=None, scannumber=None,
-                 intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
-                 fileonline=None, template=None, filetemplate=None, hm_tbuff=None, tbuff=None):
-        """
-        Initialise the Inputs, initialising any property values to those given
-        here.
-        
-        :param context: the pipeline Context state object
-        :type context: :class:`~pipeline.infrastructure.launcher.Context`
-        :param vis: the measurement set(s) to flag
-        :type vis: a string or list of strings
-        :param output_dir: the output directory for pipeline data
-        :type output_dir: string
-        :param flagbackup: backup existing flags before flagging
-        :type flagbackup: boolean
-        :param autocorr: flag autocorrelations
-        :type autocorr: boolean
-        :param shadow: flag shadowed antennas
-        :type shadow: boolean
-        :param scan: flag scans specified by scannumber and intents
-        :type scan: boolean
-        :param scannumber: the scans to flag
-        :type scannumber: comma-delimited string
-        :param intents: the intents to flag
-        :type intents: comma-delimited string
-        :param edgespw: flag edge channels
-        :type edgespw: boolean
-        :param fracspw: the fraction of edge channels to remove
-        :type fracspw: float between 0.0-1.0
-        :param online: apply online flags
-        :type online: boolean
-        :param fileonline: filename of the online flagging commands template
-        :type fileonline: string
-        :param template: apply flagging template
-        :type template: boolean
-        :param filetemplate: filename of flagging commands template
-        :type filetemplate: string
-        """        
+                 intents=None, edgespw=None, fracspw=None, fracspwfps=None, 
+                 online=None, fileonline=None, template=None, filetemplate=None, 
+                 hm_tbuff=None, tbuff=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
-    @property
-    def autocorr(self):
-        return self._autocorr
-    
-    @autocorr.setter
-    def autocorr(self, value):
-        if value is None:
-            value = True
-        self._autocorr = value
-
-    @property
-    def edgespw(self):
-        return self._edgespw
-    
-    @edgespw.setter
-    def edgespw(self, value):
-        if value is None:
-            #value = True
-            value = False
-        self._edgespw = value
 
     @property
     def fileonline(self):
@@ -205,47 +161,29 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             idx = self._my_vislist.index(self.vis)
             return self._filetemplate[idx]
 
-        #if not isinstance(self.vis, list):
-	    #if not hasattr (self, '_my_vislist'):
-	        #idx = 0
-	    #else:
-                #idx = self._my_vislist.index(self.vis)
-            #return self._filetemplate[idx]
-        
-        #return self._filetemplate[0]
         return self._filetemplate
 
-    #Force filetemplate to be a list.
     @filetemplate.setter
     def filetemplate(self, value):
-	if value is None:
-	    value = []
-	elif type(value) is types.StringType:
-	    if value == '':
-	        value = []
-	    else:
-	        value = list(value.replace('[','').replace(']','').replace("'","").split(','))
+        if value in (None, ''):
+            value = []
+        elif type(value) is types.StringType:
+            value = list(value.replace('[','').replace(']','').replace("'","").split(','))
         self._filetemplate = value
 
     @property
-    def flagbackup(self):
-        return self._flagbackup
+    def hm_tbuff(self):
+        return self._hm_tbuff
     
-    @flagbackup.setter
-    def flagbackup(self, value):
-        if value is None:
-            value = False
-        self._flagbackup = value
-
-    @property
-    def fracspw(self):
-        return self._fracspw
-    
-    @fracspw.setter
-    def fracspw(self, value):
-        if value is None:
-            value = 0.05
-        self._fracspw = value
+    @hm_tbuff.setter
+    def hm_tbuff(self, value=None):
+        if value is None: 
+            value = 'halfint'
+        if value not in ('halfint', '1.5int', 'manual'):
+            LOG.warning('Unexpected value for hm_tbuff: %s. Using halfint.', 
+                        value)
+            value = 'halfint'
+        self._hm_tbuff = value
 
     @property
     def inpfile(self):
@@ -257,89 +195,52 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 
     @property
     def intents(self):
-        return self._intents
-    
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('intents')
+
+        if self._intents is not None:
+            return self._intents
+
+        # return just the unwanted intents that are present in the MS
+        intents_to_flag = set(['POINTING','FOCUS','ATMOSPHERE','SIDEBAND'])
+        return ','.join(self.ms.intents.intersection(intents_to_flag))
+
     @intents.setter
     def intents(self, value):
-        if value is None:
-            value = '*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*'
-        self._intents = value
-        
-    @property
-    def online(self):
-        return self._online
-    
-    @online.setter
-    def online(self, value):
-        if value is None:
-            value = True
-        self._online = value
-        
-        
-    @property
-    def hm_tbuff(self):
-        return self._hm_tbuff
-        
-    @hm_tbuff.setter
-    def hm_tbuff(self, value):
-        if value is None:
-            value = 'halfint'
-        if value in 'halfint | 1.5int | manual':
-            self._hm_tbuff = value
-        else:
-            self._hm_tbuff = 'halfint'
-        
-        
+        self._intents = value        
+
     @property
     def tbuff(self):
-        return self._tbuff
-        
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('tbuff')
+
+        if self.hm_tbuff == 'halfint':
+            if any([a.diameter == 7.0 for a in self.ms.antennas]):
+                return 0.0
+
+            median_ints = [self.ms.get_median_science_integration_time(intent=intent)
+                           for intent in ('AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK')
+                           if intent in self.ms.intents]
+            if not median_ints:
+                return 0.0
+            return 0.5 * max(median_ints)
+
+        elif self.hm_tbuff == '1.5int':
+            if hasattr(self.context, 'evla'):
+                t = self.ms.get_vla_max_integration_time()
+            else:
+                t = self.ms.get_median_integration_time()
+            return 1.5 * t
+
+        else:
+            return self._tbuff
+            
     @tbuff.setter
-    def tbuff(self, value):
-        if value is None:
+    def tbuff(self, value=None):
+        if value == None:
             value = 0.0
-        self._tbuff = value
+        self._tbuff = value                
         
-    @property
-    def scan(self):
-        return self._scan
-    
-    @scan.setter
-    def scan(self, value):
-        if value is None:
-            value = True
-        self._scan = value
-
-    @property
-    def scannumber(self):
-        return self._scannumber
-    
-    @scannumber.setter
-    def scannumber(self, value):
-        if value is None:
-            value = ''
-        self._scannumber = value
-
-    @property
-    def shadow(self):
-        return self._shadow
-    
-    @shadow.setter
-    def shadow(self, value):
-        if value is None:
-            value = True
-        self._shadow = value
-
-    @property
-    def template(self):
-        return self._template
-    
-    @template.setter
-    def template(self, value):
-        if value is None:
-            value = False
-        self._template = value        
-
     def to_casa_args(self):
         """
         Translate the input parameters of this class to task parameters 
@@ -348,49 +249,15 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         :rtype: dict        
         """
-
-	# Generate file list.
-	filelist = []
-	if self.online:
-	    if os.path.isfile(self.fileonline):
-	        filelist.append(self.fileonline)
-	    else:
-	        LOG.warning('Online flags file %s does not exist' % (self.fileonline))
-	filelist.append(self.inpfile)
-	if self.template:
-	    if os.path.isfile(self.filetemplate):
-	        filelist.append(self.filetemplate)
-	    else:
-	        LOG.warning('Template flags file %s does not exist' % (self.filetemplate))
-
         return {'vis'        : self.vis,
                 'mode'       : 'list',
                 'action'     : 'apply',                     
-                #'inpfile'    : self.inpfile,
-                'inpfile'    : filelist,
+                'inpfile'    : self.inpfile,
+                'tbuff'      : self.tbuff,
                 'savepars'   : False,
                 'flagbackup' : self.flagbackup}
 
-'''
-class FlagDeterBaseResults(basetask.Results):
-    def __init__(self, jobs=[]):
-        """
-        Initialise the results object with the given list of JobRequests.
-        """
-        super(FlagDeterBaseResults, self).__init__()
-        self.jobs = jobs
 
-    def __repr__(self):
-        s = 'Deterministic flagging results:\n'
-        for job in self.jobs:
-            s += '%s performed. Statistics to follow?' % str(job)
-        return s 
-'''        
-
-
-
-
-#New version...
 class FlagDeterBaseResults(basetask.Results):
     def __init__(self, summaries, flagcmds):
         super(FlagDeterBaseResults, self).__init__()
@@ -404,14 +271,11 @@ class FlagDeterBaseResults(basetask.Results):
         # nothing to do
         pass
 
-
-
     def __repr__(self):
         # Step through the summary list and print a few things.
         # SUBTRACT flag counts from previous agents, because the counts are
         # cumulative.
         s = 'Deterministic flagging results:\n'
-        
         
         for idx in range(0, len(self.summaries)):
             flagcount = int(self.summaries[idx]['flagged'])
@@ -427,17 +291,6 @@ class FlagDeterBaseResults(basetask.Results):
                     100.0*flagcount/totalcount)
         
         return s
-
-
-
-
-
-
-
-
-
-
-
 
 
 class FlagDeterBase(basetask.StandardTaskTemplate):
@@ -474,71 +327,31 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         
         # get the flagdata command string, ready for the flagdata input file
         flag_cmds = self._get_flag_commands()
+        flag_str = '\n'.join(flag_cmds)
 
         # write the flag commands to the file
-        ####with open(inputs.inpfile, 'w') as stream:
-        ####    stream.write(flag_cmds)
+        with open(inputs.inpfile, 'w') as stream:
+            stream.writelines(flag_str)
 
         # to save inspecting the file, also log the flag commands
-        LOG.debug('Flag commands for %s:\n%s' % (inputs.vis, flag_cmds))
-
-        #Set the tbuf parameter
-        if inputs._hm_tbuff == 'halfint':
-            # compute half of the maximum integration time, see ms.get_median_science_integration times method (this
-            # has an intent parameter so it can be restricted to science intents)
-            tbuff = 0.0
-	    n7mantennas = len([a.id for a in inputs.ms.antennas if a.diameter == 7.0])
-	    if n7mantennas <= 0:
-                for intent in ['AMPLITUDE','BANDPASS','PHASE','TARGET','CHECK']:
-                    try:
-                        time = inputs.ms.get_median_science_integration_time(intent=intent)
-                        tbuff = max (tbuff, time)
-                        LOG.debug("Using tbuff = "+str(tbuff))
-                    except:
-		        LOG.debug('Intent ' + intent + ' not present.')
-                tbuff = 0.5 * tbuff
-        elif inputs._hm_tbuff == '1.5int':
-            tbuff = 1.5 * inputs.ms.get_median_integration_time()
-            
-            #Check for VLA usage of max integration time
-            if self.inputs.context.__dict__.has_key('evla'):
-                tbuff = 1.5 * inputs.ms.get_vla_max_integration_time()
-                LOG.info("Using VLA 1.5 * int_time")
-            
-        else:
-            tbuff = inputs._tbuff
-        LOG.info("Using tbuff = "+str(tbuff))
+        LOG.debug('Flag commands for %s:\n%s', inputs.vis, flag_str)
 
         # Map the pipeline inputs to a dictionary of CASA task arguments 
-        ####task_args = inputs.to_casa_args()
-        task_args = {'vis' :inputs.vis,
-                     'mode' : 'list',
-                     'tbuff' : tbuff,
-                     'inpfile' : flag_cmds}
+        task_args = inputs.to_casa_args()
 
         # create and execute a flagdata job using these task arguments
-        print "Determining Summary reports"
         job = casa_tasks.flagdata(**task_args)
         summary_dict = self._executor.execute(job)
 
-        sumreps = {}
-        
-
-        for key in summary_dict.keys():
-            sumreps[summary_dict[key]['name']] = summary_dict[key]
-
+        agent_summaries = dict((v['name'], v) for v in summary_dict.values())
  
-        summary_reps = []
-        pseudoagents = ['before', 'anos', 'online', 'template', 'autocorr', 'shadow', 'intents', 'edgespw',
-                        'clip', 'quack', 'baseband']
+        ordered_agents = ['before', 'anos', 'online', 'template', 'autocorr',
+                          'shadow', 'intents', 'edgespw', 'clip', 'quack', 
+                          'baseband']
 
-        for agent in pseudoagents:
-            try:
-                summary_reps.append(sumreps[agent])
-            except:
-               LOG.debug('Agent ' + agent + ' not present')
-
-
+        summary_reps = [agent_summaries[agent] 
+                        for agent in ordered_agents 
+                        if agent in agent_summaries]
 
         # return the results object, which will be used for the weblog
         return FlagDeterBaseResults(summary_reps, flag_cmds)
@@ -572,8 +385,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         inputs = self.inputs
         
         # the empty list which will hold the flagging commands
-        flag_cmds = []
-        
+        flag_cmds = []        
         
         # flag online?
         if inputs.online:
@@ -596,11 +408,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
                 flag_cmds.append('mode=summary name=template')
 
         # Flag autocorrelations?
-        #if inputs.autocorr:
-        #    #flag_cmds.append('mode=manual antenna=*&&&')
-        #    flag_cmds.append(self._get_autocorr_cmd())
-    
-        # Flag autocorrelations?
         if inputs.autocorr:
             flag_cmds.append('mode=manual autocorr=True reason=autocorr')
             flag_cmds.append('mode=summary name=autocorr')
@@ -609,12 +416,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if inputs.shadow:
             flag_cmds.append('mode=shadow reason=shadow')
             flag_cmds.append('mode=summary name=shadow')
-    
-    
-        # Flag shadowed antennas?
-        ##if inputs.shadow:
-        ##    flag_cmds.append('mode=shadow')
-        
         
         # Flag according to scan numbers and intents?
         if inputs.scan and inputs.scannumber != '':
@@ -642,34 +443,7 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if flag_cmds:
             flag_cmds.insert(0, 'mode=summary name=before')
 
-        LOG.trace('Flag commands for %s:\n%s' % (inputs.ms.basename, 
-                                                 '\n'.join(flag_cmds)))
-        
-        
-        
-        '''
-        # Flag according to scan numbers and intents?
-        if inputs.scan:
-	    if inputs.scannumber != '':
-                flag_cmds.append('mode=manual scan={0}'
-                             ''.format(inputs.scannumber))
-	    # These must be separated due to the way agent flagging works
-	    if inputs.intents != '':
-	        intentslist = inputs.intents.split(',')
-	        for item in intentslist:
-                    flag_cmds.append('mode=manual intent={0}'
-                             ''.format(item))
-
-        # Flag spectral window edge channels?
-        if inputs.edgespw: 
-            flag_cmds.append(self._get_edgespw_cmds())
-        '''
-
-        #return '\n'.join(flag_cmds)
-
         return flag_cmds
-        
-    
 
     def _get_autocorr_cmd (self):
         #return 'mode=manual antenna=*&&&'
@@ -720,8 +494,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
             # If the twice the number of flagged channels is greater than the
             # number of channels for a given spectral window, skip it.
-            #frac_chan = int(round(fracspw * spw.num_channels + 0.5))
-	    # Make rounding less agressive
             frac_chan = int(round(fracspw * spw.num_channels))
             if 2*frac_chan >= spw.num_channels:
                 LOG.debug('Too many flagged channels %s for spw %s '
@@ -731,8 +503,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             # calculate the channel ranges to flag. No need to calculate the
             # left minimum as it is always channel 0.
             l_max = frac_chan - 1
-            #r_min = spw.num_channels - frac_chan - 1
-	    # Fix asymmetry 
             r_min = spw.num_channels - frac_chan
             r_max = spw.num_channels - 1
 
@@ -742,50 +512,6 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             to_flag.append(cmd)
 
         return to_flag
-
-
-    '''
-    def _get_edgespw_cmds(self):
-        """
-        Return a flagdata flagging command that will flag the edge channels
-        of spectral windows in this measurement set.
-
-        The number of channels to flag is calculated using the 'fracspw' value
-        on this task's associated Inputs.
-        
-        :rtype: a string         
-        """
-        inputs = self.inputs
-
-        # to_flag is the list to which flagging commands will be appended        
-        to_flag = []
-
-        # loop over the spectral windows, generate a flagging command for each
-        # spw in the ms. Calling get_spectral_windows() with no arguments 
-        # returns just the science windows, which is exactly what we want.
-        for spw in inputs.ms.get_spectral_windows():
-            
-            # If the twice the number of flagged channels is greater than the
-            # number of channels for a given spectral window, skip it.
-            frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
-            if 2*frac_chan >= spw.num_channels:
-                LOG.debug('Too many flagged channels for spw %s ' % spw.id)
-                continue
-
-            # calculate the channel ranges to flag. No need to calculate the
-            # left minimum as it is always channel 0.
-            l_max = frac_chan - 1
-            r_min = spw.num_channels - frac_chan - 1
-            r_max = spw.num_channels - 1
-            
-            # state the spw and channels to flag in flagdata format, adding
-            # the statement to the list of flag commands
-            cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-            to_flag.append(cmd)
-
-        return 'mode=manual spw={0}'.format(','.join(to_flag))
-    '''
-
 
     def _add_file(self, filename):
         """
