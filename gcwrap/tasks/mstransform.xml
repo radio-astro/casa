@@ -5,12 +5,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="mstransform" category="manipulation" visibility="experimental">
+<task type="function" name="mstransform" category="manipulation">
      <shortdescription>Split the MS, combine/separate/regrid spws and do channel and time averaging</shortdescription>
 
 <description>
-    Experimental version of task mstransform.
-
+    
     The task mstransform can do the same functionalities available
     in cvel, partition, hanningsmooth and split without the need to read and write
     the output to disk multiple times. The main features of this task
@@ -19,8 +18,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     * take an input MS or Multi-MS (MMS)
     * ability to create an output MS or MMS
     * spw combination and separation
-    * channel averaging taking weights into account
-    * time averaging
+    * channel averaging taking flags and weights into account
+    * time averaging taking flags and weights into account
     * reference frame transformation
     * Hanning smoothing
     
@@ -41,14 +40,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     CORRECTED_DATA) can be selected. It can also be used to create a normal
     MS, split-based on the given data selection parameters.
 	
-    The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical sense 
-    correct for the simple cases of channel average, and time average, but not for the 
-    general re-gridding case, in which the error propagation formulas applicable for 
-    WEIGHT_SPECTRUM are yet to be defined. Currently, as in cvel, WEIGHT_SPECTRUM is 
-    transformed in the same way as the other data columns, but this is not statistically 
-    correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
-    to define the applicable error propagation formulas.
-    
+    The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical
+    sense correct for the simple cases of channel average and time average, but not for
+    the general re-gridding case, in which the error propagation formulas applicable for 
+    WEIGHT_SPECTRUM are yet to be defined. Currently, as in cvel and in the imager,
+    WEIGHT_SPECTRUM is transformed in the same way as the other data columns.
+    Notice that this is not formally correct from the statistical point of view, 
+    but is a good approximation at this stage.
+        
     NOTE: the input/output in mstransform have a one-to-one relation.
           input MS  --  output MS
           input MMS --  output MMS
@@ -222,15 +221,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="int">1</value>
         </param>
 
-        <param type="string" name="useweights" subparam="true">
-            <description>Type of weights to use in average (flags/spectrum).</description>
-            <value type="string">flags</value>
-              <allowed kind="enum" ignorecase="True">
-                <value>flags</value>
-                <value>spectrum</value>
-              </allowed>
-        </param>
-
 
     <!-- HANNING SMOOTHING parameters -->
     <param type="bool" name="hanning">
@@ -372,7 +362,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                   <default param="chanbin"><value type="int">1</value></default>
-                  <default param="useweights"><value type="string">flags</value></default>
             </equals>
           </when>
         <when param="regridms">
@@ -424,23 +413,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         by setting createmms=True, the following is possible:
           input MS  --  output MMS
             
-        The combination of some transformations and createmms=True is not possible in
-        some cases, depending on the choice of separationaxis. The following table 
-        summarizes this:
-
-        separationaxis  combinespws  nspw > 1  timespan='scan' 
-        -------------------------------------------------------
-        spw                NO         NO         YES          
-        scan               YES        YES        NO*          
-        auto               NO         NO         NO*          
-
-        * --> it will issue a WARNING that this may lead to wrong results!
-        
+        NOTE: See information on processing input Multi-MS at the end of this help section.        
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
             options: 'scan', 'spw', 'auto'
-            The 'auto' option will try to partition in both scan and spw axes.
+            The 'auto' option will try to partition in both spw and scan axes. It will calculate the
+            output partitions in the following way:
+    
+            1) Calculate the number of possible spw partitions:
+                spw_partitions = min ((len(list_of_spws),numsubms))
+    
+            2) Calculate the number of possible scan partitions:
+                scan_partitions = int(math.ceil(numsubms/float(spw_partitions)))
 
         numsubms -- The number of sub-MSs to create (int).
             default: 64
@@ -596,11 +581,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             options: (int) or [int]
             example: chanbin=[2,3] =&gt; average 2 channels of 1st selected
 		             spectral window and 3 in the second one.
-
-        useweights -- Type of weights to use in average. It will apply to all spws.
-            default: 'flags'
-            options: 'flags', 'spectrum'. When set to 'spectrum', it will use the
-                               WEIGHT_SPECTRUM column for the weights.
+    
+            NOTE: WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used (if present) in
+                  addition to the flags to compute a weighted average. The calculations
+                  is done as follows:
+    
+             1) When WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present:
+                    Avg = SUM(Chan_i*Flag_i)/SUM(Flag_i) 
+    
+             2) When WEIGHT_SPECTRUM/SIGMA_SPECTRUM are present:
+                    Avg = SUM(Chan_i*Flag_i*WeightSpectrum_i)/SUM(Flag_i*WeightSpectrum_i)
 
 
 --- Hanning smoothing parameters --- 
@@ -677,6 +667,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     timeaverage -- Average data in time. Flagged data will be included in the average
                    calculation, unless the parameter keepflags is set to False. In this
                    case only partially flagged rows will be used in the average.
+                   WEIGHT_SPECTRUM/SIGMA_SPECTRUM will be used (if present) in
+                   addition to the flags to compute a weighted average. The calculation is done
+                   in the same way as for the channel average case but across the time axis.
+                   Otherwise (if WEIGHT_SPECTRUM/SIGMA_SPECTRUM are not present)
+                   mstransform will use WEIGH/SIGMA instead, as in split.
         default: False
 
         timebin -- Bin width for time averaging.
@@ -703,51 +698,45 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           that can be included in an average. (int)
             default: 0.0 (given in meters)
 
-    
-    ------ Multi-MS Heuristics ---------
-    
-    ** Input Multi-MS (MMS) **
-    
-    MStransform will process an input MMS in parallel whenever possible. Each SubMS
-    of the MMS will be processed in a separate engine and the results will be post-processed 
-    at the end to create an output MMS.
-
-    Naturally, some transformations available in mstransform require more care
-    when the user first partition the MS. If one wants to do a combination of
-    spws by setting combinespws=True in mstransform, the input MMS needs to contain all the 
-    selected spws in each of the SubMSs or the processing will fail. For this, one may set 
-    the initial separationaxis to scan or use the default auto with a proper numsubms set so
-    that each SubMS in the MMS is self-contained with all the necessary spws
-    for the combination.
-
-    The task will check if the subMSs contain all the selected spws when
-    combinespws=True and if not, it will issue a warning and process the input
-    MMS as a monolithic MS. In this case, the separation axis of the output MMS will
-    be set to scan.
-
-    A similar case happens when the separation axis of the input MMS is per scan
-    and the user asks to do time averaging with time spanning across scans (timespan='scan'). 
-    If the individual SubMSs are not self-contained of the necessary scans and the
-    duration of the scans is shorter than the given timebin, the spanning will not
-    be possible. In this case, the task will process the input MMS as a monolithic
-    MS and will set the axis of the output MMS to spw.
-    
-    It is important that the user sets the separation axis correctly when first
-    partitioning the MS and before running these transformation in mstransform. See the 
-    table below for the heuristic details when processing an input MMS.
-            
-    input separationaxis   combinespws   nspw > 1   timespan='scan'
-     -----------------------------------------------------------
-     spw                    NO            NO         YES        
-     scan                   YES           YES        NO           
-     auto                   YES*          YES*       YES**               
-                    
-    
-    *  --> it can process in parallel only if each SubMS contains all the selected spws.
-    ** --> it can process in parallel only if each SubMS contains all the selected scans and the 
-           scans duration is >= timebin.
 
         
+    ------ Multi-MS Processing and Heuristics ---------
+    
+    ** Input Multi-MS (MMS) **
+
+    Task mstransform will process an input MMS in parallel whenever possible. Each sub-MS of
+    the MMS will be processed in a separate engine and the results will be post-processed at the
+    end to create an output MMS. The output MMS will have the same separationaxis of the input
+    MMS, which will be written to the table.info file inside the MMS directory.
+
+    Naturally, some transformations available in mstransform require more care when the user
+    first partition the MS. If one wants to do a combination of spws by setting the parameter
+    combinespws = True in mstransform, the input MMS needs to contain all the
+    selected spws in each of the sub-MSs or the processing will fail. For this, one may set the initial
+    separationaxis to scan or use the default auto with a proper numsubms set so that each sub- MS in 
+    the MMS is self-contained with all the necessary spws for the combination.
+
+    The task will check if the sub-MSs contain all the selected spws when combinespws=True
+    and if not, it will issue a warning and process the input MMS as a monolithic MS. In this
+    case, the separation axis of the output MMS will be set to scan, regardless of what the input
+    axis was. 
+
+    A similar case happens when the separation axis of the input MMS is per scan and the user
+    asks to do time averaging with time spanning across scans. If the individual sub-MSs are not
+    self-contained of the necessary scans and the duration of the scans is shorter than the given
+    timebin, the spanning will not be possible. In this case, the task will process the input MMS as
+    a monolithic MS and will set the axis of the output MMS to spw. 
+
+    It is important that the user sets the separation axis correctly when first partitioning the MS.
+    See the table below for when it is possible to process the input MMS in parallel or not, using
+    mstransform.
+        
+    input MMS axis   combinespws=True   nspw > 1   timeaverage=True, timespan='scan'
+    -------------------------------------------------------------------------------
+    scan                  YES            YES             NO        
+    spw                   NO             NO              YES     
+    auto                  MAYBE          MAYBE           MAYBE             
+                
     
 ------ EXAMPLES ------
 	

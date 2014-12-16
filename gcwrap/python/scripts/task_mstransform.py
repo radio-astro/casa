@@ -40,7 +40,6 @@ def mstransform(
              combinespws,        # spw combination --> cvel
              chanaverage,        # channel averaging --> split
              chanbin,
-             useweights,
              hanning,            # Hanning --> cvel
              regridms,           # regridding to new frame --> cvel
              mode, 
@@ -205,7 +204,6 @@ def mstransform(
             # convert numpy types, until CAS-6493 is not fixed
             chanbin = fh.evaluateNumpyType(chanbin)
             config['chanbin'] = chanbin
-            config['useweights'] = useweights
             
         if hanning:
             casalog.post('Apply Hanning smoothing')
