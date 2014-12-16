@@ -167,6 +167,9 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                 #LOG.debug('spw%s: allowance=%srad'%(spw, allowance))
                 for pol in pollist:
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol))
+                    if tsel.nrows() == 0:
+                        LOG.warn('%s: No sky spectra for spw %s, pol %s'%(os.path.basename(caltable.rstrip('/')),spw,pol))
+                        continue
                     freq_id = tsel.getcell('FREQ_ID', 0)
                     spectra = tsel.getcol('SPECTRA')
                     time_list = tsel.getcol('TIME')
