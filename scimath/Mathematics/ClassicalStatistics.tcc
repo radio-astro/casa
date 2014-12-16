@@ -415,7 +415,13 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStati
 ) {
 	AccumType value;
 	Record r = _getStatistics();
-	r.get(StatisticsData::toString(stat), value);
+	String statString = StatisticsData::toString(stat);
+	ThrowIf(
+		! r.isDefined(statString),
+		"Logic Error: stat " + statString + " is not defined. "
+		"Please file a defect report"
+	);
+	r.get(statString, value);
 	return value;
 }
 
@@ -777,12 +783,14 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumulate(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_binCounts(
-	const BinDesc& binDesc
+	CountedPtr<AccumType>& sameVal, const BinDesc& binDesc
 ) {
-	vector<uInt64> bins(binDesc.nBins, 0);
+    sameVal = NULL;
+    Bool allSame = True;
+    vector<uInt64> bins(binDesc.nBins, 0);
 	AccumType maxLimit = binDesc.minLimit + (AccumType)binDesc.nBins*binDesc.binWidth;
 	_initIterators();
-	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
+    CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
 		= this->_getDataProvider();
 	while (True) {
 		_initLoopVars();
@@ -790,14 +798,14 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			if (_hasMask) {
 				if (_hasRanges) {
 					_findBins(
-						bins, _myData, _myWeights, _myCount,
+						bins, sameVal, allSame, _myData, _myWeights, _myCount,
 						_myStride, _myMask, _maskStride, _myRanges, _myIsInclude,
 						binDesc, maxLimit
 					);
 				}
 				else {
 					_findBins(
-						bins, _myData, _myWeights,
+						bins, sameVal, allSame, _myData, _myWeights,
 						_myCount, _myStride, _myMask, _maskStride,
 						binDesc, maxLimit
 					);
@@ -805,7 +813,7 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			}
 			else if (_hasRanges) {
 				_findBins(
-					bins, _myData, _myWeights, _myCount,
+					bins, sameVal, allSame, _myData, _myWeights, _myCount,
 					_myStride, _myRanges, _myIsInclude,
 					binDesc, maxLimit
 				);
@@ -813,7 +821,7 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			else {
 				// has weights, but no mask nor ranges
 				_findBins(
-					bins, _myData, _myWeights, _myCount, _myStride,
+					bins, sameVal, allSame, _myData, _myWeights, _myCount, _myStride,
 					binDesc, maxLimit
 				);
 			}
@@ -822,14 +830,14 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			// this data set has no weights, but does have a mask
 			if (_hasRanges) {
 				_findBins(
-					bins, _myData, _myCount, _myStride,
+					bins, sameVal, allSame, _myData, _myCount, _myStride,
 					_myMask, _maskStride, _myRanges, _myIsInclude,
 					binDesc, maxLimit
 				);
 			}
 			else {
 				_findBins(
-					bins, _myData, _myCount, _myStride, _myMask, _maskStride,
+					bins, sameVal, allSame, _myData, _myCount, _myStride, _myMask, _maskStride,
 					binDesc, maxLimit
 				);
 			}
@@ -838,7 +846,7 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			// this data set has no weights no mask, but does have a set of ranges
 			// associated with it
 			_findBins(
-				bins, _myData, _myCount, _myStride,
+				bins, sameVal, allSame, _myData, _myCount, _myStride,
 				_myRanges, _myIsInclude,
 				binDesc, maxLimit
 			);
@@ -847,7 +855,7 @@ vector<uInt64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_bin
 			// simplest case, this data set has no weights, no mask, nor any ranges associated
 			// with it. No filtering of the data is necessary.
 			_findBins(
-				bins, _myData, _myCount, _myStride,
+				bins, sameVal, allSame, _myData, _myCount, _myStride,
 				binDesc, maxLimit
 			);
 		}
@@ -970,17 +978,35 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 	const BinDesc& binDesc, uInt maxArraySize,
 	const std::set<uInt64>& dataIndices
 ) {
-	// dataIndices are relative to mininum bin minimum border
-    vector<uInt64> binCounts = _binCounts(binDesc);
-	vector<uInt64>::const_iterator biter = binCounts.begin();
-	vector<uInt64>::const_iterator bend = binCounts.end();
+	// dataIndices are relative to minimum bin minimum border
+    CountedPtr<AccumType> sameVal;
+    vector<uInt64> binCounts = _binCounts(sameVal, binDesc);
+    /*
+    ThrowIf(
+		sum(Vector<uInt64>(binCounts)) < *dataIndices.rend(),
+		"Logic Error: total counts " + String::toString(sum(Vector<uInt64>(binCounts)))
+		+ " max index " + String::toString(*dataIndices.rend())
+		+ " Please send us a defect report"
+	);
+	*/
 	std::set<uInt64>::const_iterator initer = dataIndices.begin();
 	std::set<uInt64>::const_iterator inend = dataIndices.end();
 	std::map<uInt64, AccumType> ret;
+    if (! sameVal.null()) {
+        // all points are the same value
+        while (initer != inend) {
+            ret[*initer] = *sameVal;
+            ++initer;
+        }
+        return ret;
+    }
+	vector<uInt64>::const_iterator biter = binCounts.begin();
+	vector<uInt64>::const_iterator bend = binCounts.end();
 	uInt dataCount = 0;
 	uInt prevDataCount = 0;
 	uInt loopCount = 0;
 	while (initer != inend) {
+		ThrowIf(biter == bend, "Logic Error: ran out of bins, accounting error");
 		dataCount += *biter;
         if (*initer < dataCount) {
 			// datum at index exists in current bin
@@ -999,8 +1025,6 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 			std::map<uInt64, AccumType> dataForCurrentBin = _dataFromSingleBin(
 				*biter, maxArraySize, binLimits, newDataIndices
 			);
-			//ret.reserve(ret.size() + dataForCurrentBin.size());
-			// ret.insert(ret.end(), dataForCurrentBin.begin(), dataForCurrentBin.end());
 			typename std::map<uInt64, AccumType>::const_iterator miter = dataForCurrentBin.begin();
 			typename std::map<uInt64, AccumType>::const_iterator mend = dataForCurrentBin.end();
 			while (miter != mend) {
@@ -1041,11 +1065,6 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 			+ " elements but it should have " + String::toString(binNpts)
 			+ ". Please file a bug report and include your dataset and your inputs"
 		);
-		/*
-		if (_doMedAbsDevMed) {
-			_convertToAbsDevMedArray(dataArray, *_median);
-		}
-		*/
 		std::set<uInt64>::const_iterator initer = dataIndices.begin();
 		std::set<uInt64>::const_iterator inend = dataIndices.end();
 		while (initer != inend) {
@@ -1274,12 +1293,25 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_doNpts() {
 	if (myDatum >= binDesc.minLimit && myDatum < maxLimit) { \
 		AccumType idx = (myDatum - binDesc.minLimit)/binDesc.binWidth; \
 		++binCounts[StatisticsUtilities<AccumType>::getInt(idx)]; \
+		if (allSame) { \
+			if (sameVal.null()) { \
+				sameVal = new AccumType(myDatum); \
+			} \
+			else { \
+				allSame = myDatum == *sameVal; \
+				if (! allSame) { \
+					sameVal = NULL; \
+				} \
+			} \
+		} \
 	}
+
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataStart, Int64 nr, uInt dataStride,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataStart, Int64 nr, uInt dataStride,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
 	InputIterator datum = dataStart;
@@ -1297,7 +1329,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataStart, Int64 nr, uInt dataStride,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataStart, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
@@ -1323,7 +1356,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
@@ -1344,7 +1378,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 	Bool isInclude,
 	const BinDesc& binDesc, AccumType maxLimit
@@ -1372,7 +1407,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, const InputIterator& weightsBegin,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
@@ -1393,7 +1429,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, const InputIterator& weightsBegin,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
@@ -1421,7 +1458,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, const InputIterator& weightsBegin,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude,
 	const BinDesc& binDesc, AccumType maxLimit
@@ -1451,7 +1489,8 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	vector<uInt64>& binCounts,
-	const InputIterator& dataBegin, const InputIterator& weightBegin,
+    CountedPtr<AccumType>& sameVal, Bool& allSame,
+    const InputIterator& dataBegin, const InputIterator& weightBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const BinDesc& binDesc, AccumType maxLimit
 ) const {
