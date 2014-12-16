@@ -61,7 +61,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_bandpass</Command>
+        <Command xmlns="">hifa_bandpass</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
