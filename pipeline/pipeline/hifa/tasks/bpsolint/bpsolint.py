@@ -403,7 +403,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		#   Match first by id then by frequency   
 		bestspwid = None
 		if spw.id in scanspwidlist: 
-		    bestspwid = scanspw.id
+		    #bestspwid = scanspw.id
+		    bestspwid = spw.id
 		else:
 		    mindiff = sys.float_info.max
 		    for scanspw in scanspwlist:
@@ -501,6 +502,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         qt = casatools.quanta
 
 	# Loop over the spws
+	prev_spwid = None; prev_scanids = []
 	for spwid in spwidlist:
 
 	    # Get spectral window
@@ -538,21 +540,35 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    scanids = [scan.id for scan in fscans]
 	    obsdict[spwid]['bandpass_scans'] = scanids
 
+
 	    # Figure out the number of 7m and 12 m antennas
 	    #   Note comparison of floating point numbers is tricky ...
-	    #   Flagging not taken into account here
-	    n7mant = 0; n12mant = 0
-	    for scan in fscans:
-		if hm_nantennas == 'all':
-	            n7mant = max (n7mant, len ([a for a in scan.antennas \
+	    #   
+	    if hm_nantennas == 'all':
+		# Use numbers from the scan with the minimum number of 
+		# antennas
+	        n7mant = np.iinfo('i').max; n12mant = np.iinfo('i').max
+	        for scan in fscans:
+	            n7mant = min (n7mant, len ([a for a in scan.antennas \
 		        if a.diameter == 7.0]))
-	            n12mant = max (n12mant, len ([a for a in scan.antennas \
+	            n12mant = min (n12mant, len ([a for a in scan.antennas \
 		        if a.diameter == 12.0]))
-                else:
-		    ant7m = [a.name for a in scan.antennas if a.diameter == 7.0]
-		    ant12m = [a.name for a in scan.antennas if a.diameter == 12.0]
-		    n12mant, n7mant = self._get_unflagged_antennas(ms.name, scan, ant12m, ant7m,
-		        max_fracflagged=max_fracflagged)
+            elif len(set(scanids).difference(set(prev_scanids))) > 0:
+		# Get the lists of unique 7m and 12m antennas
+		ant7m = []; ant12m = []
+		for scan in fscans:
+		    ant7m.extend ([a.name for a in scan.antennas if a.diameter == 7.0])
+		    ant12m.extend([a.name for a in scan.antennas if a.diameter == 12.0])
+		ant12m = list(set(ant12m))
+		ant7m = list(set(ant7m))
+		# Get the number of unflagged antennas
+		n12mant, n7mant = self._get_unflagged_antennas(ms.name, scanids,
+		    ant12m, ant7m, max_fracflagged=max_fracflagged)
+	    else:
+		# Use values from previous spw
+	        nant7m = obsdict[prev_spwid]['num_7mantenna']
+	        nant12m = obsdict[prev_spwid]['num_12mantenna']
+
 	    obsdict[spwid]['num_12mantenna'] = n12mant
 	    obsdict[spwid]['num_7mantenna'] = n7mant
 
@@ -588,6 +604,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    LOG.info('For field %s spw %2d scans %s' % (fieldname, spwid, scanids))
 	    LOG.info('    %2d 12m antennas  %2d 7m antennas  exposure %0.3f minutes  interval %0.3f minutes' % \
 	        (obsdict[spwid]['num_12mantenna'], obsdict[spwid]['num_7mantenna'], exposureTime, meanInterval))
+
+	    prev_spwid = spwid
+	    prev_scanids = scanids
 
 	return obsdict
     
@@ -813,14 +832,18 @@ class BpSolint(basetask.StandardTaskTemplate):
     # Loop over the scans in scanlist. Compute the list and number of unflagged
     # and flagged antennas for each scan. In most cases there will be only one
     # scan.
-    def _get_unflagged_antennas(self, vis, scan, ants12m, ants7m, max_fracflagged = 0.90):
+    def _get_unflagged_antennas(self, vis, scanidlist, ants12m, ants7m,
+       max_fracflagged = 0.90):
 
 	# Loop over the bandpass scans
 	nunflagged_12mantennas = 0; nflagged_12mantennas = 0
 	nunflagged_7mantennas = 0; nflagged_7mantennas = 0
 
-	# Execute the CASA flagdata task for each bandpass scan
-	flagdata_task = casa_tasks.flagdata(vis=vis, scan=str(scan.id),
+	# Execute the CASA flagdata task for the specified bandpass scans
+	#     Format the id list for CASA
+	#     Execute task
+	scanidstr = ','.join([str(scanid) for scanid in scanidlist])
+	flagdata_task = casa_tasks.flagdata(vis=vis, scan=scanidstr,
 	    mode='summary')
 	flagdata_result = flagdata_task.execute(dry_run=False)
 
