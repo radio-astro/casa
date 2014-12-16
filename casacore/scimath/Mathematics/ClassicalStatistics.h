@@ -285,7 +285,9 @@ private:
 	// Any points that are less than binDesc.minLimit or greater than
 	// binDesc.minLimit + binDesc.nBins*binDesc.binWidth are not included in the counts. A data
 	// point that falls exactly on a bin boundary is considered to be in the higher index bin.
-	vector<uInt64> _binCounts(const BinDesc& binDesc);
+    // <src>sameVal</src> will be non-null if all the good values in the histogram range are the
+	// same. In that case, the value held will be the value of each of those data points.
+	vector<uInt64> _binCounts(CountedPtr<AccumType>& sameVal, const BinDesc& binDesc);
 
 	// convert in place by taking the absolute value of the difference of the vector and the median
 	static void _convertToAbsDevMedArray(vector<AccumType>& myArray, AccumType median);
@@ -319,12 +321,14 @@ private:
 
 	void _findBins(
 		vector<uInt64>& binCounts,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
 		const InputIterator& dataStart, Int64 nr, uInt dataStride,
 		const BinDesc& binDesc, AccumType maxLimit
 	) const ;
 
 	void _findBins(
 		vector<uInt64>& binCounts,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
 		const InputIterator& dataStart, Int64 nr, uInt dataStride,
 		const DataRanges& ranges, Bool isInclude,
 		const BinDesc& binDesc, AccumType maxLimit
@@ -332,14 +336,16 @@ private:
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 		const MaskIterator& maskBegin, uInt maskStride,
 		const BinDesc& binDesc, AccumType maxLimit
 	) const;
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 		const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 		Bool isInclude,
 		const BinDesc& binDesc, AccumType maxLimit
@@ -347,21 +353,24 @@ private:
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, const InputIterator& weightsBegin,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride,
 		const BinDesc& binDesc, AccumType maxLimit
 	)const ;
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, const InputIterator& weightsBegin,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude,
 		const BinDesc& binDesc, AccumType maxLimit
 	) const;
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, const InputIterator& weightsBegin,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 		const DataRanges& ranges, Bool isInclude,
 		const BinDesc& binDesc, AccumType maxLimit
@@ -369,7 +378,8 @@ private:
 
 	void _findBins(
 		vector<uInt64>& binCounts,
-		const InputIterator& dataBegin, const InputIterator& weightBegin,
+        CountedPtr<AccumType>& sameVal, Bool& allSame,
+        const InputIterator& dataBegin, const InputIterator& weightBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 		const BinDesc& binDesc, AccumType maxLimit
 	) const;

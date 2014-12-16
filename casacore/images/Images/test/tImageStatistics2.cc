@@ -304,7 +304,6 @@ int main() {
         }
         */
 
-
         {
             LatticeStatistics<Float> lattStats(im);
             Array<Double> res;
@@ -351,6 +350,19 @@ int main() {
 			cout << "medabsdevmed " << std::setprecision(15)  << medabsdevmed << endl;
 		}
 		*/
+
+        {
+        	String imageName2 = datadir + "regression/unittest/stats/ngc4826.tutorial.16apr98.src.clean.model";
+        	if (! File(imageName2).exists()) {
+        		cout << "Cannot find image " << imageName2 << " so some tests cannot be run" << endl;
+        		return 0;
+        	}
+        	casa::PagedImage<Float> im2(imageName2);
+        	LatticeStatistics<Float> lattStats(im2);
+        	Array<Double> res;
+        	lattStats.getStatistic(res, LatticeStatsBase::MEDIAN);
+        	AlwaysAssert(*res.begin() == 0, AipsError);
+        }
 
 
 
