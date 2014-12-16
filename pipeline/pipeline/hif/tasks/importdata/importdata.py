@@ -439,7 +439,7 @@ def read_fluxes(ms):
 		LOG.info("Flux was: " + str(iquv[0].value) + " Jy      Now using: "+str(f) + " Jy from online flux catalog.")
 		
 	    except:
-		LOG.warn("Unable to obtain some online flux catalog values for source " + str(source.name))
+		LOG.debug("Unable to obtain some online flux catalog values for source " + str(source.name))
         
         
         
@@ -466,7 +466,7 @@ def flux_nosourcexml(ms):
                 sourcename = source.name
                 frequency= str(spw.centre_frequency.value)
                 spw_id = spw.id
-                print 'freq/sourcename',frequency, sourcename
+                LOG.debug('freq/sourcename:  '+str(frequency) + str(sourcename))
                 
                 try:
                     
@@ -479,7 +479,7 @@ def flux_nosourcexml(ms):
                     m = domain.FluxMeasurement(spw_id, *iquv_db)
                     result[source].append(m)
                 except:
-                    LOG.warn("Unable to obtain some online flux catalog values for source " + str(source.name))
+                    LOG.debug("Unable to obtain some online flux catalog values for source " + str(source.name))
                     
     return result
 
@@ -510,7 +510,7 @@ def fluxservice(ms, frequency, sourcename):
     urlparams = buildparams(sourcename, date, frequency)
     dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams))
     
-    print 'url: ', serviceurl + '?%s' % urlparams
+    LOG.debug('url: ' + serviceurl + '?%s' % urlparams)
     
     domtable = dom.getElementsByTagName('TR')
     

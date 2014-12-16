@@ -239,7 +239,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 
         self._init_properties(vars())
-        
+    '''    
     @property
     def hm_tbuff(self):
         return self._hm_tbuff
@@ -262,7 +262,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
         if value is None:
             value = 0.0
         self._tbuff = value
-
+    '''
     
     
 
