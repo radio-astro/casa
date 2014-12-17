@@ -239,7 +239,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 
 	# Compute the bandpass solint parameters and return a solution
 	# dictionary
-	solint_dict = self._compute_bpsolint(spwlist, spw_dict,
+	solint_dict = self._compute_bpsolint(inputs.ms, spwlist, spw_dict,
 	    inputs.phaseupsnr, inputs.minphaseupints, inputs.bpsnr,
 	    inputs.minbpnchan)
 
@@ -899,7 +899,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     #        key: bpsolint           value: The frequency solint in MHz
     #        key: nchan_bpsolint       value: The total number of solint channels
 
-    def _compute_bpsolint(self, spwlist, spw_dict, reqPhaseupSnr,
+    def _compute_bpsolint(self, ms, spwlist, spw_dict, reqPhaseupSnr,
         minBpNintervals, reqBpSnr, minBpNchan):
 
 	# The ALMA receiver band, nominal tsys, and sensitivity info.
