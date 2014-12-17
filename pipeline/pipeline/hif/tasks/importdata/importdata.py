@@ -467,10 +467,12 @@ def read_fluxes(ms):
 		fluxdict = fluxservice(ms, frequency, sourcename)
 		f = fluxdict['fluxdensity']
 		iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
-			iquv[1], iquv[2], iquv[3])
+			   measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY), 
+			   measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY), 
+			   measures.FluxDensity(0.0,measures.FluxDensityUnits.JANSKY))
 		m = domain.FluxMeasurement(spw_id, *iquv_db)
 		
-		LOG.info("Flux was: " + str(iquv[0].value) + " Jy      Now using: "+str(f) + " Jy from online flux catalog.")
+		LOG.info("Now using: "+str(f) + " Jy from online flux catalog.")
 		
 	    except:
 		LOG.debug("Unable to obtain some online flux catalog values for source " + str(source.name))
