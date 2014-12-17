@@ -989,7 +989,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	        solint_dict[spwid]['nint_phaseup_solint'] = 1
 	    else:
 	        solint_dict[spwid]['phaseup_solint'] = '%fs' % \
-	            (solint_dict[spwid]['integrationtime'] * \
+	            (solint_dict[spwid]['integration_minutes'] * \
 		    requiredIntegrations * 60.0)
 	        solint_dict[spwid]['nint_phaseup_solint'] = \
 		    int(np.ceil(requiredIntegrations))
