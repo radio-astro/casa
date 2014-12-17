@@ -35,8 +35,18 @@ template <class AccumType, class T, class InputIterator>
 LatticeStatsDataProviderBase<AccumType, T, InputIterator>::~LatticeStatsDataProviderBase() {}
 
 template <class AccumType, class T, class InputIterator>
+uInt LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getMaskStride() {
+	return 1;
+}
+
+template <class AccumType, class T, class InputIterator>
 DataRanges LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getRanges() {
 	return _ranges;
+}
+
+template <class AccumType, class T, class InputIterator>
+uInt LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getStride() {
+	return 1;
 }
 
 template <class AccumType, class T, class InputIterator>

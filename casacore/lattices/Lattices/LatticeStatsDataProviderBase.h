@@ -41,8 +41,14 @@ public:
 
 	virtual ~LatticeStatsDataProviderBase();
 
+	// Get the stride for the current mask (only called if hasMask() returns True).
+	uInt getMaskStride();
+
 	// Get the associated range(s) of the current dataset. Only called if hasRanges() returns True;
 	DataRanges getRanges();
+
+	// Get the stride for the current data set.
+	uInt getStride();
 
 	// Returns NULL; lattices do not have associated weights.
 	InputIterator getWeights();

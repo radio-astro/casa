@@ -71,16 +71,6 @@ const Bool* LatticeStatsDataProvider<AccumType, T, InputIterator>::getMask() {
 }
 
 template <class AccumType, class T, class InputIterator>
-uInt LatticeStatsDataProvider<AccumType, T, InputIterator>::getStride() {
-	return 1;
-}
-
-template <class AccumType, class T, class InputIterator>
-uInt LatticeStatsDataProvider<AccumType, T, InputIterator>::getMaskStride() {
-	return 0;
-}
-
-template <class AccumType, class T, class InputIterator>
 Bool LatticeStatsDataProvider<AccumType, T, InputIterator>::hasMask() const {
 	return False;
 }
