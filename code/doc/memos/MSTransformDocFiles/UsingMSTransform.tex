@@ -18,13 +18,15 @@ or off.
 \item Split into a new MS using data selection parameters.
 \item Partition into a new Multi-MS using data selection parameters.
 \item Combination of spectral windows.
-\item Channel averaging using FLAG or WEIGHT_SPECTRUM as the weights.
+\item Channel averaging using channelized FLAG and WEIGHT/SIGMA\_SPECTRUM (if
+present) as the weights.
 \item Hanning smoothing.
 \item Reference frame transformation, similar to cvel.
 \item Separation of spectral windows, which does not have an independent
 boolean switch, but it can be independently applied when regridms=True and
 the nspw parameter is set to > 1.
-\item Time averaging, similar to split.
+\item Time averaging using channelized FLAG and WEIGHT/SIGMA\_SPECTRUM (if
+present) as the weights.
 
 \end{enumerate}
 
@@ -38,6 +40,7 @@ Mapping of parameters between split-mstransform and cvel-mstransform.
     timebin             timeaverage=True, timebin                        perform time averaging
     combine             timeaverage=True, timespan                       time averaging with time spanning
     keepflags           keepflags                                        keep or drop flags in output
+
 
 \end{verbatim}
 
@@ -75,19 +78,20 @@ and then setting the sub-parameter {\it realmodelcol} to True. This will copy th
 column to a physical MODEL column in the MS main table. The virtual model column
 will be deleted afterwards.
 
-The user can control whether to create a WEIGHT_SPECTRUM column in the output MS or
-not. If the input MS does not have a WEIGHT_SPECTRUM, by setting the parameter
-{\it usewtspectrum} to True, the task will create a WEIGHT_SPECTRUM from the values
-in the WEIGHT column, such that each channel in the WEIGHT_SPECTRUM will get WEIGHT/nChannels.
+The user can control whether to create WEIGHT\_SPECTRUM/SIGMA\_SPECTRUM columns
+in the output MS or not. If the input MS does not have a
+WEIGHT\_SPECTRUM/SIGMA\_SPECTRUM column, by setting the parameter {\it
+usewtspectrum} to True, the task will create a WEIGHT\_SPECTRUM from the values
+in the WEIGHT column, and initialize SIGMA\_SPECTRUM to 1/sqrt(WEIGHT\_SPECTRUM). 
 By default, {\it usewtspectrum} is set to False.
 
-The resulting WEIGHT_SPECTRUM produced by mstransform is in the statistical sense 
-correct for the simple cases of channel average, and time average, but not for the 
+The resulting WEIGHT\_SPECTRUM produced by mstransform is in the statistical
+sense correct for the simple cases of channel average and time average, but not for the 
 general re-gridding case, in which the error propagation formulas applicable for 
-WEIGHT_SPECTRUM are yet to be defined. Currently, as in cvel, WEIGHT_SPECTRUM is 
-transformed in the same way as the other data columns, but this is not statistically 
-correct. Once it is clear how WEIGHT_SPECTRUM is going to be used, it will be possible 
-to define the applicable error propagation formulas.
+WEIGHT\_SPECTRUM are yet to be defined. Currently, as in cvel and in the imager,
+WEIGHT\_SPECTRUM is transformed in the same way as the other data columns,
+notice that this is not formally correct from the statistical point of view, but is a good
+approximation at this stage.
 
 The parameter {\it keepflags} from split is also available in mstransform. By
 default, mstransform keeps the flagged data in the output, depending on the data
@@ -102,115 +106,118 @@ split.
 \end{verbatim}
 
 \subsection{Multi-MS Structure}
-%% describe here how a multi-MS is layed in disk etc
+A Multi-MS (MMS) is structured to have a reference MS on the top directory and a subdirectory
+called SUBMSS, which contains each partitioned sub-MS. A Multi-MS can be
+handled like a normal monolithic MS. It can be moved and renamed like any other
+directory. CASA tasks that are not MMS-aware can process it like a monolithic MS.
+The reference MS contains links to the sub-tables of the first sub-MS. The other sub-MSs
+contain a copy of the sub-tables each. In order to reduce the volume of the MMS, the
+POINTING and SYSCAL tables (which are read-only in all use cases and identical for all
+sub-MSs) are stored only with the first sub-MS and linked into the other sub-MSs.
+
+The table.info file inside the reference MS contains information on the axis used to partition
+the original MS. This information is written by the partition task and carried over by other
+tasks.
 
 \subsection{Partition and Multi-MS support}
+The partition task is the main task to create a Multi-MS. It takes an input Measurement Set
+and creates an output Multi-MS based on the data selection parameters. Partition accepts three
+axis to do separation across: auto, scan or spw. The default auto will first separate the MS in
+spws, then in scans. Each partitioned MS is referred to as a sub-MS. The user
+may force the number of sub-MSs in the output MMS by setting the parameter {\it numsubms}.
+By default, the parameter {\it createmms} is set to True to create an output
+MMS.
+
+If set to False, the task will work as the split task and create a normal MS based on the input data selection.
+Task partition uses two helper classes to handle the parallel jobs; ParallelTaskHelper and
+ParallelDataHelper. Special care needs to be
+taken in order to consolidate the sub-tables of the MMS because the spectral window indices
+in the output are re-indexed in each engine to the same initial index and this needs to be
+consolidated later. The sub-tables are merged after all engines return for post-processing.
+
 
 \subsubsection{Input Multi-MS Processing}
-MStransform will process an input MMS in parallel whenever possible. Each SubMS
-of the MMS will be processed in a separate engine and the results will be
-post-processed at the end to create an output MMS.
+There are essentially two ways of processing an input MMS, these are in parallel using a
+cluster or as a monolithic MS. Basically every task in CASA can process the MMS as a
+monolithic MS, because the MMS is made to look like a normal MS. This processing will
+happen automatically in a transparent way to the user. Examples of such tasks are: listobs,
+gencal, gaincal, etc.
 
-Naturally, some transformations available in mstransform require more care
-when the user first partition the MS. If one wants to do a combination of
-spws by setting {\it combinespws=True} in mstransform, the input 
-MMS needs to contain all the selected spws in each of the SubMSs or the
-processing will fail. For this, one may set the initial {\it separationaxis}
-to {\bf scan} or use the default {\bf auto} with a proper {\it numsubms} set so
-that each SubMS in the MMS is self-contained with all the necessary spws
-for the combination.
+Other tasks were modified to process the input MMS in parallel such as to speed up the
+processing, or because they need to modify the input MMS or create a new output MMS.
+Tasks that only modify the input MMS such as flagdata and applycal may raise NULL MS
+Selection exceptions depending on the way the MMS was created and the data selection given
+in the parameters. These exceptions are harmless in these cases and are hidden
+from the user\’s terminal or logger. Flagdata\’s summary mode does not modify
+the input, but creates output dictionaries in each parallel engine. These dictionaries are consolidated into 
+one single output dictionary, which is returned to the user.
 
-The task will check if the subMSs contain all the selected spws when
-{\it combinespws=True} and if not, it will issue a warning and process the input
-MMS as a monolithic MS. In this case, the separation axis of the output MMS will
-be set to {\bf scan}.
+Tasks that create a new output such as split2, cvel2, hanningsmooth2 and
+{\bf mstransform} will process each input sub-MS in parallel whenever possible.
+In these cases, the output is a Multi- MS with the same separation axis as the input. In some cases, 
+the heuristics are more complicated and it is not possible to process the MMS in
+parallel or to create an output MMS. These cases are discussed in the following
+section. The only tasks that can create a Multi-MS from a normal MS are
+partition and mstransform. These two tasks have a parameter called createmms that controls how to
+partition the MS. The simple relation between input and output for all tasks is the following:
 
-A similar case happens when the separation axis of the input MMS is per scan
-and the user asks to do time averaging with time spanning across scans. If the
-individual SubMSs are not self-contained of the necessary scans and the
-duration of the scans is shorter than the given timebin, the spanning will not
-be possible. In this case, the task will process the input MMS as a monolithic
-MS and will set the axis of the output MMS to {\bf spw}.
+\begin{verbatim}
+               input MS  --> output MS
+               input MMS --> output MMS
+               input MS  --> output MMS (only partition and mstransform)
+\end{verbatim}
 
-It is important that the user sets the separation axis correctly when first
-partitioning the MS. See the table below for the heuristic details when
-processing an {\bf input MMS}.
+\subsubsection{MSTransform Heuristics}
+Task mstransform will process an input MMS in parallel whenever possible. Each sub-MS of
+the MMS will be processed in a separate engine and the results will be post-processed at the
+end to create an output MMS. The output MMS will have the same separationaxis of the input
+MMS, which will be written to the table.info file inside the MMS directory.
+
+Naturally, some transformations available in mstransform require more care when the user
+first partition the MS. If one wants to do a combination of spws by setting the parameter
+{\it combinespws = True} in mstransform, the input MMS needs to contain all the
+selected spws in each of the sub-MSs or the processing will fail. For this, one may set the initial
+{\it separationaxis} to scan or use the default auto with a proper {\it
+numsubms} set so that each sub- MS in the MMS is self-contained with all the necessary spws for the combination.
+
+The task will check if the sub-MSs contain all the selected spws when combinespws=True
+and if not, it will issue a warning and process the input MMS as a monolithic MS. In this
+case, the separation axis of the output MMS will be set to scan, regardless of what the input
+axis was. This possibility is not available in cvel2.
+
+A similar case happens when the separation axis of the input MMS is per scan and the user
+asks to do time averaging with time spanning across scans. If the individual sub-MSs are not
+self-contained of the necessary scans and the duration of the scans is shorter than the given
+timebin, the spanning will not be possible. In this case, the task will process the input MMS as
+a monolithic MS and will set the axis of the output MMS to spw. This possibility is not
+available in split2.
+
+It is important that the user sets the separation axis correctly when first partitioning the MS.
+See the table below for when it is possible to process the input MMS in parallel or not, using
+mstransform.
 
 \begin{verbatim}
 
-input separationaxis   combinespws   nspw > 1   timespan='scan'
- -----------------------------------------------------------
- spw                    NO            NO         YES        
- scan                   YES           YES        NO           
- auto                   YES*          YES*       YES**               
+input MMS axis   combinespws=True   nspw > 1   timeaverage=True, timespan='scan'
+ -------------------------------------------------------------------------------
+ scan                  YES            YES             NO        
+ spw                   NO             NO              YES     
+ auto                  MAYBE          MAYBE           MAYBE             
                 
-
-*  --> it can process in parallel only if each SubMS contains
-all the selected spws.
-** --> it can process in parallel only if each SubMS contains
-all the selected scans and the scans duration is >= timebin.
 \end{verbatim}
 
-\subsubsection{Output Multi-MS Creation}
-Task mstransform (or partition) can partition a normal MS to create an output
-MMS. This is controlled by the parameter {\it createmms}, which only has effect
-if the input is an MS. It can partition the MS using different separation axes.
-The default is to separate using an auto mode that first separates per scans
-then per spws. It supports channel selections and re-indexing of sub-tables. 
-
-As explained in the previous section, some transformations require
-that either selected spws or scans are contained in each SubMS of the MMS
-in order to work. The combination of some transformations and {\it
-createmms=True} is not possible in some cases, depending on the choice of {\it
-separationaxis} and {\it numsubms}. The following table summarizes this:
-
-\begin{verbatim}
-
-output separationaxis   combinespws  nspw > 1  timespan='scan'
------------------------------------------------------------------------------
-spw                       NO          NO         YES    
-scan                      YES         YES        NO*   
-auto                      NO          NO         NO*   
-
-** --> this may lead to wrong results and will issue a WARNING.
-
-\end{verbatim}
-
-Depending on the structure of the data, some subMSs will have empty data.
-For example, if an MS has scan=1 with spw=0,1 and scan=2 with spw=0. If
-you run partition with separationaxis='auto', it will try to create the
-following group of subMSs.
-
-\begin{verbatim}
-
-subMS            scan      spw
-----------------------------------
-subMS.0000.ms    1         0
-subMS.0001.ms    2         0
-subMS.0002.ms    1         1
-subMS.0003.ms    2         1  -----> NULL selection
-
-\end{verbatim}
-
-Obviously, subMS.0003.ms has no data in scan=2 spw=1, so it will naturally
-issue a NULL MS Selection exception. The partition/mstransform task tries to
-pre-select the subMSs before actually sending them to the engines and catchs 
-this type of NULL selections. It issues a warning for these cases and continues.
-The output MMS of the above example would contain 3 subMSs, running from 0000
-to 0002.
+In the event that the user requests two transformations at the same time: combination of
+spectral windows and time averaging across scans on an input MMS, similar checks will be
+applied in order to determine if it is possible to process the input in parallel. First, the task
+will check if each sub-MS contains the selected spws and only in case of success, it will
+check if it contains all the scans with proper duration. If the checks are unsuccessful, the input
+MMS will be processed as a monolithic MS and the output will be in this case a normal
+{\bf monolithic MS}.
 
 You can use the task {\it listpartition} to verify the contents of an MMS.
 Listpartition is similar to listobs and can also save the output to a file
 or return it as a Python dictionary.
 
-\begin{verbatim}
-    mstransform('uid.ms', outputvis='myout.mms', createmms=True, separationaxis='spw', datacolumn='all')
-    
-    or
-    
-    partition('uid.ms', outputvis='myout.mms', separationaxis='spw', datacolumn='all')
-    
-\end{verbatim}
 
 \subsection{Combination of spectral windows}
 Task mstransform can combine spectral windows independently or
@@ -245,25 +252,35 @@ integers that will apply to each spw in the selection. Note that the {\it chanbi
 parameter is independent of the {\it width} parameter used in the reference frame
 transformation controlled by the {\it regridms} parameter. See the Examples Section.
 
-A parameter called {\it useweights} controls the type of weights to use in the
-averaging. The options are flags that will consider the FLAG column and spectrum
-that will consider the WEIGHT_SPECTRUM column per channel. The calculation is
+Starting at  version 4.3 WEIGHT/SIGMA\_SPECTRUM will be used (if present) in
+addition to the flags to compute a weighted average. The calculation is
 done as follows:
 
 \begin{verbatim}
-When using flags:
+* When using flags (WEIGHT/SIGMA_SPECTRUM not present):
+
     Avg = SUM(Chan_i*Flag_i)/SUM(Flag_i)     
+    
 (where boolean values are converted to 0 for True and 1 for False)
 
-When using weights:
-    Avg = SUM(Chan_i*WeightSpectrum_i)/SUM(WeightSpectrum_i)     
+* When using flags and weights, (WEIGHT/SIGMA_SPECTRUM present):
+
+    Avg = SUM(Chan_i*Flag_i*WeightSpectrum_i)/SUM(Flag_i*WeightSpectrum_i)
+         
 (using directly the WEIGHT_SPECTRUM values provided that they are already numerical)
 
 \end{verbatim}
 
-\begin{verbatim}
-    mstransform('uid.ms', outputvis='myout.ms', datacolumn='data', spw='5', chanaverage=True, chanbin=2, useweights='flags')
-\end{verbatim}
+Whereas the output WEIGHT\_SPECTRUM is defined as the sum of the
+weights of all un-flagged input channels contributing to one output channel.
+When all the input channels contributing to one output channel are flagged,
+then mstransform will calculate and store the average of all the flagged
+channels, and set the output channel flag to True. The same applies to
+WEIGHT\_SPECTRUM but using a sum instead of and average.
+The output row-level WEIGHT value is defined and set as the average of
+WEIGHT\_SPECTRUM across the channel axis. A median algorithm was
+considered, but finally ruled out to actually account for the impact of
+reduced weights in the regions with significant systematic errors.
 
 When the number of unflagged channels in an interval is fewer than {\it chanbin}, mstransform will consider only the flagged channels
 in that interval. If fewer  channels than {\it chanbin} are left at the end of the spw, these channels will be dropped.
@@ -345,14 +362,29 @@ msmd. The {\it maxuvdistance} parameter provide a maximum separation of
 start-to-end baselines that can be included in the average. This value should be
 given in meters.
 
-Time averaging will always include flagged data in the calculation. It will
-write the average value of flagged rows in the output and set the flag to
-True.
+Starting at 4.3 WEIGHT/SIGMA\_SPECTRUM will be used (if present) in
+addition to the flags to compute a weighted average. The calculation is done
+in the same way as for the channel average case but across the time axis (see
+section 1.5). Otherwise (if WEIGHT/SIGMA\_SPECTRUM are not present)
+mstransform will use WEIGH/SIGMA instead, as in split.
+The output WEIGHT\_SPECTRUM is defined as the sum of the weights of
+all un-flagged input rows contributing to one output row.
+Also, in a similar way as for channel average, when all the input rows
+contributing to one output row are flagged, then mstransform will calculate
+and store the average of all the flagged rows, and set the output row flag to
+True. The same applies to WEIGHT\_SPECTRUM but using a sum instead
+of and average.
+
+The output row-level WEIGHT value is defined and set as the average of
+WEIGHT\_SPECTRUM across the channel axis. A median algorithm was
+considered, but finally ruled out to actually account for the impact of
+reduced weights in the regions with significant systematic errors.
+
 If the {\it keepflags} parameter is set to False, then only partially flagged
 rows will be used in the average calculation. 
 
-Time averaging was motivated by this paper:
-ftp://ftp.cv.nrao.edu/NRAO-staff/bcotton/Obit/BLAverage.pdf
+The especial case of baseline-dependent time average is described in the
+following paper: ftp://ftp.cv.nrao.edu/NRAO-staff/bcotton/Obit/BLAverage.pdf
 
 %timespan
 %minbaselines

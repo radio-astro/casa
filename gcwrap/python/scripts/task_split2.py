@@ -126,7 +126,6 @@ def split2(vis,
             chanbin = fh.evaluateNumpyType(chanbin)
             casalog.post('Converted type(width) is %s'%type(chanbin),'DEBUG')
             config['chanbin'] = chanbin
-            config['useweights'] = 'flags'            
         
         # Time averaging
         timeaverage = False

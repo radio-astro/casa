@@ -194,10 +194,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-    From CASA 4.1.0 onwards, partition uses the MSTransform framework.
-    See help mstransform for more details.
 
 ----- Detailed description of keyword arguments -----
+    
     vis -- Name of input visibility file
         default: none; example: vis='ngc5921.ms'
 
@@ -214,8 +213,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
             Options: 'scan', 'spw', 'auto'
-            The 'auto' option will try to partition in both scan and spw axes.
 
+            The 'auto' option will try to partition in both spw and scan axes. It will calculate the
+            output partitions in the following way:
+    
+            1) Calculate the number of possible spw partitions:
+                spw_partitions = min ((len(list_of_spws),numsubms))
+    
+            2) Calculate the number of possible scan partitions:
+                scan_partitions = int(math.ceil(numsubms/float(spw_partitions)))
+    
         numsubms -- The number of sub-MSs to create.
             default: 64
 				

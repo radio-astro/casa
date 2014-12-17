@@ -1191,7 +1191,7 @@ class test_WeightSpectrum(test_base):
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
                     mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
                     interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4)
 
         mytb = tbtool()
         mytb.open(self.outvis)
@@ -1212,7 +1212,7 @@ class test_WeightSpectrum(test_base):
         mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
                     mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
                     interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
-                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4)
 
         mytb = tbtool()
         mytb.open(self.outvis)
