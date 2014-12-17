@@ -169,10 +169,11 @@ append       If logfile exists, append to it (True) or overwrite it (False).
 	median       - the median pixel value
 	medabsdevmed - the median of the absolute deviations from the 
                        median
-	quartile     - the inter-quartile range. Find the points 
+	quartile     - the inner-quartile range. Find the points 
                        which are 25% largest and 75% largest (the median is 
-                       50% largest), find their difference and divide that 
-                       difference by 2.
+                       50% largest).
+    q1           - the first quartile.
+    q3           - the third quartile
 
 	Additional Examples
 	# Selected two box region

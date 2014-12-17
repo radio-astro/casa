@@ -10,9 +10,6 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 		<needs>coordsys</needs>
         <shortdescription>Operations on images</shortdescription>
        
-
-include "image.g"
-
 <keyword>image</keyword>
 <keyword>calculator</keyword>
 <keyword>FITS</keyword>
@@ -9320,8 +9317,11 @@ mean: $\sigma^2 = (\sum I_i - \bar{I})^2 / (n-1)$
 
 \item {\stfaf quartile} - the inter-quartile range (if {\stfaf
 robust=T}).  Find the points which are 25\% largest and 75\% largest
-(the median is 50\% largest), find their difference and divide that
-difference by 2.
+(the median is 50\% largest).
+
+\item {\stfaf q1} - The first quartile. Reported only if robust=T.
+
+\item {\stfaf q3} - The third quartile. Reported only if robust=T.
 
 \item {\stfaf blc} - the absolute pixel coordinate of the bottom left
 corner of the bounding box of the region of interest.  If 'region' is
