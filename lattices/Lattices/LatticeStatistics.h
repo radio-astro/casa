@@ -460,7 +460,8 @@ private:
 	   virtual void displayStats(
 		   AccumType nPts, AccumType sum, AccumType median,
 		   AccumType medAbsDevMed, AccumType quartile, AccumType sumSq, AccumType mean,
-		   AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax
+		   AccumType var, AccumType rms, AccumType sigma, AccumType dMin, AccumType dMax,
+		   AccumType q1, AccumType q3
 	   );
 
 // Calculate statistic from storage lattice and return in an array
@@ -523,7 +524,10 @@ private:
 // Find the next nice PGPLOT colour index 
    Int niceColour         (Bool& initColours) const; 
 
+   // FIXME AFAIK, CASA no longer uses plotStats since we no longer use pgplot. Can we
+   // remove this method?
 // Plot the statistics
+
    Bool plotStats         (const IPosition& dPos,
                            const Matrix<AccumType>& ord,
                            PGPlotter& plotter);

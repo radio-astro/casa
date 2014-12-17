@@ -107,6 +107,10 @@ enum StatisticsTypes {
 // inter-quartile range
    QUARTILE, 
 
+   // The first and third quartiles
+   Q1,
+   Q3,
+
 // The minimum
    MIN,
 
