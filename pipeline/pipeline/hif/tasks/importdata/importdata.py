@@ -377,7 +377,7 @@ def read_fluxes(ms):
 
     source_table = os.path.join(ms.name, 'Source.xml')
     if not os.path.exists(source_table):
-        LOG.info('No Source XML found at %s. No flux import performed.'
+        LOG.info('No Source XML found at %s. No flux import performed.  Attempting database query.'
                  % source_table)
                  
         result = flux_nosourcexml(ms)
@@ -386,7 +386,7 @@ def read_fluxes(ms):
 
     source_element = ElementTree.parse(source_table)
     if not source_element:
-        LOG.info('Could not parse Source XML at %s. No flux import performed' 
+        LOG.info('Could not parse Source XML at %s. No flux import performed.  Attempting database query.' 
                  % source_table)
         
         result = flux_nosourcexml(ms)
@@ -401,23 +401,58 @@ def read_fluxes(ms):
 
         # all elements must contain data to proceed
         if None in (flux_text, frequency_text, source_id, spw_id):
-            LOG.info("Not enough field elements in Source XML.  Querying online web service")
-            result = flux_nosourcexml(ms)
-            return result
+            #See what elements can be used
+            
+            if USEFLUXSERVICE:
+                LOG.info("Not enough field elements in Source XML.  Checking Measurement Set...")
+            
+		try:
+		    
+		    #print flux_text, frequency_text, source_id, spw_id
+		    
+		    if (spw_id == None):
+			continue
+			
+		    if (source_id == None):
+			continue
+		    else:
+			source = ms.sources[int(source_id)]
+			sourcename = source.name
+		
+		    if ((spw_id) and frequency_text == None):
+			spw_id = string.split(spw_id, '_')[1]
+			spw = ms.get_spectral_windows(spw_id)
+			frequency = str(spw[0].centre_frequency.value)
+		    
+		    
+
+		except:
+		    LOG.info("Not enough information for an online DB query.")
+		    LOG.info(" ")
+		    continue
+            else:
+                continue
+
+            #result = flux_nosourcexml(ms)
+            #return result
             #continue
+        else:
+            #print "Using Source.xml ", flux_text, frequency_text, source_id, spw_id
+            
+            # spws can overlap, so rather than looking up spw by frequency,
+	    # extract the spw id from the element text. I assume the format uses
+	    # underscores, eg. 'SpectralWindow_13'
+	    spw_id = string.split(spw_id, '_')[1]
 
+	    source = ms.sources[int(source_id)]
+	    sourcename = source.name
 
-        # spws can overlap, so rather than looking up spw by frequency,
-        # extract the spw id from the element text. I assume the format uses
-        # underscores, eg. 'SpectralWindow_13'
-        spw_id = string.split(spw_id, '_')[1]
-
-        source = ms.sources[int(source_id)]
-
-        # we are mapping to spw rather than frequency, so should only take 
-        # one flux density. 
-        iquv = to_jansky(flux_text)[0]
-        m = domain.FluxMeasurement(spw_id, *iquv)
+	    # we are mapping to spw rather than frequency, so should only take 
+	    # one flux density. 
+	    iquv = to_jansky(flux_text)[0]
+	    m = domain.FluxMeasurement(spw_id, *iquv)
+	    frequencyobject = to_hertz(frequency_text)[0]
+	    frequency = str(frequencyobject.value)  #In Hertz
         
         # At this point we take:
         #  - the frequency of the spw_id in Hz
@@ -428,9 +463,8 @@ def read_fluxes(ms):
         if USEFLUXSERVICE:
         
 	    try:
-	        frequencyobject = to_hertz(frequency_text)[0]
-	        frequency = str(frequencyobject.value)  #In Hertz
-		fluxdict = fluxservice(ms, frequency, source.name)
+	        
+		fluxdict = fluxservice(ms, frequency, sourcename)
 		f = fluxdict['fluxdensity']
 		iquv_db = (measures.FluxDensity(float(f),measures.FluxDensityUnits.JANSKY),
 			iquv[1], iquv[2], iquv[3])
@@ -440,7 +474,12 @@ def read_fluxes(ms):
 		
 	    except:
 		LOG.debug("Unable to obtain some online flux catalog values for source " + str(source.name))
-        
+		if None in (flux_text, frequency_text, source_id, spw_id):
+		    #If Source.xml was a no-go then continue
+		    continue
+		else:
+		   #Use Source.xml values since nothing was returned from the online database
+		   m = domain.FluxMeasurement(spw_id, *iquv)
         
         
         result[source].append(m)

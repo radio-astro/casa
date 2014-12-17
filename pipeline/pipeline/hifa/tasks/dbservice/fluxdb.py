@@ -28,6 +28,7 @@ https://bugs.nrao.edu/browse/CAS-6869
 
 #Sample URL
 # http://bender.csrg.cl:2121/bfs-0.2/ssap?NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
+# http://asa-test.alma.cl/bfs/?NAME=3c279&DATE=04-Apr-2014&FREQUENCY=231.435E9
 #Documentation
 # http://twiki.csrg.cl/twiki/bin/view/LIRAE/SourceCatalogueVO
 
