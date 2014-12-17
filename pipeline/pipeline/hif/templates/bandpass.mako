@@ -107,16 +107,13 @@ $(document).ready(function() {
         </tr>
     </thead>
 	<tbody>
-% for application in applications:
+	% for tr in bandpass_table_rows:
 		<tr>
-			<td>${application.ms}</td>
-		  	<td>${application.bandtype}</td>
-		  	<td>${application.solint}</td>
-		  	<td>${application.intent}</td>
-		  	<td>${application.spw}</td>
-		  	<td>${application.gaintable}</td>
+		% for td in tr:
+			${td}
+		% endfor
 		</tr>
-% endfor		
+	%endfor
 	</tbody>
 </table>
 

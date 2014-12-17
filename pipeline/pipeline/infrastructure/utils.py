@@ -677,7 +677,7 @@ class OrderedDefaultdict(collections.OrderedDict):
         args = (self.default_factory,) if self.default_factory else ()
         return self.__class__, args, None, None, self.iteritems()
 
-def get_intervals(context, calapp):
+def get_intervals(context, calapp, spw_ids=None):
     """
     Get the integration intervals for scans processed by a calibration.
     
@@ -686,7 +686,9 @@ def get_intervals(context, calapp):
 
     :param ms: the MeasurementSet domain object
     :param calapp: the CalApplication representing the calibration
-    :return: a ilst of datetime objects representing the unique scan intervals 
+    :param spw_ids: a set of spw IDs to get intervals for. Leave as None to
+        use all spws specified in the CalApplication.
+    :return: a list of datetime objects representing the unique scan intervals 
     """
     ms = context.observing_run.get_ms(calapp.vis)
 
@@ -697,8 +699,9 @@ def get_intervals(context, calapp):
     scans = ms.get_scans(scan_intent=pipeline_intent)
 
     # let CASA parse spw arg in case it contains channel spec
-    spw_ids = set([spw_id for (spw_id, _, _, _) 
-                   in spw_arg_to_id(calapp.vis, calapp.spw)])
+    if not spw_ids:
+        spw_ids = set([spw_id for (spw_id, _, _, _) 
+                       in spw_arg_to_id(calapp.vis, calapp.spw)])
     
     all_solints = set()
     for scan in scans:

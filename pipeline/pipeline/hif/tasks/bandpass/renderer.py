@@ -5,6 +5,7 @@ Created on 11 Sep 2014
 '''
 import collections
 import os
+import types
 
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
@@ -15,7 +16,8 @@ import pipeline.infrastructure.utils as utils
 LOG = logging.get_logger(__name__)
 
 BandpassApplication = collections.namedtuple('BandpassApplication', 
-                                             'ms gaintable bandtype solint intent spw') 
+                                             'ms bandtype solint intent spw gaintable')
+
 PhaseupApplication = collections.namedtuple('PhaseupApplication', 
                                             'ms calmode solint minblperant minsnr flagged phaseupbw') 
 
@@ -54,7 +56,7 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         # generate the bandpass-specific plots, collecting the Plot objects
         # returned by the plot generator 
-        applications = []
+        bandpass_table_rows = []
         phaseup_applications = []
         amp_refant = {}
         amp_mode = {}
@@ -69,7 +71,7 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
         for result in results:
             vis = os.path.basename(result.inputs['vis'])
             ms = context.observing_run.get_ms(vis)
-            applications.extend(self.get_bandpass_applications(context, result, ms))
+            bandpass_table_rows.extend(self.get_bandpass_table(context, result, ms))
             phaseup_applications.extend(self.get_phaseup_applications(context, result, ms))
             ms_refant = ms.reference_antenna.split(',')[0]
 
@@ -118,10 +120,12 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
                 outfile = os.path.basename(renderer.path)
                 amp_vs_time_subpages[ms.basename] = outfile
 
+        bandpass_table_rows = utils.merge_td_columns(bandpass_table_rows)
+
         # add the PlotGroups to the Mako context. The Mako template will parse
         # these objects in order to create links to the thumbnail pages we
         # just created
-        ctx.update({'applications'         : applications,
+        ctx.update({'bandpass_table_rows'  : bandpass_table_rows,
                     'phaseup_applications' : phaseup_applications,
                     'amp_mode'             : amp_mode,
                     'amp_refant'           : amp_refant,
@@ -178,39 +182,47 @@ class T2_4MDetailsBandpassRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
         return applications
     
-    def get_bandpass_applications(self, context, result, ms):
+    def get_bandpass_table(self, context, result, ms):
         applications = []
         
         bandtype_map = {'B'    :'Channel',
                         'BPOLY':'Polynomial'}                       
         
         for calapp in result.final:
-            solint = calapp.origin.inputs['solint']
-
-            if solint == 'inf':
-                solint = 'Infinite'
-            
-            # Convert solint=int to a real integration time. 
-            # solint is spw dependent; science windows usually have the same
-            # integration time, though that's not guaranteed by the MS.
-            if solint == 'int':
-                in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
-                           for dt in utils.get_intervals(context, calapp)]
-                solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
-            
             gaintable = os.path.basename(calapp.gaintable)
-            spw = ', '.join(calapp.spw.split(','))
-
             to_intent = ', '.join(calapp.intent.split(','))
             if to_intent == '':
                 to_intent = 'ALL'
 
-            # TODO get this from the calapp rather than the top-level inputs?
-            bandtype = calapp.origin.inputs['bandtype']
-            bandtype = bandtype_map.get(bandtype, bandtype)
-            a = BandpassApplication(ms.basename, gaintable, bandtype, solint,
-                                    to_intent, spw)
-            applications.append(a)
+            LOG.todo('Make all CalAppOrigins a list?')
+            if type(calapp.origin) is not types.ListType:
+                calapp_origins = [calapp.origin]
+            else:
+                calapp_origins = calapp.origin
+
+            for calapp_origin in calapp_origins:                
+                spws = calapp_origin.inputs['spw'].split(',')
+                
+                solint = calapp_origin.inputs['solint']
+    
+                if solint == 'inf':
+                    solint = 'Infinite'
+                
+                # Convert solint=int to a real integration time. 
+                # solint is spw dependent; science windows usually have the same
+                # integration time, though that's not guaranteed by the MS.
+                if solint == 'int':
+                    in_secs = ['%0.2fs' % (dt.seconds + dt.microseconds * 1e-6) 
+                               for dt in utils.get_intervals(context, calapp, set(spws))]
+                    solint = 'Per integration (%s)' % utils.commafy(in_secs, quotes=False, conjunction='or')
+
+                # TODO get this from the calapp rather than the top-level 
+                # inputs?
+                bandtype = calapp_origin.inputs['bandtype']
+                bandtype = bandtype_map.get(bandtype, bandtype)
+                a = BandpassApplication(ms.basename, bandtype, solint, 
+                                        to_intent, ', '.join(spws), gaintable)
+                applications.append(a)
 
         return applications
 
