@@ -421,7 +421,7 @@ Record ImageStatsCalculator::statistics(
 
 	// Recover statistics
 	Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
-	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile;
+	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile, q1, q3;
 	Bool ok = True;
 
 	Bool trobust(_robust);
@@ -448,6 +448,12 @@ Record ImageStatsCalculator::statistics(
 			)
 			&& _statistics->getStatistic(
 				quartile, LatticeStatsBase::QUARTILE
+			)
+			&& _statistics->getStatistic(
+				q1, LatticeStatsBase::Q1
+			)
+			&& _statistics->getStatistic(
+				q3, LatticeStatsBase::Q3
 			);
 	}
 	if (ok) {
@@ -472,6 +478,8 @@ Record ImageStatsCalculator::statistics(
 		statsout.define("median", med);
 		statsout.define("medabsdevmed", medAbsDevMed);
 		statsout.define("quartile", quartile);
+		statsout.define("q1", q1);
+		statsout.define("q3", q3);
 	}
 	statsout.define("sigma", sigma);
 	statsout.define("rms", rms);
@@ -510,7 +518,7 @@ Record ImageStatsCalculator::statistics(
 			*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
 		}
 	}
-	_statistics->closePlotting();
+	//_statistics->closePlotting();
 	if (messageStore != 0) {
 		vector<String> messages = _statistics->getMessages();
 		for (
