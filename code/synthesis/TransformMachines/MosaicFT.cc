@@ -1126,9 +1126,6 @@ void MosaicFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
-  //////***********************DEBUGGING
-  nth=1;
-  ////////***************
   if (nth >3){
     ixsub=2;
     iysub=2; 
