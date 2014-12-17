@@ -65,12 +65,6 @@ public:
 	// Get the associated mask of the current dataset. Only called if hasMask() returns True;
 	const Bool* getMask();
 
-	// Get the stride for the current data set.
-	uInt getStride();
-
-	// Get the stride for the current mask (only called if hasMask() returns True).
-	uInt getMaskStride();
-
 	// Does the current data set have an associated mask?
 	Bool hasMask() const;
 
