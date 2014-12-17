@@ -148,9 +148,30 @@ public:
   //void fillFieldTable(Int nField);
   void fillFieldTable();
   
-  //fill the Spectral Window table
+  //fill the Spectral Window table with the content of FREQUENCY
   void fillSpectralWindowTable();
   
+  //fill the optional Correlator Model table with the content of INTERFEROMETER_MODEL
+  Bool fillCorrelatorModelTable();
+
+  //fill the optional SysCal table with the content of SYSTEM_TEMPERATURE
+  Bool fillSysCalTable();
+
+  //fill the optional FlagCmd table with the content of FLAG
+  Bool fillFlagCmdTable();
+
+  //fill the optional Weather table with the content of WEATHER
+  Bool fillWeatherTable();
+
+  //store the information from the GAIN_CURVE table in a calibration table
+  Bool handleGainCurve();
+
+  //store the information from the PHASE-CAL table in a calibration table
+  Bool handlePhaseCal();
+
+  //store the information from the MODEL_COMPS table 
+  Bool handleModelComps();
+
   // fix up the EPOCH MEASURE_REFERENCE keywords
   void fixEpochReferences();
   
@@ -206,7 +227,8 @@ protected:
   // If useTSM is True, the Tiled Storage Manager will be used to store
   // DATA, FLAG and WEIGHT_SPECTRUM
   void setupMeasurementSet(const String& MSFileName, Bool useTSM=True, 
-			   Bool mainTbl=False);
+			   Bool mainTbl=False, 
+			   Bool addCorrMod=False, Bool addSyscal=False);
   
   // Fill the main table from the Primary group data
   void fillMSMainTable(const String& MSFileName, Int& nField, Int& nSpW);

@@ -1536,7 +1536,7 @@ void FITSIDItoMS1::getAxisInfo()
 }
 
 void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM, 
-				       Bool mainTbl) {
+				       Bool mainTbl, Bool addCorrMod, Bool addSyscal) {
   
   Int nCorr = 0;
   Int nChan = 0;
@@ -1622,8 +1622,6 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     newtab.bindColumn(MS::columnName(MS::FEED2), incrStMan3);
     IncrementalStMan incrStMan4("FIELD_ID",cache_val);
     newtab.bindColumn(MS::columnName(MS::FIELD_ID), incrStMan4);
-    IncrementalStMan incrStMan5("FLAG_ROW",cache_val/4);
-    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), incrStMan5);
     IncrementalStMan incrStMan6("INTERVAL",cache_val);
     newtab.bindColumn(MS::columnName(MS::INTERVAL), incrStMan6);
     IncrementalStMan incrStMan7("OBSERVATION_ID",cache_val);
@@ -1639,7 +1637,7 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     IncrementalStMan incrStMan12("TIME_CENTROID",cache_val);
     newtab.bindColumn(MS::columnName(MS::TIME_CENTROID), incrStMan12);
   
-    // Bind ANTENNA1, ANTENNA2 and DATA_DESC_ID to the standardStMan 
+    // Bind FLAG_ROW, ANTENNA1, ANTENNA2 and DATA_DESC_ID to the standardStMan 
     // as they may change sufficiently frequently to make the
     // incremental storage manager inefficient for these columns.
     
@@ -1649,6 +1647,8 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     newtab.bindColumn(MS::columnName(MS::ANTENNA2), aipsStMan1);
     StandardStMan aipsStMan2("DATA_DESC_ID", cache_val);
     newtab.bindColumn(MS::columnName(MS::DATA_DESC_ID), aipsStMan2);
+    StandardStMan aipsStMan3("FLAG_ROW",cache_val/4);
+    newtab.bindColumn(MS::columnName(MS::FLAG_ROW), aipsStMan3);
     
     
     TiledShapeStMan tiledStMan1f("TiledFlag",tileShape);
@@ -1698,6 +1698,14 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
 //   SetupNewTable sourceSetup(ms.sourceTableName(),sourceTD,option);
 //   ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
 //  				 Table(sourceSetup,0));
+
+  if(addCorrMod){
+    cout << "Correlator model table setup needs to be inplemented." << endl;
+  }
+
+  if(addSyscal){
+    cout << "Syscal table setup needs to be inplemented." << endl;
+  }
 
   // update the references to the subtable keywords
   ms.initRefs();
@@ -2923,6 +2931,78 @@ void FITSIDItoMS1::fillFieldTable()
   }
 }
 
+Bool FITSIDItoMS1::fillCorrelatorModelTable()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "fillCorrelatorModelTable");
+//  MSCorrelatorModelColumns& msCorrMod(msc_p->correlatorModel());
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+Bool FITSIDItoMS1::fillSysCalTable()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "fillSysCalTable");
+  MSSysCalColumns& msSysCal(msc_p->sysCal());
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+Bool FITSIDItoMS1::fillFlagCmdTable()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "fillFlagCmdTable");
+  MSFlagCmdColumns& msFlagCmd(msc_p->flagCmd());
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+
+Bool FITSIDItoMS1::fillWeatherTable()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "fillWeatherTable");
+  MSWeatherColumns& msWeather(msc_p->weather());
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+Bool FITSIDItoMS1::handleGainCurve()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "handleGainCurve");
+  // convert the GAIN_CURVE table to a calibration table
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+Bool FITSIDItoMS1::handlePhaseCal()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "handlePhaseCal");
+  // convert the PHASE-CAL table to a calibration table
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+Bool FITSIDItoMS1::handleModelComps()
+{
+
+  *itsLog << LogOrigin("FitsIDItoMS()", "handleModelComps");
+  // make the content of the MODEL_COMPS table available in the MS (t.b.d.)
+  *itsLog << LogIO::WARN <<  "not yet implemented" << LogIO::POST;
+  return False;
+
+}
+
+
 void FITSIDItoMS1::fixEpochReferences() {
   *itsLog << LogOrigin("FitsIDItoMS()", "fixEpochReferences");
   if (timsys_p=="IAT") timsys_p="TAI";
@@ -3035,20 +3115,23 @@ bool FITSIDItoMS1::readFitsFile(const String& msFile)
     Bool mainTbl=False;
     setupMeasurementSet(msFile, useTSM, mainTbl);
     
+    Bool success = True; // for the optional tables, we have a return value permitting us
+                         // to skip them if they cannot be read
+
     if(extname=="ARRAY_GEOMETRY") fillAntennaTable();
     else if (extname=="SOURCE") fillFieldTable();
     else if (extname=="FREQUENCY") fillSpectralWindowTable();
     else if (extname=="ANTENNA") fillFeedTable();
-    else if(extname=="INTERFEROMETER_MODEL"
-	    || extname =="SYSTEM_TEMPERATURE"
-	    || extname =="GAIN_CURVE"
-	    || extname =="PHASE-CAL"
-	    || extname =="FLAG"
-	    || extname =="WEATHER"
-	    || extname =="BASELINE"
+    else if (extname=="INTERFEROMETER_MODEL") success =  fillCorrelatorModelTable();
+    else if (extname=="SYSTEM_TEMPERATURE") success = fillSysCalTable();
+    else if (extname=="FLAG") success =  fillFlagCmdTable(); 
+    else if (extname=="GAIN_CURVE") success =  handleGainCurve();
+    else if (extname=="PHASE-CAL") success =  handlePhaseCal(); 
+    else if (extname=="WEATHER")  success =  fillWeatherTable(); 
+    else if (extname=="MODEL_COMPS") success = handleModelComps();
+    else if(extname =="BASELINE"
 	    || extname =="BANDPASS"
 	    || extname =="CALIBRATION"
-	    || extname =="MODEL_COMPS"
 	    ){
       *itsLog << LogIO::WARN << "FITS-IDI table " << extname 
 	      << " not yet supported. Will ignore it." << LogIO::POST;
@@ -3059,6 +3142,11 @@ bool FITSIDItoMS1::readFitsFile(const String& msFile)
 	      << " not part of the FITS-IDI convention. Will ignore it." << LogIO::POST;
       return False;
     }  
+    if(!success){
+      *itsLog << LogIO::WARN << "The optional FITS-IDI table " << extname 
+	      << " could not be read. Will ignore it." << LogIO::POST;
+      return False;
+    }
   }
 
   return True;
