@@ -845,9 +845,9 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
     poor_spws = []
     for i in range (len(spwids)):
         if not nbpsolutions[i]:
-	    poor_spws.append(spwid[i])
+	    poor_spws.append(spwids[i])
 	elif nbpsolutions[i] < min_nsolutions:
-	    poor_spws.append(spwid[i])
+	    poor_spws.append(spwids[i])
     npoor = len(poor_spws) 
 
     if npoor <= 0:
