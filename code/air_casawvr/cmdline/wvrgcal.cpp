@@ -536,12 +536,19 @@ std::vector<std::set<size_t> >  tiedIDs(const std::vector<std::set<std::string> 
 	    int srcid=boost::lexical_cast<int>(*j);
 	    cs.insert(srcid);
 	  }
-	catch (const boost::bad_lexical_cast & bc)
+	catch (const std::exception& x)
 	  {
-	    cs.insert(srcmap.right.at(*j));
+	    try{
+	      cs.insert(srcmap.right.at(*j));
+	    }
+	    catch (const std::exception& y){
+	      std::ostringstream oss;
+	      oss << "Parameter 'tie': The field " << *j << " is not recognised. Please check for typos." << std::endl;
+	      throw LibAIR2::WVRUserError(oss.str());
+	    }
 	  }
-      }
-    res.push_back(cs);
+	res.push_back(cs);
+      } // end for
   }
   return res;
 }
@@ -946,12 +953,21 @@ int main(int argc,  char* argv[])
 			    flds,
 			    src,
 			    sortedI);
-	   std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
-	   printTied(tied, tiedi);
-	   LibAIR2::fieldSegmentsTied(time,
-				     src,
-				     tiedi,
-				     fb);
+	   try{
+	     std::vector<std::set<size_t> >  tiedi=tiedIDs(tied, ms);
+	     
+	     printTied(tied, tiedi);
+	     LibAIR2::fieldSegmentsTied(time,
+					src,
+					tiedi,
+					fb);
+	   }
+	   catch(LibAIR2::WVRUserError& x){
+	     std::cout << x.what() << std::endl;
+	     std::cerr << x.what() << std::endl;
+	     return -1;
+	   }
+
 	   //printFieldSegments(fb, time[0]);
 	   
 //       { // debugging output
