@@ -407,32 +407,6 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 	++loopCount;
 }
 
-/*
-template <class AccumType, class InputIterator, class MaskIterator>
-vector<AccumType> StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_quantilesFromArray(
-	vector<AccumType>& myArray, Double qmax, const std::set<Double>& quantiles
-) {
-	uInt size = myArray.size();
-	ThrowIf(
-		size == 0,
-		"There are no good elements in the dataset"
-	);
-	uInt idx = (uInt)ceil(qmax * (Double)size) - 1;
-	// we run kthLargest to sort the array, we don't need the return value
-	// at this point
-	GenSort<AccumType>::kthLargest(&myArray[0], size, idx);
-	vector<AccumType> values;
-	vector<uInt64> indices = _indicesFromQuantiles(size, quantiles);
-	vector<uInt64>::const_iterator initer = indices.begin();
-	vector<uInt64>::const_iterator inend = indices.end();
-	while (initer != inend) {
-		values.push_back(myArray[*initer]);
-		++initer;
-	}
-	return values;
-}
-*/
-
 template <class AccumType, class InputIterator, class MaskIterator>
 std::map<uInt64, AccumType> StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_valuesFromArray(
 	vector<AccumType>& myArray, const std::set<uInt64>& indices
@@ -445,11 +419,14 @@ std::map<uInt64, AccumType> StatisticsAlgorithm<AccumType, InputIterator, MaskIt
 		"The sorted array has size " + String::toString(arySize)
 	);
 	std::map<uInt64, AccumType> indexToValuesMap;
-	// the sorted array will be sorted up to and including largestIdx after this call
 	std::set<uInt64>::const_iterator initer = indices.begin();
 	std::set<uInt64>::const_iterator inend = indices.end();
+	Int64 lastIndex = 0;
 	while(initer != inend) {
-		GenSort<AccumType>::kthLargest(&myArray[0], arySize, *initer);
+		GenSort<AccumType>::kthLargest(
+			&myArray[lastIndex], arySize - lastIndex, *initer - lastIndex
+		);
+		lastIndex = *initer;
 		++initer;
 	}
 	std::set<uInt64>::const_iterator iter = indices.begin();
