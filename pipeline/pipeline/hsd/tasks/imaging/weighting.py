@@ -101,6 +101,7 @@ class WeightMS(common.SingleDishTaskTemplate):
             tsel = tb.query('DATA_DESC_ID==%s' % (data_desc_id),
                             sortlist='TIME')
             ms_rows = tsel.rownumbers() 
+            tsel.close()
     
         row_map = {}
         # ms_row: (st_row_pol0, st_row_pol1)
@@ -195,6 +196,6 @@ class WeightMS(common.SingleDishTaskTemplate):
                             flag[ipol, ichan, maxrow[ichan]] = True
                             flag[ipol, ichan, minrow[ichan]] = True
                     tsel.putcol('FLAG', flag)
-                    return (argmin, argmax)
+                tsel.close()
 
     
