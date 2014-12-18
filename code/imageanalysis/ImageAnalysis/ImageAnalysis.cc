@@ -243,16 +243,28 @@ Bool ImageAnalysis::open(const String& infile) {
 	SPtrHolder<LatticeBase> latt(ImageOpener::openImage(infile));
 	ThrowIf (! latt.ptr(), "Unable to open image");
 	DataType dataType = latt->dataType();
-	if (dataType == TpFloat) {
+	if (isReal(dataType)) {
 		_imageFloat.reset(
 			dynamic_cast<ImageInterface<Float> *>(latt.transfer())
 		);
+		if (dataType != TpFloat) {
+			ostringstream os;
+			os << dataType;
+			*_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
+				<< "to float precision in CASA image" << LogIO::POST;
+		}
 		_imageComplex.reset();
 	}
-	else if (dataType == TpComplex) {
+	else if (isComplex(dataType)) {
 		_imageComplex.reset(
 			dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
 		);
+		if (dataType != TpComplex) {
+			ostringstream os;
+			os << dataType;
+			*_log << LogIO::WARN << "Converting " << os.str() << " precision pixel values "
+				<< "to complex float precision in CASA image" << LogIO::POST;
+		}
 		_imageFloat.reset();
 	}
 	else {
