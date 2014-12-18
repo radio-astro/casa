@@ -58,8 +58,11 @@ def make_bpsolint_table(context, results):
 	        bpintervals = ''
 	        bpnpoints = ''
 	    else:
-	        bpintervals = '%f (%d)' % (qt.getvalue(single_result.bpsolints[i])[0],
-		    single_result.bpchansolints[i])
+		if single_result.bpsolints[i] == '1ch':
+	            bpintervals = '1ch (%d)' % (single_result.bpchansolints[i])
+		else:
+	            bpintervals = '%f (%d)' % (qt.getvalue(single_result.bpsolints[i])[0],
+		        single_result.bpchansolints[i])
 	        bpnpoints = '%d' % single_result.nbpsolutions[i]
 
             tr = BpsolintTR(vis_cell, spwid,  phintervals, phnpoints,

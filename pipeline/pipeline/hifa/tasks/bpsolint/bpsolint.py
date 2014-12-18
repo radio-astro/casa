@@ -1002,7 +1002,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    else:
 	        tooFewIntervals = False
 	        asterisks = ''
-	    LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%6.3fsec' (%d time intervals in solution) to reach S/N=%.0f" % \
+	    LOG.info("%sspw %2d (%6.3fmin) requires phaseup solint='%0.3gsec' (%d time intervals in solution) to reach S/N=%.0f" % \
 	        (asterisks,
 		spwid,
 		solint_dict[spwid]['exptime_minutes'],
@@ -1016,8 +1016,11 @@ class BpSolint(basetask.StandardTaskTemplate):
 		(asterisks, minBpNintervals, ms.basename))
 
 	    # Bandpass solution info
-	    solint_dict[spwid]['bpsolint'] = '%fMHz' % \
-	        (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
+	    if requiredChannels > 1.0:
+	        solint_dict[spwid]['bpsolint'] = '%fMHz' % \
+	            (requiredChannels * solint_dict[spwid]['chanwidth_Hz'] * 1.0e-6)
+            else:
+	        solint_dict[spwid]['bpsolint'] = '1ch'
 	    solint_dict[spwid]['nchan_bpsolint'] = \
 	        int(np.ceil(requiredChannels))
 	    solChannels = solint_dict[spwid]['nchan_total'] / \
@@ -1028,7 +1031,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    else:
 	        tooFewChannels = False
 	        asterisks = ''
-	    LOG.info("%sspw %2d (%4.0fMHz) requires solint='%.2fMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
+	    LOG.info("%sspw %2d (%4.0fMHz) requires solint='%0.3gMHz' (%d channels intervals in solution) to reach S/N=%.0f" % \
 	        (asterisks,
 		spwid,
 		solint_dict[spwid]['bandwidth']*1.0e-6,
