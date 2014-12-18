@@ -403,8 +403,9 @@ def read_fluxes(ms):
         if None in (flux_text, frequency_text, source_id, spw_id):
             #See what elements can be used
             
+            #print flux_text, frequency_text, source_id, spw_id
+            
             if USEFLUXSERVICE:
-                LOG.info("Not enough field elements in Source XML.  Checking Measurement Set...")
             
 		try:
 		    
@@ -424,10 +425,10 @@ def read_fluxes(ms):
 			spw = ms.get_spectral_windows(spw_id)
 			frequency = str(spw[0].centre_frequency.value)
 		    
-		    
+		    LOG.info("Not enough field elements in Source XML for "+str(source_id)+" "+sourcename+".  Checking Measurement Set...")
 
 		except:
-		    LOG.info("Not enough information for an online DB query.")
+		    LOG.info("Not enough information for an online DB query for source.")
 		    LOG.info(" ")
 		    continue
             else:
@@ -451,8 +452,15 @@ def read_fluxes(ms):
 	    # one flux density. 
 	    iquv = to_jansky(flux_text)[0]
 	    m = domain.FluxMeasurement(spw_id, *iquv)
-	    frequencyobject = to_hertz(frequency_text)[0]
-	    frequency = str(frequencyobject.value)  #In Hertz
+	    
+	    
+
+            try:
+                spw = ms.get_spectral_windows(spw_id)
+	        frequency = str(spw[0].centre_frequency.value)
+            except:
+                frequencyobject = to_hertz(frequency_text)[0]
+                frequency = str(frequencyobject.value)  #In Hertz
         
         # At this point we take:
         #  - the frequency of the spw_id in Hz
@@ -513,7 +521,7 @@ def flux_nosourcexml(ms):
                 sourcename = source.name
                 frequency= str(spw.centre_frequency.value)
                 spw_id = spw.id
-                LOG.debug('freq/sourcename:  '+str(frequency) + str(sourcename))
+                LOG.info('freq/sourcename:  '+str(frequency) + str(sourcename))
                 
                 try:
                     
@@ -557,7 +565,7 @@ def fluxservice(ms, frequency, sourcename):
     urlparams = buildparams(sourcename, date, frequency)
     dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams))
     
-    LOG.debug('url: ' + serviceurl + '?%s' % urlparams)
+    LOG.info('url: ' + serviceurl + '?%s' % urlparams)
     
     domtable = dom.getElementsByTagName('TR')
     
