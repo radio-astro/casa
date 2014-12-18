@@ -818,7 +818,7 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
     missing_spws = []
     for i in range (len(spwids)):
         if not bpsolints[i]:
-	    missing_spws.append(spwid[i])
+	    missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
 
     if nmissing <= 0:
