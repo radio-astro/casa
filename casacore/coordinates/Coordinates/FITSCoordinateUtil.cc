@@ -1070,6 +1070,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		
 		String waveUnit = String(wcsDest.cunit[0]);
 		Double restFrequency = wcs.restfrq;
+		if (restFrequency==0.){
+		    if(wcs.restwav != 0.){
+			restFrequency = C::c/wcs.restwav;
+		    }
+		}
 
 		for(uInt i=0; i<nc; i++){
 		  wavelengths(i) = cRval + cDelt * cPc * (Double(i + 1) - cRpix); // +1 because FITS works 1-based
