@@ -50,11 +50,13 @@ def automask(image='', maskimage='', fracofpeak=0, rmsthresh=0, resolution=None,
         rms=stat['rms'][0]
     
     ib=iaim.rebin('__rebin.image', [numpix, numpix, 1, 1], overwrite=True)
+    ib.done()
+    ib.open('__rebin.image')
     if(twopass):
         thresh=5.0*rms/np.sqrt(float(numpix))
     else:
         thresh=3.0*rms/np.sqrt(float(numpix))
-    ic=ib.imagecalc(outfile='__thresh.image', pixels='iif(abs(__rebin.image)> '+str(thresh)+',1.0,0.0)', overwrite=True)
+    ic=ib.imagecalc(outfile='__thresh.image', pixels='iif(abs("__rebin.image")> '+str(thresh)+',1.0,0.0)', overwrite=True)
     ib.remove(done=True, verbose=False)
     ie=ic.regrid(outfile='__threshreg.image', shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
     ic.remove(done=True, verbose=False)
