@@ -243,6 +243,7 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
     Int val=ant1PointingCache_p.nelements();
     ant1PointingCache_p.resize(val+1, True);
     ant1PointingCache_p[val]=vb.firstDirection1();
+    //ant1PointingCache_p[val]=vbUtil_p.getPointingDir(vb, vb.antenna1()(0), 0);
     ant1PointVal_p[elkey]=val;
     return ant1PointingCache_p[val];
 
@@ -424,8 +425,11 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       TempImage<Float> screen2(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
       screen2.set(1.0);
       TempImage<Complex> subout(TiledShape(IPosition(4, convSize_p, convSize_p, 1, 1)), coordLastPlane, memtobeused);
+      //////Making a reference on half of the lattice as on the Mac rcfft is failing for some 
+      //////reason
+      SubImage<Complex> halfsubout(subout, Slicer(IPosition(4, 0, 0, 0, 0), IPosition(4, convSize_p/2, convSize_p-1, 0, 0), Slicer::endIsLast), True);
       sj_p->applySquare(screen2, screen2, vb, 0); 
-      LatticeFFT::rcfft(subout, screen2, True, False);
+      LatticeFFT::rcfft(halfsubout, screen2, True, False);
       //Real FFT fills only first half of the array
       //making it look like a Complex to Complex FFT
       IPosition iblc(4, 0, 3*subout.shape()(1)/8, 0, 0);
@@ -578,7 +582,7 @@ void SimplePBConvFunc::findConvFunction(const ImageInterface<Complex>& iimage,
       */ 
       
       
-      if(1) {
+      if(0) {
 	CoordinateSystem ftCoords(coords);
 	directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
 	AlwaysAssert(directionIndex>=0, AipsError);
