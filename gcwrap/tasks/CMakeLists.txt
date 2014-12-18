@@ -90,6 +90,7 @@ rmtables.xml
 sdaverage.xml
 sdbaseline.xml
 sdbaseline2.xml
+tsdbaseline.xml
 sdcal.xml
 sdcal2.xml
 sdcoadd.xml
