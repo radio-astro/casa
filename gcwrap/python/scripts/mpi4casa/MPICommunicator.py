@@ -57,7 +57,7 @@ class MPICommunicator:
                 # Register exit handler in case MPICommandClient exit handler is not initialized
                 # NOTE: It is not guaranteed that __del__() methods are called 
                 #       for objects that still exist when the interpreter exits.
-                self.__servers_running = True
+                self.__finalize_mpi_environment = True
                 # jagonzal: This exit function must be registered only for the client
                 if MPIEnvironment.is_mpi_client:                   
                     atexit.register(self.finalize_server_and_client_mpi_environment)
@@ -78,11 +78,12 @@ class MPICommunicator:
             
         def finalize_server_and_client_mpi_environment(self):
             
-            # Send stop server signal to servers
-            self.control_service_request_broadcast(request={'signal':'exit'})
-            
-            # Finalize local MPI envionment
-            MPIEnvironment.finalize_mpi_environment()
+            # Default finalization of MPI environment when MPICommandClient has not been instantiated 
+            if self.__finalize_mpi_environment:
+                # Send stop server signal to servers
+                self.control_service_request_broadcast(request={'signal':'exit'})
+                # Finalize local MPI environment
+                MPIEnvironment.finalize_mpi_environment()
             
                     
         def command_request_send(self,request,server):
@@ -185,18 +186,17 @@ class MPICommunicator:
         # NOTE: We don't use broadcast because it is always blocking
         def control_service_request_broadcast(self,request,logger=None):
             
-            if self.__servers_running:
-                mpi_server_rank_list = MPIEnvironment.mpi_server_rank_list()
-                for rank in mpi_server_rank_list:
-                    if logger is not None:
-                        logger.post("Sending %s service signal to server %s" 
-                                    % (request['signal'],str(rank)),"INFO","MPICommunicator::control_service_request_send_all")
+            mpi_server_rank_list = MPIEnvironment.mpi_server_rank_list()
+            for rank in mpi_server_rank_list:
+                if logger is not None:
+                    logger.post("Sending %s service signal to server %s" 
+                                % (request['signal'],str(rank)),"INFO","MPICommunicator::control_service_request_send_all")
                     self.control_service_request_send(request=request,server=rank)      
                     
         
-        # Set method to notify whether the servers are running or not         
-        def set_servers_running(self,servers_running):
-            self.__servers_running = servers_running
+        # Mark/UnMark MPI environment to be finalized by the MPICommunicator destructor 
+        def set_finalize_mpi_environment(self,finalize_mpi_environment):
+            self.__finalize_mpi_environment = finalize_mpi_environment
             
             
 # EOF
