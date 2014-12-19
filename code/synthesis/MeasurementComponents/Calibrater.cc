@@ -2501,6 +2501,12 @@ void Calibrater::specifycal(const String& type,
       cal_ = createSolvableVisCal("GAINCURVE",*vs_p);
     else if (utype.contains("TEC"))
       cal_ = createSolvableVisCal("TEC",*vs_p);
+    else if (utype.contains("SDSKY_PS"))
+      cal_ = createSolvableVisCal("SDSKY_PS",*vs_p);
+    else if (utype.contains("SDSKY_RASTER"))
+      cal_ = createSolvableVisCal("SDSKY_RASTER",*vs_p);
+    else if (utype.contains("SDSKY_OTF"))
+      cal_ = createSolvableVisCal("SDSKY_OTF",*vs_p);
     else
       throw(AipsError("Unrecognized caltype."));
 
