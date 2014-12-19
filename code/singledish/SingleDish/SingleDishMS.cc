@@ -432,12 +432,12 @@ void SingleDishMS::subtract_baseline(int const order,
 	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
 	  // actual execution of single spectrum
 	  status = 
-	    LIBSAKURA_SYMBOL(SubtractBaseline)(num_chan, spec.data, mask.data, bl_context, 
+	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
 					       clip_threshold_sigma, num_fitting_max, 
 					       true, mask.data, spec.data, &bl_status);
 	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 	    //raise exception?
-	    std::cout << "   -- error occured in SubtractBaseline()." << std::flush;
+	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
 	  }
 	  // set back a spectrum to data cube
 	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
