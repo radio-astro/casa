@@ -46,7 +46,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 sdms.set_selection(spw=str(spwid), field=field, 
                                    baseline='%s&&&'%(antenna), time=timerange, 
                                    scan=scan, polarization=pol)
-                sdms.subtract_baseline(order=order, #mask=mask,
+                sdms.subtract_baseline(mask=mask, order=order, 
                                        clip_threshold_sigma=clipthresh, 
                                        num_fitting_max=clipniter+1)
             finally:
