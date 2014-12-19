@@ -54,6 +54,6 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
         # file output (will be implemeted later)
 
-    except Exception, instance
+    except Exception, instance:
         print '*** Exception ***', instance
         raise Exception, instance
