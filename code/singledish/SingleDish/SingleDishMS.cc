@@ -386,7 +386,7 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
 
-void SingleDishMS::subtract_baseline(bool const in_mask[],
+void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
 				     int const order, 
 				     float const clip_threshold_sigma, 
 				     int const num_fitting_max)

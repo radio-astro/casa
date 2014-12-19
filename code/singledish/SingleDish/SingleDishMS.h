@@ -44,7 +44,7 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in CORRECTED_DATA column)
-  void subtract_baseline(bool const in_mask[],
+  void subtract_baseline(Vector<Bool> const &in_mask,
 			 int const order, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);

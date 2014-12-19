@@ -124,6 +124,10 @@ Fit baseline and subtract it from selected spectra
   </description>
   <input>
 
+    <param type="boolArray" name="mask">
+      <description>channel mask</description>
+    </param>
+
     <param type="int" name="order">
       <description>polynomial order</description>
       <value>5</value>
