@@ -5,12 +5,13 @@ tAutoDiff
 tClassicalStatistics
 tCombinatorics
 tConvolver
-tInterpolateArray1D
 tFFTServer
 tFFTServer2
 tGaussianBeam
 tGeometry
+tHingesFencesStatistics
 tHistAcc
+tInterpolateArray1D
 tMathFunc
 tMatrixMathLA
 tMedianSlider
