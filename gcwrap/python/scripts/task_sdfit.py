@@ -426,7 +426,9 @@ class sdfit_worker(sdutil.sdtask_template):
             if ( self.plotlevel==2 ):
                 plot_line(myp,x,self.fitter.get_residual(),themask,label=labels[2],color=7)
             # plot fit
-            plot_line(myp,x,self.fitter.fitter.getfit(),themask,label=labels[3],color=2)
+            #plot_line(myp,x,self.fitter.fitter.getfit(),themask,label=labels[3],color=2)
+            # plot all channels for fit region
+            plot_line(myp,x,self.fitter.fitter.getfit(),False,label=labels[3],color=2)
 
         if ( irow == 0 ):
                 tlab=self.fitter.data._getsourcename(self.fitter._fittedrow)
@@ -450,7 +452,7 @@ def plot_line(plotter,x,y,msk,label,color,colormap=None,scale=False):
     my=ma.masked_array(y,msk)
     if scale:
         xlim=[min(x),max(x)]
-        ylim=[min(my),max(my)]
+        ylim=[my.min(),my.max()]
         wy=ylim[1]-ylim[0]
         ylim=[ylim[0]-wy*0.1,ylim[1]+wy*0.1]
         plotter.axes.set_xlim(xlim)
