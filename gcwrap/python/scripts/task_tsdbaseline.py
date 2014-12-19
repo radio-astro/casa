@@ -1,7 +1,6 @@
 import numpy
 import os
 from taskinit import *
-
 ms,sdms,tb = gentools(['ms','sdms','tb'])
 
 def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None, timerange=None, scan=None, pol=None, maskmode=None, thresh=None, avg_limit=None, edge=None, blmode=None, dosubtract=None, blparam=None, blformat=None, bloutput=None, bltable=None, blfunc=None, order=None, npiece=None, applyfft=None, fftmethod=None, fftthresh=None, addwn=None, rejwn=None, clipthresh=None, clipniter=None, verify=None, verbose=None, showprogress=None, minnrow=None, outfile=None, overwrite=None):
@@ -42,6 +41,8 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 for idx in xrange(maskidx_start, maskidx_end+1): 
                     mask[idx] = True
             try:
+                print 'a'
+                """
                 sdms.open(infile)
                 sdms.set_selection(spw=str(spwid), field=field, 
                                    baseline='%s&&&'%(antenna), time=timerange, 
@@ -49,6 +50,7 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
                 sdms.subtract_baseline(mask=mask, order=order, 
                                        clip_threshold_sigma=clipthresh, 
                                        num_fitting_max=clipniter+1)
+                """
             finally:
                 sdms.close()
 

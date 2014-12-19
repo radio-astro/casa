@@ -80,9 +80,9 @@ casa_add_library( tools
  mstransformer/mstransformer_cmpt.cc
  nrao/vlafillertask_cmpt.cc
  plotms/plotms_cmpt.cc
- singledish/singledishms_cmpt.cc
  scimath/fitter_cmpt.cc
  scimath/functional_cmpt.cc
+ singledish/singledishms_cmpt.cc
  StdCasa/conversions_python.cc
  StdCasa/interrupt.cc
  spectralline/spectralline_cmpt.cc
@@ -146,9 +146,9 @@ casa_add_tools( tools_swig tools_sources tools_py
  mstransformer/mstransformer.xml
  nrao/vlafillertask.xml
  plotms/plotms.xml
- singledish/singledishms.xml
  scimath/fitter.xml
  scimath/functional.xml
+ singledish/singledishms.xml
  spectralline/spectralline.xml
  synthesis/calibrater.xml
  synthesis/deconvolver.xml
