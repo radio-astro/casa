@@ -43,8 +43,9 @@ public:
   // Set channel mask to process
 
   // Invoke baseline subtraction
-  // (polynomial, no mask, write results in CORRECTED_DATA column)
-  void subtract_baseline(int const order, 
+  // (polynomial, write results in CORRECTED_DATA column)
+  void subtract_baseline(bool const in_mask[],
+			 int const order, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);
 
@@ -99,7 +100,15 @@ private:
   // out_column_ and write it to visbuffer
   void set_data_cube_float(vi::VisBuffer2 &vb,
 			   Cube<Float> const &data_cube);
-
+  // get flag cube (npol*nchan*nvirow) from visbuffer
+  void get_flag_cube(vi::VisBuffer2 const &vb,
+		     Cube<Bool> &flag_cube);
+  // retrieve a flag at the row and plane (polarization) from data cube
+  void get_flag_from_cube(Cube<Bool> &flag_cube,
+			  size_t const row,
+			  size_t const plane,
+			  size_t const num_flag,
+			  SakuraAlignedArray<bool> &out_flag);
   /////////////////////////////////
   /// Array execution functions ///
   /////////////////////////////////

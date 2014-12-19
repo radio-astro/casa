@@ -365,11 +365,29 @@ void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
     data_cube(plane, i, row) = static_cast<Float>(in_data[i]);
 }
 
+void SingleDishMS::get_flag_cube(vi::VisBuffer2 const &vb,
+				 Cube<Bool> &flag_cube)
+{
+  flag_cube = vb.flagCube();
+}
+
+void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
+					  size_t const row,
+					  size_t const plane,
+					  size_t const num_flag,
+					  SakuraAlignedArray<bool> &out_flag)
+{
+  bool *ptr = out_flag.data;
+  for (size_t i=0; i < num_flag; ++i) 
+    ptr[i] = static_cast<bool>(flag_cube(plane, i, row));
+}
+
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
 
-void SingleDishMS::subtract_baseline(int const order, 
+void SingleDishMS::subtract_baseline(bool const in_mask[],
+				     int const order, 
 				     float const clip_threshold_sigma, 
 				     int const num_fitting_max)
 {
@@ -406,12 +424,16 @@ void SingleDishMS::subtract_baseline(int const order,
       Cube<Float> data_chunk(num_pol,num_chan,num_row);
       Matrix<Float> data_row(num_pol,num_chan);
       SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      Matrix<Bool> flag_row(num_pol,num_chan);
       SakuraAlignedArray<bool> mask(num_chan);
-      // set all elements of mask true as channel flag info 
-      // is not used for now (2014/12/01 WK)
+      // set the given channel mask into aligned mask
+      /*
       for (size_t ichan=0; ichan < num_chan; ++ichan) {
-	mask.data[ichan] = true;
+	//mask.data[ichan] = true;
+	mask.data[ichan] = in_mask[ichan];
       }
+      */
       // create baseline context
       LIBSAKURA_SYMBOL(BaselineContext) *bl_context;
       status = 
@@ -424,12 +446,22 @@ void SingleDishMS::subtract_baseline(int const order,
       }
       // get a data cube (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
+      // get a flag cube (npol*nchan*nrow) from VisBuffer
+      get_flag_cube(*vb, flag_chunk);
       // loop over MS rows
       for (size_t irow=0; irow < num_row; ++irow) {
 	// loop over polarization
 	for (size_t ipol=0; ipol < num_pol; ++ipol) {
 	  // get a spectrum from data cube
 	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+	  // get a channel mask from data cube
+	  // (note that mask used here is actually a flag)
+	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // convert flag to mask by taking logical NOT of flag
+	  // and then operate logical AND with in_mask
+	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+	    mask.data[ichan] = in_mask[ichan] && (!(mask.data[ichan]));
+	  }
 	  // actual execution of single spectrum
 	  status = 
 	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
