@@ -298,21 +298,21 @@ protected:
 		typename DataRanges::const_iterator endRange, Bool isInclude
 	);
 
-	static void _increment(
+	inline static void _increment(
 		InputIterator& datum, Int64& loopCount, Bool unityStride, uInt dataStride
 	);
 
-	static void _increment(
+	inline static void _increment(
 		InputIterator& datum, Int64& loopCount, InputIterator& weight,
 		Bool unityStride, uInt dataStride
 	);
 
-	static void _increment(
+	inline static void _increment(
 		InputIterator& datum, Int64& loopCount, MaskIterator& mask,
 		Bool unityStride, uInt dataStride, uInt maskStride
 	);
 
-	static void _increment(
+	inline static void _increment(
 		InputIterator& datum, Int64& loopCount,
 		InputIterator& weight, MaskIterator& mask,
 		Bool unityStride, uInt dataStride, uInt maskStride
@@ -321,12 +321,6 @@ protected:
 	// get the zero-based indices of the specified quantiles in sorted dataset with npts
 	// number of good points. The returned map maps quantiles to indices.
 	static std::map<Double, uInt64> _indicesFromQuantiles(uInt64 npts, const std::set<Double>& quantiles);
-
-	/*
-	static vector<AccumType> _quantilesFromArray(
-		vector<AccumType>& myArray, Double qmax, const std::set<Double>& quantiles
-	);
-	*/
 
 	// The array can be changed by paritally sorting it up to the largest index. Return
 	// a map of index to value in the sorted array.

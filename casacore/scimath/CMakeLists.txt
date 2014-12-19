@@ -245,6 +245,8 @@ Mathematics/GaussianBeam.h
 Mathematics/Geometry.h
 Mathematics/Gridder.h
 Mathematics/Gridder.tcc
+Mathematics/HingesFencesStatistics.h
+Mathematics/HingesFencesStatistics.tcc
 Mathematics/HistAcc.h
 Mathematics/HistAcc.tcc
 Mathematics/Interpolate2D.h
