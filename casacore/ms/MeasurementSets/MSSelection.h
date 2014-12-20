@@ -324,11 +324,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //
     // The key in the ordered map returned by getCorrMap() is the
-    // pol. is the Data Description ID (DDID).  The value is a set of
-    // two vectors.  The first vector is the list of the in-row
-    // indices to pick out the selected polarizations (or
-    // equivalently, the list of indices for the vector in the
-    // corrType column of the POLARIZATION sub-table).
+    // pol. in the Data Description ID (DDID) sub-table.  The value is
+    // a Vector of two Vectors.  
+    //
+    // The returned Map<T> has a key that maps to two vectors:
+    // Key  ---->    Vector1               Vector2
+    //
+    // Key : Row index in the POLARIZATION sub-table
+    //
+    // Vector1 : List of poln. indices selected from the row pointed
+    //           by Key.  These are the in-row indices to pick-out the
+    //           desired (selected) polarization products from the
+    //           selected rows of the MS (or equivalently, the list of
+    //           indices for the vector in the corrType column of the
+    //           POLARIZATION sub-table).
+    //
+    // Vector2 : List of selected rows from the DATA_DESCRIPTION sub-table 
     //
     inline OrderedMap<Int, Vector<Vector<Int> > > getCorrMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedSetupMap_p;};
