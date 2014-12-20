@@ -341,6 +341,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Vector2 : List of selected rows from the DATA_DESCRIPTION sub-table 
     //
+    // An example: following are the sub-tables used for the example
+    // explaination below:
+    //
+    // POLARIZATION Sub-table
+    // ======================
+    // Row    Poln
+    // ------------
+    // 0         RR, LL
+    // 1         RR, LR, RL, LL
+    //
+    // DATA_DESCRIPTION Sub-table
+    // ==========================
+    // Row      PolnID         SpwID
+    // ------------------------------
+    // 0          0              0
+    // 1          1              1
+    // 2          1              2
+    // 3          1              3
+    // 4          1              4
+    // 5          1              5
+    // 6          1              6
+    // 7          1              7
+    // 8          1              8
+    //
+    //
+    // E.g., the expression poln='LL'
+    //
+    // returns the Map:
+    //
+    // corrmap = (0, [[1], [0]]) (1, [[3], [0,1,2,3,4,5,6,7,8]] )
+    //
+    // The rows from the POLARIZATION table selected are 0 and 1,  These are
+    // two keys for the two entries in the map.
+    //
+    //  1. The two vectors in map 1 are:  [1] and [0].  The this reads as:
+    //      From the 0th. row of the POLARIZATION table, use the indices [1].  The
+    //      relevant list of associated DD rows are [0]
+    //
+    //  2. The two vectors in map 2 are:  [3] and  [0,1,2,3,4,5,6,7,8].  This reads as:
+    //       From the 1st. row of the POLARIZATION table, use the indices [3].  The
+    //       relevant list of associated DD rows are [0,1,2,3,4,5,6,7,8].
+    //
+    // For a client code:
+    //
+    // o To get a list of the DDIDs selected, iterate over all entries of the
+    //   map and collate the second vector from each entry.
+    //
+    //        Or, use getDDIDList().
+    //
+    // o To get the list of the selected poln. *in-row indices*, collate the
+    //   first vector from each entry.
+    //
+    // o To get a list of POLARIZATION IDs selected (rows of the POLARIZATION
+    //   table), make a list of all the keys of this map.
     inline OrderedMap<Int, Vector<Vector<Int> > > getCorrMap(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return selectedSetupMap_p;};
 
