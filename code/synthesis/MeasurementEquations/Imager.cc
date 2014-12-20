@@ -5825,7 +5825,8 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   spcsys.setWorldAxisUnits(Vector<String>(1,
 					  //mfreqs[selspw][0].getUnit().getName()));
 					  mfreqs[0][0].getUnit().getName()));
-  //spcsys.setIncrement(Vector<Double>(1, freqWidth));
+  spcsys.setIncrement(Vector<Double>(1, fabs(freqMax-freqMin)));
+  //cerr<<"fabs(freqMax-freqMin)="<<fabs(freqMax-freqMin)<<endl;
   // make a cube model if the model is a cube already
   if(modimage.shape()(freqAxis) >1){
     // model image is a cube...just regrid it then
@@ -5936,7 +5937,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     // scale the image
     if(freqscale.nelements() > 0){
       Int midchan = freqArray.nelements()/2;
-      Int mytestint = 5;
       if(modimage.shape()(freqAxis) == 1){
 	//     IPosition blc(imshape.nelements(), 0);
         //IPosition trc = imshape - 1;
