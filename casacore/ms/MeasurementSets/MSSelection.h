@@ -307,6 +307,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // selected DDIDs would be an intersection of the DDIDs selected
     // from polarization and SPW expressions parsing (see
     // getDDIDList() above).
+    //
+    // The actual DDIDs selected will be an intersection of the lists
+    // from getDDIDList() and getSPWDDIDList() (which can be generated
+    // using the set_intersection(Vector<Int>&, Vector<Int>&) global
+    // method in MSSelectionTool.{cc,h}).
     inline Vector<Int> getSPWDDIDList(const MeasurementSet* ms=NULL) 
     {if (spwDDIDs_p.nelements() <= 0) getTEN(ms); return spwDDIDs_p;}
 
