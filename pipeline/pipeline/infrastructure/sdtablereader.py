@@ -374,6 +374,7 @@ class ScantableReaderFromMS(ScantableReader):
                         rest_frequencies.extend(ts.getcell('REST_FREQUENCY',i))
                 rest_frequencies = numpy.unique(rest_frequencies)
                 spectral_window[spw].rest_frequencies = rest_frequencies
+                ts.close()
 
         keys = spectral_window.keys()
         for spw in keys:
