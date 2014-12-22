@@ -292,6 +292,9 @@ public:
   // Specific specify() that performs position switch sky calibration
   virtual void specify(const Record& specify);
 
+private:
+  String configureSelection();
+
 };
   
 class SingleDishRasterCal : public SingleDishSkyCal 
@@ -308,6 +311,9 @@ public:
   // Specific specify() that performs raster sky calibration
   virtual void specify(const Record& specify);
 
+private:
+  String configureSelection(const Record &specify);
+  void parseOption(const Record &option, Float &fraction, Int &num);
 };
 
 class SingleDishOtfCal : public SingleDishSkyCal 

@@ -28,6 +28,7 @@
 //# Includes
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
@@ -166,6 +167,177 @@ private:
   FloatDataColumnAccessor() {}
   casa::ROArrayColumn<casa::Float> dataCol_;
 };
+
+inline  casa::Int nominalDataDesc(casa::String const &msName, casa::Int const ant)
+{
+  casa::Int goodDataDesc = -1;
+  casa::MeasurementSet ms(msName);
+  casa::ROScalarColumn<casa::Int> col(ms.spectralWindow(), "NUM_CHAN");
+  casa::Vector<casa::Int> nchanList = col.getColumn();
+  size_t numSpw = col.nrow();
+  casa::Vector<casa::Int> spwMap(numSpw);
+  col.attach(ms.dataDescription(), "SPECTRAL_WINDOW_ID");
+  for (size_t i = 0; i < col.nrow(); ++i) {
+    spwMap[col(i)] = i;
+  }
+  casa::ROScalarColumn<casa::String> obsModeCol(ms.state(), "OBS_MODE");
+  casa::Regex regex("^OBSERVE_TARGET#ON_SOURCE");
+  for (size_t ispw = 0; ispw < numSpw; ++ispw) {
+    if (nchanList[ispw] == 4) {
+      // this should be WVR
+      continue;
+    }
+    else {
+      std::ostringstream oss;
+      oss << "SELECT FROM $1 WHERE ANTENNA1 == " << ant
+	  << " && ANTENNA2 == " << ant << " && DATA_DESC_ID == " << spwMap[ispw]
+	  << " ORDER BY STATE_ID";
+      casa::MeasurementSet msSel(casa::tableCommand(oss.str(), ms));
+      col.attach(msSel, "STATE_ID");
+      casa::Vector<casa::Int> stateIdList = col.getColumn();
+      casa::Int previousStateId = -1;
+      for (size_t i = 0; i < msSel.nrow(); ++i) {
+	casa::Int stateId = stateIdList[i];
+	if (stateId != previousStateId) {
+	  casa::String obsmode = obsModeCol(stateId);
+	  if (regex.match(obsmode.c_str(), obsmode.size()) != casa::String::npos) {
+	    goodDataDesc = spwMap[ispw];
+	    break;
+	  }
+	}
+	previousStateId = stateId;
+      }
+    }
+
+    if (goodDataDesc >= 0)
+      break;
+  }
+  return goodDataDesc;
+}
+
+inline casa::Vector<casa::Int> detectGap(casa::Vector<casa::Double> timeList)
+{
+  size_t n = timeList.size();
+  casa::Vector<casa::Double> timeInterval = timeList(casa::Slice(1, n-1)) - timeList(casa::Slice(0, n-1));
+  casa::Double medianTime = casa::median(timeInterval);
+  casa::Double const threshold = medianTime * 5.0;
+  casa::Vector<casa::Int> gapIndexList(casa::IPosition(1, n/2 + 2), new casa::Int[n/2+2], casa::TAKE_OVER);
+  gapIndexList[0] = 0;
+  size_t gapIndexCount = 1;
+  for (size_t i = 0; i < timeInterval.size(); ++i) {
+    if (timeInterval[i] > threshold) {
+      gapIndexList[gapIndexCount] = i + 1;
+      gapIndexCount++;
+    }
+  }
+  if (gapIndexList[gapIndexCount] != n) {
+    gapIndexList[gapIndexCount] = n;
+    gapIndexCount++;
+  }
+  debuglog << "Detected " << gapIndexCount << " gaps." << debugpost;
+  casa::Vector<casa::Int> ret(casa::IPosition(1, gapIndexCount), gapIndexList.data(), casa::COPY);
+  debuglog << "gapList=" << toString(ret) << debugpost;
+  return ret;
+}
+
+struct DefaultRasterEdgeDetector
+{
+  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
+  {
+    return static_cast<size_t>(sqrt(numData + 1) - 1);
+  }
+};
+
+struct FixedNumberRasterEdgeDetector
+{
+  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
+  {
+    return min(numData, (size_t)num);
+  }
+};
+
+struct FixedFractionRasterEdgeDetector
+{
+  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const num)
+  {
+    return static_cast<size_t>(numData * fraction);
+  }
+};
+
+template<class Detector>
+inline casa::Vector<casa::Double> detectEdge(casa::Vector<casa::Double> timeList, casa::Float const fraction, casa::Int const num)
+{
+  casa::Vector<casa::Double> edgeList(4);
+  size_t numList = timeList.size();
+  size_t numEdge = Detector::N(numList, fraction, num); 
+  if (timeList.size() > numEdge * 2) {
+    edgeList[0] = timeList[0];
+    edgeList[1] = timeList[numEdge];
+    edgeList[2] = timeList[numList-numEdge-1];
+    edgeList[3] = timeList[numList-1];
+  }
+  else {
+    edgeList[0] = timeList[0];
+    edgeList[1] = timeList[numList-1];
+    edgeList[2] = edgeList[0];
+    edgeList[3] = edgeList[2];
+  }
+  return edgeList;
+}
+  
+inline casa::Vector<casa::String> detectRaster(casa::String const &msName,
+					       casa::Int const ant,
+					       casa::Float const fraction,
+					       casa::Int const num)
+{
+  casa::Int dataDesc = nominalDataDesc(msName, ant);
+  assert(dataDesc >= 0);
+  if (dataDesc < 0) {
+    return casa::Vector<casa::String>();
+  }
+
+  std::ostringstream oss;
+  oss << "SELECT FROM " << msName << " WHERE ANTENNA1 == " << ant
+      << " && ANTENNA2 == " << ant << " && FEED1 == 0 && FEED2 == 0"
+      << " && DATA_DESC_ID == " << dataDesc
+      << " ORDER BY TIME";
+  casa::MeasurementSet msSel(casa::tableCommand(oss.str()));
+  casa::ROScalarColumn<casa::Double> timeCol(msSel, "TIME");
+  casa::Vector<casa::Double> timeList = timeCol.getColumn();
+  casa::Vector<casa::Int> gapList = detectGap(timeList);
+  casa::Vector<casa::String> edgeAsTimeRange(gapList.size() * 2);
+  typedef casa::Vector<casa::Double> (*DetectorFunc)(casa::Vector<casa::Double>, casa::Float const, casa::Int const);
+  DetectorFunc func = NULL;
+  if (num > 0) {
+    func = detectEdge<FixedNumberRasterEdgeDetector>;
+  }
+  else if (fraction < 0) {
+    func = detectEdge<DefaultRasterEdgeDetector>;
+  }
+  else {
+    func = detectEdge<FixedFractionRasterEdgeDetector>;
+  }
+  for (size_t i = 0; i < gapList.size()-1; ++i) {
+    casa::Int startRow = gapList[i];
+    casa::Int endRow = gapList[i+1];
+    casa::Int len = endRow - startRow;
+    debuglog << "startRow=" << startRow << ", endRow=" << endRow << debugpost;
+    casa::Vector<casa::Double> oneRow = timeList(casa::Slice(startRow, len));
+    casa::Vector<casa::Double> edgeList = func(oneRow, fraction, num);
+    std::ostringstream s;
+    //s << std::setprecision(16) << "TIME > " << edgeList[0] << " && TIME < " << edgeList[1];
+    s << std::setprecision(16) << "TIME BETWEEN " << edgeList[0] << " AND " << edgeList[1];
+    edgeAsTimeRange[2*i] = s.str();
+    s.str("");
+    //s << std::setprecision(16) << "TIME > " << edgeList[2] << " && TIME < " << edgeList[3];
+    s << std::setprecision(16) << "TIME BETWEEN " << edgeList[2] << " AND " << edgeList[3];
+    edgeAsTimeRange[2*i+1] = s.str();
+    debuglog << "Resulting selection: (" << edgeAsTimeRange[2*i] << ") || ("
+	     << edgeAsTimeRange[2*i+1] << ")" << debugpost;
+  }
+  return edgeAsTimeRange;
+}
+
 }
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -445,8 +617,8 @@ void SingleDishPositionSwitchCal::specify(const Record& specify)
   debuglog << "SingleDishPositionSwitchCal::specify()" << debugpost;
 
   // Pick up OFF spectra using STATE_ID
-  Vector<uInt> stateIdList = getOffStateIdList(msName());
-  String taql = configureTaqlString(msName(), stateIdList);
+  //Vector<uInt> stateIdList = getOffStateIdList(msName());
+  String taql = configureSelection(); //configureTaqlString(msName(), stateIdList);
   debuglog << "taql = \"" << taql << "\"" << debugpost;
   MeasurementSet msSel(tableCommand(taql));
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
@@ -464,6 +636,16 @@ void SingleDishPositionSwitchCal::specify(const Record& specify)
   // update weight without Tsys
   // formula is chanWidth [Hz] * interval [sec]
   updateWeight(*ct_);
+}
+
+String SingleDishPositionSwitchCal::configureSelection()
+{
+  Vector<uInt> stateIdList = getOffStateIdList(msName());
+  std::ostringstream oss;
+  oss << "SELECT FROM " << msName() << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
+      << toString(stateIdList)
+      << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
+  return String(oss.str());  
 }
 
 //
@@ -494,6 +676,84 @@ SingleDishRasterCal::~SingleDishRasterCal()
 void SingleDishRasterCal::specify(const Record& specify)
 {
   debuglog << "SingleDishRasterCal::specify()" << debugpost;
+  // Pick up OFF spectra using raster edge detector
+  String taql = configureSelection(specify);
+  debuglog << "taql = \"" << taql << "\"" << debugpost;
+  
+  MeasurementSet msSel(tableCommand(taql));
+  debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
+  String dataColName = (msSel.tableDesc().isColumn("FLOAT_DATA")) ? "FLOAT_DATA" : "DATA";
+
+  if (msSel.tableDesc().isColumn("FLOAT_DATA")) {
+    traverseMS<FloatDataColumnAccessor>(msSel);
+  }
+  else {
+    traverseMS<DataColumnAccessor>(msSel);
+  }
+
+  assignCTScanField(*ct_, msName());
+
+  // update weight without Tsys
+  // formula is chanWidth [Hz] * interval [sec]
+  updateWeight(*ct_);
+}
+
+String SingleDishRasterCal::configureSelection(const Record &specify)
+{
+  std::ostringstream oss;
+  oss << "SELECT FROM " << msName() << " WHERE ";
+  Float fraction = 0.0f;
+  Int num = -1;
+  parseOption(specify, fraction, num);
+  String delimiter = "";
+  for (Int iant = 0; iant < nAnt(); ++iant) {
+    Vector<String> timeRangeList = detectRaster(msName(), iant, fraction, num);
+    oss << delimiter;
+    oss << "(ANTENNA1 == " << iant << " && ANTENNA2 == " << iant << " && (";
+    String separator = "";
+    for (size_t i = 0; i < timeRangeList.size(); ++i) {
+      if (timeRangeList[i].size() > 0) { 
+    	oss << separator << "(" << timeRangeList[i] << ")";
+    	separator = " || ";
+      }
+    }
+    oss << "))";
+    delimiter = " || ";
+  }
+  oss //<< ")"
+      << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
+  return String(oss);  
+}
+
+void SingleDishRasterCal::parseOption(const Record &option, Float &fraction, Int &num)
+{
+  fraction = -1.0;
+  num = -1;
+  if (option.isDefined("parameter")) {
+    Vector<Double> params = option.asArrayDouble("parameter");
+    size_t numParams = params.size();
+    if (numParams == 0) {
+      fraction = 0.1;
+    }
+    else if (numParams == 1) {
+      num = static_cast<Int>(params[0]);
+    }
+    else if (numParams == 2) {
+      if (params[0] >= 1.0) {
+	num = static_cast<Int>(params[0]);
+      }
+      else {
+	fraction = params[1];
+      }
+    }
+  }
+  else {
+    // set fraction to 10%
+    fraction = 0.1;
+  }
+  debuglog << "OPTION SUMMARY: \n" 
+	   << "   fraction=" << fraction << "\n"
+	   << "   npts=" << num << debugpost;
 }
 
 //
