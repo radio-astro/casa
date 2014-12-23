@@ -273,7 +273,7 @@ class MakeCleanListHeuristics(object):
                     width = str(bandwidth / nchan)
         else:
             nchan = -1
-            width = -1
+            width = ''
 
         return nchan, width
 
