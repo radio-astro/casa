@@ -56,8 +56,7 @@ class Statwt(basetask.StandardTaskTemplate):
                      'minsamp'      : 2,
                      'field'        : '',
                      'spw'          : '',
-                     'datacolumn'   : 'corrected',
-                     'async'        : False}
+                     'datacolumn'   : 'corrected'}
                      
         job = casa_tasks.statwt(**task_args)
             

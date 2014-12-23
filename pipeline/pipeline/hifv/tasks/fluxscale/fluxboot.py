@@ -429,8 +429,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                              'spix'           : result[3],
                              'reffreq'        : str(result[5])+'GHz',
                              'standard'       : 'manual',
-                             'usescratch'     : True,
-                             'async'          : False}
+                             'usescratch'     : True}
         
                 job = casa_tasks.setjy(**task_args)
             
@@ -462,8 +461,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                          'scalebychan'    : True,
                          'fluxdensity'    : -1,
                          'standard'       : 'Perley-Butler 2013',
-                         'usescratch'     : True,
-                         'async'          : False}
+                         'usescratch'     : True}
         
             job = casa_tasks.setjy(**task_args)
             
@@ -503,8 +501,7 @@ class Fluxboot(basetask.StandardTaskTemplate):
                      'gainfield'      : [''],
                      'interp'         : [''],
                      'spwmap'         : [],
-                     'parang'         : False,
-                     'async'          : False}
+                     'parang'         : False}
         
         job = casa_tasks.gaincal(**task_args)
             
