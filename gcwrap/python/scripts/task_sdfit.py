@@ -224,15 +224,27 @@ class sdfit_worker(sdutil.sdtask_template):
 
     def __get_initial_guess(self, scantab, msk, linerange, dbw, irow):
         sp = array(scantab._getspectrum(irow))
+        msk = scantab.get_mask(irow)
+        linerange = [int(chan) for chan in linerange]
         if len(linerange) == 0:
-            data = sp
+            data = ma.masked_array(sp,[ (not val) for val in msk])
+            mx = ma.masked_array(range(len(sp)), data.mask)
         else:
-            data = sp[linerange[0]:linerange[1]+1]
-        maxl = max(data)
-        suml = sum(data)
+            data = ma.masked_array(sp[linerange[0]:linerange[1]+1],
+                                   [ (not msk[idx]) for idx in xrange(linerange[0],linerange[1]+1) ])
+            mx = ma.masked_array(xrange(linerange[0],linerange[1]+1),
+                                 data.mask)
+        maxl = data.max()
+        suml = data.sum()
         fwhm = maxl if maxl==0.0 else 0.7*abs(suml/maxl*dbw)
-        cen = 0.5*sum(linerange[:2]) if len(linerange) > 1 \
-              else scantab.nchan(scantab.getif(irow))/2
+        casalog.post("Calculating initial guess of row=%d, range=[%d, %d]" % (irow, mx.min(), mx.max()), priority='DEBUG')
+        # center of channel range
+        rcen = 0.5*sum(linerange[:2]) if len(linerange) > 1 \
+               else scantab.nchan(scantab.getif(irow))/2
+        # the valid channel closest to rcen
+        #cen = mx[ numpy.where( abs(mx-rcen)==abs(mx-rcen).min() ) ][0]
+        cen = mx[ numpy.where(data==maxl)][0]
+        casalog.post("Initial guess: [max, center, fwhm] = [%f, %d, %f]" % (maxl, cen, fwhm), priority='DEBUG')
         return (maxl,cen,fwhm)
 
     def __update_params(self, ncomps):
