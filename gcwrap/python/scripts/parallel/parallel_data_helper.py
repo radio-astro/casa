@@ -1095,7 +1095,7 @@ class ParallelDataHelper(ParallelTaskHelper):
             spwsel --- a string with spw selection
             
         It returns a dictionary such as:
-            spwsel = "'0,1:10~20"
+            spwsel = '0,1:10~20'
             seldict = {0: {'channels': '', 'spw': '0'}, 
                        1: {'channels': '10~20', 'spw': '1'}}
         """
