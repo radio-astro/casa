@@ -24,8 +24,9 @@ doplot = False
 
 casapath = os.environ['CASAPATH']
 datapath = casapath.split()[0]+'/data/regression/ATST5/OrionS/OrionS_rawACSmod'
-copystring = 'cp -r '+datapath+' .'
-os.system(copystring)
+#copystring = 'cp -r '+datapath+' .'
+#os.system(copystring)
+shutil.copytree(datapath,'OrionS_rawACSmod')
 
 startTime = time.time()
 startProc = time.clock()
