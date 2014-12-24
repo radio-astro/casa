@@ -1127,7 +1127,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
   ixsub=1;
   iysub=1;
   //////***********************DEBUGGING
-  nth=1;
+  //nth=1;
   ////////***************
   if (nth >3){
     ixsub=2;
@@ -1169,7 +1169,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor,  csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for      
+#pragma omp for schedule(static, 1)      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -1240,7 +1240,7 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
     Complex *gridstor=griddedData.getStorage(gridcopy);
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, doWeightGridding, datStorage, wgtStorage, flagstor, rowflagstor, convstor, wconvstor, pmapstor, cmapstor, gridstor, csupp, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, nvp, nvc, nvisrow, phasorstor, locstor, offstor, convrowmapstor, convchanmapstor, convpolmapstor, nPolConv, nChanConv, nConvFunc) shared(sumwgt) num_threads(ixsub*iysub)
     {   
-#pragma omp for      
+#pragma omp for schedule(static, 1)      
       for(icounter=0; icounter < ixsub*iysub; ++icounter){
 	ix= (icounter+1)-((icounter)/ixsub)*ixsub;
 	iy=(icounter)/ixsub+1;
@@ -1316,7 +1316,8 @@ Int x0, y0, nxsub, nysub, ixsub, iysub, icounter, ix, iy;
 
 
 }
-/*
+
+
 void MosaicFT::get(VisBuffer& vb, Int row)
 {
   
@@ -1352,7 +1353,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   }
   
   doUVWRotation_p=True;
-  rotateUVW(uvw, dphase, vb);
+  girarUVW(uvw, dphase, vb);
   refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
   
   
@@ -1450,10 +1451,11 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 #pragma omp for
   for (irow=startRow; irow<=endRow;irow++){
     /////////////////*locateuvw(uvwstor,dpstor, visfreqstor, nvc, scalestor, offsetstor, csamp, 
-	      locstor, 
+    //    locstor, 
 		///////////	      offstor, phasorstor, irow, False);
     //using the fortran version which is significantly faster ...this can account for 10% less overall degridding time
-    locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, offstor, phasorstor, &irow, &dow, &cinv);
+    locuvw(uvwstor, dpstor, visfreqstor, &nvc, scalestor, offsetstor, &csamp, locstor, 
+	   offstor, phasorstor, &irow, &dow, &cinv);
   }  
 
  }//end pragma parallel
@@ -1473,12 +1475,12 @@ void MosaicFT::get(VisBuffer& vb, Int row)
  Array<Complex> conjConvFunc=conj(convFunc);
  const Complex *convstor=conjConvFunc.getStorage(convcopy);
   Int ix=0;
-#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csize, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor, nPolConv, nChanConv, nConvFunc, convrowmapstor, convpolmapstor, convchanmapstor) shared(npart) num_threads(npart)
+#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csize, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor, nPolConv, nChanConv, nConvFunc, convrowmapstor, convpolmapstor, convchanmapstor, npart)  num_threads(npart)
   {
-    #pragma omp for 
+    #pragma omp for schedule(static,1) 
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
-      rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
+      rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)-1+nvisrow%npart) ;
       //cerr << "maps "  << convChanMap_p << "   " << chanMap  << endl;
       //cerr << "nchan " << nchan << "  nchanconv " << nChanConv << " npolconv " << nPolConv << " nRowConv " << nConvFunc << endl;
      sectdmos2(
@@ -1518,8 +1520,9 @@ void MosaicFT::get(VisBuffer& vb, Int row)
 
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
-*/
 
+
+/*
 void MosaicFT::get(VisBuffer& vb, Int row)
 {
   
@@ -1601,72 +1604,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   Int nPolConv=convFunc.shape()[2];
   Int nChanConv=convFunc.shape()[3];
   Int nConvFunc=convFunc.shape()(4);
-  /*if(isTiled) {
-    Double invLambdaC=vb.frequency()(0)/C::c;
-    Vector<Double> uvLambda(2);
-    Vector<Int> centerLoc2D(2);
-    centerLoc2D=0;
-    
-    // Loop over all rows
-    for (Int rownr=startRow; rownr<=endRow; rownr++) {
-      
-      // Calculate uvw for this row at the center frequency
-      uvLambda(0)=uvw(0, rownr)*invLambdaC;
-      uvLambda(1)=uvw(1, rownr)*invLambdaC;
-      centerLoc2D=gridder->location(centerLoc2D, uvLambda);
-
-      // Is this point on the grid?
-      if(gridder->onGrid(centerLoc2D)) {
-      
-      // Get the tile
-      Array<Complex>* dataPtr=getDataPointer(centerLoc2D, True);
-      Int aNx=dataPtr->shape()(0);
-      Int aNy=dataPtr->shape()(1);
-      
-      // Now use FORTRAN to do the gridding. Remember to 
-      // ensure that the shape and offsets of the tile are 
-      // accounted for.
-      Bool del;
-      Vector<Double> actualOffset(2);
-      for (Int i=0;i<2;i++) {
-	actualOffset(i)=uvOffset(i)-Double(offsetLoc(i));
-      }
-      //      IPosition s(data.shape());
-      const IPosition& fs=data.shape();
-      std::vector<Int> s(fs.begin(), fs.end());
-
-      dmos2(uvw.getStorage(del),
-	     dphase.getStorage(del),
-	     datStorage,
-	     &s[0],
-	     &s[1],
-	     flags.getStorage(del),
-	     rowFlags.getStorage(del),
-	     &s[2],
-	     &rownr,
-	     uvScale.getStorage(del),
-	     actualOffset.getStorage(del),
-	     dataPtr->getStorage(del),
-	     &aNx,
-	     &aNy,
-	     &npol,
-	     &nchan,
-	     interpVisFreq_p.getStorage(del),
-	     &C::c,
-	     &convSupport,
-	     &convSize,
-	     &convSampling,
-	     convFunc.getStorage(del),
-	     chanMap.getStorage(del),
-	     polMap.getStorage(del),
-	     convRowMap_p.getStorage(del),convChanMap_p.getStorage(del),
-	     convPolMap_p.getStorage(del),
-	     &nConvFunc, &nChanConv, &nPolConv);
-      }
-    }
-  }
-
-  else */
+ 
   {
     Bool del;
      Bool uvwcopy; 
@@ -1717,7 +1655,7 @@ void MosaicFT::get(VisBuffer& vb, Int row)
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 
-
+*/
 
 
 // Finalize the FFT to the Sky. Here we actually do the FFT and
