@@ -36,7 +36,9 @@
 #include <images/Regions/RegionManager.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
+#include <imageanalysis/ImageAnalysis/CasaImageBeamSet.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
@@ -437,6 +439,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+
   void SDMaskHandler::regionTextToImageRegion(const String& text, const ImageInterface<Float>& regionImage,
                                             ImageRegion*& imageRegion)
   {
@@ -675,38 +678,200 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SDMaskHandler::autoMask(CountedPtr<SIImageStore> imstore, String alg) 
+  void SDMaskHandler::autoMask(CountedPtr<SIImageStore> imstore, 
+                               const String& alg, 
+                               const String& threshold, 
+                               const Float& fracofpeak, 
+                               const String& resolution) 
   {
     LogIO os( LogOrigin("SDMaskHandler","autoMask",WHERE) );
     
+    cerr<<"alg="<<alg<<endl;
     TempImage<Float>* tempres = new TempImage<Float>(imstore->residual()->shape(), imstore->residual()->coordinates()); 
     Array<Float> resdata;
     Array<Float> maskdata;
     imstore->residual()->get(resdata);
     tempres->put(resdata);
     TempImage<Float>* tempmask = new TempImage<Float>(imstore->mask()->shape(), imstore->mask()->coordinates());
+    // get current mask
     imstore->mask()->get(maskdata);
+    String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
 
+    //input 
+    Quantity qthresh(0,"");
+    Quantity qreso(0,"");
+    Quantity::read(qreso,resolution);
+    cerr<<"input resolution="<<resolution<<" qreso.getValue()="<<qreso.getValue()<<endl;
+    Float sigma;
+    // if fracofpeak (fraction of a peak) is specified, use it to set a threshold
+    if ( fracofpeak != 0.0 ) {
+      if (fracofpeak > 1.0 )
+         throw(AipsError("Fracofpeak must be < 1.0"));
+      sigma = 0.0;
+    }
+    else if(Quantity::read(qthresh,threshold) ) {
+      // evaluate threshold input 
+      cerr<<"qthresh="<<qthresh.get().getValue()<<" unit="<<qthresh.getUnit()<<endl;
+      if (qthresh.getUnit()!="") {
+        // use qthresh and set sigma =0.0 to ignore
+        sigma = 0.0;
+      }
+      else {
+        sigma = String::toFloat(threshold);
+        if (sigma==0.0) {
+            // default case: threshold, fracofpeak unset => use default (3sigma)
+            sigma = 3.0; // defalut 3sigma
+        }
+      }
+    }
+    else {
+      if (!sigma) {
+        throw(AipsError("Unrecognized automask threshold="+threshold));
+      }
+    }
+       
     //do statistics
     std::tr1::shared_ptr<casa::ImageInterface<float> > tempres_ptr(tempres);
+    cerr<<"maskname="<<maskname<<endl;
+    ImageRegion *imReg = ImageRegion::fromLatticeExpression(maskname+" ==1.0"); 
+    TableRecord tempRec = imReg->toRecord("");
+    //Record *regRec=0;
+    //regRec->assign(tempRec);
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     Vector<Int> axes(2);
     axes[0] = 0;
     axes[1] = 1;
     imcalc.setAxes(axes);
     Record thestats = imcalc.statistics();
-    Array<Double> max, min;
+    Array<Double> max, min, rms;
     thestats.get(RecordFieldId("max"), max);
-    //cerr<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<endl;
+    thestats.get(RecordFieldId("rms"), rms);
+    cerr<<"Stats -- rms.nelements()="<<rms.nelements()<<" rms(0)="<<rms[0]<<endl;
+    cerr<<"Stats -- max.nelements()="<<max.nelements()<<" max(0)="<<max[0]<<endl;
     if (alg==String("")) {
       makeAutoMask(imstore);
     }
-
+    else if (alg==String("thresh")) {
+      autoMaskByThreshold(*tempmask, *tempres, qreso, qthresh, fracofpeak, thestats, sigma);
+      cerr<<" automaskbyThreshold...."<<endl;
+      tempmask->get(maskdata);
+      imstore->mask()->put(maskdata);
+    } 
     delete tempmask; tempmask=0;
   }
 
+  void SDMaskHandler::autoMaskByThreshold(ImageInterface<Float>& mask,
+                                          const ImageInterface<Float>& res, 
+                                          const Quantity& resolution, 
+                                          const Quantity& qthresh, 
+                                          const Float& fracofpeak,
+                                          const Record& stats, 
+                                          const Float& sigma) 
+  {
+    LogIO os( LogOrigin("SDMaskHandler","autoMaskByThreshold",WHERE) );
+     Array<Double> rms, max;
+     Double thresh, rmsthresh, maxval;
+     Int npix;
+     // taking account for beam or input resolution
+     TempImage<Float> tempmask(mask.shape(), mask.coordinates());
+     CoordinateSystem incsys = res.coordinates();
+     Vector<Double> incVal = incsys.increment(); 
+     Vector<String> incUnit = incsys.worldAxisUnits();
+     Quantity qinc(incVal[0],incUnit[0]);
+     if (resolution.get().getValue() ) {
+       cerr<<"resolution="<<resolution.get().getValue()<<" unit="<<resolution.getUnit()<<endl;
+       cerr<<"qinc="<<qinc.get().getValue()<<" unit="<<qinc.getUnit()<<endl;
+       cerr<<"qinc in res unit="<<(qinc.convert(resolution.get().getUnit()),resolution)<<endl;
+       cerr<<" reso / qinc = "<< resolution.get().getValue() / qinc.getValue(resolution.get().getUnit()) ;
+       //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
+       npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
+       cerr<<"npix now="<<npix<<endl;
+     }
+     else {
+       ImageInfo resInfo = res.imageInfo();
+       if (resInfo.hasBeam()) {
+         GaussianBeam beam;
+         if (resInfo.hasSingleBeam()) {
+           beam = resInfo.restoringBeam();  
+         }
+         else {
+           //ImageBeamSet multiBeams = resINfo.getBeamSet();
+           beam = CasaImageBeamSet(resInfo.getBeamSet()).getCommonBeam(); 
+         }
+         Quantity bmaj = beam.getMajor();
+         npix = 2*Int( abs( (bmaj/(qinc.convert(bmaj),bmaj)).get().getValue() ) );
+       }
+       else {
+          throw(AipsError("No restoring beam(s) in the input image or resolution is given"));
+       }
+     }
+     cerr<<"npix="<<npix<<endl;
+     if (npix==0) {
+       os << "Resolution too small. No binning (nbin=1)  is applied input image to evaluate the threshold." << LogIO::POST;
+       npix=1;
+     }
+     RebinImage<Float> tempRebinnedIm( res, IPosition(4,npix,npix,1,1) );
+     PagedImage<Float> temprebincopy(TiledShape(tempRebinnedIm.shape()),tempRebinnedIm.coordinates(), String("mytemp_rebinim"));
+     temprebincopy.copyData(tempRebinnedIm);
 
+     // Determine threshold 
+     Double minval;
+     if (fracofpeak) {
+       stats.get(RecordFieldId("max"), max);
+       minMax(minval,maxval,max);
+       cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+       rmsthresh = maxval * fracofpeak; 
+     }
+     else if (sigma) {
+       stats.get(RecordFieldId("rms"), rms);
+       minMax(minval,maxval,rms); 
+       cerr<<"minval="<<minval<<" maxval="<<maxval<<endl;
+       rmsthresh = maxval * sigma;
+     }      
+     else {
+       rmsthresh = qthresh.getValue(Unit("Jy"));
+       if ( rmsthresh==0.0 ) 
+         { throw(AipsError("Threshold for automask is not set"));}
+     }
+     cerr<<"sigma="<<sigma<<" rmsthresh="<<rmsthresh<<endl;
+
+     thresh = rmsthresh / sqrt(npix);
+     cerr<<" thresh="<<thresh<<endl;
+     // apply threshold to rebinned image to generate a temp image mask
+     LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );
+     TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
+     tempthreshIm.copyData(tempthresh);
+     PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
+     tempthreshimcopy.copyData(tempthreshIm);
+     ImageRegrid<Float> tempRegridIm; 
+     Vector<Int> axes(2); 
+     axes(0)=0; axes(1)=1;
+     TempImage<Float> tempIm2(res.shape(), res.coordinates() );
+     TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
+     std::tr1::shared_ptr<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
+     // regrid 
+     tempRegridIm.regrid(tempIm2, Interpolate2D::LINEAR, axes, tempthreshIm); 
+     PagedImage<Float> tempregridimcopy(TiledShape(tempIm2.shape()),tempIm2.coordinates(), String("mytemp_tempim2"));
+     tempregridimcopy.copyData(tempIm2);
+     // convolve to a beam = npix
+     Vector<Quantity> convbeam(3);
+     convbeam[0] = Quantity(npix, "pix");
+     convbeam[1] = Quantity(npix, "pix");
+     convbeam[2] = Quantity(0.0, "deg");
+     Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
+     PagedImage<Float> tempconvimcopy(TiledShape(tempIm3->shape()),tempIm3->coordinates(), String("mytemp_tempconvim"));
+     tempconvimcopy.copyData(*tempIm3_ptr);
+
+     // fudge factor?  
+     Float afactor = 2.0;
+     cerr<<"thresh/afactor="<<thresh/afactor<<endl;
+     LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
+     PagedImage<Float> tempimcopy(TiledShape(mask.shape()),mask.coordinates(), String("mytemp_finalim"));
+     tempimcopy.copyData(themask);
+     mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
+  }
+  
   void SDMaskHandler::makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit)
   {
     LogIO os( LogOrigin("SDMaskHandler","makeAutoMask",WHERE) );

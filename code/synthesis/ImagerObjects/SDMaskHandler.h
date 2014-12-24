@@ -99,9 +99,21 @@ public:
   // Return a reference to an imageinterface for the mask.
   void makeAutoMask(CountedPtr<SIImageStore> imstore);
   // Top level autoMask interface...
-  void autoMask(CountedPtr<SIImageStore> imstore, String alg="");
+  void autoMask(CountedPtr<SIImageStore> imstore, 
+                const String& alg="",
+                const String& threshold="",
+                const Float& fracpeak=0.0,
+                const String& resolution="");
   // automask algorithms...  
-  void autoMaskByThreshold();
+  void autoMaskByThreshold (ImageInterface<Float>& mask,
+                           const ImageInterface<Float>& res, 
+                           const Quantity& resolution, 
+                           const Quantity& qthreshold, 
+                           const Float& fracofpeak, 
+                           const Record& theStats,
+                           const Float& sigma=3.0);
+                           
+
 
   void makePBMask(CountedPtr<SIImageStore> imstore, Float weightlimit);
 
