@@ -49,9 +49,11 @@ def context_manager_factory(tool):
     def f(filename):
         LOG.trace('%s tool: opening \'%s\'' % (tool_name, filename))
         tool.open(filename)
-        yield tool
-        LOG.trace('%s tool: closing \'%s\'' % (tool_name, filename))
-        tool.close()
+        try:
+            yield tool
+        finally:
+            LOG.trace('%s tool: closing \'%s\'' % (tool_name, filename))
+            tool.close()
     return f
 
 # context manager for CASA table tool
