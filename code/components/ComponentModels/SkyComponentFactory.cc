@@ -29,6 +29,7 @@
 #include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <components/ComponentModels/ComponentType.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/ImageUtilities.h>
 
 namespace casa { 

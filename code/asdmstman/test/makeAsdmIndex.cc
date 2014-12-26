@@ -9,7 +9,7 @@
 #include <asdmstman/AsdmIndex.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/DataManAccessor.h>
+#include <tables/DataMan/DataManAccessor.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayUtil.h>

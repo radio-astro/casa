@@ -54,7 +54,7 @@ namespace casa {
 		bool isTemporaryOutput() const {
 			return temporary;
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > getImage() const {
+		CountedPtr<ImageInterface<Float> > getImage() const {
 			return image;
 		}
 
@@ -62,7 +62,7 @@ namespace casa {
 		String outputFileName;
 		bool temporary;
 
-		std::tr1::shared_ptr<ImageInterface<Float> > image;
+		CountedPtr<ImageInterface<Float> > image;
 	};
 
 

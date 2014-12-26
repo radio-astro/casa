@@ -20,6 +20,7 @@ using namespace sdmbin;
 #include <NetSideband.h>
 #include <PrimitiveDataType.h>
 #include <CalibrationDevice.h>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace sdmbin {
 
@@ -2670,7 +2671,7 @@ namespace sdmbin {
     return getNextMSMainCols( e_qcm, es_qapc, nDataSubset);
   }
 
-  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp) {
+  void SDMBinData::getNextMSMainCols(unsigned int nDataSubset, casa::CountedPtr<VMSDataWithSharedPtr>& vmsData_p_sp) {
     Enum<CorrelationMode>       e_qcm;
     EnumSet<AtmPhaseCorrection> es_qapc;
     if(canSelect_){
@@ -2832,7 +2833,7 @@ namespace sdmbin {
     return vmsDataPtr_;
   }
 
-  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
+  void  SDMBinData::getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int nDataSubset,  casa::CountedPtr<VMSDataWithSharedPtr>& vmsData_p_sp ) {
     if (verbose_) cout << "SDMBinData::getNextMSMainCols (with VMSDataSharedPtr) : entering" << endl;
 
     VMSDataWithSharedPtr* vmsData_p = vmsData_p_sp.get();

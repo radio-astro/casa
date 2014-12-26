@@ -41,11 +41,11 @@
 #include <display/DisplayDatas/MSAsRaster.h>
 #include <casadbus/types/nullptr.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 // sometimes (?) gcc fails to instantiate this function, so this
 // explicit instantiation request may be necessary... <drs>
-// template bool casa::memory::operator==(casa::std::tr1::shared_ptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
+// template bool casa::memory::operator==(casa::CountedPtr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -152,7 +152,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// return;
 		}
 
-		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+		CountedPtr<viewer::Region> creation(viewer::Region::creatingRegion( ));
 		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			rectanglelist processing = rectangles;
@@ -810,7 +810,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			try {
 				if ( ! padd->conformsTo(*itsCurrentWC) ) continue;
 
-				std::tr1::shared_ptr<ImageInterface<Float> > image = padd->imageinterface( );
+				CountedPtr<ImageInterface<Float> > image = padd->imageinterface( );
 
 				if ( image == 0 ) continue;
 
@@ -890,12 +890,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
+	CountedPtr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID * ) const {
 		////// this is the code we would like to use (removing the "region source"), but currently the profile tool
 		////// queues off of events from the region source...
 		// viewer::Rectangle *result = new viewer::Rectangle( wc, dock_, x1, y1, x2, y2, true );
 		// result->releaseSignals( );
-		// return std::tr1::shared_ptr<viewer::Rectangle>(result);
+		// return CountedPtr<viewer::Rectangle>(result);
 		return rfactory->rectangle( wc, x1, y1, x2, y2 );
 	}
 
@@ -925,7 +925,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if ( pts.size( ) != 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-		std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second, region_specific_state );
+		CountedPtr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second, region_specific_state );
 		result->setLabel( label );
 		result->setLabelPosition( label_pos );
 		result->setLabelDelta( label_off );
@@ -963,7 +963,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
-		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		viewer::Region::creatingRegionBegin(dynamic_pointer_cast<viewer::Region>(creating_region));
 		rectangles.push_back( resizing_region );
 
 		if ( type( ) != POINTTOOL )

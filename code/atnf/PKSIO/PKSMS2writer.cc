@@ -44,13 +44,13 @@
 #include <casa/Logging/LogIO.h>
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 
 // Class name
 const string className = "PKSMS2writer" ;

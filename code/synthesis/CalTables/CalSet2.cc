@@ -84,7 +84,8 @@ void smooth(CalSet<Complex>& cs,
       // Do all fields present, if none explicitly specificed
       if (nFld==0) {
 	selfields=fields;
-	nFld=genSort(selfields,(Sort::QuickSort | Sort::NoDuplicates));
+	nFld=genSort(selfields,Sort::Ascending,
+                     (Sort::QuickSort | Sort::NoDuplicates));
 	selfields.resize(nFld,True);
       }
 

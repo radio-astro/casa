@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <casa/Containers/Record.h>
 #include <casa/OS/Path.h>
 #include <casa/Utilities/Sort.h>

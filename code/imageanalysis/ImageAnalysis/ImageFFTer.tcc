@@ -2,7 +2,7 @@
 
 #include <stdcasa/cboost_foreach.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 

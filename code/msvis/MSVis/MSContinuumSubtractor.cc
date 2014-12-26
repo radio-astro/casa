@@ -46,7 +46,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 //#include <casa/iomanip.h>
 #include <casa/iostream.h>
 

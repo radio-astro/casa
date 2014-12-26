@@ -32,7 +32,7 @@
 
 #include <casa/aips.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 

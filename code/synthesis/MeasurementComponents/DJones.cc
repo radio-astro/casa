@@ -38,7 +38,7 @@
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>
 #include <casa/BasicMath/Math.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MaskArrMath.h>
@@ -1502,7 +1502,7 @@ void GlinXphJones::solveOneVB(const VisBuffer& vb) {
 
   // Find number of timestamps in the VB
   Vector<uInt> ord;
-  Int nTime=genSort(ord,vb.time(),Sort::NoDuplicates);
+  Int nTime=genSort(ord,vb.time(),Sort::Ascending,Sort::NoDuplicates);
 
   Matrix<Double> x(nTime,nChan,0.0),y(nTime,nChan,0.0),wt(nTime,nChan,0.0),sig(nTime,nChan,0.0);
   Matrix<Bool> mask(nTime,nChan,False);

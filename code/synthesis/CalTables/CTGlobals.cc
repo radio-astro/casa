@@ -188,7 +188,8 @@ void assignCTScanField(NewCalTable& ct, String msName,
   // How many scans in total?
   ROTableVector<Int> allscansTV(mstab,"SCAN_NUMBER");
   Vector<Int> allscans=allscansTV.makeVector();
-  Int nScan=genSort(allscans,(Sort::QuickSort | Sort::NoDuplicates));
+  Int nScan=genSort(allscans,Sort::Ascending,
+                    (Sort::QuickSort | Sort::NoDuplicates));
 
   //  cout << "Found " << nScan << " scans in " << msName << "." << endl;
 

@@ -34,7 +34,7 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 

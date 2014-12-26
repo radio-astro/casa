@@ -2,7 +2,7 @@
 #include <synthesis/MSVis/UtilJ.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 
 
 #include <cmath>

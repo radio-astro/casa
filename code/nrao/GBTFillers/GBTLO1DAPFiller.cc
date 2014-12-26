@@ -34,7 +34,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicMath/Math.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 

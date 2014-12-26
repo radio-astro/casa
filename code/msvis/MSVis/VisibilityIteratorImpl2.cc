@@ -50,11 +50,11 @@
 #include <msvis/MSVis/VisModelDataI.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/IncrStManAccessor.h>
-#include <tables/Tables/StandardStManAccessor.h>
+#include <tables/DataMan/IncrStManAccessor.h>
+#include <tables/DataMan/StandardStManAccessor.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 
 #include <cassert>
 #include <algorithm>
@@ -821,7 +821,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   more_p (False),
   msIndex_p (0),
   msIterAtOrigin_p (False),
-  msIter_p (0),
+  msIter_p (),
   nCorrelations_p (-1),
   nRowBlocking_p (0),
   observatoryFrame_p (VisBuffer2::FrameNotSpecified),
@@ -833,7 +833,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   timeInterval_p (timeInterval),
   vb_p (0),
   vi_p (0),
-  weightScaling_p (0),
+  weightScaling_p (),
   writable_p (writable)
 {
     // Make sure the pointer to the containing ROVI (vi_p) is NULL when calling initialize

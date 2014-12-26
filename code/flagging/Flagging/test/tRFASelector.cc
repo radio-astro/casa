@@ -3,7 +3,7 @@
 #include <msvis/MSVis/VisSet.h>
 #include <measures/Measures/Stokes.h>
 
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 
 #include <casa/aips.h>
 #include <casa/namespace.h>

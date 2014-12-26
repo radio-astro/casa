@@ -45,14 +45,14 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/MVAngle.h>
 
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <tables/Tables/TableRecord.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MeasTable.h>

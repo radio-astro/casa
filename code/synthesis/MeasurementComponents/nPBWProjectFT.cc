@@ -150,7 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Bool usezero)
     : FTMachine(), padding_p(1.0), nWPlanes_p(nWPlanes),
       imageCache(0), cachesize(icachesize), tilesize(itilesize),
-      gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
+      gridder(0), isTiled(False), arrayLattice(), lattice(), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       mspc(0), msac(0), pointingToImage(0), usezero_p(usezero),
       doPBCorrection(doPBCorr),

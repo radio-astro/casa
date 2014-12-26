@@ -29,21 +29,21 @@
 
 #include <casa/aipstype.h>
 #include <casa/BasicSL/Complexfwd.h>
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
-#define SPIIT std::tr1::shared_ptr<casa::ImageInterface<T> >
-#define SPCIIT std::tr1::shared_ptr<const casa::ImageInterface<T> >
+#define SPIIT CountedPtr<casa::ImageInterface<T> >
+#define SPCIIT CountedPtr<const casa::ImageInterface<T> >
 
-#define SPIIU std::tr1::shared_ptr<casa::ImageInterface<U> >
-#define SPCIIU std::tr1::shared_ptr<const casa::ImageInterface<U> >
+#define SPIIU CountedPtr<casa::ImageInterface<U> >
+#define SPCIIU CountedPtr<const casa::ImageInterface<U> >
 
 namespace casa {
 	template<class T> class ImageInterface;
 
-	typedef std::tr1::shared_ptr<const ImageInterface<Float> > SPCIIF;
-	typedef std::tr1::shared_ptr<ImageInterface<Float> > SPIIF;
-	typedef std::tr1::shared_ptr<const ImageInterface<Complex> > SPCIIC;
-	typedef std::tr1::shared_ptr<ImageInterface<Complex> > SPIIC;
+	typedef CountedPtr<const ImageInterface<Float> > SPCIIF;
+	typedef CountedPtr<ImageInterface<Float> > SPIIF;
+	typedef CountedPtr<const ImageInterface<Complex> > SPCIIC;
+	typedef CountedPtr<ImageInterface<Complex> > SPIIC;
 }
 
 #endif

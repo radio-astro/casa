@@ -290,7 +290,7 @@ void SDGrid::init() {
     Double val, x;
     for (Int i = 0 ; i <= itruncate ; i++) {
       x = Double(i)/Double(convSampling);
-      grdgauss(&hwhm, &x, &val);
+      ///      grdgauss(&hwhm, &x, &val);
       convFunc(i)=val;
     }
 
@@ -325,8 +325,8 @@ void SDGrid::init() {
       for (Int i = 0 ; i < itruncate ; i++) {
         x = Double(i) / Double(convSampling);
         //r = Double(i) / (Double(hwhm)*Double(convSampling));
-        grdgauss(&hwhm, &x, &val1);
-        grdjinc1(&c, &x, &normalize, &val2);
+        ///        grdgauss(&hwhm, &x, &val1);
+        ///        grdjinc1(&c, &x, &normalize, &val2);
         convFunc(i) = val1 * val2;
       }
     }
@@ -335,12 +335,12 @@ void SDGrid::init() {
       for (Int i=0;i<convSize;i++) {
         x = Double(i) / Double(convSampling);
         //r = Double(i) / (Double(hwhm)*Double(convSampling));
-        grdjinc1(&c, &x, &normalize, &val2);
+        ///grdjinc1(&c, &x, &normalize, &val2);
         if (val2 <= 0.0) {
           logIO() << LogIO::DEBUG1 << "convFunc is automatically truncated at radius " << x << LogIO::POST;
           break;
         }
-        grdgauss(&hwhm, &x, &val1);
+        ///        grdgauss(&hwhm, &x, &val1);
         convFunc(i) = val1 * val2;
       }
     }

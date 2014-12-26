@@ -47,9 +47,9 @@
 #include <tables/Tables/ScaRecordColData.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
+#include <tables/DataMan/StManAipsIO.h>
+#include <tables/TaQL/ExprNode.h>
+#include <tables/TaQL/ExprNodeSet.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>

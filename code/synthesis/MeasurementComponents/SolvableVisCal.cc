@@ -5141,7 +5141,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
   ROCTMainColumns mcols(*ct_);
   Vector<Int> fldList;
   mcols.fieldId().getColumn(fldList);
-  Int nFldList=genSort(fldList,(Sort::QuickSort | Sort::NoDuplicates));
+  Int nFldList=genSort(fldList,Sort::Ascending,
+                       (Sort::QuickSort | Sort::NoDuplicates));
   fldList.resize(nFldList,True);
 
   Int nFld=max(fldList)+1;
@@ -5169,8 +5170,10 @@ void SolvableVisJones::fluxscale(const String& outfile,
     Vector<Int> refField; refField = refFieldIn;
     Vector<Int> tranField; tranField = tranFieldIn;
     Int nRef,nTran;
-    nRef=genSort(refField,(Sort::QuickSort | Sort::NoDuplicates));
-    nTran=genSort(tranField,(Sort::QuickSort | Sort::NoDuplicates));
+    nRef=genSort(refField,Sort::Ascending,
+                 (Sort::QuickSort | Sort::NoDuplicates));
+    nTran=genSort(tranField,Sort::Ascending,
+                  (Sort::QuickSort | Sort::NoDuplicates));
 
     // make masks for ref/tran among available fields
     Vector<Bool> tranmask(nFldList,True);
@@ -5349,7 +5352,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
         ROCTMainColumns ctmc(selct);
         selTime=ctmc.time().getColumn();
         deselAntList=ctmc.antenna1().getColumn();
-	Int ndeselAnt=genSort(deselAntList,(Sort::QuickSort | Sort::NoDuplicates));
+	Int ndeselAnt=genSort(deselAntList,Sort::Ascending,
+                              (Sort::QuickSort | Sort::NoDuplicates));
 	deselAntList.resize(ndeselAnt,True);
       }
     }         
@@ -5420,7 +5424,8 @@ void SolvableVisJones::fluxscale(const String& outfile,
           // successful selection for the data and use it for the rest of the process.
           if (antSel!="" && firstpass) {
             Vector<Int> selantlist=ctmc.antenna1().getColumn();
-	    Int nSelAnt=genSort(selantlist,(Sort::QuickSort | Sort::NoDuplicates));
+	    Int nSelAnt=genSort(selantlist,Sort::Ascending,
+                                (Sort::QuickSort | Sort::NoDuplicates));
 	    selantlist.resize(nSelAnt,True);
             selAntList=selantlist;
             //cerr<<"selantlist.nelements()="<<selantlist.nelements()<<endl;
@@ -6495,7 +6500,8 @@ void SolvableVisJones::listCal(const Vector<Int> ufldids,
 
 	    Vector<Int> fldids;
 	    fldids=ctiter.field();
-	    Int nUniqFlds=genSort(fldids,(Sort::QuickSort | Sort::NoDuplicates));
+	    Int nUniqFlds=genSort(fldids,Sort::Ascending,
+                                  (Sort::QuickSort | Sort::NoDuplicates));
 	    fldids.resize(nUniqFlds,True);  // shrink the Vector
 
 	    for (Int ifld=0;ifld<nUniqFlds;++ifld) {

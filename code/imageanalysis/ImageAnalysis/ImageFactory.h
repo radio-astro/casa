@@ -109,14 +109,14 @@ public:
 
     // Create a float-valued image from a complex-valued image. All metadata is copied
     // and pixel values are initialized according to <src>func</src>.
-    static std::tr1::shared_ptr<TempImage<Float> > floatFromComplex(
+    static CountedPtr<TempImage<Float> > floatFromComplex(
     	SPCIIC complexImage, ComplexToFloatFunction func
     );
 
     // Create a complex-valued image from a float-valued image (real part)
     // and float-valued array (imaginary part). All metadata is copied from the
     // real image and pixel values are initialized to real + i*complex
-    static std::tr1::shared_ptr<TempImage<Complex> > complexFromFloat(
+    static CountedPtr<TempImage<Complex> > complexFromFloat(
     	SPCIIF realPart, const Array<Float>& imagPart
     );
 

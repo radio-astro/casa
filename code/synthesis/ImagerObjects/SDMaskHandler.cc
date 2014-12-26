@@ -428,7 +428,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     if(imageRegRec !=0){
     //if(imageRegRec.nfields() !=0){
-      ImageRegion::tweakedRegionRecord(imageRegRec);
+      //ImageRegion::tweakedRegionRecord(imageRegRec);
       //ImageRegion::tweakedRegionRecord(&imageRegRec);
       TableRecord rec1;
       rec1.assign(*imageRegRec);

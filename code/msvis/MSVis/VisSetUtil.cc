@@ -39,12 +39,12 @@
 
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledDataStManAccessor.h>
-#include <tables/Tables/CompressComplex.h>
-#include <tables/Tables/CompressFloat.h>
+#include <tables/DataMan/TiledDataStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
+#include <tables/DataMan/StandardStMan.h>
+#include <tables/DataMan/TiledDataStManAccessor.h>
+#include <tables/DataMan/CompressComplex.h>
+#include <tables/DataMan/CompressFloat.h>
 
 
 #include <ms/MeasurementSets/MSColumns.h>

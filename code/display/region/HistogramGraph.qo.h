@@ -30,7 +30,7 @@
 #include <QtGui/QWidget>
 #include <display/region/HistogramGraph.ui.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -54,7 +54,7 @@ namespace casa {
 		void initPlot();
 		void setIndex( int stackIndex );
 		void setNextEnabled( bool enabled );
-		void setImage( std::tr1::shared_ptr<ImageInterface<float> > image );
+		void setImage( CountedPtr<ImageInterface<float> > image );
 		void setImageRegion( ImageRegion* region, int id );
 
 	signals:

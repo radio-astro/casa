@@ -27,14 +27,14 @@
 
 
 namespace asdm {
-  const  string DuplicateKey::ITSNAME = "Duplicate key exception: ";
+  const  std::string DuplicateKey::ITSNAME = "Duplicate key exception: ";
   DuplicateKey::DuplicateKey(): message("") { ; }
-  DuplicateKey::DuplicateKey (const string& k, const string& t)  {
+  DuplicateKey::DuplicateKey (const std::string& k, const std::string& t)  {
     message = "cannot insert row with key " + k + " into table " + 
       t + ".  Key already exists.";
   }
   DuplicateKey::~DuplicateKey() { ; }
-  string DuplicateKey::getMessage() const {
+  std::string DuplicateKey::getMessage() const {
     return ITSNAME + message;
   }
 } // end namespace asdm.

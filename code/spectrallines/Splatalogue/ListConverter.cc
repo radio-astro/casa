@@ -36,7 +36,7 @@
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/TableDesc.h>
 
 namespace casa {

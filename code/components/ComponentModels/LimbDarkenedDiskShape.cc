@@ -44,7 +44,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 
-#include <gsl/gsl_sf_bessel.h>
+///#include <gsl/gsl_sf_bessel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -384,7 +384,8 @@ Double LimbDarkenedDiskShape::calcVis(Double u, Double v, const Double factor) c
   //return 2.0 * j1(r)/r;
   // Vi(u,v) for the limb-darkened disk from ALMA memo #594 
   // assume u, v are != 0.0 (in such case Vi(u,v)=Vo, handled in visibility())
-  return pow(C::e,lgamma(eta + 1))*pow(2.0/r,eta)*gsl_sf_bessel_Jnu(eta,r); 
+  ///  return pow(C::e,lgamma(eta + 1))*pow(2.0/r,eta)*gsl_sf_bessel_Jnu(eta,r); 
+  return 0;  ///
 }
 
 

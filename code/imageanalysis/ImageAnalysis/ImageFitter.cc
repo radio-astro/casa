@@ -313,8 +313,8 @@ void ImageFitter::_fitLoop(
 	Bool hasSpectralAxis = csys.hasSpectralAxis();
 	uInt spectralAxisNumber = csys.spectralAxisNumber();
 	Bool outputImages = residualImage || modelImage;
-	std::tr1::shared_ptr<ArrayLattice<Bool> > initMask;
-	std::tr1::shared_ptr<TempImage<Float> > tImage;
+	CountedPtr<ArrayLattice<Bool> > initMask;
+	CountedPtr<TempImage<Float> > tImage;
 	IPosition location(_getImage()->ndim(), 0);
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
 		if (_chanPixNumber >= 0) {
@@ -400,8 +400,8 @@ void ImageFitter::_doConverged(
 	ComponentList& convolvedList, ComponentList& deconvolvedList,
 	Double& zeroLevelOffsetEstimate, std::pair<Int, Int>& pixelOffsets,
 	SPIIF& residualImage, SPIIF& modelImage,
-	std::tr1::shared_ptr<TempImage<Float> >& tImage,
-	std::tr1::shared_ptr<ArrayLattice<Bool> >& initMask,
+	CountedPtr<TempImage<Float> >& tImage,
+	CountedPtr<ArrayLattice<Bool> >& initMask,
 	Double zeroLevelOffsetSolution, Double zeroLevelOffsetError,
 	Bool hasSpectralAxis, Int spectralAxisNumber, Bool outputImages,
 	const IPosition& planeShape, const Array<Float>& pixels,
@@ -435,7 +435,7 @@ void ImageFitter::_doConverged(
 		curResidPixels, curModelPixels, data,
 		pixelOffsets.first, pixelOffsets.second
 	);
-	std::tr1::shared_ptr<TempImage<Float> > fittedResid;
+	CountedPtr<TempImage<Float> > fittedResid;
 	if (outputImages) {
 		if (hasSpectralAxis) {
 			location[spectralAxisNumber] = _curChan - _chanVec[0];
@@ -445,7 +445,7 @@ void ImageFitter::_doConverged(
 		if (modelImage) {
 			modelImage->putSlice(curModelPixels, location);
 		}
-		fittedResid = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
+		fittedResid = dynamic_pointer_cast<TempImage<Float> >(
 			SubImageFactory<Float>::createImage(
 				*residualImage, "", *_getRegion(), _getMask(),
 				False, False, False, False
@@ -1058,12 +1058,12 @@ void ImageFitter::_setDeconvolvedSizes() {
 		Quantity maj = _majorAxes[i];
 		Quantity minor = _minorAxes[i];
 		Quantity pa = _positionAngles[i];
-		std::tr1::shared_ptr<GaussianShape> gaussShape(
+		CountedPtr<GaussianShape> gaussShape(
 			static_cast<GaussianShape *>(
 				_curConvolvedList.getShape(i)->clone()
 			)
 		);
-		std::tr1::shared_ptr<PointShape> point;
+		CountedPtr<PointShape> point;
 		Quantity emaj = _majorAxisErrors[i];
 		Quantity emin = _minorAxisErrors[i];
 		Quantity epa  = _positionAngleErrors[i];

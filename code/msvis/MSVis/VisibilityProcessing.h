@@ -98,19 +98,19 @@ private:
     Int subChunkNumber_p;
 };
 
-class VbPtr : public boost::shared_ptr<casa::VisBuffer> {
+class VbPtr : public CountedPtr<casa::VisBuffer> {
 
 public:
 
-    VbPtr () : boost::shared_ptr<casa::VisBuffer> () {}
-    explicit VbPtr (casa::VisBuffer * vb) : boost::shared_ptr<casa::VisBuffer> (vb) {}
+    VbPtr () : CountedPtr<casa::VisBuffer> () {}
+    explicit VbPtr (casa::VisBuffer * vb) : CountedPtr<casa::VisBuffer> (vb) {}
 
     // Assignment operator setting VbPtr to a normal pointer.  Ownership is passed to the
     // VbPtr so caller must ensure that delete is not called on the VisBuffer.
 
     VbPtr & operator= (casa::VisBuffer * vb)
     {
-        boost::shared_ptr<casa::VisBuffer>::operator= (VbPtr (vb));
+        CountedPtr<casa::VisBuffer>::operator= (VbPtr (vb));
         return * this;
     }
 };

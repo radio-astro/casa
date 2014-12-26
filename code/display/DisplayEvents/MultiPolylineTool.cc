@@ -183,7 +183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+		CountedPtr<viewer::Region> creation(viewer::Region::creatingRegion( ));
 		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			for ( polylinelist::reverse_iterator iter = polylines.rbegin(); iter != polylines.rend(); ++iter ) {
@@ -526,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                bool is_annotation, VOID */*region_specific_state*/ ) {
 		if ( pts.size( ) <= 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-		std::tr1::shared_ptr<viewer::Polyline> result = (rfactory->polyline( wc, pts ));
+		CountedPtr<viewer::Polyline> result = (rfactory->polyline( wc, pts ));
 		result->setLabel( label );
 		result->setLabelPosition( label_pos );
 		result->setLabelDelta( label_off );
@@ -563,7 +563,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 		creating_region = building_polyline = (rfactory->polyline( wc, linx, liny ));
-		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		viewer::Region::creatingRegionBegin(dynamic_pointer_cast<viewer::Region>(creating_region));
 		building_polyline->addVertex(linx,liny);
 		resizing_region_handle = 1;
 		polylines.push_back( building_polyline );

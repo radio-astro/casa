@@ -310,13 +310,13 @@ namespace casa {
 			return result;
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > * Point::generate_dds_centers( ) {
+		std::list<CountedPtr<RegionInfo> > * Point::generate_dds_centers( ) {
 			// In principle there is no need to implement this,
 			// it would go to Rectangle::generate_dds_centers() otherwise
 			// and really try to fit a Gaussian to a point, certainly
 			// without success. Implementing it here as an empty method
 			// just accelerates matters (MK)
-			return new std::list<std::tr1::shared_ptr<RegionInfo> >( );
+			return new std::list<CountedPtr<RegionInfo> >( );
 		}
 
 		bool Point::output_region( ds9writer &out, WorldCanvas *, const std::vector<std::pair<double,double> > &pts ) const {

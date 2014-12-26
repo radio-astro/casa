@@ -34,6 +34,7 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LCBox.h>
+#include <lattices/Lattices/LCSlicer.h>
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/TableRecord.h>
 
@@ -915,7 +916,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 	const CoordinateSystem& csys = getcoordsys();
 	TempImage<Float> x(imShape, csys);
 	x.set(0);
-	std::tr1::shared_ptr<const SubImage<Float> >subimage(
+	CountedPtr<const SubImage<Float> >subimage(
 		new SubImage<Float>(
 			SubImageFactory<Float>::createSubImage(
 				x, *regionRec, "", _getLog(), False,
@@ -924,7 +925,7 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
 		)
 	);
 	ImageMetaData md(
-		std::tr1::dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
+		dynamic_pointer_cast<const ImageInterface<Float> >(subimage)
 	);
 	uInt nChan = md.nChannels();
 	const SpectralCoordinate& subsp = subimage->coordinates().spectralCoordinate();

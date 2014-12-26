@@ -51,12 +51,12 @@ const uInt ImageProfileFitterResults::_lsPlane = 1;
 
 
 ImageProfileFitterResults::ImageProfileFitterResults(
-	const std::tr1::shared_ptr<LogIO> log, const CoordinateSystem& csysIm,
-	const Array<std::tr1::shared_ptr<ProfileFitResults> >* const &fitters, const SpectralList& nonPolyEstimates,
-	const std::tr1::shared_ptr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
+	const CountedPtr<LogIO> log, const CoordinateSystem& csysIm,
+	const Array<CountedPtr<ProfileFitResults> >* const &fitters, const SpectralList& nonPolyEstimates,
+	const CountedPtr<const SubImage<Float> > subImage, Int polyOrder, Int fitAxis,
 	uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
 	uInt nPLPCoeffs, uInt nLTPCoeffs,
-	Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile> logfile,
+	Bool logResults, Bool multiFit, const CountedPtr<LogFile> logfile,
 	const String& xUnit, const String& summaryHeader
 ) : _logResults(logResults), _multiFit(multiFit), _xUnit(xUnit), _summaryHeader(summaryHeader),
 	_nGaussSinglets(nGaussSinglets), _nGaussMultiplets(nGaussMultiplets),
@@ -182,7 +182,7 @@ void ImageProfileFitterResults::_marshalFitResults(
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(*_subImage, stepper);
-	//Array<std::tr1::shared_ptr<ProfileFitResults> >::const_iterator fitter = _fitters->begin();
+	//Array<CountedPtr<ProfileFitResults> >::const_iterator fitter = _fitters->begin();
 	const CoordinateSystem& csysSub = _subImage->coordinates();
 	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
 		? &csysSub.directionCoordinate() : 0;
@@ -197,7 +197,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 		inIter.reset();	! inIter.atEnd(); inIter++
 	) {
         IPosition pixel = inIter.position();
-        std::tr1::shared_ptr<const ProfileFitResults> fitter = (*_fitters)(pixel);
+        CountedPtr<const ProfileFitResults> fitter = (*_fitters)(pixel);
 		if (! fitter) {
 			continue;
 		}
@@ -222,7 +222,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 void ImageProfileFitterResults::_processSolutions(
 	Array<Bool>& mask, Array<String>& typeMat, Array<Int>& niterArr,
 	Array<Int>& nCompArr, const IPosition& pixel,
-	std::tr1::shared_ptr<const ProfileFitResults> fitter,
+	CountedPtr<const ProfileFitResults> fitter,
 	const RO_MaskedLatticeIterator<Float>& inIter,
 	std::auto_ptr<vector<vector<Array<Double> > > >& pcfArrays,
 	vector<Array<Double> >& plpArrays, vector<Array<Double> >& ltpArrays,
@@ -477,11 +477,11 @@ void ImageProfileFitterResults::_setResults() {
 	ImageCollapser<Float> collapser(
 		_subImage, axes, False, ImageCollapserData::ZERO, String(""), False
 	);
-    std::tr1::shared_ptr<TempImage<Float> > tmp = std::tr1::dynamic_pointer_cast<TempImage<Float> >(
+    CountedPtr<TempImage<Float> > tmp = dynamic_pointer_cast<TempImage<Float> >(
     	collapser.collapse()
     );
     ThrowIf(! tmp, "Unable to perform dynamic cast");
-	std::tr1::shared_ptr<TempImage<Float> > myTemplate(tmp);
+	CountedPtr<TempImage<Float> > myTemplate(tmp);
 	_results.define("attempted", attemptedArr);
 	_results.define(_SUCCEEDED, successArr);
 	_results.define(_CONVERGED, convergedArr);
@@ -850,7 +850,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 		inIter++
 	) {
 		subimPos = inIter.position();
-        const std::tr1::shared_ptr<ProfileFitResults> fitter = (*_fitters)(subimPos);
+        const CountedPtr<ProfileFitResults> fitter = (*_fitters)(subimPos);
 		if (! fitter) {
 			continue;
 		}

@@ -65,7 +65,7 @@ namespace casa {
 		histogram->setImageRegion( region, id );
 	}
 
-	void HistogramGraph::setImage(std::tr1::shared_ptr<ImageInterface<float> > image ) {
+	void HistogramGraph::setImage(CountedPtr<ImageInterface<float> > image ) {
 		histogram->setImage( image );
 	}
 

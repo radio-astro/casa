@@ -28,7 +28,7 @@
 
 #ifndef __casadbus_nullptr_h__
 #define __casadbus_nullptr_h__
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -36,8 +36,8 @@ namespace casa {
 
 	class _nullptr_t_ {
 	    public:
-		template<typename T> operator std::tr1::shared_ptr<T>( ) const { return std::tr1::shared_ptr<T>( ); }
-		template<typename T> bool check( const std::tr1::shared_ptr<T> &o ) const { return o == std::tr1::shared_ptr<T>( ); }
+		template<typename T> operator CountedPtr<T>( ) const { return CountedPtr<T>( ); }
+		template<typename T> bool check( const CountedPtr<T> &o ) const { return o == CountedPtr<T>( ); }
 	    private:
 		friend class nullptr_init_;
 		void do_init( ) { }

@@ -30,7 +30,7 @@
 
 #include <casa/Exceptions/Error.h>
 #include <casa/Quanta/MVTime.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>

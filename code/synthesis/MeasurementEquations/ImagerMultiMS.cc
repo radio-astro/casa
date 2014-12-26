@@ -48,8 +48,8 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/ExprNode.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/SetupNewTab.h>
 
 #include <lattices/Lattices/LatticeExpr.h> 

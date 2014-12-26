@@ -29,6 +29,7 @@
 #include <imageanalysis/ImageAnalysis/ImageRegridderBase.h>
 
 #include <scimath/Mathematics/Interpolate2D.h>
+#include <set>
 #include <casa/namespace.h>
 
 namespace casa {

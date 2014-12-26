@@ -39,7 +39,7 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <measures/TableMeasures/TableMeasDesc.h>
 #include <measures/TableMeasures/TableMeasValueDesc.h>

@@ -33,7 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 
 VLALogicalRecord::VLALogicalRecord() 
-  :itsRecordPtr(0),
+  :itsRecordPtr(),
    itsRCA(),
    itsSDA(),
    itsADA(0),

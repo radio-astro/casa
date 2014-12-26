@@ -30,7 +30,7 @@
 #include <utility>
 #include <QDialog>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 using namespace std;
 
@@ -48,7 +48,7 @@ namespace casa {
 
 	public:
 		PixelRangeDialog(QWidget *parent = 0);
-		void setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > img );
+		void setImage( const CountedPtr<const ImageInterface<Float> > img );
 		void setInterval( double minValue, double maxValue );
 		void setImageMode( bool imageMode );
 		void setChannelValue( int channel );

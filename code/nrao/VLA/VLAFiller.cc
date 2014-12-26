@@ -83,26 +83,26 @@
 #include <measures/TableMeasures/ArrayMeasColumn.h>
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
+#include <tables/DataMan/TiledColumnStMan.h>
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledDataStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 
 

@@ -201,7 +201,15 @@ public:
     
     // Copy operator.  Copies subparameters groups.
     PlotMSPlotParameters& operator=(const PlotMSPlotParameters& copy);
-    
+
+    Bool operator==(const PlotMSPlotParameters& other) const {
+        return (operator==(other)); 
+    }
+    Bool operator!=(const PlotMSPlotParameters& other) const {
+        return (operator!=(other));
+    }
+
+
 protected:
     // Factory.
     PlotFactoryPtr itsFactory_;
@@ -234,6 +242,7 @@ private:
 #define PMS_PP_RETCALL(PARAMS, GROUP, METHOD, DEFAULT, ...)                   \
     (PARAMS .typedGroup< GROUP >() == NULL ? DEFAULT :                        \
         PARAMS .typedGroup< GROUP >()-> METHOD ( __VA_ARGS__ ))
+
 // </group>
 
 }

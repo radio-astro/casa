@@ -778,7 +778,7 @@ public:
       vi_p (0),
       viC_p (0),
       visModelData_p (0),
-      weightScaling_p (0)
+      weightScaling_p ()
     {}
 
     Int appendCapacity_p;

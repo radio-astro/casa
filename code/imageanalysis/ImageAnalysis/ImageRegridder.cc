@@ -167,7 +167,7 @@ SPIIF ImageRegridder::_regrid() const {
 			finalMask(slice) = fillerMask;
 		}
 		replicatedIm->put(finalPixels);
-		std::tr1::dynamic_pointer_cast<TempImage<Float> >(replicatedIm)->attachMask(
+		dynamic_pointer_cast<TempImage<Float> >(replicatedIm)->attachMask(
 			ArrayLattice<Bool>(finalMask)
 		);
 		SpectralCoordinate spTo = _getTemplateCoords().spectralCoordinate();
@@ -201,7 +201,7 @@ SPIIF ImageRegridder::_decimateStokes(SPIIF workIm) const {
 	else {
 		cout << "output stokes " << _getOutputStokes() << endl;
 		// Only include the wanted stokes
-		std::tr1::shared_ptr<ImageConcat<Float> > concat(
+		CountedPtr<ImageConcat<Float> > concat(
 			new ImageConcat<Float>(
 				workIm->coordinates().polarizationAxisNumber(False)
 			)

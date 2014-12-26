@@ -102,7 +102,7 @@ endmacro()
 # for the generated file
 #
 MACRO (CASA_QT4_WRAP_UI outfiles )
-  QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
+  QT4_EXTRACT_OPTIONS(ui_files ui_options ui_target ${ARGN})
 
   FOREACH (it ${ui_files})
     GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
@@ -130,7 +130,7 @@ ENDMACRO (CASA_QT4_WRAP_UI)
 # the "-name" option to rcc is parametrized
 #
 MACRO (CASA_QT4_ADD_RESOURCES outfiles )
-  QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
+  QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
   
   FOREACH (it ${rcc_files})
     GET_FILENAME_COMPONENT(outfilename ${it} NAME_WE)

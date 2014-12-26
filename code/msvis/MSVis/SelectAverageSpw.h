@@ -38,7 +38,7 @@
 //#include <tables/Tables/Table.h>
 #include <tables/Tables/MemoryTable.h>
 #include <tables/Tables/TableDesc.h>
-#include <tables/Tables/StManAipsIO.h>
+#include <tables/DataMan/StManAipsIO.h>
 
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>

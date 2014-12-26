@@ -36,7 +36,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/Constants.h>
 
-#include <tables/Tables/ForwardCol.h>
+#include <tables/DataMan/ForwardCol.h>
 
 #include <casa/namespace.h>
 

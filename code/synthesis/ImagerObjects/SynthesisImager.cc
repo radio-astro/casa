@@ -916,7 +916,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","createSIMapper",WHERE) );
     
-    CountedPtr<SIMapper> localMapper=NULL;
+    CountedPtr<SIMapper> localMapper;
 
     try
       {
@@ -1161,7 +1161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if( mType=="imagemosaic" && 
 	(ftname != "awprojectft" && ftname != "mawprojectft" && ftname != "proroft") )
       {
-	CountedPtr<SkyJones> vp = NULL;
+	CountedPtr<SkyJones> vp;
 	ROMSColumns msc(mss4vi_p[0]);
 	Quantity parang(0.0,"deg");
 	Quantity skyposthreshold(0.0,"deg");

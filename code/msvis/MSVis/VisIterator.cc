@@ -40,8 +40,8 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledColumnStMan.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 #include <msvis/MSVis/VisibilityIteratorImpl.h>
 #include <cmath>
 
@@ -761,7 +761,7 @@ void ROVisIteratorImpl::allSelectedSpectralWindows (Vector<Int> & spws, Vector<I
 
   Vector<Int> ddids;
   msColumns().dataDescId().getColumn(ddids);
-  Int ndd=genSort(ddids,(Sort::QuickSort | Sort::NoDuplicates));
+  Int ndd=genSort(ddids,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
   ddids.resize(ndd,True);
   //  cout << "ddids = " << ddids << endl;
   Vector<Int> spwperdd;

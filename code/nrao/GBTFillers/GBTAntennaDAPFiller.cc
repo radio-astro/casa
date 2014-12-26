@@ -33,7 +33,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
 #include <tables/Tables/Table.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/namespace.h>
 

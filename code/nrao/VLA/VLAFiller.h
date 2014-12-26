@@ -44,7 +44,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
 #include <measures/Measures/Stokes.h>
-#include <tables/Tables/TiledDataStManAccessor.h>
+#include <tables/DataMan/TiledDataStManAccessor.h>
 #include <nrao/VLA/VLAEnum.h>
 #include <nrao/VLA/VLAFilterSet.h>
 #include <nrao/VLA/VLALogicalRecord.h>

@@ -29,7 +29,8 @@
 #include "SDMDataObjectReader.h"
 #include "SDMDataObjectStreamReader.h"
 
-#include <boost/shared_ptr.hpp>
+//#include <boost/CountedPtr.hpp>
+#include <casa/Utilities/CountedPtr.h>
 
 using namespace asdmbinaries;
 
@@ -266,10 +267,10 @@ class SDMBinData{
    * @return a pointer to a VMSData containing the values to populate MS rows.
    */
   const VMSData* getNextMSMainCols(unsigned int n);
-  void getNextMSMainCols(unsigned int n, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp);
+  void getNextMSMainCols(unsigned int n, casa::CountedPtr<VMSDataWithSharedPtr>& vmsData_p_sp);
 
   const VMSData* getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n);
-  void getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n, boost::shared_ptr<VMSDataWithSharedPtr>& vmsData_p_sp);
+  void getNextMSMainCols(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n, casa::CountedPtr<VMSDataWithSharedPtr>& vmsData_p_sp);
 
   vector<MSData*> getMSDataFromBDFData(Enum<CorrelationMode> e_qcm, EnumSet<AtmPhaseCorrection> es_qapc, unsigned int n);
 

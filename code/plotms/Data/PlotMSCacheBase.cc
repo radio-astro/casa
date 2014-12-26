@@ -717,18 +717,18 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 	switch (iteraxis) {
 	case PMS::SCAN: {
 		iterValues=scan_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 
 		break;
 	}
 	case PMS::SPW: {
 		iterValues=spw_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 		break;
 	}
 	case PMS::FIELD: {
 		iterValues=field_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 		break;
 	}
 	case PMS::BASELINE: {

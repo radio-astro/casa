@@ -81,11 +81,11 @@ Bool MatrixCleaner::validatePsf(const Matrix<Float> & psf)
   
  
 MatrixCleaner::MatrixCleaner():
-  itsMask(0),
+  itsMask(),
   itsSmallScaleBias(0.6),
   itsMaskThreshold(0.9),
-  itsDirty(0),
-  itsXfr(0),
+  itsDirty(),
+  itsXfr(),
   itsScaleSizes(0),
   itsMaximumResidual(0.0),
   itsStrengthOptimum(0.0),
@@ -115,7 +115,7 @@ MatrixCleaner::MatrixCleaner():
 
 MatrixCleaner::MatrixCleaner(const Matrix<Float> & psf,
 				  const Matrix<Float> &dirty):
-  itsMask(0),
+  itsMask(),
   itsSmallScaleBias(0.6),
   itsScaleSizes(0),
   itsMaximumResidual(0.0),

@@ -178,7 +178,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		std::tr1::shared_ptr<viewer::Region> creation(viewer::Region::creatingRegion( ));
+		CountedPtr<viewer::Region> creation(viewer::Region::creatingRegion( ));
 		if ( memory::nullptr.check(creation) || checkType(creation->type( )) ) {
 			int size = selected_regions.size( );
 			for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
@@ -517,7 +517,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                            bool is_annotation, VOID */*region_specific_state*/ ) {
 		if ( pts.size( ) <= 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-		std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
+		CountedPtr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 		result->setLabel( label );
 		result->setLabelPosition( label_pos );
 		result->setLabelDelta( label_off );
@@ -554,7 +554,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 		creating_region = building_polygon = (rfactory->polygon( wc, linx, liny ));
-		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));
+		viewer::Region::creatingRegionBegin(dynamic_pointer_cast<viewer::Region>(creating_region));
 		building_polygon->addVertex(linx,liny);
 		resizing_region_handle = 1;
 		polygons.push_back( building_polygon );

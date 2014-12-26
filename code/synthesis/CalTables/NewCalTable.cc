@@ -35,7 +35,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableInfo.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Arrays.h>
@@ -897,7 +897,8 @@ void NewCalTable::flagAbsentSpws() {
   // Extract unique spws in MAIN
   Vector<Int> spwids;
   ctcol.spwId().getColumn(spwids);
-  Int nspw=genSort(spwids,(Sort::QuickSort | Sort::NoDuplicates));
+  Int nspw=genSort(spwids,Sort::Ascending,
+                   (Sort::QuickSort | Sort::NoDuplicates));
   spwids.resize(nspw,True);
 
   // Revise SPW FLAG_ROW

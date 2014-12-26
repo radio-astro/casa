@@ -1451,7 +1451,7 @@ VbAvg::captureIterationInfo (VisBufferImpl2 * dstVb, const VisBuffer2 * srcVb,
                              srcVb->isNewSpectralWindow(),
                              subchunk,
                              srcVb->getCorrelationTypes (),
-                             CountedPtr <WeightScaling> (0));
+                             CountedPtr <WeightScaling> ());
 
     // Request info from the VB which will cause it to be filled
     // into cache from the input VII at its current position.

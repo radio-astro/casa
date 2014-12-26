@@ -51,7 +51,7 @@ vector<String> ImageFitterResults::_prefixes = vector<String>();
 
 
 ImageFitterResults::ImageFitterResults(
-	SPCIIF image, std::tr1::shared_ptr<LogIO> log
+	SPCIIF image, CountedPtr<LogIO> log
 ) : _image(image), _log(log), _bUnit(image->units().getName()) {}
 
 ImageFitterResults::~ImageFitterResults() {}
@@ -133,8 +133,8 @@ void ImageFitterResults::writeCompList(
 String ImageFitterResults::resultsHeader(
 	const String& chans, const Vector<uInt>& chanVec,
 	const String& region, const String& mask,
-	std::tr1::shared_ptr<std::pair<Float, Float> > includePixelRange,
-	std::tr1::shared_ptr<std::pair<Float, Float> > excludePixelRange,
+	CountedPtr<std::pair<Float, Float> > includePixelRange,
+	CountedPtr<std::pair<Float, Float> > excludePixelRange,
 	const String& estimates
 ) const {
 	ostringstream summary;

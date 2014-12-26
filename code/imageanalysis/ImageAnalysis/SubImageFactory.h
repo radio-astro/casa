@@ -32,7 +32,7 @@
 
 #include <imageanalysis/ImageTypedefs.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

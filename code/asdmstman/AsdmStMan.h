@@ -32,7 +32,7 @@
 
 //# Includes
 #include <asdmstman/AsdmIndex.h>
-#include <tables/Tables/DataManager.h>
+#include <tables/DataMan/DataManager.h>
 #include <casa/IO/LargeFiledesIO.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>

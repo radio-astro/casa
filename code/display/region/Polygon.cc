@@ -40,7 +40,7 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/ds9/ds9writer.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 	namespace viewer {
@@ -891,8 +891,8 @@ namespace casa {
 
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > *Polygon::generate_dds_centers() {
-			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
+		std::list<CountedPtr<RegionInfo> > *Polygon::generate_dds_centers() {
+			std::list<CountedPtr<RegionInfo> > *region_centers = new std::list<CountedPtr<RegionInfo> >( );
 
 			if( wc_==0 ) return region_centers;
 
@@ -926,7 +926,7 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					std::tr1::shared_ptr<ImageInterface<Float> > image ( padd->imageinterface( ));
+					CountedPtr<ImageInterface<Float> > image ( padd->imageinterface( ));
 
 					if ( ! image  ) continue;
 
@@ -970,7 +970,7 @@ namespace casa {
 					}
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion     *imgbox = new ImageRegion(box);
-					std::tr1::shared_ptr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
+					CountedPtr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
 
 					// technically (I guess), WorldCanvasHolder::worldAxisUnits( ) should be
 					// used here, because it references the "CSmaster" DisplayData which all
@@ -983,7 +983,7 @@ namespace casa {
 
 					ImageRegion *imageregion = new ImageRegion(poly);
 
-					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion))));
+					region_centers->push_back(CountedPtr<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion))));
 
 					delete imgbox;
 					delete imageregion;
@@ -1022,7 +1022,7 @@ namespace casa {
 				y[i] = wld[1];
 			}
 
-			std::tr1::shared_ptr<ImageInterface<Float> >image (padd->imageinterface( ));
+			CountedPtr<ImageInterface<Float> >image (padd->imageinterface( ));
 			if ( ! image ) return 0;
 
 			Vector<Int> dispAxes = padd->displayAxes( );

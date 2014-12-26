@@ -28,7 +28,7 @@
 #define DuplicateKey_CLASS
 
 #include <string>
-using std::string;
+//using std::string;
 
 namespace asdm {
 
@@ -51,7 +51,7 @@ public:
    * @param m The conversion error.
    * @param t The table being converted.
    */
-  DuplicateKey(const string& m, const string& t);
+  DuplicateKey(const std::string& m, const std::string& t);
   
 
   /**
@@ -62,13 +62,13 @@ public:
   /**
    * @return a text describing the exception.
    */
-  string getMessage() const;
+  std::string getMessage() const;
   
  protected:  
-  string message;
+  std::string message;
 
  private:
-  static const string ITSNAME;
+  static const std::string ITSNAME;
   
 };
  

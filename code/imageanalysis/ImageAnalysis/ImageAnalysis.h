@@ -472,10 +472,10 @@ class ImageAnalysis
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::tr1::shared_ptr<ImageHistograms<Float> > _histograms;
+    CountedPtr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
 
-    std::tr1::shared_ptr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
+    CountedPtr<ImageRegion> pOldHistRegionRegion_p, pOldHistMaskRegion_p;
     Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 

@@ -34,7 +34,7 @@
 #include <QDebug>
 #include <QMessageBox>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 
@@ -222,7 +222,7 @@ namespace casa {
 			String ddType(imageData->dataType());
 
 			//Get the path
-            std::tr1::shared_ptr<ImageInterface<float> > image = imageData->imageInterface();
+            CountedPtr<ImageInterface<float> > image = imageData->imageInterface();
 			if ( image ) {
 				String path = image->name();
 
@@ -336,7 +336,7 @@ namespace casa {
 				ColormapDefinition* hueDefinition = hueMap->definition();
 				double baseColorMin;
 				double baseColorMax;
-                std::tr1::shared_ptr<ImageInterface<float> > hueInterface = colorDD->imageInterface();
+                CountedPtr<ImageInterface<float> > hueInterface = colorDD->imageInterface();
 				getIntensityMinMax( hueInterface, &baseColorMin, &baseColorMax );
 
 				for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
@@ -345,7 +345,7 @@ namespace casa {
 					if ( (*iter) != saturationDD ){
 						double intensityMin;
 						double intensityMax;
-                        std::tr1::shared_ptr<ImageInterface<float> > ddInterface = (*iter)->imageInterface();
+                        CountedPtr<ImageInterface<float> > ddInterface = (*iter)->imageInterface();
 						getIntensityMinMax( ddInterface, &intensityMin, &intensityMax );
 						ddMap = generateMasterDefinition( hueDefinition,
 								baseColorMin, baseColorMax, intensityMin, intensityMax );
@@ -482,7 +482,7 @@ namespace casa {
 	}
 
 
-	bool ImageManagerDialog::getIntensityMinMax( std::tr1::shared_ptr<ImageInterface<float> > img,
+	bool ImageManagerDialog::getIntensityMinMax( CountedPtr<ImageInterface<float> > img,
 	        double* intensityMin, double* intensityMax ) {
 		ImageStatistics<Float> stats(*img, False);
 		bool success = true;

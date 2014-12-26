@@ -103,7 +103,7 @@ class Flagger : public FlaggerEnums
 {
 protected:
 // creates an agent by name
-  boost::shared_ptr<RFABase> createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
+  CountedPtr<RFABase> createAgent ( const String &name,RFChunkStats &chunk,const RecordInterface &parms, bool &only_selector );
 
 // sets up record of agents and default parameters
   const RecordInterface & setupAgentDefaults ();
@@ -116,7 +116,7 @@ protected:
  
   MeasurementSet   ms;
   MeasurementSet   originalms;
-  std::vector<boost::shared_ptr<RFABase> > acc;
+  std::vector<CountedPtr<RFABase> > acc;
 
   //new added
   MeasurementSet *mssel_p;

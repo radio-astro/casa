@@ -226,8 +226,8 @@ template<class T, class R, class RFilter>
     enum StatesEnum {START, IN_TABLE, IN_ENTITY, AFTER_ENTITY, IN_CONTAINER_ENTITY, AFTER_CONTAINER_ENTITY, IN_ROW, AFTER_ROW, IN_ATTRIBUTE, END};
     asdm::ASDM*			asdm_p;
     unsigned int		maxNumberOfRowsInMem;
-    boost::shared_ptr<R>	row_sp;
-    std::vector<boost::shared_ptr<R> >  rows;
+    CountedPtr<R>	row_sp;
+    std::vector<CountedPtr<R> >  rows;
     RFilter*                    rFilter_p;
     bool                        ignoreTime;
     void (*tableFiller_f_p) (const vector<R*>&, map<AtmPhaseCorrectionMod::AtmPhaseCorrection, ASDM2MSFiller*>&);
@@ -323,7 +323,7 @@ template <class	T, class R, class RFilter>
     case ParserContext<T, R, RFilter>::AFTER_CONTAINER_ENTITY :
       {
 	T& tableRef = (T&) V2CTX_P(v_p)->asdm_p->getTable(T::name());
-	V2CTX_P(v_p)->row_sp = boost::shared_ptr<R>(tableRef.newRow());
+	V2CTX_P(v_p)->row_sp = CountedPtr<R>(tableRef.newRow());
 	expectedElement = V2CTX_P(v_p)->rowElement_p;
 	nextState = ParserContext<T, R, RFilter>::IN_ROW;
       }

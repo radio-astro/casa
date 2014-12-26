@@ -37,7 +37,7 @@
 
 #include <casa/aips.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 #define _LOCATEA "ImageMetaDataRW" << __func__ << " "
 #define _ORIGINA LogOrigin("ImageMetaDataRW", __func__)
@@ -45,11 +45,11 @@
 namespace casa {
 
 ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Float> > image
+	CountedPtr<ImageInterface<Float> > image
 ) : ImageMetaDataBase(), _floatImage(image), _complexImage() {}
 
 ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Complex> > image
+	CountedPtr<ImageInterface<Complex> > image
 ) : ImageMetaDataBase(), _floatImage(), _complexImage(image) {}
 
 Record ImageMetaDataRW::toRecord(Bool verbose) const {
@@ -852,15 +852,9 @@ void ImageMetaDataRW::_setCoordinateValue(
 			"A polarization axis cannot have a reference pixel"
 		);
 		DataType t = value.dataType();
-		Bool stringIsDouble = False;
 		Double x = 0;
 		if (t == TpString) {
-			x = String::toDouble(stringIsDouble, value.asString());
-			ThrowIf (
-				! stringIsDouble,
-				value.asString()
-				+ " is not a String representation of a real numeric type"
-			);
+                        x = String::toDouble(value.asString(), True);
 		}
 		else if (
 			t == TpInt || t == TpInt64

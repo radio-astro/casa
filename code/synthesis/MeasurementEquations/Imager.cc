@@ -49,11 +49,11 @@
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -2167,7 +2167,6 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
 
   ImageRegion* recordRegion=0;
   if(imageRegRec !=0){
-    ImageRegion::tweakedRegionRecord(imageRegRec);
     TableRecord rec1;
     rec1.assign(*imageRegRec);
     recordRegion=ImageRegion::fromRecord(rec1,"");    

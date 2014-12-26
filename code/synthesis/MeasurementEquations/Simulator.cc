@@ -37,11 +37,11 @@
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordInterface.h>
 
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>

@@ -40,6 +40,7 @@
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/LogFile.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <stdcasa/variant.h>
 
 namespace casa {
@@ -186,7 +187,7 @@ template <class T> void ImageTask<T>::setLogfile(const String& lf) {
 	catch (const AipsError& x) {}
 }
 
-template <class T> const std::tr1::shared_ptr<LogFile> ImageTask<T>::_getLogFile() const {
+template <class T> const CountedPtr<LogFile> ImageTask<T>::_getLogFile() const {
 	ThrowIf(
 		! _logfileSupport,
 		"Logic Error: This task does not support writing of a log file"
@@ -305,7 +306,7 @@ template <class T> SPIIT  ImageTask<T>::_prepareOutputImage(
 ) const {
 	IPosition oShape = outShape == 0 ? image.shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? image.coordinates() : *coordsys;
-	std::tr1::shared_ptr<TempImage<T> > tmpImage(
+	CountedPtr<TempImage<T> > tmpImage(
 		new TempImage<T>(
 			TiledShape(oShape), csys
 		)

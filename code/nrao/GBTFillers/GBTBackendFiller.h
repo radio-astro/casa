@@ -55,7 +55,7 @@
 #include <nrao/GBTFillers/GBTMSSysCalFiller.h>
 #include <nrao/GBTFillers/GBTMSWeatherFiller.h>
 #include <nrao/GBTFillers/GBTDAPFiller.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/TableLock.h>
 #include <casa/BasicSL/String.h>
 

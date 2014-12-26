@@ -29,9 +29,9 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 
 #include <casa/System/AipsrcValue.h>
 #include <casa/Arrays/ArrayUtil.h>

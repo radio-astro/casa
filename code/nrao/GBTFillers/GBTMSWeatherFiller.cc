@@ -35,7 +35,7 @@
 #include <ms/MeasurementSets/MSWeather.h>
 #include <ms/MeasurementSets/MSWeatherColumns.h>
 #include <casa/Quanta/MVTime.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <casa/Utilities/Assert.h>

@@ -64,7 +64,7 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableVector.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QMath.h>

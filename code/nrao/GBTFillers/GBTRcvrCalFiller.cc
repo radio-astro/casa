@@ -43,11 +43,11 @@
 #include <casa/Utilities/GenSort.h>
 #include <measures/TableMeasures/TableQuantumDesc.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/TaQL/ExprNode.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRecord.h>
 

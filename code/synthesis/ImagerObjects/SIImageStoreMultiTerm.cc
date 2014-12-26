@@ -345,14 +345,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Set these to null, to be set later upon first access.
     // Setting to null will hopefully set all elements of each array, to NULL.
-    itsPsfs=NULL;  
-    itsModels=NULL;
-    itsResiduals=NULL;
-    itsWeights=NULL;
-    itsImages=NULL;
-    itsSumWts=NULL;
+    itsPsfs=CountedPtr<ImageInterface<Float> >();  
+    itsModels=CountedPtr<ImageInterface<Float> >();
+    itsResiduals=CountedPtr<ImageInterface<Float> >();
+    itsWeights=CountedPtr<ImageInterface<Float> >();
+    itsImages=CountedPtr<ImageInterface<Float> >();
+    itsSumWts=CountedPtr<ImageInterface<Float> >();
 
-    itsMask=NULL;
+    itsMask=CountedPtr<ImageInterface<Float> >();
 
      validate();
 

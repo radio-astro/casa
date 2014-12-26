@@ -38,7 +38,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <display/ds9/ds9writer.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 	namespace viewer {
@@ -224,8 +224,8 @@ namespace casa {
 			return result;
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > *Ellipse::generate_dds_centers( ) {
-			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
+		std::list<CountedPtr<RegionInfo> > *Ellipse::generate_dds_centers( ) {
+			std::list<CountedPtr<RegionInfo> > *region_centers = new std::list<CountedPtr<RegionInfo> >( );
 
 			if( wc_==0 ) return region_centers;
 
@@ -262,7 +262,7 @@ namespace casa {
 				try {
 					if ( ! padd->conformsTo(*wc_) ) continue;
 
-					std::tr1::shared_ptr<ImageInterface<Float> > image (padd->imageinterface( ));
+					CountedPtr<ImageInterface<Float> > image (padd->imageinterface( ));
 
 					if ( ! image ) continue;
 
@@ -306,7 +306,7 @@ namespace casa {
 					}
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion     *imgbox = new ImageRegion(box);
-					std::tr1::shared_ptr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
+					CountedPtr<SubImage<Float> > boxImg(new SubImage<Float>(*image, *imgbox));
 
 					// generate the WCEllipsoide
 					//Quantum<Double> px0(0.,"pix");
@@ -337,7 +337,7 @@ namespace casa {
 					ImageRegion *imageregion = new ImageRegion(ellipse);
 
 					region_centers->push_back(
-						std::tr1::shared_ptr<RegionInfo>(
+						CountedPtr<RegionInfo>(
 							new ImageRegionInfo(
 								name,description,
 								getLayerCenter(padd,boxImg,*imageregion)
@@ -430,7 +430,7 @@ namespace casa {
 			PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
 			if ( padd == 0 ) return 0;
 
-			std::tr1::shared_ptr<ImageInterface<Float> > image( padd->imageinterface( ));
+			CountedPtr<ImageInterface<Float> > image( padd->imageinterface( ));
 			Vector<Int> dispAxes = padd->displayAxes( );
 			dispAxes.resize(2,True);
 

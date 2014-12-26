@@ -8,8 +8,8 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/TiledDataStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/NewMSSimulator.h>
 #include <measures/Measures/MeasTable.h>

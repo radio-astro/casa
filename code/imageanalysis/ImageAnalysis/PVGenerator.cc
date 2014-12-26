@@ -29,6 +29,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 #include <tables/Tables/PlainTable.h>
+#include <casa/BasicSL/STLMath.h>
 
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
@@ -361,7 +362,7 @@ SPIIF PVGenerator::generate() const {
 	) + nPixels;
 
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	std::tr1::shared_ptr<ImageInterface<Float> > rotated;
+	CountedPtr<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
 		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
 		rotated.reset(

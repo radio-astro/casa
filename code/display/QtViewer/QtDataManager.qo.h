@@ -53,7 +53,7 @@
 #include <display/Utilities/Lowlevel.h>
 #include <set>
 #include <list>
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 #include <tr1/tuple>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -287,7 +287,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				return output_name_line_;
 			}
 
-			std::tr1::shared_ptr<QDir> dir( ) {
+			CountedPtr<QDir> dir( ) {
 				return dir_;
 			}
 			QLineEdit *dirline( ) {
@@ -300,7 +300,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			std::set<int> filtered_types_;
 			QLineEdit *dir_entry_;
 			QTreeWidget *tree_;
-			std::tr1::shared_ptr<QDir> dir_;
+			CountedPtr<QDir> dir_;
 			notify_func_t notify_func_;
 			QFrame *info_frame_;
 			infofield_list_t *info_fields_;

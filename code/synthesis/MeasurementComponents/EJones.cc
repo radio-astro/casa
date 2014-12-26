@@ -31,7 +31,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MeasurementEquations/VisEquation.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>

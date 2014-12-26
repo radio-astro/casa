@@ -123,7 +123,7 @@ namespace sdmbin{
   
   /**
    * A structure containing the data from a single SDM BLOB.
-   * The *big* difference with the previous definition (VMSData) is that the visibilities are referred to by a boost::shared_ptr instead
+   * The *big* difference with the previous definition (VMSData) is that the visibilities are referred to by a CountedPtr instead
    * of a plain old pointer.
    *
    * \note 

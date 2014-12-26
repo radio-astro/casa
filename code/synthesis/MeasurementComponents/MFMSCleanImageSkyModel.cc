@@ -203,7 +203,6 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
     }*/
 
   Block<CountedPtr<ImageMSCleaner > > cleaner(numberOfModels());
-  cleaner=0;
 
   Int cycle=0;
   Bool stop=False;

@@ -58,8 +58,8 @@ using namespace std;
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   SynthesisDeconvolver::SynthesisDeconvolver() : 
-				       itsDeconvolver(NULL), 
-				       itsMaskHandler(NULL),
+				       itsDeconvolver(), 
+				       itsMaskHandler(),
 				       itsImages(CountedPtr<SIImageStore>()),
 				       //				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),

@@ -565,6 +565,7 @@ message ( STATUS "BOOST_ROOT=${BOOST_ROOT} (second)" )
 message ( STATUS "casa_packages=${casa_packages} (second)" )
 
 set( boost_components regex program_options filesystem thread serialization system)
+##set( boost_components regex program_options filesystem serialization system)
 find_package( Boost REQUIRED ${boost_components} )
 
 message( STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}; Boost_LIBRARIES=${Boost_LIBRARIES}")
@@ -582,7 +583,8 @@ if( Boost_VERSION GREATER 103499 )
     unset( Boost_FOUND )
     unset( Boost_INCLUDE_DIR CACHE )
   endif()
-  set( boost_components regex program_options filesystem system thread )
+##  set( boost_components regex program_options filesystem system thread )
+  set( boost_components regex program_options filesystem system )
   find_package( Boost REQUIRED ${boost_components} )
 
   if( NOT Boost_FOUND )
@@ -774,7 +776,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.255
+           VERSION 1.0.254
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -787,6 +789,9 @@ casa_find( CASACORE
            DEPENDS LAPACK CFITSIO WCSLIB FFTW3 DL Boost)
 # Listing explicitly CASACore's dependency libraries is not necessary if the CASACore libraries 
 # were built with correct linking information, which they are not.
+
+# Casacore now has casacore/ in #includes, so add /.. to -I path.
+include_directories (${CASACORE_INCLUDE_DIRS}/..)
 
 set( CASACORE_DEFINITIONS ${CASACORE_DEFINITIONS}
   -DCASA_USECASAPATH
@@ -1074,7 +1079,7 @@ endif()
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
-casa_add_module( components stdcasa CASACORE GSL)
+casa_add_module( components stdcasa CASACORE)
 casa_add_module( imageanalysis CASACORE Boost components)
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( asdmstman CASACORE )

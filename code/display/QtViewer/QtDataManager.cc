@@ -60,7 +60,7 @@
 #include <QTextStream>
 #include <graphics/X11/X_exit.h>
 
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 using std::tr1::function;
 using std::tr1::get;
@@ -1442,7 +1442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDisplayData *qdd = display_datas[item->text(0)];
 
-		std::tr1::shared_ptr<ImageInterface<Float> > img = qdd->imageInterface();
+		CountedPtr<ImageInterface<Float> > img = qdd->imageInterface();
 		if (!img) {
 			img_output_error->setStyleSheet("color: red");
 			img_output_error->setText( "cannot export data, complex images cannot be exported" );

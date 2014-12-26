@@ -278,9 +278,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Create the actual mouse tools.
 
 		zoom_      = new MWCRTZoomer;
-		pd_->addTool(ZOOM, std::tr1::shared_ptr<MultiWCTool>(zoom_));
+		pd_->addTool(ZOOM, CountedPtr<MultiWCTool>(zoom_));
 		panner_    = new MWCPannerTool;
-		pd_->addTool(PAN, std::tr1::shared_ptr<MultiWCTool>(panner_));
+		pd_->addTool(PAN, CountedPtr<MultiWCTool>(panner_));
 
 		if ( new_region_tools ) {
 
@@ -288,13 +288,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		} else {
 			ocrosshair_ = new QtOldCrossTool;
-			pd_->addTool(POINT, std::tr1::shared_ptr<MultiWCTool>(ocrosshair_));
+			pd_->addTool(POINT, CountedPtr<MultiWCTool>(ocrosshair_));
 			optregion_  = new QtOldPolyTool(pd_);
-			pd_->addTool(POLYGON, std::tr1::shared_ptr<MultiWCTool>(optregion_));
+			pd_->addTool(POLYGON, CountedPtr<MultiWCTool>(optregion_));
 			ortregion_  = new QtOldRectTool(pd_);
-			pd_->addTool(RECTANGLE, std::tr1::shared_ptr<MultiWCTool>(ortregion_));
+			pd_->addTool(RECTANGLE, CountedPtr<MultiWCTool>(ortregion_));
 			oelregion_  = new QtOldEllipseTool(pd_);
-			pd_->addTool(ELLIPSE, std::tr1::shared_ptr<MultiWCTool>(oelregion_));
+			pd_->addTool(ELLIPSE, CountedPtr<MultiWCTool>(oelregion_));
 			connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			         SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
 			connect( ortregion_, SIGNAL(echoClicked(Record)),
@@ -311,12 +311,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		polyline_  = new MWCPolylineTool;
-		pd_->addTool(POLYLINE, std::tr1::shared_ptr<MultiWCTool>(polyline_));
+		pd_->addTool(POLYLINE, CountedPtr<MultiWCTool>(polyline_));
 
 		rulerline_  = new MWCRulerlineTool;
-		pd_->addTool(RULERLINE, std::tr1::shared_ptr<MultiWCTool>(rulerline_));
+		pd_->addTool(RULERLINE, CountedPtr<MultiWCTool>(rulerline_));
 		pvtool_  = new MWCPositionVelocityTool;
-		pd_->addTool(POSITIONVELOCITY, std::tr1::shared_ptr<MultiWCTool>(pvtool_));
+		pd_->addTool(POSITIONVELOCITY, CountedPtr<MultiWCTool>(pvtool_));
 
 
 		snsFidd_ = new PCITFiddler(pc_, PCITFiddler::StretchAndShift,
@@ -503,7 +503,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanel::resetTool(String toolname) {
 		// (NB: no effect on PCTools (e.g. SHIFTSLOPE, BRIGHTCONTRAST).
-		std::tr1::shared_ptr<MultiWCTool> tool = pd_->getTool(toolname);
+		CountedPtr<MultiWCTool> tool = pd_->getTool(toolname);
 		if ( tool.get( ) == 0 ) return;
 		tool->reset();
 	}
@@ -2884,7 +2884,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // revoke region from region source...
 	void QtDisplayPanel::revokeRegion( viewer::Region *r ) {
-		std::tr1::shared_ptr<RegionTool> tool = toolmgr->tool(r->type( ));
+		CountedPtr<RegionTool> tool = toolmgr->tool(r->type( ));
 		if ( memory::nullptr.check(tool) == false )
 			tool->revokeRegion( r );
 	}

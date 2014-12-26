@@ -22,7 +22,7 @@
 
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <tables/Tables/TableProxy.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN

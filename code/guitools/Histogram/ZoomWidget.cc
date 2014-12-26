@@ -131,7 +131,7 @@ void ZoomWidget::calculateRange( ){
 	}
 }
 
-void ZoomWidget::setImage( const std::tr1::shared_ptr<const ImageInterface<Float> > image ){
+void ZoomWidget::setImage( const CountedPtr<const ImageInterface<Float> > image ){
 	this->image = image;
 }
 

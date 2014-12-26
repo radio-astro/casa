@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	////////////////////////////////////
   
 	// All SIIterBot_states must have 'type' and 'name' defined.
-	SIIterBot_state::SIIterBot_state( std::tr1::shared_ptr<SIIterBot_callback> cb ) :
+	SIIterBot_state::SIIterBot_state( CountedPtr<SIIterBot_callback> cb ) :
 						itsDescription("no description is currently available..."),
 						itsMinPsfFraction(0.05),
 						itsMaxPsfFraction(0.8),
@@ -633,7 +633,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
-	SIIterBot_adaptor::SIIterBot_adaptor( std::tr1::shared_ptr<SIIterBot_state> s, const std::string &bus_name, const std::string &object_path) :
+	SIIterBot_adaptor::SIIterBot_adaptor( CountedPtr<SIIterBot_state> s, const std::string &bus_name, const std::string &object_path) :
 #ifdef INTERACTIVE_ITERATION
 				dbus::address(bus_name),
 				DBus::ObjectAdaptor( DBusSession::instance().connection( ), object_path ),

@@ -43,6 +43,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Double twoPiW=2.0*C::pi*Double(wValue);
 #ifdef HAS_OMP
     Int Nth=max(omp_get_max_threads()-2,1);
+#else
+    Int Nth=1;
 #endif
 
     if (!isNoOp())

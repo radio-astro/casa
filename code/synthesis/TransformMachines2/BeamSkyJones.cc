@@ -79,7 +79,7 @@ BeamSkyJones::BeamSkyJones(
      doSquint_p(doSquint),
      parallacticAngleIncrement_p(parallacticAngleIncrement.getValue("rad")),
      skyPositionThreshold_p(skyPositionThreshold.getValue("rad")),
-     lastUpdateVisBuffer_p(NULL), lastUpdateRow_p(-1),
+     lastUpdateVisBuffer_p(), lastUpdateRow_p(-1),
      lastUpdateIndex1_p(-1), lastUpdateIndex2_p(-1), hasBeenApplied(False)
      
 {  

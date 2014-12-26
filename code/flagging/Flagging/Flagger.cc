@@ -48,13 +48,13 @@
 #include <stdarg.h>
 
 #include <tables/Tables/Table.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/SetupNewTab.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 
@@ -1279,7 +1279,7 @@ const RecordInterface & Flagger::setupAgentDefaults ()
 // Flagger::createAgent
 // Creates flagging agent based on name
 // -----------------------------------------------------------------------
-boost::shared_ptr<RFABase> Flagger::createAgent (const String &id,
+CountedPtr<RFABase> Flagger::createAgent (const String &id,
 		RFChunkStats &chunk,
 		const RecordInterface &parms,
 		bool &only_selector)
@@ -1289,23 +1289,23 @@ boost::shared_ptr<RFABase> Flagger::createAgent (const String &id,
 	}
 	// cerr << "Agent id: " << id << endl;
 	if ( id == "timemed" )
-		return boost::shared_ptr<RFABase>(new RFATimeMedian(chunk, parms));
+		return CountedPtr<RFABase>(new RFATimeMedian(chunk, parms));
 	else if ( id == "newtimemed" )
-		return boost::shared_ptr<RFABase>(new RFANewMedianClip(chunk, parms));
+		return CountedPtr<RFABase>(new RFANewMedianClip(chunk, parms));
 	else if ( id == "freqmed" )
-		return boost::shared_ptr<RFABase>(new RFAFreqMedian(chunk, parms));
+		return CountedPtr<RFABase>(new RFAFreqMedian(chunk, parms));
 	else if ( id == "sprej" )
-		return boost::shared_ptr<RFABase>(new RFASpectralRej(chunk, parms));
+		return CountedPtr<RFABase>(new RFASpectralRej(chunk, parms));
 	else if ( id == "select" )
-		return boost::shared_ptr<RFABase>(new RFASelector(chunk, parms));
+		return CountedPtr<RFABase>(new RFASelector(chunk, parms));
 	else if ( id == "flagexaminer" )
-		return boost::shared_ptr<RFABase>(new RFAFlagExaminer(chunk, parms));
+		return CountedPtr<RFABase>(new RFAFlagExaminer(chunk, parms));
 	else if ( id == "uvbin" )
-		return boost::shared_ptr<RFABase>(new RFAUVBinner(chunk, parms));
+		return CountedPtr<RFABase>(new RFAUVBinner(chunk, parms));
 	else if ( id == "tfcrop" )
-		return boost::shared_ptr<RFABase>(new RFATimeFreqCrop(chunk, parms));
+		return CountedPtr<RFABase>(new RFATimeFreqCrop(chunk, parms));
 	else
-		return boost::shared_ptr<RFABase>();
+		return CountedPtr<RFABase>();
 }
 
 
@@ -1499,7 +1499,7 @@ Record Flagger::run (Bool trial, Bool reset)
 		acc.resize(agents.nfields());
 
 		for (uInt i=0; i<agents.nfields(); i++) {
-			acc[i] = boost::shared_ptr<RFABase>();
+			acc[i] = CountedPtr<RFABase>();
 		}
 
 		uInt nacc = 0;
@@ -1551,7 +1551,7 @@ Record Flagger::run (Bool trial, Bool reset)
 			else
 				agcounts.define(agent_id,1);
 			// create agent based on name
-			boost::shared_ptr<RFABase> agent =
+			CountedPtr<RFABase> agent =
 					createAgent(agent_id,
 							chunk,
 							parms,
