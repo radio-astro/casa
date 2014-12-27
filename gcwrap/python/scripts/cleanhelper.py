@@ -3393,7 +3393,7 @@ def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     ftm='ft';
     if((gridmode != '') and (imagermode=='mosaic')):
            raise Exception, pwd.getpwuid(os.getuid())[4].split()[0]+ " gridmode='"+gridmode + "' combined with " + "imagermode='"+imagermode + "' is not supported yet" 
-    if ((gridmode == 'widefield') and(wprojplanes > 1)): ftm = 'wproject';
+    if ((gridmode == 'widefield') and(wprojplanes > 1 or wprojplanes==-1)): ftm = 'wproject';
     elif (gridmode == 'aprojection'):                    ftm = 'awproject';
     elif (gridmode == 'advancedaprojection'):            ftm = 'awproject';
     elif (imagermode == 'csclean'):                      ftm = 'ft';

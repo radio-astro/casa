@@ -128,8 +128,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="int" name="wprojplanes" subparam="true">
-      <description>Number of w-projection planes for convolution </description>
-      <value>1</value>
+      <description>Number of w-projection planes for convolution; -1 =&gt; automatic determination </description>
+      <value>-1</value>
     </param>
     <param type="int" name="facets" subparam="true">
       <description>Number of facets along each axis (main image only)</description>
@@ -512,7 +512,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <when param="gridmode">
 	      <equals value=""/>
 	      <equals value="widefield">
-		      <default param="wprojplanes"><value>1</value></default>
+		      <default param="wprojplanes"><value>-1</value></default>
 		      <default param="facets"><value>1</value></default>
               </equals>
 	      <equals value="aprojection">
@@ -1007,10 +1007,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                wprojplanes is the number of pre-computed w-planes used for
                    the W-Projection algorithm.  wprojplanes=1 disables
-                   correction for non-coplanar effects. 
+                   correction for non-coplanar effects.  default value wprojpanes=-1
+                   means clean will determine the number to use. 
                facets is the number of facets on each side of the image 
                    (i.e. the total number of facets is 'facets x facets'). 
                    If wprojplanes>1, W-Projection is done for each facet.
+		   Usually when many wprojection convolution functions 
+		   sizes are  above ~400 pixels , 
+                   it might be faster to use a few facets with wprojection.
 
   &gt;&gt;&gt; gridmode='aprojection' expandable parameters
                Corrects for the (E)VLA time-varying PB effects
