@@ -697,7 +697,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     imstore->mask()->get(maskdata);
     String maskname = imstore->getName()+".mask";
     tempmask->put(maskdata);
-
+    // create pixel mask (set to False for the previous selected region(s))
+    LatticeExpr<Bool> pixmask( iif(*tempmask > 0.0, False, True) );
+    TempImage<Float>* dummy = new TempImage<Float>(tempres->shape(), tempres->coordinates());
+    dummy->attachMask(pixmask);
+    if (ntrue(dummy->getMask())) tempres->attachMask(pixmask);
+    delete dummy; dummy=0;
     //input 
     Quantity qthresh(0,"");
     Quantity qreso(0,"");
@@ -721,7 +726,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         sigma = String::toFloat(threshold);
         if (sigma==0.0) {
             // default case: threshold, fracofpeak unset => use default (3sigma)
-            sigma = 3.0; // defalut 3sigma
+            sigma = 3.0;
         }
       }
     }
@@ -733,11 +738,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        
     //do statistics
     std::tr1::shared_ptr<casa::ImageInterface<float> > tempres_ptr(tempres);
-    cerr<<"maskname="<<maskname<<endl;
-    ImageRegion *imReg = ImageRegion::fromLatticeExpression(maskname+" ==1.0"); 
-    TableRecord tempRec = imReg->toRecord("");
-    //Record *regRec=0;
-    //regRec->assign(tempRec);
     ImageStatsCalculator imcalc( tempres_ptr, 0, "", False); 
     Vector<Int> axes(2);
     axes[0] = 0;
@@ -780,13 +780,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      Vector<String> incUnit = incsys.worldAxisUnits();
      Quantity qinc(incVal[0],incUnit[0]);
      if (resolution.get().getValue() ) {
-       cerr<<"resolution="<<resolution.get().getValue()<<" unit="<<resolution.getUnit()<<endl;
-       cerr<<"qinc="<<qinc.get().getValue()<<" unit="<<qinc.getUnit()<<endl;
-       cerr<<"qinc in res unit="<<(qinc.convert(resolution.get().getUnit()),resolution)<<endl;
-       cerr<<" reso / qinc = "<< resolution.get().getValue() / qinc.getValue(resolution.get().getUnit()) ;
        //npix = 2*Int(abs( resolution.getValue()/qinc.getValue(resolution.getUnit()) ) );
        npix = 2*Int(abs( resolution/(qinc.convert(resolution),qinc) ).getValue() );
-       cerr<<"npix now="<<npix<<endl;
      }
      else {
        ImageInfo resInfo = res.imageInfo();
@@ -842,8 +837,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      LatticeExpr<Float> tempthresh( iif( tempRebinnedIm > thresh, 1.0, 0.0) );
      TempImage<Float> tempthreshIm(tempRebinnedIm.shape(), tempRebinnedIm.coordinates() );
      tempthreshIm.copyData(tempthresh);
-     PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
-     tempthreshimcopy.copyData(tempthreshIm);
+     //PagedImage<Float> tempthreshimcopy(TiledShape(tempthreshIm.shape()),tempthreshIm.coordinates(), String("mytemp_threshim"));
+     //tempthreshimcopy.copyData(tempthreshIm);
      ImageRegrid<Float> tempRegridIm; 
      Vector<Int> axes(2); 
      axes(0)=0; axes(1)=1;
@@ -851,24 +846,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      TempImage<Float>* tempIm3 = new TempImage<Float>(res.shape(), res.coordinates() );
      std::tr1::shared_ptr<casa::ImageInterface<float> > tempIm3_ptr(tempIm3);
      // regrid 
-     tempRegridIm.regrid(tempIm2, Interpolate2D::LINEAR, axes, tempthreshIm); 
-     PagedImage<Float> tempregridimcopy(TiledShape(tempIm2.shape()),tempIm2.coordinates(), String("mytemp_tempim2"));
-     tempregridimcopy.copyData(tempIm2);
      // convolve to a beam = npix
      Vector<Quantity> convbeam(3);
      convbeam[0] = Quantity(npix, "pix");
      convbeam[1] = Quantity(npix, "pix");
      convbeam[2] = Quantity(0.0, "deg");
      Image2DConvolver<Float>::convolve(os, tempIm3_ptr, tempIm2, VectorKernel::GAUSSIAN, IPosition(2, 0, 1), convbeam, True, Double(-1.0), True, False);   
-     PagedImage<Float> tempconvimcopy(TiledShape(tempIm3->shape()),tempIm3->coordinates(), String("mytemp_tempconvim"));
-     tempconvimcopy.copyData(*tempIm3_ptr);
 
      // fudge factor?  
      Float afactor = 2.0;
      cerr<<"thresh/afactor="<<thresh/afactor<<endl;
      LatticeExpr<Float> themask( iif( *(tempIm3_ptr) > thresh/afactor, 1.0, 0.0 ));
-     PagedImage<Float> tempimcopy(TiledShape(mask.shape()),mask.coordinates(), String("mytemp_finalim"));
-     tempimcopy.copyData(themask);
      mask.copyData( (LatticeExpr<Float>)( iif((mask + themask) > 0.0, 1.0, 0.0  ) ) );
   }
   
