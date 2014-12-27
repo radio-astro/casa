@@ -105,10 +105,11 @@ namespace casa{
       Int convSize_p;
       Vector<Int> convSupport_p;
       Cube<Complex> convFunc_p;
-      Double wScale_p;
+      Double wScaler_p;
       Int convSampling_p;
       Int nx_p, ny_p;
       Double minW_p, maxW_p, rmsW_p;
+      
 
     };
 };// end of namespace

@@ -116,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSupport_p=other.convSupport_p;
       convFunc_p.resize();
       convFunc_p=other.convFunc_p;
-      wScale_p=other.wScale_p;
+      wScaler_p=other.wScaler_p;
       convSampling_p=other.convSampling_p;
       nx_p=other.nx_p; 
       ny_p=other.ny_p;
@@ -151,7 +151,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     convSampling=convSampling_p;
     convSupport.resize();
     convSupport=convSupport_p;
-    wScale=wScale_p;
+    wScale=Float((convFunc.shape()(2)-1)*(convFunc.shape()(2)-1))/wScaler_p;
     return;
   }
 
@@ -160,16 +160,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   os << LogOrigin("WPConvFunc", "findConvFunction")  << LogIO::NORMAL;
   
   
+  // Get the coordinate system
+  CoordinateSystem coords(image.coordinates());
+  Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
+  nx_p=Int(image.shape()(directionIndex)); 
+  ny_p=Int(image.shape()(directionIndex+1));
 
   Int wConvSize=wConvSizeUser;
   ////Automatic mode
   Double maxUVW;
   if(wConvSize < 1){
+    //cerr << "max, min, rms " << maxW_p << "  " << minW_p << "  " << rmsW_p << endl;
     maxUVW=rmsW_p < 0.5*(minW_p+maxW_p) ? 1.05*maxW_p: (rmsW_p /(0.5*((minW_p)+maxW_p))*1.05*maxW_p) ;
-    wConvSize=Int(sqrt(maxUVW)*10.0);
+    //maxUVW=min(maxUVW, 0.25/abs(image.coordinates().increment()(0)));
+    wConvSize=Int(maxUVW*fabs(sin(fabs(image.coordinates().increment()(0))*max(nx_p, ny_p)/2.0)));
     //maxUVW=1.05*maxW_p;
     //wConvSize=100*(maxUVW*maxUVW*image.coordinates().increment()(0)*image.coordinates().increment()(0));
-    //cerr << "wConvSize 0 " << wConvSize << endl;
+    //cerr << "wConvSize 0 " << wConvSize << " nx_p " << nx_p << endl;
     //if(rmsW_p < 0.5*(minW_p+maxW_p))
     // wConvSize=wConvSize*(minW_p+maxW_p)*(minW_p+maxW_p)/(rmsW_p*rmsW_p);
 
@@ -196,18 +203,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    uvScale(2)=(Float(wConvSize-1))/maxUVW;
     wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
     //wScale=Float(wConvSize-1)/maxUVW;
-    wScale_p=wScale;
-    os << "Scaling in W (at maximum W) = " << 1.0/wScale_p
+    wScaler_p=maxUVW;;
+    os << "Scaling in W (at maximum W) = " << 1.0/wScale
 	    << " wavelengths per pixel" << LogIO::POST;
   }
 
   Timer tim;
-  // Get the coordinate system
-  CoordinateSystem coords(image.coordinates());
-  Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-  nx_p=Int(image.shape()(directionIndex)); 
-  ny_p=Int(image.shape()(directionIndex+1));
-
+  
   // Set up the convolution function. 
   if(wConvSize>1) {
     /* if(wConvSize>256) {
@@ -333,12 +335,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #ifdef HAS_OMP
    omp_set_nested(0);
 #endif
-
    //////openmp like to share reference param ...but i don't like to share
    Int cpConvSize=convSize;
    Int cpWConvSize=wConvSize;
+   Double cpWscale=wScale;
    Float max0=1.0;
-#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner, maxptr ) 
+#pragma omp parallel for default(none) firstprivate(cpWConvSize, cpConvSize, convFuncPtr, s0, s1, wsaveptr, ier, lsav, cor, inner, maxptr, cpWscale ) 
 
   for (Int iw=0; iw< cpWConvSize;iw++) {
     // First the w term
@@ -349,7 +351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(cpWConvSize>1) {
       //      Double twoPiW=2.0*C::pi*sqrt(Double(iw))/uvScale(2);
       //Double twoPiW=2.0*C::pi*Double(iw)/wScale_p;
-      Double twoPiW=2.0*C::pi*Double(iw*iw)/wScale_p;
+      Double twoPiW=2.0*C::pi*Double(iw*iw)/cpWscale;
       //#ifdef HAS_OMP
       //      omp_set_nested(1);
       //#endif
@@ -528,7 +530,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  << " pixels in Fourier plane"
 	  << LogIO::POST;
 
-  // tim.show("After pbsumming ");
+  //tim.show("After pbsumming ");
 
   convSupportBlock_p.resize(actualConvIndex_p+1);
   convSupportBlock_p[actualConvIndex_p]= new Vector<Int>();
@@ -564,7 +566,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   convSizes_p(actualConvIndex_p)=convSize;
 
   convSampling=convSampling_p;
-  wScale=wScale_p;
+  wScale=Float((wConvSize-1)*(wConvSize-1))/wScaler_p;
   //tim.show("After calculating WConv funx ");
 
 
@@ -631,7 +633,7 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
     rec.define("convsize", convSize_p);
     rec.define("convsupport", convSupport_p);
     rec.define("convfunc",convFunc_p);
-    rec.define("wscale", wScale_p);
+    rec.define("wscaler", wScaler_p);
     rec.define("convsampling", convSampling_p);
     rec.define("nx", nx_p);
     rec.define("ny", ny_p);
@@ -669,7 +671,8 @@ Bool WPConvFunc::toRecord(RecordInterface& rec){
     rec.get("convsize", convSize_p);
     rec.get("convsupport", convSupport_p);
     rec.get("convfunc",convFunc_p);
-    rec.get("wscale", wScale_p);
+    if(rec.isDefined("wscaler"))
+       rec.get("wscaler", wScaler_p);
     rec.get("convsampling", convSampling_p);
     rec.get("nx", nx_p);
     rec.get("ny", ny_p);
