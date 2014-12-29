@@ -268,6 +268,11 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 LOG.error('WVR data expected but not found in %s'
                           '' % os.path.basename(inputs.vis))
             return result
+	elif len([a for a in inputs.ms.antennas if a.diameter == 12.0]) <= 1:
+	    # WVR data available for only 1 antenna
+            LOG.error('WVR data available for only 1 antenna in %s'
+                          '' % os.path.basename(inputs.vis))
+            return result
 
         if inputs.hm_toffset == 'automatic':
             toffset = wvrheuristics.toffset()
