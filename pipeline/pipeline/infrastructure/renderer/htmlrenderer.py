@@ -81,8 +81,8 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
-    if task_cls is hif.tasks.ExportData:
-        return 'Export data products'
+    #if task_cls is hif.tasks.ExportData:
+        #return 'Export data products'
 
     if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportDataOld):
         return 'Register measurement sets with the pipeline'
@@ -96,8 +96,8 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
 
-    if task_cls is hif.tasks.NormaliseFlux:
-        return 'Calculate mean fluxes of calibrators'
+    #if task_cls is hif.tasks.NormaliseFlux:
+        #return 'Calculate mean fluxes of calibrators'
 
     if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MS to Scantables'
@@ -2154,10 +2154,8 @@ renderer_map = {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
-        hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
-        hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=False),
         hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False)
         
