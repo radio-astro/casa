@@ -293,6 +293,12 @@ class ImageDisplay(object):
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]+1]
         else:
             extent=[xdata[0], xdata[-1], ydata_numeric[0], ydata_numeric[-1]]
+        if 'ANTENNA' in xtitle.upper(): 
+            extent[0] -= 0.5
+            extent[1] += 0.5
+        if 'ANTENNA' in ytitle.upper():
+            extent[2] -= 0.5
+            extent[3] += 0.5
 
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
           vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect,
