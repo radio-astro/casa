@@ -143,8 +143,6 @@ public:
 
 	// </group>
 
-
-
 	// scan the dataset(s) that have been added, and find the min and max.
 	// This method may be called even if setStatsToCaclulate has been called and
 	// MAX and MIN has been excluded. If setCalculateAsAdded(True) has previously been
@@ -695,7 +693,7 @@ private:
 
 
 	// update min and max if necessary
-    void _updateMaxMin(AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos);
+    void _updateMaxMin(AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos, uInt dataStride);
 	
 	// get values from sorted array if the array is small enough to be held in
 	// memory. Note that this is the array containing all good data, not data in

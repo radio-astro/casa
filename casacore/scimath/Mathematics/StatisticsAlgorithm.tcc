@@ -41,11 +41,18 @@ StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::~StatisticsAlgorith
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
-	const InputIterator& first, uInt nr, uInt dataStride
+	const InputIterator& first, uInt nr, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_throwIfDataProviderDefined();
 	_data.push_back(first);
-	_counts.push_back(nr);
+	// internally we store the number of strided points
+
+	_counts.push_back(
+		nrAccountsForStride ? nr
+			: nr % dataStride == 0
+			  ? nr/dataStride
+				: nr/dataStride + 1
+	);
 	_dataStrides.push_back(dataStride);
 	_addData();
 }
@@ -53,7 +60,8 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, uInt nr,
-	const DataRanges& dataRanges, Bool isInclude, uInt dataStride
+	const DataRanges& dataRanges, Bool isInclude, uInt dataStride,
+	Bool nrAccountsForStride
 ) {
 	_throwIfDataProviderDefined();
 	typename DataRanges::const_iterator riter = dataRanges.begin();
@@ -68,76 +76,86 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	uInt n = _data.size();
 	_isIncludeRanges[n] = isInclude;
 	_dataRanges[n] = dataRanges;
-	this->addData(first, nr, dataStride);
+	this->addData(first, nr, dataStride, nrAccountsForStride);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const MaskIterator& maskFirst,
-	uInt nr, uInt dataStride, uInt maskStride
+	uInt nr, uInt dataStride, Bool nrAccountsForStride, uInt maskStride
 ) {
 	_throwIfDataProviderDefined();
 	uInt key = _data.size();
 	_maskStrides[key] = maskStride;
 	_masks[key] = maskFirst;
-	this->addData(first, nr, dataStride);
+	this->addData(first, nr, dataStride, nrAccountsForStride);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const MaskIterator& maskFirst,
 	uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride, uInt maskStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride,
+	uInt maskStride
 ) {
 	_throwIfDataProviderDefined();
 	uInt key = _data.size();
 	_maskStrides[key] = maskStride;
 	_masks[key] = maskFirst;
-	this->addData(first, nr, dataRanges, isInclude, dataStride);
+	this->addData(
+		first, nr, dataRanges, isInclude,
+		dataStride, nrAccountsForStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const InputIterator& weightFirst,
-	uInt nr, uInt dataStride
+	uInt nr, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_throwIfDataProviderDefined();
 	_weights[_data.size()] = weightFirst;
-	this->addData(first, nr, dataStride);
+	this->addData(first, nr, dataStride, nrAccountsForStride);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const InputIterator& weightFirst,
 	uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_throwIfDataProviderDefined();
 	_weights[_data.size()] = weightFirst;
-	this->addData(first, nr, dataRanges, isInclude, dataStride);
+	this->addData(
+		first, nr, dataRanges, isInclude, dataStride, nrAccountsForStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const InputIterator& weightFirst,
-	const MaskIterator& maskFirst, uInt nr, uInt dataStride, uInt maskStride
+	const MaskIterator& maskFirst, uInt nr, uInt dataStride,
+	Bool nrAccountsForStride, uInt maskStride
 ) {
 	_throwIfDataProviderDefined();
 	_weights[_data.size()] = weightFirst;
-	this->addData(first, maskFirst, nr, dataStride, maskStride);
+	this->addData(
+		first, maskFirst, nr, dataStride, nrAccountsForStride, maskStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::addData(
 	const InputIterator& first, const InputIterator& weightFirst,
 	const MaskIterator& maskFirst, uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride, uInt maskStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride,
+	uInt maskStride
 ) {
 	_throwIfDataProviderDefined();
 	_weights[_data.size()] = weightFirst;
 	this->addData(
-		first, maskFirst, nr, dataRanges,
-		isInclude, dataStride, maskStride
+		first, maskFirst, nr, dataRanges, isInclude, dataStride,
+		nrAccountsForStride, maskStride
 	);
 }
 
@@ -183,83 +201,94 @@ Record StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::getStatistic
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
-	const InputIterator& first, uInt nr, uInt dataStride
+	const InputIterator& first, uInt nr, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_clearData();
-	addData(first, nr, dataStride);
+	addData(first, nr, dataStride, nrAccountsForStride);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, uInt nr,
-	const DataRanges& dataRanges, Bool isInclude, uInt dataStride
+	const DataRanges& dataRanges, Bool isInclude, uInt dataStride,
+	Bool nrAccountsForStride
 ) {
 	_clearData();
-	addData(first, nr, dataRanges, isInclude, dataStride);
+	addData(
+		first, nr, dataRanges, isInclude, dataStride, nrAccountsForStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const MaskIterator& maskFirst,
-	uInt nr, uInt dataStride, uInt maskStride
+	uInt nr, uInt dataStride, Bool nrAccountsForStride, uInt maskStride
 ) {
 	_clearData();
-	addData(first, maskFirst, nr, dataStride, maskStride);
+	addData(
+		first, maskFirst, nr, dataStride, nrAccountsForStride, maskStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const MaskIterator& maskFirst,
 	uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride, uInt maskStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride,
+	uInt maskStride
 ) {
 	_clearData();
 	addData(
-		first, maskFirst, nr, dataRanges,
-		isInclude, dataStride, maskStride
+		first, maskFirst, nr, dataRanges, isInclude, dataStride,
+		nrAccountsForStride, maskStride
 	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const InputIterator& weightFirst,
-	uInt nr, uInt dataStride
+	uInt nr, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_clearData();
-	addData(first, weightFirst, nr, dataStride);
+	addData(first, weightFirst, nr, dataStride, nrAccountsForStride);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const InputIterator& weightFirst,
 	uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride
 ) {
 	_clearData();
 	addData(
-		first, weightFirst, nr, dataRanges, isInclude, dataStride
+		first, weightFirst, nr, dataRanges, isInclude,
+		dataStride, nrAccountsForStride
 	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const InputIterator& weightFirst,
-	const MaskIterator& maskFirst, uInt nr, uInt dataStride, uInt maskStride
+	const MaskIterator& maskFirst, uInt nr, uInt dataStride,
+	Bool nrAccountsForStride, uInt maskStride
 ) {
 	_clearData();
-	addData(first, weightFirst, maskFirst, nr, dataStride, maskStride);
+	addData(
+		first, weightFirst, maskFirst, nr, dataStride,
+		nrAccountsForStride, maskStride
+	);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::setData(
 	const InputIterator& first, const InputIterator& weightFirst,
 	const MaskIterator& maskFirst, uInt nr, const DataRanges& dataRanges,
-	Bool isInclude, uInt dataStride, uInt maskStride
+	Bool isInclude, uInt dataStride, Bool nrAccountsForStride, uInt maskStride
 ) {
 	_clearData();
 	addData(
-		first, weightFirst, maskFirst, nr, dataRanges,
-		isInclude, dataStride, maskStride
+		first, weightFirst, maskFirst, nr, dataRanges, isInclude,
+		dataStride, nrAccountsForStride, maskStride
 	);
 }
 

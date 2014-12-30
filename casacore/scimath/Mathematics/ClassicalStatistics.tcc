@@ -517,7 +517,7 @@ Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatisti
 			_sumofweights += ngood;
 		}
 		if (_doMaxMin) {
-			_updateMaxMin(mymin, mymax, minpos, maxpos);
+			_updateMaxMin(mymin, mymax, minpos, maxpos, _myStride);
 		}
 		++_idataset;
 		if (! dataProvider.null()) {
@@ -2438,16 +2438,16 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
-	AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos
+	AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos, uInt dataStride
 ) {
 	if (maxpos >= 0) {
 		_maxpos.first = _idataset;
-		_maxpos.second = maxpos;
+		_maxpos.second = maxpos * dataStride;
         _max = new AccumType(mymax);
 	}
 	if (minpos >= 0) {
 		_minpos.first = _idataset;
-		_minpos.second = minpos;
+		_minpos.second = minpos * dataStride;
         _min = new AccumType(mymin);
 	}
 }
@@ -2583,7 +2583,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_valuesFromSor
 		: knownNpts.null()
 		  ? 0 : *knownNpts;
 	if (myArray.empty()) {
-		if (/*! _currentStats.empty() && */ myNpts > 0) {
+		if (myNpts > 0) {
 			// we have already computed npts
 			if (myNpts <= maxArraySize) {
 				// npts is smaller than the max array size, so create the array and sort
