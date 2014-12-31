@@ -78,7 +78,8 @@ class Antenna1VsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
         dirname = os.path.join(context.report_dir, stage)
 
         plotter = image.ImageDisplay()
-        plots = plotter.plot(context=context, results=result, reportdir=dirname)
+        plots = plotter.plot(context=context, results=result, reportdir=dirname,
+          dpi=1000)
         
         super(Antenna1VsChannelsPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
