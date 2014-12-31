@@ -503,24 +503,38 @@ IPosition SubLattice<T>::doNiceCursorShape (uInt maxPixels) const
 template<class T>
 T SubLattice<T>::getAt (const IPosition& where) const
 {
+	return itsLatticePtr->getAt (positionInParent(where));
+	/*
   if (! itsAxesMap.isRemoved()) {
     return itsLatticePtr->getAt (itsRegion.convert (where));
   }
   return itsLatticePtr->getAt (itsRegion.convert(itsAxesMap.posToOld (where)));
+  */
 }
 
 template<class T>
 void SubLattice<T>::putAt (const T& value, const IPosition& where)
 {
-  if (!itsWritable) {
-      throw (AipsError ("SubLattice::putAt - non-writable lattice"));
-  }
+	ThrowIf(! itsWritable, "SubLattice::putAt - non-writable lattice");
+	itsLatticePtr->putAt (value, positionInParent(where));
+  /*
   if (! itsAxesMap.isRemoved()) {
     itsLatticePtr->putAt (value, itsRegion.convert (where));
   } else {
     itsLatticePtr->putAt (value, itsRegion.convert (itsAxesMap.posToOld
 						                 (where)));
   }
+  */
+}
+
+template<class T>
+IPosition SubLattice<T>::positionInParent(const IPosition& subLatticePosition) const {
+	if (itsAxesMap.isRemoved()) {
+		return itsRegion.convert (itsAxesMap.posToOld(subLatticePosition));
+	}
+	else {
+		return itsRegion.convert (subLatticePosition);
+	}
 }
 
 template<class T>

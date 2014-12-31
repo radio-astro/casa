@@ -2440,14 +2440,22 @@ template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 	AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos, uInt dataStride
 ) {
+	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
+		= this->_getDataProvider();
 	if (maxpos >= 0) {
 		_maxpos.first = _idataset;
 		_maxpos.second = maxpos * dataStride;
+		if (! dataProvider.null()) {
+			dataProvider->updateMaxPos(_maxpos);
+		}
         _max = new AccumType(mymax);
 	}
 	if (minpos >= 0) {
 		_minpos.first = _idataset;
 		_minpos.second = minpos * dataStride;
+		if (! dataProvider.null()) {
+			dataProvider->updateMinPos(_minpos);
+		}
         _min = new AccumType(mymin);
 	}
 }

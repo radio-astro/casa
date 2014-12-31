@@ -2128,7 +2128,7 @@ int main() {
     		CountedPtr<Double> mymin, mymax;
     		std::map<Double, Double> quantileToValue;
     		Double median = hfs.getMedianAndQuantiles(
-    			quantileToValue, quantiles, npts, mymin, mymax, 99999
+    			quantileToValue, quantiles, npts, mymin, mymax, 50000
     		);
     		AlwaysAssert(median == 0, AipsError);
     		AlwaysAssert(quantileToValue[0.25] == 0, AipsError);
