@@ -276,6 +276,10 @@ public:
   const AxesMapping& getAxesMap() const
     { return itsAxesMap; }
 
+  // Convert the specified position in the sublattice to the corresponding
+  // position in the parent lattice.
+  inline IPosition positionInParent(const IPosition& subLatticePosition) const;
+
 protected:
   // Set the various pointer needed to construct the object.
   // One of the pointers should be zero.

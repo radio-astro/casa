@@ -629,31 +629,6 @@ private:
 
 	void _doNpts();
 
-	/*
-	inline void _findBinCode(
-		vector<uInt64>& binCounts, CountedPtr<AccumType>& sameVal, Bool& allSame,
-		const InputIterator& datum, const BinDesc& binDesc, const AccumType& maxLimit
-	) const {
-		AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum;
-		if (myDatum >= binDesc.minLimit && myDatum < maxLimit) {
-			AccumType idx = (myDatum - binDesc.minLimit)/binDesc.binWidth;
-			++binCounts[StatisticsUtilities<AccumType>::getInt(idx)];
-			if (allSame) {
-				if (sameVal.null()) {
-					sameVal = new AccumType(myDatum);
-				}
-				else {
-					allSame = myDatum == *sameVal;
-					if (! allSame) {
-						sameVal = NULL;
-					}
-				}
-			}
-		}
-	}
-	*/
-
-
 	// get the values for the specified indices in the sorted array of all good data
 	std::map<uInt64, AccumType> _indicesToValues(
 		CountedPtr<uInt64> knownNpts, CountedPtr<AccumType> knownMin,
@@ -705,8 +680,6 @@ private:
 		const std::set<uInt64>& indices, uInt maxArraySize,
 		Bool persistSortedArray
 	);
-
-
 };
 
 }
