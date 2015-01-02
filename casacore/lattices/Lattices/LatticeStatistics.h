@@ -454,6 +454,8 @@ private:
    T minFull_p, maxFull_p;
    Bool doneFullMinMax_p;
 
+   vector<ClassicalStatistics<AccumType, const T*, const Bool*> > _cs;
+
 // Summarize the statistics found over the entire lattice
    virtual void summStats();
 
