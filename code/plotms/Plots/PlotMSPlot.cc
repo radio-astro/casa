@@ -976,12 +976,6 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 		updateCanvas();
 	}
 
-	// Release drawing if needed.
-	if(itsTCLParams_.releaseWhenDone && !isCacheUpdating() ){
-		releaseDrawing();
-	}
-
-
 	// Log number of points as needed.
 	// resetIter() took care of this already
 	/*
@@ -994,6 +988,12 @@ void PlotMSPlot::cacheLoaded_(bool wasCanceled) {
 	if(itsTCLParams_.endCacheLog){
 		itsParent_->getLogger()->releaseMeasurement();
 	}
+
+	// Release drawing if needed.
+	if(itsTCLParams_.releaseWhenDone && !isCacheUpdating() ){
+		releaseDrawing();
+	}
+
 }
 
 void PlotMSPlot::setRelease( bool b ){
