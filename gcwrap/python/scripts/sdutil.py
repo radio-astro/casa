@@ -19,8 +19,10 @@ import rasterutil
 def toolmanager(vis, tooltype, *args, **kwargs):
     tool = gentools([tooltype])[0]
     tool.open(vis, *args, **kwargs)
-    yield tool
-    tool.close()
+    try:
+        yield tool
+    finally:
+        tool.close()
 
 def tbmanager(vis, *args, **kwargs):
     return toolmanager(vis, 'tb', *args, **kwargs)
