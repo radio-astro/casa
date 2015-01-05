@@ -16,18 +16,19 @@ import pipeline.infrastructure.pipelineqa as pqa
 __all__ = ['score_polintents',                                # ALMA specific
            'score_bands',                                     # ALMA specific
            'score_bwswitching',                               # ALMA specific
-	   'score_tsysspwmap',                                # ALMA specific
-	   'score_missing_derived_fluxes',                    # ALMA specific
-	   'score_derived_fluxes_snr',                        # ALMA specific
-	   'score_phaseup_mapping_fraction',                  # ALMA specific
-	   'score_missing_phaseup_snrs',                      # ALMA specific
-	   'score_missing_bandpass_snrs',                     # ALMA specific
-	   'score_poor_phaseup_solutions',                    # ALMA specific
-	   'score_poor_bandpass_solutions',                   # ALMA specific
-	   'score_setjy_measurements',         
+           'score_tsysspwmap',                                # ALMA specific
+           'score_missing_derived_fluxes',                    # ALMA specific
+           'score_derived_fluxes_snr',                        # ALMA specific
+           'score_phaseup_mapping_fraction',                  # ALMA specific
+           'score_missing_phaseup_snrs',                      # ALMA specific
+           'score_missing_bandpass_snrs',                     # ALMA specific
+           'score_poor_phaseup_solutions',                    # ALMA specific
+           'score_poor_bandpass_solutions',                   # ALMA specific
+           'score_setjy_measurements',         
            'score_missing_intents',
            'score_ephemeris_coordinates',
            'score_online_shadow_agents',
+           'score_applycal_agents',
            'score_total_data_flagged',
            'score_ms_model_data_column_present',
            'score_ms_history_entries_present',
@@ -398,15 +399,15 @@ def score_ephemeris_coordinates(mses):
     # analyse each MS
     for ms in mses:
 
-        # Examine each source
-	for source in ms.sources:
-	    if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) or \
-	        source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
-		all_ok = False
+    # Examine each source
+        for source in ms.sources:
+            if source.ra == casatools.quanta.formxxx(zerodirection['m0'], format='hms', prec=3) or \
+                source.dec == casatools.quanta.formxxx(zerodirection['m1'], format='dms', prec=2):
+                all_ok = False
                 score += (-1.0 / num_mses)
-		longmsg =  ('Suspicious source coordinates for  %s in %s'
-		    '' % (source.name, ms.basename))
-		complaints.append(longmsg)
+                longmsg =  ('Suspicious source coordinates for  %s in %s'
+                    '' % (source.name, ms.basename))
+                complaints.append(longmsg)
 
     if all_ok:
         longmsg = ('All source coordinates OK in '
@@ -423,10 +424,19 @@ def score_online_shadow_agents(ms, summaries):
     """
     Get a score for the fraction of data flagged by online and shadow agents.
 
-    0 < score < 1 === 50% < frac_flagged < 20%
+    0 < score < 1 === 60% < frac_flagged < 5%
     """
-    return score_data_flagged_by_agents(ms, summaries, 0.2, 0.5, ['online', 'shadow'])
+    return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, 
+                                        ['online', 'shadow'])
 
+@log_qa
+def score_applycal_agents(ms, summaries):
+    """
+    Get a score for the fraction of data flagged by online and shadow agents.
+
+    0 < score < 1 === 60% < frac_flagged < 5%
+    """
+    return score_data_flagged_by_agents(ms, summaries, 0.05, 0.6, ['applycal'])
 
 @log_qa
 def score_total_data_flagged(filename, summaries):
@@ -620,8 +630,8 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
     # Loop over the expected fields
     nexpected = 0
     for scifield in scifields:
-	validspws = set([spw.id for spw in scifield.valid_spws])
-	nexpected = nexpected + len(validspws.intersection(scispws))
+        validspws = set([spw.id for spw in scifield.valid_spws])
+        nexpected = nexpected + len(validspws.intersection(scispws))
 
     # Loop over the measurements
     nmeasured = 0
@@ -648,7 +658,7 @@ def score_setjy_measurements (ms, reqfields, reqintents, reqspws, measurements):
         longmsg = 'Missing flux calibrator measurements for %s %d/%d ' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Missing flux calibrator measurements'
     else:
-	score = 0.0
+        score = 0.0
         longmsg = 'Too many flux calibrator measurements for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Too many flux measurements'
 
@@ -671,18 +681,18 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
     # Loop over the expected fields
     nexpected = 0
     for scifield in scifields:
-	validspws = set([spw.id for spw in scifield.valid_spws])
-	nexpected = nexpected + len(validspws.intersection(scispws))
+        validspws = set([spw.id for spw in scifield.valid_spws])
+        nexpected = nexpected + len(validspws.intersection(scispws))
 
     # Loop over measurements
     nmeasured = 0
     for key, value in measurements.iteritems():
         # Loop over the flux measurements
         for flux in value:
-	    fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
-	    uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
-	    if fluxjy <= 0.0 or uncjy <= 0.0: 
-	         continue
+            fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+            uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
+            if fluxjy <= 0.0 or uncjy <= 0.0: 
+                 continue
             nmeasured = nmeasured + 1
 
     # Compute score
@@ -703,7 +713,7 @@ def score_missing_derived_fluxes (ms, reqfields, reqintents, measurements):
         longmsg = 'Missing derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Missing derived fluxes'
     else:
-	score = 0.0
+        score = 0.0
         longmsg = 'Extra derived fluxes for %s %d/%d' % (ms.basename, nmeasured, nexpected)
         shortmsg = 'Extra derived fluxes'
 
@@ -726,25 +736,25 @@ def score_phaseup_mapping_fraction(ms, reqfields, reqintents, phaseup_spwmap):
 
         # Expected science windows
         scispws = set([spw.id for spw in ms.get_spectral_windows(science_windows_only=True)])
-	nexpected = len (scispws)
+        nexpected = len(scispws)
 
         # Loop over the expected fields
         #nexpected = 0
         #for scifield in scifields:
-	    #validspws = set([spw.id for spw in scifield.valid_spws])
-	    #nexpected = nexpected + len(validspws.intersection(scispws))
+            #validspws = set([spw.id for spw in scifield.valid_spws])
+            #nexpected = nexpected + len(validspws.intersection(scispws))
 
         nunmapped = 0
-	for spwid in scispws:
-	    if spwid == phaseup_spwmap[spwid]: 
-	        nunmapped = nunmapped + 1
-	
-	if nunmapped >= nexpected:
+        for spwid in scispws:
+            if spwid == phaseup_spwmap[spwid]: 
+                nunmapped = nunmapped + 1
+        
+        if nunmapped >= nexpected:
             score = 1.0
             longmsg = 'No mapped science spws for %s ' % ms.basename
             shortmsg = 'No mapped science spws'
-	else:
-	    score =  float(nunmapped) / float(nexpected) 
+        else:
+            score =  float(nunmapped) / float(nexpected) 
             longmsg = 'There are %d mapped narrow science spws for %s ' % (nexpected - nunmapped, ms.basename)
             shortmsg = 'There are mapped narrow science spws'
 
@@ -762,7 +772,7 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
     missing_spws = []
     for i in range (len(spwids)):
         if not phsolints[i]:
-	    missing_spws.append(spwid[i])
+            missing_spws.append(spwid[i])
     nmissing = len(missing_spws) 
 
     if nmissing <= 0:
@@ -772,14 +782,13 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
     else:
         score = float (nexpected - nmissing) / nexpected
         longmsg = 'Missing phaseup SNR estimates for spws %s in %s ' % \
-	    (missing_spws, ms.basename)
+            (missing_spws, ms.basename)
         shortmsg = 'Missing phaseup SNR estimates'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
 def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
-
     '''
     Score is the fraction of spws with poor phaseup solutions
     '''
@@ -789,9 +798,9 @@ def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
     poor_spws = []
     for i in range (len(spwids)):
         if not nphsolutions[i]:
-	    poor_spws.append(spwid[i])
-	elif nphsolutions[i] < min_nsolutions:
-	    poor_spws.append(spwid[i])
+            poor_spws.append(spwids[i])
+        elif nphsolutions[i] < min_nsolutions:
+            poor_spws.append(spwids[i])
     npoor = len(poor_spws) 
 
     if npoor <= 0:
@@ -801,7 +810,7 @@ def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
     else:
         score = float (nexpected - npoor) / nexpected
         longmsg = 'Poorly determined phaseup solutions for spws %s in %s ' % \
-	    (poor_spws, ms.basename)
+            (poor_spws, ms.basename)
         shortmsg = 'Poorly determined phaseup solutions'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
@@ -818,7 +827,7 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
     missing_spws = []
     for i in range (len(spwids)):
         if not bpsolints[i]:
-	    missing_spws.append(spwids[i])
+            missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
 
     if nmissing <= 0:
@@ -828,7 +837,7 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
     else:
         score = float (nexpected - nmissing) / nexpected
         longmsg = 'Missing bandpass SNR estimates for spws %s in%s ' % \
-	    (missing_spws, ms.basename)
+            (missing_spws, ms.basename)
         shortmsg = 'Missing bandpass SNR estimates'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
@@ -845,55 +854,49 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
     poor_spws = []
     for i in range (len(spwids)):
         if not nbpsolutions[i]:
-	    poor_spws.append(spwids[i])
-	elif nbpsolutions[i] < min_nsolutions:
-	    poor_spws.append(spwids[i])
+            poor_spws.append(spwids[i])
+        elif nbpsolutions[i] < min_nsolutions:
+            poor_spws.append(spwids[i])
     npoor = len(poor_spws) 
 
     if npoor <= 0:
         score = 1.0
         longmsg = 'No poorly determined bandpass solutions for %s ' % \
-	    ms.basename
+            ms.basename
         shortmsg = 'No poorly determined bandpass solutions'
     else:
         score = float (nexpected - npoor) / nexpected
         longmsg = 'Poorly determined bandpass solutions for spws %s in %s ' % \
-	    (poor_spws, ms.basename)
+            (poor_spws, ms.basename)
         shortmsg = 'Poorly determined bandpass solutions'
 
     return pqa.QAScore(score, longmsg=longmsg, shortmsg=shortmsg)
 
 @log_qa
-def score_derived_fluxes_snr (ms, measurements):
-
+def score_derived_fluxes_snr(ms, measurements):
     '''
     Score the SNR of the derived flux measurements.
         1.0 if SNR > 20.0
-	0.0 if SNR < 5.0
-	linear scale between 0.0 and 1.0 in between
+        0.0 if SNR < 5.0
+        linear scale between 0.0 and 1.0 in between
     '''
 
     # Loop over measurements
     nmeasured = 0
     score = 0.0
     minscore = 1.0
-    for key, value in measurements.iteritems():
+    for _, value in measurements.iteritems():
         # Loop over the flux measurements
         for flux in value:
-	    fluxjy = getattr (flux, 'I').to_units(measures.FluxDensityUnits.JANSKY)
-	    uncjy = getattr (flux.uncertainty, 'I').to_units(measures.FluxDensityUnits.JANSKY)
-	    if fluxjy <= 0.0 or uncjy <= 0.0: 
-	         continue
-	    snr = fluxjy / uncjy
+            fluxjy = flux.I.to_units(measures.FluxDensityUnits.JANSKY)
+            uncjy = flux.uncertainty.I.to_units(measures.FluxDensityUnits.JANSKY)
+            if fluxjy <= 0.0 or uncjy <= 0.0: 
+                continue
+            snr = fluxjy / uncjy
             nmeasured = nmeasured + 1
-	    if float(snr) <= 5.0:
-	        score1 = 0.0
-	    elif float(snr)  >= 20.0:
-	        score1 = 1.0
-	    else:
-	        score1 = linear_score (float(snr), 5.0, 20.0, 0.0, 1.0)
-	    minscore = min (minscore, score1)
-	    score = score + score1
+            score1 = linear_score (float(snr), 5.0, 20.0, 0.0, 1.0)
+            minscore = min (minscore, score1)
+            score = score + score1
     if nmeasured > 0:
         score = score / nmeasured
 
