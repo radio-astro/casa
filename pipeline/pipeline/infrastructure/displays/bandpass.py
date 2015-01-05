@@ -113,7 +113,7 @@ class BandpassAmpVsFreqSummaryChart(BandpassSummaryChart):
     def __init__(self, context, result):
         # request plots per spw, overlaying all antennas
         super(BandpassAmpVsFreqSummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='amp')
+                context, result, xaxis='freq', yaxis='amp', showatm=True)
 
 
 class BandpassPhaseVsFreqSummaryChart(BandpassSummaryChart):
@@ -123,7 +123,7 @@ class BandpassPhaseVsFreqSummaryChart(BandpassSummaryChart):
     def __init__(self, context, result):
         # request plots per spw, overlaying all antennas
         super(BandpassPhaseVsFreqSummaryChart, self).__init__(
-                context, result, xaxis='freq', yaxis='phase')        
+                context, result, xaxis='freq', yaxis='phase', showatm=True)        
 
 
 class BandpassAmpVsFreqDetailChart(BandpassDetailChart):
@@ -133,7 +133,7 @@ class BandpassAmpVsFreqDetailChart(BandpassDetailChart):
     def __init__(self, context, result):
         # request plots per antenna and spw
         super(BandpassAmpVsFreqDetailChart, self).__init__(
-                context, result, xaxis='freq', yaxis='amp')
+                context, result, xaxis='freq', yaxis='amp', showatm=True)
 
 
 class BandpassPhaseVsFreqDetailChart(BandpassDetailChart):
@@ -143,4 +143,4 @@ class BandpassPhaseVsFreqDetailChart(BandpassDetailChart):
     def __init__(self, context, result):
         # request plots per antenna and spw
         super(BandpassPhaseVsFreqDetailChart, self).__init__(
-                context, result, xaxis='freq', yaxis='phase')
+                context, result, xaxis='freq', yaxis='phase', showatm=True)
