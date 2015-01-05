@@ -81,8 +81,8 @@ class Fluxdb(basetask.StandardTaskTemplate):
                     LOG.info(" ")
                     LOG.info(" ")
                     (I, Q, U, V) = flux.casa_flux_density
-                    sourcename = field.name
-                    LOG.info(str(field.id) + '  ' + field.name + '  ' + str(I))
+                    sourcename = sanitize_string(field.name)
+                    LOG.info(str(field.id) + '  ' + sourcename + '  ' + str(I))
                     
                     try:
 			frequency = str(flux.spw_id.centre_frequency.value)
@@ -183,3 +183,12 @@ class Fluxdb(basetask.StandardTaskTemplate):
         urlparams = urllib.urlencode(params)
     
         return urlparams
+        
+def sanitize_string(name):
+    '''
+        sanitize source name if needed
+    '''
+    
+    namereturn = name.split(';')
+    
+    return namereturn[0]
