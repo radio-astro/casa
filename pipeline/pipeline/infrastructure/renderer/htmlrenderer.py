@@ -82,8 +82,8 @@ def _get_task_description_for_class(task_cls):
     if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportDataOld):
         return 'Register measurement sets with the pipeline'
 
-    if task_cls is hifa.tasks.Linpolcal:
-        return 'Linear polarization calibration'
+    #if task_cls is hifa.tasks.Linpolcal:
+        #return 'Linear polarization calibration'
         
     if task_cls is hifa.tasks.Fluxdb:
         return 'Flux calibration database'
