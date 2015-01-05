@@ -51,6 +51,12 @@ By setting scaletsys = True, associated Tsys is also scaled.
         <value>False</value>
     </param>
 
+    <param type="bool" name="verbose">
+        <shortdescription>Print verbose log output [True, False]</shortdescription>
+        <description>Print verbose log output</description>
+        <value>True</value>
+    </param>
+
     </input>
 
   <returns type="void"/>
@@ -78,6 +84,10 @@ overwrite -- overwrite the output file if already exists
         options: (bool) True,False
         default: False
         NOTE this parameter is ignored when outform='ASCII'
+verbose -- Print verbose log messages. If True, Tsys values before
+           (and after) scaling are printed to logger.
+          options: (bool) True, False
+          default: True
 
 -----------
 DESCRIPTION

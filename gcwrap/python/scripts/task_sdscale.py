@@ -5,7 +5,7 @@ from asap.scantable import is_scantable, is_ms
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
+def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite, verbose):
     with sdutil.sdtask_manager(sdscale_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -33,13 +33,17 @@ class sdscale_worker(sdutil.sdtask_template):
             return
 
         s2 = self.scan.scale(self.factor, self.scaletsys, False)
-        casalog.post( "Scaled spectra and Tsys by "+str(self.factor) )
+        casalog.post( "Scaled %s by %s" % \
+                      (("spectra" + (" and Tsys" if self.scaletsys else "") ),
+                       str(self.factor)) )
 
-        if self.scaletsys:
-            oldtsys=self.scan._row_callback(self.scan._gettsys, "Original Tsys")
-            newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
-        else:
-            oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
+        if self.verbose:
+            if self.scaletsys:
+                oldtsys=self.scan._row_callback(self.scan._gettsys, "Original Tsys")
+                newtsys=s2._row_callback(s2._gettsys, "Scaled Tsys")
+            else:
+                oldtsys=s2._row_callback(s2._gettsys, "Tsys (not scaled)")
+
         self.scan = s2
 
     def save(self):
