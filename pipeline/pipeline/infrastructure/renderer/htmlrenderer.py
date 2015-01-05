@@ -72,17 +72,12 @@ def get_task_description(result_obj):
     return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
 
 def _get_task_description_for_class(task_cls):
-    if task_cls is hif.tasks.Atmflag:
-        return 'Flag on atmospheric transmission'
 
     if task_cls is hif.tasks.Clean:
         return 'Produce a cleaned image'
 
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
-
-    #if task_cls is hif.tasks.ExportData:
-        #return 'Export data products'
 
     if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportDataOld):
         return 'Register measurement sets with the pipeline'
@@ -95,9 +90,6 @@ def _get_task_description_for_class(task_cls):
 
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
-
-    #if task_cls is hif.tasks.NormaliseFlux:
-        #return 'Calculate mean fluxes of calibrators'
 
     if task_cls is hsd.tasks.SDMsToScantable:
         return 'Convert MS to Scantables'
@@ -2151,7 +2143,6 @@ renderer_map = {
         # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
-        hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hifa.tasks.Fluxdb        : T2_4MDetailsDefaultRenderer('t2-4m_details-hifa_fluxdb.html'),
