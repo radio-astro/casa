@@ -24,14 +24,11 @@ import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 from pipeline.infrastructure.renderer.templates import resources
-from . import logger
 from . import qaadapter
 from .. import utils
 from . import weblog
 import pipeline.hif as hif
-import pipeline.hifa as hifa
 import pipeline.hifv as hifv
 import pipeline.hif.tasks.applycal.renderer as applycal_renderer
 
@@ -951,250 +948,6 @@ class T2_3_6MRenderer(T2_3_XMBaseRenderer):
         return qaadapter.registry.get_miscellaneous_topic()        
 
 
-class T2_3MDetailsDefaultRenderer(object):
-    def __init__(self, template='t2-3m_details.html', always_rerender=False):
-        self.template = template
-        self.always_rerender = always_rerender
-        
-    def get_display_context(self, context, result):
-        return {'pcontext' : context,
-                'result'   : result}
-
-    def render(self, context, result):
-        display_context = self.get_display_context(context, result)
-        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
-        return t.render(**display_context)
-
-
-class T2_3MDetailsRenderer(object):
-    # the filename component of the output file. While this is the same for
-    # all results, the directory is stage-specific, so there's no risk of
-    # collisions  
-    output_file = 't2-3m_details.html'
-    
-    # the default renderer used should the task:renderer mapping not specify a
-    # specialised renderer
-    _default_renderer = T2_3MDetailsDefaultRenderer()
-
-    """
-    Get the file object for this renderer.
-
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param result: the task results object to render
-    :type result: :class:`~pipeline.infrastructure.api.Result`
-    :rtype: a file object
-    """
-    @classmethod
-    def get_file(cls, context, result):
-        # construct the relative filename, eg. 'stageX/t2-3m_details.html'
-        path = cls.get_path(context, result)
-
-        # to avoid any subsequent file not found errors, create the directory
-        # if a hard copy is requested and the directory is missing
-        stage_dir = os.path.dirname(path)
-        if not os.path.exists(stage_dir):
-            os.makedirs(stage_dir)
-        
-        # create a file object that writes to a file if a hard copy is 
-        # requested, otherwise return a file object that flushes to stdout
-        file_obj = open(path, 'w')
-        
-        # return the file object wrapped in a context manager, so we can use
-        # it with the autoclosing 'with fileobj as f:' construct
-        return contextlib.closing(file_obj)
-
-    """
-    Get the path to which the template will be written.
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param result: the task results object to render
-    :type result: :class:`~pipeline.infrastructure.api.Result`
-    :rtype: string
-    """
-    @classmethod
-    def get_path(cls, context, result):
-        # HTML output will be written to the directory 'stageX' 
-        stage = 'stage%s' % result.stage_number
-        stage_dir = os.path.join(context.report_dir, stage)
-
-        # construct the relative filename, eg. 'stageX/t2-4m_details.html'
-        return os.path.join(stage_dir, cls.output_file)
-
-    """
-    Render the detailed QA perspective of each Results in the given context.
-    
-    This renderer creates detailed T2_3M output for each Results. Each Results
-    in the context is passed to a specialised renderer, which generates
-    custom output and plots for the Result in question.
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    """
-    @classmethod
-    def render(cls, context):
-        # get the map of t2_3m renderers from the dictionary
-        t2_3m_renderers = renderer_map[T2_3MDetailsRenderer]
-        
-        # for each result accepted and stored in the context..
-        for result in context.results:
-            # we only handle lists of results, so wrap single objects in a
-            # list if necessary
-            if not isinstance(result, collections.Iterable):
-                l = basetask.ResultsList()
-                l.append(result)
-                l.timestamps = result.timestamps
-                l.inputs = result.inputs
-                l.stage_number = result.stage_number
-                result = l
-            task = result[0].task
-
-            # find the renderer appropriate to the task..
-            renderer = t2_3m_renderers.get(task, cls._default_renderer)
-            LOG.trace('Using %s to render %s result' % (
-                renderer.__class__.__name__, task.__name__))
-            
-            # details pages do not need to be updated once written
-            path = cls.get_path(context, result)
-            force_rerender = getattr(renderer, 'always_rerender', False)
-            if os.path.exists(path) and not force_rerender:
-                continue
-            
-            # .. get the file object to which we'll render the result
-            with cls.get_file(context, result) as fileobj:
-                # .. and write the renderer's interpretation of this result to
-                # the file object  
-                fileobj.write(renderer.render(context, result))
-
-
-class T2_3MDetailsWvrgcalflagRenderer(T2_3MDetailsDefaultRenderer):
-    """
-    T2_43DetailsBandpassRenderer generates the QA output specific to the
-    Wvrgcalflag task.
-    """
-    
-    def __init__(self, template='t2-3m_details-wvrgcalflag.html',
-                 always_rerender=False):
-        # set the name of our specialised Mako template via the superclass
-        # constructor 
-        super(T2_3MDetailsWvrgcalflagRenderer, self).__init__(template,
-                                                              always_rerender)
-
-    """
-    Get the Mako context appropriate to the results created by a Bandpass
-    task.
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param results: the Wvrgcalflag results to describe
-    :type results: 
-        :class:`~pipeline.infrastructure.tasks.wvrgcal.resultobjects.WvrgcalflagResults`
-    :rtype a dictionary that can be passed to the matching bandpass Mako 
-        template
-    """
-    def get_display_context(self, context, results):
-        # get the standard Mako context from the superclass implementation 
-        super_cls = super(T2_3MDetailsWvrgcalflagRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        plots_dir = os.path.join(context.report_dir, 
-                                 'stage%d' % results.stage_number)
-        if not os.path.exists(plots_dir):
-            os.mkdir(plots_dir)
-
-        plotter = image.ImageDisplay()
-        plots = []
-        for result in results:
-            if result.qa_wvr.view:
-                plot = plotter.plot(context, result.qa_wvr, reportdir=plots_dir, 
-                                    prefix='qa', change='WVR')
-                plots.append(plot)
-    
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup  
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        for plot_group in plot_groups:
-            # Write the thumbnail pages for each plot grouping to disk 
-            renderer = sharedrenderer.PlotGroupRenderer(context, results, plot_group, 'qa')
-            plot_group.filename = renderer.basename
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-
-        # add the PlotGroups to the Mako context. The Mako template will parse
-        # these objects in order to create links to the thumbnail pages we
-        # just created
-        ctx.update({'plot_groups' : plot_groups})
-        return ctx
-
-
-class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
-    """
-    T2_43DetailsBandpassRenderer generates the QA output specific to the
-    bandpass task.
-    """
-    
-    def __init__(self, template='t2-3m_details-bandpass.html',
-                 always_rerender=False):
-        # set the name of our specialised Mako template via the superclass
-        # constructor 
-        super(T2_3MDetailsBandpassRenderer, self).__init__(template,
-                                                           always_rerender)
-
-    def get_display_context(self, context, results):
-        """
-        Get the Mako context appropriate to the results created by a Bandpass
-        task.
-
-        :param context: the pipeline Context
-        :type context: :class:`~pipeline.infrastructure.launcher.Context`
-        :param results: the bandpass results to describe
-        :type results:
-            :class:`~pipeline.infrastructure.tasks.bandpass.common.BandpassResults`
-        :rtype a dictionary that can be passed to the matching bandpass Mako
-            template
-        """
-        # get the standard Mako context from the superclass implementation
-        super_cls = super(T2_3MDetailsBandpassRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        plots = []
-        flagged = []
-        num_flagged_feeds = 0
-        for result in results:
-            # return early if there are no QA results
-            if not result.qa:
-                return ctx
-            adapter = qaadapter.QABandpassAdapter(context, result)
-            plots.append(adapter.amplitude_plots)
-            plots.append(adapter.phase_plots)
-            
-            for antenna, feeds in adapter.flagged_feeds.items():
-                flagged.append((os.path.basename(result.inputs['vis']),
-                                antenna.identifier,
-                                ', '.join(feeds)))
-                num_flagged_feeds += len(feeds)
-
-        # Group the Plots by axes and plot types; each logical grouping will
-        # be contained in a PlotGroup  
-        plot_groups = logger.PlotGroup.create_plot_groups(plots)
-        # Write the thumbnail pages for each plot grouping to disk 
-        for plot_group in plot_groups:
-            renderer = sharedrenderer.QAPlotRenderer(context, results, plot_group, 'qa')
-            plot_group.filename = renderer.basename 
-            with renderer.get_file() as fileobj:
-                fileobj.write(renderer.render())
-
-        # add the PlotGroups to the Mako context. The Mako template will parse
-        # these objects in order to create links to the thumbnail pages we
-        # just created
-        ctx.update({'plot_groups'       : plot_groups,
-                    'flagged'           : flagged,
-                    'num_flagged_feeds' : num_flagged_feeds})
-
-        return ctx
-
-
 class T2_4MRenderer(RendererBase):
     """
     T2-4M renderer
@@ -1541,17 +1294,6 @@ class T2_4MDetailsHeuristicFlagRenderer(T2_4MDetailsDefaultRenderer):
         return ctx
 
 
-
-
-
-
-
-
-
-
-
-
-
 class VLASubPlotRenderer(object):
     #template = 'testdelays_plots.html'
     
@@ -1729,13 +1471,6 @@ class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
         return ctx
 
 
-
-
-
-
-    
-
-
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -1871,7 +1606,6 @@ class WebLogGenerator(object):
 #                  T2_3_4MRenderer,      # line finding topic
                  T2_3_5MRenderer,      # imaging topic
                  T2_3_6MRenderer,      # miscellaneous topic
-                 T2_3MDetailsRenderer, # QA details pages
                  T2_4MRenderer,        # task tree
                  T2_4MDetailsRenderer, # task details
                  # some summary renderers are placed last for access to scores
@@ -2089,10 +1823,6 @@ class LogCopier(object):
 # task-dependent weblog sections. This lets us write customised output for
 # each task type.
 renderer_map = {
-    T2_3MDetailsRenderer : {
-        hifa.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer(),
-        # hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
-    },
     T2_4MDetailsRenderer : {
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
