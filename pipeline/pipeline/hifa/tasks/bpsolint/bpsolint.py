@@ -225,6 +225,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 	# Get the median Tsys dictionary as a function of Tsys spw
         tsystemp_dict = self._get_mediantemp (inputs.ms, tsys_spwlist,
 	    scan_list, antenna='', temptype='tsys')
+	if not tsystemp_dict:
+	    LOG.info('No Tsys estimates')
+	    return BpSolintResults(vis=inputs.vis)
 
 	# Get the observing characteristics dictionary as a function of spw
 	#    This includes the spw configuration, time on source and
