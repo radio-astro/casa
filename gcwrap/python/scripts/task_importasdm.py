@@ -323,7 +323,7 @@ def importasdm(
         vistoproc = [] # the output MSs to postprocess
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             vistoproc.append(viso)
-        if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') and os.path.exists(visoc): # it may happen that no MS with corrected data was produced.
+        if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') : 
             vistoproc.append(visoc)
 
         # If viso+".flagversions" then process differently depending on the value of overwrite..
@@ -368,6 +368,13 @@ def importasdm(
 
         if showversion:
             return
+        
+        #
+        # Possibly remove the element the name of the measurement set expected to contain the corrected data from the list of of produced measurement
+        # sets if it appears the filler did not find any corrected data.
+        #
+        if not os.path.exists(visoc):
+            vistoproc = [myviso for myviso in vistoproc if myviso != visoc]
 
         #
         # Populate the HISTORY table of the MS with informations about the context in which it's been created
@@ -469,7 +476,6 @@ def importasdm(
             if process_flags:
                 flagcmds = fh.parseXML(asdm, float(tbuff))
                 onlinekeys = flagcmds.keys()
-
                 nflags = onlinekeys.__len__()
                                 
                 # Apply flags to the MS
