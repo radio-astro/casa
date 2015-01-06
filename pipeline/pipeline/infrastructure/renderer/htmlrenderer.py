@@ -31,7 +31,6 @@ from . import qaadapter
 from .. import utils
 from . import weblog
 import pipeline.hif as hif
-import pipeline.hsd as hsd
 import pipeline.hifa as hifa
 import pipeline.hifv as hifv
 import pipeline.hif.tasks.applycal.renderer as applycal_renderer
@@ -79,56 +78,14 @@ def _get_task_description_for_class(task_cls):
     if task_cls is hif.tasks.CleanList:
         return 'Calculate clean products'
 
-    if task_cls in (hsd.tasks.SDImportData, hsd.tasks.SDImportDataOld):
-        return 'Register measurement sets with the pipeline'
-
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
 
-    if task_cls is hsd.tasks.SDMsToScantable:
-        return 'Convert MS to Scantables'
-
-    if task_cls is hsd.tasks.SDExportData:
-        return 'Single-dish SDExportData'
-
-    if task_cls is hsd.tasks.SDInspectData:
-        return 'Inspect data'
-
-    if task_cls is hsd.tasks.SDCalTsys:
-        return 'Generate Tsys calibration table'
-
-    if task_cls is hsd.tasks.SDCalSky:
-        return 'Generate Sky calibration table'
-
-    if task_cls is hsd.tasks.SDApplyCal:
-        return 'Apply calibration tables'
-
-    if task_cls is hsd.tasks.SDImaging:
-        return 'Image single dish data'
-
-    if task_cls is hsd.tasks.SDBaseline:
-        return 'Generate Baseline tables and subtract spectral baseline'
-
-    if task_cls is hsd.tasks.SDBLFlag:
-        return 'Flag data by Tsys, weather, and statistics of spectra'
-    
-    if task_cls is hsd.tasks.SDFlagBaseline:
-        return 'Iterative execution of baseline subtraction and flagging'
-
-    if task_cls is hsd.tasks.SDPlotFlagBaseline:
-        return 'Plot whole spectra with baseline fit and flag result'
-
-    if task_cls is hsd.tasks.SDMsToScantable:
-        return 'Convert MSs into Scantables'
-        
     if task_cls is hifv.tasks.flagging.uncalspw.Uncalspw:
         return 'Flag spws that have no calibration'
     
     if task_cls is hifv.tasks.Applycals:
         return 'Apply all calibrations'
-
-    if task_cls is hsd.tasks.SDSimpleScale:
-        return 'Apply a scaling factor for non-linearity correction'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
