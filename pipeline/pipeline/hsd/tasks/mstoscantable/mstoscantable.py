@@ -57,6 +57,7 @@ class SDMsToScantableResults(common.SingleDishResults):
         super(SDMsToScantableResults, self).__init__()
         self.mses = mses
         self.scantables = scantables
+        self.mappedcaltables = None
         
     def merge_with_context(self, context):
         if isinstance(context.observing_run, domain.ScantableList):
@@ -70,14 +71,14 @@ class SDMsToScantableResults(common.SingleDishResults):
         callib = context.callibrary
         mycallib = callibrary.SDCalLibrary(context)
 
-        if hasattr(self, 'mappedcaltables'):
+        if self.mappedcaltables is not None:
             LOG.debug('register mapped Tsys caltables to callibrary')
             for st in self.scantables:
                 ms = st.ms
                 vis = ms.name
                 basename = ms.basename
                 antenna = st.antenna.name
-                caltable_list = self.mappedcaltables[basename]
+                caltable_list = self.mappedcaltables[basename]['mapped']
 
                 calto = callibrary.CalTo(vis=vis)
                 calstate = callib.get_calstate(calto)
@@ -245,7 +246,7 @@ class SDMsToScantable(common.SingleDishTaskTemplate):
 
             caltable = tsyscaltables[0]
             names = tsystablemapper.map(prefix, caltable, reftable)
-            sdtsystables[vis] = names
+            sdtsystables[vis] = {'mapped': names, 'original': caltable}
 
         if len(sdtsystables) > 0:
             LOG.debug('setting mappedcaltables attribute to result object')
