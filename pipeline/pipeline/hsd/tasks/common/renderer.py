@@ -6,7 +6,7 @@ import pipeline.infrastructure.renderer.weblog as weblog
 import pipeline.infrastructure.filenamer as filenamer
 
 class SingleDishGenericPlotsRenderer(object):
-    template = 'sd_generic_plots.html'
+    template = 'hsd_generic_plots.mako'
 
     def __init__(self, context, result, name, plots, plot_title):
         self.context = context

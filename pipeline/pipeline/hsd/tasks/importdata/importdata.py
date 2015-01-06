@@ -24,8 +24,10 @@ class SDImportDataInputs(importdata.ImportDataInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
          session=None, overwrite=None, save_flagonline=None,
-         bdfflags=None):
+         bdfflags=None, with_pointing_correction=None):
         self._init_properties(vars())
+
+    with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
 
 class SDImportDataResults(basetask.Results):
     '''

@@ -91,10 +91,10 @@ class T2_4MDetailsSingleDishInspectDataRenderer(basetemplates.T2_4MDetailsDefaul
         return plot_group[vis][0]        
 
 class SingleDishInspectDataPlotsRenderer(sdsharedrenderer.SingleDishGenericPlotsRenderer):
-    template = 'sd_inspectdata_plots.html'   
+    template = 'hsd_inspectdata_plots.mako'   
 
 class SingleDishPointingPlotsRenderer(sdsharedrenderer.SingleDishGenericPlotsRenderer):
-    template = 'sd_pointing_plots.html'
+    template = 'hsd_pointing_plots.mako'
     
     def __init__(self, context, result, name, plots, plot_title):
         self.context = context

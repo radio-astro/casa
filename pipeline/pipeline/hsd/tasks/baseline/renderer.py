@@ -74,7 +74,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
 class SingleDishClusterPlotsRenderer(object):
     # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
     # scores and histograms to generate. there should be a common base class. 
-    template = 'sd_cluster_plots.html'
+    template = 'hsd_cluster_plots.mako'
     
     def __init__(self, context, result, xytitle, plots):
         self.context = context
