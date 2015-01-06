@@ -34,7 +34,8 @@ def importasdm(
     showversion=None,
     useversion=None,
     bdfflags=None,
-    with_pointing_correction=None
+    with_pointing_correction=None,
+    remove_ref_undef=None
     ):
     """Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
@@ -151,6 +152,8 @@ def importasdm(
       with_pointing_correction -- add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection)
                  to the value to be written in MS::Pointing::direction 
                    default: false
+
+      remove_ref_undef -- if set to True then apply fixspwbackport on the resulting MSes.
            
         """
 
@@ -320,7 +323,7 @@ def importasdm(
         vistoproc = [] # the output MSs to postprocess
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             vistoproc.append(viso)
-        if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') and os.path.exists(visoc): # it may happen that no MS with corrected data was produced.
+        if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') : 
             vistoproc.append(visoc)
 
         # If viso+".flagversions" then process differently depending on the value of overwrite..
@@ -365,6 +368,13 @@ def importasdm(
 
         if showversion:
             return
+        
+        #
+        # Possibly remove the element the name of the measurement set expected to contain the corrected data from the list of of produced measurement
+        # sets if it appears the filler did not find any corrected data.
+        #
+        if not os.path.exists(visoc):
+            vistoproc = [myviso for myviso in vistoproc if myviso != visoc]
 
         #
         # Populate the HISTORY table of the MS with informations about the context in which it's been created
@@ -385,7 +395,24 @@ def importasdm(
 
         if mslocal:
             mslocal = None 
-        
+            
+        # 
+        # Do we apply fixspwbackport
+        if remove_ref_undef :
+            casalog.post('remove_ref_undef=True: fixspwbackport will be applied ...')
+            
+            for myviso in vistoproc:
+                cmd = 'fixspwbackport ' + myviso
+                casalog.post('Running fixspwbackport standalone invoked as:')
+                casalog.post(cmd)
+                cmdexitcode = os.system(cmd)
+
+                if cmdexitcode != 0:
+                    casalog.post(cmd
+                                 + ' terminated with exit code '
+                                 + str(cmdexitcode), 'SEVERE')
+                    raise Exception, 'fixspwbackport error.'
+
         # Binary Flag processing
         if bdfflags:
             
@@ -449,7 +476,6 @@ def importasdm(
             if process_flags:
                 flagcmds = fh.parseXML(asdm, float(tbuff))
                 onlinekeys = flagcmds.keys()
-
                 nflags = onlinekeys.__len__()
                                 
                 # Apply flags to the MS
