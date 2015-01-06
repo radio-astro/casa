@@ -103,6 +103,7 @@ def gpcal_calc(caltable):
 
                 if caltableformat == 'new':
                     phase1 = tb1.getcol('CPARAM')
+                    flag1 = tb1.getcol('FLAG')
                 else:
                     phase1 = tb1.getcol('GAIN')
  
@@ -113,12 +114,18 @@ def gpcal_calc(caltable):
  
                     phase2 = []
                     for i in range(ngains):
-                        phase2.append( phase1[0][0][i] - phase1[1][0][i] )
+                        # don't use flagged points (see CAS-6804)
+                        if ((flag1[0][0][i]==False) and (flag1[1][0][i]==False)):
+                            phase2.append( phase1[0][0][i] - phase1[1][0][i] )
  
-                    if removeoutliers == True:
-                        phase2Median = np.median(phase2)
-                        phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
-                        phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 3*phase2MAD]
+                    # Unwrap the difference
+                    phase2 = np.unwrap(np.array(phase2))
+
+                    # Outlier removal turned off according to CAS-6804
+                    #if removeoutliers == True:
+                    #    phase2Median = np.median(phase2)
+                    #    phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
+                    #    phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 3*phase2MAD]
  
                     if len(phase2) == 0:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
