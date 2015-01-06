@@ -113,10 +113,10 @@ class SDApplyCalResults(common.SingleDishResults):
                     datatable.exportdata(minimal=False)
                     break
                 
-                # applied caltables are marked as applied
-                if calapp is not None:
-                    LOG.trace('Marking %s as applied' % calapp.as_applycal())
-                    context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
+            # applied caltables are marked as applied
+            if calapp is not None:
+                LOG.trace('Marking %s as applied' % calapp.as_applycal())
+                context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
 
         
     def _outcome_name(self):
