@@ -204,8 +204,15 @@ PlotLineWidget::~PlotLineWidget() { }
 
 PlotLinePtr PlotLineWidget::getLine() const {
     PlotLinePtr line = itsFactory_->line("");
+    int width = cWidth->text().toInt();
+#ifdef Q_WS_MAC
+	// cannot see dotted grid on Mac, make bigger
+	if (width==1 && lineStyle() == PlotLine::DOTTED) {
+		width += 1;
+	}
+#endif
     line->setWidth((stackedWidget->currentIndex() == 0) ?
-                   cWidth->text().toInt() : nWidth->value());
+                   width : nWidth->value());
     line->setStyle(lineStyle());
     line->setColor(itsColorWidget_->getColor());
     return line;
