@@ -775,7 +775,11 @@ def score_missing_phaseup_snrs(ms, spwids, phsolints):
             missing_spws.append(spwid[i])
     nmissing = len(missing_spws) 
 
-    if nmissing <= 0:
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No phaseup SNR estimates for %s ' % ms.basename
+        shortmsg = 'No phaseup SNR estimates'
+    elif nmissing <= 0:
         score = 1.0
         longmsg = 'No missing phaseup SNR estimates for %s ' % ms.basename
         shortmsg = 'No missing phaseup SNR estimates'
@@ -803,7 +807,11 @@ def score_poor_phaseup_solutions(ms, spwids, nphsolutions, min_nsolutions):
             poor_spws.append(spwids[i])
     npoor = len(poor_spws) 
 
-    if npoor <= 0:
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No phaseup solutions for %s ' % ms.basename
+        shortmsg = 'No phaseup solutions'
+    elif npoor <= 0:
         score = 1.0
         longmsg = 'No poorly determined phaseup solutions for %s ' % ms.basename
         shortmsg = 'No poorly determined phaseup solutions'
@@ -830,7 +838,11 @@ def score_missing_bandpass_snrs(ms, spwids, bpsolints):
             missing_spws.append(spwids[i])
     nmissing = len(missing_spws) 
 
-    if nmissing <= 0:
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No bandpass SNR estimates for %s ' % ms.basename
+        shortmsg = 'No bandpass SNR estimates'
+    elif nmissing <= 0:
         score = 1.0
         longmsg = 'No missing bandpass SNR estimates for %s ' % ms.basename
         shortmsg = 'No missing bandpass SNR estimates'
@@ -859,7 +871,12 @@ def score_poor_bandpass_solutions(ms, spwids, nbpsolutions, min_nsolutions):
             poor_spws.append(spwids[i])
     npoor = len(poor_spws) 
 
-    if npoor <= 0:
+    if nexpected <= 0:
+        score = 0.0
+        longmsg = 'No bandpass solutions for %s ' % \
+            ms.basename
+        shortmsg = 'No bandpass solutions'
+    elif npoor <= 0:
         score = 1.0
         longmsg = 'No poorly determined bandpass solutions for %s ' % \
             ms.basename
