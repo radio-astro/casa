@@ -1,9 +1,6 @@
-<%!
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-%>
 <%inherit file="task_details_base.html"/>
 
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<h1>Stage ${result.stage_number}: End-to-end single dish data reduction</h1>
 
 <ul>
 <li>

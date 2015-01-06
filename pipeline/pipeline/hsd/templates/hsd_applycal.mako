@@ -3,9 +3,6 @@ import os
 import string
 import types
 
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.logging as logging
-
 agent_description = {
 	'before'   : 'Before',
 	'applycal' : 'After',
@@ -61,7 +58,7 @@ def ifmap_to_spwmap(num_spw, ifmap):
     return spwmap
 %>
 
-<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
+<%block name="title">Apply calibration tables</%block>
 
 <p>This task applies all calibrations registered with the pipeline to their target scantables.<p>
 

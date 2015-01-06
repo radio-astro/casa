@@ -1,13 +1,9 @@
 <%!
-import operator
 import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
+<%block name="title">Register measurement sets with the pipeline</%block>
 
 <!--
 <ul class="unstyled">

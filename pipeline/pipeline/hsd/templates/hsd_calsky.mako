@@ -1,17 +1,12 @@
 <%!
 rsc_path = "../"
 import os
-
-import itertools
-import pipeline.infrastructure.renderer.htmlrenderer as hr
-import pipeline.infrastructure.renderer.logger as logger
-import pipeline.infrastructure.displays as displays
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
 <%block name="header" />
 
-<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
+<%block name="title">Generate Sky calibration table</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 

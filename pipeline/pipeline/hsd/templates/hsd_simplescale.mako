@@ -1,14 +1,12 @@
 <%!
 rsc_path = "../"
 import os
-
-import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
 <%block name="header" />
 
-<%block name="title">${hr._get_task_description_for_class(result[0].task)}</%block>
+<%block name="title">Apply a scaling factor for non-linearity correction</%block>
 
 <%
 try:
