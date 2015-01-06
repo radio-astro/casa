@@ -184,7 +184,7 @@ class SDExportData(basetask.StandardTaskTemplate):
                 inputs.products_dir)
                 flag_version_list.append(flag_version_file)
             
-	    # create the calibration apply file(s) in the products directory. 
+            # create the calibration apply file(s) in the products directory. 
             apply_file_list = []
             for visfile in vislist:
                 apply_file =  self._export_final_applylist (inputs.context, \
@@ -207,10 +207,9 @@ class SDExportData(basetask.StandardTaskTemplate):
                     inputs.context.logs['casa_commands'], inputs.products_dir)
     
             # Export a text format list of files whithin a products directory
-            newlist = [flag_version_list,apply_file_list,fitsfiles,caltable_file_list,weblog,pprfiles,casa_commands_file]
-            list_of_locallists = [key for key,value in locals().iteritems()
-                                if type(value) == list]
-            self._export_list_txt(inputs.context,inputs.products_dir,newlist,list_of_locallists)
+            self._export_list_txt(inputs.products_dir, fitsfiles=fitsfiles, weblog=weblog[0], pprfile=pprfiles[0],
+                                  flagversions=flag_version_list, calapply=apply_file_list, caltables=caltable_file_list,
+                                  casa_commands=casa_commands_file)
             #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
         else:
             LOG.info('There is no product direoctory, please input !mkdir products')
@@ -286,46 +285,44 @@ class SDExportData(basetask.StandardTaskTemplate):
         return out_casalog_file
     
     def _export_final_applylist (self, context, vis, products_dir):
-
         """
-	Save the final calibration list to a file. For now this is
-	a text file. Eventually it will be the CASA callibrary file.
-	"""
+	    Save the final calibration list to a file. For now this is
+    	a text file. Eventually it will be the CASA callibrary file.
+    	"""
         # return '' if vis is not in callibrary applied list
         if not context.callibrary.applied.has_key(vis):
             return ''
 
-	applyfile_name = os.path.basename(vis) + '.calapply.txt'
-	LOG.info('Storing calibration apply list for %s in  %s' % \
-	    (os.path.basename(vis), applyfile_name))
+        applyfile_name = os.path.basename(vis) + '.calapply.txt'
+        LOG.info('Storing calibration apply list for %s in  %s' % \
+                 (os.path.basename(vis), applyfile_name))
 
-	if not self._executor._dry_run:
+        if not self._executor._dry_run:
+            # Get the applied calibration state for the visibility file and
+            # convert it into a dictionary of apply instructions.
+            callib = callibrary.SDCalState()
+            callib[vis] = context.callibrary.applied[vis]
 
-	    # Get the applied calibration state for the visibility file and
-	    # convert it into a dictionary of apply instructions.
-	    callib = callibrary.SDCalState()
-	    callib[vis] = context.callibrary.applied[vis]
+            # Log the list in human readable form. Better way to do this ?
+            callib_merged = callib.merged()
+            for calto, calfrom in callib_merged.iteritems():
+                LOG.info('Apply to:  Field: %s  Spw: %s  Antenna: %s',
+                         calto.field, calto.spw, calto.antenna)
+                for item in calfrom:
+                    LOG.info ('    Gaintable: %s  Caltype: %s  Spwmap: %s  Interp: %s',
+                              os.path.basename(item.gaintable),
+                              item.caltype,
+                              item.spwmap,
+                              item.interp)
 
-	    # Log the list in human readable form. Better way to do this ?
-	    callib_merged = callib.merged()
-	    for calto, calfrom in callib_merged.iteritems():
-	        LOG.info('Apply to:  Field: %s  Spw: %s  Antenna: %s',
-		    calto.field, calto.spw, calto.antenna)
-		for item in calfrom:
-		    LOG.info ('    Gaintable: %s  Caltype: %s  Spwmap: %s  Interp: %s',
-		        os.path.basename(item.gaintable),
-			item.caltype,
-		        item.spwmap,
-		        item.interp)
-
-	    # Open the file.
+            # Open the file.
             with open(os.path.join(products_dir, applyfile_name), 'w') as applyfile:
 
                 # Write
                 applyfile.write ('# Apply file for %s\n' % (os.path.basename(vis)))
                 applyfile.write (callib.as_applycal())
 
-	return applyfile_name
+        return applyfile_name
 
     def _export_images (self, context, products_dir, images):
         #cwd = os.getcwd()
@@ -357,7 +354,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             antenna_names = set([st.antenna.name for st in context.observing_run])
             #LOG.info('antenna_names=%s'%(antenna_names))
             
-            pattern_nomatch = '.*\.(%s)\.spw.*\.sd\.im$'%('|'.join(antenna_names))
+            pattern_nomatch = '.*\.(DV|DA|PM|CM)[0-9][0-9]\.spw.*\.sd\.im$'
             pattern_match = '.*\.spw.*\.sd\.im$'
             #LOG.info('pattren_string=%s'%(pattern_nomatch))
             
@@ -479,36 +476,46 @@ class SDExportData(basetask.StandardTaskTemplate):
         # Restore the original current working directory
         os.chdir(cwd)
         return product_tar_list
-      
-    def _export_list_txt (self,context, products_dir, inputlist=[],name=[]):
+                                          
+    def _export_list_txt(self, products_dir, fitsfiles=None, caltables=None, weblog=None, pprfile=None, 
+                         flagversions=None, calapply=None, casa_commands=None):
         if not self._executor._dry_run:
-            with open(os.path.join(products_dir, 'list_of_exported_files.txt'),'a+') as f:
-                for n in name:
-                    pattern = None
-                    if fnmatch.fnmatch(n, "fitsfiles"):
-                        pattern = '*fits*'
-                    if fnmatch.fnmatch(n, "caltable_file_list"):
-                        pattern = 'caltables.tar.gz'
-                    if fnmatch.fnmatch(n, "weblog"):
-                        pattern = 'weblog'
-                    if fnmatch.fnmatch(n, "pprfiles"):
-                        pattern = 'PPR'
-                    if fnmatch.fnmatch(n, "casa_commands_file"):
-                        pattern = 'casa_commands'
-                    if fnmatch.fnmatch(n, "flag_version_list"):
-                        pattern = 'flagversions.tar.gz'
-                    if fnmatch.fnmatch(n, "apply_file_list"):
-                        pattern = 'calapply.txt'
+            def get_text(title, item):
+                title_text = lambda x: '{0}: \n--------\n'.format(x)
+                item_text = lambda x: '{0}\n'.format(os.path.basename(x))
+                next_content = lambda: '\n'
+                if item is not None:
+                    yield title_text(title)
+                    for i in item:
+                        yield item_text(i)
+                    yield next_content()
+                     
+            with open(os.path.join(products_dir, 'list_of_exported_files.txt'), 'w') as f:
+                def dowrite(lines):
+                    for line in lines:
+                        f.write(line)
                         
-                    if pattern is not None:
-                        listname_txt = "\n %s : \n --------\n" % n
-                        f.write(listname_txt)
-                        for i in range(len(inputlist)):
-                            for ln in inputlist[i]:
-                                if fnmatch.fnmatch(ln,"*%s*" % pattern):
-                                    output_txt = " %s \n" % os.path.basename(ln)
-                                    f.write(output_txt)
-            
+                # PPR
+                dowrite(get_text('PPR file', [pprfile]))
+                
+                # Weblog
+                dowrite(get_text('Weblog', [weblog]))
+                
+                # Images
+                dowrite(get_text('Target Images', fitsfiles))
+                    
+                # flagversions
+                dowrite(get_text('Flagversions', flagversions))
+                
+                # caltables
+                dowrite(get_text('Caltables', caltables))
+                    
+                # calapply list
+                dowrite(get_text('Calapply list', calapply))
+                    
+                # casa_commands.log
+                dowrite(get_text('Casa Commands Log', [casa_commands]))
+                                    
     def _save_final_flagversion(self, vis, flag_version_name):
         """
         Save the final flags to a final flag version.
