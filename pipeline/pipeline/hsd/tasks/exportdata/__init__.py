@@ -6,5 +6,6 @@ import pipeline.infrastructure.renderer.basetemplates as super_renderer
 from .exportdata import SDExportData
 
 weblog.add_renderer(SDExportData, 
-                    super_renderer.T2_4MDetailsDefaultRenderer(description='Export Pipeline Products', 
+                    super_renderer.T2_4MDetailsDefaultRenderer(uri='hsd_exportdata.mako',
+                                                               description='Prepare pipeline data products for export', 
                                                                always_rerender=False))
