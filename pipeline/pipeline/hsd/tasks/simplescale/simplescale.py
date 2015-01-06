@@ -67,6 +67,8 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
         context = inputs.context
         reduction_group = context.observing_run.reduction_group
         infiles = inputs.infiles # will return a list of original scantables if None
+        if isinstance(infiles, str):
+            infiles = [infiles]
         factor = inputs.factor
         #args = inputs.to_casa_args()
         
