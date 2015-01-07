@@ -173,8 +173,10 @@ def get_mask_from_flagtra(flagtra):
 
 @contextlib.contextmanager
 def temporary_filename(name='_heuristics.temporary.table'):
-    yield name
-    os.system('rm -rf %s'%(name))
+    try:
+        yield name
+    finally:
+        os.system('rm -rf %s'%(name))
 
 def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     assert len(antenna) == len(spw)
