@@ -141,12 +141,13 @@ singledishms::subtract_baseline(std::vector<bool> const &mask,
 bool
 singledishms::set_selection(::casac::variant const& spw,
 		    ::casac::variant const& field, 
-		    ::casac::variant const& baseline, 
-		    ::casac::variant const& time, 
+		    ::casac::variant const& antenna, 
+		    ::casac::variant const& timerange, 
 		    ::casac::variant const& scan,
 		    ::casac::variant const& observation,
 		    ::casac::variant const& polarization,
 		    ::casac::variant const& beam,
+		    ::casac::variant const& intent,
 		    string const& taql)
 {
   bool rstat(false);
@@ -168,13 +169,13 @@ singledishms::set_selection(::casac::variant const& spw,
     if (selection_string != "")
       selection.define("field", selection_string);
     // baseline
-    selection_string = toCasaString(baseline);
+    selection_string = toCasaString(antenna);
     if (selection_string != "")
-      selection.define("baseline", selection_string);
+      selection.define("antenna", selection_string);
     // time
-    selection_string = toCasaString(time);
+    selection_string = toCasaString(timerange);
     if (selection_string != "")
-      selection.define("time", selection_string);
+      selection.define("timerange", selection_string);
     // scan
     selection_string = toCasaString(scan);
     if (selection_string != "")
@@ -186,11 +187,16 @@ singledishms::set_selection(::casac::variant const& spw,
     // polarization
     selection_string = toCasaString(polarization);
     if (selection_string != "")
-      selection.define("polarization", selection_string);
+      selection.define("correlation", selection_string);
     // beam
     selection_string = toCasaString(beam);
     if (selection_string != "")
-      selection.define("beam", selection_string);
+      *itsLog << LogIO::WARN << "Beam selection is not yet supported. Ignoring beam selection" << LogIO::POST;
+      //selection.define("beam", selection_string);
+    // intent
+    selection_string = toCasaString(intent);
+    if (selection_string != "")
+      selection.define("intent", selection_string);
     // taql
     selection_string = toCasaString(taql);
     if (selection_string != "")

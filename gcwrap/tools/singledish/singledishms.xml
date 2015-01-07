@@ -173,13 +173,13 @@ sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
      <value></value>
      </param>
 
-     <param type="any" name="baseline">
+     <param type="any" name="antenna">
      <description>Antenna Ids (0 relative) or Antenna names (msselection syntax and wilcards are used) to select</description>
      <any type="variant"/>
      <value></value>
      </param>
 
-     <param type="any" name="time">
+     <param type="any" name="timerange">
      <description>Limit data selected to be within a given time range. Syntax is the defined in the msselection link</description>
      <any type="variant"/>
      <value></value>
@@ -206,6 +206,11 @@ sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
      <param type="any" name="beam">
      <description>Beam Ids (0 relative) to select; CURRENTLY NOT AVAILABLE!!!</description>
      <any type="variant"/>
+     <value></value>
+     </param>
+
+     <param type="any" name="intent">
+     <description>Select data by intent(s)</description>
      <value></value>
      </param>
 
