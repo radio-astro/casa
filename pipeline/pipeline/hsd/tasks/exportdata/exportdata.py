@@ -19,17 +19,18 @@ results = task.execute (dry_run = False)
 from __future__ import absolute_import
 import os
 import re
+import copy
 import errno
 import StringIO
 import tarfile
 import fnmatch
 import shutil
 import string
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.sdfilenamer as filenamer
 
 # the logger for this module
@@ -124,12 +125,22 @@ class SDExportDataInputs(basetask.StandardInputs):
         self._targetimages = value
       
 class SDExportDataResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, jobs=[], pprequest='', targetimages=(),
+                 caltabledict={}, flagversionsdict={}, calapplydict={},
+                 weblog='', pipescript='', restorescript='', commandslog=''):
         super(SDExportDataResults,self).__init__()
-        """
-        Initialise the results object with the given list of JobRequests.
-        """
+        
+        # Initialise the results object with the given list of JobRequests.
         self.jobs = jobs
+        
+        self.pprequest = pprequest
+        self.weblog = weblog
+        self.commandslog = commandslog
+        self.pipescript = pipescript
+        self.targetimages = targetimages
+        self.caltabledict = caltabledict
+        self.flagversionsdict = flagversionsdict
+        self.calapplydict = calapplydict
     
     def __repr__(self):
         s = 'SDExportData results:\n'
@@ -168,6 +179,8 @@ class SDExportData(basetask.StandardTaskTemplate):
         inputs = self.inputs
          
         if os.path.exists(inputs.products_dir):
+            self.init_visdict()
+            
             # Loop over the measurements sets in the working directory and 
             # save the final flags using the flag manager. 
             vislist = self._generate_vislist()
@@ -178,43 +191,76 @@ class SDExportData(basetask.StandardTaskTemplate):
             # Copy the final flag versions to the data products directory
             # and tar them up.
             flag_version_list = []
+            flagversionsdict= {}
             for visfile in vislist:
                 flag_version_file = self._export_final_flagversion ( \
                     inputs.context, visfile, flag_version_name, \
-                inputs.products_dir)
+                    inputs.products_dir)
                 flag_version_list.append(flag_version_file)
+                if self.visdict.has_key(os.path.basename(visfile)):
+                    key = self.visdict[os.path.basename(visfile)]
+                    if not flagversionsdict.has_key(key):
+                        flagversionsdict[key] = []
+                    flagversionsdict[key].append(os.path.basename(flag_version_file))
+                
             
             # create the calibration apply file(s) in the products directory. 
             apply_file_list = []
+            applydict = {}
             for visfile in vislist:
                 apply_file =  self._export_final_applylist (inputs.context, \
-                                                                visfile, inputs.products_dir)
+                                                            visfile, inputs.products_dir)
                 if len(apply_file) > 0:
                     apply_file_list.append (apply_file)
+                    applydict[os.path.basename(visfile)] = apply_file
 
             # Create fits files from CASA images
-            fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
+            imagelist, fitsfiles = self._export_images (inputs.context, inputs.products_dir, inputs.targetimages)
             # Export a tar file of skycal , tsyscal and bl-subtracted which is created by asap
-            caltable_file_list = self._export_caltable_file_list(inputs.context, inputs.products_dir)
+            caltabledict = self._export_caltable_file_list(inputs.context, inputs.products_dir)
+            caltable_file_list = caltabledict.values()
+            
             # Export a tar file of the web log
             weblog = self._export_weblog (inputs.context, inputs.products_dir)
             
             # Locate and copy the pipeline processing request.
-            pprfiles = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
+            pprfile = self._export_pprfile (inputs.context,inputs.products_dir, inputs.pprfile)
         
             # Export the processing log independently of the web log
             casa_commands_file = self._export_casa_commands_log(inputs.context,
                     inputs.context.logs['casa_commands'], inputs.products_dir)
     
+            # Export the processing script independently of the web log
+            casa_pipescript = self._export_casa_script (inputs.context,
+                                                        inputs.context.logs['pipeline_script'], inputs.products_dir)
+            #'casa_pipescript.py', inputs.products_dir)
+
+            # Export the restore script
+            #casa_restore_script = self._export_casa_restore_script (inputs.context,
+            #                                                        inputs.context.logs['pipeline_restore_script'],
+            #                                                        inputs.products_dir, vislist, session_list)
+
             # Export a text format list of files whithin a products directory
-            self._export_list_txt(inputs.products_dir, fitsfiles=fitsfiles, weblog=weblog[0], pprfile=pprfiles[0],
+            self._export_list_txt(inputs.products_dir, fitsfiles=fitsfiles, weblog=weblog, pprfile=pprfile,
                                   flagversions=flag_version_list, calapply=apply_file_list, caltables=caltable_file_list,
                                   casa_commands=casa_commands_file)
             #LOG.info('contents of product direoctory is %s' % os.listdir(inputs.products_dir))
         else:
             LOG.info('There is no product direoctory, please input !mkdir products')
          
-        return SDExportDataResults(jobs=[])
+        return SDExportDataResults(jobs=[], pprequest=pprfile, weblog=weblog, 
+                                   targetimages=(imagelist, fitsfiles),
+                                   caltabledict=caltabledict,
+                                   flagversionsdict=flagversionsdict,
+                                   calapplydict=applydict,
+                                   pipescript=casa_pipescript, commandslog=casa_commands_file)
+     
+    def init_visdict(self):
+        self.visdict = {}
+        for scantable in self.inputs.context.observing_run:
+            original_vis = scantable.ms.basename
+            if hasattr(scantable, 'exported_ms') and scantable.exported_ms is not None:
+                self.visdict[os.path.basename(scantable.exported_ms)] = original_vis
      
     def analyse(self, results):
         """
@@ -247,18 +293,18 @@ class SDExportData(basetask.StandardTaskTemplate):
         # to be copied to the data products directory. Normally there
         # should be only one match but if there are more copy them all.
         pprmatches = []
-        for file in os.listdir(context.output_dir):
-            if fnmatch.fnmatch (file, pprtemplate):
-                LOG.debug('Located pipeline processing request(PPR) xmlfile %s' % (file))
-                pprmatches.append (os.path.join(context.output_dir, file))
+        for _f in os.listdir(context.output_dir):
+            if fnmatch.fnmatch (_f, pprtemplate):
+                LOG.debug('Located pipeline processing request(PPR) xmlfile %s' % (_f))
+                pprmatches.append (os.path.join(context.output_dir, _f))
         
         # Copy the pipeline processing request files.
-        for file in pprmatches: 
+        for _f in pprmatches: 
             LOG.info('Copying pipeline processing request(PPR) xmlfile %s to %s' % \
-                (os.path.basename(file), products_dir))
+                (os.path.basename(_f), products_dir))
             if not self._executor._dry_run:
-                shutil.copy (file, products_dir)
-        return pprmatches
+                shutil.copy (_f, products_dir)
+        return os.path.basename(pprmatches[0])
 
     def _export_casa_commands_log (self, context, casalog_name, products_dir):
         """
@@ -282,8 +328,32 @@ class SDExportData(basetask.StandardTaskTemplate):
             shutil.copy (casalog_file, out_casalog_file)
         
         #return os.path.basename(out_casalog_file)
-        return out_casalog_file
+        return os.path.basename(out_casalog_file)
     
+    def _export_casa_script (self, context, casascript_name, products_dir):
+        """
+        Save the CASA script.
+        """
+
+        ps = context.project_structure
+        if ps is None:
+            casascript_file = os.path.join (context.report_dir, casascript_name)
+            out_casascript_file = os.path.join (products_dir, casascript_name) 
+        elif ps.ousstatus_entity_id == 'unknown':
+            casascript_file = os.path.join (context.report_dir, casascript_name)
+            out_casascript_file = os.path.join (products_dir, casascript_name) 
+        else:
+            ousid = ps.ousstatus_entity_id.translate(string.maketrans(':/', '__'))
+            casascript_file = os.path.join (context.report_dir, casascript_name)
+            out_casascript_file = os.path.join (products_dir, ousid + '.' + casascript_name)
+
+        LOG.info('Copying casa script file %s to %s' % \
+                 (casascript_file, out_casascript_file))
+        if not self._executor._dry_run:
+            shutil.copy (casascript_file, out_casascript_file)
+
+        return os.path.basename(out_casascript_file)
+
     def _export_final_applylist (self, context, vis, products_dir):
         """
 	    Save the final calibration list to a file. For now this is
@@ -397,19 +467,40 @@ class SDExportData(basetask.StandardTaskTemplate):
                 fits_list.append(fitsfile)
         else:
             LOG.info('FITS: There are no CASA image files here')
-        return fits_list
+            
+        # generate image description from FITS file name
+        # FITS name should be <source name>.<spw id>.<pol>.sd.fits 
+        imlibrary = imagelibrary.ImageLibrary()
+        for filename in fits_list:
+            image = os.path.basename(filename)
+            match = re.search('\.spw[0-9]+\.', image)
+            if match is None:
+                # create dummy description
+                sourcename = 'UNKNOWN'
+                spwlist = 'UNKNOWN'
+            else:
+                sourcename = image[:match.start()]
+                spwlist = image[match.start()+4:match.end()-1]
+            imageitem = imagelibrary.ImageItem(imagename=image,
+                                               sourcename=sourcename,
+                                               spwlist=spwlist,
+                                               sourcetype='TARGET')
+            imlibrary.add_item(imageitem)
+        imagelist = copy.deepcopy(imlibrary.get_imlist())
+            
+        return imagelist, fits_list
      
     def _export_caltable_file_list (self, context, products_dir):
         """
         Save flag_bl / Antenna are to be tar file
         """
-        list_of_tarname=[]
+        list_of_tarname={}
         if not self._executor._dry_run:
             for ms in context.observing_run.measurement_sets:
                 vis = ms.basename
                 prefix = vis.replace('.ms','')
                 tar_filename = '.'.join([vis, 'caltables.tar.gz'])
-                list_of_tarname.append(tar_filename)
+                list_of_tarname[vis] = tar_filename
                 LOG.info ('caltable_list: Copying final tar file in %s ' % os.path.join (products_dir,tar_filename))
                 tar = tarfile.open(os.path.join(products_dir, tar_filename), 'w:gz')
                 antenna_list = [a.name for a in ms.antennas]
@@ -475,7 +566,7 @@ class SDExportData(basetask.StandardTaskTemplate):
             LOG.info('WEBLOG: There is no html directory in report_dir')
         # Restore the original current working directory
         os.chdir(cwd)
-        return product_tar_list
+        return product_tar_list[0]
                                           
     def _export_list_txt(self, products_dir, fitsfiles=None, caltables=None, weblog=None, pprfile=None, 
                          flagversions=None, calapply=None, casa_commands=None):
