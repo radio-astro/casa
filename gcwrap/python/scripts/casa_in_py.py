@@ -239,6 +239,7 @@ from msmoments_pg import msmoments_pg as msmoments
 from partition_pg import partition_pg as partition
 from mstransform_pg import mstransform_pg as mstransform
 from cvel2_pg import cvel2_pg as cvel2
+from tsdcal_pg import tsdcal_pg as tsdcal
 
 ##
 ## asap may not be available with every casa installation

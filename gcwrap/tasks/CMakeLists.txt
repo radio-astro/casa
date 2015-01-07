@@ -123,6 +123,7 @@ spxfit.xml
 statwt.xml
 tclean.xml
 testconcat.xml
+tsdcal.xml
 uvcontsub.xml
 uvcontsub3.xml
 uvmodelfit.xml
