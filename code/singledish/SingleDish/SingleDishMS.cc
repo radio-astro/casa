@@ -64,6 +64,7 @@ SingleDishMS::SingleDishMS(SingleDishMS const &other)
   if(other.mssel_) {
     mssel_ = new MeasurementSet(*other.mssel_);
   }
+  msname_ = static_cast<string>(ms_->tableName());
 }
 
 SingleDishMS &SingleDishMS::operator=(SingleDishMS const &other)
@@ -76,6 +77,7 @@ SingleDishMS &SingleDishMS::operator=(SingleDishMS const &other)
   if (mssel_ && this != &other && other.mssel_) {
     *mssel_ = *(other.mssel_);
   }
+  msname_ = static_cast<string>(ms_->tableName());
   return *this;
 }
 
@@ -149,23 +151,23 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
   bool any_selection(false);
   String timeExpr(""), antennaExpr(""), fieldExpr(""),
     spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
-    scanExpr(""), arrayExpr(""), stateExpr(""), obsExpr("");
-  timeExpr = get_field_as_casa_string(selection,"time");
-  antennaExpr = get_field_as_casa_string(selection,"baseline");
+    scanExpr(""), arrayExpr(""), intentExpr(""), obsExpr("");
+  timeExpr = get_field_as_casa_string(selection,"timerange");
+  antennaExpr = get_field_as_casa_string(selection,"antenna");
   fieldExpr = get_field_as_casa_string(selection,"field");
   spwExpr = get_field_as_casa_string(selection,"spw");
   uvDistExpr = get_field_as_casa_string(selection,"uvdist");
   taQLExpr = get_field_as_casa_string(selection,"taql");
-  polnExpr = get_field_as_casa_string(selection,"polarization");
+  polnExpr = get_field_as_casa_string(selection,"correlation");
   scanExpr = get_field_as_casa_string(selection,"scan");
   arrayExpr = get_field_as_casa_string(selection,"array");
-  stateExpr = get_field_as_casa_string(selection,"state");
+  intentExpr = get_field_as_casa_string(selection,"intent");
   obsExpr = get_field_as_casa_string(selection,"observation");
   //Now the actual selection.
   mssel_ = new MeasurementSet(*ms_);
   if (!mssSetData(*ms_,*mssel_,"",timeExpr,antennaExpr,fieldExpr,
 		  spwExpr,uvDistExpr,taQLExpr,polnExpr,scanExpr,
-		  arrayExpr,stateExpr,obsExpr)) { // no valid selection
+		  arrayExpr,intentExpr,obsExpr)) { // no valid selection
     reset_selection();
     os << "Selection is reset." << LogIO::POST;
   } else if (verbose) {
@@ -185,8 +187,8 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
       {any_selection = true; os << "- Scan: " << scanExpr << LogIO::POST;}
     if (timeExpr != "")
       {any_selection = true; os << "- Time: " << timeExpr << LogIO::POST;}
-    if (stateExpr != "")
-      {any_selection = true; os << "- State: " << stateExpr << LogIO::POST;}
+    if (intentExpr != "")
+      {any_selection = true; os << "- Intent: " << intentExpr << LogIO::POST;}
     if (arrayExpr != "")
       {any_selection = true; os << "- Array: " << arrayExpr << LogIO::POST;}
     if (uvDistExpr != "")
