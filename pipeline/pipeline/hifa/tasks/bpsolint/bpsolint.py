@@ -661,6 +661,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    endTime = reqscan[0].end_time 
 	    beginScanTimes.append(startTime)
 	    endScanTimes.append(endTime)
+	    LOG.debug ('scan %d start %s end %s' % (scan, startTime, endTime)) 
     
         # Get the syscal table meta data.
         with casatools.TableReader(os.path.join(ms.name,  'SYSCAL')) as table:
@@ -702,6 +703,7 @@ class BpSolint(basetask.StandardTaskTemplate):
 		    time_unit))
                 tend = mt.epoch(time_ref, qt.quantity(tsys_end_times[i],
 		    time_unit))
+	        LOG.debug ('row %d start %s end %s' % (i, tstart, tend)) 
 
 		# Scan starts after end of validity interval or ends before
 		# the beginning of the validity interval
@@ -732,7 +734,7 @@ class BpSolint(basetask.StandardTaskTemplate):
         else:
             uniqueAntennaIds = [ms.get_antenna(search_term=antenna)[0].id]
     
-        # Lopp over the spw and scan list which have the same length
+        # Loop over the spw and scan list which have the same length
         for spw, scan in zip (tsys_spwlist, scan_list):
     
             if (spw not in tsys_uniqueSpws):
