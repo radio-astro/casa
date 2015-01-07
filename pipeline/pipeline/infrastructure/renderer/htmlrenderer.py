@@ -411,31 +411,30 @@ class T1_3MRenderer(RendererBase):
             if 'applycal' in get_task_description(result):
                 try:
                     for resultitem in result:
-                        ms_name = os.path.basename(resultitem.inputs['vis'])
-                        ms = [i for i in context.observing_run.get_measurement_sets() if ms_name in i.name][0]
+                        vis = os.path.basename(resultitem.inputs['vis'])
+                        ms = context.observing_run.get_ms(vis)
                         flagtable = {}
-			for field in resultitem.flagsummary.keys():
-			    #each field
-			    intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET') if field in f.name][0])
-			    
-			    flagsummary = resultitem.flagsummary[field]
-			
-			    fieldtable = {}
-			    for k,v in flagsummary.iteritems():
-				myname = v['name']
-				myspw = v['spw']
-				myant = v['antenna']
-				antkeys = myant.keys()
-				spwkey = myspw.keys()[0]
-			    
-				fieldtable.update({myname:{spwkey:myant}})
-				
-			    flagtable['Source name: '+ field + ', Intents: ' + intents] = fieldtable
-			
-			flagtables[ms_name] = flagtable
-			
+                        for field in resultitem.flagsummary.keys():
+                            #each field
+                            intents = ','.join([f.intents for f in ms.get_fields(intent='BANDPASS,PHASE,AMPLITUDE,CHECK,TARGET') if field in f.name][0])
+                            
+                            flagsummary = resultitem.flagsummary[field]
+                        
+                            fieldtable = {}
+                            for _,v in flagsummary.iteritems():
+                                myname = v['name']
+                                myspw = v['spw']
+                                myant = v['antenna']
+                                spwkey = myspw.keys()[0]
+                            
+                                fieldtable.update({myname:{spwkey:myant}})
+                                
+                            flagtable['Source name: '+ field + ', Intents: ' + intents] = fieldtable
+                        
+                        flagtables[ms.basename] = flagtable
+                        
                 except:
-                    LOG.debug("No flag summary table available yet from applycal")
+                    LOG.debug('No flag summary table available yet from applycal')
                  
 
         return {'pcontext' : context,
