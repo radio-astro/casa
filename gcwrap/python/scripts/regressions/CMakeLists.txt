@@ -25,6 +25,7 @@ casa_add_python( tools tools_regressions_python python/${PYTHONV}/regressions
   accum_regression.py
   alma-m100-analysis-regression.py
   alma-m100-analysis-hpc-regression.py
+  alma-m100-sd-regression.py
   alma-ngc3256-analysis-regression.py
   alma-titan-ephemeris-regression.py
   alma_asdm+reimported-asdm_sf.py
