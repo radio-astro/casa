@@ -663,9 +663,9 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    endScanTimes.append(endTime)
     
         # Get the syscal table meta data.
-        with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
+        with casatools.TableReader(os.path.join(ms.name,  'SYSCAL')) as table:
 
-	    # Get the antenna ids
+            # Get the antenna ids
             tsys_antennas = table.getcol('ANTENNA_ID')
             if (len(tsys_antennas) < 1):
                 LOG.warn('The SYSCAL table is blank in MS %s' % ms.basename)
@@ -742,7 +742,7 @@ class BpSolint(basetask.StandardTaskTemplate):
     
             # Loop over the rows
             medians = []
-            with utils.open_table (os.path.join (ms.name,  'SYSCAL')) as table:
+            with casatools.TableReader(os.path.join(ms.name,  'SYSCAL')) as table:
                 for i in range(len(tsys_antennas)):
                     if (tsys_spws[i] != spw):
                         continue

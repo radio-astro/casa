@@ -84,7 +84,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
 #         beam_size = qa.convert(self.context.observing_run[ant_index].beam_size[self.inputs.spwid_list[0]], 'deg')['value']
 #         grid_size = beam_size / 3.0
 #         
-#         with utils.open_image(inname) as ia:
+#         with casatools.ImageReader(inname) as ia:
 #             csys = ia.coordsys()
 #             dir_ax = csys.findcoordinate('direction')['pixel']
 #             increment = csys.increment()

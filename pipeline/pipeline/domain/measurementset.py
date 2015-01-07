@@ -282,22 +282,18 @@ class MeasurementSet(object):
         
         vis = self.name
         
-        with utils.open_table(vis + '/FIELD') as table:
-            #casatools.table.open(vis+'/FIELD')
+        with casatools.TableReader(vis + '/FIELD') as table:
             numFields = table.nrows()
             field_positions = table.getcol('PHASE_DIR')
             field_ids = range(numFields)
             field_names = table.getcol('NAME')
-            #casatools.table.close()
         
-        with utils.open_table(vis) as table:
-            #casatools.table.open(vis)
+        with casatools.TableReader(vis) as table:
             scanNums = sorted(numpy.unique(table.getcol('SCAN_NUMBER')))
             field_scans = []
             for ii in range(0,numFields):
                 subtable = table.query('FIELD_ID==%s'%ii)
                 field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
-            #casatools.table.close()
         
         ## field_scans is now a list of lists containing the scans for each field.
         ## so, to access all the scans for the fields, you'd:
@@ -309,7 +305,7 @@ class MeasurementSet(object):
         
         # Identify intents
         
-        with utils.open_table(vis + '/STATE') as table:
+        with casatools.TableReader(vis + '/STATE') as table:
             #casatools.table.open(vis+'/STATE')
             intents = table.getcol('OBS_MODE')
             #casatools.table.close()
@@ -378,7 +374,7 @@ class MeasurementSet(object):
         if not state_ids:
             state_ids = [-1] 
         
-        with utils.open_table(self.name) as table:
+        with casatools.TableReader(self.name) as table:
             taql = '(STATE_ID IN %s AND FIELD_ID IN %s)' % (state_ids, field_ids)
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          
@@ -433,7 +429,7 @@ class MeasurementSet(object):
         
         science_spw_dd_ids = [self.get_data_description(spw).id for spw in science_spws]
         
-        with utils.open_table(self.name) as table:
+        with casatools.TableReader(self.name) as table:
             taql = '(STATE_ID IN %s AND FIELD_ID IN %s AND DATA_DESC_ID in %s)' % (science_state_ids, science_field_ids, science_spw_dd_ids)
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          

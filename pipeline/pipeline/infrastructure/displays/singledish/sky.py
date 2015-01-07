@@ -91,7 +91,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         calfrom = result.outcome.calfrom[0]
 
         # get base frame
-        with utils.open_table(frequencies) as tb:
+        with casatools.TableReader(frequencies) as tb:
             base_frame = tb.getkeyword('BASEFRAME')
 
         # set up axes
@@ -119,7 +119,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
 
         # get base frequency
         base_freqs = {}
-        with utils.open_table(caltable) as tb:
+        with casatools.TableReader(caltable) as tb:
             spwlist = numpy.unique(tb.getcol('IFNO'))
             pollist = numpy.unique(tb.getcol('POLNO'))
 
@@ -141,7 +141,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
             off_source = 1
         else:
             off_source = 99
-        with utils.open_table(scantable.name) as tb:
+        with casatools.TableReader(scantable.name) as tb:
             if calfrom.caltype == 'ps':
                 tsel = tb.query('SRCTYPE==%s'%(off_source))
                 if tsel.nrows() == 0:
@@ -159,7 +159,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         plots = []
         qa = casatools.quanta
         #polmap = {0: 'XX', 1: 'YY', 2: 'XY', 3: 'YX'}
-        with utils.open_table(caltable) as tb:
+        with casatools.TableReader(caltable) as tb:
             for spw in spwlist:
                 beam_size = scantable.beam_size[spw]
                 beam_size_rad = qa.convert(beam_size, 'rad')['value']
@@ -282,7 +282,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         parameters_base['ant'] = antenna_name
         parameters_base['type'] = 'sd'
         parameters_base['file'] = os.path.basename(table)
-        with utils.open_table(table) as tb:
+        with casatools.TableReader(table) as tb:
             spwlist = numpy.unique(tb.getcol('IFNO'))
             pollist = numpy.unique(tb.getcol('POLNO'))
             pl.clf()

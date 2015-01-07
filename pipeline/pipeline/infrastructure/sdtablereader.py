@@ -72,7 +72,7 @@ class ScantableReader(object):
     def configure_observation(st):
         me = casatools.measures
         qa = casatools.quanta
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             st.observer = tb.getkeyword('Observer')
             # start/end time in MJD [day]
             timecol = tb.getcol('TIME')
@@ -83,7 +83,7 @@ class ScantableReader(object):
 
     @staticmethod
     def get_antenna(st):
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             name = tb.getkeyword('AntennaName')
             position = tb.getkeyword('AntennaPosition')
             
@@ -123,7 +123,7 @@ class ScantableReader(object):
         me = casatools.measures
         qa = casatools.quanta
         source = {}
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             source_names = numpy.unique(tb.getcol('SRCNAME'))
             for idx in xrange(len(source_names)):
                 name = source_names[idx]
@@ -146,11 +146,11 @@ class ScantableReader(object):
         spectral_window = {}
         frequencies_dict = {}
                     
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             frequencies = tb.getkeyword('FREQUENCIES').lstrip('Table: ')
             molecules = tb.getkeyword('MOLECULES').lstrip('Table: ')
 
-        with utils.open_table(frequencies) as tb:
+        with casatools.TableReader(frequencies) as tb:
             id = tb.getcol('ID')
             refpix = tb.getcol('REFPIX')
             refval = tb.getcol('REFVAL')
@@ -164,7 +164,7 @@ class ScantableReader(object):
                 d['frame'] = frame
                 frequencies_dict[id[i]] = d
 
-        with utils.open_table(molecules) as tb:
+        with casatools.TableReader(molecules) as tb:
             rest_frequencies = {}
             for i in xrange(tb.nrows()):
                 mid = tb.getcell('ID',i)
@@ -173,7 +173,7 @@ class ScantableReader(object):
                 else:
                     rest_frequencies[mid] = []
 
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             spw_ids = numpy.unique(tb.getcol('IFNO'))
             for spw in spw_ids:
                 ts = tb.query('IFNO==%s'%(spw))
@@ -230,7 +230,7 @@ class ScantableReader(object):
     def get_polarization(st):
         polarization = {}
         polmap = domain.singledish.Polarization.polarization_map
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
             poltype = tb.getkeyword('POLTYPE')
             for spw in st.spectral_window.keys():
                 ts = tb.query('IFNO==%s'%(spw))
@@ -314,7 +314,7 @@ class ScantableReaderFromMS(ScantableReader):
 
     @staticmethod
     def get_source(st, ms):
-        with utils.open_table(st.name) as tb:
+        with casatools.TableReader(st.name) as tb:
 ##             source_names = map((lambda s: s.replace(' ','_')),
 ##                                numpy.unique(tb.getcol('SRCNAME')))
             source_names = numpy.unique(tb.getcol('SRCNAME'))
@@ -335,7 +335,7 @@ class ScantableReaderFromMS(ScantableReader):
                                 
 
         name = ms.name
-        with utils.open_table(name) as tb:
+        with casatools.TableReader(name) as tb:
             for spw in spectral_window.keys():
                 datadesc = ms.get_data_description(spw)
                 if datadesc is None:
@@ -360,12 +360,12 @@ class ScantableReaderFromMS(ScantableReader):
             spw_name = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
             source_name = tb.getkeyword('SOURCE').lstrip('Table: ')
 
-        with utils.open_table(spw_name) as tb:
+        with casatools.TableReader(spw_name) as tb:
             for spw in spectral_window.keys():
                 frame_id = tb.getcell('MEAS_FREQ_REF')
                 spectral_window[spw].frame = domain.singledish.Frequencies.frame_map[frame_id]
 
-        with utils.open_table(source_name) as tb:
+        with casatools.TableReader(source_name) as tb:
             for spw in spectral_window.keys():
                 ts = tb.query('SPECTRAL_WINDOW_ID==%s'%(spw))
                 rest_frequencies = []
@@ -412,10 +412,10 @@ class ScantableReaderFromMS(ScantableReader):
         
     @staticmethod
     def configure_calibration(st, ms):
-        with utils.open_table(ms.name) as tb:
+        with casatools.TableReader(ms.name) as tb:
             spw_table = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
 
-        with utils.open_table(spw_table) as tb:
+        with casatools.TableReader(spw_table) as tb:
             if 'BBC_NO' in tb.colnames():
                 bbc_no = tb.getcol('BBC_NO')
             else:
@@ -477,7 +477,7 @@ class VirtualMeasurementSetFiller(object):
 
     @staticmethod
     def get_antenna_array(st):
-        with utils.open_table(st[0].name) as tb:
+        with casatools.TableReader(st[0].name) as tb:
             antenna_name = tb.getkeyword('AntennaName')
             site_name = antenna_name.split('//')[0]
             
@@ -506,7 +506,7 @@ class VirtualMeasurementSetFiller(object):
         me = casatools.measures
         qa = casatools.quanta
         fields = []
-        with utils.open_table(st[0].name) as tb:
+        with casatools.TableReader(st[0].name) as tb:
             # start/end time in MJD [day]
             source_names = numpy.unique(tb.getcol('SRCNAME'))
             field_names = numpy.unique(tb.getcol('FIELDNAME'))
@@ -561,7 +561,7 @@ class VirtualMeasurementSetFiller(object):
         # assume all scantables have same scan sequence
         me = casatools.measures
         qa = casatools.quanta
-        with utils.open_table(st[0].name) as tb:
+        with casatools.TableReader(st[0].name) as tb:
             scannos = numpy.unique(tb.getcol('SCANNO'))
             for s in scannos:
                 tsel = tb.query('SCANNO==%s'%(s))

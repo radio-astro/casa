@@ -493,7 +493,7 @@ class CaltableWrapperFactory(object):
     @staticmethod
     def from_caltable(filename):
         LOG.trace('CaltableWrapperFactory.from_caltable(%r)', filename)
-        with utils.open_table(filename) as tb:
+        with casatools.TableReader(filename) as tb:
             viscal = tb.getkeyword('VisCal')            
             caltype = callibrary.CalFrom.get_caltype_for_viscal(viscal) 
         if caltype == 'gaincal':
@@ -506,7 +506,7 @@ class CaltableWrapperFactory(object):
     
     @staticmethod    
     def create_gaincal_wrapper(path):
-        with utils.open_table(path) as tb:
+        with casatools.TableReader(path) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')
             spw = tb.getcol('SPECTRAL_WINDOW_ID')
@@ -527,7 +527,7 @@ class CaltableWrapperFactory(object):
 
     @staticmethod    
     def create_bandpass_wrapper(path):
-        with utils.open_table(path) as tb:
+        with casatools.TableReader(path) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')
             spw = tb.getcol('SPECTRAL_WINDOW_ID')
@@ -552,7 +552,7 @@ class CaltableWrapperFactory(object):
 
     @staticmethod    
     def create_fparam_wrapper(path):
-        with utils.open_table(path) as tb:
+        with casatools.TableReader(path) as tb:
             time_mjd = tb.getcol('TIME')
             antenna1 = tb.getcol('ANTENNA1')
             spw = tb.getcol('SPECTRAL_WINDOW_ID')

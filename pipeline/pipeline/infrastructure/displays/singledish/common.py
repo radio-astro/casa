@@ -8,7 +8,6 @@ import math
 import pylab as pl
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 
 from .utils import utc_locator
@@ -31,7 +30,7 @@ class SingleDishDisplayInputs(object):
 class SpectralImage(object):
     def __init__(self, imagename):
         # read data to storage
-        with utils.open_image(imagename) as ia:
+        with casatools.ImageReader(imagename) as ia:
             self.image_shape = ia.shape()
             self.coordsys = ia.coordsys()
             coord_types = self.coordsys.axiscoordinatetypes()
@@ -314,7 +313,7 @@ class SDImageDisplay(object):
 
 def get_base_frequency(table, freqid, nchan):
     freq_table = os.path.join(table, 'FREQUENCIES')
-    with utils.open_table(freq_table) as tb:
+    with casatools.TableReader(freq_table) as tb:
         refpix = tb.getcell('REFPIX', freqid)
         refval = tb.getcell('REFVAL', freqid)
         increment = tb.getcell('INCREMENT', freqid)
@@ -324,7 +323,7 @@ def get_base_frequency(table, freqid, nchan):
 
 def get_base_frame(table):
     freq_table = os.path.join(table, 'FREQUENCIES')
-    with utils.open_table(freq_table) as tb:
+    with casatools.TableReader(freq_table) as tb:
         base_frame = tb.getkeyword('BASEFRAME')
     return base_frame
 

@@ -87,7 +87,7 @@ class CalApplication(object):
 
         calfroms = []
         for (gaintable, gainfield, interp, spwmap, calwt) in zipped:
-            with utils.open_table(gaintable) as caltable:
+            with casatools.TableReader(gaintable) as caltable:
                 viscal = caltable.getkeyword('VisCal')
             
             caltype = CalFrom.get_caltype_for_viscal(viscal) 
@@ -935,7 +935,7 @@ class SDCalApplication(object):
 
         calfroms = []
         for tab in d['applytable']:
-            with utils.open_table(tab) as applytable:
+            with casatools.TableReader(tab) as applytable:
                 caltype = applytable.getkeyword('ApplyType')
 
             if caltype == 'CALTSYS':

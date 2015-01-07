@@ -4,9 +4,10 @@ import sys
 import time
 import types
 
+from taskinit import casalog
+
 import pipeline.extern.logutils as logutils
 import pipeline.extern.logutils.colorize as colorize
-from . import casatools
 
 from logging import CRITICAL, WARNING, ERROR, INFO, DEBUG
 
@@ -52,7 +53,7 @@ class CASALogHandler(logging.Handler):
         """
         logging.Handler.__init__(self)
         if log is None:
-            log = casatools.log
+            log = casalog
         self._log = log
         self.setFormatter(logging.Formatter('%(message)s', ''))
 

@@ -1,9 +1,14 @@
 from __future__ import absolute_import
 import copy_reg
+import contextlib
 import sys
 
 from casac import casac
 from taskinit import casalog
+
+from . import logging
+
+LOG = logging.get_logger(__name__)
 
 imager = casac.imager()
 measures = casac.measures()
@@ -46,113 +51,33 @@ def set_log_origin(fromwhere=''):
     log.origin(fromwhere)
 
 
-class TableReader(object):
+def context_manager_factory(tool):
     '''
-    TableReader is a context manager for CASA tables.
-    
-    TableReader uses the CASA table tool to open the given table, closing the
-    table automatically once this object is out of scope or if an exception is 
-    raised.
-    '''   
-    num_instances = 0
+    Create a context manager function that wraps the given CASA tool.
 
-    def __init__(self, table_name, nomodify=True):
-        self._table_name = table_name
-        self._nomodify = nomodify
-        
-    def __enter__(self):        
-        if TableReader.num_instances != 0:
-            raise IOError('Cannot open multiple tables simultaneously')
-        # increment the counter *after* opening the file, otherwise the
-        # counter could be left non-zero should the table.open raise an 
-        # exception
-        table.open(self._table_name, nomodify=self._nomodify)
-        TableReader.num_instances += 1
-        return table
-
-    def __exit__(self, thetype, value, traceback):
-        table.close()
-        TableReader.num_instances -= 1
-
-
-# class MSReader(object):
-#     '''
-#     MSReader is a context manager for measurement sets.
-#     
-#     MSReader uses the CASA measurement set tool to open the given measurement
-#     set, closing it automatically once this object is out of scope or if an
-#     exception is raised.
-#     ''' 
-#     
-#     num_instances = 0
-# 
-#     def __init__(self, ms_name):
-#         self._ms_name = ms_name
-#         
-#     def __enter__(self):        
-#         if MSReader.num_instances != 0:
-#             raise IOError('Cannot open multiple measurement sets simultaneously')
-#         MSReader.num_instances += 1
-#         ms.open(self._ms_name)
-#         return ms
-# 
-#     def __exit__(self, thetype, value, traceback):
-#         ms.close()
-#         MSReader.num_instances -= 1
-
-
-# class ImageReader(object):
-#     """Uses the CASA image tool to open the given image,
-#     closing it automatically once this object is out of scope or if an
-#     exception is raised.""" 
-#     
-#     num_instances = 0
-# 
-#     def __init__(self, image_name):
-#         self._image_name = image_name
-#         
-#     def __enter__(self):        
-#         if ImageReader.num_instances != 0:
-#             raise IOError('Cannot open multiple images simultaneously')
-#         ImageReader.num_instances += 1
-#         image.open(self._image_name)
-#         return image
-# 
-#     def __exit__(self, thetype, value, traceback):
-#         image.close()
-#         ImageReader.num_instances -= 1
-
-
-def createContextManager(tool):
+    The returned context manager function takes one argument: a filename. The
+    function opens the file using the CASA tool, returning the tool so that it
+    may be used for queries or other operations pertaining to the tool. The
+    tool is closed once it falls out of scope or an exception is raised.
     '''
-    ToolContextManager is a context manager for CASA tools. It closes the 
-    tool automatically once the object goes out of scope or when an exception
-    is raised. 
-    '''     
-    # variables in the outer scope of python closures are read-only, so we
-    # must make this a mutable type
-    num_instances = [0]
+    tool_name = tool.__class__.__name__
 
-    class t(object):
-        def __init__(self, filename):
-            self.filename = filename
-                
-        def __enter__(self):        
-            if num_instances[0] != 0:
-                raise IOError('Cannot open multiple files simultaneously')
-            num_instances[0] += 1
-            tool.open(self.filename)
-            return tool
-        
-        def __exit__(self, thetype, value, traceback):
+    @contextlib.contextmanager
+    def f(filename, **kwargs):
+        LOG.trace('%s tool: opening \'%s\'' % (tool_name, filename))
+        tool.open(filename, **kwargs)
+        try:
+            yield tool
+        finally:
+            LOG.trace('%s tool: closing \'%s\'' % (tool_name, filename))
             tool.close()
-            num_instances[0] -= 1
+    return f
 
-    return t
-
-ImageReader = createContextManager(image)
-CalAnalysis = createContextManager(calanalysis)
-MSReader = createContextManager(ms)
+# context managers for frequently used CASA tools
+CalAnalysis = context_manager_factory(calanalysis)
+ImageReader = context_manager_factory(image)
+MSReader = context_manager_factory(ms)
+TableReader = context_manager_factory(table)
 
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle

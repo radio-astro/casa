@@ -34,7 +34,7 @@ class MeasurementSetReader(object):
     @staticmethod
     def get_scans(ms):
         LOG.debug('Analysing scans in {0}'.format(ms.name))
-        with utils.open_table(ms.name) as openms:
+        with casatools.TableReader(ms.name) as openms:
             scan_number_col = openms.getcol('SCAN_NUMBER')
             time_col = openms.getcol('TIME')
             antenna1_col = openms.getcol('ANTENNA1')
@@ -160,7 +160,7 @@ class MeasurementSetReader(object):
         container = ms.states if ms.states else ms.fields
         column = 'STATE_ID' if ms.states else 'FIELD_ID'
         
-        with utils.open_table(ms.name) as table:
+        with casatools.TableReader(ms.name) as table:
             for dd in ms.data_descriptions:
                 spw = dd.spw
                 for obj in container:
@@ -187,7 +187,7 @@ class MeasurementSetReader(object):
     
     @staticmethod
     def link_fields_to_states(ms):
-        with utils.open_table(ms.name) as table:
+        with casatools.TableReader(ms.name) as table:
             field_ids = table.getcol('FIELD_ID')
             state_ids = table.getcol('STATE_ID')
             
@@ -219,7 +219,7 @@ class MeasurementSetReader(object):
     @staticmethod
     def add_valid_spws_to_fields(ms):
         # get list of field/spw combinations that actually contain data.
-        with utils.open_table(ms.name) as table:
+        with casatools.TableReader(ms.name) as table:
             data_desc_id = table.getcol('DATA_DESC_ID')
             field_id = table.getcol('FIELD_ID')
             antenna1 = table.getcol('ANTENNA1')
@@ -241,7 +241,7 @@ class MeasurementSetReader(object):
         ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)
         ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
         ms.polarizations = PolarizationTable.get_polarizations(ms)
-        with utils.open_ms(ms.name) as openms:
+        with casatools.MSReader(ms.name) as openms:
             for dd in ms.data_descriptions:
                 openms.selectinit(dd.id)
                 ms_info = openms.getdata(['axis_info','time'])
@@ -280,7 +280,7 @@ class MeasurementSetReader(object):
 
     @staticmethod
     def _get_range(filename, column):
-        with utils.open_ms(filename) as ms:
+        with casatools.MSReader(filename) as ms:
             data = ms.range([column])
             return data.values()[0]
 
@@ -327,7 +327,7 @@ class SpectralWindowTable(object):
         LOG.debug('Analysing SPECTRAL_WINDOW table')
         ms = _get_ms_name(ms)
         spectral_window_table = os.path.join(ms, 'SPECTRAL_WINDOW')        
-        with utils.open_table(spectral_window_table) as table:
+        with casatools.TableReader(spectral_window_table) as table:
             group_ids = table.getcol('FREQ_GROUP')
             group_names = table.getcol('FREQ_GROUP_NAME')
             bandwidths = table.getcol('TOTAL_BANDWIDTH')
@@ -363,7 +363,7 @@ class ObservationTable(object):
         LOG.debug('Analysing OBSERVATION table')
         ms = _get_ms_name(ms)
         table_filename = os.path.join(ms, 'OBSERVATION')
-        with utils.open_table(table_filename) as table:
+        with casatools.TableReader(table_filename) as table:
             telescope_name = table.getcol('TELESCOPE_NAME')[0]
             return telescope_name
 
@@ -371,7 +371,7 @@ class ObservationTable(object):
     def get_project_info(ms):
         ms = _get_ms_name(ms)
         table_filename = os.path.join(ms, 'OBSERVATION')
-        with utils.open_table(table_filename) as table:
+        with casatools.TableReader(table_filename) as table:
             telescope_name = table.getcol('TELESCOPE_NAME')[0]
             project_id = table.getcol('PROJECT')[0]
             observer = table.getcol('OBSERVER')[0]
@@ -396,7 +396,7 @@ class ObservationTable(object):
     def get_time_range(ms):
         ms = _get_ms_name(ms)
 
-        with utils.open_table(ms) as openms:
+        with casatools.TableReader(ms) as openms:
             # get columns and tools needed to create scan times
             time_colkeywords = openms.getcolkeywords('TIME')
             time_unit = time_colkeywords['QuantumUnits'][0]
@@ -405,7 +405,7 @@ class ObservationTable(object):
             qa = casatools.quanta
                 
         table_filename = os.path.join(ms, 'OBSERVATION')
-        with utils.open_table(table_filename) as table:
+        with casatools.TableReader(table_filename) as table:
             start_s, end_s = table.getcol('TIME_RANGE')
 
             # start_s, end_s are arrays with a single entry for
@@ -496,7 +496,7 @@ class AntennaTable(object):
         ms = _get_ms_name(ms)
 
         table_filename = os.path.join(ms, 'ANTENNA')
-        with utils.open_table(table_filename) as table:
+        with casatools.TableReader(table_filename) as table:
             names = table.getcol('NAME')
             positions = table.getcol('POSITION')
             position_keywords = table.getcolkeywords('POSITION')
@@ -544,7 +544,7 @@ class DataDescriptionTable(object):
         LOG.debug('Analysing DATA_DESCRIPTION table')
         ms = _get_ms_name(ms)
         data_description_table = os.path.join(ms, 'DATA_DESCRIPTION')        
-        with utils.open_table(data_description_table) as table:
+        with casatools.TableReader(data_description_table) as table:
             spw_ids = table.getcol('SPECTRAL_WINDOW_ID')
             pol_ids = table.getcol('POLARIZATION_ID')
             dd_ids = range(len(spw_ids))
@@ -573,7 +573,7 @@ class PolarizationTable(object):
         LOG.debug('Analysing POLARIZATION table')
         ms = _get_ms_name(ms)
         polarization_table = os.path.join(ms, 'POLARIZATION')        
-        with utils.open_table(polarization_table) as table:
+        with casatools.TableReader(polarization_table) as table:
             num_corrs = table.getcol('NUM_CORR')
             vcorr_types = table.getvarcol('CORR_TYPE')
             vcorr_products = table.getvarcol('CORR_PRODUCT')
@@ -638,7 +638,7 @@ class SourceTable(object):
         LOG.debug('Analysing SOURCE table')
         ms = _get_ms_name(ms)
         source_table = os.path.join(ms, 'SOURCE')   
-        with utils.open_table(source_table) as table:
+        with casatools.TableReader(source_table) as table:
             source_ids = table.getcol('SOURCE_ID')
             names = table.getcol('NAME')
             directions = table.getcol('DIRECTION')
@@ -677,7 +677,7 @@ class StateTable(object):
         ms = _get_ms_name(ms)
         state_table = os.path.join(ms, 'STATE')
 
-        with utils.open_table(state_table) as table:
+        with casatools.TableReader(state_table) as table:
             obs_modes = table.getcol('OBS_MODE')
             state_ids = range(len(obs_modes))
             return zip(state_ids, obs_modes)
@@ -706,7 +706,7 @@ class FieldTable(object):
         LOG.debug('Analysing FIELD table')
         ms = _get_ms_name(ms)
         field_table = os.path.join(ms, 'FIELD')      
-        with utils.open_table(field_table) as table:
+        with casatools.TableReader(field_table) as table:
             names = table.getcol('NAME')
             source_ids = table.getcol('SOURCE_ID')
             times = table.getcol('TIME')

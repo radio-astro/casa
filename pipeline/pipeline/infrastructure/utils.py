@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import collections
-import contextlib
 import copy
 import datetime
 import decimal
@@ -32,36 +31,6 @@ from . import logging
 from . import pipelineqa
 
 LOG = logging.get_logger(__name__)
-
-
-def context_manager_factory(tool):
-    '''
-    Create a context manager function that wraps the given CASA tool.
-
-    The returned context manager function takes one argument: a filename. The
-    function opens the file using the CASA tool, returning the tool so that it
-    may be used for queries or other operations pertaining to the tool. The
-    tool is closed once it falls out of scope or an exception is raised.
-    '''
-    tool_name = tool.__class__.__name__
-
-    @contextlib.contextmanager
-    def f(filename):
-        LOG.trace('%s tool: opening \'%s\'' % (tool_name, filename))
-        tool.open(filename)
-        try:
-            yield tool
-        finally:
-            LOG.trace('%s tool: closing \'%s\'' % (tool_name, filename))
-            tool.close()
-    return f
-
-# context manager for CASA table tool
-open_table = context_manager_factory(casatools.table)
-# context manager for CASA image tool
-open_image = context_manager_factory(casatools.image)
-# context manager for CASA ms tool
-open_ms = context_manager_factory(casatools.ms)
 
 
 def commafy(l, quotes=True, multi_prefix='', separator=', ', conjunction='and'):
@@ -630,7 +599,7 @@ def _convert_arg_to_id(arg_name, ms_path, arg_val):
     # msselect is executed
     LOG.trace('Executing msselect({%r:%r} on %s', arg_name, arg_val, ms_path)
     taql = {arg_name : str(arg_val)}
-    with open_ms(ms_path) as ms:
+    with casatools.MSReader(ms_path) as ms:
         ms.msselect(taql, onlyparse=True)
         return ms.msselectedindices()
 
