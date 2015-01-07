@@ -1,7 +1,7 @@
 <%!
 import os.path
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.hif.tasks.clean.renderer as clean_renderer
 import pipeline.infrastructure.utils as utils
 
 columns = {'cleanmask' : 'Clean Mask',
@@ -124,7 +124,7 @@ def get_plot(plots, field, spw, i, colname):
                                 %>
                                 % if plot is not None:
                                     <%
-                                    renderer = hr.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
+                                    renderer = clean_renderer.CleanPlotsRenderer(pcontext, result, plots_dict, field, str(spw), pol)
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
                                     %>

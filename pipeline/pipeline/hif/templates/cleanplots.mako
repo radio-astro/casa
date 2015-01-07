@@ -1,7 +1,6 @@
 <%!
 rsc_path = ""
 import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 columns = {'cleanmask' : 'Clean Mask',
 		   'flux' : 'Flux',

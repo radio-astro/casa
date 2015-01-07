@@ -11,15 +11,12 @@ import zipfile
 
 import casadef
 import mako
-import numpy as np
 
 import pipeline as pipeline
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
-import pipeline.infrastructure.displays.clean as clean
-import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
@@ -28,7 +25,6 @@ from pipeline.infrastructure.renderer.templates import resources
 from . import qaadapter
 from .. import utils
 from . import weblog
-import pipeline.hif as hif
 import pipeline.hifv as hifv
 import pipeline.hif.tasks.applycal.renderer as applycal_renderer
 
@@ -68,16 +64,6 @@ def get_task_description(result_obj):
     return '{stage}. <strong>{task_name}</strong>: {description}'.format(**d)
 
 def _get_task_description_for_class(task_cls):
-
-    if task_cls is hif.tasks.Clean:
-        return 'Produce a cleaned image'
-
-    if task_cls is hif.tasks.CleanList:
-        return 'Calculate clean products'
-
-    if task_cls is hif.tasks.MakeCleanList:
-        return 'Compile a list of cleaned images to be calculated'
-
     if task_cls is hifv.tasks.flagging.uncalspw.Uncalspw:
         return 'Flag spws that have no calibration'
     
@@ -1015,55 +1001,6 @@ class T2_4MDetailsDefaultRenderer(object):
             return None
 
 
-class CleanPlotsRenderer(object):
-    template = 'cleanplots.html'
-
-    def __init__(self, context, result, plots_dict, field, spw, pol):
-        self.context = context
-        self.result = result
-        self.plots_dict = plots_dict
-        self.field = field
-        self.spw = spw
-        self.pol = pol
-        
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):
-        filename = 'field%s-spw%s-pol%s-cleanplots.html' % (
-          self.field, 
-          self.spw,
-          self.pol)
-        filename = filenamer.sanitize(filename)
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self):
-        if not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-        file_obj = open(self.path, 'w') 
-        return contextlib.closing(file_obj)
-    
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots_dict' : self.plots_dict,
-                'dirname'    : self.dirname,
-                'field'      : self.field,
-                'spw'        : self.spw}
-
-    def render(self):
-        display_context = self._get_display_context()
-        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
-        return t.render(**display_context)
-
-
 class T2_4MDetailsfinalcalsRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hifv_finalcals.html', 
                  always_rerender=False):
@@ -1346,128 +1283,6 @@ class VLASubPlotRenderer(object):
 
 #----------------------------------------------------------------------
 
-
-
-class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='t2-4m_details-hif_cleanlist.html',
-                 always_rerender=False):
-        super(T2_4MDetailsCleanRenderer, self).__init__(template,
-                                                        always_rerender)
-
-    def get_display_context(self, context, results):
-        super_cls = super(T2_4MDetailsCleanRenderer, self)
-        ctx = super_cls.get_display_context(context, results)
-
-        weblog_dir = os.path.join(context.report_dir,
-                                  'stage%s' % results.stage_number)
-
-        # There is only ever one CleanListResult in the ResultsList as it
-        # operates over multiple measurement sets, so we can set the result to
-        # the first item in the list
-
-        # Get results info
-        info_dict = {}
-
-        if results[0]:
-            cresults = results[0].results
-
-            for r in cresults:
-                if r.empty():
-                    continue
-                if not r.iterations:
-                    continue
-
-                maxiter = max(r.iterations.keys())
-
-                with casatools.ImageReader(r.iterations[maxiter]['image']) as image:
-                   info = image.miscinfo()
-                   spw = pol = field = None
-                   if info.has_key('spw'): 
-                       spw = info['spw']
-                   if info.has_key('field'):
-                       field = '%s (%s)' % (info['field'], r.intent)
-
-                   coordsys = image.coordsys()
-                   coord_names = np.array(coordsys.names())
-                   coord_refs = coordsys.referencevalue(format='s')
-                   pol = coord_refs['string'][coord_names=='Stokes'][0]
-                   frequency = coord_refs['string'][coord_names=='Frequency'][0]
-                   frequency = casatools.quanta.convert(frequency, 'GHz')
-                   info_dict[(field,spw,pol,'frequency')] = frequency
-
-                   info_dict[(field,spw,pol,'image name')] = image.name(strippath=True)
-                   stats = image.statistics(robust=False)
-                   info_dict[(field,spw,pol,'max')] = stats.get('max')[0]
-                   beam = image.restoringbeam()
-                   if 'beams' in beam.keys():
-                       # 'beams' dict has results for each channel and
-                       # each pol product. For now, just use the first beam.
-                       beam = beam['beams']['*0']['*0']
-                       LOG.warning('%s has per-plane beam shape, displaying only first' %
-                         r.iterations[maxiter]['image'])
-                   major = casatools.quanta.convert(beam['major'], 'arcsec')
-                   info_dict[(field,spw,pol,'beam major')] = major
-                   minor = casatools.quanta.convert(beam['minor'], 'arcsec')
-                   info_dict[(field,spw,pol,'beam minor')] = minor
-                   pa = casatools.quanta.convert(beam['positionangle'], 'deg')
-                   info_dict[(field,spw,pol,'beam pa')] = pa
-                   info_dict[(field,spw,pol,'brightness unit')] = image.brightnessunit()
-                   
-                   stats = image.statistics(robust=False)
-                   info_dict[(field,spw,pol,'image rms')] = stats.get('rms')[0]
-
-                   summary = image.summary()
-                   nchan = summary['shape'][3]
-                   width = casatools.quanta.quantity(summary['incr'][3],
-                     summary['axisunits'][3])
-                   width = casatools.quanta.convert(width, 'MHz')
-                   width = casatools.quanta.tos(width, 2)
-
-                   info_dict[(field,spw,pol,'nchan')] = nchan
-                   info_dict[(field,spw,pol,'width')] = width
-
-                with casatools.ImageReader(r.iterations[maxiter]['residual']) as residual:
-                   stats = image.statistics(robust=False)
-                   info_dict[(field,spw,pol,'residual rms')] = stats.get('rms')[0]
-
-        # Make the plots
-        plotter = clean.CleanSummary(context, results[0])
-        plots = plotter.plot()        
-
-        fields = sorted(set([p.parameters['field'] for p in plots]))
-        spws = sorted(set([p.parameters['spw'] for p in plots]))
-        iterations = sorted(set([p.parameters['iter'] for p in plots]))
-        types = sorted(set([p.parameters['type'] for p in plots]))
-        
-        iteration_dim = lambda : collections.defaultdict(dict)
-        spw_dim = lambda : collections.defaultdict(iteration_dim)
-        plots_dict = collections.defaultdict(spw_dim)
-        for field in fields:
-            for spw in spws:
-                for iteration in iterations:
-                    for t in types:
-                        matching = [p for p in plots
-                                    if p.parameters['field'] == field
-                                    and p.parameters['spw'] == spw
-                                    and p.parameters['iter'] == iteration
-                                    and p.parameters['type'] == t]
-                        if matching:
-                            plots_dict[field][spw][iteration][t] = matching[0]
-                    
-        ctx.update({'fields'     : fields,
-                    'spws'       : spws,
-                    'iterations' : iterations,
-                    'plots'      : plots,
-                    'plots_dict' : plots_dict,
-                    'info_dict'  : info_dict,
-                    'dirname'    : weblog_dir})
-
-#         import pprint
-#         d = {}
-#         d.update(plots_dict)
-#         pprint.pprint(d)
-
-        return ctx
 
 
 class T2_4MDetailsRenderer(object):
@@ -1823,12 +1638,8 @@ class LogCopier(object):
 # each task type.
 renderer_map = {
     T2_4MDetailsRenderer : {
-        hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
-        hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
-        hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hifv.tasks.flagging.uncalspw.Uncalspw    : T2_4MDetailsDefaultRenderer('t2-4m_details-hifv_uncalspw.html', always_rerender=False),
-        hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False)
-        
+        hifv.tasks.Applycals                     : applycal_renderer.T2_4MDetailsApplycalRenderer(always_rerender=False)        
     }
 }
 
