@@ -109,7 +109,7 @@ def score_data_flagged_by_agents(ms, summaries, min_frac, max_frac,
     # sum the number of flagged rows for the selected agents     
     frac_flagged = reduce(operator.add, 
                           [float(s.flagged)/s.total for s in agent_stats
-                           if s.name in agents or match_all_agents])
+                           if s.name in agents or match_all_agents], 0)
 
     score = linear_score(frac_flagged, min_frac, max_frac, 1.0, 0.0)
     percent = 100.0*frac_flagged
@@ -452,7 +452,7 @@ def score_total_data_flagged(filename, summaries):
 
     # sum the number of flagged rows for the selected agents     
     frac_flagged = reduce(operator.add, 
-                          [float(s.flagged)/s.total for s in agent_stats])
+                          [float(s.flagged)/s.total for s in agent_stats], 0)
 
     if frac_flagged > 0.5:
         score = 0
