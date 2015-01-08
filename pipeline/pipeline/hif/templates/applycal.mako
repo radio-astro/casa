@@ -283,6 +283,9 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -320,6 +323,9 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -458,6 +464,9 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -506,6 +515,9 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
 		${spws_for_baseband(plot)}
 	</%def>
 
@@ -550,6 +562,9 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+	</%def>
+
+	<%def name="caption_subtitle(plot)">
 		${spws_for_baseband(plot)}
 	</%def>
 
