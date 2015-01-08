@@ -1276,7 +1276,7 @@ int main() {
     		AlwaysAssert(medabsdevmed == 999001, AipsError);
     	}
     	{ // large array with all the same values, getMedianAndQuartile()
-    		vector<Float> big(100000, 0);
+    		vector<Float> big(100000, 30);
     		ClassicalStatistics<Double, vector<Float>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.addData(big.begin(), big.size());
     		std::set<Double> quantiles;
@@ -1286,12 +1286,30 @@ int main() {
     		CountedPtr<Double> mymin, mymax;
     		std::map<Double, Double> quantileToValue;
     		Double median = cs.getMedianAndQuantiles(
-    			quantileToValue, quantiles, npts, mymin, mymax, 99999
+    			quantileToValue, quantiles, npts, mymin, mymax, 100
     		);
-    		AlwaysAssert(median == 0, AipsError);
-    		AlwaysAssert(quantileToValue[0.25] == 0, AipsError);
-    		AlwaysAssert(quantileToValue[0.75] == 0, AipsError);
-
+    		AlwaysAssert(median == 30, AipsError);
+    		AlwaysAssert(quantileToValue[0.25] == 30, AipsError);
+    		AlwaysAssert(quantileToValue[0.75] == 30, AipsError);
+    	}
+    	{ // two large array with two unique values, getMedianAndQuartile()
+    		ClassicalStatistics<Double, vector<Float>::const_iterator, vector<Bool>::const_iterator> cs;
+    		vector<Float> big(100000, 30);
+    		cs.addData(big.begin(), big.size());
+    		vector<Float> big2(50000, -10);
+    		cs.addData(big2.begin(), big2.size());
+    		std::set<Double> quantiles;
+    		quantiles.insert(0.25);
+    		quantiles.insert(0.75);
+    		CountedPtr<uInt64> npts;
+    		CountedPtr<Double> mymin, mymax;
+    		std::map<Double, Double> quantileToValue;
+    		Double median = cs.getMedianAndQuantiles(
+    			quantileToValue, quantiles, npts, mymin, mymax, 100
+    		);
+    		AlwaysAssert(median == 30, AipsError);
+    		AlwaysAssert(quantileToValue[0.25] == -10, AipsError);
+    		AlwaysAssert(quantileToValue[0.75] == 30, AipsError);
     	}
     }
 
