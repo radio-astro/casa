@@ -304,7 +304,7 @@ class SDExportData(basetask.StandardTaskTemplate):
                 (os.path.basename(_f), products_dir))
             if not self._executor._dry_run:
                 shutil.copy (_f, products_dir)
-        return os.path.basename(pprmatches[0])
+        return os.path.basename(pprmatches[0] if len(pprmatches) > 0 else '')
 
     def _export_casa_commands_log (self, context, casalog_name, products_dir):
         """

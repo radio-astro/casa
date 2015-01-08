@@ -25,7 +25,11 @@ import os
 %for r in result:
       <tr>
           <td>Pipeline processing request</td>
-          <td>${r.pprequest}</td>
+	% if len(r.pprequest) == 0:
+			<td>N/A</td>
+	% else:
+			<td>${r.pprequest}</td>
+	% endif
       </tr>
       <tr>
           <td>Pipeline web log</td>
