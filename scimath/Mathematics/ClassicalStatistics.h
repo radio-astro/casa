@@ -30,7 +30,7 @@
 
 #include <scimath/Mathematics/StatisticsAlgorithm.h>
 
-// #include <scimath/Mathematics/StatisticsUtilities.h>
+#include <scimath/Mathematics/StatisticsUtilities.h>
 
 #include <set>
 #include <vector>
@@ -50,15 +50,6 @@ namespace casa {
 template <class AccumType, class InputIterator, class MaskIterator=const Bool*> class ClassicalStatistics
 	: public StatisticsAlgorithm<AccumType, InputIterator, MaskIterator> {
 public:
-
-	// description of a regularly spaced bins with the first bin having lower limit
-	// of minLimit and having nBins equally spaced bins of width binWidth, so that
-	// the upper limit of the last bin is given by minLimit + nBins*binWidth
-	struct BinDesc {
-		AccumType binWidth;
-		AccumType minLimit;
-		uInt nBins;
-	};
 
 	ClassicalStatistics();
 
@@ -249,69 +240,74 @@ protected:
 	void _clearStats();
 
 	// <group>
+	// Get the counts of data within the specified histogram bins. The number of
+	// arrays within binCounts will be equal to the number of histograms in <src>binDesc</src>.
+	// Each array within <src>binCounts</src> will have the same number of elements as the
+	// number of bins in its corresponding histogram in <src>binDesc</src>.
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
 		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
-		const BinDesc& binDesc, AccumType maxLimit
-	) const ;
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+		const vector<AccumType>& maxLimit
+	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
 		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 		const DataRanges& ranges, Bool isInclude,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 		const MaskIterator& maskBegin, uInt maskStride,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 		const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 		Bool isInclude,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, const InputIterator& weightsBegin,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const ;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, const InputIterator& weightsBegin,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, const InputIterator& weightsBegin,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, const InputIterator& weightsBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 		const DataRanges& ranges, Bool isInclude,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 
 	virtual void _findBins(
-		vector<uInt64>& binCounts,
-        CountedPtr<AccumType>& sameVal, Bool& allSame,
-        const InputIterator& dataBegin, const InputIterator& weightBegin,
+		vector<vector<uInt64> >& binCounts,
+		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
+		const InputIterator& dataBegin, const InputIterator& weightBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-		const BinDesc& binDesc, AccumType maxLimit
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 	// </group>
 
@@ -371,69 +367,121 @@ protected:
 	// </group>
 
 	//<group>
-	// populate an unsorted array with valid data. If <src>includeLimits</src> is defined,
-	// then restrict values that are entered in the array to those limits (inclusive of the
-	// minimum, exclusive of the maximum). <src>maxCount</src> and <src>currentCount</src> are
-	// used only if <src>includeLimits</src> is defined. In this case, the method will return
-	// when currentCount == maxCount, thus avoiding scanning remaining data unnecessarily.
-
+	// populate an unsorted array with valid data.
 	// no weights, no mask, no ranges
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr, uInt dataStride
 	) const;
 
 	// ranges
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
-		uInt dataStride, const DataRanges& ranges, Bool isInclude,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr,
+		uInt dataStride, const DataRanges& ranges, Bool isInclude
 	) const;
 
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
+		vector<AccumType>& ary, const InputIterator& dataBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin,
-		uInt maskStride,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		uInt maskStride
 	) const;
 
 	// mask and ranges
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+		vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr,
 		uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-		const DataRanges& ranges, Bool isInclude,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		const DataRanges& ranges, Bool isInclude
 	) const;
 
 	// weights
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
-		const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		vector<AccumType>& ary, const InputIterator& dataBegin,
+		const InputIterator& weightsBegin, Int64 nr, uInt dataStride
 	) const;
 
 	// weights and ranges
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
+		vector<AccumType>& ary, const InputIterator& dataBegin,
 		const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
-		const DataRanges& ranges, Bool isInclude,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		const DataRanges& ranges, Bool isInclude
 	) const;
 
 	// weights and mask
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
+		vector<AccumType>& ary, const InputIterator& dataBegin,
 		const InputIterator& weightBegin, Int64 nr, uInt dataStride,
-		const MaskIterator& maskBegin, uInt maskStride,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		const MaskIterator& maskBegin, uInt maskStride
 	) const;
 
 	// weights, mask, ranges
 	virtual void _populateArray(
-		vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightBegin,
+		vector<AccumType>& ary, const InputIterator& dataBegin, const InputIterator& weightBegin,
+		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+		const DataRanges& ranges, Bool isInclude
+	) const;
+	// </group>
+
+	// <group>
+	// Create a vector of unsorted arrays, one array for each bin defined by <src>includeLimits</src>.
+	// <src>includeLimits</src> should be non-overlapping and should be given in ascending order (the
+	// algorithm used assumes this). Once the sum of the lengths of all arrays equals </src>maxCount</src>
+	// the method will return with no further processing.
+	// no weights, no mask, no ranges
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// ranges
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+		uInt dataStride, const DataRanges& ranges, Bool isInclude,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+		Int64 nr, uInt dataStride, const MaskIterator& maskBegin,
+		uInt maskStride,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// mask and ranges
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+		uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+		const DataRanges& ranges, Bool isInclude,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// weights
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+		const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// weights and ranges
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+		const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
+		const DataRanges& ranges, Bool isInclude,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// weights and mask
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+		const InputIterator& weightBegin, Int64 nr, uInt dataStride,
+		const MaskIterator& maskBegin, uInt maskStride,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+	) const;
+
+	// weights, mask, ranges
+	virtual void _populateArrays(
+		vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightBegin,
 		Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 		const DataRanges& ranges, Bool isInclude,
-		const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+		const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 	) const;
 	// </group>
 
@@ -597,7 +645,10 @@ private:
 	// point that falls exactly on a bin boundary is considered to be in the higher index bin.
     // <src>sameVal</src> will be non-null if all the good values in the histogram range are the
 	// same. In that case, the value held will be the value of each of those data points.
-	vector<uInt64> _binCounts(CountedPtr<AccumType>& sameVal, const BinDesc& binDesc);
+	vector<vector<uInt64> > _binCounts(
+		vector<CountedPtr<AccumType> >& sameVal,
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc
+	);
 
 	// convert in place by taking the absolute value of the difference of the vector and the median
 	static void _convertToAbsDevMedArray(vector<AccumType>& myArray, AccumType median);
@@ -606,23 +657,30 @@ private:
 	// only points within those limits (including min but excluding max, as per definition of bins),
 	// are included.
 	void _createDataArray(
-		vector<AccumType>& array,
-		const std::pair<AccumType, AccumType> *const &includeLimits=0,
-		uInt maxCount=0
+		vector<AccumType>& array
 	);
 
-	// extract data from multiple bins given by binDesc that have the specified sorted dataIndices relative
-	// to the lowest bin
-	std::map<uInt64, AccumType> _dataFromMultipleBins(
-		const BinDesc& binDesc, uInt maxArraySize,
-		const std::set<uInt64>& dataIndices
+	void _createDataArrays(
+		vector<vector<AccumType> >& arrays,
+		const vector<std::pair<AccumType, AccumType> > &includeLimits,
+		uInt maxCount
+	);
+	// extract data from multiple histograms given by <src>binDesc</src>.
+	// <src>dataIndices</src> represent the indices of the sorted arrays of values to
+	// extract. There should be exactly one set of data indices to extract for each
+	// supplied histogram. The data indices are relative to the minimum value of the minimum
+	// bin in their repsective histograms. The ordering of the maps in the returned vector represent
+	// the ordering of histograms in <src>binDesc</src>. <src>binDesc</src> should contain
+	// non-overlapping histograms and the histograms should be specified in ascending order.
+	vector<std::map<uInt64, AccumType> > _dataFromMultipleBins(
+		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, uInt maxArraySize,
+		const vector<std::set<uInt64> >& dataIndices
 	);
 
-	// extract data from the specified bin that have the specified sorted dataIndices within
-	// that bin
-	std::map<uInt64, AccumType> _dataFromSingleBin(
-		uInt64 binNpts, uInt maxArraySize, const std::pair<AccumType, AccumType>& binLimits,
-		const std::set<uInt64>& dataIndices
+	vector<std::map<uInt64, AccumType> > _dataFromSingleBins(
+		const vector<uInt64>& binNpts, uInt maxArraySize,
+		const vector<std::pair<AccumType, AccumType> >& binLimits,
+		const vector<std::set<uInt64> >& dataIndices
 	);
 
 	void _doMinMax();
@@ -650,7 +708,7 @@ private:
 	// of their respective bins. If false, no padding so that minData and maxData are also
 	// exactly the histogram abscissa limits.
 	static void _makeBins(
-		BinDesc& bins, AccumType minData, AccumType maxData, uInt maxBins,
+		typename StatisticsUtilities<AccumType>::BinDesc& bins, AccumType minData, AccumType maxData, uInt maxBins,
 		Bool allowPad
 	);
 
@@ -663,9 +721,6 @@ private:
 	// _npts will be used if it has been previously calculated. If not, the data sets will
 	// be scanned to determine npts.
 	std::set<uInt64> _medianIndices(CountedPtr<uInt64> knownNpts);
-
-
-
 
 	// update min and max if necessary
     void _updateMaxMin(AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos, uInt dataStride);

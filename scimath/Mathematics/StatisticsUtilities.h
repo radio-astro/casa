@@ -37,6 +37,15 @@ namespace casa {
 template <class T> class StatisticsUtilities {
 public:
 
+	// description of a regularly spaced bins with the first bin having lower limit
+	// of minLimit and having nBins equally spaced bins of width binWidth, so that
+	// the upper limit of the last bin is given by minLimit + nBins*binWidth
+	struct BinDesc {
+		T binWidth;
+		T minLimit;
+		uInt nBins;
+	};
+
 	~StatisticsUtilities() {}
 
 	// <group>

@@ -423,32 +423,58 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 #define _findBinCodeHF \
 	if (_isInRange(*datum)) { \
 		AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
-		if (myDatum >= binDesc.minLimit && myDatum < maxLimit) { \
-			AccumType idx = (myDatum - binDesc.minLimit)/binDesc.binWidth; \
-			++binCounts[StatisticsUtilities<AccumType>::getInt(idx)]; \
-			if (allSame) { \
-				if (sameVal.null()) { \
-					sameVal = new AccumType(myDatum); \
-				} \
-				else { \
-					allSame = myDatum == *sameVal; \
-					if (! allSame) { \
-						sameVal = NULL; \
+		if (myDatum >= bBinDesc->minLimit && myDatum < *maxLimit.rbegin()) { \
+			iCounts = bCounts; \
+			iSameVal = bSameVal; \
+			iAllSame = bAllSame; \
+			iBinDesc = bBinDesc; \
+			iMaxLimit = bMaxLimit; \
+			while (iBinDesc != eBinDesc) { \
+				if (myDatum >= iBinDesc->minLimit && myDatum < *iMaxLimit) { \
+					AccumType idx = (myDatum - iBinDesc->minLimit)/iBinDesc->binWidth; \
+					++(*iCounts)[StatisticsUtilities<AccumType>::getInt(idx)]; \
+					if (*iAllSame) { \
+						if (iSameVal->null()) { \
+							*iSameVal = new AccumType(myDatum); \
+						} \
+						else { \
+							*iAllSame = myDatum == *(*iSameVal); \
+							if (! *iAllSame) { \
+								*iSameVal = NULL; \
+							} \
+						} \
 					} \
+					break; \
 				} \
+				++iCounts; \
+				++iSameVal; \
+				++iAllSame; \
+				++iBinDesc; \
+				++iMaxLimit; \
 			} \
 		} \
 	}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, Int64 nr, uInt dataStride,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc,
-	AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -469,13 +495,25 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator  bAllSame = allSame.begin();
+		vector<Bool>::iterator  iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -504,13 +542,25 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -534,14 +584,26 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 	Bool isInclude,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -571,13 +633,25 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -601,32 +675,44 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
-	InputIterator datum = dataBegin;
-	InputIterator weight = weightsBegin;
-	Int64 count = 0;
-	Bool unityStride = dataStride == 1;
-	typename DataRanges::const_iterator beginRange = ranges.begin();
-	typename DataRanges::const_iterator endRange = ranges.end();
-	while (count < nr) {
-		if (
-			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
-				*datum, beginRange, endRange, isInclude
-			)
-		) {
-			_findBinCodeHF
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1;
+		typename DataRanges::const_iterator beginRange = ranges.begin();
+		typename DataRanges::const_iterator endRange = ranges.end();
+		while (count < nr) {
+			if (
+				*weight > 0
+				&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+					*datum, beginRange, endRange, isInclude
+				)
+			) {
+				_findBinCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, unityStride, dataStride
+			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
-			datum, count, weight, unityStride, dataStride
-		);
-	}
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
@@ -638,14 +724,26 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -678,13 +776,25 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-	vector<uInt64>& binCounts,
-    CountedPtr<AccumType>& sameVal, Bool& allSame,
+	vector<vector<uInt64> >& binCounts,
+    vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
     const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-	const typename ClassicalStatistics<AccumType, InputIterator, MaskIterator>::BinDesc& binDesc, AccumType maxLimit
+	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
+	const vector<AccumType>& maxLimit
 ) const {
 	if (_hasRange) {
+		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
+		vector<vector<uInt64> >::iterator iCounts = bCounts;
+		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
+		typename vector<CountedPtr<AccumType> >::iterator iSameVal = bSameVal;
+		vector<Bool>::iterator bAllSame = allSame.begin();
+		vector<Bool>::iterator iAllSame = bAllSame;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator bBinDesc = binDesc.begin();
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator iBinDesc = bBinDesc;
+		typename vector<typename StatisticsUtilities<AccumType>::BinDesc>::const_iterator eBinDesc = binDesc.end();
+		typename vector<AccumType>::const_iterator bMaxLimit = maxLimit.begin();
+		typename vector<AccumType>::const_iterator iMaxLimit = bMaxLimit;
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -990,35 +1100,24 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	}
 }
 
+
 // define rather than make a method to ensure this is called inline to maximize performance
-#define _populateArrayCodeHF \
+#define _populateArrayCodeHF1 \
 	if (_isInRange(*datum)) { \
 		AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
-		if (includeLimits) { \
-			if (myDatum >= includeLimits->first && myDatum < includeLimits->second) { \
-				ary.push_back(myDatum); \
-				++currentCount; \
-				if (currentCount == maxCount) { \
-					return; \
-				} \
-			} \
-		} \
-		else { \
-			ary.push_back(myDatum); \
-		} \
+		ary.push_back(myDatum); \
 	}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr, uInt dataStride
 ) const {
 	if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1;
 		while (count < nr) {
-			_populateArrayCodeHF
+			_populateArrayCodeHF1
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, unityStride, dataStride
 			);
@@ -1026,17 +1125,15 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, nr, dataStride,
-			includeLimits, maxCount
+			ary, dataBegin, nr, dataStride
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
-	uInt dataStride, const DataRanges& ranges, Bool isInclude,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr,
+	uInt dataStride, const DataRanges& ranges, Bool isInclude
 ) const {
 	if (_hasRange) {
 		Int64 count = 0;
@@ -1050,7 +1147,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 					*datum, beginRange, endRange, isInclude
 				)
 			) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, unityStride, dataStride
@@ -1059,17 +1156,16 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, nr, dataStride,
-			ranges, isInclude, includeLimits, maxCount
+			ary, dataBegin, nr, dataStride,
+			ranges, isInclude
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
-	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	vector<AccumType>& ary, const InputIterator& dataBegin,
+	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
 	if (_hasRange) {
 		Int64 count = 0;
@@ -1078,7 +1174,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 		MaskIterator mask = maskBegin;
 		while (count < nr) {
 			if (*mask) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, mask, unityStride, dataStride, maskStride
@@ -1087,18 +1183,17 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, nr, dataStride,
-			maskBegin, maskStride, includeLimits, maxCount
+			ary, dataBegin, nr, dataStride,
+			maskBegin, maskStride
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr,
 	uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-	const DataRanges& ranges, Bool isInclude,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	const DataRanges& ranges, Bool isInclude
 ) const {
 	if (_hasRange) {
 		Int64 count = 0;
@@ -1114,7 +1209,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 					*datum, beginRange, endRange, isInclude
 				)
 			) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, mask, unityStride, dataStride, maskStride
@@ -1123,46 +1218,44 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude, includeLimits, maxCount
+			ary, dataBegin, nr, dataStride,
+			maskBegin, maskStride, ranges, isInclude
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
-	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	vector<AccumType>& ary, const InputIterator& dataBegin,
+	const InputIterator& weightsBegin, Int64 nr, uInt dataStride
 ) const {
 	if (_hasRange) {
-	InputIterator datum = dataBegin;
-	InputIterator weight = weightsBegin;
-	Int64 count = 0;
-	Bool unityStride = dataStride == 1;
-	while (count < nr) {
-		if (*weight > 0) {
-			_populateArrayCodeHF
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1;
+		while (count < nr) {
+			if (*weight > 0) {
+				_populateArrayCodeHF1
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, unityStride, dataStride
+			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
-			datum, count, weight, unityStride, dataStride
-		);
-	}
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, includeLimits, maxCount
+			ary, dataBegin, weightsBegin,
+			nr, dataStride
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin,
+	vector<AccumType>& ary, const InputIterator& dataBegin,
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
-	const DataRanges& ranges, Bool isInclude,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	const DataRanges& ranges, Bool isInclude
 ) const {
 	if (_hasRange) {
 		InputIterator datum = dataBegin;
@@ -1178,7 +1271,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 					*datum, beginRange, endRange, isInclude
 				)
 			) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, weight, unityStride, dataStride
@@ -1187,17 +1280,16 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, ranges, isInclude, includeLimits, maxCount
+			ary, dataBegin, weightsBegin,
+			nr, dataStride, ranges, isInclude
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightsBegin,
-	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	vector<AccumType>& ary, const InputIterator& dataBegin, const InputIterator& weightsBegin,
+	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
 	if (_hasRange) {
 		InputIterator datum = dataBegin;
@@ -1207,7 +1299,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 		Bool unityStride = dataStride == 1 && maskStride == 1;
 		while (count < nr) {
 			if (*mask && *weight > 0) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, weight, mask, unityStride, dataStride, maskStride
@@ -1216,18 +1308,17 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride, includeLimits, maxCount
+			ary, dataBegin, weightsBegin,
+			nr, dataStride, maskBegin, maskStride
 		);
 	}
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-	vector<AccumType>& ary, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightsBegin,
+	vector<AccumType>& ary, const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
-	const DataRanges& ranges, Bool isInclude,
-	const std::pair<AccumType, AccumType> *const &includeLimits, uInt maxCount
+	const DataRanges& ranges, Bool isInclude
 ) const {
 	if (_hasRange) {
 		InputIterator datum = dataBegin;
@@ -1244,7 +1335,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 					*datum, beginRange, endRange, isInclude
 				)
 			) {
-				_populateArrayCodeHF
+				_populateArrayCodeHF1
 			}
 			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 				datum, count, weight, mask, unityStride, dataStride, maskStride
@@ -1253,7 +1344,320 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateAr
 	}
 	else {
 		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, currentCount, dataBegin, weightsBegin,	nr, dataStride,
+			ary, dataBegin, weightsBegin,	nr, dataStride,
+			maskBegin, maskStride, ranges, isInclude
+		);
+	}
+}
+
+// define rather than make a method to ensure this is called inline to maximize performance
+#define _populateArraysCodeHF \
+	if (_isInRange(*datum)) { \
+		AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
+		if (myDatum >= includeLimits.begin()->first && myDatum < includeLimits.rbegin()->second) { \
+			iIncludeLimits = bIncludeLimits; \
+			iArys = bArys; \
+			while (iIncludeLimits != eIncludeLimits) { \
+				if (myDatum >= iIncludeLimits->first && myDatum < iIncludeLimits->second) { \
+					iArys->push_back(myDatum); \
+					++currentCount; \
+					if (currentCount == maxCount) { \
+						return; \
+					} \
+					break; \
+				} \
+				++iIncludeLimits; \
+				++iArys; \
+			} \
+		} \
+	}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		Int64 count = 0;
+		InputIterator datum = dataBegin;
+		Bool unityStride = dataStride == 1;
+		while (count < nr) {
+			_populateArraysCodeHF
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, unityStride, dataStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, nr, dataStride,
+			includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+	uInt dataStride, const DataRanges& ranges, Bool isInclude,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		Int64 count = 0;
+		InputIterator datum = dataBegin;
+		Bool unityStride = dataStride == 1;
+		typename DataRanges::const_iterator beginRange = ranges.begin();
+		typename DataRanges::const_iterator endRange = ranges.end();
+		while (count < nr) {
+			if (
+				StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+					*datum, beginRange, endRange, isInclude
+				)
+			) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, unityStride, dataStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, nr, dataStride,
+			ranges, isInclude, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		Int64 count = 0;
+		InputIterator datum = dataBegin;
+		Bool unityStride = dataStride == 1 && maskStride == 1;
+		MaskIterator mask = maskBegin;
+		while (count < nr) {
+			if (*mask) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, mask, unityStride, dataStride, maskStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, nr, dataStride,
+			maskBegin, maskStride, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr,
+	uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+	const DataRanges& ranges, Bool isInclude,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		Int64 count = 0;
+		InputIterator datum = dataBegin;
+		Bool unityStride = dataStride == 1 && maskStride == 1;
+		MaskIterator mask = maskBegin;
+		typename DataRanges::const_iterator beginRange = ranges.begin();
+		typename DataRanges::const_iterator endRange = ranges.end();
+		while (count < nr) {
+			if (
+				*mask
+				&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+					*datum, beginRange, endRange, isInclude
+				)
+			) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, mask, unityStride, dataStride, maskStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, nr, dataStride,
+			maskBegin, maskStride, ranges, isInclude, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1;
+		while (count < nr) {
+			if (*weight > 0) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, unityStride, dataStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, weightsBegin,
+			nr, dataStride, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin,
+	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
+	const DataRanges& ranges, Bool isInclude,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1;
+		typename DataRanges::const_iterator beginRange = ranges.begin();
+		typename DataRanges::const_iterator endRange = ranges.end();
+		while (count < nr) {
+			if (
+				*weight > 0
+				&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+					*datum, beginRange, endRange, isInclude
+				)
+			) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, unityStride, dataStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, weightsBegin,
+			nr, dataStride, ranges, isInclude, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightsBegin,
+	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		MaskIterator mask = maskBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1 && maskStride == 1;
+		while (count < nr) {
+			if (*mask && *weight > 0) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, mask, unityStride, dataStride, maskStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, weightsBegin,
+			nr, dataStride, maskBegin, maskStride, includeLimits, maxCount
+		);
+	}
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, const InputIterator& weightsBegin,
+	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
+	const DataRanges& ranges, Bool isInclude,
+	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
+) const {
+	if (_hasRange) {
+		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
+		typename vector<vector<AccumType> >::iterator iArys = bArys;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator iIncludeLimits = bIncludeLimits;
+		typename vector<std::pair<AccumType, AccumType> >::const_iterator eIncludeLimits = includeLimits.end();
+		InputIterator datum = dataBegin;
+		InputIterator weight = weightsBegin;
+		MaskIterator mask = maskBegin;
+		Int64 count = 0;
+		Bool unityStride = dataStride == 1 && maskStride == 1;
+		typename DataRanges::const_iterator beginRange = ranges.begin();
+		typename DataRanges::const_iterator endRange = ranges.end();
+		while (count < nr) {
+			if (
+				*mask && *weight > 0
+				&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+					*datum, beginRange, endRange, isInclude
+				)
+			) {
+				_populateArraysCodeHF
+			}
+			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+				datum, count, weight, mask, unityStride, dataStride, maskStride
+			);
+		}
+	}
+	else {
+		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
+			arys, currentCount, dataBegin, weightsBegin,	nr, dataStride,
 			maskBegin, maskStride, ranges, isInclude, includeLimits, maxCount
 		);
 	}
