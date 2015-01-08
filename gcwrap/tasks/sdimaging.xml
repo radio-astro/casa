@@ -456,7 +456,7 @@ ephemsrcname -- ephemeris source name for moving source
         objects known by CASA, the imaging realigns the data by
         correcting shifts of the source during observation,
         so that the source appears to be fixed in the image.
-        examples: 'MERCURY', 'VENUS','MARS', 'JUPITER', 'SATURN',
+        examples: 'MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN',
                   'URANUS', 'NEPUTUNE', 'PLUTO', 'SUN', 'MOON'
 pointingcolumn -- pointing data column to use
         option: 'direction', 'target', 'pointing_offset', 'source_offset', encoder' 
