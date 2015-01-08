@@ -835,6 +835,10 @@ void PlotMSIndexer::setMethod(CacheMemPtr& getmethod,PMS::Axis axis) {
 		getmethod = &PlotMSCacheBase::getRow;
 		break;
 
+	case PMS::OBSERVATION:
+		getmethod = &PlotMSCacheBase::getObsid;
+		break;
+
 	case PMS::DELAY:
 	case PMS::SWP:
 	case PMS::OPAC:
@@ -859,6 +863,7 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 	case PMS::TIME:
 	case PMS::TIME_INTERVAL:
 	case PMS::SPW:
+	case PMS::OBSERVATION:
 		indexmethod = &PlotMSIndexer::getIndex0000;
 		break;
 

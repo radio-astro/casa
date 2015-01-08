@@ -122,6 +122,7 @@ public:
 	      GAMP,GPHASE,GREAL,GIMAG,
 	      DELAY,SWP,TSYS,OPAC,
 	      RADIAL_VELOCITY, RHO,
+	      OBSERVATION,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
@@ -134,7 +135,9 @@ public:
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "GainAmp","GainPhase","GainReal","GainImag",
-	      "Delay","SwPower","Tsys","Opac","Radial Velocity [km/s]", "Distance (rho) [km]",
+	      "Delay","SwPower","Tsys","Opac",
+	      "Radial Velocity [km/s]", "Distance (rho) [km]",
+	      "Observation",
 	      "None")
 
     // </group>

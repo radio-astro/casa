@@ -202,6 +202,8 @@ public:
 
   inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
 
+  inline Double getObsid(Int chnk,Int irel) { return *(obsid_[chnk]->data()+irel); };
+
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
   inline Double getEl0(Int chnk,Int irel) { return el0_(chnk);  (void)irel; };
@@ -341,6 +343,7 @@ protected:
   PtrBlock<Vector<Double>*> freq_, vel_;
   PtrBlock<Vector<Int>*> chan_;
   PtrBlock<Vector<Int>*> corr_;
+  PtrBlock<Vector<Int>*> obsid_;
 
   // Optional parts of the cache
   PtrBlock<Vector<Float>*> pa_;

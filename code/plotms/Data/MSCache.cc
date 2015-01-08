@@ -1294,6 +1294,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		*row_[vbnum] = vb.rowIds();
 		break;
 
+	case PMS::OBSERVATION:
+		*obsid_[vbnum] = vb.observationId();
+		break;
+
 	default:
 		throw(AipsError("Axis choice not supported for MS"));
 		break;

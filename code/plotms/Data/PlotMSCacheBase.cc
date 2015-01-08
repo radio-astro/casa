@@ -47,6 +47,8 @@
 
 namespace casa {
 
+const unsigned int PlotMSCacheBase::N_METADATA = 12;
+
 const PMS::Axis PlotMSCacheBase::METADATA[] =
 {
 		PMS::TIME,
@@ -60,12 +62,12 @@ const PMS::Axis PlotMSCacheBase::METADATA[] =
 		PMS::ANTENNA2,
 		PMS::BASELINE,
 		PMS::FLAG,
+		PMS::OBSERVATION,
 };
 
 //      PMS::TIME_INTERVAL,
 //      PMS::FLAG_ROW
 
-const unsigned int PlotMSCacheBase::N_METADATA = 11;
 
 bool PlotMSCacheBase::axisIsMetaData(PMS::Axis axis) {
 	for(unsigned int i = 0; i < N_METADATA; i++)
@@ -570,6 +572,7 @@ void PlotMSCacheBase::release(const vector<PMS::Axis>& axes) {
 			case PMS::DELAY:
 			case PMS::OPAC:
 			case PMS::SWP: PMSC_DELETE(par_) break;
+			case PMS::OBSERVATION: PMSC_DELETE(obsid_) break;
 
 			case PMS::TSYS:
 			case PMS::NONE: break;
@@ -1017,6 +1020,8 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 
 	par_.resize(nChunk_,False,True);
 
+	obsid_.resize(nChunk_,False,True);
+
 	// Construct (empty) pointed-to Vectors/Arrays
 	for (Int ic=oldnChunk;ic<nChunk_;++ic) {
 		row_[ic] = new Vector<uInt>();
@@ -1049,6 +1054,7 @@ void PlotMSCacheBase::increaseChunks(Int nc) {
 		el_[ic] = new Vector<Double>();
 		parang_[ic] = new Vector<Float>();
 		par_[ic] = new Array<Float>();
+		obsid_[ic] = new Vector<Int>();
 	}
 }
 
@@ -1146,6 +1152,7 @@ void PlotMSCacheBase::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 	case PMS::TSYS:
 	case PMS::RADIAL_VELOCITY:
 	case PMS::RHO:
+	case PMS::OBSERVATION:
 	case PMS::NONE:
 		break;
 	}
@@ -1270,6 +1277,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 	case PMS::DELAY:
 	case PMS::SWP:
 	case PMS::OPAC:
+	case PMS::OBSERVATION:
 	{
 		unsigned int n = 0;
 		for(Int i = 0; i < nChunk_; ++i) {
@@ -1309,6 +1317,7 @@ unsigned int PlotMSCacheBase::nPointsForAxis(PMS::Axis axis) const {
 			else if(axis == PMS::DELAY ||
 					axis == PMS::SWP ||
 					axis == PMS::OPAC)     n += par_[i]->size();
+			else if(axis == PMS::OBSERVATION)  n += obsid_[i]->size();
 		}
 		return n;
 	}
