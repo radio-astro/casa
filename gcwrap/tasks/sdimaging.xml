@@ -206,7 +206,7 @@ available.
     </param>
 
     <param type="string" name="ephemsrcname">
-	    <description>ephemeris source name, e.g. \'mars\'</description>
+	    <description>ephemeris source name, e.g. \'MARS\'</description>
 	    <value></value>
     </param>
 
@@ -451,11 +451,13 @@ phasecenter -- image phase center: direction measure or field ID
         example: 6 (field id), 'J2000 13h44m00 -17d02m00',
                  'AZEL -123d48m29 15d41m41'
 ephemsrcname -- ephemeris source name for moving source
-        default: ''
-        if the source name in the data matches one of the known 
-        solar objects by the system, this task automatically set 
-        the source name. 
-        example: 'mars' 
+        default: '' (none)
+        if the source name in the data matches one of the solar sytem
+        objects known by CASA, the imaging realigns the data by
+        correcting shifts of the source during observation,
+        so that the source appears to be fixed in the image.
+        examples: 'MERCURY', 'VENUS','MARS', 'JUPITER', 'SATURN',
+                  'URANUS', 'NEPUTUNE', 'PLUTO', 'SUN', 'MOON'
 pointingcolumn -- pointing data column to use
         option: 'direction', 'target', 'pointing_offset', 'source_offset', encoder' 
         default: 'direction'
