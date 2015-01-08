@@ -85,7 +85,8 @@ class BaselineVsChannelsPlotRenderer(basetemplates.JsonPlotRenderer):
         dirname = os.path.join(context.report_dir, stage)
 
         plotter = image.ImageDisplay()
-        plots = plotter.plot(context=context, results=result, reportdir=dirname)
+        plots = plotter.plot(context=context, results=result, reportdir=dirname,
+          dpi=3000)
         
         super(BaselineVsChannelsPlotRenderer, self).__init__(
                 'generic_x_vs_y_per_spw_and_pol_plots.mako', context, 
