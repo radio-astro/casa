@@ -137,6 +137,7 @@ MS Parameters
       <value>swp</value><value>swpower</value><value>switchedpower</value>
       <value>radialvelocity</value>
       <value>rho</value>
+      <value>observation</value>
     </allowed>
   </param>
   
@@ -241,6 +242,7 @@ MS Parameters
       <value>swp</value>
       <value>swpower</value>
       <value>switchedpower</value>
+      <value>observation</value>
     </allowed>
     </param>
     
@@ -610,6 +612,7 @@ Display Parameters
             <value>channel</value><value>chan</value>
             <value>corr</value>
             <value>time</value>
+            <value>observation</value>
         </allowed>
     </param>
 
@@ -1016,6 +1019,7 @@ Constraints
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
+      <equals value="observation"/>
     </when>
 
     
@@ -1093,6 +1097,7 @@ Constraints
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
+      <equals value="observation"/>
     </when>
     
     <when param="selectdata">
@@ -1539,7 +1544,7 @@ Constraints
     coloraxis -- axis upon which to colorize the plotted points
                 options (= indicates synonyms):
                     'scan',  'field',  'spw',  'antenna1'='ant1',  'antenna2'='ant2',
-                    'baseline',  'channel'='chan',  'corr'='correlation', 'time'
+                    'baseline',  'channel'='chan',  'corr'='correlation', 'time', 'observation'
                 default: ''  (use a single color for all points)
 
     customflaggedsymbol -- If true, use a custom symbol for drawing flagged points
