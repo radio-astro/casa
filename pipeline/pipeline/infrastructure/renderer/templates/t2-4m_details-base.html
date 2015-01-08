@@ -94,6 +94,9 @@ def get_qascores(pool, lo, hi):
 									</a>
 								% endif
 								</h4>
+								% if hasattr(caller, 'caption_subtitle'):
+									<h6>${caller.caption_subtitle(plot)}</h6>								
+								% endif
 								
 								% if hasattr(caller, 'caption_text'):		
 		                        <p>${caller.caption_text(plot, intent)}</p>

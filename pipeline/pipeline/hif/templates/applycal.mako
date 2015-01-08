@@ -40,6 +40,12 @@ def get_template_agents(agents):
 def sanitise(url):
 	return filenamer.sanitize(url)
 
+def spws_for_baseband(plot):
+	spws = plot.parameters['spw'].split(',')
+	if not spws:
+		return ''
+	return '<h6 style="margin-top: -11px;">(Spw%s)</h6>' % utils.commafy(spws, quotes=False, multi_prefix='s')
+
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -249,7 +255,6 @@ def space_comma(s):
 	</tbody>
 </table>
 
-
 % if amp_vs_freq_plots or phase_vs_freq_plots or amp_vs_time_plots or amp_vs_uv_plots or phase_vs_uv_plots or phase_vs_time_plots:
 <h2>Plots</h2>
 
@@ -263,6 +268,11 @@ def space_comma(s):
 		Calibrated amplitude vs frequency
 	</%def>
 
+	<%def name="preamble()">
+		Plots of calibrated amplitude vs frequency for all antennas and
+		correlations, coloured by antenna.
+	</%def>
+
 	<%def name="mouseover(plot)">Click to show amplitude vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
@@ -273,13 +283,12 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Calibrated amplitude vs frequency for ${intent} calibrator 
-		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		baseband ${plot.parameters['baseband']}, all antennas and correlations, 
-		coloured by antenna.
+		${intent.capitalize()} calibrator: 
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
 	</%def>
 
 </%self:plot_group>
@@ -295,6 +304,12 @@ def space_comma(s):
 		Calibrated phase vs frequency
 	</%def>
 
+	<%def name="preamble()">
+		Plots of calibrated phase vs frequency for all antennas and
+		correlations, coloured by antenna.
+	</%def>
+
+
 	<%def name="mouseover(plot)">Click to show phase vs frequency for baseband ${plot.parameters['baseband']}</%def>
 
 	<%def name="fancybox_caption(plot)">
@@ -305,13 +320,12 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, intent)">
-		Calibrated phase vs frequency for ${intent} calibrator 
-		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		baseband ${plot.parameters['baseband']}, all antennas and correlations, 
-		coloured by antenna.		
+		${intent.capitalize()} calibrator: 
+		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}.
 	</%def>
 
 </%self:plot_group>
@@ -323,6 +337,12 @@ def space_comma(s):
 
 	<%def name="title()">
 		Calibrated amplitude vs UV distance
+	</%def>
+
+	<%def name="preamble()">
+		Plots of calibrated amplitude vs UV distance for the amplitude
+		calibrator in each measurement set. Data are plotted for all antennas,
+		coloured by correlation.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs UV distance for spectral window ${plot.parameters['spw']}</%def>
@@ -338,8 +358,7 @@ def space_comma(s):
 	</%def>
 
 	<%def name="caption_text(plot, intent)"> 
-		Calibrated amplitude vs UV distance for amplitude calibrator ${plot.parameters['field']}
-		spw ${plot.parameters['spw']}, all antennas and correlations. Data are coloured by correlation.
+		Amplitude calibrator: ${plot.parameters['field']}
 	</%def>
 
 </%self:plot_group>
@@ -351,6 +370,11 @@ def space_comma(s):
 
 	<%def name="title()">
 		Calibrated amplitude vs time
+	</%def>
+
+	<%def name="preamble()">
+		Plots of calibrated amplitude vs time for all fields, antennas and
+		correlations. Data are coloured by field.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show amplitude vs time for spectral window ${plot.parameters['spw']}</%def>
@@ -365,11 +389,6 @@ def space_comma(s):
 		Spectral Window ${plot.parameters['spw']}
 	</%def>
 
-	<%def name="caption_text(plot, intent)"> 
-		Calibrated amplitude vs time for all fields, spw ${plot.parameters['spw']}, 
-		all antennas and correlations. Data are coloured by field.
-	</%def>
-
 </%self:plot_group>
 
 
@@ -379,6 +398,11 @@ def space_comma(s):
 
 	<%def name="title()">
 		Calibrated phase vs time
+	</%def>
+
+	<%def name="preamble()">
+		Plots of calibrated phase vs time for all fields, antennas and
+		correlations. Data are coloured by field.
 	</%def>
 
 	<%def name="mouseover(plot)">Click to show phase vs time for spectral window ${plot.parameters['spw']}</%def>
@@ -391,11 +415,6 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Spectral Window ${plot.parameters['spw']}
-	</%def>
-
-	<%def name="caption_text(plot, intent)"> 
-		Calibrated phase vs time for all fields, spw ${plot.parameters['spw']},
-		all antennas and correlations. Data are coloured by field.
 	</%def>
 
 </%self:plot_group>
@@ -439,12 +458,12 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Calibrated amplitude vs frequency for Source #${source_id}
-		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		baseband ${plot.parameters['baseband']}.
+		Source #${source_id}
+		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)})
 	</%def>
 
 </%self:plot_group>
@@ -487,12 +506,12 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Calibrated phase vs frequency for Source #${source_id}
-		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		baseband ${plot.parameters['baseband']}.
+		Source #${source_id}
+		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}).
 	</%def>
 
 </%self:plot_group>
@@ -531,12 +550,12 @@ def space_comma(s):
 
 	<%def name="caption_title(plot)">
 		Baseband ${plot.parameters['baseband']}
+		${spws_for_baseband(plot)}
 	</%def>
 
 	<%def name="caption_text(plot, source_id)">
-		Calibrated amplitude vs UV distance for Source #${source_id}
-		${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}, 
-		baseband ${plot.parameters['baseband']}.
+		Source #${source_id}
+		(${utils.commafy(utils.safe_split(plot.parameters['field']), quotes=False)}). 
 	</%def>
 
 </%self:plot_group>
