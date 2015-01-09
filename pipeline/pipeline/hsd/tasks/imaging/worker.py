@@ -86,6 +86,12 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
                           if 'TARGET' in v.intents]
         source_name = target_sources[0].name
         field = '"%s*"' % (source_name)
+        # Check for ephemeris source
+        known_ephemeris_list = ['MERCURY', 'VENUS', 'MARS', 'JUPITER', 'SATURN', 'URANUS', 'NEPTUNE', 'PLUTO', 'SUN', 'MOON']
+        ephemsrcname = ''
+        if source_name.upper() in known_ephemeris_list:
+            ephemsrcname = source_name.upper()
+            LOG.info("Generating an image of ephemeris source. Setting ephemsrcname='%s'" % ephemsrcname)
     
         # baseline
         #baseline = '0&&&'
@@ -217,7 +223,8 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
                       'cell': [qa.tos(cellx), qa.tos(celly)],
                       'phasecenter': phasecenter,
                       'restfreq': restfreq,
-                      'stokes': stokes}
+                      'stokes': stokes,
+                      'ephemsrcname': ephemsrcname}
         with temporary_filename(temporary_name) as name:
             # weight image must be removed before imaging
             weight_image = name.rstrip('/') + '.weight'
@@ -230,7 +237,8 @@ class SDImagingWorker(common.SingleDishTaskTemplate):
             scansel_list = []
             spwsel = []
             for (vis, spw, scan) in zip(vislist, spwid_list, scan_list):
-                LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s'%(vis, spw, field))
+                LOG.debug('Registering data to image: vis=\'%s\', spw=%s, field=%s%s'%(vis, spw, field,
+                                                                                       (' (ephemeris source)' if ephemsrcname!='' else '')))
                 infile_list.append(vis)
                 scansel_list.append(common.list_to_selection(scan))
                 # WORKAROUND for a bug in sdimaging
