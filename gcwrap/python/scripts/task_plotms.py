@@ -10,7 +10,8 @@ def plotms(vis=None,
            yaxis=None, ydatacolumn=None, yaxislocation=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
-           correlation=None, array=None, observation=None, msselect=None,
+           correlation=None, array=None, observation=None, 
+           intent=None, msselect=None,
            averagedata=None,
            avgchannel=None, avgtime=None, avgscan=None, avgfield=None,
            avgbaseline=None, avgantenna=None, avgspw=None, scalar=None,
@@ -108,6 +109,10 @@ def plotms(vis=None,
                  default: '' (all).
         observation -- select by observation ID(s).
                  default: '' (all).
+        intent -- select observing intent  
+                  default: ''  (no selection by intent)  
+                  intent='*BANDPASS*'  (selects data labelled with  
+                                        BANDPASS intent)
         msselect -- TaQL selection expression
                     default: '' (all).
     
@@ -325,9 +330,11 @@ def plotms(vis=None,
         # Set selection
         if (selectdata and os.path.exists(vis)):
             pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan,
-                                  correlation, array, str(observation), msselect, False, plotindex)
+                                  correlation, array, str(observation), intent,
+                                  msselect, False, plotindex)
         else:
-            pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', False, plotindex)
+            pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', '',
+                                  False, plotindex)
        
         # Set averaging
         if not averagedata:

@@ -384,6 +384,11 @@ only be applied next time update() and/or show() is called.
       <value />
     </param>
     
+    <param type="string" name="intent">
+      <description>MS selection parameter for intent</description>
+      <value />
+    </param>
+    
     <param type="string" name="msselect">
       <description>MS selection parameter for msselect</description>
       <value />

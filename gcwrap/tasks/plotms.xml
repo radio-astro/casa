@@ -332,6 +332,11 @@ MS Selection parameters
       <value type="string"></value>
     </param>
 
+    <param type="string" name="intent" subparam="true">
+      <description>Select observing intent</description>
+      <value />
+    </param>
+
     <param type="string" name="msselect" subparam="true">
       <description>MS selection (blank for all)</description>
       <value />
@@ -1111,6 +1116,7 @@ Constraints
         <default param="correlation"><value type="string" /></default>
         <default param="array"><value type="string" /></default>
 	<default param="observation"><value type="string"/></default>
+	<default param="intent"><value type="string"/></default>
         <default param="msselect"><value type="string" /></default>
       </equals>
       <equals type="bool" value="False" />
@@ -1462,6 +1468,10 @@ Constraints
       observation Select by observation ID(s).
                   default: ''-->all;
 		  example: observation='0' (select obsID 0)
+      intent -- Select observing intent  
+                default: ''  (no selection by intent)  
+                intent='*BANDPASS*'  (selects data labelled with  
+                                      BANDPASS intent)
       msselect -- Optional TaQL data selection
 
     averagedata -- data averaging parameters flag

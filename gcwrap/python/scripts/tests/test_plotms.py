@@ -866,7 +866,7 @@ class plotms_test1(test_base):
         self.res =plotms(vis='/home/uniblab/casa/trunk/test/Plotms/ftp.cv.nrao.edu/NRAO-staff/bkent/pipeline/13A-537.sb24066356.eb24324502.56514.05971091435.ms',xaxis="freq",xdatacolumn="",yaxis="amp",
 ydatacolumn="corrected",selectdata=True,field="1",spw="",timerange="",
 uvrange="",antenna="",scan="2,3",correlation="LL,RR",array="",
-observation="",msselect="",averagedata=True,avgchannel="",avgtime="1e8s",
+observation="",intent="", msselect="",averagedata=True,avgchannel="",avgtime="1e8s",
 avgscan=True,avgfield=False,avgbaseline=False,avgantenna=False,avgspw=False,
 scalar=False,transform=False,freqframe="",restfreq="",veldef="RADIO",
 shift=[0.0, 0.0],extendflag=False,extcorr=False,extchannel=False,iteraxis="",
