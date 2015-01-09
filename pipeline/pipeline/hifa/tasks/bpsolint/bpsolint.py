@@ -1017,8 +1017,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 	    solint_dict[spwid]['nphaseup_solutions'] = solInts
 	    if tooFewIntervals:
 	        LOG.warn( \
-		'%s This spw would have less than %d time intervals in its solution in MS %s' % \
-		(asterisks, minBpNintervals, ms.basename))
+		'%s Spw %d would have less than %d time intervals in its solution in MS %s' % \
+		(asterisks, spwid, minBpNintervals, ms.basename))
 
 	    # Bandpass solution info
 	    if requiredChannels > 1.0:
@@ -1045,8 +1045,8 @@ class BpSolint(basetask.StandardTaskTemplate):
 		reqBpSnr))
 	    solint_dict[spwid]['nbandpass_solutions'] = solChannels
 	    if tooFewChannels:
-	        LOG.warn('%s This spw would have less than %d channels in its solution in MS %s' % \
-		    (asterisks, minBpNchan, ms.basename))
+	        LOG.warn('%s Spw %d would have less than %d channels in its solution in MS %s' % \
+		    (asterisks, spwid, minBpNchan, ms.basename))
 
 	return solint_dict
 
