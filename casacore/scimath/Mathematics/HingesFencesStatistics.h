@@ -56,6 +56,11 @@ public:
 		const HingesFencesStatistics<AccumType, InputIterator, MaskIterator>& other
 	);
 
+	// get the algorithm that this object uses for computing stats
+	virtual StatisticsData::ALGORITHM algorithm() const {
+		return StatisticsData::HINGESFENCES;
+	};
+
 	// <group>
 	// In the following group of methods, if the size of the composite dataset
 	// is smaller than

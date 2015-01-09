@@ -67,6 +67,9 @@
 
 #include <casa/OS/Timer.h>
 
+#include <scimath/Mathematics/ClassicalStatistics.h>
+#include <scimath/Mathematics/HingesFencesStatistics.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <class T>
@@ -94,8 +97,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _cs()
-{
+  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf() {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);   
    range_p.resize(0);
@@ -138,7 +140,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _cs()
+  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf()
 {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);
@@ -161,9 +163,8 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
 
 template <class T>
 LatticeStatistics<T>::LatticeStatistics(const LatticeStatistics<T> &other) 
-: pInLattice_p(0),
-  pStoreLattice_p(0),
-  _cs()
+: pInLattice_p(0), pStoreLattice_p(0),
+  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf()
 //
 // Copy constructor.  Storage lattice is not copied.
 //
@@ -229,26 +230,19 @@ LatticeStatistics<T> &LatticeStatistics<T>::operator=(const LatticeStatistics<T>
       doneFullMinMax_p= other.doneFullMinMax_p;
       minFull_p = other.minFull_p;
       maxFull_p = other.maxFull_p;
-      _cs.resize(0);
+      _sa.resize(0);
+      _algorithm = other._algorithm;
+      _algConf = other._algConf;
    }
    return *this;
 }
 
-
- 
-
 template <class T>
-LatticeStatistics<T>::~LatticeStatistics()
-//
-// Destructor.  
-//
-{
+LatticeStatistics<T>::~LatticeStatistics() {
    delete pInLattice_p;
    pInLattice_p = 0;
-   if (pStoreLattice_p != 0) {
-      delete pStoreLattice_p;
-      pStoreLattice_p = 0;
-   }
+   delete pStoreLattice_p;
+   pStoreLattice_p = 0;
 }
 
 
@@ -785,6 +779,28 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
    return True;
 }
 
+template <class T>
+void LatticeStatistics<T>::setAlgorithm(
+	StatisticsData::ALGORITHM algorithm
+) {
+	if (_algorithm != algorithm) {
+		_algorithm = algorithm;
+		_algConf = Record();
+		needStorageLattice_p = True;
+	}
+}
+
+template <class T>
+void LatticeStatistics<T>::configureHingesFences(Double f) {
+	ThrowIf(
+		_algorithm != StatisticsData::HINGESFENCES,
+		"Logic Error: _algorithm is not set to HingesFences"
+	);
+	if (! _algConf.isDefined("hf") || ! near(_algConf.asDouble("hf"), f)) {
+		_algConf.define("hf", f);
+		needStorageLattice_p = True;
+	}
+}
 
 template <class T>
 Bool LatticeStatistics<T>::generateStorageLattice()
@@ -822,9 +838,11 @@ Bool LatticeStatistics<T>::generateStorageLattice()
        os_p << LogIO::NORMAL1
             << "Creating new statistics storage lattice of shape " << storeLatticeShape << endl << LogIO::POST;
     }
-    // ensure all elements are destroyed first, then resize to correct size
-    _cs.resize(0);
-    _cs.resize(storeLatticeShape.product()/storeLatticeShape.last());
+    /*
+    _sa = vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >(
+    	storeLatticeShape.product()/storeLatticeShape.last()
+    );
+    */
     delete pStoreLattice_p;
     pStoreLattice_p = new TempLattice<AccumType>(TiledShape(storeLatticeShape,
                                                  tileShape), useMemory);
@@ -840,8 +858,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
        delete pProgressMeter;
        pProgressMeter = 0;
     }
-    //collapser.minMaxPos(minPos_p, maxPos_p);
-
 
     const uInt nCursorAxes = cursorAxes_p.nelements();
     const IPosition latticeShape(pInLattice_p->shape());
@@ -864,7 +880,8 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     T overallMax = 0;
     T overallMin = 0;
     Bool isReal = whatType(&currentMax);
-    typename vector<ClassicalStatistics<AccumType, const T*, const Bool*> >::iterator curCS = _cs.begin();
+    _sa.resize(0);
+    //typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curSA = _sa.begin();
     for (stepper.reset(); ! stepper.atEnd(); stepper++) {
     	IPosition curPos = stepper.position();
     	IPosition posMax = locInStorageLattice(curPos, LatticeStatsBase::MAX);
@@ -882,7 +899,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	// we use T rather than AccumType for the first templated variable because
     	// we lose no accuracy and if AccumType=complex<double> and T=complex<float>,
     	// this code will not compile
-
 
     	LatticeStatsDataProviderBase<AccumType, T> *dataProvider = NULL;
 
@@ -905,8 +921,24 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	CountedPtr<StatsDataProvider<AccumType, const T*, const Bool*> > mydp
     		= dynamic_cast<StatsDataProvider<AccumType, const T*, const Bool*> *>(dataProvider);
     	ThrowIf (mydp.null(), "Logic Error: dynamic cast failed");
-    	curCS->setDataProvider(mydp);
-    	Record stats = curCS->getStatistics();
+    	CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > curSA;
+    	switch (_algorithm) {
+    	case StatisticsData::CLASSICAL:
+    		curSA = new ClassicalStatistics<AccumType, const T*, const Bool*>();
+    		break;
+    	case StatisticsData::HINGESFENCES: {
+    		curSA = _algConf.isDefined("hf")
+    			? new HingesFencesStatistics<AccumType, const T*, const Bool*>(_algConf.asDouble("hf"))
+    			: new HingesFencesStatistics<AccumType, const T*, const Bool*>();
+    		break;
+    	}
+    	default:
+    		ThrowCc("Logic Error: Unhandled algorithm " + String::toString(_algorithm));
+    	}
+
+    	curSA->setDataProvider(mydp);
+    	Record stats = curSA->getStatistics();
+    	_sa.push_back(curSA);
     	AccumType u;
     	stats.get(
     		StatisticsData::toString(StatisticsData::MEAN), u
@@ -979,7 +1011,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     			}
     		}
     	}
-    	++curCS;
     }
     // Do robust statistics separately as required.
     generateRobust();
@@ -1009,7 +1040,7 @@ void LatticeStatistics<T>::generateRobust () {
 		quartiles.insert(0.75);
 	}
 	std::map<Double, AccumType> quantileToValue;
-    typename vector<ClassicalStatistics<AccumType, const T*, const Bool*> >::iterator curCS = _cs.begin();
+    typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curCS = _sa.begin();
 	for (stepper.reset(); !stepper.atEnd(); stepper++) {
 		IPosition pos = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDIAN);
 		IPosition pos2 = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDABSDEVMED);
@@ -1030,11 +1061,11 @@ void LatticeStatistics<T>::generateRobust () {
 		// computing the median and the quartiles simultaneously minimizes
 		// the number of necessary data scans, as opposed to first calling
 		// getMedian() and getQuartiles() separately
-		AccumType median = curCS->getMedianAndQuantiles(quantileToValue, quartiles);
+		AccumType median = (*curCS)->getMedianAndQuantiles(quantileToValue, quartiles);
 		AccumType q1 = quantileToValue[0.25];
 		AccumType q3 = quantileToValue[0.75];
 		AccumType iqr = q3 - q1;
-		AccumType medabsdevmed = curCS->getMedianAbsDevMed();
+		AccumType medabsdevmed = (*curCS)->getMedianAbsDevMed();
 		// Whack results into storage lattice
 		pStoreLattice_p->putAt(median, pos);
 		pStoreLattice_p->putAt(medabsdevmed, pos2);

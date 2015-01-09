@@ -28,12 +28,11 @@
 #ifndef LATTICES_LATTICESTATISTICS_H
 #define LATTICES_LATTICESTATISTICS_H
 
-
-//# Includes
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <lattices/Lattices/TiledCollapser.h>
 #include <lattices/Lattices/TiledCollapser.h>
@@ -43,11 +42,9 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogIO.h>
+#include <scimath/Mathematics/StatisticsData.h>
 #include <vector>
 #include <list>
-
-#include <scimath/Mathematics/ClassicalStatistics.h>
-
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -55,6 +52,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template <class T> class MaskedLattice;
 template <class T> class TempLattice;
 class IPosition;
+
+template <class AccumType, class T, class U> class StatisticsAlgorithm;
+template <class AccumType, class T, class U> class ClassicalStatistics;
+
 #include <casa/iosstrfwd.h>
 
 
@@ -357,6 +358,17 @@ public:
 // Did we construct with a logger ?
    Bool hasLogger () const {return haveLogger_p;};
 
+   // set the statistics algorithm to use. This will reset any previous algorithm
+   // configuration data, so if you want the algorithm to have a different configuration
+   // beyond its default, you will need to call the appropriate configuration methods
+   // after you have called this method.
+   void setAlgorithm(
+		   StatisticsData::ALGORITHM algorithm
+   );
+
+   // throws exception if the algorithm has not been set to hinges-fences
+   void configureHingesFences(Double f);
+
 protected:
 
    LogIO os_p;
@@ -389,12 +401,8 @@ protected:
    // more time than I have atm. A return value of False means that the object in
    // question cannot compute flux density values. The default implementation returns False.
    virtual Bool _canDoFlux() const { return False; }
-   virtual Quantum<AccumType> _flux(
-		    AccumType sum, Double beamAreaInPixels
-	) const {
+   virtual Quantum<AccumType> _flux(AccumType, Double) const {
 	   ThrowCc("Logic Error: This object cannot compute flux density");
-	   // kill compiler warnings
-	   sum = 0; beamAreaInPixels = 0;
    }
 
    virtual void listMinMax (ostringstream& osMin,
@@ -454,7 +462,10 @@ private:
    T minFull_p, maxFull_p;
    Bool doneFullMinMax_p;
 
-   vector<ClassicalStatistics<AccumType, const T*, const Bool*> > _cs;
+   vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
+
+   StatisticsData::ALGORITHM _algorithm;
+   Record _algConf;
 
 // Summarize the statistics found over the entire lattice
    virtual void summStats();
@@ -674,9 +685,7 @@ public:
 // in the input lattice.
    void minMaxPos(IPosition& minPos, IPosition& maxPos);
 
-
 private:
-   // Vector<T> range_p;
     Bool noInclude_p, noExclude_p, fixedMinMax_p;
     IPosition minPos_p, maxPos_p;
 

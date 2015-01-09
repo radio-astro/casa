@@ -40,10 +40,10 @@
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 #include <lattices/Lattices/LCSlicer.h>
-#include <casa/System/PGPlotter.h>
+//#include <casa/System/PGPlotter.h>
+#include <scimath/Mathematics/ClassicalStatistics.h>
 
 #include <casa/iostream.h>
-
 
 #include <casa/namespace.h>
 void doitFloat(LogIO& os);
@@ -67,16 +67,17 @@ int main()
       LogOrigin lor("tLatticeStatistics", "main()", WHERE);
       LogIO os(lor);
       doitFloat(os);
+
+      Vector<Float> data(1000);
+      Vector<Float>::iterator iter = data.begin();
+      Vector<Float>::iterator end = data.end();
+      uInt count = 0;
+      while(iter != end) {
+    	  *iter = count % 2 == 0 ? (Float)count : -(Float)(count*count);
+    	  ++iter;
+    	  ++count;
+      }
       {
-    	  Vector<Float> data(1000);
-    	  Vector<Float>::iterator iter = data.begin();
-    	  Vector<Float>::iterator end = data.end();
-    	  uInt count = 0;
-    	  while(iter != end) {
-    		  *iter = count % 2 == 0 ? (Float)count : -(Float)(count*count);
-    		  ++iter;
-    		  ++count;
-    	  }
     	  ArrayLattice<Float> latt(data);
     	  SubLattice<Float> subLatt(latt);
     	  LatticeStatistics<Float> stats(subLatt);
@@ -171,14 +172,30 @@ int main()
     	  stats.getStatistic(npts, LatticeStatsBase::NPTS, False);
     	  AlwaysAssert(npts.size() == 0, AipsError);
       }
-
-   } catch (AipsError x) {
+      {
+    	  // using setAlgorithm()
+    	  ArrayLattice<Float> latt(data);
+    	  SubLattice<Float> subLatt(latt);
+    	  LatticeStatistics<Float> stats(subLatt);
+    	  stats.setAlgorithm(StatisticsData::CLASSICAL);
+    	  Array<Double> mean;
+    	  Float expec = casa::mean(data);
+    	  stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
+    	  AlwaysAssert(near(*mean.begin(), expec), AipsError);
+    	  stats.setAlgorithm(StatisticsData::HINGESFENCES);
+    	  stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
+    	  AlwaysAssert(near(*mean.begin(), expec), AipsError);
+    	  stats.configureHingesFences(0.0);
+    	  stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
+    	  expec = -41960.081836;
+    	  AlwaysAssert(near(*mean.begin(), expec), AipsError);
+      }
+   } catch (const AipsError& x) {
      cerr << "aipserror: error " << x.getMesg() << endl;
      return 1;
   } 
   return 0;
 }
-   
  
 void doitFloat (LogIO& os) 
 {   
