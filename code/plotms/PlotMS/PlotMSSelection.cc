@@ -122,7 +122,7 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
     mssSetData(ms, selMS, chansel,corrsel, "", 
 	       timerange(), antenna(), field(), spw(),
 	       uvrange(), msselect(), corr(), scan(), array(),
-	       "", observation(), 1, &mss );
+	       intent(), observation(), 1, &mss );
     selAnts.resize(0);
     selAnts2.resize(0);
     String antennaSel = antenna();
@@ -167,6 +167,7 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
   mss.setSpwExpr(spw());
   mss.setFieldExpr(field());
   mss.setAntennaExpr(antenna());
+  mss.setStateExpr(intent());
   TableExprNode ten=mss.toTableExprNode(&cti);
   try {
     getSelectedTable(selCT,ct,ten,"");
