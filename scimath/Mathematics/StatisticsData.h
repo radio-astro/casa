@@ -26,11 +26,11 @@
 #ifndef SCIMATH_STATSISTICSDATA_H
 #define SCIMATH_STATSISTICSDATA_H
 
-#include <casa/BasicSL/String.h>
-
 #include <casa/aips.h>
 
 namespace casa {
+
+class String;
 
 /*
  * This class simply defines the enum of supported statistics types
@@ -40,13 +40,17 @@ namespace casa {
 class StatisticsData {
 public:
 
+	// implemented algorithms
+	enum ALGORITHM {
+		CLASSICAL,
+		HINGESFENCES
+	};
+
 	enum STATS {
 		MAX,
 		MEAN,
 		MIN,
 		NPTS,
-		// QUANTILE includes things like median, quartile, etc
-		// QUANTILE,
 		RMS,
 		STDDEV,
 		SUM,
@@ -56,19 +60,6 @@ public:
 		VARIANCE
 	};
 
-	/*
-	// There are various conflicting definitions of what the median is for
-	// a dataset with an even number of points. This enum attempts to account for
-	// those, providing API users to specify which they wish to use.
-	enum EVEN_MEDIAN {
-		// use the mean value of the middle two values
-		MEDIAN_IS_MEAN,
-		// use the minimum value of the middle two values
-		LOWER_VALUE,
-		// use the maximum value of the middle two values
-		UPPER_VALUE
-	};
-*/
 	static String toString(STATS stat);
 };
 

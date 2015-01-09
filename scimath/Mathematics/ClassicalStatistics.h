@@ -60,6 +60,11 @@ public:
 		const ClassicalStatistics<AccumType, InputIterator, MaskIterator>& other
 	);
 
+	// get the algorithm that this object uses for computing stats
+	virtual StatisticsData::ALGORITHM algorithm() const {
+		return StatisticsData::CLASSICAL;
+	};
+
 	// <group>
 	// In the following group of methods, if the size of the composite dataset
 	// is smaller than
@@ -107,8 +112,8 @@ public:
 	);
 
 	// If one needs to compute both the median and quantile values, it is better to call
-	// getMedianAndQuantiles() rather than getMedian() and getQuantiles() seperately, as the
-	// first will scan large data sets fewer times than calling the seperate methods.
+	// getMedianAndQuantiles() rather than getMedian() and getQuantiles() separately, as the
+	// first will scan large data sets fewer times than calling the separate methods.
 	// The return value is the median; the quantiles are returned in the <src>quantileToValue</src> map.
 	virtual AccumType getMedianAndQuantiles(
 		std::map<Double, AccumType>& quantileToValue, const std::set<Double>& quantiles,
