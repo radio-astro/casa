@@ -122,10 +122,12 @@ copypointing -- Make a proper copy of the POINTING subtable (can be time consumi
         default: True
 
 visweightscale -- The weights of the individual MSs will be scaled in the concatenated
-        output MS by the factors in this list. Useful for handling heterogeneous arrays.
+        output MS by the factors in this list. SIGMA will be scaled by 1/sqrt(factor).
+        Useful for handling heterogeneous arrays.
 	Use plotms to inspect the "Wt" column as a reference for determining the scaling 
 	factors. See the cookbook for more details.
-	example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3.
+	example: [1.,3.,3.] - scale the weights of the second and third MS by a factor 3
+                 and the SIGMA column of these MS by a factor 1/sqrt(3).
 	default: [] (empty list) - no scaling
 </description> 
 

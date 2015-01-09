@@ -2,6 +2,7 @@ import os
 import shutil
 import stat
 import time
+from math import sqrt
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -281,7 +282,7 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 				addmodel=(considermodel and needmodel[i])) # calibrator-open creates scratch columns
 			cb.close()
 
-		# scale the weights of the first MS in the chain
+		# scale the weights and sigma of the first MS in the chain
 		if doweightscale:
 			wscale = visweightscale[i]
 			if(wscale==1.):
@@ -294,6 +295,13 @@ def concat(vislist,concatvis,freqtol,dirtol,respectname,timesort,copypointing,
 						for j in xrange(0,t.nrows()):
 							a = t.getcell(colname, j)
 							a *= wscale
+							t.putcell(colname, j, a)
+				for colname in ['SIGMA']:
+					if (wscale > 0. and colname in t.colnames()) and (t.iscelldefined(colname,0)):
+						sscale = 1./sqrt(wscale)
+						for j in xrange(0,t.nrows()):
+							a = t.getcell(colname, j)
+							a *= sscale
 							t.putcell(colname, j, a)
 				t.close()
 

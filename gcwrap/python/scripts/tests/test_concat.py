@@ -13,6 +13,7 @@ from __main__ import default
 from tasks import *
 from taskinit import *
 import unittest
+from math import sqrt
 
 myname = 'test_concat'
 
@@ -412,12 +413,16 @@ class test_concat(unittest.TestCase):
             msnrows = []
             oldweightbeg = []
             oldweightend = []
+            oldsigmabeg = []
+            oldsigmaend = []
             ii = 0
             for myms in ['part1.ms','part2-mod.ms','part3.ms']:
                 tb.open(myms)
                 msnrows.append(tb.nrows())
                 oldweightbeg.append(tb.getcell('WEIGHT',0))
                 oldweightend.append(tb.getcell('WEIGHT',tb.nrows()-1))
+                oldsigmabeg.append(tb.getcell('SIGMA',0))
+                oldsigmaend.append(tb.getcell('SIGMA',tb.nrows()-1))
                 tb.close()
 
 
@@ -434,6 +439,20 @@ class test_concat(unittest.TestCase):
 
             results = checktable(name, expected)
             if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
+            expected2 = [
+                    ['SIGMA', 0, 1./sqrt(3.)*oldsigmabeg[0], 1E-6], # scaling uses float precision
+                    ['SIGMA', msnrows[0]-1, 1./sqrt(3.)*oldsigmaend[0], 1E-6],
+                    ['SIGMA', msnrows[0], 1./sqrt(2.)*oldsigmabeg[1], 1E-6],
+                    ['SIGMA', msnrows[0]+msnrows[1]-1, 1/sqrt(2.)*oldsigmaend[1], 1E-6],
+                    ['SIGMA', msnrows[0]+msnrows[1], oldsigmabeg[2], 1E-6],
+                    ['SIGMA', msnrows[0]+msnrows[1]+msnrows[2]-1, oldsigmaend[2], 1E-6]
+                ]
+
+            results2 = checktable(name, expected2)
+            if not results2:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
 
