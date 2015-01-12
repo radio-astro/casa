@@ -27,25 +27,25 @@
 
 namespace casa {
 
-template <class AccumType, class T>
-LatticeStatsDataProvider<AccumType, T>::LatticeStatsDataProvider(
+template <class T>
+LatticeStatsDataProvider<T>::LatticeStatsDataProvider(
 	Lattice<T>& lattice
-) : LatticeStatsDataProviderBase<AccumType, T>(),
+) : LatticeStatsDataProviderBase<T>(),
 	_iter(RO_LatticeIterator<T>(lattice)), _currentSlice(),
 	_currentPtr(0), _delData(False) {}
 
-template <class AccumType, class T>
-LatticeStatsDataProvider<AccumType, T>::~LatticeStatsDataProvider() {}
+template <class T>
+LatticeStatsDataProvider<T>::~LatticeStatsDataProvider() {}
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::operator++() {
+template <class T>
+void LatticeStatsDataProvider<T>::operator++() {
 	_freeStorage();
 	++_iter;
 	this->_updateProgress();
 }
 
-template <class AccumType, class T>
-uInt LatticeStatsDataProvider<AccumType, T>::estimatedSteps() const {
+template <class T>
+uInt LatticeStatsDataProvider<T>::estimatedSteps() const {
 	IPosition lattShape = _iter.latticeShape();
 	IPosition cursShape = _iter.cursor().shape();
 	uInt ndim = lattShape.size();
@@ -60,46 +60,46 @@ uInt LatticeStatsDataProvider<AccumType, T>::estimatedSteps() const {
 	return count;
 }
 
-template <class AccumType, class T>
-Bool LatticeStatsDataProvider<AccumType, T>::atEnd() const {
+template <class T>
+Bool LatticeStatsDataProvider<T>::atEnd() const {
 	return _iter.atEnd();
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::finalize() {
+template <class T>
+void LatticeStatsDataProvider<T>::finalize() {
 	_freeStorage();
-	LatticeStatsDataProviderBase<AccumType, T>::finalize();
+	LatticeStatsDataProviderBase<T>::finalize();
 }
 
-template <class AccumType, class T>
-uInt64 LatticeStatsDataProvider<AccumType, T>::getCount() {
+template <class T>
+uInt64 LatticeStatsDataProvider<T>::getCount() {
 	return _iter.cursor().size();
 }
 
-template <class AccumType, class T>
-const T* LatticeStatsDataProvider<AccumType, T>::getData() {
+template <class T>
+const T* LatticeStatsDataProvider<T>::getData() {
 	_currentSlice.assign(_iter.cursor());
 	_currentPtr = _currentSlice.getStorage(_delData);
 	return _currentPtr;
 }
 
-template <class AccumType, class T>
-const Bool* LatticeStatsDataProvider<AccumType, T>::getMask() {
+template <class T>
+const Bool* LatticeStatsDataProvider<T>::getMask() {
 	return NULL;
 }
 
-template <class AccumType, class T>
-Bool LatticeStatsDataProvider<AccumType, T>::hasMask() const {
+template <class T>
+Bool LatticeStatsDataProvider<T>::hasMask() const {
 	return False;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::reset() {
+template <class T>
+void LatticeStatsDataProvider<T>::reset() {
 	_iter.reset();
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::updateMaxPos(
+template <class T>
+void LatticeStatsDataProvider<T>::updateMaxPos(
 	const std::pair<uInt, Int64>& maxpos
 ) {
 	this->_updateMaxPos(
@@ -107,8 +107,8 @@ void LatticeStatsDataProvider<AccumType, T>::updateMaxPos(
 	);
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::updateMinPos(
+template <class T>
+void LatticeStatsDataProvider<T>::updateMinPos(
 	const std::pair<uInt, Int64>& minpos
 ) {
 	this->_updateMinPos(
@@ -116,8 +116,8 @@ void LatticeStatsDataProvider<AccumType, T>::updateMinPos(
 	);
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProvider<AccumType, T>::_freeStorage() {
+template <class T>
+void LatticeStatsDataProvider<T>::_freeStorage() {
 	_currentSlice.freeStorage (_currentPtr, _delData);
 	_delData = False;
 }

@@ -37,8 +37,8 @@ namespace casa {
 
 // Data provider which allows stats framework to iterate through a masked lattice.
 
-template <class AccumType, class T> class MaskedLatticeStatsDataProvider
-	: public LatticeStatsDataProviderBase<AccumType, T> {
+template <class T> class MaskedLatticeStatsDataProvider
+	: public LatticeStatsDataProviderBase<T> {
 public:
 
 	MaskedLatticeStatsDataProvider(MaskedLattice<T>& lattice);
