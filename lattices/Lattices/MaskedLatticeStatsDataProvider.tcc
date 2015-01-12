@@ -27,25 +27,25 @@
 
 namespace casa {
 
-template <class AccumType, class T, class InputIterator>
-MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::MaskedLatticeStatsDataProvider(
+template <class AccumType, class T>
+MaskedLatticeStatsDataProvider<AccumType, T>::MaskedLatticeStatsDataProvider(
 	MaskedLattice<T>& lattice
-) : LatticeStatsDataProviderBase<AccumType, T, InputIterator>(),
+) : LatticeStatsDataProviderBase<AccumType, T>(),
 	_iter(RO_MaskedLatticeIterator<T>(lattice)), _currentSlice(), _currentMaskSlice(),
 	_currentPtr(0), _currentMaskPtr(0), _delData(False), _delMask(False) {}
 
-template <class AccumType, class T, class InputIterator>
-MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::~MaskedLatticeStatsDataProvider() {}
+template <class AccumType, class T>
+MaskedLatticeStatsDataProvider<AccumType, T>::~MaskedLatticeStatsDataProvider() {}
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::operator++() {
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::operator++() {
 	_freeStorage();
 	++_iter;
 	this->_updateProgress();
 }
 
-template <class AccumType, class T, class InputIterator>
-uInt MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::estimatedSteps() const {
+template <class AccumType, class T>
+uInt MaskedLatticeStatsDataProvider<AccumType, T>::estimatedSteps() const {
 	IPosition lattShape = _iter.latticeShape();
 	IPosition cursShape = _iter.cursor().shape();
 	uInt ndim = lattShape.size();
@@ -60,48 +60,48 @@ uInt MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::estimatedSteps
 	return count;
 }
 
-template <class AccumType, class T, class InputIterator>
-Bool MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::atEnd() const {
+template <class AccumType, class T>
+Bool MaskedLatticeStatsDataProvider<AccumType, T>::atEnd() const {
 	return _iter.atEnd();
 }
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::finalize() {
-	LatticeStatsDataProviderBase<AccumType, T, InputIterator>::finalize();
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::finalize() {
+	LatticeStatsDataProviderBase<AccumType, T>::finalize();
 	_freeStorage();
 }
 
-template <class AccumType, class T, class InputIterator>
-uInt64 MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::getCount() {
+template <class AccumType, class T>
+uInt64 MaskedLatticeStatsDataProvider<AccumType, T>::getCount() {
 	return _iter.cursor().size();
 }
 
-template <class AccumType, class T, class InputIterator>
-InputIterator MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::getData() {
+template <class AccumType, class T>
+const T* MaskedLatticeStatsDataProvider<AccumType, T>::getData() {
 	_currentSlice.assign(_iter.cursor());
 	_currentPtr = _currentSlice.getStorage(_delData);
 	return _currentPtr;
 }
 
-template <class AccumType, class T, class InputIterator>
-const Bool* MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::getMask() {
+template <class AccumType, class T>
+const Bool* MaskedLatticeStatsDataProvider<AccumType, T>::getMask() {
 	_currentMaskSlice.assign(_iter.getMask());
 	_currentMaskPtr = _currentMaskSlice.getStorage(_delMask);
 	return _currentMaskPtr;
 }
 
-template <class AccumType, class T, class InputIterator>
-Bool MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::hasMask() const {
+template <class AccumType, class T>
+Bool MaskedLatticeStatsDataProvider<AccumType, T>::hasMask() const {
 	return True;
 }
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::reset() {
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::reset() {
 	_iter.reset();
 }
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::updateMaxPos(
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::updateMaxPos(
 	const std::pair<uInt, Int64>& maxpos
 ) {
 	this->_updateMaxPos(
@@ -109,8 +109,8 @@ void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::updateMaxPos(
 	);
 }
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::updateMinPos(
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::updateMinPos(
 	const std::pair<uInt, Int64>& minpos
 ) {
 	this->_updateMinPos(
@@ -118,16 +118,16 @@ void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::updateMinPos(
 	);
 }
 
-template <class AccumType, class T, class InputIterator>
-void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::_freeStorage() {
+template <class AccumType, class T>
+void MaskedLatticeStatsDataProvider<AccumType, T>::_freeStorage() {
 	_currentSlice.freeStorage (_currentPtr, _delData);
 	_delData = False;
 	_currentMaskSlice.freeStorage(_currentMaskPtr, _delMask);
 	_delMask = False;
 }
 
-template <class AccumType, class T, class InputIterator>
-uInt MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::_nsteps() const {
+template <class AccumType, class T>
+uInt MaskedLatticeStatsDataProvider<AccumType, T>::_nsteps() const {
 	const IPosition trc = _iter.latticeShape() - 1;
 	uInt ndim = trc.size();
 	const IPosition blc(ndim, 0);

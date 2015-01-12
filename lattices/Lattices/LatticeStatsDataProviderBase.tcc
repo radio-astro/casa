@@ -29,68 +29,68 @@
 
 namespace casa {
 
-template <class AccumType, class T, class InputIterator>
-LatticeStatsDataProviderBase<AccumType, T, InputIterator>::LatticeStatsDataProviderBase()
+template <class AccumType, class T>
+LatticeStatsDataProviderBase<AccumType, T>::LatticeStatsDataProviderBase()
 : _hasRanges(False), _isInclude(True), _ranges(),
   _progressMeter(NULL), _minPos(), _maxPos() {}
 
-template <class AccumType, class T, class InputIterator>
-LatticeStatsDataProviderBase<AccumType, T, InputIterator>::~LatticeStatsDataProviderBase() {}
+template <class AccumType, class T>
+LatticeStatsDataProviderBase<AccumType, T>::~LatticeStatsDataProviderBase() {}
 
-template <class AccumType, class T, class InputIterator>
-uInt LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getMaskStride() {
+template <class AccumType, class T>
+uInt LatticeStatsDataProviderBase<AccumType, T>::getMaskStride() {
 	return 1;
 }
 
-template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::finalize() {}
+template <class AccumType, class T>
+void LatticeStatsDataProviderBase<AccumType, T>::finalize() {}
 
-template <class AccumType, class T, class InputIterator>
-DataRanges LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getRanges() {
+template <class AccumType, class T>
+DataRanges LatticeStatsDataProviderBase<AccumType, T>::getRanges() {
 	return _ranges;
 }
 
-template <class AccumType, class T, class InputIterator>
-uInt LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getStride() {
+template <class AccumType, class T>
+uInt LatticeStatsDataProviderBase<AccumType, T>::getStride() {
 	return 1;
 }
 
-template <class AccumType, class T, class InputIterator>
-InputIterator LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getWeights() {
+template <class AccumType, class T>
+const T* LatticeStatsDataProviderBase<AccumType, T>::getWeights() {
 	return NULL;
 }
 
-template <class AccumType, class T, class InputIterator>
-Bool LatticeStatsDataProviderBase<AccumType, T, InputIterator>::hasRanges() const {
+template <class AccumType, class T>
+Bool LatticeStatsDataProviderBase<AccumType, T>::hasRanges() const {
 	return _hasRanges;
 }
 
-template <class AccumType, class T, class InputIterator>
-Bool LatticeStatsDataProviderBase<AccumType, T, InputIterator>::hasWeights() const {
+template <class AccumType, class T>
+Bool LatticeStatsDataProviderBase<AccumType, T>::hasWeights() const {
 	return False;
 }
 
-template <class AccumType, class T, class InputIterator>
-Bool LatticeStatsDataProviderBase<AccumType, T, InputIterator>::isInclude() const {
+template <class AccumType, class T>
+Bool LatticeStatsDataProviderBase<AccumType, T>::isInclude() const {
 	return _isInclude;
 }
 
-template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::minMaxPos(
+template <class AccumType, class T>
+void LatticeStatsDataProviderBase<AccumType, T>::minMaxPos(
 	IPosition& minPos, IPosition& maxPos) const {
 	minPos = _minPos;
 	maxPos = _maxPos;
 }
 
-template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::setProgressMeter(
+template <class AccumType, class T>
+void LatticeStatsDataProviderBase<AccumType, T>::setProgressMeter(
 	CountedPtr<LattStatsProgress> pm
 ) {
 	_progressMeter = pm;
 }
 
-template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::setRanges(
+template <class AccumType, class T>
+void LatticeStatsDataProviderBase<AccumType, T>::setRanges(
 	const DataRanges& ranges, Bool isInclude
 ) {
 	_hasRanges = ! ranges.empty();
@@ -98,8 +98,8 @@ void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::setRanges(
 	_isInclude = isInclude;
 }
 
-template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::_updateProgress() {
+template <class AccumType, class T>
+void LatticeStatsDataProviderBase<AccumType, T>::_updateProgress() {
 	if (! _progressMeter.null()) {
 		(*_progressMeter)++;
 	}
