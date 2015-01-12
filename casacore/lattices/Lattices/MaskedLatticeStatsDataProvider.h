@@ -37,8 +37,8 @@ namespace casa {
 
 // Data provider which allows stats framework to iterate through a masked lattice.
 
-template <class AccumType, class T, class InputIterator=const T*> class MaskedLatticeStatsDataProvider
-	: public LatticeStatsDataProviderBase<AccumType, T, InputIterator> {
+template <class AccumType, class T> class MaskedLatticeStatsDataProvider
+	: public LatticeStatsDataProviderBase<AccumType, T> {
 public:
 
 	MaskedLatticeStatsDataProvider(MaskedLattice<T>& lattice);
@@ -62,7 +62,7 @@ public:
 	uInt64 getCount();
 
 	// get the current data set
-	InputIterator getData();
+	const T* getData();
 
 	// Get the associated mask of the current dataset. Only called if hasMask() returns True;
 	const Bool* getMask();

@@ -39,9 +39,11 @@ class LatticeProgress;
 
 // Abstract base class of data providers which allows stats framework to iterate through a lattice.
 
-template <class AccumType, class T, class InputIterator=const T*> class LatticeStatsDataProviderBase
-	: public StatsDataProvider<AccumType, InputIterator, const Bool*> {
+template <class AccumType, class T> class LatticeStatsDataProviderBase
+	: public StatsDataProvider<AccumType, const T*, const Bool*> {
 public:
+
+	typedef const T* InputIterator;
 
 	virtual ~LatticeStatsDataProviderBase();
 
