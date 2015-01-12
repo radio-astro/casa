@@ -192,7 +192,7 @@ import pipeline.infrastructure.utils as utils
 			                <tr bgcolor="#E8F0FF">
 			                    <td colspan="10"><b>Session:</b> ${sessionkey} </td>
 			                </tr>
-			                % for row in sorted(sessiongroup, key=lambda y: y.ms):
+			                % for row in sessiongroup:
 					    <tr>
 				                <td><a href="${row.href}">${row.ms}</a></td>
 				                <td>${utils.commafy(row.receivers, quotes=False)}</td>
