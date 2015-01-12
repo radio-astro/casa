@@ -28,6 +28,7 @@
 
 #include <scimath/Mathematics/StatsDataProvider.h>
 
+#include <scimath/Mathematics/NumericTraits.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LattStatsProgress.h>
 
@@ -39,11 +40,12 @@ class LatticeProgress;
 
 // Abstract base class of data providers which allows stats framework to iterate through a lattice.
 
-template <class AccumType, class T> class LatticeStatsDataProviderBase
-	: public StatsDataProvider<AccumType, const T*, const Bool*> {
+template <class T> class LatticeStatsDataProviderBase
+	: public StatsDataProvider<typename NumericTraits<T>::PrecisionType, const T*, const Bool*> {
+
 public:
 
-	typedef const T* InputIterator;
+	//typedef typename NumericTraits<T>::PrecisionType AccumType;
 
 	virtual ~LatticeStatsDataProviderBase();
 
@@ -56,13 +58,13 @@ public:
 	uInt getMaskStride();
 
 	// Get the associated range(s) of the current dataset. Only called if hasRanges() returns True;
-	DataRanges getRanges();
+	std::vector<std::pair<typename NumericTraits<T>::PrecisionType, typename NumericTraits<T>::PrecisionType> > getRanges();
 
 	// Get the stride for the current data set.
 	uInt getStride();
 
 	// Returns NULL; lattices do not have associated weights.
-	InputIterator getWeights();
+	const T* getWeights();
 
 	// Does the current data set have associated range(s)?
 	Bool hasRanges() const;
@@ -80,7 +82,10 @@ public:
 	void setProgressMeter(CountedPtr<LattStatsProgress> pm);
 
 	// set the data ranges
-	void setRanges(const DataRanges& ranges, Bool isInclude);
+	void setRanges(
+		const std::vector<std::pair<typename NumericTraits<T>::PrecisionType, typename NumericTraits<T>::PrecisionType> >& ranges,
+		Bool isInclude
+	);
 
 protected:
 	LatticeStatsDataProviderBase();
@@ -95,7 +100,7 @@ protected:
 
 private:
 	Bool _hasRanges, _isInclude;
-	DataRanges _ranges;
+	std::vector<std::pair<typename NumericTraits<T>::PrecisionType, typename NumericTraits<T>::PrecisionType> > _ranges;
 	CountedPtr<LattStatsProgress> _progressMeter;
 	IPosition _minPos, _maxPos;
 };

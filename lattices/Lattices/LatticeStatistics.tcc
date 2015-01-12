@@ -895,12 +895,12 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	// we lose no accuracy and if AccumType=complex<double> and T=complex<float>,
     	// this code will not compile
 
-    	LatticeStatsDataProviderBase<AccumType, T> *dataProvider = NULL;
+    	LatticeStatsDataProviderBase<T> *dataProvider = NULL;
     	if (subLat.isMasked()) {
-    		dataProvider = new MaskedLatticeStatsDataProvider<AccumType, T>(subLat);
+    		dataProvider = new MaskedLatticeStatsDataProvider<T>(subLat);
     	}
     	else {
-    		dataProvider = new LatticeStatsDataProvider<AccumType, T>(subLat);
+    		dataProvider = new LatticeStatsDataProvider<T>(subLat);
     	}
 
     	if (! pProgressMeter.null()) {

@@ -29,77 +29,78 @@
 
 namespace casa {
 
-template <class AccumType, class T>
-LatticeStatsDataProviderBase<AccumType, T>::LatticeStatsDataProviderBase()
+template <class T>
+LatticeStatsDataProviderBase<T>::LatticeStatsDataProviderBase()
 : _hasRanges(False), _isInclude(True), _ranges(),
   _progressMeter(NULL), _minPos(), _maxPos() {}
 
-template <class AccumType, class T>
-LatticeStatsDataProviderBase<AccumType, T>::~LatticeStatsDataProviderBase() {}
+template <class T>
+LatticeStatsDataProviderBase<T>::~LatticeStatsDataProviderBase() {}
 
-template <class AccumType, class T>
-uInt LatticeStatsDataProviderBase<AccumType, T>::getMaskStride() {
+template <class T>
+uInt LatticeStatsDataProviderBase<T>::getMaskStride() {
 	return 1;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProviderBase<AccumType, T>::finalize() {}
+template <class T>
+void LatticeStatsDataProviderBase<T>::finalize() {}
 
-template <class AccumType, class T>
-DataRanges LatticeStatsDataProviderBase<AccumType, T>::getRanges() {
+template <class T>
+std::vector<std::pair<typename NumericTraits<T>::PrecisionType, typename NumericTraits<T>::PrecisionType> > LatticeStatsDataProviderBase<T>::getRanges() {
 	return _ranges;
 }
 
-template <class AccumType, class T>
-uInt LatticeStatsDataProviderBase<AccumType, T>::getStride() {
+template <class T>
+uInt LatticeStatsDataProviderBase<T>::getStride() {
 	return 1;
 }
 
-template <class AccumType, class T>
-const T* LatticeStatsDataProviderBase<AccumType, T>::getWeights() {
+template <class T>
+const T* LatticeStatsDataProviderBase<T>::getWeights() {
 	return NULL;
 }
 
-template <class AccumType, class T>
-Bool LatticeStatsDataProviderBase<AccumType, T>::hasRanges() const {
+template <class T>
+Bool LatticeStatsDataProviderBase<T>::hasRanges() const {
 	return _hasRanges;
 }
 
-template <class AccumType, class T>
-Bool LatticeStatsDataProviderBase<AccumType, T>::hasWeights() const {
+template <class T>
+Bool LatticeStatsDataProviderBase<T>::hasWeights() const {
 	return False;
 }
 
-template <class AccumType, class T>
-Bool LatticeStatsDataProviderBase<AccumType, T>::isInclude() const {
+template <class T>
+Bool LatticeStatsDataProviderBase<T>::isInclude() const {
 	return _isInclude;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProviderBase<AccumType, T>::minMaxPos(
+template <class T>
+void LatticeStatsDataProviderBase<T>::minMaxPos(
 	IPosition& minPos, IPosition& maxPos) const {
 	minPos = _minPos;
 	maxPos = _maxPos;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProviderBase<AccumType, T>::setProgressMeter(
+template <class T>
+void LatticeStatsDataProviderBase<T>::setProgressMeter(
 	CountedPtr<LattStatsProgress> pm
 ) {
 	_progressMeter = pm;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProviderBase<AccumType, T>::setRanges(
-	const DataRanges& ranges, Bool isInclude
+template <class T>
+void LatticeStatsDataProviderBase<T>::setRanges(
+	const std::vector<std::pair<typename NumericTraits<T>::PrecisionType, typename NumericTraits<T>::PrecisionType> >& ranges,
+	Bool isInclude
 ) {
 	_hasRanges = ! ranges.empty();
 	_ranges = ranges;
 	_isInclude = isInclude;
 }
 
-template <class AccumType, class T>
-void LatticeStatsDataProviderBase<AccumType, T>::_updateProgress() {
+template <class T>
+void LatticeStatsDataProviderBase<T>::_updateProgress() {
 	if (! _progressMeter.null()) {
 		(*_progressMeter)++;
 	}
