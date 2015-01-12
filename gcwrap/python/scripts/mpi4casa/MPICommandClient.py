@@ -395,9 +395,6 @@ class MPICommandClient:
             # Send request to all servers
             self.__communicator.control_service_request_broadcast(request,casalog)
             
-            # Register servers as not running in MPICommunicator
-            self.__communicator.set_servers_running(False)
-            
             casalog.post("Stop service signal sent to all servers","INFO",casalog_call_origin)
             
             
@@ -563,6 +560,11 @@ class MPICommandClient:
                 casalog.post("MPIServers with rank %s are in timeout condition, skipping MPI_Finalize()" 
                              % str(server_rank_timeout),"SEVERE",casalog_call_origin)
             
+            # UnMark MPI environment to be finalized by the MPICommunicator destructor
+            # (Either because it is already finalized or due to a 
+            # server not responsive that prevents graceful finalization)  
+            self.__communicator.set_finalize_mpi_environment(False)         
+                              
             # Set life cycle state
             self.__life_cycle_state = 2            
             
