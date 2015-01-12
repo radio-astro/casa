@@ -32,12 +32,11 @@
 //# Includes
 #include <casa/aips.h>
 #include <lattices/Lattices/LatticeProgress.h>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class ProgressMeter;
-
-
 
 // <summary> Provides a progress meter for the <src>LatticeStatistics</src> class </summary>
 // <use visibility=export>
@@ -74,24 +73,28 @@ class LattStatsProgress : public LatticeProgress
 {
 public:
 
-// Constructor makes a null object
-    LattStatsProgress() : itsMeter(0) {};
+	// Constructor makes a null object
+    LattStatsProgress() : _meter(), _currentStep(0) {};
 
-// Destructor deletes the ProgressMeter pointer
+    // Destructor deletes the ProgressMeter pointer
     virtual ~LattStatsProgress();
 
-// Initialize this object.  Here we create the ProgressMeter
-// This function is called by the <src>init</src> in LatticeProgress
+    // increment the current step (postfix version)
+    void operator++(Int);
+
+    // Initialize this object.  Here we create the ProgressMeter
+    // This function is called by the <src>init</src> in LatticeProgress
     virtual void initDerived();
 
-// Tell the number of steps done so far.
+    // Tell the number of steps done so far.
     virtual void nstepsDone (uInt nsteps);
 
-// The process has ended so clean things up.
+    // The process has ended so clean things up.
     virtual void done();
 
 private:
-    ProgressMeter* itsMeter;
+    CountedPtr<ProgressMeter> _meter;
+    uInt _currentStep;
 };
 
 

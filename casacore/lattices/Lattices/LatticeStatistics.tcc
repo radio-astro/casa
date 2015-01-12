@@ -809,7 +809,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
 // The shape of the storage lattice is n1, n2, ..., NACCUM
 // where n1, n2 etc are the display axes
 {
-
 // Set the display axes vector (possibly already set in ::setAxes)
    displayAxes_p.resize(0);
    displayAxes_p = IPosition::otherAxes(pInLattice_p->ndim(),
@@ -838,11 +837,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
        os_p << LogIO::NORMAL1
             << "Creating new statistics storage lattice of shape " << storeLatticeShape << endl << LogIO::POST;
     }
-    /*
-    _sa = vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >(
-    	storeLatticeShape.product()/storeLatticeShape.last()
-    );
-    */
     delete pStoreLattice_p;
     pStoreLattice_p = new TempLattice<AccumType>(TiledShape(storeLatticeShape,
                                                  tileShape), useMemory);
@@ -851,14 +845,10 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     minPos_p.resize(pInLattice_p->shape().nelements());
     maxPos_p.resize(pInLattice_p->shape().nelements());
 
-    LattStatsProgress* pProgressMeter = 0;
-    if (showProgress_p) pProgressMeter = new LattStatsProgress();
-
-    if (pProgressMeter) {
-       delete pProgressMeter;
-       pProgressMeter = 0;
+    CountedPtr<LattStatsProgress> pProgressMeter;
+    if (showProgress_p) {
+    	pProgressMeter = new LattStatsProgress();
     }
-
     const uInt nCursorAxes = cursorAxes_p.nelements();
     const IPosition latticeShape(pInLattice_p->shape());
     IPosition cursorShape(pInLattice_p->ndim(),1);
@@ -869,7 +859,8 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     IPosition axisPath = cursorAxes_p;
     axisPath.append(displayAxes_p);
     LatticeStepper stepper(latticeShape, cursorShape, axisPath);
-
+    uInt stepperSteps = pProgressMeter.null() 
+        ? 0 : latticeShape.product()/cursorShape.product();
     DataRanges range;
     if (! noInclude_p || ! noExclude_p) {
     	range.push_back(std::pair<T, T>(range_p[0], range_p[1]));
@@ -880,10 +871,10 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     T overallMax = 0;
     T overallMin = 0;
     Bool isReal = whatType(&currentMax);
-    _sa.resize(0);
-    //typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curSA = _sa.begin();
-    for (stepper.reset(); ! stepper.atEnd(); stepper++) {
-    	IPosition curPos = stepper.position();
+    _sa.resize(storeLatticeShape.product()/storeLatticeShape.last());
+    typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curSA = _sa.begin();
+    for (stepper.reset(); ! stepper.atEnd(); stepper++, ++curSA) {
+        IPosition curPos = stepper.position();
     	IPosition posMax = locInStorageLattice(curPos, LatticeStatsBase::MAX);
     	IPosition posMean = locInStorageLattice(curPos, LatticeStatsBase::MEAN);
     	IPosition posMin = locInStorageLattice(curPos, LatticeStatsBase::MIN);
@@ -895,18 +886,25 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	// Create SubLattice from chunk
     	Slicer slicer(curPos, stepper.endPosition(), Slicer::endIsLast);
     	SubLattice<T> subLat(*pInLattice_p, slicer);
+        if (! pProgressMeter.null() && stepper.atStart()) {
+            uInt nSublatticeSteps = subLat.shape().product()/subLat.niceCursorShape().product();
+            pProgressMeter->init(stepperSteps*nSublatticeSteps);
+        }
 
     	// we use T rather than AccumType for the first templated variable because
     	// we lose no accuracy and if AccumType=complex<double> and T=complex<float>,
     	// this code will not compile
 
     	LatticeStatsDataProviderBase<AccumType, T> *dataProvider = NULL;
-
     	if (subLat.isMasked()) {
     		dataProvider = new MaskedLatticeStatsDataProvider<AccumType, T>(subLat);
     	}
     	else {
     		dataProvider = new LatticeStatsDataProvider<AccumType, T>(subLat);
+    	}
+
+    	if (! pProgressMeter.null()) {
+    		dataProvider->setProgressMeter(pProgressMeter);
     	}
     	// FIXME having Bool variables that are true when a fundamental property is negated
     	// is incredibly confusing and certainly not best practice. Rename and adjust
@@ -921,13 +919,12 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	CountedPtr<StatsDataProvider<AccumType, const T*, const Bool*> > mydp
     		= dynamic_cast<StatsDataProvider<AccumType, const T*, const Bool*> *>(dataProvider);
     	ThrowIf (mydp.null(), "Logic Error: dynamic cast failed");
-    	CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > curSA;
     	switch (_algorithm) {
     	case StatisticsData::CLASSICAL:
-    		curSA = new ClassicalStatistics<AccumType, const T*, const Bool*>();
+    		*curSA = new ClassicalStatistics<AccumType, const T*, const Bool*>();
     		break;
     	case StatisticsData::HINGESFENCES: {
-    		curSA = _algConf.isDefined("hf")
+    		*curSA = _algConf.isDefined("hf")
     			? new HingesFencesStatistics<AccumType, const T*, const Bool*>(_algConf.asDouble("hf"))
     			: new HingesFencesStatistics<AccumType, const T*, const Bool*>();
     		break;
@@ -936,9 +933,12 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		ThrowCc("Logic Error: Unhandled algorithm " + String::toString(_algorithm));
     	}
 
-    	curSA->setDataProvider(mydp);
-    	Record stats = curSA->getStatistics();
-    	_sa.push_back(curSA);
+    	(*curSA)->setDataProvider(mydp);
+    	Record stats = (*curSA)->getStatistics();
+    	if (! pProgressMeter.null()) {
+
+    		dataProvider->setProgressMeter(CountedPtr<LattStatsProgress>(NULL));
+    	}
     	AccumType u;
     	stats.get(
     		StatisticsData::toString(StatisticsData::MEAN), u
@@ -1012,6 +1012,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		}
     	}
     }
+    pProgressMeter = NULL;
     // Do robust statistics separately as required.
     generateRobust();
     needStorageLattice_p = False;     
@@ -1041,7 +1042,7 @@ void LatticeStatistics<T>::generateRobust () {
 	}
 	std::map<Double, AccumType> quantileToValue;
     typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curCS = _sa.begin();
-	for (stepper.reset(); !stepper.atEnd(); stepper++) {
+	for (stepper.reset(); ! stepper.atEnd(); stepper++) {
 		IPosition pos = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDIAN);
 		IPosition pos2 = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDABSDEVMED);
 		IPosition pos3 = locInStorageLattice(stepper.position(), LatticeStatsBase::QUARTILE);

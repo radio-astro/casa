@@ -45,6 +45,9 @@ public:
 
 	void operator++();
 
+	// estimated number of steps to iterate through the the lattice
+	uInt estimatedSteps() const;
+
 	// Are there any data sets left to provide?
 	Bool atEnd() const;
 
@@ -84,7 +87,7 @@ private:
 
 	void _freeStorage();
 
-	uInt _nsteps() const;
+	//uInt _nsteps() const;
 
 };
 

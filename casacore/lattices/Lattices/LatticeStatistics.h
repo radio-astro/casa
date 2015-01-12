@@ -458,7 +458,7 @@ private:
        
    Bool needStorageLattice_p, doneSomeGoodPoints_p, someGoodPointsValue_p;
    Bool showProgress_p, forceDisk_p;
-//
+
    T minFull_p, maxFull_p;
    Bool doneFullMinMax_p;
 
