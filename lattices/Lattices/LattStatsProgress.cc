@@ -35,9 +35,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-LattStatsProgress::~LattStatsProgress()
-{
-    delete itsMeter;
+LattStatsProgress::~LattStatsProgress() {}
+
+void LattStatsProgress::operator++(Int) {
+	++_currentStep;
+	_meter->update (_currentStep);
 }
 
 void LattStatsProgress::initDerived()
@@ -45,30 +47,26 @@ void LattStatsProgress::initDerived()
 // Initialize meter
 //
 {
-    delete itsMeter;
-
 // The expectedNSteps function will return the number of
 // expected steps.  The number of expected steps
 // is set by calling LatticeProgress::init which then
 // calls this initDerived function
 // 
 
-    itsMeter = new ProgressMeter(0.0, Double(expectedNsteps()), String("Generate Storage Image"),
+    _meter = new ProgressMeter(0.0, Double(expectedNsteps()), String("Generate Storage Image"),
                                  String("Accumulation Iterations"), String(""), String(""),
                                  True, max(1,Int(expectedNsteps()/20)));
 }
 
 void LattStatsProgress::nstepsDone (uInt nsteps)
 {
-// Update the meter with the number of steps taken so far
-
-    itsMeter->update (nsteps);
+	_currentStep = nsteps;
+    _meter->update (_currentStep);
 }
 
 void LattStatsProgress::done()
 {   
-    delete itsMeter;
-    itsMeter = 0;
+    _meter = NULL;
 }
 
 

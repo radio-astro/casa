@@ -26,8 +26,10 @@
 #ifndef LATTICES_LATTICESTATSDATAPROVIDERBASE_H
 #define LATTICES_LATTICESTATSDATAPROVIDERBASE_H
 
-#include <lattices/Lattices/LatticeIterator.h>
 #include <scimath/Mathematics/StatsDataProvider.h>
+
+#include <lattices/Lattices/LatticeIterator.h>
+#include <lattices/Lattices/LattStatsProgress.h>
 
 #include <casa/aips.h>
 
@@ -42,6 +44,9 @@ template <class AccumType, class T, class InputIterator=const T*> class LatticeS
 public:
 
 	virtual ~LatticeStatsDataProviderBase();
+
+	// estimated number of steps to iterate through the the lattice
+	virtual uInt estimatedSteps() const = 0;
 
 	virtual void finalize();
 
@@ -70,7 +75,7 @@ public:
 	// get the positions of the min and max
 	void minMaxPos(IPosition& minpos, IPosition& maxpos) const;
 
-	void setProgressMeter(LatticeProgress * const &pm);
+	void setProgressMeter(CountedPtr<LattStatsProgress> pm);
 
 	// set the data ranges
 	void setRanges(const DataRanges& ranges, Bool isInclude);
@@ -78,18 +83,18 @@ public:
 protected:
 	LatticeStatsDataProviderBase();
 
-	virtual uInt _nsteps() const = 0;
+	//virtual uInt _nsteps() const = 0;
 
 	void _updateMaxPos(const IPosition& maxPos) { _maxPos = maxPos; }
 
 	void _updateMinPos(const IPosition& minPos) { _minPos = minPos; }
 
-	void _updateProgress(uInt currentStep);
+	void _updateProgress();
 
 private:
 	Bool _hasRanges, _isInclude;
 	DataRanges _ranges;
-	LatticeProgress* _progressMeter;
+	CountedPtr<LattStatsProgress> _progressMeter;
 	IPosition _minPos, _maxPos;
 };
 

@@ -43,11 +43,7 @@ uInt LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getMaskStride() 
 }
 
 template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::finalize() {
-	if (_progressMeter) {
-		_progressMeter->done();
-	}
-}
+void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::finalize() {}
 
 template <class AccumType, class T, class InputIterator>
 DataRanges LatticeStatsDataProviderBase<AccumType, T, InputIterator>::getRanges() {
@@ -88,27 +84,24 @@ void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::minMaxPos(
 
 template <class AccumType, class T, class InputIterator>
 void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::setProgressMeter(
-	LatticeProgress * const &pm
+	CountedPtr<LattStatsProgress> pm
 ) {
 	_progressMeter = pm;
-	_progressMeter->init(_nsteps());
 }
 
 template <class AccumType, class T, class InputIterator>
 void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::setRanges(
 	const DataRanges& ranges, Bool isInclude
 ) {
-	_hasRanges = ranges.size() > 0;
+	_hasRanges = ! ranges.empty();
 	_ranges = ranges;
 	_isInclude = isInclude;
 }
 
 template <class AccumType, class T, class InputIterator>
-void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::_updateProgress(
-	uInt currentStep
-) {
-	if (_progressMeter) {
-		_progressMeter->nstepsDone (currentStep);
+void LatticeStatsDataProviderBase<AccumType, T, InputIterator>::_updateProgress() {
+	if (! _progressMeter.null()) {
+		(*_progressMeter)++;
 	}
 }
 

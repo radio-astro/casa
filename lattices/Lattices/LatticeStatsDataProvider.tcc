@@ -41,7 +41,23 @@ template <class AccumType, class T, class InputIterator>
 void LatticeStatsDataProvider<AccumType, T, InputIterator>::operator++() {
 	_freeStorage();
 	++_iter;
-	this->_updateProgress(_iter.nsteps());
+	this->_updateProgress();
+}
+
+template <class AccumType, class T, class InputIterator>
+uInt LatticeStatsDataProvider<AccumType, T, InputIterator>::estimatedSteps() const {
+	IPosition lattShape = _iter.latticeShape();
+	IPosition cursShape = _iter.cursor().shape();
+	uInt ndim = lattShape.size();
+	uInt count = 1;
+	for (uInt i=0; i<ndim; i++) {
+		uInt nsteps = lattShape[i]/cursShape[i];
+		if (lattShape[i] % cursShape[i] != 0) {
+			++nsteps;
+		}
+		count *= nsteps;
+	}
+	return count;
 }
 
 template <class AccumType, class T, class InputIterator>
@@ -105,20 +121,6 @@ void LatticeStatsDataProvider<AccumType, T, InputIterator>::_freeStorage() {
 	_currentSlice.freeStorage (_currentPtr, _delData);
 	_delData = False;
 }
-
-template <class AccumType, class T, class InputIterator>
-uInt LatticeStatsDataProvider<AccumType, T, InputIterator>::_nsteps() const {
-	const IPosition trc = _iter.latticeShape() - 1;
-	uInt ndim = trc.size();
-	const IPosition blc(ndim, 0);
-	const IPosition tileShape = _iter.lattice().niceCursorShape();
-	uInt nsteps = 1;
-	for (uInt j=0; j<ndim; j++) {
-		nsteps *= 1 + trc(j)/tileShape(j) - blc(j)/tileShape(j);
-	}
-	return nsteps;
-}
-
 
 }
 

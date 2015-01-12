@@ -41,7 +41,23 @@ template <class AccumType, class T, class InputIterator>
 void MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::operator++() {
 	_freeStorage();
 	++_iter;
-	this->_updateProgress(_iter.nsteps());
+	this->_updateProgress();
+}
+
+template <class AccumType, class T, class InputIterator>
+uInt MaskedLatticeStatsDataProvider<AccumType, T, InputIterator>::estimatedSteps() const {
+	IPosition lattShape = _iter.latticeShape();
+	IPosition cursShape = _iter.cursor().shape();
+	uInt ndim = lattShape.size();
+	uInt count = 1;
+	for (uInt i=0; i<ndim; i++) {
+		uInt nsteps = lattShape[i]/cursShape[i];
+		if (lattShape[i] % cursShape[i] != 0) {
+			++nsteps;
+		}
+		count *= nsteps;
+	}
+	return count;
 }
 
 template <class AccumType, class T, class InputIterator>

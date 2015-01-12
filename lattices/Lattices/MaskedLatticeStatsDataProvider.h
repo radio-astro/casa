@@ -47,6 +47,8 @@ public:
 
 	void operator++();
 
+	uInt estimatedSteps() const;
+
 	// Are there any data sets left to provide?
 	Bool atEnd() const;
 
