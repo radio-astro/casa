@@ -42,7 +42,7 @@ const String ImageStatsCalculator::_class = "ImageStatsCalculator";
 
 
 ImageStatsCalculator::ImageStatsCalculator(
-		const SPCIIF image,
+	const SPCIIF image,
 	const Record *const &regionPtr,
 	const String& maskInp,
 	Bool beVerboseDuringConstruction
@@ -54,7 +54,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 	_axes(),
 	_includepix(), _excludepix(),
 	_list(False), _force(False),
-	_disk(False), _robust(False), _verbose(False) {
+	_disk(False), _robust(False), _verbose(False), _algorithm(StatisticsData::CLASSICAL), _algConf() {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
 }
@@ -100,6 +100,16 @@ Record ImageStatsCalculator::calculate() {
 		}
 	}
 	return retval;
+}
+
+void ImageStatsCalculator::configureHingesFences(Double f) {
+	_algConf.define("hf", f);
+}
+
+void ImageStatsCalculator::setAlgorithm(
+	StatisticsData::ALGORITHM algorithm
+) {
+	_algorithm = algorithm;
 }
 
 void ImageStatsCalculator::_reportDetailedStats(
@@ -292,11 +302,11 @@ Record ImageStatsCalculator::statistics(
 		trc = sl.end();
 	}
 	// for precision
-	CoordinateSystem cSys = _getImage()->coordinates();
-	Bool hasDirectionCoordinate = (cSys.findCoordinate(Coordinate::DIRECTION) >= 0);
+	CoordinateSystem csys = _getImage()->coordinates();
+	Bool hasDirectionCoordinate = (csys.findCoordinate(Coordinate::DIRECTION) >= 0);
 	Int precis = -1;
 	if (hasDirectionCoordinate) {
-		DirectionCoordinate dirCoord = cSys.directionCoordinate(0);
+		DirectionCoordinate dirCoord = csys.directionCoordinate(0);
 		Vector<String> dirUnits = dirCoord.worldAxisUnits();
 		Vector<Double> dirIncs = dirCoord.increment();
 		for (uInt i=0; i< dirUnits.size(); i++) {
@@ -308,8 +318,8 @@ Record ImageStatsCalculator::statistics(
 	}
 
 	String blcf, trcf;
-	blcf = CoordinateUtil::formatCoordinate(blc, cSys, precis);
-	trcf = CoordinateUtil::formatCoordinate(trc, cSys, precis);
+	blcf = CoordinateUtil::formatCoordinate(blc, csys, precis);
+	trcf = CoordinateUtil::formatCoordinate(trc, csys, precis);
 
 	if (_list) {
 		// Only write to the logger if the user wants it displayed.
@@ -339,10 +349,8 @@ Record ImageStatsCalculator::statistics(
 	// Make new statistics object only if we need to.    This code is getting
 	// a bit silly. I should rework it somewhen.
 	Bool forceNewStorage = _force;
-	if (_statistics.get() != 0) {
-		if (_disk != _oldStatsStorageForce) {
-			forceNewStorage = True;
-		}
+	if (_statistics.get() != 0 && _disk != _oldStatsStorageForce) {
+		forceNewStorage = True;
 	}
 	if (forceNewStorage) {
 		_statistics.reset(
@@ -361,8 +369,10 @@ Record ImageStatsCalculator::statistics(
 				? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
 				: new ImageStatistics<Float> (subImage, False, _disk)
 			);
+			/*
 			Array<Double> debugMax;
 			_statistics->getStatistic(debugMax, LatticeStatsBase::MAX);
+			*/
 		}
 		else {
 			// We already have a statistics object.  We only have to set
@@ -393,7 +403,11 @@ Record ImageStatsCalculator::statistics(
 			}
 		}
 	}
-	if (messageStore != 0) {
+	_statistics->setAlgorithm(_algorithm);
+	if (_algorithm == StatisticsData::HINGESFENCES && _algConf.isDefined(("hf"))) {
+		_statistics->configureHingesFences(_algConf.asDouble("hf"));
+	}
+	if (messageStore != NULL) {
 		_statistics->recordMessages(True);
 	}
 	_statistics->setPrecision(precis);
@@ -408,7 +422,6 @@ Record ImageStatsCalculator::statistics(
 	// Set cursor axes
 	*_getLog() << LogOrigin(_class, __func__);
 	ThrowIf(! _statistics->setAxes(_axes), _statistics->errorMessage());
-
 	ThrowIf(
 		!_statistics->setInExCludeRange(_includepix, _excludepix, False),
 		_statistics->errorMessage()
@@ -427,9 +440,9 @@ Record ImageStatsCalculator::statistics(
 	Bool trobust(_robust);
 	Bool doFlux = True;
 	if (_getImage()->imageInfo().hasMultipleBeams()) {
-		if (cSys.hasSpectralAxis() || cSys.hasPolarizationCoordinate()) {
-			Int spAxis = cSys.spectralAxisNumber();
-			Int poAxis = cSys.polarizationAxisNumber();
+		if (csys.hasSpectralAxis() || csys.hasPolarizationCoordinate()) {
+			Int spAxis = csys.spectralAxisNumber();
+			Int poAxis = csys.polarizationAxisNumber();
 			for (Int i=0; i<(Int)_axes.size(); i++) {
 				if (_axes[i] == spAxis || _axes[i] == poAxis) {
 					*_getLog() << LogIO::WARN << "At least one cursor axis contains multiple beams. "
@@ -502,23 +515,20 @@ Record ImageStatsCalculator::statistics(
 	if (_statistics->getMinMaxPos(minPos, maxPos)) {
 		if (minPos.nelements() > 0 && maxPos.nelements() > 0) {
 			statsout.define("minpos", (blc + minPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + minPos, cSys, precis);
+			tmp = CoordinateUtil::formatCoordinate(blc + minPos, csys, precis);
 			statsout.define("minposf", tmp);
 			statsout.define("maxpos", (blc + maxPos).asVector());
-			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, cSys, precis);
+			tmp = CoordinateUtil::formatCoordinate(blc + maxPos, csys, precis);
 			statsout.define("maxposf", tmp);
 		}
 	}
-
-	// Make plots
-
 	if (_list) {
 		_statistics->showRobust(trobust);
-		if (!_statistics->display()) {
-			*_getLog() << _statistics->errorMessage() << LogIO::EXCEPTION;
-		}
+		ThrowIf(
+			!_statistics->display(),
+			_statistics->errorMessage()
+		);
 	}
-	//_statistics->closePlotting();
 	if (messageStore != 0) {
 		vector<String> messages = _statistics->getMessages();
 		for (

@@ -70,6 +70,9 @@ public:
 
     Record calculate();
 
+    // configure hinges-fences algorithm
+    void configureHingesFences(Double f);
+
     inline String getClass() const {return _class;}
 
     // Set range of pixel values to include in the calculation. Should be a two element
@@ -91,6 +94,9 @@ public:
     inline void setRobust(const Bool r) {_robust = r;}
 
     inline void setVerbose(const Bool v) {_verbose = v;}
+
+    // set statistics algorithm to use
+    void setAlgorithm(StatisticsData::ALGORITHM algorithm);
 
     inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
 
@@ -124,6 +130,9 @@ private:
     Vector<Int> _axes;
     Vector<Float> _includepix, _excludepix;
     Bool _list, _force, _disk, _robust, _verbose;
+
+    StatisticsData::ALGORITHM _algorithm;
+    Record _algConf;
 
     static const String _class;
 
