@@ -436,6 +436,29 @@ class imstat_test(unittest.TestCase):
         self.assertTrue(stats['quartile'][0] == 499000)
 
         myia.done()
+        
+    def test_hingesfences(self):
+        """Test hinges-fences algorithm"""
+        data = range(100)
+        myia = self._myia
+        imagename = "hftest.im"
+        myia.fromarray(imagename, data)
+        classic = myia.statistics(robust=True, algorithm="c")
+        for i in range(2):
+            if i == 0:
+                hfall = myia.statistics(robust=True, algorithm="h")
+                hf0 = myia.statistics(robust=True, algorithm="h", fence=0)
+            else:
+                hfall = imstat(imagename=imagename, algorithm="h")
+                hf0 = imstat(imagename=imagename, algorithm="h", fence=0)
+            for k in classic.keys():
+                if type(classic[k]) == numpy.ndarray:
+                    self.assertTrue((hfall[k] == classic[k]).all())
+                else:
+                    self.assertTrue(hfall[k] == classic[k])
+            self.assertTrue(hf0['npts'][0] == 51)
+            self.assertTrue(hf0['mean'][0] == 49)
+            self.assertTrue(hf0['q1'][0] == 36)
  
 def suite():
     return [imstat_test]

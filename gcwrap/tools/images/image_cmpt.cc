@@ -3182,9 +3182,8 @@ bool image::putchunk(
 			return false;
 		}
 		if (_image->isFloat()) {
-			Float f;
 			_putchunk(
-				f, _image->getImage(), pixels, blc, inc, list, locking, replicate
+				_image->getImage(), pixels, blc, inc, list, locking, replicate
 			);
 		}
 		else {
@@ -3204,9 +3203,8 @@ bool image::putchunk(
 				);
 			}
 			else {
-				Complex c;
 				_putchunk(
-					c, _image->getComplexImage(), pixels,
+					_image->getComplexImage(), pixels,
 					blc, inc, list, locking, replicate
 				);
 			}
@@ -3221,7 +3219,7 @@ bool image::putchunk(
 }
 
 template<class T> void image::_putchunk(
-	T imageType, SPIIT myimage, const variant& pixels,
+	SPIIT myimage, const variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
 	const bool list, const bool locking, const bool replicate
 ) {
@@ -3239,7 +3237,7 @@ template<class T> void image::_putchunk(
 		casa::convertArray(pixelsArray, localpix.reform(IPosition(shape)));
 	}
 	else {
-		String types = casa::whatType(&imageType) == TpFloat
+		String types = myimage->dataType() == TpFloat
 			? "doubles or ints"
 			: "complexes, doubles, or ints";
 		ThrowCc(
@@ -4192,8 +4190,8 @@ record* image::statistics(
 	const vector<double>& includepix,
 	const vector<double>& excludepix, bool list, bool force,
 	bool disk, bool robust, bool verbose,
-	bool /* async */, bool stretch, const string& logfile,
-	bool append
+	bool stretch, const string& logfile,
+	bool append, const string& algorithm, double fence
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4249,6 +4247,18 @@ record* image::statistics(
 			_stats->setMask(mtmp);
 			std::tr1::shared_ptr<Record> regionRec2(_getRegion(region, False));
 			_stats->setRegion(*regionRec2);
+		}
+		String myalg = algorithm;
+		myalg.downcase();
+		if (myalg.startsWith("c")) {
+			_stats->setAlgorithm(StatisticsData::CLASSICAL);
+		}
+		else if (myalg.startsWith("h")) {
+			_stats->setAlgorithm(StatisticsData::HINGESFENCES);
+			_stats->configureHingesFences(fence);
+		}
+		else {
+			ThrowCc("Unsupported filter " + algorithm);
 		}
 		_stats->setAxes(tmpaxes);
 		_stats->setIncludePix(tmpinclude);

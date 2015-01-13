@@ -9231,10 +9231,6 @@ ib.done()
      <value>false</value>
      </param>
   
-     <param type="bool"  name="async">
-     <description>Run asynchronously?</description>
-     <value>false</value>
-     </param>
      <param type="bool"  name="stretch">
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
@@ -9247,6 +9243,14 @@ ib.done()
           <description>Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.</description>
           <value>true</value>
      </param>
+     <param type="string"  name="algorithm">
+          <description>Algorithm to use. Supported values are "classic" and "hinges-fences". Minimum match is supported.</description>
+          <value>classic</value>
+     </param>
+     <param type="double"  name="fence">
+          <description>Fence value for hinges-fences. A negative value means use the entire data set (ie default to the "classic" algorithm). Ignored if filter is not "hinges-fences".</description>
+          <value>-1</value>
+     </param>
 </input>
 
 <returns type="record">
@@ -9255,8 +9259,8 @@ ib.done()
 
 <description>
 
-This function <!-- (short-hand name is {\stff stats}) --> computes statistics
-from the pixel values in the image.  You can then <!-- plot them,--> list them
+This function computes statistics
+from the pixel values in the image.  You can then list them
 and retrieve them (into a record) for further analysis. 
 
 The chunk of the image over which you evaluate the statistics is
@@ -9266,19 +9270,10 @@ The statistics would be computed for each XZ (axes 0 and 2) plane in the
 image.  You could then examine those statistics as a function of the Y
 (axis 1) axis.  Or perhaps you set {\stfaf axes=[2]}, whereupon you could
 examine the statistics for each Z (axis 2) profile as a function of X
-and Y location in the image. 
+and Y location in the image.
 
-<!--
-You have control over how the statistics are presented; whether they are
-listed, or plotted, or retrieved into records or all of the above. 
-
-A variety of statistics are offered for plotting and you can plot any
-combination of them simultaneously (argument {\stfaf plotstats}).   
--->
-
-If you retrieve the statistics <!-- into a record (argument {\stfaf
-statsout}) --> from the returned record, each statistic is stored in
-an array in one named field in the record.  The shape of that array is
+Each statistic is stored in 
+an array in one named field in the returned record.  The shape of that array is
 that of the axes which you did {\bf not} evaluate the statistics over.
 For example, in the second example above, we set {\stfaf axes=[2]} and
 asked for statistics as a function of the remaining axes, in this
@@ -9346,7 +9341,7 @@ the maximum pixel value
 \end{itemize}
 
 The last four fields only appear if you evaluate the statistics over all
-axes in the image.  As an example, if the returned record is saved in
+axes in the image.  As an example, if the returned record is captured in
 {\stfaf `mystats'}, then you could access the `mean' field via
 {\cf print mystats['mean']}. 
 
@@ -9354,33 +9349,20 @@ If there are no good points (e.g.  all pixels are masked bad in the
 region), then the length of these fields will be 0 (e.g.  {\cf
 len(mystats['npts'])==0}). 
 
-<!--
-If you retrieve statistics all of the available statistics are retrieved
-into the record regardless of what you might have asked to plot. -->
-You can of course plot the statistics by accessing the arrays in
-the record. <!--, rather than using the built in plotting
-capability. -->
-
 You have no control over which statistics are listed to the logger,
 you always get the same selection.  You can choose to list the
 statistics or not (argument {\stfaf list}).
 
 As well as the simple (and faster to calculate) statistics like means
-and sums, you can also compute some robust statistics.  Currently
-these are the median, median absolute deviations from the median and
-the inter-quartile range.  Because these are computationally
-expensive, they are only computed if you directly ask for them.  You
-can do this in two ways.  First by requesting a robust statistic in
-the string array assigned to {\stfaf plotstats}.  Second by setting
-{\stfaf robust=T} (it defaults to F).  <!-- For example, it may be that you
-are not making any plots but wish to recover the robust statistics
-into the output record.  This is why this extra argument is needed.-->
+and sums, you can also compute some robust (quantile-like) statistics.  Currently
+these are the median, median absolute deviations from the median,
+the first and third quartiles, and the inner-quartile range.  Because these are computationally
+expensive, they are only computed if robust=True.
 
 Note that if the axes are set to all of the axes in the image (which is
-the default) <!-- , no plotting is available as--> there is just one point
-per statistic. 
+the default) there is just one value per statistic. 
 
-You have control over which pixels are included in the statistical sums
+You have control over which pixels are included in the statistics computations
 via the {\stfaf includepix} and {\stfaf excludepix} arguments.  These vectors
 specify a range of pixel values for which pixels are either included or
 excluded.  They are mutually exclusive; you can specify one or the
@@ -9396,6 +9378,22 @@ However, you can force regeneration of the storage image if you set
 {\stfaf force=T}.  The storage medium is either in memory or on disk,
 depending upon its size.  You can force it to disk if you set {\stfaf
 disk=T}, otherwise it decides for itself.    
+
+ALGORITHMS
+
+Several types of statistical algorithms are supported:
+
+* classic: This is the familiar algorithm, in which all unmasked data, subject to any
+  specified pixel ranges are used.
+
+* hinges-fences: This algorithm calculates statistics by including data in a range
+  between Q1 - f*D and Q3 + f*D, inclusive, where Q1 is the first quartile of the distribution
+  of unmasked data, subject to any specified pixel ranges, Q3 is the third quartile, D = Q3 - Q1
+  (the inner quartile range), and f is the user-specified fence factor. Negative values of f
+  indicate that the full distribution is to be used (ie, the classic algorithm is used). Sufficiently
+  large values of f will also be equivalent to using the classic algorithm. For f = 0, only data
+  in the inner quartile range is used for computing statistics. The value of fence is silently
+  ignored if filter is not "hinges-fences".
 
 </description>
 

@@ -1,9 +1,9 @@
 from taskinit import *
 
 def imstat(
-    imagename=None, axes=None, region=None, box=None, chans=None,
-    stokes=None, listit=None, verbose=None, mask=None, stretch=None,
-    logfile=None, append=None
+    imagename, axes, region, box, chans,
+    stokes, listit, verbose, mask, stretch,
+    logfile, append, algorithm, fence
 ):
     _myia = iatool()
     _myrg = rgtool()
@@ -18,12 +18,12 @@ def imstat(
             csrec, shape,
             box, chans, stokes, "a", region
         )
-        retValue = _myia.statistics(
+        return _myia.statistics(
             axes=axes, region=reg, list=listit,
             verbose=verbose, robust=True, mask=mask,
-            stretch=stretch, logfile=logfile, append=append
+            stretch=stretch, logfile=logfile, append=append,
+            algorithm=algorithm, fence=fence
         )
-        return retValue
     except Exception, instance:
         casalog.post( '*** Error ***'+str(instance), 'SEVERE' )
         raise

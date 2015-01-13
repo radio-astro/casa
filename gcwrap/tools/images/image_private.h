@@ -81,8 +81,7 @@ template <class T> casa::Record _getprofile(
 );
 
 template<class T> void _putchunk(
-	T imageType, SPIIT image,
-	const casac::variant& pixels,
+	SPIIT image, const casac::variant& pixels,
 	const vector<int>& blc, const vector<int>& inc,
 	const bool list, const bool locking, const bool replicate
 );
