@@ -13,112 +13,59 @@
 #include <msvis/MSVis/VisSetUtil.h>
 
 #include <casa_sakura/SakuraUtils.h>
-#include <singledish/SingleDish/SingleDishMS.h>
+#include <singledish/SingleDish/SingleDishMS2.h>
 
 //---for measuring elapse time------------------------
-#include <sys/time.h>
-double gettimeofday_sec() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  return tv.tv_sec + (double)tv.tv_usec*1.0e-6;
-}
+// #include <sys/time.h>
+// double gettimeofday_sec() {
+//   struct timeval tv;
+//   gettimeofday(&tv, NULL);
+//   return tv.tv_sec + (double)tv.tv_usec*1.0e-6;
+// }
 //----------------------------------------------------
 
-#define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
+#define _ORIGIN LogOrigin("SingleDishMS2", __func__, WHERE)
 
 namespace casa {
 
-SingleDishMS::SingleDishMS()
-  : msname_(""), ms_(0), mssel_(0)
+SingleDishMS2::SingleDishMS2()
+  : msname_(""), sdh_(0)
 {
   initialize();
 }
 
-SingleDishMS::SingleDishMS(string const& ms_name)
-  : msname_(ms_name), ms_(0), mssel_(0)
+SingleDishMS2::SingleDishMS2(string const& ms_name)
+  : msname_(ms_name), sdh_(0)
 {
   LogIO os(_ORIGIN);
   initialize();
-  // Make a MeasurementSet object for the disk-base MeasurementSet
-  String lems(ms_name);
-  ms_ = new MeasurementSet(lems, TableLock(TableLock::AutoNoReadLocking), 
-			    Table::Update);
-  os << "Opened Measurement set " << name() << LogIO::POST;
-  AlwaysAssert(ms_, AipsError);
 }
 
-SingleDishMS::SingleDishMS(MeasurementSet &ms)
-  : msname_(""), ms_(0), mssel_(0)
+SingleDishMS2::~SingleDishMS2()
 {
-  initialize();
-  msname_ = static_cast<string>(ms.tableName());
-  ms_ = new MeasurementSet(ms);
-  AlwaysAssert(ms_, AipsError);
-}
-
-SingleDishMS::SingleDishMS(SingleDishMS const &other)
-  : msname_(""), ms_(0)
-{
-  initialize();
-  ms_ = new MeasurementSet(*other.ms_);
-  if(other.mssel_) {
-    mssel_ = new MeasurementSet(*other.mssel_);
+  if(sdh_){
+    delete sdh_;
+    sdh_ = 0;
   }
-  msname_ = static_cast<string>(ms_->tableName());
-}
-
-SingleDishMS &SingleDishMS::operator=(SingleDishMS const &other)
-{
-  initialize();
-  msname_ = "";
-  if (ms_ && this != &other) {
-    *ms_ = *(other.ms_);
-  }
-  if (mssel_ && this != &other && other.mssel_) {
-    *mssel_ = *(other.mssel_);
-  }
-  msname_ = static_cast<string>(ms_->tableName());
-  return *this;
-}
-
-SingleDishMS::~SingleDishMS()
-{
-  LogIO os(_ORIGIN);
-  if (ms_) {
-    os << "Closing Measurement set " << name() << LogIO::POST;
-    ms_->relinquishAutoLocks();
-    ms_->unlock();
-    delete ms_;
-  }
-  ms_ = 0;
-  if (mssel_) {
-    mssel_->relinquishAutoLocks();
-    mssel_->unlock();
-    delete mssel_;
-  }
-  mssel_ = 0;
   msname_ = "";
 }
 
-void SingleDishMS::initialize()
+void SingleDishMS2::initialize()
 {
   in_column_ = MS::UNDEFINED_COLUMN;
   out_column_ = MS::UNDEFINED_COLUMN;
 }
 
-bool SingleDishMS::close()
+bool SingleDishMS2::close()
 {
   LogIO os(_ORIGIN);
-  os << "Closing MeasurementSet and detaching from SingleDishMS"
+  os << "Detaching from SingleDishMS"
      << LogIO::POST;
 
-  ms_->unlock();
-  if(mssel_) {
-    mssel_->unlock();
-    delete mssel_;
-    mssel_ = 0;
+  if(sdh_){
+    delete sdh_;
+    sdh_ = 0;
   }
-  if(ms_) delete ms_; ms_ = 0;
   msname_ = "";
 
   return True;
@@ -127,50 +74,32 @@ bool SingleDishMS::close()
 ////////////////////////////////////////////////////////////////////////
 ///// Common utility functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS::check_ms()
-{
-  AlwaysAssert(ms_, AipsError);
-}
-
-void SingleDishMS::reset_selection()
-{
-  if (mssel_) {
-    delete mssel_;
-    mssel_=0;
-  };
-}
-
-void SingleDishMS::set_selection(Record const &selection, bool const verbose)
+void SingleDishMS2::set_selection(Record const &selection, bool const verbose)
 {
   LogIO os(_ORIGIN);
-  check_ms();
-  reset_selection();
-  selection_ = selection;
+  if (!selection_.empty()) // selection is set before
+    os << "Discard old selection and setting new one." << LogIO::POST;
+  if (selection.empty()) // empty selection is passed
+    os << "Resetting selection." << LogIO::POST;
 
-  //Parse selection
+  selection_ = selection;
+  // Verbose output
   bool any_selection(false);
-  String timeExpr(""), antennaExpr(""), fieldExpr(""),
-    spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
-    scanExpr(""), arrayExpr(""), intentExpr(""), obsExpr("");
-  timeExpr = get_field_as_casa_string(selection,"timerange");
-  antennaExpr = get_field_as_casa_string(selection,"antenna");
-  fieldExpr = get_field_as_casa_string(selection,"field");
-  spwExpr = get_field_as_casa_string(selection,"spw");
-  uvDistExpr = get_field_as_casa_string(selection,"uvdist");
-  taQLExpr = get_field_as_casa_string(selection,"taql");
-  polnExpr = get_field_as_casa_string(selection,"correlation");
-  scanExpr = get_field_as_casa_string(selection,"scan");
-  arrayExpr = get_field_as_casa_string(selection,"array");
-  intentExpr = get_field_as_casa_string(selection,"intent");
-  obsExpr = get_field_as_casa_string(selection,"observation");
-  //Now the actual selection.
-  mssel_ = new MeasurementSet(*ms_);
-  if (!mssSetData(*ms_,*mssel_,"",timeExpr,antennaExpr,fieldExpr,
-		  spwExpr,uvDistExpr,taQLExpr,polnExpr,scanExpr,
-		  arrayExpr,intentExpr,obsExpr)) { // no valid selection
-    reset_selection();
-    os << "Selection is reset." << LogIO::POST;
-  } else if (verbose) {
+  if (verbose && !selection.empty()) {
+    String timeExpr(""), antennaExpr(""), fieldExpr(""),
+      spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
+      scanExpr(""), arrayExpr(""), obsExpr(""), intentExpr("");
+    timeExpr = get_field_as_casa_string(selection,"timerange");
+    antennaExpr = get_field_as_casa_string(selection,"baseline");
+    fieldExpr = get_field_as_casa_string(selection,"field");
+    spwExpr = get_field_as_casa_string(selection,"spw");
+    uvDistExpr = get_field_as_casa_string(selection,"uvdist");
+    taQLExpr = get_field_as_casa_string(selection,"taql");
+    polnExpr = get_field_as_casa_string(selection,"correlation");
+    scanExpr = get_field_as_casa_string(selection,"scan");
+    arrayExpr = get_field_as_casa_string(selection,"array");
+    intentExpr = get_field_as_casa_string(selection,"intent");
+    obsExpr = get_field_as_casa_string(selection,"observation");
     // selection Summary
     os << "[Selection Summary]" << LogIO::POST;
     if (obsExpr != "")
@@ -196,14 +125,11 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
     if (taQLExpr != "")
       {any_selection = true; os << "- TaQL: " << taQLExpr << LogIO::POST;}
     if (!any_selection)
-      os << "RESET selection" << LogIO::POST;
+      os << "No valid selection parameter is set." << LogIO::WARN;
   }
-  if (mssel_!=0)
-    os << "Selected nrows = " << mssel_->nrow()
-       << " from " << ms_->nrow() << "rows" << LogIO::POST;
 }
 
-String SingleDishMS::get_field_as_casa_string(Record const &in_data,
+String SingleDishMS2::get_field_as_casa_string(Record const &in_data,
 					      string const &field_name)
 {
   Int ifield;
@@ -212,77 +138,85 @@ String SingleDishMS::get_field_as_casa_string(Record const &in_data,
   return "";
 }
 
-void SingleDishMS::prepare_for_process(string const& in_column_name,
-				       string const& out_ms_name)
+
+bool SingleDishMS2::prepare_for_process(string const& in_column_name,
+					string const& out_ms_name)
 {
   LogIO os(_ORIGIN);
-  // make sure MS is set
-  check_ms();
+  AlwaysAssert(msname_!="", AipsError);
   // define a column to read data from
   if (in_column_name == "float_data"){
-    if (!set_column(MS::FLOAT_DATA, in_column_))
-      throw(AipsError("Input MS does not have FLOAT_DATA column"));
-    os << "Reading data from FLOAT_DATA column" << LogIO::POST;
+    in_column_ = MS::FLOAT_DATA;
   } else if (in_column_name == "corrected_data") {
-    if (!set_column(MS::CORRECTED_DATA, in_column_))
-      throw(AipsError("Input MS does not have CORRECTED_DATA column"));
-    os << "Reading data from CORRECTED_DATA column" << LogIO::POST;
+    in_column_ = MS::CORRECTED_DATA;
   } else if (in_column_name == "data") {
-    if (!set_column(MS::DATA, in_column_))
-      throw(AipsError("Input MS does not have DATA column"));
-    os << "Reading data from DATA column" << LogIO::POST;
-  } else if (in_column_name != "") {
+    in_column_ = MS::DATA;
+  } else {
     throw(AipsError("Invalid data column name"));
   }
-  if (set_column(MS::FLOAT_DATA, in_column_)) {
-    os << "Reading data from FLOAT_DATA column" << LogIO::POST;
-  } else if (set_column(MS::DATA, in_column_)) {
-    os << "Reading data from DATA column" << LogIO::POST;
-  } else {
-    throw(AipsError("Unable to find input data column in input MS"));
-  }
-  // define a column to save data to
-  if (out_ms_name != "") { // Creating a new MS.
-    if (in_column_ == MS::CORRECTED_DATA)
-      out_column_ = MS::DATA;
-    else // DATA or FLOAT_DATA
-      out_column_ = in_column_;
-    os << "Output is stored in a new MS" << LogIO::POST;
-  } else { // Storing results to input MS
-    out_column_ = MS::CORRECTED_DATA;
-    os << "Output data to CORRECTED_DATA column" << LogIO::POST;
-  }
-  //  create output CORRECTED_DATA if not exists.
-  if (out_column_==MS::CORRECTED_DATA &&
-      !ms_->tableDesc().isColumn("CORRECTED_DATA")) {
-    bool redo_selection(false);
-    if (mssel_) {
-      redo_selection = true;
-      reset_selection();
-    }
-    Bool addModel(False), addScratch(True), alsoinit(True), compress(False);
-    VisSetUtil::addScrCols(*ms_,addModel,addScratch,alsoinit,compress);
+  // Configure record
+  Record configure_param(selection_);
+  parse_selection(configure_param);
+  configure_param.define("inputms", msname_);
+  configure_param.define("outputms", out_ms_name);
+  String in_name(in_column_name);
+  in_name.upcase();
+  configure_param.define("datacolumn", in_name);
+  // The other available keys
+  // - buffermode, realmodelcol, usewtspectrum, tileshape,
+  // - chanaverage, chanbin, useweights, 
+  // - combinespws, ddistart, hanning
+  // - regridms, phasecenter, restfreq, outframe, interpolation, nspw,
+  // - mode, nchan, start, width, veltype,
+  // - timeaverage, timebin, timespan, maxuvwdistance
 
-    if (redo_selection) set_selection(selection_,false);
-  }
-  // handle no selection
-  if (mssel_==0)
-    mssel_ = new MeasurementSet(*ms_);
+  // Generate SDMSManager
+  if (sdh_) delete sdh_;
+  sdh_ = new SDMSManager();
+
+  // Configure SDMSManager
+  sdh_->configure(configure_param);
+  
+  ostringstream oss;
+  configure_param.print(oss);
+  String str(oss.str());
+  os << LogIO::DEBUG1 << " Configuration Record " << LogIO::POST;
+  os << LogIO::DEBUG1 << str << LogIO::POST;
+  // Open the MS and select data
+  sdh_->open();
+  // Set up the Data Handler
+  sdh_->setup();
+  return true;
 }
 
-bool SingleDishMS::set_column(MSMainEnums::PredefinedColumns const &in,
-			      MSMainEnums::PredefinedColumns &out)
+void SingleDishMS2::finalize_process()
 {
-  if (ms_!=0 && ms_->tableDesc().isColumn(MS::columnName(in))) {
-    out = in;
-    return true;
-  } else {
-    out = MS::UNDEFINED_COLUMN;
-    return false;
+  initialize();
+  if(sdh_){
+    sdh_->close();
+    delete sdh_;
+    sdh_ = 0;
   }
 }
 
-void SingleDishMS::get_data_cube_float(vi::VisBuffer2 const &vb,
+void SingleDishMS2::parse_selection(Record &selection)
+{
+  int exists = -1;
+  // Select only auto-correlation
+  exists = selection.fieldNumber ("antenna");
+  if (exists >= 0)
+    {
+      //selection.define("antenna", )
+    }
+  // Select only SPW ID
+  exists = selection.fieldNumber ("spw");
+  if (exists >= 0)
+    {
+      //selection.define("antenna", )
+    }
+}
+
+void SingleDishMS2::get_data_cube_float(vi::VisBuffer2 const &vb,
 				       Cube<Float> &data_cube)
 {
   if (in_column_==MS::FLOAT_DATA) {
@@ -299,7 +233,7 @@ void SingleDishMS::get_data_cube_float(vi::VisBuffer2 const &vb,
   }
 }
 
-void SingleDishMS::convertArrayC2F(Array<Float> &to,
+void SingleDishMS2::convertArrayC2F(Array<Float> &to,
 				   Array<Complex> const &from)
 {
     if (to.nelements() == 0 && from.nelements() == 0) {
@@ -317,26 +251,7 @@ void SingleDishMS::convertArrayC2F(Array<Float> &to,
     }
 }
 
-void SingleDishMS::set_data_cube_float(vi::VisBuffer2 &vb,
-				       Cube<Float> const &data_cube)
-{
-  if (out_column_==MS::FLOAT_DATA) {
-
-    vb.setVisCubeFloat(data_cube);
-  } else { //need to convert Float cube to Complex
-    Cube<Complex> cdata_cube(data_cube.shape());
-    convertArray(cdata_cube,data_cube);
-    if (out_column_==MS::DATA) {
-      vb.setVisCube(cdata_cube);
-    } else {//MS::CORRECTED_DATA
-      if (!ms_->tableDesc().isColumn("CORRECTED_DATA"))
-	throw(AipsError("CORRECTED_DATA column unexpectedly absent. Cannot correct."));
-      vb.setVisCubeCorrected(cdata_cube);
-    }
-  }
-}
-
-void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
+void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
@@ -346,7 +261,7 @@ void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
     out_data[i] = static_cast<float>(data_cube(plane, i, row));
 }
 
-void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
+void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
@@ -357,7 +272,7 @@ void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
     ptr[i] = static_cast<float>(data_cube(plane, i, row));
 }
 
-void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
+void SingleDishMS2::set_spectrum_to_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
@@ -367,13 +282,13 @@ void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
     data_cube(plane, i, row) = static_cast<Float>(in_data[i]);
 }
 
-void SingleDishMS::get_flag_cube(vi::VisBuffer2 const &vb,
+void SingleDishMS2::get_flag_cube(vi::VisBuffer2 const &vb,
 				 Cube<Bool> &flag_cube)
 {
   flag_cube = vb.flagCube();
 }
 
-void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
+void SingleDishMS2::get_flag_from_cube(Cube<Bool> &flag_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_flag,
@@ -388,115 +303,119 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
 
-void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
-				     int const order, 
-				     float const clip_threshold_sigma, 
-				     int const num_fitting_max)
+void SingleDishMS2::subtract_baseline2(string const& in_column_name,
+				      string const& out_ms_name,
+				      string const &in_mask,
+				      int const order,
+				      float const clip_threshold_sigma, 
+				      int const num_fitting_max)
 {
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
-  // in_ms = out_ms
-  // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
-  // no iteration is necessary for the processing.
-  // procedure
-  // 1. iterate over MS
-  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
-  // 3. fit a polynomial to each spectrum and subtract it
-  // 4. put single spectrum (or a block of spectra) to out_column
+//   // in_ms = out_ms
+//   // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
+//   // no iteration is necessary for the processing.
+//   // procedure
+//   // 1. iterate over MS
+//   // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+//   // 3. fit a polynomial to each spectrum and subtract it
+//   // 4. put single spectrum (or a block of spectra) to out_column
 
-  // initializing Sakura -- temporarily placed here, though this should be done in start-up of casapy eventually
-  SakuraUtils::InitializeSakura();
+//   // initializing Sakura -- temporarily placed here, though this should be done in start-up of casapy eventually
+//   SakuraUtils::InitializeSakura();
 
-  double tstart = gettimeofday_sec();
+//   double tstart = gettimeofday_sec();
 
-  prepare_for_process();
-  Block<Int> columns(1);
-  columns[0] = MS::DATA_DESC_ID;
-  vi::SortColumns sc(columns,False);
-  vi::VisibilityIterator2 vi(*mssel_,sc,True);
-  vi::VisBuffer2 *vb = vi.getVisBuffer();
-  LIBSAKURA_SYMBOL(Status) status;
-  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+//   prepare_for_process();
+//   Block<Int> columns(1);
+//   columns[0] = MS::DATA_DESC_ID;
+//   vi::SortColumns sc(columns,False);
+//   vi::VisibilityIterator2 vi(*mssel_,sc,True);
+//   vi::VisBuffer2 *vb = vi.getVisBuffer();
+//   LIBSAKURA_SYMBOL(Status) status;
+//   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
 
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-    for (vi.origin(); vi.more(); vi.next()) {
-      size_t const num_chan = static_cast<size_t>(vb->nChannels());
-      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
-      size_t const num_row = static_cast<size_t>(vb->nRows());
-      Cube<Float> data_chunk(num_pol,num_chan,num_row);
-      Matrix<Float> data_row(num_pol,num_chan);
-      SakuraAlignedArray<float> spec(num_chan);
-      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
-      Matrix<Bool> flag_row(num_pol,num_chan);
-      SakuraAlignedArray<bool> mask(num_chan);
-      // set the given channel mask into aligned mask
-      /*
-      for (size_t ichan=0; ichan < num_chan; ++ichan) {
-	//mask.data[ichan] = true;
-	mask.data[ichan] = in_mask[ichan];
-      }
-      */
-      // create baseline context
-      LIBSAKURA_SYMBOL(BaselineContext) *bl_context;
-      status = 
-	LIBSAKURA_SYMBOL(CreateBaselineContext)(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
-						static_cast<uint16_t>(order), 
-						num_chan, 
-						&bl_context);
-      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	std::cout << "   -- error occured in CreateBaselineContext()." << std::flush;
-      }
-      // get a data cube (npol*nchan*nrow) from VisBuffer
-      get_data_cube_float(*vb, data_chunk);
-      // get a flag cube (npol*nchan*nrow) from VisBuffer
-      get_flag_cube(*vb, flag_chunk);
-      // loop over MS rows
-      for (size_t irow=0; irow < num_row; ++irow) {
-	// loop over polarization
-	for (size_t ipol=0; ipol < num_pol; ++ipol) {
-	  // get a spectrum from data cube
-	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
-	  // get a channel mask from data cube
-	  // (note that mask used here is actually a flag)
-	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
-	  // convert flag to mask by taking logical NOT of flag
-	  // and then operate logical AND with in_mask
-	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
-	    mask.data[ichan] = in_mask[ichan] && (!(mask.data[ichan]));
-	  }
-	  // actual execution of single spectrum
-	  status = 
-	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
-					       clip_threshold_sigma, num_fitting_max, 
-					       true, mask.data, spec.data, &bl_status);
-	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	    //raise exception?
-	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
-	  }
-	  // set back a spectrum to data cube
-	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
-	} // end of polarization loop
-      } // end of MS row loop
-      // write back data cube to VisBuffer
-      set_data_cube_float(*vb, data_chunk);
-      vb->writeChangesBack();
-      // destroy baseline context
-      status =
-        LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_context);
-      if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-	//raise exception?
-	std::cout << "   -- error occured in DestroyBaselineContext()." << std::flush;
-      }
-    } // end of vi loop
-  } // end of chunk loop
+//   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+//     for (vi.origin(); vi.more(); vi.next()) {
+//       size_t const num_chan = static_cast<size_t>(vb->nChannels());
+//       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+//       size_t const num_row = static_cast<size_t>(vb->nRows());
+//       Cube<Float> data_chunk(num_pol,num_chan,num_row);
+//       Matrix<Float> data_row(num_pol,num_chan);
+//       SakuraAlignedArray<float> spec(num_chan);
+//       Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+//       Matrix<Bool> flag_row(num_pol,num_chan);
+//       SakuraAlignedArray<bool> mask(num_chan);
+//       // set the given channel mask into aligned mask
+//       /*
+//       for (size_t ichan=0; ichan < num_chan; ++ichan) {
+// 	//mask.data[ichan] = true;
+// 	mask.data[ichan] = in_mask[ichan];
+//       }
+//       */
+//       // create baseline context
+//       LIBSAKURA_SYMBOL(BaselineContext) *bl_context;
+//       status = 
+// 	LIBSAKURA_SYMBOL(CreateBaselineContext)(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
+// 						static_cast<uint16_t>(order), 
+// 						num_chan, 
+// 						&bl_context);
+//       if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+// 	std::cout << "   -- error occured in CreateBaselineContext()." << std::flush;
+//       }
+//       // get a data cube (npol*nchan*nrow) from VisBuffer
+//       get_data_cube_float(*vb, data_chunk);
+//       // get a flag cube (npol*nchan*nrow) from VisBuffer
+//       get_flag_cube(*vb, flag_chunk);
+//       // loop over MS rows
+//       for (size_t irow=0; irow < num_row; ++irow) {
+// 	// loop over polarization
+// 	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+// 	  // get a spectrum from data cube
+// 	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+// 	  // get a channel mask from data cube
+// 	  // (note that mask used here is actually a flag)
+// 	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+// 	  // convert flag to mask by taking logical NOT of flag
+// 	  // and then operate logical AND with in_mask
+// 	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+// 	    mask.data[ichan] = in_mask[ichan] && (!(mask.data[ichan]));
+// 	  }
+// 	  // actual execution of single spectrum
+// 	  status = 
+// 	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
+// 					       clip_threshold_sigma, num_fitting_max, 
+// 					       true, mask.data, spec.data, &bl_status);
+// 	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+// 	    //raise exception?
+// 	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
+// 	  }
+// 	  // set back a spectrum to data cube
+// 	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+// 	} // end of polarization loop
+//       } // end of MS row loop
+//       // write back data cube to VisBuffer
+//       set_data_cube_float(*vb, data_chunk);
+//       vb->writeChangesBack();
+//       // destroy baseline context
+//       status =
+//         LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_context);
+//       if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+// 	//raise exception?
+// 	std::cout << "   -- error occured in DestroyBaselineContext()." << std::flush;
+//       }
+//     } // end of vi loop
+//   } // end of chunk loop
 
-  double tend = gettimeofday_sec();
-  std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
-  // clean-up Sakura -- temporarily placed here, though this should be done in casapy-side
-  SakuraUtils::CleanUpSakura();
+//   double tend = gettimeofday_sec();
+//   std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+//   // clean-up Sakura -- temporarily placed here, though this should be done in casapy-side
+//   SakuraUtils::CleanUpSakura();
 }
 
-void SingleDishMS::scale(float const factor)
+void SingleDishMS2::scale(float const factor,
+			  string const& in_column_name,
+			  string const& out_ms_name)
 {
   LogIO os(_ORIGIN);
   os << "Multiplying scaling factor = " << factor << LogIO::POST;
@@ -505,18 +424,15 @@ void SingleDishMS::scale(float const factor)
   // no iteration is necessary for the processing.
   // procedure
   // 1. iterate over MS
-  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+  // 2. pick single spectrum from in_column
   // 3. multiply a scaling factor to each spectrum
   // 4. put single spectrum (or a block of spectra) to out_column
-  prepare_for_process();
-  Block<Int> columns(1);
-  columns[0] = MS::DATA_DESC_ID;
-  vi::SortColumns sc(columns,False);
-  vi::VisibilityIterator2 vi(*mssel_,sc,True);
-  vi::VisBuffer2 *vb = vi.getVisBuffer();
+  prepare_for_process(in_column_name, out_ms_name);
+  vi::VisibilityIterator2 *vi = sdh_->getVisIter();
+  vi::VisBuffer2 *vb = vi->getVisBuffer();
 
-  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
-    for (vi.origin(); vi.more(); vi.next()) {
+  for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
+    for (vi->origin(); vi->more(); vi->next()) {
       size_t const num_chan = static_cast<size_t>(vb->nChannels());
       size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
       size_t const num_row = static_cast<size_t>(vb->nRows());
@@ -539,14 +455,14 @@ void SingleDishMS::scale(float const factor)
 	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum);
 	} // end of polarization loop
       } // end of MS row loop
-      // write back data cube to VisBuffer
-      set_data_cube_float(*vb, data_chunk);
-      vb->writeChangesBack();
+      // write back data cube to Output MS
+      sdh_->fillCubeToOutputMs(vb, data_chunk);
     } // end of vi loop
   } // end of chunk loop
+  finalize_process();
 }
 
-void SingleDishMS::do_scale(float const factor,
+void SingleDishMS2::do_scale(float const factor,
 			    size_t const num_data, float *data)
 {
   for (size_t i=0; i < num_data; ++i) 
