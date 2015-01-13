@@ -18,8 +18,8 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1, width=0.5, elon
 		else:
 			raise Exception, 'Infile data set not found - please verify the name'
 
-		if((type(calmode)==str) and calmode!='tsys'): 
-			raise Exception, 'A calmode must be tsys'
+                if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps']): 
+			raise Exception, 'A calmode must be either \'ps\' or \'tsys\''
 
 		if (outfile==''):
                      raise Exception, 'A outfile name must be specified'
@@ -59,8 +59,10 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1, width=0.5, elon
                             caltype=caltype,parameter=parameter,infile2=infile2)
 
 """
+                calmodemap = {'tsys': 'tsys',
+                              'ps': 'sdsky_ps'}
 		cb.specifycal(caltable=outfile,time="",spw=spw,pol=pol,
-                            caltype=calmode)
+                            caltype=calmodemap[calmode])
 
 
 
