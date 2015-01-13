@@ -1633,11 +1633,6 @@ class sdcal2_applycal_flag2(sdcal2_flag_base):
         
     def test_validsky_validtsys(self):
         """test_validsky_validtsys:"""
-        #outfile = self.prefix + '_cal'
-        #applytable = self.applytable('valid', 'valid')
-        #sdcal2(infile=self.rawfile, outfile=outfile, calmode='apply',
-        #       spwmap=self.spwmap, applytable=applytable)
-        #self._verify_flag(self.rawfile, outfile, False)
         self._test('valid', 'valid', False)
 
     def test_validsky_notsys(self):
