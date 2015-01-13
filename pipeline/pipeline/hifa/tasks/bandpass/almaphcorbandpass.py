@@ -133,49 +133,58 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
     def _get_best_phaseup_solint(self, snr_result):
         inputs = self.inputs
 
-        # Look for missing estimates.
-        nmissing = 0
+	# Number of expected results.
+        nexpected = len(snr_result.spwids)
+	quanta = casatools.quanta
+
+        # Look for missing and bad solutions.
+	#    Adjust the estimates for poor solutions to the
+	#    best acceptable value
+        nmissing = 0; tmpsolints = []
         for i in range(len(snr_result.spwids)):
             if not snr_result.phsolints[i]:
-                nmissing = nmissing + 1
+	        nmissing = nmissing + 1
                 LOG.warn('No phaseup solint estimate for spw %s in MS %s' % \
                          (snr_result.spwids[i], inputs.ms.basename))
-
-        # If any missing values return default value.
-        if nmissing > 1:
-            LOG.warn('Reverting to phaseup solint default %s for MS %s' % \
-                     (inputs.phaseupsolint, inputs.ms.basename))
-            return inputs.phaseupsolint
-
-        # Look for bad solutions.
-	#    Improve use of poor solutions
-        npoor = 0
-        for i in range(len(snr_result.spwids)):
+		continue
             if snr_result.nphsolutions[i] < inputs.phaseupnsols:
-                npoor = npoor + 1
-                LOG.warn('Phaseup solint for spw %s has %d points in MS %s' % \
+                LOG.warn('Phaseup solution for spw %s has only %d points in MS %s' % \
                          (snr_result.spwids[i], snr_result.nphsolutions[i], 
                          inputs.ms.basename))
+		factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
+		newsolint = quanta.tos(quanta.mul(snr_result.phsolints[i], factor))
+                LOG.warn('Resetting estimated phaseup solint for spw %s from %s to %s in MS %s' % \
+                         (snr_result.spwids[i], snr_result.phsolints[i], newsolint, inputs.ms.basename))
+	        tmpsolints.append(newsolint)
+	    else:
+	        tmpsolints.append(snr_result.phsolints[i])
 
-        # If any bad solutions return default value.
-        if npoor > 1:
+        # If all values are missing return default value.
+        if nmissing >= nexpected:
             LOG.warn('Reverting to phaseup solint default %s for MS %s' % \
                      (inputs.phaseupsolint, inputs.ms.basename))
             return inputs.phaseupsolint
 
         # If phaseup solints are all the same return the first one
-        if len(set(snr_result.phsolints)) is 1:
+        if len(set(tmpsolints)) is 1:
             LOG.info("Best phaseup solint estimate is '%s'" % \
-                     (snr_result.phsolints[0]))
-            return snr_result.phsolints[0]
+                     (tmpsolints[0]))
+            return tmpsolints[0]
 
         # Find  spws with the minimum number of phaseup solutions and
         # return the first phaseup solint
-        indices = [i for i,x in enumerate(snr_result.nphsolutions) 
-                   if x == min(snr_result.nphsolutions)]
-        LOG.info("Best phaseup solint estimate is '%s'" % \
-                 (snr_result.phsolints[indices[0]]))
-        return snr_result.phsolints[indices[0]]
+	best_solint = '0.0s'
+	for i in range(len(tmpsolints)):
+	    # Test for pre-existing 'int' times
+	    if tmpsolints[i] == 'int':
+	        continue
+	    if quanta.gt(tmpsolints[i], best_solint):
+	        best_solint = tmpsolints[i]
+	if best_solint == '0.0s':
+	    best_solint = 'int'
+	    
+        LOG.info("Best phaseup solint estimate is '%s'" % best_solint)
+        return best_solint
 
     # Compute the phaseup solution.
     def _do_phaseup(self, phaseupsolint='int'):
