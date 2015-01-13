@@ -29,8 +29,8 @@
 
 namespace casa {
 
-// For performance reasons, we prefer repeating code rather than
-// calling other functions which do the same thing. The performance
+// For performance reasons, we ensure code is inlined rather than
+// calling other functions. The performance
 // benefits become important for very large datasets
 
 #define _NLINEAR \
@@ -146,6 +146,69 @@ Bool StatisticsUtilities<T>::doMin(
 		return True;
 	}
 	return False;
+}
+
+/*
+#define _NLINEARSYM \
+	npts += 2; \
+	sum += 2*center; \
+
+#define _WLINEARSYM \
+	npts += 2; \
+	sumweights += 2*weight; \
+	wsum += 2*weight*center; \
+*/
+
+#define _NQUADSYM \
+	npts += 2; \
+	T reflect = 2*center - datum; \
+	sumsq += datum*datum + reflect*reflect; \
+	T diff = datum - center; \
+	nvariance += 2*diff*diff;
+
+#define _WQUADSYM \
+	npts += 2; \
+	sumweights += 2*weight; \
+	T reflect = 2*center - datum; \
+	wsumsq += weight*(datum*datum + reflect*reflect); \
+	T diff = datum - center; \
+	wnvariance += 2*weight*diff*diff;
+
+template <class T> void StatisticsUtilities<T>::accumulateSym (
+	Double& npts, T& nvariance,
+	T& sumsq, const T& datum, const T& center
+) {
+	_NQUADSYM
+}
+
+template <class T> void StatisticsUtilities<T>::waccumulateSym (
+	Double& npts, T& sumweights, T& wnvariance, T& wsumsq,
+	const T& datum, const T& weight, const T& center
+) {
+	_WQUADSYM
+}
+
+template <class T> template <class LocationType>
+void StatisticsUtilities<T>::accumulateSym (
+	Double& npts, T& nvariance,
+	T& sumsq, T& datamin,
+	T& datamax, LocationType& minpos, LocationType& maxpos,
+	const T& datum, const LocationType& location, const T& center
+) {
+	_NQUADSYM
+	_MAXMIN
+}
+
+template <class T> template <class LocationType>
+void StatisticsUtilities<T>::waccumulateSym (
+	Double& npts, T& sumweights, T& wnvariance,
+	T& wsumsq, T& datamin, T& datamax,
+	LocationType& minpos, LocationType& maxpos,
+	const T& datum, const T& weight, const LocationType& location,
+	const T& center
+) {
+	_WQUADSYM
+	_MAXMIN
 }
 
 }

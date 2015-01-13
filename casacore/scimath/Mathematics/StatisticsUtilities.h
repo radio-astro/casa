@@ -51,7 +51,7 @@ public:
 	// <group>
 	// accumulate values. It is the responsibility of the caller to keep track
 	// of the accumulated values after each call. This class does not since it
-	// has not state.
+	// has no state.
 	// The accumulation derivation for mean and variance can be found at
 	// www.itl.nist.gov/div898/software/dataplot/refman2/ch2/weighvar.pdf
 	// nvariance is an accumulated value. It is related to the variance via
@@ -61,7 +61,7 @@ public:
 	// It's basic definition is nvariance = sum((x_i - mean)**2),
 	// wnvariance = sum((weight_i*(x_i - mean)**2)
 	// npts is a Double rather than an Int64 because of compilation issues when T is a Complex
-	static void accumulate (
+	inline static void accumulate (
 		Double& npts, T& sum, T& mean, const T& datum
 	);
 
@@ -69,18 +69,18 @@ public:
 	// callers should ensure that the weigth is not zero before calling this method,
 	// and shouldn't call this method if the weight is 0. Expect a segfault because of
 	// division by zero if sumweights and weight are both zero.
-	static void waccumulate (
+	inline static void waccumulate (
 		Double& npts, T& sumweights, T& wsum, T& wmean,
 		const T& datum, const T& weight
 	);
 
-	static void accumulate (
+	inline static void accumulate (
 		Double& npts, T& sum, T& mean, T& nvariance,
 		T& sumsq, const T& datum
 	);
 
 	// wsumsq is the weighted sum of squares, sum(w_i*x_i*x_i)
-	static void waccumulate (
+	inline static void waccumulate (
 		Double& npts, T& sumweights, T& wsum,
 		T& wmean, T& wnvariance, T& wsumsq,
 		const T& datum, const T& weight
@@ -91,7 +91,7 @@ public:
 	// The assignment operator of class LocationType should use copy, not reference,
 	// semantics.
 	template <class LocationType>
-	static void accumulate (
+	inline static void accumulate (
 		Double& npts, T& sum, T& mean, T& nvariance,
 		T& sumsq, T& datamin,
 		T& datamax, LocationType& minpos, LocationType& maxpos,
@@ -99,42 +99,86 @@ public:
 	);
 
 	template <class LocationType>
-	static void waccumulate (
+	inline static void waccumulate (
 		Double& npts, T& sumofweights, T& sum, T& mean,
 		T& nvariance, T& sumsq, T& datamin, T& datamax,
 		LocationType& minpos, LocationType& maxpos,
 		const T& datum, const T& weight, const LocationType& location
 	);
 
-	// <group>
+	// </group>
 
 	// <group>
 	// return True if the max or min was updated, False otherwise.
 	template <class LocationType>
-	static Bool doMax(
+	inline static Bool doMax(
 		T& datamax, LocationType& maxpos, Bool isFirst,
 		const T& datum, const LocationType& location
 	);
 
 	template <class LocationType>
-	static Bool doMin(
+	inline static Bool doMin(
 		T& datamin, LocationType& minpos, Bool isFirst,
 		const T& datum, const LocationType& location
 	);
 	// </group>
 
+	// <group>
+	// These versions are for symmetric accumulation about a specified center
+	// point. The actual point is accumulated, as is a "virtual" point that is
+	// symmetric about the specified center. Of course, the trivial relationship
+	// that the mean is the specified center is used to simplify things.
+	/*
+	inline static void accumulateSym (
+		Double& npts, T& sum, const T& datum, const T& center
+	);
+	*/
+
+	/*
+	inline static void waccumulateSym (
+		Double& npts, T& sumweights, T& wsum,
+		const T& datum, const T& weight, const T& center
+	);
+	*/
+
+	inline static void accumulateSym (
+		Double& npts, T& nvariance,
+		T& sumsq, const T& datum, const T& center
+	);
+
+	// wsumsq is the weighted sum of squares, sum(w_i*x_i*x_i)
+	inline static void waccumulateSym (
+		Double& npts, T& sumweights,
+		T& wnvariance, T& wsumsq,
+		const T& datum, const T& weight, const T& center
+	);
+
+	// <src>maxpos</src> and <src>minpos</src> refer to actual, not
+	// virtually created, data only.
+	template <class LocationType>
+	inline static void accumulateSym (
+		Double& npts, T& nvariance,
+		T& sumsq, T& datamin,
+		T& datamax, LocationType& minpos, LocationType& maxpos,
+		const T& datum, const LocationType& location, const T& center
+	);
+
+	template <class LocationType>
+	inline static void waccumulateSym (
+		Double& npts, T& sumofweights,
+		T& nvariance, T& sumsq, T& datamin, T& datamax,
+		LocationType& minpos, LocationType& maxpos,
+		const T& datum, const T& weight, const LocationType& location,
+		const T& center
+	);
+
+	// </group>
 	// This does the obvious conversions. The Complex and DComplex versions
 	// (implemented after the class definition) are used solely to permit compilation. In general, these versions should
 	// never actually be called
 	inline static Int getInt(const T& v) {
 		return (Int)v;
 	}
-/*
-	template <class U>
-	inline static U convert(const T& v) {
-		return (U)v;
-	}
-	*/
 
 private:
 	StatisticsUtilities() {}
@@ -153,15 +197,6 @@ template<>
 inline Int StatisticsUtilities<casa::DComplex>::getInt(const casa::DComplex&) {
 	ThrowCc("Logic Error: This version for complex data types should never be called");
 }
-
-/*
-template<>
-template <class T>
-inline casa::DComplex StatisticsUtilities<T>::convert<casa::DComplex>(const T&) {
-	ThrowCc("Logic Error: This version for complex data types should never be called");
-}
-*/
-
 
 }
 
