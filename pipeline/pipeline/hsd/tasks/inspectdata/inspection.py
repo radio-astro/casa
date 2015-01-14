@@ -3,8 +3,10 @@ from __future__ import absolute_import
 import re
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
 from pipeline.domain.datatable import DataTableImpl as DataTable
+import pipeline.domain as domain
 from .. import common
 from . import reader
 from . import analyser
@@ -48,9 +50,51 @@ class SDInspectDataResults(common.SingleDishResults):
         # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
 
-        # merge
+        # merge to observing_run
         context.observing_run.merge_inspection(instance=datatable, **self.outcome)
+        
+        # update callibrary
+        if isinstance(context.observing_run, domain.ScantableList):
+            self.update_callibrary(context)
 
+    def update_callibrary(self, context):
+        callib = context.callibrary
+        apply_list = []
+        for st in context.observing_run:
+            ms = st.ms
+            vis = ms.name
+            basename = ms.basename
+            antenna = st.antenna.name
+            LOG.debug('Processing %s antenna %s'%(basename, antenna))
+            tsys_strategy = st.calibration_strategy['tsys_strategy']
+            spwmap = {}
+            for pairs in tsys_strategy:
+                tsysspw = pairs[0]
+                targetspw = pairs[1]
+                if not spwmap.has_key(tsysspw):
+                    spwmap[tsysspw] = []
+                spwmap[tsysspw].append(targetspw)
+            calto = callibrary.CalTo(vis=vis,
+                                     spw=','.join(map(str,[v[1] for v in tsys_strategy])),
+                                     antenna=antenna,
+                                     intent='TARGET,REFERENCE')
+            calstate = callib.get_calstate(calto)
+            calfroms = calstate.merged().values()[0]
+            LOG.debug('There are %s calfrom objects %s'%(len(calfroms),map(lambda x: x.caltype, calfroms)))
+            for calfrom in calfroms:
+                if calfrom.caltype == 'tsys':
+                    newcalfrom = callibrary.SDCalFrom(gaintable=calfrom.gaintable,
+                                                      interp='',
+                                                      spwmap=spwmap,
+                                                      caltype=calfrom.caltype)
+                    apply_list.append([calto, newcalfrom])
+                else:
+                    apply_list.append([calto, calfrom])
+
+        context.callibrary.clear()
+        for (calto, calfrom) in apply_list:
+            context.callibrary.add(calto, calfrom)
+            
     def _outcome_name(self):
         name = self.outcome['name']
         return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
