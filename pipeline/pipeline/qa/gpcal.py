@@ -121,11 +121,12 @@ def gpcal_calc(caltable):
                     # Unwrap the difference
                     phase2 = np.unwrap(np.array(phase2))
 
-                    # Outlier removal turned off according to CAS-6804
-                    #if removeoutliers == True:
-                    #    phase2Median = np.median(phase2)
-                    #    phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
-                    #    phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 3*phase2MAD]
+                    # Outlier removal turned on according to new comments in
+                    # CAS-6804. Threshold changed to 5 sigma.
+                    if removeoutliers == True:
+                        phase2Median = np.median(phase2)
+                        phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
+                        phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 5*phase2MAD]
  
                     if len(phase2) == 0:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
