@@ -83,13 +83,6 @@ class Tsyscal(basetask.StandardTaskTemplate):
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
-        # remove any flagging file associated with this caltable
-#        flagcmdfile = '%s_flagcmds.txt' % gencal_args['caltable']
-#        if os.path.exists(flagcmdfile):
-#            LOG.warning('deleting old flagging file: %s' % os.path.basename(
-#              flagcmdfile))
-#            os.system('rm -fr %s' % flagcmdfile)
-
         LOG.todo('tsysspwmap heuristic re-reads measurement set!')
         LOG.todo('tsysspwmap heuristic won\'t handle missing file')
         nospwmap, spwmap = tsysspwmap(ms=inputs.ms, tsystable=gencal_args['caltable'],
