@@ -6,6 +6,7 @@ import pipeline.infrastructure.casatools as casatools
 from .basecleansequence import BaseCleanSequence
 from .imagecentrethresholdsequence import ImageCentreThresholdSequence
 from .iterativesequence import IterativeSequence
+from .iterativesequence2 import IterativeSequence2
 from . import cleanbase
 
 from pipeline.hif.heuristics import cleanbox as cbheuristic
@@ -128,16 +129,12 @@ class Clean(cleanbase.CleanBase):
 
 	try:
 	    result = None
-            if inputs.imagermode == 'mosaic':
-                # Remove rows in POINTING table - bug workaround.
-                #    May no longer be necesssary
-                self._empty_pointing_table()
-	        LOG.info('Temporarily remove pointing table')
 
             # delete any old files with this naming root. One of more
             # of these (don't know which) will interfere with this run.
             LOG.info('deleting %s*.iter*' % inputs.imagename)
-            os.system('rm -fr %s*.iter*' % inputs.imagename)
+            shutil.rmtree('%s*.iter*' % inputs.imagename, ignore_errors=True)
+#            os.system('rm -fr %s*.iter*' % inputs.imagename)
 
             # Get an empirical noise estimate by generating Q or V image.
             #    Assumes presence of XX and YY, or RR and LL
@@ -165,6 +162,10 @@ class Clean(cleanbase.CleanBase):
             elif inputs.hm_masking == 'psfiter':
                 sequence_manager = IterativeSequence(
                   maxncleans=inputs.maxncleans)
+
+            elif inputs.hm_masking == 'psfiter2':
+                sequence_manager = IterativeSequence2(
+                  maxncleans=inputs.maxncleans)
     
             result = self._do_iterative_imaging(
               sequence_manager=sequence_manager, result=result)
@@ -173,10 +174,7 @@ class Clean(cleanbase.CleanBase):
             raise Exception, '%s/%s/SpW%s Iterative imaging error: %s' % (
               inputs.intent, inputs.field, inputs.spw, str(e))
 	finally:
-            if inputs.imagermode == 'mosaic':
-                # restore POINTING table to input state
-                self._restore_pointing_table()
-                LOG.info('Restored pointing table')
+            pass
 
 	return result
 
