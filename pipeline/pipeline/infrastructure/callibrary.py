@@ -1267,6 +1267,10 @@ class SDCalLibrary(CalLibrary):
         self._context = context
         self._active = SDCalState()
         self._applied = SDCalState()
+        
+    def clear(self):
+        self._active = SDCalState()
+        self._applied = SDCalState()
 
     def _add(self, calto, calfroms, calstate):
         if type(calfroms) is not types.ListType:
