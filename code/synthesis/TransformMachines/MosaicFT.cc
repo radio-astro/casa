@@ -309,7 +309,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   phaseShifter_p=new UVWMachine(*uvwMachine_p);
   //findConvFunction(*image, vb);
   prepGridForDegrid();
-  cerr << "initializeToVis lastfield " << lastFieldId_p << endl; 
+  //cerr << "initializeToVis lastfield " << lastFieldId_p << endl; 
 
 }
 
