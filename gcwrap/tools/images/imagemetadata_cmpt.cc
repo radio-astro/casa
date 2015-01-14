@@ -82,7 +82,7 @@ bool imagemetadata::open(const std::string& infile) {
 		) {
 			_header.reset(
 				new ImageMetaDataRW(
-					std::tr1::shared_ptr<ImageInterface<Complex> >(
+					CountedPtr<ImageInterface<Complex> >(
 						dynamic_cast<ImageInterface<Complex> *>(latt.transfer())
 					)
 				)
@@ -91,7 +91,7 @@ bool imagemetadata::open(const std::string& infile) {
 		else if (dataType == TpFloat) {
 			_header.reset(
 				new ImageMetaDataRW(
-					std::tr1::shared_ptr<ImageInterface<Float> >(
+					CountedPtr<ImageInterface<Float> >(
 						dynamic_cast<ImageInterface<Float> *>(latt.transfer())
 					)
 				)

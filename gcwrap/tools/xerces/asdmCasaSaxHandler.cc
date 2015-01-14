@@ -13,7 +13,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableColumn.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableLock.h>
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Exceptions/Error.h>
@@ -24,7 +24,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <ctype.h>

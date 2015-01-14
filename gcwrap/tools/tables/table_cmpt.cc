@@ -14,13 +14,13 @@
 #include <iostream>
 #include <table_cmpt.h>
 #include <casa/aips.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/IncrStManAccessor.h>
-#include <tables/Tables/MemoryStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
+#include <tables/DataMan/IncrStManAccessor.h>
+#include <tables/DataMan/MemoryStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableColumn.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableLock.h>
 #include <fits/FITS/FITSTable.h>
 #include <fits/FITS/SDFITSTable.h>
@@ -41,13 +41,13 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/PlainTable.h>
 #include <casa/Utilities/Regex.h>
 // jagonzal: Needed for ISM error detection tool
-#include <tables/Tables/DataManError.h>
+#include <tables/DataMan/DataManError.h>
 
 
 using namespace std;

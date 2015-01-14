@@ -7,7 +7,7 @@
 #include <measures/Measures/Stokes.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <memory>
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 namespace casa {
 	class GaussianBeam;

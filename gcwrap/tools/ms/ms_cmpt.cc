@@ -63,7 +63,7 @@
 #include <casa/OS/DOos.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/TableCopy.h>
 #include <casa/System/ObjectID.h>
@@ -754,7 +754,7 @@ ms::getfielddirmeas(
       String f(format);
       f.downcase();
       if (f.startsWith("s")) {
-    	  return new variant(d.toString());
+          return new variant(String::toString(d));
       }
       MeasureHolder out(d);
       

@@ -94,7 +94,7 @@
 #include <casa/namespace.h>
 
 #include <memory>
-#include <tr1/memory>
+#include <casa/Utilities/CountedPtr.h>
 
 #include <stdcasa/cboost_foreach.h>
 #include <boost/assign/std/vector.hpp>
@@ -115,7 +115,7 @@ _log(), _image(new ImageAnalysis()) {}
 // using a shared_ptr
 
 image::image(casa::ImageInterface<casa::Float> *inImage) :
-	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Float> >(inImage))) {
+	_log(), _image(new ImageAnalysis(CountedPtr<ImageInterface<Float> >(inImage))) {
 	try {
 		_log << _ORIGIN;
 
@@ -128,7 +128,7 @@ image::image(casa::ImageInterface<casa::Float> *inImage) :
 }
 
 image::image(ImageInterface<Complex> *inImage) :
-	_log(), _image(new ImageAnalysis(std::tr1::shared_ptr<ImageInterface<Complex> >(inImage))) {
+	_log(), _image(new ImageAnalysis(CountedPtr<ImageInterface<Complex> >(inImage))) {
 	try {
 		_log << _ORIGIN;
 
@@ -166,7 +166,7 @@ image::image(SPIIC inImage) :
 	}
 }
 
-image::image(std::tr1::shared_ptr<ImageAnalysis> ia) :
+image::image(CountedPtr<ImageAnalysis> ia) :
 	_log(), _image(ia) {
 	try {
 		_log << _ORIGIN;
@@ -238,7 +238,7 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 			return False;
 		}
 
-		std::tr1::shared_ptr<Record> pRegion = _getRegion(region, False);
+		CountedPtr<Record> pRegion = _getRegion(region, False);
 		_image->addnoise(type, pars, *pRegion, zeroIt);
 
 		_stats.reset(0);
@@ -298,7 +298,7 @@ image * image::collapse(
 		else {
 			ThrowCc("Unsupported type for parameter axes");
 		}
-		std::tr1::shared_ptr<Record> regRec = _getRegion(region, True);
+		CountedPtr<Record> regRec = _getRegion(region, True);
 		String aggString = function;
 		aggString.trim();
 		aggString.downcase();
@@ -354,7 +354,7 @@ image* image::imagecalc(
 	const bool overwrite
 ) {
 	try {
-		std::tr1::shared_ptr<ImageAnalysis> ia(new ImageAnalysis());
+		CountedPtr<ImageAnalysis> ia(new ImageAnalysis());
         ia->imagecalc(outfile, pixels, overwrite);
         return  new image(ia);
 	}
@@ -450,7 +450,7 @@ bool image::fromarray(const std::string& outfile,
 		else if (pixels.type() == ::casac::variant::COMPLEXVEC) {
 			vector<std::complex<double> > pixelVector = pixels.getComplexVec();
 			complexArray.resize(IPosition(shape));
-			Vector<Complex> localpix(pixelVector);
+			Vector<DComplex> localpix(pixelVector);
 			convertArray(complexArray, localpix.reform(IPosition(shape)));
 		}
 		else {
@@ -582,7 +582,7 @@ bool image::fromimage(const string& outfile, const string& infile,
 		}
 
 		//auto_ptr<Record> regionPtr(toRecord(region));
-		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, False));
+		CountedPtr<Record> regionPtr(_getRegion(region, False));
 		return _image->imagefromimage(outfile, infile, *regionPtr, theMask,
 				dropdeg, overwrite);
 	} catch (const AipsError& x) {
@@ -759,7 +759,7 @@ template<class T> image* image::_adddegaxes(
 				<< LogIO::EXCEPTION;
 		}
 
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		return new image(
 			_image->convolve(
 				outFile, kernelArray,
@@ -781,7 +781,7 @@ image::boundingbox(const variant& region) {
 		if (detached()) {
 			return 0;
 		}
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		return fromRecord(*_image->boundingbox(*Region));
 	}
 	catch (const AipsError& x) {
@@ -803,7 +803,7 @@ image* image::boxcar(
 		throw AipsError("Unable to create image");
 	}
 	try {
-		std::tr1::shared_ptr<const Record> myregion = _getRegion(
+		CountedPtr<const Record> myregion = _getRegion(
 			region, True
 		);
 		String mask = vmask.toString();
@@ -881,7 +881,7 @@ image* image::boxcar(
 }
 
 template <class T> image* image::_boxcar(
-	SPCIIT myimage, std::tr1::shared_ptr<const Record> region,
+	SPCIIT myimage, CountedPtr<const Record> region,
 	const String& mask, const string& outfile, bool overwrite,
 	bool stretch, int axis, int width, bool drop,
 	ImageDecimatorData::Function dFunction, const LogOrigin& lor,
@@ -977,12 +977,12 @@ image* image::continuumsub(
 		if (detached()) {
 			return 0;
 		}
-		std::tr1::shared_ptr<Record> leRegion = _getRegion(region, False);
+		CountedPtr<Record> leRegion = _getRegion(region, False);
 		Vector<Int> theChannels(channels);
 		if (theChannels.size() == 1 && theChannels[0] == -1) {
 			theChannels.resize(0);
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > theResid(
+		CountedPtr<ImageInterface<Float> > theResid(
 			_image->continuumsub(
 				outline, outcont, *leRegion, theChannels,
 				pol, in_fitorder, overwrite
@@ -1051,7 +1051,7 @@ image* image::convolve2d(
 			throw AipsError("Unable to create image");
 		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 
 		if (mask == "[]") {
@@ -1215,7 +1215,7 @@ image* image::decimate(
 		else {
 			ThrowCc("Unsupported decimation method " + method);
 		}
-		std::tr1::shared_ptr<Record> regPtr(_getRegion(region, True));
+		CountedPtr<Record> regPtr(_getRegion(region, True));
 		vector<String> msgs;
 		{
 			msgs.push_back("Ran ia.decimate() on image " + _name());
@@ -1276,7 +1276,7 @@ template <class T> image* image::_decimate(
 	const SPCIIT myimage,
 	const string& outfile, int axis, int factor,
 	ImageDecimatorData::Function f,
-	const std::tr1::shared_ptr<Record> region,
+	const CountedPtr<Record> region,
 	const string& mask, bool overwrite, bool stretch,
 	const vector<String>& msgs
 ) const {
@@ -1349,7 +1349,7 @@ image::decompose(const variant& region, const ::casac::variant& vmask,
 			"Threshold = " + String::toString(Threshold)
 			+ ". You must specify a nonnegative threshold"
 		);
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -1661,7 +1661,7 @@ bool image::fft(
 			return false;
 		}
 
-		std::tr1::shared_ptr<Record> myregion(_getRegion(region, False));
+		CountedPtr<Record> myregion(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -1726,7 +1726,7 @@ image::findsources(const int nMax, const double cutoff,
 			return rstat;
 		}
 
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]")
 			mask = "";
@@ -1775,7 +1775,7 @@ record* image::fitprofile(const string& box, const variant& region,
 			"This method only supports Float valued images"
 		);
 		String regionName;
-		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		CountedPtr<Record> regionPtr = _getRegion(region, True);
 		if (ngauss < 0) {
 			_log << LogIO::WARN
 				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
@@ -2071,7 +2071,7 @@ image* image::transpose(
 				"be either an integer or a string"
 			);
 		}
-		std::tr1::shared_ptr<Record> regionRecord = _getRegion(region, True);
+		CountedPtr<Record> regionRecord = _getRegion(region, True);
 		vector<String> msgs;
 		Bool doImages = ! residual.empty() || ! model.empty();
 
@@ -2371,7 +2371,7 @@ image* image::pbcor(
 			)
 		);
 		pbcor->setStretch(stretch);
-        std::tr1::shared_ptr<ImageInterface<Float> > corrected(pbcor->correct(True));
+        CountedPtr<ImageInterface<Float> > corrected(pbcor->correct(True));
 		return new image(corrected);
 	}
 	catch (const AipsError& x) {
@@ -2391,9 +2391,9 @@ record* image::getprofile(
 		ThrowIf(
 			detached(), "Unable to create image"
 		);
-		std::tr1::shared_ptr<Record> myregion(_getRegion(region, False));
+		CountedPtr<Record> myregion(_getRegion(region, False));
 
-		std::tr1::shared_ptr<casa::Quantity> rfreq;
+		CountedPtr<casa::Quantity> rfreq;
 		if (restfreq.type() != variant::BOOLVEC) {
 			String rf = restfreq.toString();
 			rf.trim();
@@ -2456,7 +2456,7 @@ variant* image::getregion(
 		if (detached()) {
 			return false;
 		}
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
@@ -2578,7 +2578,7 @@ image* image::hanning(
 		throw AipsError("Unable to create image");
 	}
 	try {
-		std::tr1::shared_ptr<const Record> myregion = _getRegion(
+		CountedPtr<const Record> myregion = _getRegion(
 			region, True
 		);
 		String mask = vmask.toString();
@@ -2639,7 +2639,7 @@ image* image::hanning(
 }
 
 template <class T> image* image::_hanning(
-	SPCIIT myimage, std::tr1::shared_ptr<const Record> region,
+	SPCIIT myimage, CountedPtr<const Record> region,
 	const String& mask, const string& outfile, bool overwrite,
 	bool stretch, int axis, bool drop,
 	ImageDecimatorData::Function dFunction,
@@ -2693,7 +2693,7 @@ record* image::histograms(
 		return 0;
 	}
 	try {
-		std::tr1::shared_ptr<Record> regionRec(_getRegion(region, False));
+		CountedPtr<Record> regionRec(_getRegion(region, False));
 		String Mask;
 		if (mask.type() == variant::BOOLVEC) {
 			Mask = "";
@@ -2771,7 +2771,7 @@ bool image::insert(
 		if (locatePixel.size() == 1 && locatePixel[0] < 0) {
 			locatePixel.resize(0);
 		}
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		if (_image->insert(infile, *Region, locatePixel, verbose)) {
 			_stats.reset(0);
 			return True;
@@ -2840,7 +2840,7 @@ bool image::makecomplex(const std::string& outFile,
 		if (detached()) {
 			return rstat;
 		}
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		rstat = _image->makecomplex(outFile, imagFile, *Region, overwrite);
 	}
 	catch (const AipsError& x) {
@@ -2905,7 +2905,7 @@ bool image::modify(
 	try {
 		String error;
 		std::auto_ptr<Record> Model(toRecord(model));
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -2937,7 +2937,7 @@ image::maxfit(const variant& region, const bool doPoint,
 		if (detached()) {
 			return rstat;
 		}
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		rstat = fromRecord(_image->maxfit(*Region, doPoint, width, absFind,
 				list));
 
@@ -2971,7 +2971,7 @@ image::moments(
 		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Vector<Int> whichmoments(moments);
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3013,7 +3013,7 @@ image::moments(
 			for (int i = 0; i < num; i++)
 				excludepix[i] = d_excludepix[i];
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > outIm(
+		CountedPtr<ImageInterface<Float> > outIm(
 			_image->moments(
 				whichmoments, axis,
 				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
@@ -3086,7 +3086,7 @@ image* image::pad(
 		if (npixels <= 0) {
 			_log << "Value of npixels must be greater than zero" << LogIO::EXCEPTION;
 		}
-		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		CountedPtr<Record> regionPtr = _getRegion(region, True);
 
 		ImagePadder padder(
 			_image->getImage(), regionPtr.get(), box,
@@ -3094,7 +3094,7 @@ image* image::pad(
 		);
 		padder.setStretch(stretch);
 		padder.setPaddingPixels(npixels, value, padmask);
-		tr1::shared_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
+		CountedPtr<ImageInterface<Float> > out(padder.pad(wantreturn));
 		if (wantreturn) {
 			return new image(out);
 		}
@@ -3130,7 +3130,7 @@ image* image::crop(
 		    }
         }
         std::set<uInt> saxes(axes.begin(), axes.end());
-		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		CountedPtr<Record> regionPtr = _getRegion(region, True);
 
 		ImageCropper<Float> cropper(
 			_image->getImage(), regionPtr.get(), box,
@@ -3138,7 +3138,7 @@ image* image::crop(
 		);
 		cropper.setStretch(stretch);
         cropper.setAxes(saxes);
-        std::tr1::shared_ptr<ImageInterface<Float> > out(cropper.crop(wantreturn));
+        CountedPtr<ImageInterface<Float> > out(cropper.crop(wantreturn));
 		if (wantreturn) {
 			return new image(out);
 		}
@@ -3322,7 +3322,7 @@ bool image::putregion(const ::casac::variant& v_pixels,
 			return False;
 		}
 
-		std::tr1::shared_ptr<Record> theRegion(_getRegion(region, False));
+		CountedPtr<Record> theRegion(_getRegion(region, False));
 		if (
 			_image->putregion(
 				pixels, mask, *theRegion, list, usemask,
@@ -3358,9 +3358,9 @@ image* image::pv(
 			! _image->isFloat(),
 			"This method only supports Float valued images"
 		);
-		std::tr1::shared_ptr<casa::MDirection> startMD, endMD, centerMD;
+		CountedPtr<casa::MDirection> startMD, endMD, centerMD;
 		Vector<Double> startPix, endPix, centerPix;
-		std::tr1::shared_ptr<casa::Quantity> lengthQ;
+		CountedPtr<casa::Quantity> lengthQ;
 		Double lengthD = 0;
 		if (! start.empty() && ! end.empty()) {
 			ThrowIf(
@@ -3438,7 +3438,7 @@ image* image::pv(
 			_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
-		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		CountedPtr<Record> regionPtr = _getRegion(region, True);
 		PVGenerator pv(
 			_image->getImage(), regionPtr.get(),
 			chans, stokes, mask, outfile, overwrite
@@ -3629,7 +3629,7 @@ image* image::regrid(
 			! coordinates.get(),
 			"Invalid specified coordinate system record."
 		);
-		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, True));
+		CountedPtr<Record> regionPtr(_getRegion(region, True));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3738,12 +3738,12 @@ image* image::rotate(
 		Vector<Int> shape(inshape);
 		Quantum<Double> pa(_casaQuantityFromVar(inpa));
 		//std::auto_ptr<Record> Region(toRecord(region));
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > pImOut(
+		CountedPtr<ImageInterface<Float> > pImOut(
 			_image->rotate(
 				outfile, shape, pa, *Region, mask, method,
 				decimate, replicate, dropdeg, overwrite, stretch
@@ -3787,7 +3787,7 @@ bool image::replacemaskedpixels(
 		return False;
 	}
 	try {
-		std::tr1::shared_ptr<Record> regionPtr = _getRegion(region, True);
+		CountedPtr<Record> regionPtr = _getRegion(region, True);
 
 		String mask = vmask.toString();
 		if (mask == "[]") {
@@ -3883,7 +3883,7 @@ image::restoringbeam(int channel, int polarization) {
 	}
 	try {
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
-		std::tr1::shared_ptr<Record> pRegion(_getRegion(region, False));
+		CountedPtr<Record> pRegion(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -3939,7 +3939,7 @@ image::restoringbeam(int channel, int polarization) {
 				smoothaxes[i] = i;
 			}
 		}
-		std::tr1::shared_ptr<ImageInterface<Float> > pImOut(
+		CountedPtr<ImageInterface<Float> > pImOut(
 			_image->sepconvolve(outFile,
 				smoothaxes, kernels, kernelwidths,
 				Scale, *pRegion, mask, overwrite,
@@ -3968,7 +3968,7 @@ bool image::set(
 		String pixels = vpixels.toString();
 		if (pixels == "[]")
 			pixels = "";
-		std::tr1::shared_ptr<Record> pRegion(_getRegion(region, False));
+		CountedPtr<Record> pRegion(_getRegion(region, False));
 
 		if (pixels == "" && pixelmask == -1) {
 			_log << LogIO::WARN
@@ -4205,7 +4205,7 @@ record* image::statistics(
 			! _image->isFloat(),
 			"This method only supports Float valued images"
 		);
-		std::tr1::shared_ptr<Record> regionRec(_getRegion(region, True));
+		CountedPtr<Record> regionRec(_getRegion(region, True));
 		String mtmp = mask.toString();
 		if (mtmp == "false" || mtmp == "[]") {
 			mtmp = "";
@@ -4247,7 +4247,7 @@ record* image::statistics(
 		}
 		else {
 			_stats->setMask(mtmp);
-			std::tr1::shared_ptr<Record> regionRec2(_getRegion(region, False));
+			CountedPtr<Record> regionRec2(_getRegion(region, False));
 			_stats->setRegion(*regionRec2);
 		}
 		_stats->setAxes(tmpaxes);
@@ -4284,7 +4284,7 @@ bool image::twopointcorrelation(
 	}
 	try {
 		String outFile(outfile);
-		std::tr1::shared_ptr<Record> Region(_getRegion(region, False));
+		CountedPtr<Record> Region(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -4317,7 +4317,7 @@ bool image::twopointcorrelation(
 			detached(),
 			"Unable to create image"
 		);
-		std::tr1::shared_ptr<Record> regionRec = _getRegion(region, False);
+		CountedPtr<Record> regionRec = _getRegion(region, False);
 		String regionStr = region.type() == variant::STRING
 			? region.toString()
 			: "";
@@ -4330,12 +4330,12 @@ bool image::twopointcorrelation(
 				<< "The resulting image will be inaccessible" << LogIO::POST;
 		}
 
-		tr1::shared_ptr<ImageAnalysis> ia;
+		CountedPtr<ImageAnalysis> ia;
 		if (_image->isFloat()) {
 			ia.reset(
 				new ImageAnalysis(
 					_subimage<Float>(
-						std::tr1::shared_ptr<ImageInterface<Float> >(
+						CountedPtr<ImageInterface<Float> >(
 							_image->getImage()->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
@@ -4348,7 +4348,7 @@ bool image::twopointcorrelation(
 			ia.reset(
 				new ImageAnalysis(
 					_subimage<Complex>(
-						std::tr1::shared_ptr<ImageInterface<Complex> >(
+						CountedPtr<ImageInterface<Complex> >(
 							_image->getComplexImage()->cloneII()
 						),
 						outfile, *regionRec, mask, dropDegenerateAxes,
@@ -4423,7 +4423,7 @@ bool image::tofits(
 			fitsfile == "." || fitsfile == "..",
 			"Invalid fitsfile name " + fitsfile
 		);
-		std::tr1::shared_ptr<Record> pRegion(_getRegion(region, False));
+		CountedPtr<Record> pRegion(_getRegion(region, False));
 		String mask = vmask.toString();
 		if (mask == "[]") {
 			mask = "";
@@ -4471,7 +4471,7 @@ bool image::toASCII(const std::string& outfile, const variant& region,
 		) {
 			Mask = mask.toString();
 		}
-		std::tr1::shared_ptr<Record> pRegion(_getRegion(region, False));
+		CountedPtr<Record> pRegion(_getRegion(region, False));
 		return _image->toASCII(
 			outfile, *pRegion, Mask, sep, format,
 			maskvalue, overwrite, stretch
@@ -4669,8 +4669,8 @@ image* image::newimagefromimage(
 			throw AipsError("Unable to create image");
 			return 0;
 		}
-		std::tr1::shared_ptr<Record> regionPtr(_getRegion(region, False, infile));
-        std::tr1::shared_ptr<ImageInterface<Float> >outIm(
+		CountedPtr<Record> regionPtr(_getRegion(region, False, infile));
+        CountedPtr<ImageInterface<Float> >outIm(
 			newImage->newimage(
 				infile, outfile,*regionPtr,
 				mask, dropdeg, overwrite
@@ -4698,7 +4698,7 @@ image* image::newimagefromfile(const std::string& fileName) {
 		image *rstat(0);
 		std::auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
-		std::tr1::shared_ptr<ImageInterface<Float> > outIm(
+		CountedPtr<ImageInterface<Float> > outIm(
 			newImage->newimagefromfile(fileName)
 		);
 		if (outIm.get() != 0) {
@@ -4768,7 +4768,7 @@ image* image::newimagefromarray(
 			return new image();
 		}
 		auto_ptr<Record> coordinates(toRecord(csys));
-        tr1::shared_ptr<ImageInterface<Float> > outIm(
+        CountedPtr<ImageInterface<Float> > outIm(
 			newImage->newimagefromarray(
 				outfile, pixelsArray, *coordinates,
 				linear, overwrite, log
@@ -4840,7 +4840,7 @@ image* image::newimagefromshape(
 		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
 		auto_ptr<Record> coordinates(toRecord(csys));
-        std::tr1::shared_ptr<ImageInterface<Float> > outIm(
+        CountedPtr<ImageInterface<Float> > outIm(
 			newImage->newimagefromshape(
 				outfile, Vector<Int>(shape), *coordinates,
 				linear, overwrite, log
@@ -4869,7 +4869,7 @@ image* image::newimagefromfits(
 		image *rstat(0);
 		auto_ptr<ImageAnalysis> newImage(new ImageAnalysis());
 		_log << _ORIGIN;
-        tr1::shared_ptr<ImageInterface<Float> > outIm(
+        CountedPtr<ImageInterface<Float> > outIm(
 			newImage->newimagefromfits(
 				outfile,
 				fitsfile, whichrep, whichhdu, zeroBlanks, overwrite
@@ -4997,7 +4997,7 @@ bool image::isconform(const string& other) {
 			throw AipsError("Unable to open image " + other);
 		}
 		std::auto_ptr<ImageInterface<Float> > x(oth);
-        std::tr1::shared_ptr<const ImageInterface<Float> > mine = _image->getImage();
+        CountedPtr<const ImageInterface<Float> > mine = _image->getImage();
 		if (mine->shape().isEqual(x->shape()) && mine->coordinates().near(
 				x->coordinates())) {
 			Vector<String> mc = mine->coordinates().worldAxisNames();
@@ -5020,12 +5020,12 @@ bool image::isconform(const string& other) {
 	}
 }
 
-std::tr1::shared_ptr<Record> image::_getRegion(
+CountedPtr<Record> image::_getRegion(
 	const variant& region, const bool nullIfEmpty, const string& otherImageName
 ) const {
 	switch (region.type()) {
 	case variant::BOOLVEC:
-		return std::tr1::shared_ptr<Record>(nullIfEmpty ? 0 : new Record());
+		return CountedPtr<Record>(nullIfEmpty ? 0 : new Record());
 	case variant::STRING: {
 		IPosition shape;
 		CoordinateSystem csys;
@@ -5061,7 +5061,7 @@ std::tr1::shared_ptr<Record> image::_getRegion(
 				csys = imagec->coordinates();
 			}
 		}
-		return std::tr1::shared_ptr<Record>(
+		return CountedPtr<Record>(
 			region.toString().empty()
 				? nullIfEmpty ? 0 : new Record()
 				: new Record(
@@ -5074,12 +5074,12 @@ std::tr1::shared_ptr<Record> image::_getRegion(
 	}
 	case variant::RECORD:
 		{
-			std::tr1::shared_ptr<variant> clon(region.clone());
-			return std::tr1::shared_ptr<Record>(
+			CountedPtr<variant> clon(region.clone());
+			return CountedPtr<Record>(
 				nullIfEmpty && region.size() == 0
 					? 0
 					: toRecord(
-						std::tr1::shared_ptr<variant>(region.clone())->asRecord()
+						CountedPtr<variant>(region.clone())->asRecord()
 					)
 			);
 		}
