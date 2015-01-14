@@ -7,6 +7,7 @@
 <task type="function" name="hifa_importdata" category="pipeline">
 <shortdescription>Imports data into the interferometry pipeline</shortdescription>
 <description>
+Imports data into the interferometry pipeline
 </description>
 <input>
     <param type="stringArray" name="vis">

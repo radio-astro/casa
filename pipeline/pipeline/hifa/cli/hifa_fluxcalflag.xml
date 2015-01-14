@@ -6,9 +6,9 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="hifa_fluxcalflag" category="pipeline">
-<shortdescription>Locate line regions in solar system flux calibrator spws</shortdescription>
+<shortdescription>Locate and flag line regions in solar system flux calibrators</shortdescription>
 <description>
-Locate line regions in solar system flux calibrator spws
+Locate and flag line regions in solar system flux calibrators
 </description>
 <input>
     <param type="stringArray" name="vis" subparam="true">

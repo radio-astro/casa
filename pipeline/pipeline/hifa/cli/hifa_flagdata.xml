@@ -6,7 +6,8 @@
 
 <task type="function" name="hifa_flagdata" category="pipeline">
 
-<shortdescription>Do basic flagging of a list of measurement sets</shortdescription>
+<shortdescription>Do basic flagging</shortdescription>
+<description>Do meta data based flagging of a list of measurement sets</description>
 
 <input>
 	<param type="stringArray" name="vis" subparam="true">
