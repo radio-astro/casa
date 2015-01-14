@@ -28,6 +28,7 @@
 #ifndef IMAGES_IMAGEDECONVOLVER_H
 #define IMAGES_IMAGEDECONVOLVER_H
 
+#include <casa/aips.h>
 #include <casa/aipstype.h>
 
 namespace casa {
