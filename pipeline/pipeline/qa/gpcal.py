@@ -5,6 +5,7 @@ import numpy as np
 import copy
 from casac import casac
 import scipy.special
+import utility.scorers as scorers
 
 
 def gpcal(caltable):
@@ -193,16 +194,8 @@ def gpcal_score(gpcal_stats):
     # Using average sigmas for now. Eric's report lists sigmas per band / frequency.
     # Need to check if we have to distinguish by band.
 
-    xySig1 = 4.25e-6
-    xySig3 = 8.4e-5
-    xyM = 6.0 / np.sqrt(2.0) / (xySig1 - xySig3)
-    xyB = 3.0 / np.sqrt(2.0) * (1.0 - 2.0 * xySig1 / (xySig1 - xySig3))
-
-    x2x1Sig1 = 3.08e-5
-    x2x1Sig3 = 2.24e-4
-    x2x1M = 6.0 / np.sqrt(2.0) / (x2x1Sig1 - x2x1Sig3)
-    x2x1B = 3.0 / np.sqrt(2.0) * (1.0 - 2.0 * x2x1Sig1 / (x2x1Sig1 - x2x1Sig3))
-
+    xyScorer = scorers.erfScorer(4.25e-6, 8.4e-5)
+    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
 
     for fieldId in gpcal_stats['STATS'].iterkeys():
 
@@ -223,8 +216,7 @@ def gpcal_score(gpcal_stats):
                     gpcal_scores['SCORES'][fieldId][spwId][antId] = {}
 
                 try:
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = \
-                        (scipy.special.erf(xyM * gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] + xyB) + 1.0) / 2.0
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = xyScorer(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
                     gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = \
                         min(gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
                     gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
@@ -239,8 +231,7 @@ def gpcal_score(gpcal_stats):
                     # flagged antennas. Need to decide how to account for these cases.
 
                 try:
-                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = \
-                        (scipy.special.erf(x2x1M * gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] + x2x1B) + 1.0) / 2.0
+                    gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = x2x1Scorer(gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'])
                     gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'] = \
                         min(gpcal_scores['SCORES'][fieldId]['X2X1_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'])
                     gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
