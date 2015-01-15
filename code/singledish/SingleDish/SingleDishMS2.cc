@@ -384,7 +384,7 @@ void SingleDishMS2::subtract_baseline2(string const& in_column_name,
 // 	  // actual execution of single spectrum
 // 	  status = 
 // 	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
-// 					       clip_threshold_sigma, num_fitting_max, 
+// 					       static_cast<uint16_t>(order), clip_threshold_sigma, num_fitting_max, 
 // 					       true, mask.data, spec.data, &bl_status);
 // 	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 // 	    //raise exception?

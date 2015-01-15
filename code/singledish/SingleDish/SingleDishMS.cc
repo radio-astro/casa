@@ -404,9 +404,6 @@ void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
   // 3. fit a polynomial to each spectrum and subtract it
   // 4. put single spectrum (or a block of spectra) to out_column
 
-  // initializing Sakura -- temporarily placed here, though this should be done in start-up of casapy eventually
-  SakuraUtils::InitializeSakura();
-
   double tstart = gettimeofday_sec();
 
   prepare_for_process();
@@ -467,8 +464,8 @@ void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
 	  // actual execution of single spectrum
 	  status = 
 	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, spec.data, mask.data, bl_context, 
-					       clip_threshold_sigma, num_fitting_max, 
-					       true, mask.data, spec.data, &bl_status);
+						    static_cast<uint16_t>(order), clip_threshold_sigma, num_fitting_max,
+						    true, mask.data, spec.data, &bl_status);
 	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
 	    //raise exception?
 	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
@@ -492,8 +489,6 @@ void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
 
   double tend = gettimeofday_sec();
   std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
-  // clean-up Sakura -- temporarily placed here, though this should be done in casapy-side
-  SakuraUtils::CleanUpSakura();
 }
 
 void SingleDishMS::scale(float const factor)
