@@ -149,7 +149,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.vis, table=inputs.caltable, inpfile=[])
+          vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
