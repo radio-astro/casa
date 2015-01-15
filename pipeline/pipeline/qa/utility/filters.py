@@ -5,7 +5,7 @@
 import numpy as np
 
 def outlierFilter(data, sigma):
-    dataMedian = np.median(data)
-    dataMAD = np.median(abs(data-dataMedian)) / 0.6745
-    filteredData = data[np.where(abs(data-dataMedian) < sigma * dataMAD)]
-    return filteredData
+    nData = np.array(data)
+    nDataMedian = np.median(nData)
+    nDataMAD = np.median(abs(nData-nDataMedian)) / 0.6745
+    return nData[np.where(abs(nData-nDataMedian) < sigma * nDataMAD)]
