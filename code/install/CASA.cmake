@@ -143,8 +143,22 @@ ENDMACRO (CASA_QT4_WRAP_UI)
 # the "-name" option to rcc is parametrized
 #
 MACRO (CASA_QT4_ADD_RESOURCES outfiles )
-  QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
-  
+
+# Later version of Qt4Macros.cmake added an output argument to
+# qt4_extract_options.  This causes the first resource file to be
+# lost if the old signature is used (jjacobs).  It's known that 2.8.5
+# uses the old signature and 2.8.12.2 uses the new signature;
+# the exact version where this cuts over could be somewhere 
+# in between; it's hard to track down.  The symptom here is
+# a link error complaiing about a missing symbol containing
+# "resource" in its signature.
+
+  if (CMAKE_VERSION VERSION_GREATER 2.8.5)
+    QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
+  else ()
+    QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
+  endif (CMAKE_VERSION VERSION_GREATER 2.8.5)
+
   FOREACH (it ${rcc_files})
     GET_FILENAME_COMPONENT(outfilename ${it} NAME_WE)
     GET_FILENAME_COMPONENT(infile ${it} ABSOLUTE)
