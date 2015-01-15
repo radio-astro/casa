@@ -6,6 +6,7 @@ import copy
 from casac import casac
 import scipy.special
 import utility.scorers as scorers
+import utility.filters as filters
 
 
 def gpcal(caltable):
@@ -125,9 +126,7 @@ def gpcal_calc(caltable):
                     # Outlier removal turned on according to new comments in
                     # CAS-6804. Threshold changed to 5 sigma.
                     if removeoutliers == True:
-                        phase2Median = np.median(phase2)
-                        phase2MAD = np.median(abs(phase2-phase2Median)) / 0.6745
-                        phase2 = [kl for kl in phase2 if abs(kl-phase2Median) < 5*phase2MAD]
+                        phase2 = filters.outlierFilter(phase2, 5.0)
  
                     if len(phase2) == 0:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
@@ -141,9 +140,7 @@ def gpcal_calc(caltable):
                     phase3.append( phase1[0][0][i+1] - phase1[0][0][i] )
 
                 if removeoutliers == True:
-                    phase3Median = np.median(phase3)
-                    phase3MAD = np.median(abs(phase3-phase3Median)) / 0.6745
-                    phase3 = [kl for kl in phase3 if abs(kl-phase3Median) < 3*phase3MAD]
+                    phase3 = filters.outlierFilter(phase3, 3.0)
 
                 if len(phase3) == 0:
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
