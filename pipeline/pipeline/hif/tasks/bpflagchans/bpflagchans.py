@@ -213,8 +213,7 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
           mode='channel',
           intent='PHASE',
           minsnr=0.0,
-          qa2_intent='',
-          run_qa2=False)
+	  maxchannels=0)
         name = view_inputs.caltable
 
         task = bandpass.PhcorBandpass(view_inputs)
