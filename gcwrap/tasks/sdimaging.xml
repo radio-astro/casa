@@ -450,9 +450,9 @@ phasecenter -- image phase center: direction measure or field ID
                      POINTING table of infiles)
         example: 6 (field id), 'J2000 13h44m00 -17d02m00',
                  'AZEL -123d48m29 15d41m41'
-ephemsrcname -- ephemeris source name for moving source
+ephemsrcname -- ephemeris source name for moving source (solar sytem objects)
         default: '' (none)
-        if the source name in the data matches one of the solar sytem
+        if the source name in the data matches one of the solar system
         objects known by CASA, the imaging realigns the data by
         correcting shifts of the source during observation,
         so that the source appears to be fixed in the image.
