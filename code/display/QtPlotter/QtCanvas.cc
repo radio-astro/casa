@@ -896,7 +896,7 @@ namespace casa {
 	}
 
 	void QtCanvas::keyReleaseEvent(QKeyEvent *event) {
-		if (!imageMode)
+		if (!imageMode){
 			switch (event->key()) {
 			case Qt::Key_Meta:
 			case Qt::Key_Control:
@@ -907,6 +907,7 @@ namespace casa {
 				xcursor = QColor( );	// invalid color
 				QWidget::keyPressEvent(event);
 			}
+		}
 	}
 
 	void QtCanvas::wheelEvent(QWheelEvent *event) {
@@ -1841,6 +1842,7 @@ namespace casa {
 			channelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
 			emit channelSelect(channelSelectValue);
 		}
+		xcursor = QColor();
 	}
 
 	void QtCanvas::updateChannel( QMouseEvent* event ) {
@@ -1856,7 +1858,7 @@ namespace casa {
 			float endChannelSelectValue = currSettings.getMinX(QtPlotSettings::xBottom ) + dx * (event->pos().x()-MARGIN_LEFT);
 			emit channelRangeSelect(channelSelectValue, endChannelSelectValue );
 			channelSelectValue = endChannelSelectValue;
-		}
+		}	
 	}
 
 
