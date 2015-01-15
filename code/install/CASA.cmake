@@ -102,7 +102,20 @@ endmacro()
 # for the generated file
 #
 MACRO (CASA_QT4_WRAP_UI outfiles )
-  QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
+
+# Later version of Qt4Macros.cmake added an output argument to
+# qt4_extract_options.  This causes the first .ui file to be
+# lost (and the corresponding .ui.h file to not be generated)
+# if the old signature is used (jjacobs).  It's known that 2.8.5
+# uses the old signature and 2.8.12.2 uses the new signature;
+# the exact version where this cuts over could be somewhere 
+# in between; it's hard to track down.
+
+  if (CMAKE_VERSION VERSION_GREATER 2.8.5)
+    QT4_EXTRACT_OPTIONS(ui_files ui_options ui_target ${ARGN})
+  else ()
+    QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
+  endif (CMAKE_VERSION VERSION_GREATER 2.8.5)
 
   FOREACH (it ${ui_files})
     GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
