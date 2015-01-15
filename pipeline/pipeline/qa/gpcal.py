@@ -194,7 +194,7 @@ def gpcal_score(gpcal_stats):
     # Need to check if we have to distinguish by band.
 
     xySig1 = 4.25e-6
-    xySig3 = 7.955e-5
+    xySig3 = 8.4e-5
     xyM = 6.0 / np.sqrt(2.0) / (xySig1 - xySig3)
     xyB = 3.0 / np.sqrt(2.0) * (1.0 - 2.0 * xySig1 / (xySig1 - xySig3))
 
