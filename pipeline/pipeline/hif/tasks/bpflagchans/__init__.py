@@ -8,9 +8,6 @@ from . import renderer
 from . import resultobjects
 from . import qa
 
-#pipelineqa.registry.add_handler(qa.BandpassQAHandler())
-#pipelineqa.registry.add_handler(qa.BandpassListQAHandler())
-
 pipelineqa.registry.add_handler(qa.BandpassFlagChansQAHandler())
 pipelineqa.registry.add_handler(qa.BandpassFlagChansListQAHandler())
 
