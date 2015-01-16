@@ -27,35 +27,12 @@ LOG = infrastructure.get_logger(__name__)
 class BandpassflagchansInputs(basetask.StandardInputs):
 
     @basetask.log_equivalent_CASA_call
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, 
+    def __init__(self, context, output_dir=None, vis=None, 
       flag_hilo=None, fhl_limit=None, fhl_minsample=None,
       flag_tmf=None, tmf_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
-    @property
-    def caltable(self):
-        if type(self.vis) is types.ListType:
-            return self._handle_multiple_vis('caltable')
-
-        if self._caltable is None:
-            caltables = self.context.callibrary.active.get_caltable(
-              caltypes='bandpass')
-
-            # return just the bandpass table that matches the vis being handled
-            for name in caltables:
-                # Get the bandpass table name
-                bptable_vis = \
-                  caltableaccess.CalibrationTableDataFiller._readvis(name)
-                if bptable_vis in self.vis:
-                    return name
-
-        return self._caltable
-
-    @caltable.setter
-    def caltable(self, value):
-        self._caltable = value
 
     @property
     def flag_hilo(self):
@@ -142,7 +119,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
         datainputs = BandpassflagchansWorkerInputs(context=inputs.context,
-          output_dir=inputs.output_dir, caltable=inputs.caltable,
+          output_dir=inputs.output_dir, 
           vis=inputs.vis)
         datatask = BandpassflagchansWorker(datainputs)
 
@@ -174,9 +151,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
           rules=rules, niter=inputs.niter)
         flaggertask = flagger(flaggerinputs)
 
- 
-
-	# Execute it to flag the data view
+ 	# Execute it to flag the data view
         summary_job = casa_tasks.flagdata(vis=inputs.vis, mode='summary')
         stats_before = self._executor.execute(summary_job)
         result = self._executor.execute(flaggertask)
@@ -192,7 +167,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
 
 
 class BandpassflagchansWorkerInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None):
+    def __init__(self, context, output_dir=None, vis=None): 
         self._init_properties(vars())
 
 
@@ -202,42 +177,60 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         super(BandpassflagchansWorker, self).__init__(inputs)
         self.result = BandpassflagResults()
+        self.first = True
 
     def prepare(self):
-        inputs = self.inputs
-        final = []
 
-        # Calculate new bandpass from PHASE intent
-        view_inputs = bandpass.PhcorBandpass.Inputs(inputs.context,
-          vis=inputs.vis,
-          mode='channel',
-          intent='PHASE',
-          minsnr=0.0,
-	  maxchannels=0)
-        name = view_inputs.caltable
+        # the view is calculated once, on the first call. Thereafter it stays
+        # the same - no repeat of the view is appended to the result, which
+        # shouldn't matter as the 'before' and 'after' views are just the
+        # first and last in the list.
+        if self.first:
+            self.first = False
 
-        task = bandpass.PhcorBandpass(view_inputs)
-        view_result = self._executor.execute(task, merge=False)
+            inputs = self.inputs
+            final = []
 
-	# Loop over caltables.
-        name = view_result.final[0].gaintable
+            # Calculate new bandpass from PHASE intent
+            view_inputs = bandpass.PhcorBandpass.Inputs(inputs.context,
+              vis=inputs.vis,
+              mode='channel',
+              intent='PHASE',
+              minsnr=0.0,
+	      maxchannels=0)
 
-        # Get the bandpass table name
-        bptable = caltableaccess.CalibrationTableDataFiller.getcal(name)
-        self.result.vis = bptable.vis
+            task = bandpass.PhcorBandpass(view_inputs)
+            view_result = self._executor.execute(task, merge=False)
 
-        # Get the MS object.
-        ms = self.inputs.context.observing_run.get_ms(name=bptable.vis)
+            # Get the bandpass table name
+            name = view_result.final[0].gaintable
+            bptable = caltableaccess.CalibrationTableDataFiller.getcal(name)
+            self.result.vis = bptable.vis
 
-        # Get the spws from the bandpass table.
-        bpspws = set()
-        for row in bptable.rows:
-            bpspws.update([row.get('SPECTRAL_WINDOW_ID')])
+            # Get the MS object.
+            ms = self.inputs.context.observing_run.get_ms(name=bptable.vis)
 
-        LOG.info ('Computing flagging metrics for caltable %s ' % (name))
-        for spwid in bpspws:
-            # calculate view for each group of fieldids
-            self.calculate_view(bptable, spwid)
+            # Get the spws from the bandpass table.
+            bpspws = set()
+            for row in bptable.rows:
+                bpspws.update([row.get('SPECTRAL_WINDOW_ID')])
+
+            LOG.info ('Computing flagging metrics for caltable %s ' % (name))
+            for spwid in bpspws:
+                # calculate view for each group of fieldids
+                self.calculate_view(bptable, spwid)
+
+        else:
+            # extend view lists by duplicating the last entry.
+            # This is necessary because the display code expects
+            # any flag_reason_plane stuff to be associated with the
+            # last entry and will not work properly if the last entry
+            # is also the first.
+   
+            descriptionlist = self.result.descriptions()
+            for description in descriptionlist:
+                view = self.result.last(description)
+                self.result.addview(description, view)
 
         return self.result
 
