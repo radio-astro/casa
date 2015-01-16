@@ -11,7 +11,7 @@ from . import resultobjects
 LOG = logging.get_logger(__name__)
 
 
-class BpflagchansQAHandler(pqa.QAResultHandler):    
+class BandpassFlagChansQAHandler(pqa.QAResultHandler):    
     """
     QA handler for an uncontained BandpassflagResults.
     """
@@ -28,7 +28,7 @@ class BpflagchansQAHandler(pqa.QAResultHandler):
         result.qa.all_unity_longmsg = 'No extra data was flagged in %s' % vis
 
 
-class BpflagchansListQAHandler(pqa.QAResultHandler):
+class BandpassFlagChansListQAHandler(pqa.QAResultHandler):
     """
     QA handler for a list containing BandpassflagResults.
     """
