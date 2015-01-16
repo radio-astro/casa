@@ -120,8 +120,6 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         flags = list(set(flags))
         result.addflags(flags)
         result.add_flag_reason_plane(flag_reason_plane, self.flag_reason_key)
-#        result.flag_reason_key = self.flag_reason_key
-#        print 'viewflagger', result.flag_reason_key
         result.table = flagsettertask.inputs.table
 
         return result
