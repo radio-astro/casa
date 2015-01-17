@@ -192,9 +192,14 @@ def gpcal_score(gpcal_stats):
     # Need to check if we have to distinguish by band.
 
     xyScorer = scorers.erfScorer(4.25e-6, 8.4e-5)
-    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
+    #x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
+    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-2)
+
+    totalXYMetrics = []
 
     for fieldId in gpcal_stats['STATS'].iterkeys():
+
+        fieldXYMetrics = []
 
         if fieldId not in gpcal_scores['SCORES']:
             gpcal_scores['SCORES'][fieldId] = {}
@@ -214,14 +219,16 @@ def gpcal_score(gpcal_stats):
 
                 try:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = xyScorer(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
-                    gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = \
-                        min(gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
-                    gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
-                        min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
-                    gpcal_scores['SCORES']['XY_TOTAL'] = \
-                        min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
-                    gpcal_scores['SCORES']['TOTAL'] = \
-                        min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    fieldXYMetrics.append(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
+                    totalXYMetrics.append(gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'])
+                    #gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = \
+                    #    min(gpcal_scores['SCORES'][fieldId]['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #gpcal_scores['SCORES'][fieldId]['TOTAL'] = \
+                    #    min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #gpcal_scores['SCORES']['XY_TOTAL'] = \
+                    #    min(gpcal_scores['SCORES']['XY_TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
+                    #gpcal_scores['SCORES']['TOTAL'] = \
+                    #    min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'])
                 except Exception as e:
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_XY'] = 'C/C'
                     # Don't count this in the totals since it is likely due to missing solutions because of
@@ -242,5 +249,19 @@ def gpcal_score(gpcal_stats):
                     gpcal_scores['SCORES'][fieldId][spwId][antId]['PHASE_SCORE_X2X1'] = 'C/C'
                     # Don't count this in the totals since it is likely due to missing solutions because of
                     # flagged antennas. Need to decide how to account for these cases.
+
+        fieldXYMetrics = filters.outlierFilter(fieldXYMetrics, 5.0)
+        if (len(fieldXYMetrics) > 0):
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = xyScorer(max(fieldXYMetrics))
+            gpcal_scores['SCORES'][fieldId]['TOTAL'] = min(gpcal_scores['SCORES'][fieldId]['TOTAL'], gpcal_scores['SCORES'][fieldId]['XY_TOTAL'])
+        else:
+            gpcal_scores['SCORES'][fieldId]['XY_TOTAL'] = 'C/C'
+
+    totalXYMetrics = filters.outlierFilter(totalXYMetrics, 5.0)
+    if (len(totalXYMetrics) > 0):
+        gpcal_scores['SCORES']['XY_TOTAL'] = xyScorer(max(totalXYMetrics))
+        gpcal_scores['SCORES']['TOTAL'] = min(gpcal_scores['SCORES']['TOTAL'], gpcal_scores['SCORES']['XY_TOTAL'])
+    else:
+        gpcal_scores['SCORES']['XY_TOTAL'] = 'C/C'
 
     return gpcal_scores
