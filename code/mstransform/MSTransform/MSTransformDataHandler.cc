@@ -23,6 +23,7 @@
 #include <mstransform/MSTransform/MSTransformDataHandler.h>
 #include <tables/Tables/TableProxy.h>
 #include <tables/Tables/TableParse.h>
+#include <ms/MeasurementSets/MSMetaData.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -2486,6 +2487,10 @@ Bool MSTransformDataHandler::copyAntenna()
 	outcols.setOffsetRef(MPosition::castType(incols.offsetMeas().getMeasRef().getType()));
 	outcols.setPositionRef(MPosition::castType(incols.positionMeas().getMeasRef().getType()));
 
+    TableCopy::copyRows(newAnt, oldAnt);
+    retval = True;
+
+	/*
 	if (!antennaSel_p)
 	{
 		TableCopy::copyRows(newAnt, oldAnt);
@@ -2504,6 +2509,7 @@ Bool MSTransformDataHandler::copyAntenna()
 		newAnt.flush();
 		retval = True;
 	}
+	*/
 	return retval;
 }
 
@@ -2565,20 +2571,16 @@ Bool MSTransformDataHandler::copyFeed()
 	// Check if selected spw is WVR data. WVR data does not have FEED data
 	// so it is not a failure if newFeed.nrow == 0
 	if (newFeed.nrow() < 1 and spw_p.size() == 1){
-		Int ddid = spw2ddid_p[0];
-		String inputMSName = ms_p.tableName();
-		Int procid = getProcessorId(ddid, inputMSName);
-
-		const MSProcessor oldProc = mssel_p.processor();
-		if (oldProc.nrow() != 0){
-			const ROMSProcessorColumns proccols(oldProc);
-			const ROScalarColumn<String>& ptype = proccols.type();
-			String proctype = ptype.asString(procid);
-
-			if (proctype.compare("RADIOMETER") == 0)
-				return true;
-		}
-
+	    // Using the MSMetaData class
+	    MSMetaData msmeta(&mssel_p, 0);
+	    std::set<uInt> wvrspw = msmeta.getWVRSpw();
+	    for (std::set<uInt>::iterator bbit = wvrspw.begin(); bbit != wvrspw.end(); ++bbit){
+	        cout << *bbit <<endl;
+	        if (spw_p[0] == *bbit){
+	            os << LogIO::DEBUG1 << "Skipping spw="<<*bbit<<" because it is WVR and has no FEED content" << LogIO::POST;
+	            return true;
+	        }
+	    }
 	}
 
 	if (newFeed.nrow() < 1)
