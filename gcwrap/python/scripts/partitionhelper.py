@@ -6,6 +6,7 @@ import traceback
 import time
 import commands
 import numpy as np
+import matplotlib.pyplot as plt
 from __main__ import *
 from taskinit import *
 
@@ -901,11 +902,390 @@ def setAxisType(mmsname, axis=''):
     return True
     
     
+def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
+    """Generates a partition scan/spw map to obtain optimal load balancing with the following criteria:
+    
+       1st - Maximize the scan/spw distribution across sub-MSs
+       2nd - Generate sub-MSs with similar size
+       
+       In order to balance better the size of the subMSs the allocation process
+       iterates over the scan,spw pairs in descending number of visibilities.
+       
+       That is larger chunks are allocated first, and smaller chunks at the final
+       stages so that they can be used to balance the load in a stable way
+           
+    Keyword arguments:
+        msname          --    Input MS filename
+        selection       --    Data selection dictionary
+        plotMode        --    Integer in the range 0-3 to determine the plot generation mode
+                                0 - Don't generate any plots
+                                1 - Show plots but don't save them
+                                2 - Save plots but don't show them
+                                3 - Show and save plots
+        
+        Returns a map of the sub-MSs with the corresponding scan/spw selections and the number of visibilities
+    """
+    
+    # Open ms tool
+    myMsTool=mstool()
+    myMsTool.open(msfilename)
     
     
-    
-    
-    
-    
-    
+    # Apply data selection
+    if isinstance(selection, dict) and selection != {}:
+        myMsTool.msselect(items=selection)
+        
+        
+    # Get list of spws and timestamps per scan
+    scanSummary = myMsTool.getscansummary()
+    spectralWindowInfo = myMsTool.getspectralwindowinfo()
 
+
+    # Close ms tool
+    myMsTool.close()
+    
+    
+    # Get list of WVR SPWs using the ms metadata tool 
+    myMsMetaDataTool = msmdtool()
+    myMsMetaDataTool.open(msfilename)
+    wvrspws = myMsMetaDataTool.wvrspws()
+    myMsMetaDataTool.close()
+    
+    
+    # Mark WVR SPWs as identified by the ms metadata tool
+    for spw in spectralWindowInfo:
+        if int(spw) in wvrspws:
+            spectralWindowInfo[spw]['isWVR'] = True
+        else:
+            spectralWindowInfo[spw]['isWVR'] = False
+            
+            
+    # Make an array for total number of visibilites per spw and scan separatelly
+    nVisPerSPW = {}
+    nVisPerScan = {}
+            
+            
+    # Iterate over scan list
+    scanSpwMap = {}
+    for scan in scanSummary:
+        # Initialize scan sub-map
+        scanSpwMap[scan] = {}
+        # Iterate over timestamps for this scan
+        for timestamp in scanSummary[scan]:
+            # Get list of spws for this timestamp
+            SpwIds = scanSummary[scan][timestamp]['SpwIds']
+            # Get number of rows per spw (assume all SPWs have the same number of rows)
+            # In ALMA data WVR SPW has only one row per antenna but it is separated from the other SPWs
+            nrowsPerSPW = scanSummary[scan][timestamp]['nRow'] / len(SpwIds)
+            # Iterate over SPWs for this timestamp
+            for spw in SpwIds:
+                # Convert to string to be used as a map key
+                spw = str(spw)
+                # Check if SPW entry is already present for this scan, otherwise initialize it
+                if not scanSpwMap[scan].has_key(spw):
+                    scanSpwMap[scan][spw] = {}
+                    scanSpwMap[scan][spw]['nrows'] = 0
+                    scanSpwMap[scan][spw]['isWVR'] = spectralWindowInfo[spw]['isWVR']
+                    scanSpwMap[scan][spw]['nchan'] = spectralWindowInfo[spw]['NumChan']
+                # Add number of rows from this timestamp
+                scanSpwMap[scan][spw]['nrows'] = scanSpwMap[scan][spw]['nrows'] + nrowsPerSPW
+                # Update spw nvis
+                if not nVisPerSPW.has_key(spw):
+                    nVisPerSPW[spw] = nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                else:
+                    nVisPerSPW[spw] = nVisPerSPW[spw] + nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                # Update scan nvis
+                if not nVisPerScan.has_key(scan):
+                    nVisPerScan[scan] = nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                else:
+                    nVisPerScan[scan] = nVisPerScan[scan] + nrowsPerSPW*scanSpwMap[scan][spw]['nchan']  
+                
+                    
+    # Calculate total number of visibilities per scan/spw combination and total numper of scan/spw pairs
+    nSpwScanPairs = 0
+    for scan in scanSpwMap:
+        for spw in scanSpwMap[scan]:
+            nSpwScanPairs = nSpwScanPairs + 1
+            scanSpwMap[scan][spw]['nVis'] = scanSpwMap[scan][spw]['nrows']*scanSpwMap[scan][spw]['nchan']
+          
+            
+    # Sort the scan/spw pairs depending on the number of visibilities
+    spwList = list()
+    scanList = list()
+    nVisList = list()
+    for scan in scanSpwMap:
+        for spw in scanSpwMap[scan]:
+            spwList.append(spw)
+            scanList.append(scan)
+            nVisList.append(scanSpwMap[scan][spw]['nVis'])
+    
+    spwArray = np.array(spwList)
+    scanArray = np.array(scanList)
+    nVisArray = np.array(nVisList)
+    nVisSortIndex = np.argsort(nVisArray)
+    nVisSortIndex[:] = nVisSortIndex[::-1]
+    spwArray = spwArray[nVisSortIndex]
+    scanArray = scanArray[nVisSortIndex]
+    nVisArray = nVisArray[nVisSortIndex]
+          
+            
+    # Make a map for the contribution of each subMS to each scan
+    scanNvisDistributionPerSubMs = {}
+    for scan in scanSummary:
+        scanNvisDistributionPerSubMs[scan] = np.zeros(nsubms)
+     
+     
+    # Make a map for the contribution of each subMS to each spw   
+    spwNvisDistributionPerSubMs = {}
+    for spw in spectralWindowInfo:
+        spwNvisDistributionPerSubMs[spw] = np.zeros(nsubms)
+        
+        
+    # Make an array for total number of visibilites per subms
+    nvisPerSubMs = np.zeros(nsubms)     
+        
+        
+    # Initialize final map of scans/pw pairs per subms
+    submScanSpwMap = {}
+    for subms in range (0,nsubms):
+        submScanSpwMap[subms] = {}
+        submScanSpwMap[subms]['scanList'] = list()
+        submScanSpwMap[subms]['spwList'] = list()
+        submScanSpwMap[subms]['nVisList'] = list()
+        submScanSpwMap[subms]['nVisTotal'] = 0
+        
+        
+    # Iterate over the scan/spw map and assign each pair to a subMS
+    for pair in range(len(spwArray)):
+        
+        spw = spwArray[pair]
+        scan = scanArray[pair]
+        
+        # Find the subMS with less visibilities for the given scan
+        optimalSubMsForScan = np.where(scanNvisDistributionPerSubMs[scan] == scanNvisDistributionPerSubMs[scan].min())
+        optimalSubMsForScan = optimalSubMsForScan[0] # np.where returns a tuple
+        scanNvisGap = scanNvisDistributionPerSubMs[scan].max() - scanNvisDistributionPerSubMs[scan].min()
+        # In case of multiple candidates select the subms with minum number of total visibilities  
+        if len(optimalSubMsForScan) > 1:
+            submsidx = np.argmin(nvisPerSubMs[optimalSubMsForScan])
+            optimalSubMsForScan = optimalSubMsForScan[submsidx]
+        else:
+            optimalSubMsForScan = optimalSubMsForScan[0] 
+                
+        # Find the subMS with less visibilities for the given spw
+        optimalSubMsForSpw = np.where(spwNvisDistributionPerSubMs[spw] == spwNvisDistributionPerSubMs[spw].min())
+        optimalSubMsForSpw = optimalSubMsForSpw[0] # np.where returns a tuple
+        spwNvisGap = spwNvisDistributionPerSubMs[spw].max() - spwNvisDistributionPerSubMs[spw].min()
+        # In case of multiple candidates select the subms with minum number of total visibilities  
+        if len(optimalSubMsForSpw) > 1:
+            submsidx = np.argmin(nvisPerSubMs[optimalSubMsForSpw])
+            optimalSubMsForSpw = optimalSubMsForSpw[submsidx]
+        else:
+            optimalSubMsForSpw = optimalSubMsForSpw[0]
+                
+        # Select the best choice between the scan/spw optimal subms
+        optimalSubMs = None
+        optimalSubMsLabel = ''
+        if scanNvisGap == spwNvisGap:
+            optimalSubMsLabel = 'size'
+            if nvisPerSubMs[optimalSubMsForScan] < nvisPerSubMs[optimalSubMsForSpw]:
+                optimalSubMs = optimalSubMsForScan
+            else:
+                optimalSubMs = optimalSubMsForSpw
+        elif scanNvisGap > spwNvisGap:
+            optimalSubMs = optimalSubMsForScan
+            optimalSubMsLabel = 'scan'
+        else:
+            optimalSubMs = optimalSubMsForSpw
+            optimalSubMsLabel = 'spw'
+                
+        # Store the scan/spw pair info in the selected optimal subms
+        nVis = scanSpwMap[scan][spw]['nVis']
+        #print "scan=%s spw=%s nVis=%i optimalSubMsForScan=%i scanNvisGap=%i optimalSubMsForSpw=%i spwNvisGap=%i optimalSubMs=%i optimalSubMsLabel=%s nVis=%i" \
+        #% (scan,spw,nVis,optimalSubMsForScan,scanNvisGap,optimalSubMsForSpw,spwNvisGap,optimalSubMs,optimalSubMsLabel,nvisPerSubMs[optimalSubMs])
+        nvisPerSubMs[optimalSubMs] = nvisPerSubMs[optimalSubMs] + nVis
+        submScanSpwMap[optimalSubMs]['scanList'].append(int(scan))
+        submScanSpwMap[optimalSubMs]['spwList'].append(int(spw))
+        submScanSpwMap[optimalSubMs]['nVisList'].append(nVis)
+        submScanSpwMap[optimalSubMs]['nVisTotal'] = submScanSpwMap[optimalSubMs]['nVisTotal'] + nVis
+        # Also update the counters for the subms-scan and subms-spw maps            
+        scanNvisDistributionPerSubMs[scan][optimalSubMs] = scanNvisDistributionPerSubMs[scan][optimalSubMs] + nVis
+        spwNvisDistributionPerSubMs[spw][optimalSubMs] = spwNvisDistributionPerSubMs[spw][optimalSubMs] + nVis
+            
+
+    # Generate plots
+    if plotMode > 0:
+        plt.close()
+        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,'spw ',plotMode=plotMode)
+        plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,'scan ',plotMode=plotMode)
+        
+        
+    # Get SPW from DDI sub-table
+    myTableTool = tbtool()
+    myTableTool.open(msfilename + '/DATA_DESCRIPTION')
+    ddiToSpwId = myTableTool.getcol('SPECTRAL_WINDOW_ID')
+    myTableTool.close()
+    
+    
+    # Make a map from SPW to DDI
+    spwToDdi = {}
+    for ddi in range(len(ddiToSpwId)):
+        spw = ddiToSpwId[ddi]
+        if not spwToDdi.has_key(spw): spwToDdi[spw] = list()
+        spwToDdi[spw].append(ddi) 
+        
+        
+    # Generate list of taql commands
+    for subms in submScanSpwMap:
+        # Initialize taql command
+        initialized = False
+        mytaql = 'SELECT from ' + msfilename + ' WHERE'
+        # Iterate over scan/spw pairs for this subms
+        for pair in range(len(submScanSpwMap[subms]['scanList'])):
+            # Get scans/spw for this pair
+            spw = submScanSpwMap[optimalSubMs]['spwList'][pair]
+            scan = submScanSpwMap[optimalSubMs]['scanList'][pair]
+            # Get ddi list for this spw
+            ddiList = spwToDdi[spw]
+            # Iterate over list of DDIs for this SPW
+            for ddi in ddiList:
+                # Add or clause only for the pairs after the first one
+                joinClause = ' OR'
+                if not initialized:
+                    joinClause = ''
+                    initialized = True 
+                # Add pair to taql command
+                mytaql = mytaql + joinClause + ' (DATA_DESC_ID==%i AND SCAN_NUMBER==%i)' % (ddi,scan)
+            
+        # Store taql
+        submScanSpwMap[subms]['taql'] = mytaql
+
+
+    # Resturn map of scan/spw pairs per subMs
+    return submScanSpwMap
+
+
+def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,label,plotMode=1):
+    """Generates a plot to show the distribution of scans/wp across subMs.
+    The plot style is a stacked bar char, where the spw/scans with higher number of visibilities are shown at the bottom
+    
+    Keyword arguments:
+        nvisMap                          --    Map of total numbe of visibilities per Id
+        idNvisDistributionPerSubMs       --    Map of visibilities per subMS for each Id
+        label                            --    Label to indicate the id (spw, scan) to be used for the figure title
+        plotMode                         --    Integer in the range 0-3 to determine the plot generation mode
+                                                 0 - Don't generate any plots
+                                                 1 - Show plots but don't save them
+                                                 2 - Save plots but don't show them
+                                                 2 - Show and save plots
+    """
+    
+    # Create a new figure
+    plt.ioff()
+    
+    
+    # If plot is not to be shown then use pre-define sized figure to 1585x1170 pizels with 75 DPI
+    # (we cannot maximize the window to the screen size)
+    if plotMode==2:
+        plt.figure(figsize=(21.13,15.6),dpi=75) # Size is given in inches
+    else:
+        plt.figure()
+    
+    
+    # Sort the id according to the total number of visibilities to that we can
+    # represent bigger the groups at the bottom and the smaller ones at the top
+    idx = 0
+    idArray = np.zeros(len(nvisMap))
+    idNvisArray = np.zeros(len(nvisMap))
+    for id in nvisMap:
+        idArray[idx] = int(id)
+        idNvisArray[idx] = nvisMap[id]
+        idx  = idx + 1
+    
+    idArraySortIndex = np.argsort(idNvisArray)
+    idArraySortIndex[:] = idArraySortIndex[::-1]
+    idArraySorted = idArray[idArraySortIndex]
+    
+    
+    # Initialize color vector to alternate cold/warm colors
+    nid = len(nvisMap)
+    colorVector = list()
+    colorRange = range(nid)
+    colorVectorEven = colorRange[::2]
+    colorVectorOdd = colorRange[1::2]
+    colorVectorOdd.reverse()
+    while len(colorVectorOdd) > 0 or len(colorVectorEven) > 0:
+        if len(colorVectorOdd) > 0: colorVector.append(colorVectorOdd.pop())
+        if len(colorVectorEven) > 0: colorVector.append(colorVectorEven.pop())
+    
+    
+    # Generate spw plot
+    coloridx = 0 # color index
+    width = 0.35 # bar width
+    nsubms = len(idNvisDistributionPerSubMs[idNvisDistributionPerSubMs.keys()[0]])
+    idx = np.arange(nsubms) # location of the bar centers in the horizontal axis
+    bottomLevel = np.zeros(nsubms) # Reference level for the bars to be stacked after the previous ones
+    legendLabels = list() # List of legend labels
+    plotHandles=list() # List of plot handles for the legend
+    for id in idArraySorted:
+        
+        id = str(int(id))
+        
+        idplot = plt.bar(idx, idNvisDistributionPerSubMs[id], width, bottom=bottomLevel, color=plt.cm.Paired(1.*colorVector[coloridx]/nid))
+        
+        # Update color index 
+        coloridx = coloridx + 1
+                
+        # Update legend lists
+        plotHandles.append(idplot)
+        legendLabels.append(label + id)
+        
+        # Update reference level
+        bottomLevel = bottomLevel + idNvisDistributionPerSubMs[id]
+
+        
+    # Add legend
+    plt.legend( plotHandles, legendLabels, bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.)
+    
+    
+    # AQdd lable for y axis
+    plt.ylabel('nVis')
+    
+    
+    # Add x-ticks 
+    xticks = list()
+    for subms in range(0,nsubms):
+        xticks.append('subMS-' + str(subms))       
+    plt.xticks(idx+width/2., xticks )
+    
+    
+    # Add title
+    title = label + 'visibilities distribution across sub-MSs'
+    plt.title(label + 'visibilities distribution across sub-MSs')
+    
+    
+    # Resize to full screen
+    if plotMode==1 or plotMode==3:
+        mng = plt.get_current_fig_manager()
+        mng.resize(*mng.window.maxsize())
+    
+    
+    # Show figure
+    if plotMode==1 or plotMode==3:
+        plt.ion()
+        plt.show()
+    
+    
+    # Save plot
+    if plotMode>1:
+        title = title.replace(' ','-') + '.png'
+        plt.savefig(title)
+        
+        
+    # If plot is not to be shown then close it
+    if plotMode==2:
+        plt.close()
+    
+    
+     
+     
