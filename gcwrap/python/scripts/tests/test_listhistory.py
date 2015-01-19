@@ -64,7 +64,7 @@ class listhistory_test(unittest.TestCase):
         # Get the number of lines in file
         refnum=13
         if self.itismms:
-            refnum = 37
+            refnum = 35
 
         cmd="wc -l %s |egrep \"[0-9]+\" -o" %newfile    
         output=commands.getoutput(cmd)
