@@ -854,7 +854,7 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
     def tearDown(self):
         self.resetMS()
 
-    def test1(self):
+    def test_fluxscaleStandard1(self):
         """ Test for accepting input fluxscale dictionary """
         import numpy as np
         fluxscaledict=\
@@ -901,7 +901,7 @@ class test_setpol(SetjyUnitTestBase):
     def tearDown(self):
         self.resetMS()
 
-    def test1(self):
+    def test_setpol1(self):
         """ Test for multi-term spix (alpha and beta) """
 
         sjran = setjy(vis=self.inpms,
@@ -930,7 +930,7 @@ class test_setpol(SetjyUnitTestBase):
         ms.close()
         self.check_eq(retrec['MODEL']['min'],fexpmin,0.0001)
 
-    def test2(self):
+    def test_setpol2(self):
         """ Test for constant polindex and polangle with I flux density  """
 
         sjran = setjy(vis=self.inpms,
@@ -960,7 +960,7 @@ class test_setpol(SetjyUnitTestBase):
         ms.close()
         self.check_eq(retrec['MODEL']['min'],fexpmin,0.0001)
 
-    def test3(self):
+    def test_setpol3(self):
         """ Test for frequency-dependent polindex (2 terms)   """
         # the constant terms (polindex[0] and polangle[0] is ignored..
         pang = 0.5*66.*numpy.pi/180
@@ -1005,7 +1005,7 @@ class test_setpol(SetjyUnitTestBase):
         self.check_eq(retrecQ['MODEL']['min'],qfexpmin,0.0001)
         self.check_eq(retrecU['MODEL']['min'],ufexpmin,0.0001)
 
-    def test4(self):
+    def test_setpol4(self):
         """ Test for frequency-dependent polangle (2 terms)   """
         # the constant terms (polindex[0] and polangle[0] is ignored..
         pang = 0.5*66.*numpy.pi/180
