@@ -15,6 +15,7 @@ class convertToMMS():
                  inpdir=None, \
                  mmsdir=None, \
                  axis='auto', \
+                 numsubms=4,
                  createmslink=False, \
                  cleanup=False):
 
@@ -24,6 +25,7 @@ class convertToMMS():
         self.inpdir = inpdir
         self.outdir = mmsdir
         self.axis = axis
+        self.numsubms = numsubms
         self. createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
         self.cleanup = cleanup        
@@ -92,7 +94,7 @@ class convertToMMS():
         # Create an MMS for each MS in list
         for ms in mslist:
             casalog.post('Will create an MMS for '+ms)
-            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.axis)
+            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.axis, self.numsubms)
             if not ret:
                 sys.exit(2)
             
@@ -223,13 +225,15 @@ class convertToMMS():
         return fileslist
 
 
-    def runPartition(self, ms, mmsdir, createlink, axis):
+    def runPartition(self, ms, mmsdir, createlink, axis, subms):
         '''Run partition with default values to create an MMS.
            ms         --> full pathname of the MS
            mmsdir     --> directory to save the MMS to
            createlink --> when True, it will create a symbolic link to the
                          just created MMS in the same directory with extension .ms  
            axis      --> separationaxis to use (spw, scan, auto)
+           subms  --> number of subMss to create
+
         '''
         from tasks import partition
 
@@ -257,7 +261,7 @@ class convertToMMS():
         # Run partition   
         default('partition')
         partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', flagbackup=False,
-                  separationaxis=axis)
+                  separationaxis=axis, numsubms=subms)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created
@@ -288,6 +292,7 @@ class convertToMMS():
         print '   mmsdir <dir>        directory to save output MMS. If not given, it will save '
         print '                       the MMS in a directory called mmsdir in the current directory.'
         print "   axis='auto'         separationaxis parameter of partition (spw,scan,auto)."
+        print "   numsubms=4         number of subMSs to create in output MMS"
         print '   createmslink=False  if True it will create a link to the new MMS with extension .ms.'
         print '   cleanup=False       if True it will remove the output directory before starting.\n'
         
