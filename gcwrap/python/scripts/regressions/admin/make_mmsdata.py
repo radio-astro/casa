@@ -24,6 +24,7 @@ TASKLIST = [
             'bandpass',
             'concat', # shared with virtualconcat
             'cvel',
+            'fixvis'
             'flagdata',
             'fluxscale',
             'gaincal',
@@ -261,11 +262,23 @@ def main(thislist, axis='auto', numsubms=4):
         MMSPATH = './unittest_mms/setjy/'
         MMSNAME = MMSPATH+'n1333_1.mms'
         importuvfits(fitsfile=UVFILE, vis=MSNAME,antnamescheme="new")
-        partition(vis=MSNAME, outputvis=MMSNAME, datacolumn='all', separationaxis='auto',numsubms=4,flagbackup=False)
+        partition(vis=MSNAME, outputvis=MMSNAME, datacolumn='all', separationaxis=axis,numsubms=numsubms,flagbackup=False)
         # Create symlink
         thisdir = os.getcwd()
         os.chdir(MMSPATH)
         os.system('ln -s n1333_1.mms n1333_1.ms')
+        os.chdir(thisdir)
+        
+    if ('fixvis' in thislist):
+        MSPATH = os.environ.get('CASAPATH').split()[0]+'/data/regression/0420+417/'
+        MSNAME = MSPATH + '0420+417.ms'
+        MMSPATH = './unittest_mms/fixvis/'
+        MMSNAME = MMSPATH + '0420+417.mms'
+        partition(vis=MSNAME, outputvis=MMSNAME, datacolumn='all', separationaxis=axis,numsubms=numsubms,flagbackup=False)
+        # Create symlink
+        thisdir = os.getcwd()
+        os.chdir(MMSPATH)
+        os.system('ln -s 0420+417.mms 0420+417.ms')
         os.chdir(thisdir)
 
     
