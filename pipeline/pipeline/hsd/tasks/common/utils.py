@@ -183,12 +183,14 @@ def temporary_filename(name='_heuristics.temporary.table', removesubfiles=False)
 
 def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     assert len(antenna) == len(spw)
-    table = datatable.tb1
-    antenna_column = table.getcol('ANTENNA')
-    spw_column = table.getcol('IF')
-    pol_column = table.getcol('POL')
-    srctype_column = table.getcol('SRCTYPE')
-    f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j]
+    table1 = datatable.tb1
+    table2 = datatable.tb2
+    antenna_column = table1.getcol('ANTENNA')
+    spw_column = table1.getcol('IF')
+    pol_column = table1.getcol('POL')
+    srctype_column = table1.getcol('SRCTYPE')
+    permanent_flag = table2.getcol('FLAG_PERMANENT')
+    f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and permanent_flag[2,i] == 1
     if pols is None or len(pols) == 0:
         g = f
     else:
@@ -200,7 +202,7 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
         #f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and srctype_column[i] == srctype
         sel = lambda i, j: g(i,j) and srctype_column[i] == srctype
 
-    nrow = table.nrows()
+    nrow = table1.nrows()
     nval = len(antenna)
     for irow in xrange(nrow):
         for ival in xrange(nval):
