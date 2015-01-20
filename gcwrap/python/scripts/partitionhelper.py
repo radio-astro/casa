@@ -902,10 +902,10 @@ def setAxisType(mmsname, axis=''):
     return True
     
     
-def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
+def getPartitonMap(msfilename, nsubms, selection={}, axis=['spw','scan'],plotMode=0):
     """Generates a partition scan/spw map to obtain optimal load balancing with the following criteria:
     
-       1st - Maximize the scan/spw distribution across sub-MSs
+       1st - Maximize the scan/spw/field distribution across sub-MSs
        2nd - Generate sub-MSs with similar size
        
        In order to balance better the size of the subMSs the allocation process
@@ -916,7 +916,9 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
            
     Keyword arguments:
         msname          --    Input MS filename
+        nsubms          --    Number of subMSs 
         selection       --    Data selection dictionary
+        axis            --    Vector of strings containing the axis for load distribution (scan,spw,field)
         plotMode        --    Integer in the range 0-3 to determine the plot generation mode
                                 0 - Don't generate any plots
                                 1 - Show plots but don't save them
@@ -963,7 +965,8 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
     # Make an array for total number of visibilites per spw and scan separatelly
     nVisPerSPW = {}
     nVisPerScan = {}
-            
+    nVisPerField = {}
+    
             
     # Iterate over scan list
     scanSpwMap = {}
@@ -974,6 +977,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         for timestamp in scanSummary[scan]:
             # Get list of spws for this timestamp
             SpwIds = scanSummary[scan][timestamp]['SpwIds']
+            fieldId = str(scanSummary[scan][timestamp]['FieldId'])
             # Get number of rows per spw (assume all SPWs have the same number of rows)
             # In ALMA data WVR SPW has only one row per antenna but it is separated from the other SPWs
             nrowsPerSPW = scanSummary[scan][timestamp]['nRow'] / len(SpwIds)
@@ -984,46 +988,49 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
                 # Check if SPW entry is already present for this scan, otherwise initialize it
                 if not scanSpwMap[scan].has_key(spw):
                     scanSpwMap[scan][spw] = {}
-                    scanSpwMap[scan][spw]['nrows'] = 0
+                    scanSpwMap[scan][spw]['nVis'] = 0                   
+                    scanSpwMap[scan][spw]['fieldId'] = fieldId                    
                     scanSpwMap[scan][spw]['isWVR'] = spectralWindowInfo[spw]['isWVR']
-                    scanSpwMap[scan][spw]['nchan'] = spectralWindowInfo[spw]['NumChan']
-                # Add number of rows from this timestamp
-                scanSpwMap[scan][spw]['nrows'] = scanSpwMap[scan][spw]['nrows'] + nrowsPerSPW
+                # Calculate number of visibilities
+                nvis = nrowsPerSPW*spectralWindowInfo[spw]['NumChan']
+                # Add number of rows and vis from this timestamp
+                scanSpwMap[scan][spw]['nVis'] = scanSpwMap[scan][spw]['nVis'] + nvis
                 # Update spw nvis
                 if not nVisPerSPW.has_key(spw):
-                    nVisPerSPW[spw] = nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                    nVisPerSPW[spw] = nvis
                 else:
-                    nVisPerSPW[spw] = nVisPerSPW[spw] + nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                    nVisPerSPW[spw] = nVisPerSPW[spw] + nvis
                 # Update scan nvis
                 if not nVisPerScan.has_key(scan):
-                    nVisPerScan[scan] = nrowsPerSPW*scanSpwMap[scan][spw]['nchan']
+                    nVisPerScan[scan] = nvis
                 else:
-                    nVisPerScan[scan] = nVisPerScan[scan] + nrowsPerSPW*scanSpwMap[scan][spw]['nchan']  
-                
-                    
-    # Calculate total number of visibilities per scan/spw combination and total numper of scan/spw pairs
-    nSpwScanPairs = 0
-    for scan in scanSpwMap:
-        for spw in scanSpwMap[scan]:
-            nSpwScanPairs = nSpwScanPairs + 1
-            scanSpwMap[scan][spw]['nVis'] = scanSpwMap[scan][spw]['nrows']*scanSpwMap[scan][spw]['nchan']
+                    nVisPerScan[scan] = nVisPerScan[scan] + nvis
+                # Update field nvis
+                if not nVisPerField.has_key(fieldId):
+                    nVisPerField[fieldId] = nvis
+                else:
+                    nVisPerField[fieldId] = nVisPerField[fieldId] + nvis                      
           
             
     # Sort the scan/spw pairs depending on the number of visibilities
     spwList = list()
     scanList = list()
+    fieldList = list()
     nVisList = list()
     for scan in scanSpwMap:
         for spw in scanSpwMap[scan]:
             spwList.append(spw)
             scanList.append(scan)
+            fieldList.append(scanSpwMap[scan][spw]['fieldId'])
             nVisList.append(scanSpwMap[scan][spw]['nVis'])
     
     spwArray = np.array(spwList)
     scanArray = np.array(scanList)
     nVisArray = np.array(nVisList)
+    
     nVisSortIndex = np.argsort(nVisArray)
     nVisSortIndex[:] = nVisSortIndex[::-1]
+    
     spwArray = spwArray[nVisSortIndex]
     scanArray = scanArray[nVisSortIndex]
     nVisArray = nVisArray[nVisSortIndex]
@@ -1041,6 +1048,13 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         spwNvisDistributionPerSubMs[spw] = np.zeros(nsubms)
         
         
+    # Make a map for the contribution of each subMS to each field   
+    fieldList = np.unique(fieldList)
+    fieldNvisDistributionPerSubMs = {}
+    for field in fieldList:
+        fieldNvisDistributionPerSubMs[field] = np.zeros(nsubms)        
+        
+        
     # Make an array for total number of visibilites per subms
     nvisPerSubMs = np.zeros(nsubms)     
         
@@ -1051,6 +1065,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         submScanSpwMap[subms] = {}
         submScanSpwMap[subms]['scanList'] = list()
         submScanSpwMap[subms]['spwList'] = list()
+        submScanSpwMap[subms]['fieldList'] = list()
         submScanSpwMap[subms]['nVisList'] = list()
         submScanSpwMap[subms]['nVisTotal'] = 0
         
@@ -1060,64 +1075,46 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         
         spw = spwArray[pair]
         scan = scanArray[pair]
-        
-        # Find the subMS with less visibilities for the given scan
-        optimalSubMsForScan = np.where(scanNvisDistributionPerSubMs[scan] == scanNvisDistributionPerSubMs[scan].min())
-        optimalSubMsForScan = optimalSubMsForScan[0] # np.where returns a tuple
-        scanNvisGap = scanNvisDistributionPerSubMs[scan].max() - scanNvisDistributionPerSubMs[scan].min()
-        # In case of multiple candidates select the subms with minum number of total visibilities  
-        if len(optimalSubMsForScan) > 1:
-            submsidx = np.argmin(nvisPerSubMs[optimalSubMsForScan])
-            optimalSubMsForScan = optimalSubMsForScan[submsidx]
+        field = scanSpwMap[scan][spw]['fieldId']
+                   
+        # Select the subMS that with bigger (scan gap + spw gap)
+        jointNvisGap = np.zeros(nsubms)
+        if 'scan' in axis:
+            jointNvisGap = jointNvisGap + scanNvisDistributionPerSubMs[scan].max() - scanNvisDistributionPerSubMs[scan]
+        if 'spw' in axis:
+            jointNvisGap = jointNvisGap + spwNvisDistributionPerSubMs[spw].max() - spwNvisDistributionPerSubMs[spw]
+        if 'field' in axis:
+            jointNvisGap = jointNvisGap + fieldNvisDistributionPerSubMs[field].max() - fieldNvisDistributionPerSubMs[field]
+        optimalSubMs = np.where(jointNvisGap == jointNvisGap.max())
+        optimalSubMs = optimalSubMs[0] # np.where returns a tuple
+        # In case of multiple candidates select the subms with minum number of total visibilities
+        if len(optimalSubMs) > 1:
+            subIdx = np.argmin(nvisPerSubMs[optimalSubMs])
+            optimalSubMs = optimalSubMs[subIdx]
         else:
-            optimalSubMsForScan = optimalSubMsForScan[0] 
-                
-        # Find the subMS with less visibilities for the given spw
-        optimalSubMsForSpw = np.where(spwNvisDistributionPerSubMs[spw] == spwNvisDistributionPerSubMs[spw].min())
-        optimalSubMsForSpw = optimalSubMsForSpw[0] # np.where returns a tuple
-        spwNvisGap = spwNvisDistributionPerSubMs[spw].max() - spwNvisDistributionPerSubMs[spw].min()
-        # In case of multiple candidates select the subms with minum number of total visibilities  
-        if len(optimalSubMsForSpw) > 1:
-            submsidx = np.argmin(nvisPerSubMs[optimalSubMsForSpw])
-            optimalSubMsForSpw = optimalSubMsForSpw[submsidx]
-        else:
-            optimalSubMsForSpw = optimalSubMsForSpw[0]
-                
-        # Select the best choice between the scan/spw optimal subms
-        optimalSubMs = None
-        optimalSubMsLabel = ''
-        if scanNvisGap == spwNvisGap:
-            optimalSubMsLabel = 'size'
-            if nvisPerSubMs[optimalSubMsForScan] < nvisPerSubMs[optimalSubMsForSpw]:
-                optimalSubMs = optimalSubMsForScan
-            else:
-                optimalSubMs = optimalSubMsForSpw
-        elif scanNvisGap > spwNvisGap:
-            optimalSubMs = optimalSubMsForScan
-            optimalSubMsLabel = 'scan'
-        else:
-            optimalSubMs = optimalSubMsForSpw
-            optimalSubMsLabel = 'spw'
+            optimalSubMs = optimalSubMs[0]        
                 
         # Store the scan/spw pair info in the selected optimal subms
         nVis = scanSpwMap[scan][spw]['nVis']
-        #print "scan=%s spw=%s nVis=%i optimalSubMsForScan=%i scanNvisGap=%i optimalSubMsForSpw=%i spwNvisGap=%i optimalSubMs=%i optimalSubMsLabel=%s nVis=%i" \
-        #% (scan,spw,nVis,optimalSubMsForScan,scanNvisGap,optimalSubMsForSpw,spwNvisGap,optimalSubMs,optimalSubMsLabel,nvisPerSubMs[optimalSubMs])
         nvisPerSubMs[optimalSubMs] = nvisPerSubMs[optimalSubMs] + nVis
         submScanSpwMap[optimalSubMs]['scanList'].append(int(scan))
         submScanSpwMap[optimalSubMs]['spwList'].append(int(spw))
+        submScanSpwMap[optimalSubMs]['fieldList'].append(field)
         submScanSpwMap[optimalSubMs]['nVisList'].append(nVis)
         submScanSpwMap[optimalSubMs]['nVisTotal'] = submScanSpwMap[optimalSubMs]['nVisTotal'] + nVis
+        
         # Also update the counters for the subms-scan and subms-spw maps            
         scanNvisDistributionPerSubMs[scan][optimalSubMs] = scanNvisDistributionPerSubMs[scan][optimalSubMs] + nVis
         spwNvisDistributionPerSubMs[spw][optimalSubMs] = spwNvisDistributionPerSubMs[spw][optimalSubMs] + nVis
+        fieldNvisDistributionPerSubMs[field][optimalSubMs] = fieldNvisDistributionPerSubMs[field][optimalSubMs] + nVis
             
 
     # Generate plots
     if plotMode > 0:
         plt.close()
-        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,'spw ',plotMode=plotMode)
-        plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,'scan ',plotMode=plotMode)
+        plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,os.path.basename(msfilename),'scan',plotMode=plotMode)
+        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,os.path.basename(msfilename),'spw',plotMode=plotMode)
+        plotVisDistribution(nVisPerField,fieldNvisDistributionPerSubMs,os.path.basename(msfilename),'field',plotMode=plotMode)
         
         
     # Get SPW from DDI sub-table
@@ -1143,8 +1140,8 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         # Iterate over scan/spw pairs for this subms
         for pair in range(len(submScanSpwMap[subms]['scanList'])):
             # Get scans/spw for this pair
-            spw = submScanSpwMap[optimalSubMs]['spwList'][pair]
-            scan = submScanSpwMap[optimalSubMs]['scanList'][pair]
+            spw = submScanSpwMap[subms]['spwList'][pair]
+            scan = submScanSpwMap[subms]['scanList'][pair]
             # Get ddi list for this spw
             ddiList = spwToDdi[spw]
             # Iterate over list of DDIs for this SPW
@@ -1161,18 +1158,19 @@ def getPartitonMap(msfilename, nsubms, selection={}, plotMode=0):
         submScanSpwMap[subms]['taql'] = mytaql
 
 
-    # Resturn map of scan/spw pairs per subMs
+    # Return map of scan/spw pairs per subMs
     return submScanSpwMap
 
 
-def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,label,plotMode=1):
+def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,filename,idLabel,plotMode=1):
     """Generates a plot to show the distribution of scans/wp across subMs.
     The plot style is a stacked bar char, where the spw/scans with higher number of visibilities are shown at the bottom
     
     Keyword arguments:
         nvisMap                          --    Map of total numbe of visibilities per Id
         idNvisDistributionPerSubMs       --    Map of visibilities per subMS for each Id
-        label                            --    Label to indicate the id (spw, scan) to be used for the figure title
+        filename                         --    Name of MS to be shown in the title and plot filename
+        idLabel                          --    idLabel to indicate the id (spw, scan) to be used for the figure title
         plotMode                         --    Integer in the range 0-3 to determine the plot generation mode
                                                  0 - Don't generate any plots
                                                  1 - Show plots but don't save them
@@ -1225,7 +1223,7 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,label,plotMode=1):
     nsubms = len(idNvisDistributionPerSubMs[idNvisDistributionPerSubMs.keys()[0]])
     idx = np.arange(nsubms) # location of the bar centers in the horizontal axis
     bottomLevel = np.zeros(nsubms) # Reference level for the bars to be stacked after the previous ones
-    legendLabels = list() # List of legend labels
+    legendidLabels = list() # List of legend idLabels
     plotHandles=list() # List of plot handles for the legend
     for id in idArraySorted:
         
@@ -1238,14 +1236,14 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,label,plotMode=1):
                 
         # Update legend lists
         plotHandles.append(idplot)
-        legendLabels.append(label + id)
+        legendidLabels.append(idLabel + ' ' + id)
         
         # Update reference level
         bottomLevel = bottomLevel + idNvisDistributionPerSubMs[id]
 
         
     # Add legend
-    plt.legend( plotHandles, legendLabels, bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.)
+    plt.legend( plotHandles, legendidLabels, bbox_to_anchor=(1.01, 1), loc=2, borderaxespad=0.)
     
     
     # AQdd lable for y axis
@@ -1260,8 +1258,8 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,label,plotMode=1):
     
     
     # Add title
-    title = label + 'visibilities distribution across sub-MSs'
-    plt.title(label + 'visibilities distribution across sub-MSs')
+    title = filename + ' ' + idLabel + ' ' + 'visibilities distribution across sub-MSs'
+    plt.title(title)
     
     
     # Resize to full screen
