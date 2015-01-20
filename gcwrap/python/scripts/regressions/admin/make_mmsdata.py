@@ -51,19 +51,25 @@ TASKLIST = [
 DATAPATH = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
 def usage():
-    print '========================================================================='
-    print '\nmake_mmsdata will create Multi-MS data for defined CASA tasks.'
+    print '===================================================================================='
+    print '\nmake_mmsdata will create Multi-MS data for functional tests of defined CASA tasks.'
     print 'Usage:\n'
     print 'casapy [casapy-options] -c make_mmsdata.py [options] <tasks>\n'
     print 'Options:'
-    print '   no option         print this message and exit.'
-    print '   --all             run the script for all tasks in TASKLIST.'
-    print '   --ignore          do no create MMS for the given <tasks>.'
-    print '   --list            print the list of tasks from TASKLIST and exit.'
+    print '   no option         Print this message and exit.'
+    print '   --all             Create MMS for all tasks in TASKLIST.'
+    print '   --ignore          From all tasks, do no create MMS for the given <tasks>.'
+    print '   --list            Print the list of tasks from TASKLIST and exit.'
     print '   --axis            separationaxis to use (spw, scan, auto); default:auto'
-    print '   --numsubms        number of subMSs to use in MMS'
+    print '   --numsubms        Number of subMSs to use when creating MMS'
+    print ''
     print 'NOTE: it will look for MS data in the data repository under unittest.\r'
-    print '=========================================================================='
+    print 'Examples:'
+    print ' 1) Create MMS for all tasks, except flagdata and fluxscale'
+    print '          make_mmsdata --ignore flagdata fluxscale'
+    print ' 2) Create MMS for all tasks except setjy and use separation axis scan and numsubms=8'
+    print '          make_mmsdata --axis=scan --numsubms=8 --ignore setjy' 
+    print '===================================================================================='
 
 
 def selectList(nolist):
@@ -86,6 +92,7 @@ def mmstest(mytask, axis, subms):
     MMSPATH = './unittest_mms/'+mytask
 
     print '--------- Will create MMS data for test_'+mytask
+    
     ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, 
                     axis=axis, numsubms=subms, createmslink=True, cleanup=True)
 
@@ -103,6 +110,9 @@ def main(thislist, axis='auto', numsubms=4):
         usage()
         os._exit(0)
         
+    print "Will create MMS for the following tasks %s"%thislist
+    print
+    
     # Loop through task list
     for t in thislist:
         if t not in TASKLIST:
@@ -309,8 +319,9 @@ if __name__ == "__main__":
                         break
                                         
                     elif o in ("-i", "--ignore"):
-                        # Will ignore the tasks given in args
+                        # From all tasks, it will ignore the ones given in args
                         ignore = True
+                        all = True
                         break
                     
                     elif o in ("-l", "--list"):
@@ -327,8 +338,13 @@ if __name__ == "__main__":
                 usage()
                 os._exit(0)
                 
-            if args != [] and not all:
-                tasknames = args
+#            if args != [] and all and ignore:
+#                # From all tasks, ignore the ones given in args
+#                tasknames = selectList(args)
+                
+            if args != []:
+                if not all:
+                    tasknames = args
                 if ignore:
                     tasknames = selectList(args)
                 
@@ -337,6 +353,23 @@ if __name__ == "__main__":
     except:
         traceback.print_exc()
     
-    
+# Use cases:
+# 1) run on all tasks in TASKLIST with default parameters
+#     make_mmsdata.py --all
+# 2) run on two tasks with specific parameters
+#     make_mmsdata.py --axis=spw --numsubms=8 [flagdata,split]
+# 3) ignore some tasks from TASKLIST
+#    make_mmsdata.py --ignore=[setjy,uvcontsub]
+
+
+
+
+
+
+
+
+
+
+  
     
     
