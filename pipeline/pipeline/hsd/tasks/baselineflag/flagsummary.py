@@ -14,6 +14,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
+from pipeline.domain.datatable import OnlineFlagIndex
 
 from . import SDFlagPlotter as SDP
 from .. import common
@@ -122,6 +123,10 @@ class SDBLFlagSummary(object):
         # FLAG_PERMANENT[0] --- 'WeatherFlag'
         # FLAG_PERMANENT[1] --- 'TsysFlag'
         # FLAG_PERMANENT[2] --- 'UserFlag'
+        # FLAG_PERMANENT[3] --- 'OnlineFlag' (fixed)
+        if pflag[OnlineFlagIndex] == 0:
+            return 0
+        
         types = ['WeatherFlag', 'TsysFlag', 'UserFlag']
         mask = 1
         for idx in range(len(types)):

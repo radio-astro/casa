@@ -26,6 +26,7 @@ LogLevelMap2 = {'critical': CRITICAL, # 50
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+from pipeline.domain.datatable import OnlineFlagIndex
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -190,7 +191,8 @@ def get_index_list(datatable, antenna, spw, pols=None, srctype=None):
     pol_column = table1.getcol('POL')
     srctype_column = table1.getcol('SRCTYPE')
     permanent_flag = table2.getcol('FLAG_PERMANENT')
-    f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and permanent_flag[2,i] == 1
+    # skip if the row is flagged by online flagging
+    f = lambda i, j: antenna_column[i] == antenna[j] and spw_column[i] == spw[j] and permanent_flag[OnlineFlagIndex,i] == 1
     if pols is None or len(pols) == 0:
         g = f
     else:

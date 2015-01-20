@@ -108,6 +108,12 @@ def __tabledescrw():
 TABLEDESC_RO = __tabledescro()
 TABLEDESC_RW = __tabledescrw()
 
+# FLAG_PERMANENT Layout
+WeatherFlagIndex = 0
+TsysFlagIndex = 1
+UserFlagIndex = 2
+OnlineFlagIndex = 3
+
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 

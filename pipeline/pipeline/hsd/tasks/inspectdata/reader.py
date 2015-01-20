@@ -10,6 +10,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
+from pipeline.domain.datatable import OnlineFlagIndex
 
 from ..common import science_spw, mjd_to_datestring, TableSelector
 
@@ -170,13 +171,13 @@ class DataTableReader(object):
         # row base storing
         stats = [-1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
         flags = [1, 1, 1, 1, 1, 1, 1]
-        pflags = [1, 1, 1]
+        pflags = [1, 1, 1, 1]
         masklist = ColMaskList.NoMask
         for x in xrange(nrow):
-            # FLAGROW is mapped into UserFlag (PermanentFlag[2])
+            # FLAGROW is mapped into OnlineFlag (PermanentFlag[3])
             # NOTE: data is valid if Tflagrow is 0
-            #       data is valid if pflags[2] is 1
-            pflags[2] = 1 if Tflagrow[x] == 0 else 0
+            #       data is valid if pflags[3] is 1
+            pflags[OnlineFlagIndex] = 1 if Tflagrow[x] == 0 else 0
             sDate = mjd_to_datestring(Tmjd[x],unit='day')
             self.datatable.putcell('DATE',ID,sDate)
             self.datatable.putcell('STATISTICS',ID,stats)
