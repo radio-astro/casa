@@ -5,6 +5,7 @@ import shutil
 from __main__ import default
 from tasks import *
 from taskinit import *
+from parallel.parallel_task_helper import ParallelTaskHelper
 #from tests.test_split import check_eq, SplitChecker
 import unittest
 
@@ -28,7 +29,10 @@ if os.environ.has_key('TEST_DATADIR'):
     DATADIR = str(os.environ.get('TEST_DATADIR'))
     if os.path.isdir(DATADIR):
         datapath = DATADIR
-        
+
+if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
+
 #Commented out for refactoring (eliminated test_split dependence)
 #class UVContChecker(SplitChecker):
 #    """
