@@ -24,7 +24,7 @@ TASKLIST = [
             'bandpass',
             'concat', # shared with virtualconcat
             'cvel',
-            'fixvis'
+            'fixvis',
             'flagdata',
             'fluxscale',
             'gaincal',
