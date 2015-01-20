@@ -19,12 +19,6 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hifa_tsysflag</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
         <Command xmlns="">hsd_mstoscantable</Command>
         <ParameterSet>
         </ParameterSet>
