@@ -444,8 +444,6 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
   			   static_cast<uint16_t>(order), 
   			   nchan, ctx_indices, bl_contexts);
-  cout << "created " << bl_contexts.size() << "contexts" << endl;
-  cout << "index length= " << ctx_indices.size() << endl;
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
       Vector<Int> data_spw = vb->spectralWindows();
@@ -485,8 +483,6 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
   	  }
   	  // actual execution of single spectrum
-	  cout << "start baseline subtraction" << endl;
-	  cout << "created context = " << ctx_indices[idx] << endl;
   	  status = 
   	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, 
   						    spec.data, 
@@ -499,7 +495,6 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   						    mask.data, 
   						    spec.data, 
   						    &bl_status);
-	  cout << "done baseline subtraction" << endl;
   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
   	    //raise exception?
   	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
@@ -509,7 +504,6 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   	} // end of polarization loop
       } // end of chunk row loop
       // write back data cube to VisBuffer
-      cout << "fill" << num_row << "rows" << endl;
       sdh_->fillCubeToOutputMs(vb, data_chunk);
     } // end of vi loop
   } // end of chunk loop
