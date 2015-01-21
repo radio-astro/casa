@@ -1,1 +1,5 @@
-latex2html -split 4 msselection.latex
+#latex2html -split 4 msselection.latex
+
+#
+# Apparently, latex2html is no more supported.  The "html,3" is supposed to do the equivalent of "-split" above, but not to my satisfaction yet.
+htlatex ../msselection.latex "html,3"
