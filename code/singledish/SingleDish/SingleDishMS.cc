@@ -155,7 +155,7 @@ void SingleDishMS::set_selection(Record const &selection, bool const verbose)
     spwExpr(""), uvDistExpr(""), taQLExpr(""), polnExpr(""),
     scanExpr(""), arrayExpr(""), intentExpr(""), obsExpr("");
   timeExpr = get_field_as_casa_string(selection,"timerange");
-  antennaExpr = get_field_as_casa_string(selection,"antenna");
+  antennaExpr = get_field_as_casa_string(selection,"baseline");
   fieldExpr = get_field_as_casa_string(selection,"field");
   spwExpr = get_field_as_casa_string(selection,"spw");
   uvDistExpr = get_field_as_casa_string(selection,"uvdist");
