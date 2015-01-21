@@ -632,11 +632,14 @@ const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 // -----------------------------------------------------------------------
 const Cube<Complex> & MSTransformBufferImpl::visCube () const
 {
+	// jagonzal: Data column existence should be check when the MS is open
+	/*
 	if ( (not manager_p->dataColumnAvailable_p) and (not manager_p->getVisBuffer()->modelDataIsVirtual()) )
 	{
 		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
 				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
 	}
+	*/
 
 	if (not manager_p->spectrumReshape_p)
 	{

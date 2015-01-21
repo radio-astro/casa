@@ -290,7 +290,15 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 
 	if (bufferMode_p)
 	{
-		datacolumn_p = "ALL";
+		// datacolumn_p = "ALL";
+		// jagonzal: plotms actually sets the datacolumn to show
+		exists = configuration.fieldNumber ("datacolumn");
+		if (exists >= 0)
+		{
+			configuration.get (exists, datacolumn_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Data column is " << datacolumn_p << LogIO::POST;
+		}
 
 		exists = configuration.fieldNumber ("outputms");
 		if (exists >= 0)
@@ -977,7 +985,7 @@ void MSTransformManager::open()
 	}
 
 
-	//jagonzal (CAS-5174)dataHandler_p->fillMainTable_p = False;
+	//jagonzal (CAS-5174)
 	Bool selectionOk = False;
 	if (not bufferMode_p)
 	{
@@ -1353,7 +1361,7 @@ IPosition MSTransformManager::getShape()
 		Int inputSpw = visibilityIterator_p->getVisBuffer()->spectralWindows()(0);
 		outputCubeShape(1) = numOfOutChanMap_p[inputSpw];
 	}
-	else if (hanningSmooth_p)
+	else
 	{
 		outputCubeShape(1) = visibilityIterator_p->getVisBuffer()->nChannels();
 	}

@@ -240,6 +240,7 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("timebin", "30s");
 				configuration.define ("chanaverage", True);
 				configuration.define ("chanbin", 2);
+				configuration.define ("datacolumn", string("DATA"));
 			}
 			else
 			{
@@ -266,7 +267,6 @@ String produceTmpTransformedMSToCompare(Record configuration)
 {
 	String tmpFileName = File::newUniqueName("").absoluteName();
 	configuration.define("outputms",tmpFileName);
-	configuration.define("datacolumn","ALL");
 	MSTransformManager *manager = new MSTransformManager(configuration);
 	manager->open();
 	manager->setup();
@@ -378,6 +378,50 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			cout << BLUE;
 			cout << " COMPARING CHUNK " << chunk << " BUFFER " << buffer << endl;
 
+			// Number of Correlations
+			if (visBuffer->nCorrelations() != visBufferRef->nCorrelations())
+			{
+				cout << RED;
+				cout 	<< " nCorrelations does not match in chunk " << chunk << " buffer " << buffer
+						<< " transformBuffer=" << visBuffer->nCorrelations()
+						<< " transformFile=" << visBufferRef->nCorrelations() << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout << "=>nCorrelations match" << endl;
+			}
+
+			// Number of Channels
+			if (visBuffer->nChannels() != visBufferRef->nChannels())
+			{
+				cout << RED;
+				cout 	<< " nChannels does not match in chunk " << chunk << " buffer " << buffer
+						<< " transformBuffer=" << visBuffer->nChannels()
+						<< " transformFile=" << visBufferRef->nChannels() << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout << "=>nChannels match" << endl;
+			}
+
+			// Number of rows
+			if (visBuffer->nRows() != visBufferRef->nRows())
+			{
+				cout << RED;
+				cout 	<< " nRows does not match in chunk " << chunk << " buffer " << buffer
+						<< " transformBuffer=" << visBuffer->nRows()
+						<< " transformFile=" << visBufferRef->nRows() << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout << "=>nRows match" << endl;
+			}
 
 			// Re-indexable Vectors
 			row = compareVector(visBuffer->dataDescriptionIds(),visBufferRef->dataDescriptionIds(),0);
@@ -667,6 +711,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>visCube match" << endl;
 			}
 
+			/*
 			pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{
@@ -698,6 +743,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout 	<< "=>visCubeModel match" << endl;
 			}
+			*/
 
 			Double time0 = visBufferRef->time()(0);
 
