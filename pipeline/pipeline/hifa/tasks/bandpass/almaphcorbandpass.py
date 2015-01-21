@@ -78,8 +78,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
             # are the same
             if inputs.hm_phaseup == 'snr':
                 if len(snr_result.spwids) <= 0:
-                    LOG.warn('SNR based phaseup solint estimates are ' + \
-                             'unavailable for MS %s' % (inputs.ms.basename))
+                    LOG.warn('SNR based phaseup solint estimates are unavailable for MS %s' % (inputs.ms.basename))
                     phaseupsolint = inputs.phaseupsolint
                 else:
                     phaseupsolint = self._get_best_phaseup_solint(snr_result)
@@ -90,8 +89,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
         # Now perform the bandpass
         if inputs.hm_bandpass == 'snr':
             if len(snr_result.spwids) <= 0:
-                LOG.warn('SNR based bandpass solint estimates are unavailable' + \
-                         ' for MS %s' % (inputs.ms.basename))
+                LOG.warn('SNR based bandpass solint estimates are unavailable for MS %s' % (inputs.ms.basename))
             else:
                 LOG.info('Using SNR based solint estimates')
             result = self._do_snr_bandpass(snr_result)
@@ -149,8 +147,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
 		continue
             if snr_result.nphsolutions[i] < inputs.phaseupnsols:
                 LOG.warn('Phaseup solution for spw %s has only %d points in MS %s' % \
-                         (snr_result.spwids[i], snr_result.nphsolutions[i], 
-                         inputs.ms.basename))
+                         (snr_result.spwids[i], snr_result.nphsolutions[i], inputs.ms.basename))
 		factor = float(max(1, snr_result.nphsolutions[i])) / inputs.phaseupnsols
 		newsolint = quanta.tos(quanta.mul(snr_result.phsolints[i], factor))
                 LOG.warn('Resetting estimated phaseup solint for spw %s from %s to %s in MS %s' % \
@@ -349,9 +346,7 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                             str(bandwidth / inputs.maxchannels) + 'MHz'
                 else:
                     inputs.solint = orig_solint
-                    LOG.warn('Reverting to default bandpass solint %s for spw' + \
-                             ' %s in MS %s' % (inputs.solint, spw.id, 
-                             inputs.ms.basename))
+                    LOG.warn("Reverting to default bandpass solint %s for spw %s in MS %s" % (inputs.solint, spw.id, inputs.ms.basename))
 
                 # Compute and append bandpass solution
                 inputs.spw = spw.id
