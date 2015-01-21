@@ -49,7 +49,7 @@
 	<value>True</value>
     </param>
     
-    <param type="bool" name="dbservice" subparam="true">
+    <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
 	<value>True</value>
     </param>
@@ -73,7 +73,6 @@
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
-		<default param="dbservice"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -82,7 +81,6 @@
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
-		<default param="dbservice"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>

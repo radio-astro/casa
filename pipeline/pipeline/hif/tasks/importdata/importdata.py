@@ -26,7 +26,6 @@ from pipeline.infrastructure import casa_tasks
 from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
-USEFLUXSERVICE = True
 
 class ImportDataInputs(basetask.StandardInputs):
     @basetask.log_equivalent_CASA_call
@@ -79,6 +78,15 @@ class ImportDataInputs(basetask.StandardInputs):
         if type(value) is types.ListType:
             self._my_vislist = value 
         self._vis = value
+        
+    @property
+    def dbservice(self):
+        return self._dbservice
+    
+    @dbservice.setter    
+    def dbservice(self, value):
+        self._dbservice = value
+        
 
 
 class ImportDataResults(basetask.Results):
@@ -251,7 +259,8 @@ class ImportData(basetask.StandardTaskTemplate):
             results.origin[ms.basename] = ms_origin
 
         # get the flux measurements from Source.xml for each MS
-        xml_results = get_setjy_results(observing_run.measurement_sets)
+        #print inputs.dbservice
+        xml_results = get_setjy_results(observing_run.measurement_sets, dbservice=inputs.dbservice)
         # write/append them to flux.csv
 
         # Cycle 1 hack for exporting the field intents to the CSV file: 
@@ -352,13 +361,13 @@ class ImportData(basetask.StandardTaskTemplate):
                 f.writelines(['#\n'])
 
 
-def get_setjy_results(mses):
+def get_setjy_results(mses, dbservice=True):
     results = []
     for ms in mses:
         result = commonfluxresults.FluxCalibrationResults(ms.name)
         science_spw_ids = [spw.id for spw in ms.get_spectral_windows()]
 
-        for source, measurements in read_fluxes(ms).items():
+        for source, measurements in read_fluxes(ms, dbservice=dbservice).items():
             m = [m for m in measurements if int(m.spw_id) in science_spw_ids]
 
             # import flux values for all fields and intents so that we can 
@@ -372,7 +381,9 @@ def get_setjy_results(mses):
     return results
 
 
-def read_fluxes(ms):
+def read_fluxes(ms, dbservice=True):
+    
+
     result = collections.defaultdict(list)
 
     science_spw_ids = [spw.id for spw in ms.get_spectral_windows()]
@@ -411,14 +422,13 @@ def read_fluxes(ms):
         else:
 	    source = ms.sources[int(source_id)]
 	    sourcename = source.name
-
-            
+       
 
         # all elements must contain data to proceed
         if None in (flux_text, frequency_text, source_id, spw_id):
             #See what elements can be used
             
-            if USEFLUXSERVICE:
+            if dbservice:
             
 		try:
 		
@@ -455,7 +465,7 @@ def read_fluxes(ms):
         #  - The observation date
         #  and attempt to call the online flux catalog web service, and use the flux result
         #  and spectral index
-        if USEFLUXSERVICE:
+        if dbservice:
         
 	    try:
 	        
@@ -502,7 +512,7 @@ def flux_nosourcexml(ms):
     
     result = collections.defaultdict(list)
     
-    if USEFLUXSERVICE:
+    if dbservice:
     
         spws = ms.get_spectral_windows()
         
@@ -553,7 +563,10 @@ def fluxservice(ms, frequency, sourcename):
     sourcename = sanitize_string(sourcename)
     
     urlparams = buildparams(sourcename, date, frequency)
-    dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams))
+    try:
+        dom =  minidom.parse(urllib.urlopen(serviceurl + '?%s' % urlparams, timeout=10.0))
+    except:
+        LOG.warn('DB flux service timeout/connection problem...')
     
     LOG.debug('url: ' + serviceurl + '?%s' % urlparams)
     
