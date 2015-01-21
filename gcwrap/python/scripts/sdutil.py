@@ -1361,4 +1361,53 @@ def parse_idx_selection(s, id_min, id_max):
             if id_from <= id_to:
                 l.extend(range(id_from,id_to+1))
     return l
-            
+
+def get_spwids(selection, infile=None):
+    # return a comma-separated string of spw IDs.
+    # selection should be an output of ms.msseltoindex()
+
+    spw_list = selection['spw']
+    if len(spw_list) == 0:
+        if infile is None:
+            raise Exception, "infile is needed when selection['spw'] is empty."
+        with tbmanager(os.path.join(infile, 'DATA_DESCRIPTION')) as tb:
+            spw_list = tb.getcol('SPECTRAL_WINDOW_ID')
+
+    l= []
+    for item in spw_list:
+        l.append(str(item))
+    return ','.join(l)
+
+def get_spwchs(selection, infile):
+    # return a string containing spw IDs, nchans and edge 
+    # indices of selected regions. 
+    # parameters: 
+    #     selection: an output of ms.msseltoindex()
+    # format of returned value:
+    #     one or more 'IFNO:NCHAN:IDX' strings connected 
+    #     by comma. 'IDX' contains edge indices of selected 
+    #     channel regions connected by semicolon. 
+    # example: 
+    #     if two channel regions from 100 to 200 and from 
+    #     250 to 350 are selected for IF=3 (nchan=1024) and 
+    #     all channels are selected for IF=4 (nchan=2048), 
+    #     the returned value will be 
+    #     '3:1024:100;200;250;350,4:2048:0;2047'.
+
+    with tbmanager(os.path.join(infile, 'SPECTRAL_WINDOW')) as tb:
+        nchanmap = dict(((str(i),str(tb.getcell('NUM_CHAN',i))) for i in xrange(tb.nrows())))
+
+    ch_info = selection['channel']
+    d = {}
+    for item in ch_info:
+        spwid = str(item[0])
+        try:
+            d.keys().index(spwid)
+            d[spwid].append(str(item[1]))
+        except:
+            d[spwid] = [str(item[1])]
+        d[spwid].append(str(item[2]))
+    l = []
+    for key in d.keys():
+        l.append(':'.join([key, nchanmap[key], ';'.join(d[key])]))
+    return ','.join(l)

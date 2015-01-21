@@ -139,6 +139,28 @@ singledishms::subtract_baseline(std::vector<bool> const &mask,
 }
 
 bool
+singledishms::subtract_baseline_new(string const& spwch,
+				int const order,
+				float const clip_threshold_sigma,
+				int const num_fitting_max)
+{
+  bool rstat(false);
+  *itsLog << _ORIGIN;
+  try {
+    assert_valid_ms();
+    itsSd->subtract_baseline_new(spwch, order, 
+			     clip_threshold_sigma, 
+			     num_fitting_max);
+    rstat = true;
+  } catch  (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+	    << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+bool
 singledishms::set_selection(::casac::variant const& spw,
 		    ::casac::variant const& field, 
 		    ::casac::variant const& antenna, 
