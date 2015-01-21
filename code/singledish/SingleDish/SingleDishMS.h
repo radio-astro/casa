@@ -48,6 +48,10 @@ public:
 			 int const order, 
 			 float const clip_threshold_sigma=3.0, 
 			 int const num_fitting_max=1);
+  void subtract_baseline_new(string const& spwch, 
+			 int const order, 
+			 float const clip_threshold_sigma=3.0, 
+			 int const num_fitting_max=1);
 
 private:
   /////////////////////////
@@ -71,6 +75,21 @@ private:
 		  MSMainEnums::PredefinedColumns &out);
   // Convert a Complex Array to Float Array
   void convertArrayC2F(Array<Float> &from, Array<Complex> const &to);
+  // Split a string with given delimiter
+  std::vector<string> split_string(string const &s, char delim);
+  // Parse a string output by sdutil.get_spwchs().
+  void parse_spwch(string const &spwch, 
+		   Vector<Int> &spw, 
+		   Vector<size_t> &nchan, 
+		   Vector<Vector<Bool> > &mask);
+  // Create a set of baseline contexts
+  void create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
+			        uint16_t order, 
+			        Vector<size_t> const &nchan, 
+			        Vector<size_t> ctx_indices, 
+			        Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
+  // Destroy a set of baseline contexts
+  void destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
 
   /////////////////////////////
   /// MS handling functions ///

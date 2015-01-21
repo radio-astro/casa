@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <vector>
 
 //#include <libsakura/sakura.h>
 //#include <libsakura/config.h>
@@ -317,6 +319,119 @@ void SingleDishMS::convertArrayC2F(Array<Float> &to,
     }
 }
 
+std::vector<string> SingleDishMS::split_string(string const &s, 
+					       char delim)
+{
+  std::vector<string> elems;
+  string item;
+  for (size_t i = 0; i < s.size(); ++i) {
+    char ch = s.at(i);
+    if (ch == delim) {
+      if (!item.empty()) {
+	elems.push_back(item);
+      }
+      item.clear();
+    } else {
+      item += ch;
+    }
+  }
+  if (!item.empty()) {
+    elems.push_back(item);
+  }
+  return elems;
+}
+
+void SingleDishMS::parse_spwch(string const &spwch, 
+			       Vector<Int> &spw, 
+			       Vector<size_t> &nchan, 
+			       Vector<Vector<Bool> > &mask)
+{
+  std::vector<string> elems = split_string(spwch, ',');
+  size_t length = elems.size();
+  spw.resize(length);
+  nchan.resize(length);
+  mask.resize(length);
+  Vector<Vector<size_t> > edge(length);
+
+  for (size_t i = 0; i < length; ++i) {
+    std::vector<string> elems_spw = split_string(elems[i], ':');
+    std::istringstream iss0(elems_spw[0]);
+    iss0 >> spw[i];
+    std::istringstream iss1(elems_spw[1]);
+    iss1 >> nchan[i];
+    std::istringstream iss2(elems_spw[2]);
+    string edges;
+    iss2 >> edges;
+    std::vector<string> elems_edge = split_string(edges, ';');
+    size_t length_edge = elems_edge.size();
+    edge[i].resize(length_edge);
+    for (size_t j = 0; j < length_edge; ++j) {
+      std::istringstream iss(elems_edge[j]);
+      iss >> edge[i][j];
+    }
+    mask[i].resize(nchan[i]);
+    for (size_t j = 0; j < nchan[i]; ++j) {
+      mask[i][j] = False;
+    }
+    for (size_t j = 0; j < length_edge; j+=2) {
+      for (size_t k = edge[i][j]; k <= edge[i][j+1]; ++k) {
+	mask[i][k] = True;
+      }
+    }
+  }
+}
+
+void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
+		 	 		    uint16_t order, 
+					    Vector<size_t> const &nchan, 
+					    Vector<size_t> ctx_indices, 
+					    Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+{
+  std::vector<size_t> uniq_nchan;
+  uniq_nchan.clear();
+  ctx_indices.resize(nchan.nelements());
+  for (size_t i = 0; i < nchan.nelements(); ++i) {
+    size_t idx = 0;
+    bool found = false;
+    for (size_t j = 0; j < uniq_nchan.size(); ++j) {
+      if (uniq_nchan[j] == nchan[i]) {
+	idx = j;
+	found = true;
+	break;
+      }
+    }
+    if (found) {
+      ctx_indices[i] = idx;
+    } else {
+      uniq_nchan.push_back(nchan[i]);
+      ctx_indices[i] = uniq_nchan.size() - 1;
+    }
+  }
+
+  bl_contexts.resize(uniq_nchan.size());
+  LIBSAKURA_SYMBOL(Status) status; 
+  for (size_t i = 0; i < uniq_nchan.size(); ++i) {
+    status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type, 
+						     static_cast<uint16_t>(order), 
+						     uniq_nchan[i], 
+						     &bl_contexts[i]);
+    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+      std::cout << "   -- error occured in CreateBaselineContext()." << std::flush;
+    }
+  }
+}
+
+void SingleDishMS::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+{
+  LIBSAKURA_SYMBOL(Status) status;
+  for (size_t i = 0; i < bl_contexts.nelements(); ++i) {
+    status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_contexts[i]);
+    if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+      std::cout << "   -- error occured in DestroyBaselineContext()." << std::flush;
+    }
+  }
+}
+
 void SingleDishMS::set_data_cube_float(vi::VisBuffer2 &vb,
 				       Cube<Float> const &data_cube)
 {
@@ -486,6 +601,115 @@ void SingleDishMS::subtract_baseline(Vector<Bool> const &in_mask,
       }
     } // end of vi loop
   } // end of chunk loop
+
+  double tend = gettimeofday_sec();
+  std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+}
+
+void SingleDishMS::subtract_baseline_new(string const &spwch,
+				     int const order, 
+				     float const clip_threshold_sigma, 
+				     int const num_fitting_max)
+{
+  LogIO os(_ORIGIN);
+  os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
+  // in_ms = out_ms
+  // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
+  // no iteration is necessary for the processing.
+  // procedure
+  // 1. iterate over MS
+  // 2. pick single spectrum from in_column (this is not actually necessary for simple scaling but for exibision purpose)
+  // 3. fit a polynomial to each spectrum and subtract it
+  // 4. put single spectrum (or a block of spectra) to out_column
+
+  double tstart = gettimeofday_sec();
+
+  prepare_for_process();
+  Block<Int> columns(1);
+  columns[0] = MS::DATA_DESC_ID;
+  vi::SortColumns sc(columns,False);
+  vi::VisibilityIterator2 vi(*mssel_,sc,True);
+  vi::VisBuffer2 *vb = vi.getVisBuffer();
+  LIBSAKURA_SYMBOL(Status) status;
+  LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+
+  Vector<Int> spw;
+  Vector<size_t> nchan;
+  Vector<Vector<Bool> > in_mask;
+  parse_spwch(spwch, spw, nchan, in_mask);
+  Vector<size_t> ctx_indices;
+  Vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
+  create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
+			   static_cast<uint16_t>(order), 
+			   nchan, ctx_indices, bl_contexts);
+
+  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
+    for (vi.origin(); vi.more(); vi.next()) {
+      Vector<Int> data_spw = vb->spectralWindows();
+      size_t const num_chan = static_cast<size_t>(vb->nChannels());
+      size_t const num_pol = static_cast<size_t>(vb->nCorrelations());
+      size_t const num_row = static_cast<size_t>(vb->nRows());
+      Cube<Float> data_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<float> spec(num_chan);
+      Cube<Bool> flag_chunk(num_pol,num_chan,num_row);
+      SakuraAlignedArray<bool> mask(num_chan);
+
+      // get a data cube (npol*nchan*nrow) from VisBuffer
+      get_data_cube_float(*vb, data_chunk);
+      // get a flag cube (npol*nchan*nrow) from VisBuffer
+      get_flag_cube(*vb, flag_chunk);
+      // loop over MS rows
+      for (size_t irow=0; irow < num_row; ++irow) {
+	size_t idx = 0;
+	for (size_t ispw=0; ispw < spw.nelements(); ++ispw) {
+	  if (data_spw[irow] == spw[ispw]) {
+	    idx = ispw;
+	    break;
+	  }
+	}
+	assert(num_chan == nchan[idx]);
+
+	// loop over polarization
+	for (size_t ipol=0; ipol < num_pol; ++ipol) {
+	  // get a spectrum from data cube
+	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spec);
+	  // get a channel mask from data cube
+	  // (note that mask used here is actually a flag)
+	  get_flag_from_cube(flag_chunk, irow, ipol, num_chan, mask);
+	  // convert flag to mask by taking logical NOT of flag
+	  // and then operate logical AND with in_mask
+	  for (size_t ichan=0; ichan < num_chan; ++ichan) {
+	    mask.data[ichan] = in_mask[idx][ichan] && (!(mask.data[ichan]));
+	  }
+	  // actual execution of single spectrum
+	  status = 
+	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, 
+						    spec.data, 
+						    mask.data, 
+						    bl_contexts[ctx_indices[idx]], 
+						    static_cast<uint16_t>(order), 
+						    clip_threshold_sigma, 
+						    num_fitting_max,
+						    true, 
+						    mask.data, 
+						    spec.data, 
+						    &bl_status);
+	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
+	    //raise exception?
+	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
+	  }
+	  // set back a spectrum to data cube
+	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
+	} // end of polarization loop
+      } // end of MS row loop
+      // write back data cube to VisBuffer
+      set_data_cube_float(*vb, data_chunk);
+      vb->writeChangesBack();
+    } // end of vi loop
+  } // end of chunk loop
+
+  // destroy baselint contexts
+  destroy_baseline_contexts(bl_contexts);
 
   double tend = gettimeofday_sec();
   std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
