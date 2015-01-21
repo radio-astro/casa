@@ -50,7 +50,7 @@ Imports data into the interferometry pipeline
 	<value>True</value>
     </param>
     
-    <param type="bool" name="dbservice" subparam="true">
+    <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
 	<value>True</value>
     </param>
@@ -74,7 +74,6 @@ Imports data into the interferometry pipeline
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
-		<default param="dbservice"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
@@ -83,7 +82,6 @@ Imports data into the interferometry pipeline
 		<default param="process_caldevice"><value type="bool">False</value></default>
 		<default param="overwrite"><value type="bool">False</value></default>
 		<default param="bdfflags"><value type="bool">True</value></default>
-		<default param="dbservice"><value type="bool">True</value></default>
 	    </equals>
 	</when>
     </constraints>
