@@ -224,6 +224,7 @@ casa_add_library( synthesis
  MeasurementComponents/SDGrid.cc
  MeasurementComponents/SimACohCalc.cc
  MeasurementComponents/SimACoh.cc
+ MeasurementComponents/SingleDishSkyCal.cc
  MeasurementComponents/SolvableVisCal.cc
  MeasurementComponents/StandardVisCal.cc
  MeasurementComponents/SteepestDescentSolver.cc

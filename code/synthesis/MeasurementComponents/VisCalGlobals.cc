@@ -38,6 +38,7 @@
 #include <synthesis/MeasurementComponents/AMueller.h>
 #include <synthesis/MeasurementComponents/TsysGainCal.h>
 #include <synthesis/MeasurementComponents/EVLASwPow.h>
+#include <synthesis/MeasurementComponents/SingleDishSkyCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -189,6 +190,15 @@ SolvableVisCal* createSolvableVisCal(const String& type, VisSet& vs) {
   else if (uptype.contains("TEC") || uptype.contains("F JONES") )  // Ionosphere
     return new FJones(vs);
 
+  else if (uptype.contains("SDSKY_PS"))
+    return new SingleDishPositionSwitchCal(vs);
+
+  else if (uptype.contains("SDSKY_RASTER"))
+    return new SingleDishRasterCal(vs);
+
+  else if (uptype.contains("SDSKY_OTF"))
+    return new SingleDishOtfCal(vs);
+  
   else {
     cout << "attempted type = " << type << endl;
     throw(AipsError("Unknown calibration type."));
