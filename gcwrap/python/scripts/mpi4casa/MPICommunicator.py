@@ -191,7 +191,7 @@ class MPICommunicator:
                 if logger is not None:
                     logger.post("Sending %s service signal to server %s" 
                                 % (request['signal'],str(rank)),"INFO","MPICommunicator::control_service_request_send_all")
-                    self.control_service_request_send(request=request,server=rank)      
+                self.control_service_request_send(request=request,server=rank)      
                     
         
         # Mark/UnMark MPI environment to be finalized by the MPICommunicator destructor 
