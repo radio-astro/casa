@@ -21,14 +21,12 @@
 casa_add_library( singledish
     #SingleDish/SingleDishDummy.cc
     SingleDish/SingleDishMS.cc
-    SingleDish/SingleDishMS2.cc
     SingleDish/SDMSManager.cc
 )
 
 install (FILES
     #SingleDish/SingleDishDummy.h
     SingleDish/SingleDishMS.h
-    SingleDish/SingleDishMS2.h
     SingleDish/SDMSManager.h
     DESTINATION include/casacode/singledish/SingleDish
 )

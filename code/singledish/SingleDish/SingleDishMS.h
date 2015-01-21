@@ -1,5 +1,5 @@
-#ifndef _CASA_SINGLEDISH_MS2_H_
-#define _CASA_SINGLEDISH_MS2_H_
+#ifndef _CASA_SINGLEDISH_MS_H_
+#define _CASA_SINGLEDISH_MS_H_
 
 #include <iostream>
 #include <string>
@@ -15,15 +15,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class SingleDishMS2 {
+class SingleDishMS {
 public:
   // Default constructor
-  SingleDishMS2();
+  SingleDishMS();
   // Construct from MS name string
-  SingleDishMS2(string const& ms_name);
+  SingleDishMS(string const& ms_name);
 
   // Destructor
-  ~SingleDishMS2();
+  ~SingleDishMS();
   
   // Return the name of the MeasurementSet
   string name() const { return msname_; };
@@ -135,9 +135,9 @@ private:
   // SDMSManager
   SDMSManager *sdh_;
 
-}; // class SingleDishMS2 -END
+}; // class SingleDishMS -END
 
 
 } //# NAMESPACE CASA - END
   
-#endif /* _CASA_SINGLEDISH_MS2_H_ */
+#endif /* _CASA_SINGLEDISH_MS_H_ */

@@ -15,35 +15,35 @@
 #include <msvis/MSVis/VisSetUtil.h>
 
 #include <casa_sakura/SakuraUtils.h>
-#include <singledish/SingleDish/SingleDishMS2.h>
+#include <singledish/SingleDish/SingleDishMS.h>
 
 //---for measuring elapse time------------------------
-// #include <sys/time.h>
-// double gettimeofday_sec() {
-//   struct timeval tv;
-//   gettimeofday(&tv, NULL);
-//   return tv.tv_sec + (double)tv.tv_usec*1.0e-6;
-// }
+#include <sys/time.h>
+double gettimeofday_sec() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec + (double)tv.tv_usec*1.0e-6;
+}
 //----------------------------------------------------
 
-#define _ORIGIN LogOrigin("SingleDishMS2", __func__, WHERE)
+#define _ORIGIN LogOrigin("SingleDishMS", __func__, WHERE)
 
 namespace casa {
 
-SingleDishMS2::SingleDishMS2()
+SingleDishMS::SingleDishMS()
   : msname_(""), sdh_(0)
 {
   initialize();
 }
 
-SingleDishMS2::SingleDishMS2(string const& ms_name)
+SingleDishMS::SingleDishMS(string const& ms_name)
   : msname_(ms_name), sdh_(0)
 {
   LogIO os(_ORIGIN);
   initialize();
 }
 
-SingleDishMS2::~SingleDishMS2()
+SingleDishMS::~SingleDishMS()
 {
   if(sdh_){
     delete sdh_;
@@ -52,13 +52,13 @@ SingleDishMS2::~SingleDishMS2()
   msname_ = "";
 }
 
-void SingleDishMS2::initialize()
+void SingleDishMS::initialize()
 {
   in_column_ = MS::UNDEFINED_COLUMN;
   //  out_column_ = MS::UNDEFINED_COLUMN;
 }
 
-bool SingleDishMS2::close()
+bool SingleDishMS::close()
 {
   LogIO os(_ORIGIN);
   os << "Detaching from SingleDishMS"
@@ -76,7 +76,7 @@ bool SingleDishMS2::close()
 ////////////////////////////////////////////////////////////////////////
 ///// Common utility functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS2::set_selection(Record const &selection, bool const verbose)
+void SingleDishMS::set_selection(Record const &selection, bool const verbose)
 {
   LogIO os(_ORIGIN);
   if (!selection_.empty()) // selection is set before
@@ -131,7 +131,7 @@ void SingleDishMS2::set_selection(Record const &selection, bool const verbose)
   }
 }
 
-String SingleDishMS2::get_field_as_casa_string(Record const &in_data,
+String SingleDishMS::get_field_as_casa_string(Record const &in_data,
 					       string const &field_name)
 {
   Int ifield;
@@ -141,7 +141,7 @@ String SingleDishMS2::get_field_as_casa_string(Record const &in_data,
 }
 
 
-bool SingleDishMS2::prepare_for_process(string const& in_column_name,
+bool SingleDishMS::prepare_for_process(string const& in_column_name,
 					string const& out_ms_name)
 {
   LogIO os(_ORIGIN);
@@ -190,7 +190,7 @@ bool SingleDishMS2::prepare_for_process(string const& in_column_name,
   return true;
 }
 
-void SingleDishMS2::finalize_process()
+void SingleDishMS::finalize_process()
 {
   initialize();
   if(sdh_){
@@ -200,7 +200,7 @@ void SingleDishMS2::finalize_process()
   }
 }
 
-void SingleDishMS2::parse_selection(Record &selection)
+void SingleDishMS::parse_selection(Record &selection)
 {
   int exists = -1;
   // Select only auto-correlation
@@ -217,7 +217,7 @@ void SingleDishMS2::parse_selection(Record &selection)
     }
 }
 
-void SingleDishMS2::get_data_cube_float(vi::VisBuffer2 const &vb,
+void SingleDishMS::get_data_cube_float(vi::VisBuffer2 const &vb,
 				       Cube<Float> &data_cube)
 {
   if (in_column_==MS::FLOAT_DATA) {
@@ -234,7 +234,7 @@ void SingleDishMS2::get_data_cube_float(vi::VisBuffer2 const &vb,
   }
 }
 
-void SingleDishMS2::convertArrayC2F(Array<Float> &to,
+void SingleDishMS::convertArrayC2F(Array<Float> &to,
 				   Array<Complex> const &from)
 {
     if (to.nelements() == 0 && from.nelements() == 0) {
@@ -252,7 +252,7 @@ void SingleDishMS2::convertArrayC2F(Array<Float> &to,
     }
 }
 
-std::vector<string> SingleDishMS2::split_string(string const &s, 
+std::vector<string> SingleDishMS::split_string(string const &s, 
 					       char delim)
 {
   std::vector<string> elems;
@@ -274,7 +274,7 @@ std::vector<string> SingleDishMS2::split_string(string const &s,
   return elems;
 }
 
-void SingleDishMS2::parse_spwch(string const &spwch, 
+void SingleDishMS::parse_spwch(string const &spwch, 
 			       Vector<Int> &spw, 
 			       Vector<size_t> &nchan, 
 			       Vector<Vector<Bool> > &mask)
@@ -314,7 +314,7 @@ void SingleDishMS2::parse_spwch(string const &spwch,
   }
 }
 
-void SingleDishMS2::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
+void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
 		 	 		    uint16_t order, 
 					    Vector<size_t> const &nchan, 
 					    Vector<size_t> &ctx_indices, 
@@ -354,7 +354,7 @@ void SingleDishMS2::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) cons
   }
 }
 
-void SingleDishMS2::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
+void SingleDishMS::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts)
 {
   LIBSAKURA_SYMBOL(Status) status;
   for (size_t i = 0; i < bl_contexts.nelements(); ++i) {
@@ -365,7 +365,7 @@ void SingleDishMS2::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineCo
   }
 }
 
-void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
+void SingleDishMS::get_spectrum_from_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
@@ -376,7 +376,7 @@ void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
     ptr[i] = static_cast<float>(data_cube(plane, i, row));
 }
 
-void SingleDishMS2::set_spectrum_to_cube(Cube<Float> &data_cube,
+void SingleDishMS::set_spectrum_to_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
@@ -386,13 +386,13 @@ void SingleDishMS2::set_spectrum_to_cube(Cube<Float> &data_cube,
     data_cube(plane, i, row) = static_cast<Float>(in_data[i]);
 }
 
-void SingleDishMS2::get_flag_cube(vi::VisBuffer2 const &vb,
+void SingleDishMS::get_flag_cube(vi::VisBuffer2 const &vb,
 				 Cube<Bool> &flag_cube)
 {
   flag_cube = vb.flagCube();
 }
 
-void SingleDishMS2::get_flag_from_cube(Cube<Bool> &flag_cube,
+void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_flag,
@@ -406,7 +406,7 @@ void SingleDishMS2::get_flag_from_cube(Cube<Bool> &flag_cube,
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS2::subtract_baseline_new(string const& in_column_name,
+void SingleDishMS::subtract_baseline_new(string const& in_column_name,
 					    string const& out_ms_name,
 					    string const &spwch,
 					    int const order, 
@@ -424,15 +424,12 @@ void SingleDishMS2::subtract_baseline_new(string const& in_column_name,
   // 3. fit a polynomial to each spectrum and subtract it
   // 4. put single spectrum (or a block of spectra) to out_column
 
-  //  double tstart = gettimeofday_sec();
+   double tstart = gettimeofday_sec();
 
-  // prepare_for_process();
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
   vi::SortColumns sc(columns,False);
-  // vi::VisibilityIterator2 vi(*mssel_,sc,True);
-  // vi::VisBuffer2 *vb = vi.getVisBuffer();
-  LIBSAKURA_SYMBOL(Status) status;
+   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
   prepare_for_process(in_column_name, out_ms_name);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
@@ -521,11 +518,11 @@ void SingleDishMS2::subtract_baseline_new(string const& in_column_name,
   // destroy baselint contexts
   destroy_baseline_contexts(bl_contexts);
 
-  // double tend = gettimeofday_sec();
-  // std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+  double tend = gettimeofday_sec();
+  std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
-void SingleDishMS2::scale(float const factor,
+void SingleDishMS::scale(float const factor,
 			  string const& in_column_name,
 			  string const& out_ms_name)
 {
@@ -574,7 +571,7 @@ void SingleDishMS2::scale(float const factor,
   finalize_process();
 }
 
-void SingleDishMS2::do_scale(float const factor,
+void SingleDishMS::do_scale(float const factor,
 			    size_t const num_data, float *data)
 {
   for (size_t i=0; i < num_data; ++i) 
