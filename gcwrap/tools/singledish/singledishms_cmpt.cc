@@ -99,13 +99,13 @@ singledishms::name()
 }
 
 bool
-singledishms::scale(float const factor)
+singledishms::scale(float const factor, string const& datacolumn, string const& outfile)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->scale(factor);
+    itsSd->scale(factor, datacolumn, outfile);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -115,42 +115,44 @@ singledishms::scale(float const factor)
   return rstat;
 }
 
-bool
-singledishms::subtract_baseline(std::vector<bool> const &mask,
-				int const order,
-				float const clip_threshold_sigma,
-				int const num_fitting_max)
-{
-  bool rstat(false);
-  *itsLog << _ORIGIN;
-  try {
-    assert_valid_ms();
-    Vector<Bool> in_mask(mask);
-    itsSd->subtract_baseline(in_mask, order, 
-			     clip_threshold_sigma, 
-			     num_fitting_max);
-    rstat = true;
-  } catch  (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
-	    << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
-}
+// bool
+// singledishms::subtract_baseline(std::vector<bool> const &mask,
+// 				int const order,
+// 				float const clip_threshold_sigma,
+// 				int const num_fitting_max)
+// {
+//   bool rstat(false);
+//   *itsLog << _ORIGIN;
+//   try {
+//     assert_valid_ms();
+//     Vector<Bool> in_mask(mask);
+//     // itsSd->subtract_baseline(in_mask, order,
+//     // 			     clip_threshold_sigma, 
+//     // 			     num_fitting_max);
+//     rstat = true;
+//   } catch  (AipsError x) {
+//     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+// 	    << LogIO::POST;
+//     RETHROW(x);
+//   }
+//   return rstat;
+// }
 
 bool
-singledishms::subtract_baseline_new(string const& spwch,
-				int const order,
-				float const clip_threshold_sigma,
-				int const num_fitting_max)
+singledishms::subtract_baseline_new(string const& datacolumn,
+				    string const& outfile,
+				    string const& spwch,
+				    int const order,
+				    float const clip_threshold_sigma,
+				    int const num_fitting_max)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_new(spwch, order, 
-			     clip_threshold_sigma, 
-			     num_fitting_max);
+    itsSd->subtract_baseline_new(datacolumn, outfile,spwch, order, 
+				 clip_threshold_sigma, 
+				 num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
@@ -193,7 +195,7 @@ singledishms::set_selection(::casac::variant const& spw,
     // baseline
     selection_string = toCasaString(antenna);
     if (selection_string != "")
-      selection.define("antenna", selection_string);
+      selection.define("baseline", selection_string);
     // time
     selection_string = toCasaString(timerange);
     if (selection_string != "")

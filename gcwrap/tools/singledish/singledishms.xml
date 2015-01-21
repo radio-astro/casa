@@ -107,6 +107,21 @@ Multipy a scaling factor to selected spectra.
       <value>1.0</value>
     </param>
 
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
   </input>
   <returns type="bool"/>
   <example>
@@ -116,6 +131,7 @@ sdms.scale(factor=2.0)
   </example>
 </method>
 
+<!--
 <method type="function" name="subtract_baseline">
   <shortdescription>Invoke baseline subtraction
   </shortdescription>
@@ -151,6 +167,7 @@ sdms.set_selection(field='M100')
 sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
   </example>
 </method>
+-->
 
 <method type="function" name="subtract_baseline_new">
   <shortdescription>Invoke baseline subtraction
@@ -160,8 +177,24 @@ Fit baseline and subtract it from selected spectra
   </description>
   <input>
 
+    <param type="string" name="datacolumn">
+      <description>the name of data column to process</description>
+      <value>data</value>
+      <allowed kind="enum">
+	<value>data</value>
+	<value>float_data</value>
+	<value>corrected_data</value>
+      </allowed>
+    </param>
+
+    <param type="string" name="outfile">
+      <description>The name of output MeasurementSet</description>
+      <value></value>
+    </param>
+
     <param type="string" name="spwch">
       <description>spw and channel mask info</description>
+      <value></value>
     </param>
 
     <param type="int" name="order">
