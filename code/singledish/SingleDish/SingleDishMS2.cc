@@ -53,7 +53,7 @@ SingleDishMS2::~SingleDishMS2()
 void SingleDishMS2::initialize()
 {
   in_column_ = MS::UNDEFINED_COLUMN;
-  out_column_ = MS::UNDEFINED_COLUMN;
+  //  out_column_ = MS::UNDEFINED_COLUMN;
 }
 
 bool SingleDishMS2::close()
@@ -145,15 +145,14 @@ bool SingleDishMS2::prepare_for_process(string const& in_column_name,
   LogIO os(_ORIGIN);
   AlwaysAssert(msname_!="", AipsError);
   // define a column to read data from
-  if (in_column_name == "float_data"){
+  if (in_column_name == "float_data")
     in_column_ = MS::FLOAT_DATA;
-  } else if (in_column_name == "corrected_data") {
+  else if (in_column_name == "corrected_data")
     in_column_ = MS::CORRECTED_DATA;
-  } else if (in_column_name == "data") {
+  else if (in_column_name == "data")
     in_column_ = MS::DATA;
-  } else {
+  else
     throw(AipsError("Invalid data column name"));
-  }
   // Configure record
   Record configure_param(selection_);
   parse_selection(configure_param);
@@ -203,7 +202,7 @@ void SingleDishMS2::parse_selection(Record &selection)
 {
   int exists = -1;
   // Select only auto-correlation
-  exists = selection.fieldNumber ("antenna");
+  exists = selection.fieldNumber ("baseline");
   if (exists >= 0)
     {
       //selection.define("antenna", )
@@ -255,16 +254,6 @@ void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
 					  size_t const row,
 					  size_t const plane,
 					  size_t const num_data,
-					  float *out_data)
-{
-  for (size_t i=0; i < num_data; ++i) 
-    out_data[i] = static_cast<float>(data_cube(plane, i, row));
-}
-
-void SingleDishMS2::get_spectrum_from_cube(Cube<Float> &data_cube,
-					  size_t const row,
-					  size_t const plane,
-					  size_t const num_data,
 					  SakuraAlignedArray<float> &out_data)
 {
   float *ptr = out_data.data;
@@ -302,10 +291,14 @@ void SingleDishMS2::get_flag_from_cube(Cube<Bool> &flag_cube,
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
+// void SingleDishMS2::subtract_baseline(Vector<Bool> const &in_mask,
+//                       int const order, 
+//                       float const clip_threshold_sigma, 
+// 				      int const num_fitting_max){}
 
 void SingleDishMS2::subtract_baseline2(string const& in_column_name,
 				      string const& out_ms_name,
-				      string const &in_mask,
+				      string const &sp,
 				      int const order,
 				      float const clip_threshold_sigma, 
 				      int const num_fitting_max)
@@ -313,7 +306,7 @@ void SingleDishMS2::subtract_baseline2(string const& in_column_name,
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
 //   // in_ms = out_ms
-//   // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
+//   //  in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
 //   // no iteration is necessary for the processing.
 //   // procedure
 //   // 1. iterate over MS
@@ -420,7 +413,7 @@ void SingleDishMS2::scale(float const factor,
   LogIO os(_ORIGIN);
   os << "Multiplying scaling factor = " << factor << LogIO::POST;
   // in_ms = out_ms
-  // in_column = [FLOAT_DATA|DATA] (auto-select), out_column=CORRECTED_DATA
+  // in_column = [FLOAT_DATA|DATA|CORRECTED_DATA], out_column=new MS
   // no iteration is necessary for the processing.
   // procedure
   // 1. iterate over MS
@@ -438,7 +431,7 @@ void SingleDishMS2::scale(float const factor,
       size_t const num_row = static_cast<size_t>(vb->nRows());
       Cube<Float> data_chunk(num_pol,num_chan,num_row);
       Matrix<Float> data_row(num_pol,num_chan);
-      float spectrum[num_chan];
+      SakuraAlignedArray<float> spectrum(num_chan);
       // get a data cube (npol*nchan*nrow) from VisBuffer
       get_data_cube_float(*vb, data_chunk);
       // loop over MS rows
@@ -449,10 +442,10 @@ void SingleDishMS2::scale(float const factor,
 	  get_spectrum_from_cube(data_chunk, irow, ipol, num_chan, spectrum);
 
 	  // actual execution of single spectrum
-	  do_scale(factor, num_chan, spectrum);
+	  do_scale(factor, num_chan, spectrum.data);
 
 	  // set back a spectrum to data cube
-	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum);
+	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spectrum.data);
 	} // end of polarization loop
       } // end of MS row loop
       // write back data cube to Output MS

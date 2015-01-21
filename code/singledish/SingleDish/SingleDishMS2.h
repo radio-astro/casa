@@ -41,9 +41,13 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in CORRECTED_DATA column)
+  /* void subtract_baseline(Vector<Bool> const &in_mask, */
+  /*                     int const order,  */
+  /*                     float const clip_threshold_sigma,  */
+  /*                     int const num_fitting_max); */
   void subtract_baseline2(string const& in_column_name,
 			  string const& out_ms_name,
-			  string const &in_mask,
+			  string const &spwch,
 			  int const order, 
 			  float const clip_threshold_sigma=3.0, 
 			  int const num_fitting_max=1);
@@ -82,11 +86,6 @@ private:
 			      size_t const row,
 			      size_t const plane,
 			      size_t const num_data,
-			      float out_data[/*num_data*/]);
-  void get_spectrum_from_cube(Cube<Float> &data_cube,
-			      size_t const row,
-			      size_t const plane,
-			      size_t const num_data,
 			      SakuraAlignedArray<float> &out_data);
   // set a spectrum at the row and plane (polarization) from data cube
   void set_spectrum_to_cube(Cube<Float> &data_cube,
@@ -118,12 +117,8 @@ private:
   ////////////////////////
   // the name of input MS
   string msname_;
-  // input MS instance (full MS without selection)
-  //MeasurementSet* ms_;
-  // a selected portion of input MS
-  //MeasurementSet* mssel_;
   // columns to read and save data
-  MSMainEnums::PredefinedColumns in_column_, out_column_;
+  MSMainEnums::PredefinedColumns in_column_;//, out_column_;
   // Record of selection
   Record selection_;
   // SDMSManager
