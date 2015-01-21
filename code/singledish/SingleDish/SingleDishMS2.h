@@ -41,20 +41,12 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in CORRECTED_DATA column)
-  void subtract_baseline(Vector<Bool> const &in_mask,
-                      int const order,
-                      float const clip_threshold_sigma,
-                      int const num_fitting_max);
-  void subtract_baseline2(string const& in_column_name,
-			  string const& out_ms_name,
-			  string const &spwch,
-			  int const order, 
-			  float const clip_threshold_sigma=3.0, 
-			  int const num_fitting_max=1);
-  void subtract_baseline_new(string const& spwch, 
-			 int const order, 
-			 float const clip_threshold_sigma=3.0, 
-			 int const num_fitting_max=1);
+  void subtract_baseline_new(string const& in_column_name,
+			      string const& out_ms_name,
+			      string const& spwch, 
+			      int const order, 
+			      float const clip_threshold_sigma=3.0, 
+			      int const num_fitting_max=1);
 
 private:
   /////////////////////////
@@ -92,7 +84,7 @@ private:
   void create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const baseline_type, 
 			        uint16_t order, 
 			        Vector<size_t> const &nchan, 
-			        Vector<size_t> ctx_indices, 
+			        Vector<size_t> &ctx_indices, 
 			        Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
   // Destroy a set of baseline contexts
   void destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineContext) *> &bl_contexts);
