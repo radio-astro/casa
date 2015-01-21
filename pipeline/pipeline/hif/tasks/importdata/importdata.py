@@ -393,7 +393,7 @@ def read_fluxes(ms, dbservice=True):
         LOG.info('No Source XML found at %s. No flux import performed.  Attempting database query.'
                  % source_table)
                  
-        result = flux_nosourcexml(ms)
+        result = flux_nosourcexml(ms, dbservice=dbservice)
                  
         return result
 
@@ -402,7 +402,7 @@ def read_fluxes(ms, dbservice=True):
         LOG.info('Could not parse Source XML at %s. No flux import performed.  Attempting database query.' 
                  % source_table)
         
-        result = flux_nosourcexml(ms)
+        result = flux_nosourcexml(ms, dbservice=dbservice)
         
         return result
 
@@ -503,7 +503,7 @@ def read_fluxes(ms, dbservice=True):
     return result
 
 
-def flux_nosourcexml(ms):
+def flux_nosourcexml(ms, dbservice=True):
 
     '''
     Call the flux service and get the frequencies from the ms if no Source.xml is available
