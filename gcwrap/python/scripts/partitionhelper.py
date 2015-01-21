@@ -902,7 +902,7 @@ def setAxisType(mmsname, axis=''):
     return True
     
     
-def getPartitonMap(msfilename, nsubms, selection={}, axis=['spw','scan'],plotMode=0):
+def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan'],plotMode=0):
     """Generates a partition scan/spw map to obtain optimal load balancing with the following criteria:
     
        1st - Maximize the scan/spw/field distribution across sub-MSs
@@ -1052,7 +1052,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['spw','scan'],plotMod
     fieldList = np.unique(fieldList)
     fieldNvisDistributionPerSubMs = {}
     for field in fieldList:
-        fieldNvisDistributionPerSubMs[field] = np.zeros(nsubms)        
+        fieldNvisDistributionPerSubMs[field] = np.zeros(nsubms)
         
         
     # Make an array for total number of visibilites per subms
@@ -1077,16 +1077,23 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['spw','scan'],plotMod
         scan = scanArray[pair]
         field = scanSpwMap[scan][spw]['fieldId']
                    
-        # Select the subMS that with bigger (scan gap + spw gap)
+        # Select the subMS that with bigger (scan/spw/field gap)
+        # We use the average as a refLevel to include global structure information
+        # But we also take into account the actual max value in case we are distributing large uneven chunks
         jointNvisGap = np.zeros(nsubms)
         if 'scan' in axis:
-            jointNvisGap = jointNvisGap + scanNvisDistributionPerSubMs[scan].max() - scanNvisDistributionPerSubMs[scan]
+            refLevel = max(nVisPerScan[scan]/nsubms,scanNvisDistributionPerSubMs[scan].max())
+            jointNvisGap = jointNvisGap + refLevel - scanNvisDistributionPerSubMs[scan]
         if 'spw' in axis:
-            jointNvisGap = jointNvisGap + spwNvisDistributionPerSubMs[spw].max() - spwNvisDistributionPerSubMs[spw]
+            refLevel = max(nVisPerSPW[spw]/nsubms,spwNvisDistributionPerSubMs[scan].max())
+            jointNvisGap = jointNvisGap + refLevel - spwNvisDistributionPerSubMs[spw]
         if 'field' in axis:
-            jointNvisGap = jointNvisGap + fieldNvisDistributionPerSubMs[field].max() - fieldNvisDistributionPerSubMs[field]
+            refLevel = max(nVisPerField[field]/nsubms,fieldNvisDistributionPerSubMs[field].max())
+            jointNvisGap = jointNvisGap + refLevel - fieldNvisDistributionPerSubMs[field]        
+            
         optimalSubMs = np.where(jointNvisGap == jointNvisGap.max())
         optimalSubMs = optimalSubMs[0] # np.where returns a tuple
+        
         # In case of multiple candidates select the subms with minum number of total visibilities
         if len(optimalSubMs) > 1:
             subIdx = np.argmin(nvisPerSubMs[optimalSubMs])
@@ -1112,10 +1119,11 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['spw','scan'],plotMod
     # Generate plots
     if plotMode > 0:
         plt.close()
-        plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,os.path.basename(msfilename),'scan',plotMode=plotMode)
-        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,os.path.basename(msfilename),'spw',plotMode=plotMode)
-        plotVisDistribution(nVisPerField,fieldNvisDistributionPerSubMs,os.path.basename(msfilename),'field',plotMode=plotMode)
-        
+        plotname_prefix = os.path.basename(msfilename) + ' axis ' + string.join(axis)
+        plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,plotname_prefix,'scan',plotMode=plotMode)
+        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,plotname_prefix,'spw',plotMode=plotMode)
+        plotVisDistribution(nVisPerField,fieldNvisDistributionPerSubMs,plotname_prefix,'field',plotMode=plotMode)
+            
         
     # Get SPW from DDI sub-table
     myTableTool = tbtool()
@@ -1258,7 +1266,7 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,filename,idLabel,plot
     
     
     # Add title
-    title = filename + ' ' + idLabel + ' ' + 'visibilities distribution across sub-MSs'
+    title = filename + ' distribution of ' + idLabel + ' visibilities across sub-MSs'
     plt.title(title)
     
     
