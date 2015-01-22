@@ -1406,6 +1406,13 @@ if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casa
     os.remove('casapy.log')
 
 import shutil
+
+###
+### append user's originial path...
+###
+if os.environ.has_key('_PYTHONPATH'):
+    sys.path.extend(os.getenv('_PYTHONPATH').split(':'))
+
 if ipython:
     ipshell.mainloop( )
     if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :
