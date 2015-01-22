@@ -29,6 +29,7 @@ from h_init_cli import h_init_cli as h_init
 from hifa_importdata_cli import hifa_importdata_cli as hifa_importdata
 from hifa_flagdata_cli import hifa_flagdata_cli as hifa_flagdata
 from hifa_fluxcalflag_cli import hifa_fluxcalflag_cli as hifa_fluxcalflag
+from hif_rawflagchans_cli import hif_rawflagchans_cli as hif_rawflagchans
 from hifa_fluxdb_cli import hifa_fluxdb_cli as hifa_fluxdb
 from hif_refant_cli import hif_refant_cli as hif_refant
 from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
@@ -37,7 +38,9 @@ from hifa_wvrgcalflag_cli import hifa_wvrgcalflag_cli as hifa_wvrgcalflag
 from hif_lowgainflag_cli import hif_lowgainflag_cli as hif_lowgainflag
 from hif_setjy_cli import hif_setjy_cli as hif_setjy
 from hif_bandpass_cli import hif_bandpass_cli as hif_bandpass
+from hifa_bandpass_cli import hifa_bandpass_cli as hifa_bandpass
 from hif_bpflagchans_cli import hif_bpflagchans_cli as hif_bpflagchans
+from hifa_spwphaseup_cli import hifa_spwphaseup_cli as hifa_spwphaseup
 from hifa_gfluxscale_cli import hifa_gfluxscale_cli as hifa_gfluxscale
 from hifa_timegaincal_cli import hifa_timegaincal_cli as hifa_timegaincal
 from hif_applycal_cli import hif_applycal_cli as hif_applycal
@@ -72,6 +75,9 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         # Flag lines in solar system calibrators and compute the default
 	# reference spectral window map.
         hifa_fluxcalflag (pipelinemode=pipelinemode)
+
+        # Flag bad channels in the raw data
+        hif_rawflagchans (pipelinemode=pipelinemode)
     
         # Compute the prioritized lists of reference antennas
         hif_refant (pipelinemode=pipelinemode)
@@ -92,11 +98,14 @@ def hifacal (vislist, importonly=True, pipelinemode='automatic', interactive=Tru
         hif_setjy (pipelinemode=pipelinemode)
     
         # Compute the bandpass calibration
-        hif_bandpass (pipelinemode=pipelinemode)
+        hifa_bandpass (pipelinemode=pipelinemode)
 
         # Flag deviant channels in the bandpass calibration
         hif_bpflagchans (pipelinemode=pipelinemode)
     
+        # Compute the bandpass calibration
+        hifa_spwphaseup (pipelinemode=pipelinemode)
+
         # Determine flux values for the bandpass and gain calibrators
         # assuming point sources and set their model fluxes
         hifa_gfluxscale (pipelinemode=pipelinemode)
