@@ -18,6 +18,17 @@ myname = 'test_conjugatevis'
 
 # name of the resulting MS
 msname = 'conjugated.ms'
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/concat/input/'
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR
+    print 'conjugatevis tests will use data from '+datapath    
+
 
 def checktable(thename, theexpectation):
     global msname, myname
@@ -66,7 +77,7 @@ class test_conjugatevis(unittest.TestCase):
     def setUp(self):
         res = None
 
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
+#        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/concat/input/'
         cpath = os.path.abspath(os.curdir)
         filespresent = sorted(glob.glob("*.ms"))
         os.chdir(datapath)
