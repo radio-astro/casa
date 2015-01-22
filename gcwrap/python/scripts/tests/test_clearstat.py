@@ -14,6 +14,16 @@ Unit tests of task clearstat. It tests the following parameters:
     clears write lock on image,
     clears all locks
 '''
+datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/exportasdm/input/'
+
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):   
+    testmms = True
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/clearstat/'
+    if os.path.isdir(DATADIR):
+        datapath = DATADIR
+    print 'clearstat tests will use data from '+datapath    
 
 class clearstat_test(unittest.TestCase):
     
@@ -25,17 +35,17 @@ class clearstat_test(unittest.TestCase):
     def setUp(self):
         self.res = None
         default('clearstat')
-        
         if(os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
         if(os.path.exists(self.img)):
             os.system('rm -rf ' + self.img)
             
-        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
-                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
+#        shutil.copytree(os.environ.get('CASAPATH').split()[0] +\
+#                            '/data/regression/exportasdm/input/'+self.msfile, self.msfile)
+        shutil.copytree(datapath +self.msfile, self.msfile)
             
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/ngc4826redux/reference/'
-        shutil.copytree(datapath+self.img, self.img)
+        imgpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/ngc4826redux/reference/'
+        shutil.copytree(imgpath+self.img, self.img)
     
     def tearDown(self):
         os.system('rm -rf ' + self.msfile)
