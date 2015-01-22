@@ -15,6 +15,7 @@ def partition(vis,
            flagbackup,      # only for MMS
            disableparallel, # HIDDEN parameter to create an MMS in sequential
            ddistart,        # HIDDEN parameter to be used when merging sub-tables
+           taql,            # HIDDEN parameter to be used for balanced partition schema
            datacolumn,
            field,
            spw, 
@@ -133,7 +134,7 @@ def partition(vis,
         config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
                     uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
-                    feed=feed)
+                    feed=feed,taql=taql)
         
         # ddistart will be used in the tool when re-indexing the spw table
         config['ddistart'] = ddistart

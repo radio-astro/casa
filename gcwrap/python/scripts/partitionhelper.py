@@ -1085,7 +1085,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
             refLevel = max(nVisPerScan[scan]/nsubms,scanNvisDistributionPerSubMs[scan].max())
             jointNvisGap = jointNvisGap + refLevel - scanNvisDistributionPerSubMs[scan]
         if 'spw' in axis:
-            refLevel = max(nVisPerSPW[spw]/nsubms,spwNvisDistributionPerSubMs[scan].max())
+            refLevel = max(nVisPerSPW[spw]/nsubms,spwNvisDistributionPerSubMs[spw].max())
             jointNvisGap = jointNvisGap + refLevel - spwNvisDistributionPerSubMs[spw]
         if 'field' in axis:
             refLevel = max(nVisPerField[field]/nsubms,fieldNvisDistributionPerSubMs[field].max())
@@ -1144,7 +1144,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
     for subms in submScanSpwMap:
         # Initialize taql command
         initialized = False
-        mytaql = 'SELECT from ' + msfilename + ' WHERE'
+        mytaql = ''
         # Iterate over scan/spw pairs for this subms
         for pair in range(len(submScanSpwMap[subms]['scanList'])):
             # Get scans/spw for this pair

@@ -631,6 +631,8 @@ class ParallelDataHelper(ParallelTaskHelper):
                 self.__createSPWSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'auto':
                 self.__createDefaultSeparationCommands()
+            elif self._arg['separationaxis'].lower() == 'balanced':
+                self.__createBalancedSeparationCommands()
             else:
                 # Use a default
                 self.__createDefaultSeparationCommands()
@@ -841,6 +843,35 @@ class ParallelDataHelper(ParallelTaskHelper):
                 self._executionList.append([self._taskName + '()',mmsCmd])
             
             sindex += 1 # index of subMS name
+            
+    def __createBalancedSeparationCommands(self):
+        """ Generate a list of partion commands based on table lenguage 
+            queries that distribute the scan/spw pairs among subMSs to
+            balance the load along field, spw and scan axis
+        """
+        
+        casalog.post('Automatically distribute the scan/spw pairs to balance the load along field, spw and scan axis')
+
+        # Get parameters for the partition map function 
+        msfilename = self._arg['vis']
+        nsubms = self._arg['numsubms']
+        selection = self.__getSelectionFilter()
+        
+        # Get partition map
+        partitionMap = ph.getPartitonMap(msfilename, nsubms, selection, axis=['field','spw','scan'],plotMode=2)
+
+        # Iterate over list of subMSs
+        for subms in partitionMap:
+            
+            mmsCmd = copy.copy(self._arg)
+            mmsCmd['createmms'] = False 
+            mmsCmd['taql'] = partitionMap[subms]['taql']
+            mmsCmd['outputvis'] = self.dataDir + '/%s.%04d.ms' % (self.outputBase, subms)
+                                  
+            if not self._mpi_cluster:
+                self._executionList.append(simple_cluster.JobData(self._taskName, mmsCmd))
+            else:
+                self._executionList.append([self._taskName + '()',mmsCmd])
 
     def __scanspwSelection(self, scan, spw):
         """ Return True if the selection is True or False otherwise. """
