@@ -2575,7 +2575,6 @@ Bool MSTransformDataHandler::copyFeed()
 	    MSMetaData msmeta(&mssel_p, 0);
 	    std::set<uInt> wvrspw = msmeta.getWVRSpw();
 	    for (std::set<uInt>::iterator bbit = wvrspw.begin(); bbit != wvrspw.end(); ++bbit){
-	        cout << *bbit <<endl;
 	        if (spw_p[0] == *bbit){
 	            os << LogIO::DEBUG1 << "Skipping spw="<<*bbit<<" because it is WVR and has no FEED content" << LogIO::POST;
 	            return true;
