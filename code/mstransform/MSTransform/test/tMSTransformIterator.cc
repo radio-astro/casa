@@ -267,6 +267,7 @@ String produceTmpTransformedMSToCompare(Record configuration)
 {
 	String tmpFileName = File::newUniqueName("").absoluteName();
 	configuration.define("outputms",tmpFileName);
+	configuration.define("datacolumn",string("ALL"));
 	MSTransformManager *manager = new MSTransformManager(configuration);
 	manager->open();
 	manager->setup();
@@ -340,6 +341,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	Int chunk = 0,buffer = 0,row = 0;
 	IPosition pos;
 	Bool keepIterating = True;
+
+	// Initialize logger for printing data structures
+	LogIO logger;
 
 	// Open up transformed file
 	MeasurementSet ms(tmpFileName,Table::Old);
@@ -711,7 +715,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>visCube match" << endl;
 			}
 
-			/*
+
 			pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{
@@ -728,6 +732,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>visCubeCorrected match" << endl;
 			}
 
+			/*
 			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{

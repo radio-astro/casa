@@ -290,15 +290,8 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 
 	if (bufferMode_p)
 	{
-		// datacolumn_p = "ALL";
-		// jagonzal: plotms actually sets the datacolumn to show
-		exists = configuration.fieldNumber ("datacolumn");
-		if (exists >= 0)
-		{
-			configuration.get (exists, datacolumn_p);
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
-					<< "Data column is " << datacolumn_p << LogIO::POST;
-		}
+		// In buffer mode this parameter does not matter as the visCubes are filled on demand
+		datacolumn_p = "ALL";
 
 		exists = configuration.fieldNumber ("outputms");
 		if (exists >= 0)
@@ -1034,6 +1027,9 @@ void MSTransformManager::open()
 	outputMs_p = dataHandler_p->getOutputMS();
 	selectedInputMsCols_p = dataHandler_p->getSelectedInputMSColumns();
 	outputMsCols_p = dataHandler_p->getOutputMSColumns();
+
+	// jagonzal: This is needed for buffer mode, once the selectedInputMs_p is set
+	if (bufferMode_p) checkDataColumnsAvailable();
 
 	return;
 }
@@ -3993,6 +3989,7 @@ void MSTransformManager::checkDataColumnsToFill()
 	dataColMap_p.clear();
 	Bool mainColSet=False;
 	Bool modelDataChecked = False;
+
 	if (datacolumn_p.contains("ALL"))
 	{
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
