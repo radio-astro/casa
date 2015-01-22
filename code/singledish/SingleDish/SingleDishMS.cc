@@ -484,11 +484,11 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   	  }
   	  // actual execution of single spectrum
   	  status = 
-  	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(num_chan, 
+  	    LIBSAKURA_SYMBOL(SubtractBaselineFloat)(bl_contexts[ctx_indices[idx]], 
+  						    static_cast<uint16_t>(order), 
+						    num_chan, 
   						    spec.data, 
   						    mask.data, 
-  						    bl_contexts[ctx_indices[idx]], 
-  						    static_cast<uint16_t>(order), 
   						    clip_threshold_sigma, 
   						    num_fitting_max,
   						    true, 
