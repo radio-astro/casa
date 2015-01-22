@@ -258,7 +258,7 @@ macro( casa_add_tools out_swig out_sources out_py )
              DESTINATION include/casa/tools/${_base} )
     
     SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES CPLUSPLUS 1 )
-    SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR} -includeall") 
+    SET_SOURCE_FILES_PROPERTIES(${_swigi} PROPERTIES SWIG_FLAGS "-I${CMAKE_SOURCE_DIR};-threads")
     #SWIG_ADD_MODULE(${_base} python ${_swig} ${_path}/${_base}_cmpt.cc)
     SWIG_ADD_MODULE(${_base} python ${_swigi} ${_swigstatics})
     SWIG_LINK_LIBRARIES( ${_base} ${CASACODE_LIBRARIES}
