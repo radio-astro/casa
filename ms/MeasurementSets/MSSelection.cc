@@ -724,11 +724,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   void MSSelection::runErrorHandler()
   {
-    MSSelectionAntennaParseError msAntException(String(""));
-    MSAntennaParse::thisMSAErrorHandler->handleError(msAntException);
+    if (MSAntennaParse::thisMSAErrorHandler->nMessages() > 0)
+      {
+	MSSelectionAntennaParseError msAntException(String(""));
+	MSAntennaParse::thisMSAErrorHandler->handleError(msAntException);
+      }
 
-    MSSelectionStateParseError msStateException(String(""));
-    MSStateParse::thisMSSErrorHandler->handleError(msStateException);
+    if (MSStateParse::thisMSSErrorHandler->nMessages() > 0)
+      {
+	MSSelectionStateParseError msStateException(String(""));
+	MSStateParse::thisMSSErrorHandler->handleError(msStateException);
+      }
   }
 
   //----------------------------------------------------------------------------
