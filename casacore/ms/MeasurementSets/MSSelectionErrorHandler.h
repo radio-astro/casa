@@ -72,6 +72,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void reset();
     virtual void handleError(MSSelectionError&);
+
+    vector<String> getMessages() {return messageList;};
+    Int nMessages() {return messageList.size();}
+
   protected:
     vector<String> tokenList, messageList;
   };
