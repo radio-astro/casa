@@ -1,0 +1,103 @@
+<%!
+navbar_active='By Task'
+import os
+import pipeline.domain.measures as measures
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
+import pipeline.infrastructure.utils as utils
+
+def get_bar_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.33:
+		return ' bar-danger'
+	elif score <= 0.66:
+		return ' bar-warning'
+	elif score <= 0.9:
+		return ' bar-info'
+	else:
+		return ' bar-success'
+
+def get_badge_class(scores, result):
+	qascore = scores[result.stage_number]
+	score = qascore.score
+	if score in (None, '', 'N/A'):
+		return ''
+	elif score <= 0.33:
+		return ' badge-important'
+	elif score <= 0.66:
+		return ' badge-warning'
+	elif score <= 0.9:
+		return ' badge-info'
+	else:
+		return ' badge-success'
+
+def get_bar_width(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 0
+	else:
+		return 5.0 + 95.0 * qascore.score
+
+def format_score(scores, result):
+	qascore = scores[result.stage_number]
+	if qascore.score in (None, '', 'N/A'):
+		return 'N/A'
+	return '%0.2f' % qascore.score
+
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Task Summary</%block>
+
+<div class="page-header">
+	<h1>Task Summary</h1>
+</div>
+
+<div class="row-fluid">
+	<table class="table">
+		<thead>
+			<tr>
+				<th class="span9"><i class="icon-fixed-width icon-blank"></i> Task</th>
+				<th class="span2">QA Score</th>
+				<th class="span1"></th>
+			</tr>
+		</thead>
+		<tbody>
+			% for result in results:
+			<tr>
+				<td>${rendererutils.get_symbol_badge(result)} <a href="t2-4m.html?stage=${result.stage_number}">${hr.get_task_description(result)}</a><span class="pull-right">${scores[result.stage_number].shortmsg}</span></td>
+				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${get_bar_class(scores, result)}" style="width:${get_bar_width(scores, result)}%;"><span class="text-center"></span></div></div></td>
+				<td><span class="badge${get_badge_class(scores, result)}">${format_score(scores, result)}</span></td>
+			</tr>
+			% endfor
+		</tbody>
+	</table>
+</div>
+
+<%def name="li_anchor_to_file(relpath)">
+	<%
+	abspath = os.path.join(pcontext.report_dir, relpath)	
+	file_exists = os.path.exists(abspath)
+	if file_exists:
+		total_bytes = os.path.getsize(abspath)
+		filesize = measures.FileSize(total_bytes, measures.FileSizeUnits.BYTES)
+	%>
+	% if file_exists:
+		<li>download <a href="${relpath}" download="${relpath}">${relpath}</a> (${str(filesize)})</li>
+	% endif	
+</%def>
+
+% if any(logname in ['casalogs', 'casa_commands', 'pipeline_script', 'pipeline_restore_script'] for logname in pcontext.logs):
+<h4>CASA logs and scripts</h4>
+<ul>
+%for log_url in pcontext.logs['casalogs']:
+${li_anchor_to_file(log_url)}
+%endfor
+${li_anchor_to_file(pcontext.logs['casa_commands'])}
+${li_anchor_to_file(pcontext.logs['pipeline_script'])}
+${li_anchor_to_file(pcontext.logs['pipeline_restore_script'])}
+</ul>
+%endif 

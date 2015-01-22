@@ -1,0 +1,56 @@
+<%!
+navbar_active='By Task'
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.qaadapter as qa
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
+%>
+<%inherit file="base.html"/>
+
+<!-- include pipeline JS for access to UTILS module -->
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
+<script>
+$(document).ready(function(){
+	// sidebar may need to start/stop scrolling if window is resized
+	$(window).resize(UTILS.calculateAffix);
+
+	// Load stage details into panel is 'stage=x' given in URL 
+ 	var stageNum = $.url().param('stage');
+	var stageDetailsUrl = $('a#link_stage' + stageNum).data('fakeframehref');
+    var fakeframe = $('div#fakeframe');
+	if (typeof stageDetailsUrl != 'undefined') {
+    	UTILS.loadFakeframe(fakeframe, stageDetailsUrl);
+		$('a#link_stage' + stageNum).parent().addClass("active");
+	};	
+});
+</script>
+ 
+<%block name="title">Task Details</%block>
+ 
+<div class="row-fluid"> 
+	<div class="span3">
+		<div class="well sidebar-nav-fixed" id="nav-wrapper">
+			<ul class="nav nav-list">
+				<li class="nav-header">Tasks in execution order</li>
+			% for result in results:
+				<li>
+					<a id="link_stage${result.stage_number}"
+					   data-fakeframehref="stage${result.stage_number}/t2-4m_details.html"
+					   href="t2-4m.html?stage=${result.stage_number}">
+						${hr.get_task_name(result)}
+						<span class="pull-right">
+							${rendererutils.get_symbol_badge(result)}						
+						</span>
+					</a>
+				</li>
+			% endfor
+			</ul>
+		</div><!-- /.well -->
+	</div><!-- /span3 -->
+	
+	<div class="span9 span-fixed-sidebar">
+		<div id="fakeframe">
+			<img src="${self.attr.rsc_path}resources/img/ajax-loader.gif">Please wait while loading content...
+		</div>
+	</div>
+</div>

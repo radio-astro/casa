@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_makecleanlist" category="pipeline">
+<shortdescription>Compute list of clean images to be produced</shortdescription>
+<description>
+Create a a list of images to be cleaned.
+</description>
+<input>
+
+  <param type="stringArray" name="vis" subparam="true">
+    <description>List of input measurement sets</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="imagename" subparam="true">
+     <description>Prefix for output image names, \'\' for default.</description>
+     <value></value>
+  </param>
+
+  <param type="string" name="intent" subparam="true">
+    <description>Set of data selection intents</description>
+    <value>TARGET</value>
+  </param>
+
+  <param type="string" name="field" subparam="true">
+    <description>Set of data selection field names or ids, \'\' for all</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="spw" subparam="true">
+    <description>Set of data selection spectral window/channels, \'\' for all</description>
+    <value></value>
+  </param>
+
+  <param type="string" name="uvrange" subparam="true">
+      <description>Set of data selection uv ranges, \'\' for all.</description>
+      <any type="variant" limittypes="string stringArray"/>
+      <value type="string"></value>
+  </param>
+
+  <param type="string" name="mode">
+     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>mfs</value>
+         <value>frequency</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="outframe" subparam="true">
+     <description>velocity frame of output image (LSRK, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>LSRK</value>
+       </allowed>
+  </param>
+
+  <param type="intArray" name="imsize">
+    <description>Image X and Y size(s) in pixels, \'\' for default. Single value same for both.</description>
+    <value></value>
+  </param>
+
+  <param type="stringArray" name="cell">
+    <description>Image X and Y cell size(s), \'\' for default. Single value same for both</description>
+    <value></value>
+  </param>
+
+  <param type="int" name="calmaxpix" subparam="true">
+    <description>Maximum X and Y size of calibrator images in pixels</description>
+    <value>300</value>
+  </param>
+
+  <param type="any" name="phasecenter" subparam="true">
+    <description>Image center (direction or field index, \'\' for default)</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="int" name="nchan" subparam="true">
+    <description>Number of channels, -1 = all </description>
+    <value>-1</value>
+  </param>
+
+  <param type="any" name="start" subparam="true">
+    <description>Channel start, \'\' for default</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="any" name="width">
+    <description>Channel width, \'\' for default.</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
+
+  <constraints>
+
+    <when param="pipelinemode">
+      <equals type="string" value="automatic">
+      </equals>
+      <equals type="string" value="interactive">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="imagename"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="phasecenter"><value type="string"></value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="nchan"><value type="int">-1</value></default>
+        <default param="dryrun"><value type="bool">False</value></default>
+        <default param="acceptresults"><value type="bool">True</value></default>
+      </equals>
+      <equals type="string" value="getinputs">
+        <default param="vis"><value type="stringArray"></value></default>
+        <default param="imagename"><value type="string"></value></default>
+        <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
+        <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="phasecenter"><value type="string"></value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="nchan"><value type="int">-1</value></default>
+      </equals>
+    </when>
+
+    <when param="mode">
+      <equals type="string" value="">
+      </equals>
+      <equals type="string" value="mfs">
+      </equals>
+      <equals type="string" value="frequency">
+        <default param="outframe"><value type="string"></value></default>
+      </equals>
+    </when>
+
+  </constraints>
+
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+Create a list of images to be cleaned.
+
+Keyword Arguments
+
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+    determines the values of all context defined pipeline inputs automatically.
+    In 'interactive' mode the user can set the pipeline context defined
+    parameters manually.  In 'getinputs' mode the user can check the settings
+    of all pipeline parameters without running the task.
+    default: 'automatic'.
+
+--- pipeline parameter arguments which can be set in any pipeline mode
+
+mode -- Frequency specification:
+    default: 'mfs'
+    example:
+        mode='mfs' produce one image from all specified data
+        mode='frequency', channels are specified in frequency
+        mode='velocity', channels are specified in velocity
+
+cell -- Cell size (x, y)
+    default '' Compute cell size based on the UV coverage of all the fields
+    to be imaged.
+    example: ['0.5arcsec', '0.5arcsec']
+
+imsize -- Image X and Y size in pixels. The sizes must be even and divisible
+    by 2,3,5,7 only.
+    default: '' The default values are derived as follows:
+         1. Determine phase center and spread of field centers around it. 
+         2. Set the size of the image to cover the spread of field centers plus
+            a border of width 0.75 * beam radius, to first null.
+         3. Divide X and Y extents by cell size to arrive at the number of
+	    pixels required. 
+    example: [120, 120]
+
+calmaxpix -- Maximum image X or Y size in pixels if a calibrator is being 
+    imaged ('PHASE', 'BANDPASS', 'AMPLITUDE' or 'FLUX').
+    default: 300
+    example: 300
+
+width -- Output channel width.
+    default: '' Difference in frequency between first 2 selected channels.
+        for frequency mode images.
+    example: '24.2kHz'
+
+---- pipeline context defined parameter arguments which can be set only in
+     'interactive mode'
+
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets specified in the h_init or hif_importdata sets.
+    default '': use all measurement sets in the context 
+    example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+
+intent -- Select intents for which associated fields will be imaged.
+    default: 'TARGET'
+    example: 'PHASE,BANDPASS'
+
+field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
+    are assumed to have common source / field names.  If intent is specified
+    only fields with data matching the intent will be selected. The fields
+    will be selected from measurement sets in 'vis'.
+    default: '' Fields matching matching intent, one image per target source.
+    example: '3C279', 'Centaurus*', '3C279,J1427-421'
+
+spw -- Select spectral window/channels to image.
+    default: '' Individual images will be computed for all science spectral
+    windows.
+    example: '9'
+
+uvrange -- Select a set of uv ranges ro image.
+    default: '' All uv data is included
+    example: '0~1000klambda', ['0~100klambda', 100~1000klambda]
+
+phasecenter -- Direction measure or field id of the image center.
+    default: '' The default phase center is set to the mean of the field
+        directions of all fields that are to be image together.
+    example: 0, 'J2000 19h30m00 -40d00m00' 
+
+nchan -- Total number of channels in the output image(s)
+    default: -1 Selects enough channels to cover the data selected by
+        spw consistent with start and width.
+    example: 100
+
+start -- First channel for frequency mode images.
+    default '' Starts at first input channel of the spw.
+    example: '22.3GHz'
+
+--- pipeline task execution modes
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: False
+
+acceptresults -- Add the results of the task to the pipeline context (True) or
+   reject them (False).
+   default: True
+
+Output
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Generate a list of images to be cleaned. By default the list will include
+one image per science target per spw. Calibrator targets can be selected
+by setting appropriate values for itent.
+
+By default the output image cellsize is set to the minimum cell size
+consistent with the UV coverage.
+
+By default the image size in pixels is set to values determined by the
+cell size and the single dish beam size. If a calibrator is being
+imaged (intents 'PHASE', 'BANDPASS', 'FLUX' or 'AMPLITUDE') then the
+image dimensions are limited to 'calmaxpix' pixels.
+
+By default science target images are cubes and calibrator target images
+are single channel. Science target images may be mosaics or single fields.
+
+Issues
+
+TBD
+Examples
+
+1. Make a list of science target images to be cleaned, one image per science 
+spw.
+
+    hif_makecleanlist()
+
+2. Make a list of PHASE and BANDPASS calibrator targets to be imaged,
+one image per science spw.
+
+    hif_makecleanlist(intent='PHASE,BANDPASS')
+
+3. Make a list of PHASE calibrator images observed in spw 1, images limited to 
+50 pixels on a side.
+
+    hif_makecleanlist(intent='PHASE',spw='1',calmaxpix=50)
+
+</example>
+
+</task>
+</casaxml>
+

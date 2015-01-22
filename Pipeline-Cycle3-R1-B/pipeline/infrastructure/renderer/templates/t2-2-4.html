@@ -1,0 +1,45 @@
+<%!
+import os
+%>
+<div class="page-header">
+	<h1>Sky Setup Details<button class="btn btn-large pull-right" onclick="javascript:location.reload();">Back</button></h1>
+</div>
+
+<ul class="thumbnails">
+% if azel_plot:
+	<li class="span3">
+	  	<div class="thumbnail">
+			<a href="${os.path.relpath(azel_plot.abspath, pcontext.report_dir)}"
+			   class="fancybox">
+				<img src="${os.path.relpath(azel_plot.thumbnail, pcontext.report_dir)}"
+					 title="Elevation vs. Azimuth for ${ms.basename}"
+					 alt="Elevation vs. Azimuth for ${ms.basename}" />
+		    </a>
+		    <div class="caption">
+				<h4>Az/El</h4>
+				<p>Elevation vs. azimuth for ${ms.basename}.</p>
+			</div>
+		</div>
+	</li>
+% endif	
+% if el_vs_time_plot:
+	<li class="span3">
+	  	<div class="thumbnail">
+			<a href="${os.path.relpath(el_vs_time_plot.abspath, pcontext.report_dir)}"
+			   class="fancybox">
+				<img src="${os.path.relpath(el_vs_time.thumbnail, pcontext.report_dir)}"
+					 title="Elevation vs. Time for ${ms.basename}"
+					 alt="Elevation vs. Time for ${ms.basename}" />
+		    </a>
+		    <div class="caption">
+				<h4>Elevation/Time</h4>
+				<p>Elevation vs. time for ${ms.basename}.</p>
+			</div>
+		</div>
+	</li>
+% endif
+</ul>
+
+<ul>
+<li class="muted"> Sky setup displays</li>
+</ul>
