@@ -184,8 +184,17 @@ public:
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
-  // Get the final image: do the Fourier transform and
-  // grid-correct, then optionally normalize by the summed weights
+  // Make the entire image using a ROVisIter...
+  // This is an overload for FTMachine version as 
+  //SDGrid now does everything in memory
+  // so for large cube ..proceed by slices that fit in memory here.
+  virtual void makeImage(FTMachine::Type type,
+			 ROVisibilityIterator& vi,
+			 ImageInterface<Complex>& image,
+			 Matrix<Float>& weight);
+
+  // Get the final image: 
+  //  optionally normalize by the summed weights
   ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True);
   virtual void normalizeImage(Lattice<Complex>& /*skyImage*/,
 			      const Matrix<Double>& /*sumOfWts*/,

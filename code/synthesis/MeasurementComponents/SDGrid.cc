@@ -221,12 +221,12 @@ void SDGrid::init() {
 
   ok();
 
-  if((image->shape().product())>cachesize) {
+  /*if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
-  }
+    }*/
   isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
@@ -359,7 +359,7 @@ void SDGrid::init() {
   if(wImage) delete wImage; wImage=0;
   wImage = new TempImage<Float>(image->shape(), image->coordinates());
 
-  if(isTiled) {
+  /*if(isTiled) {
     Float tileOverlap=0.5;
     if(convType=="box") {
       tileOverlap=0.0;
@@ -382,6 +382,7 @@ void SDGrid::init() {
 					   (tileOverlap>0.0));
 
   }
+  */
 }
 
 // This is nasty, we should use CountedPointers here.
@@ -547,12 +548,12 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
   Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
   AlwaysAssert(directionIndex>=0, AipsError);
   directionCoord=coords.directionCoordinate(directionIndex);
-  if((image->shape().product())>cachesize) {
+  /*if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
-  }
+    }*/
   isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
@@ -561,11 +562,12 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
 
   // If we are memory-based then read the image in and create an
   // ArrayLattice otherwise just use the PagedImage
-  if(isTiled) {
+  /*if(isTiled) {
     lattice=image;
     wLattice=wImage;
   }
-  else {
+  else*/ 
+{
     // Make the grid the correct shape and turn it into an array lattice
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
@@ -602,7 +604,7 @@ void SDGrid::initializeToVis(ImageInterface<Complex>& iimage,
 
 void SDGrid::finalizeToVis()
 {
-  if(isTiled) {
+  /*if(isTiled) {
 
     logIO() << LogOrigin("SDGrid", "finalizeToVis")  << LogIO::NORMAL;
 
@@ -612,7 +614,7 @@ void SDGrid::finalizeToVis()
     imageCache->flush();
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
-  }
+    }*/
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
 
@@ -636,12 +638,15 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize the maps for polarization and channel. These maps
   // translate visibility indices into image indices
   initMaps(vb);
-  if((image->shape().product())>cachesize) {
+  //cerr << "ToSky cachesize " << cachesize << " im shape " << (image->shape().product()) << endl;
+  /*if((image->shape().product())>cachesize) {
     isTiled=True;
   }
   else {
     isTiled=False;
   }
+  */
+  //////////////No longer using isTiled
   isTiled=False;
   nx    = image->shape()(0);
   ny    = image->shape()(1);
@@ -662,13 +667,14 @@ void SDGrid::initializeToSky(ImageInterface<Complex>& iimage,
   // Initialize for in memory or to disk gridding. lattice will
   // point to the appropriate Lattice, either the ArrayLattice for
   // in memory gridding or to the image for to disk gridding.
-  if(isTiled) {
+  /*if(isTiled) {
     imageCache->flush();
     image->set(Complex(0.0));
     lattice=image;
     wLattice=wImage;
   }
-  else {
+  else*/
+  {
     IPosition gridShape(4, nx, ny, npol, nchan);
     griddedData.resize(gridShape);
     griddedData=Complex(0.0);
@@ -690,7 +696,7 @@ void SDGrid::finalizeToSky()
 
   // Now we flush the cache and report statistics
   // For memory based, we don't write anything out yet.
-  if(isTiled) {
+  /*if(isTiled) {
     logIO() << LogOrigin("SDGrid", "finalizeToSky")  << LogIO::NORMAL;
 
     AlwaysAssert(image, AipsError);
@@ -700,6 +706,7 @@ void SDGrid::finalizeToSky()
     imageCache->showCacheStatistics(o);
     logIO() << o.str() << LogIO::POST;
   }
+  */
 
   if(pointingToImage) delete pointingToImage; pointingToImage=0;
 }
@@ -805,12 +812,12 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   if(type==FTMachine::PSF || type==FTMachine::COVERAGE)
     dopsf=True;
   if(dopsf) type=FTMachine::PSF;
-
   Cube<Complex> data;
   //Fortran gridder need the flag as ints 
   Cube<Int> flags;
   Matrix<Float> elWeight;
   interpolateFrequencyTogrid(vb, imagingweight,data, flags, elWeight, type);
+  //cerr << "number of rows " << vb.nRow() << " data shape " << data.shape() << endl;
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);
@@ -842,7 +849,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   Int idopsf=0;
   if(dopsf) idopsf=1;
 
-  if(isTiled) {
+  /*if(isTiled) {
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       
       if(getXYPos(vb, rownr)) {
@@ -891,7 +898,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
       }
     }
   }
-  else {
+  else*/
+  {
     Matrix<Double> xyPositions(2, endRow-startRow+1);
     xyPositions=0.0;
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
@@ -905,6 +913,9 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
       //      IPosition s(data.shape());
       const IPosition& fs=flags.shape();
       std::vector<Int> s(fs.begin(), fs.end());
+      Bool datCopy, wgtCopy;
+      Complex * datStor=griddedData.getStorage(datCopy);
+      Float * wgtStor=wGriddedData.getStorage(wgtCopy);
 
       ggridsd(xyPositions.getStorage(del),
 	      datStorage,
@@ -916,8 +927,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      wgtStorage,
 	      &s[2],
 	      &row,
-	      griddedData.getStorage(del),
-	      wGriddedData.getStorage(del),
+	      datStor,
+	      wgtStor,
 	      &nx,
 	      &ny,
 	      &npol,
@@ -928,6 +939,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	      chanMap.getStorage(del),
 	      polMap.getStorage(del),
 	      sumWeight.getStorage(del));
+      griddedData.putStorage(datStor, datCopy);
+      wGriddedData.putStorage(wgtStor, wgtCopy);
     }
   }
   if(!dopsf)
@@ -995,7 +1008,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
   }
 
 
-  if(isTiled) {
+  /*if(isTiled) {
     
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
       
@@ -1040,7 +1053,8 @@ void SDGrid::get(VisBuffer& vb, Int row)
       }
     }
   }
-  else {
+  else*/ 
+  {
     Matrix<Double> xyPositions(2, endRow-startRow+1);
     xyPositions=0.0;
     for (Int rownr=startRow; rownr<=endRow; rownr++) {
@@ -1078,6 +1092,125 @@ void SDGrid::get(VisBuffer& vb, Int row)
   interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
 }
 
+
+
+  // Make a plain straightforward honest-to-FSM image. This returns
+  // a complex image, without conversion to Stokes. The representation
+  // is that required for the visibilities.
+  //----------------------------------------------------------------------
+  void SDGrid::makeImage(FTMachine::Type type, 
+			    ROVisibilityIterator& vi,
+			    ImageInterface<Complex>& theImage,
+			    Matrix<Float>& weight) {
+    
+    
+    logIO() << LogOrigin("FTMachine", "makeImage0") << LogIO::NORMAL;
+    
+    // Loop over all visibilities and pixels
+    VisBuffer vb(vi);
+    
+    // Initialize put (i.e. transform to Sky) for this model
+    vi.origin();
+    
+    if(vb.polFrame()==MSIter::Linear) {
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::LINEAR);
+    }
+    else {
+      StokesImageUtil::changeCStokesRep(theImage, StokesImageUtil::CIRCULAR);
+    }
+    Bool useCorrected= !(vi.msColumns().correctedData().isNull());
+    if((type==FTMachine::CORRECTED) && (!useCorrected))
+      type=FTMachine::OBSERVED;
+    Bool normalize=True;
+    if(type==FTMachine::COVERAGE)
+      normalize=False;
+
+    Int Nx=theImage.shape()(0);
+    Int Ny=theImage.shape()(1);
+    Int Npol=theImage.shape()(2);
+    Int Nchan=theImage.shape()(3);
+    Double memtot=Double(HostInfo::memoryTotal(true))*1024.0; // return in kB
+    Int nchanInMem=Int(memtot/2.0/8.0/Double(Nx*Ny*Npol));
+    Int nloop=nchanInMem >= Nchan ? 1 : Nchan/nchanInMem+1;
+    ImageInterface<Complex> *imCopy=NULL;
+    IPosition blc(theImage.shape());
+    IPosition trc(theImage.shape());
+    blc-=blc; //set all values to 0
+    trc=theImage.shape();
+    trc-=1; // set trc to image size -1
+    if(nloop==1) 
+      imCopy=& theImage;
+    else
+      logIO()  << "Not enough memory to image in one go \n will process the image in   " 
+	       << nloop 
+	      << " sections  " 	
+	      << LogIO::POST;
+
+    weight.resize(Npol, Nchan);
+    Matrix<Float> wgtcopy(Npol, Nchan);
+    
+    for (Int k=0; k < nloop; ++k){
+      Int bchan=k*nchanInMem;
+      Int echan=(k+1)*nchanInMem < Nchan ?  (k+1)*nchanInMem-1 : Nchan-1;
+      
+      if(nloop > 1) {
+	 blc[3]=bchan;
+	 trc[3]=echan;
+	 Slicer sl(blc, trc, Slicer::endIsLast);
+	 imCopy=new SubImage<Complex>(theImage, sl, True);
+	 wgtcopy.resize(npol, echan-bchan+1);
+      }
+      vi.originChunks();
+      vi.origin();
+      initializeToSky(*imCopy,wgtcopy,vb);
+   
+
+      // Loop over the visibilities, putting VisBuffers
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+	for (vi.origin(); vi.more(); vi++) {
+	
+	  switch(type) {
+	  case FTMachine::RESIDUAL:
+	    vb.visCube()=vb.correctedVisCube();
+	    vb.visCube()-=vb.modelVisCube();
+	    put(vb, -1, False);
+	    break;
+	  case FTMachine::MODEL:
+	    put(vb, -1, False, FTMachine::MODEL);
+	    break;
+	  case FTMachine::CORRECTED:
+	    put(vb, -1, False, FTMachine::CORRECTED);
+	    break;
+	  case FTMachine::PSF:
+	    vb.visCube()=Complex(1.0,0.0);
+	    put(vb, -1, True, FTMachine::PSF);
+	    break;
+	  case FTMachine::COVERAGE:
+	    vb.visCube()=Complex(1.0);
+	    put(vb, -1, True, FTMachine::COVERAGE);
+	    break;
+	  case FTMachine::OBSERVED:
+	  default:
+	    put(vb, -1, False, FTMachine::OBSERVED);
+	    break;
+	  }
+	}
+      }
+      finalizeToSky();
+      // Normalize by dividing out weights, etc.
+      getImage(wgtcopy, normalize);
+      if(max(wgtcopy)==0.0)
+	logIO() << LogIO::WARN 
+		<< "No useful data in SDGrid: weights all zero for image slice  " << k	
+		<< LogIO::POST;
+      weight(Slice(0, Npol), Slice(bchan, echan-bchan+1))=wgtcopy;
+      if(nloop >1) delete imCopy;
+    }//loop k
+
+  }
+  
+
+
 // Finalize : optionally normalize by weight image
 ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
 					  Bool normalize) 
@@ -1105,14 +1238,43 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
   /////////////////////
   if(normalize) {
     if(max(weights)==0.0) {
-      logIO() << LogIO::SEVERE << "No useful data in SDGrid: weights all zero"
-	      << LogIO::POST;
+      //logIO() << LogIO::WARN << "No useful data in SDGrid: weights all zero"
+      //	      << LogIO::POST;
+      //image->set(Complex(0.0));
+      return *image;
     }
-    lattice->copyData((LatticeExpr<Complex>)(iif((*wLattice<=minWeight_p), 0.0,
-						 (*lattice)/(*wLattice))));
+    //Timer tim;
+    //tim.mark();
+    //lattice->copyData((LatticeExpr<Complex>)(iif((*wLattice<=minWeight_p), 0.0,
+    //						 (*lattice)/(*wLattice))));
+    //As we are not using disk based lattices anymore the above uses too much memory for 
+    // ArrayLattice...it does not do a real  inplace math but rather mutiple copies 
+    // seem to be involved  thus the less elegant but faster and less memory hog loop 
+    // below.
+    
+    IPosition pos(4);
+    for (Int chan=0; chan < nchan; ++chan){
+      pos[3]=chan;
+      for( Int pol=0; pol < npol; ++ pol){
+	pos[2]=pol;
+	for (Int y=0; y < ny ; ++y){
+	  pos[1]=y;
+	  for (Int x=0; x < nx; ++x){
+	    pos[0]=x;
+	    Float wgt=wGriddedData(pos);
+	    if(wgt > minWeight_p)
+	      griddedData(pos)=griddedData(pos)/wgt;
+	    else
+	      griddedData(pos)=0.0;
+	  }
+	}
+      }
+      }
+    //tim.show("After normalizing");
   }
   
-  if(!isTiled) {
+  //if(!isTiled) 
+  {
     // Now find the SubLattice corresponding to the image
     IPosition gridShape(4, nx, ny, npol, nchan);
     IPosition blc(4, (nx-image->shape()(0)+(nx%2==0))/2,
