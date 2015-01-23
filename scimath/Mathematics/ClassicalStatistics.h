@@ -47,11 +47,19 @@ namespace casa {
 // allows the caller to not have to keep all the data accessible at once. Note however, that all
 // data must be simultaneously accessible if quantile (eg median) calculations are desired.
 
+// I attempted to write this class using the Composite design pattern, with eg the
+// _unweightedStats() and _weightedStats() methods in their own class, but for reasons I
+// don't understand, that impacted performance significantly. So I'm using the current
+// architecture, which I know is a bit a maintenance nightmare.
+
 template <class AccumType, class InputIterator, class MaskIterator=const Bool*> class ClassicalStatistics
 	: public StatisticsAlgorithm<AccumType, InputIterator, MaskIterator> {
 public:
 
 	ClassicalStatistics();
+
+	// copy semantics
+	ClassicalStatistics(const ClassicalStatistics<AccumType, InputIterator, MaskIterator>& cs);
 
 	virtual ~ClassicalStatistics();
 
@@ -152,7 +160,7 @@ public:
 	virtual uInt64 getNPts();
 
 	// see base class description
-	virtual std::pair<uInt, uInt> getStatisticIndex(StatisticsData::STATS stat);
+	virtual std::pair<Int64, Int64> getStatisticIndex(StatisticsData::STATS stat);
 
 	// reset object to initial state. Clears all private fields including data,
 	// accumulators, etc.

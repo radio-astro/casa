@@ -312,6 +312,7 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_clearData() {
 	_dataProvider = NULL;
 }
 
+/*
 template <class AccumType, class InputIterator, class MaskIterator>
 Bool StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
 	const AccumType& datum, typename DataRanges::const_iterator beginRange,
@@ -329,7 +330,9 @@ Bool StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
 	}
 	return ! isInclude;
 }
+*/
 
+/*
 template <class AccumType, class InputIterator, class MaskIterator>
 void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 	InputIterator& datum, Int64& loopCount, Bool unityStride, uInt dataStride
@@ -435,6 +438,7 @@ void StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
 	}
 	++loopCount;
 }
+*/
 
 template <class AccumType, class InputIterator, class MaskIterator>
 std::map<uInt64, AccumType> StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_valuesFromArray(

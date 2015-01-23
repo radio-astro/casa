@@ -27,6 +27,7 @@
 #define SCIMATH_STATISTICSUTILITIES_H
 
 #include <casa/Exceptions/Error.h>
+#include <scimath/Mathematics/StatisticsTypes.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/aips.h>
 
@@ -34,15 +35,15 @@ namespace casa {
 
 // Various statistics related methods for the statistics framework.
 
-template <class T> class StatisticsUtilities {
+template <class AccumType> class StatisticsUtilities {
 public:
 
 	// description of a regularly spaced bins with the first bin having lower limit
 	// of minLimit and having nBins equally spaced bins of width binWidth, so that
 	// the upper limit of the last bin is given by minLimit + nBins*binWidth
 	struct BinDesc {
-		T binWidth;
-		T minLimit;
+		AccumType binWidth;
+		AccumType minLimit;
 		uInt nBins;
 	};
 
@@ -62,7 +63,7 @@ public:
 	// wnvariance = sum((weight_i*(x_i - mean)**2)
 	// npts is a Double rather than an Int64 because of compilation issues when T is a Complex
 	inline static void accumulate (
-		Double& npts, T& sum, T& mean, const T& datum
+		Double& npts, AccumType& sum, AccumType& mean, const AccumType& datum
 	);
 
 	// in order to optimize performance, no checking is done for the weight == 0 case
@@ -70,20 +71,20 @@ public:
 	// and shouldn't call this method if the weight is 0. Expect a segfault because of
 	// division by zero if sumweights and weight are both zero.
 	inline static void waccumulate (
-		Double& npts, T& sumweights, T& wsum, T& wmean,
-		const T& datum, const T& weight
+		Double& npts, AccumType& sumweights, AccumType& wsum, AccumType& wmean,
+		const AccumType& datum, const AccumType& weight
 	);
 
 	inline static void accumulate (
-		Double& npts, T& sum, T& mean, T& nvariance,
-		T& sumsq, const T& datum
+		Double& npts, AccumType& sum, AccumType& mean, AccumType& nvariance,
+		AccumType& sumsq, const AccumType& datum
 	);
 
 	// wsumsq is the weighted sum of squares, sum(w_i*x_i*x_i)
 	inline static void waccumulate (
-		Double& npts, T& sumweights, T& wsum,
-		T& wmean, T& wnvariance, T& wsumsq,
-		const T& datum, const T& weight
+		Double& npts, AccumType& sumweights, AccumType& wsum,
+		AccumType& wmean, AccumType& wnvariance, AccumType& wsumsq,
+		const AccumType& datum, const AccumType& weight
 	);
 	// </group>
 
@@ -92,18 +93,18 @@ public:
 	// semantics.
 	template <class LocationType>
 	inline static void accumulate (
-		Double& npts, T& sum, T& mean, T& nvariance,
-		T& sumsq, T& datamin,
-		T& datamax, LocationType& minpos, LocationType& maxpos,
-		const T& datum, const LocationType& location
+		Double& npts, AccumType& sum, AccumType& mean, AccumType& nvariance,
+		AccumType& sumsq, AccumType& datamin,
+		AccumType& datamax, LocationType& minpos, LocationType& maxpos,
+		const AccumType& datum, const LocationType& location
 	);
 
 	template <class LocationType>
 	inline static void waccumulate (
-		Double& npts, T& sumofweights, T& sum, T& mean,
-		T& nvariance, T& sumsq, T& datamin, T& datamax,
+		Double& npts, AccumType& sumofweights, AccumType& sum, AccumType& mean,
+		AccumType& nvariance, AccumType& sumsq, AccumType& datamin, AccumType& datamax,
 		LocationType& minpos, LocationType& maxpos,
-		const T& datum, const T& weight, const LocationType& location
+		const AccumType& datum, const AccumType& weight, const LocationType& location
 	);
 
 	// </group>
@@ -112,14 +113,14 @@ public:
 	// return True if the max or min was updated, False otherwise.
 	template <class LocationType>
 	inline static Bool doMax(
-		T& datamax, LocationType& maxpos, Bool isFirst,
-		const T& datum, const LocationType& location
+		AccumType& datamax, LocationType& maxpos, Bool isFirst,
+		const AccumType& datum, const LocationType& location
 	);
 
 	template <class LocationType>
 	inline static Bool doMin(
-		T& datamin, LocationType& minpos, Bool isFirst,
-		const T& datum, const LocationType& location
+		AccumType& datamin, LocationType& minpos, Bool isFirst,
+		const AccumType& datum, const LocationType& location
 	);
 	// </group>
 
@@ -130,55 +131,60 @@ public:
 	// that the mean is the specified center is used to simplify things.
 	/*
 	inline static void accumulateSym (
-		Double& npts, T& sum, const T& datum, const T& center
+		Double& npts, AccumType& sum, const AccumType& datum, const AccumType& center
 	);
 	*/
 
 	/*
 	inline static void waccumulateSym (
-		Double& npts, T& sumweights, T& wsum,
-		const T& datum, const T& weight, const T& center
+		Double& npts, AccumType& sumweights, AccumType& wsum,
+		const AccumType& datum, const AccumType& weight, const AccumType& center
 	);
 	*/
 
 	inline static void accumulateSym (
-		Double& npts, T& nvariance,
-		T& sumsq, const T& datum, const T& center
+		Double& npts, AccumType& nvariance,
+		AccumType& sumsq, const AccumType& datum, const AccumType& center
 	);
 
 	// wsumsq is the weighted sum of squares, sum(w_i*x_i*x_i)
 	inline static void waccumulateSym (
-		Double& npts, T& sumweights,
-		T& wnvariance, T& wsumsq,
-		const T& datum, const T& weight, const T& center
+		Double& npts, AccumType& sumweights,
+		AccumType& wnvariance, AccumType& wsumsq,
+		const AccumType& datum, const AccumType& weight, const AccumType& center
 	);
 
 	// <src>maxpos</src> and <src>minpos</src> refer to actual, not
 	// virtually created, data only.
 	template <class LocationType>
 	inline static void accumulateSym (
-		Double& npts, T& nvariance,
-		T& sumsq, T& datamin,
-		T& datamax, LocationType& minpos, LocationType& maxpos,
-		const T& datum, const LocationType& location, const T& center
+		Double& npts, AccumType& nvariance,
+		AccumType& sumsq, AccumType& datamin,
+		AccumType& datamax, LocationType& minpos, LocationType& maxpos,
+		const AccumType& datum, const LocationType& location, const AccumType& center
 	);
 
 	template <class LocationType>
 	inline static void waccumulateSym (
-		Double& npts, T& sumofweights,
-		T& nvariance, T& sumsq, T& datamin, T& datamax,
+		Double& npts, AccumType& sumofweights,
+		AccumType& nvariance, AccumType& sumsq, AccumType& datamin, AccumType& datamax,
 		LocationType& minpos, LocationType& maxpos,
-		const T& datum, const T& weight, const LocationType& location,
-		const T& center
+		const AccumType& datum, const AccumType& weight, const LocationType& location,
+		const AccumType& center
 	);
 
 	// </group>
 	// This does the obvious conversions. The Complex and DComplex versions
 	// (implemented after the class definition) are used solely to permit compilation. In general, these versions should
 	// never actually be called
-	inline static Int getInt(const T& v) {
+	inline static Int getInt(const AccumType& v) {
 		return (Int)v;
 	}
+
+	inline static Bool includeDatum(
+		const AccumType& datum, typename DataRanges::const_iterator beginRange,
+		typename DataRanges::const_iterator endRange, Bool isInclude
+	);
 
 private:
 	StatisticsUtilities() {}
