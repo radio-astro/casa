@@ -1398,15 +1398,20 @@ def get_spwchs(selection, infile):
         nchanmap = dict(((str(i),str(tb.getcell('NUM_CHAN',i))) for i in xrange(tb.nrows())))
 
     ch_info = selection['channel']
+    exist_spw = selection['spw'].tolist()
     d = {}
     for item in ch_info:
-        spwid = str(item[0])
         try:
-            d.keys().index(spwid)
-            d[spwid].append(str(item[1]))
+            exist_spw.index(item[0])
+            spwid = str(item[0])
+            try:
+                d.keys().index(spwid)
+                d[spwid].append(str(item[1]))
+            except:
+                d[spwid] = [str(item[1])]
+            d[spwid].append(str(item[2]))
         except:
-            d[spwid] = [str(item[1])]
-        d[spwid].append(str(item[2]))
+            pass
     l = []
     for key in d.keys():
         l.append(':'.join([key, nchanmap[key], ';'.join(d[key])]))
