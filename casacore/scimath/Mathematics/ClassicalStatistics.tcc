@@ -36,9 +36,10 @@ namespace casa {
 template <class AccumType, class InputIterator, class MaskIterator>
 ClassicalStatistics<AccumType, InputIterator, MaskIterator>::ClassicalStatistics()
 	: StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>(),
-	  _npts(0), _idataset(0), _sum(0), _sumsq(0), _max(), _min(),
-	  _minpos(0, 0), _maxpos(0,0), _calculateAsAdded(False), _doMaxMin(True),
-	  _doMedAbsDevMed(False), _currentStats(), _median(), _medAbsDevMed() {
+	  _statsData(initializeStatsData<AccumType>()),
+	  /*_npts(0),*/ _idataset(0), /* _sum(0), _sumsq(0), */ /*_max(), _min(),*/
+	  /*_minpos(0, 0), _maxpos(0,0),*/ _calculateAsAdded(False), _doMaxMin(True),
+	  _doMedAbsDevMed(False), _mustAccumulate(False) /*, _currentStats()*/ /*, _median(), _medAbsDevMed()*/ {
 	reset();
 }
 
@@ -49,14 +50,16 @@ template <class AccumType, class InputIterator, class MaskIterator>
 ClassicalStatistics<AccumType, InputIterator, MaskIterator>::ClassicalStatistics(
     const ClassicalStatistics<AccumType, InputIterator, MaskIterator>& cs
 ) : StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>(cs),
-    _npts(cs._npts), _idataset(cs._idataset), _sum(cs._sum), _sumsq(cs._sumsq),
-    _max(cs._max.null() ? NULL : new AccumType(*cs._max)),
-    _min(cs._min.null() ? NULL : new AccumType(*cs._min)), _minpos(cs._minpos),
-    _maxpos(cs._maxpos), _calculateAsAdded(cs._calculateAsAdded),
-    _doMaxMin(cs._doMaxMin), _doMedAbsDevMed(cs._doMedAbsDevMed),
-    _currentStats(cs._currentStats),
+	_statsData(cs._statsData),
+    /*_npts(cs._npts), */ _idataset(cs._idataset), /*_sum(cs._sum), _sumsq(cs._sumsq),*/
+    /*_max(cs._max.null() ? NULL : new AccumType(*cs._max)),*/
+    /*_min(cs._min.null() ? NULL : new AccumType(*cs._min)),*/ /* _minpos(cs._minpos),
+    _maxpos(cs._maxpos), */ _calculateAsAdded(cs._calculateAsAdded),
+    _doMaxMin(cs._doMaxMin), _doMedAbsDevMed(cs._doMedAbsDevMed), _mustAccumulate(cs._mustAccumulate) /*,
+    _currentStats(cs._currentStats)*/ /*,
     _median(cs._median.null() ? NULL : new AccumType(*cs._median)),
-    _medAbsDevMed(cs._medAbsDevMed.null() ? NULL : new AccumType(*cs._medAbsDevMed)) {}
+    _medAbsDevMed(cs._medAbsDevMed.null() ? NULL : new AccumType(*cs._medAbsDevMed)) */ {
+}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 ClassicalStatistics<AccumType, InputIterator, MaskIterator>&
@@ -67,24 +70,26 @@ ClassicalStatistics<AccumType, InputIterator, MaskIterator>::operator=(
         return *this;
     }
     StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::operator=(other);
-    _npts = other._npts;
+    _statsData = copy(_statsData);
+    //_npts = other._npts;
     _idataset = other._idataset;
-    _mean = other._mean;
-    _nvariance = other._nvariance;
-    _sum = other._sum;
-    _sumsq = other._sumsq;
-    _sumofweights = other._sumofweights;
-    _max = other._max.null() ? NULL : new AccumType(*other._max);
-    _min = other._min.null() ? NULL : new AccumType(*other._min);
-    _minpos = other._minpos;
-    _maxpos = other._maxpos;
+    //_mean = other._mean;
+    //_nvariance = other._nvariance;
+    //_sum = other._sum;
+    //_sumsq = other._sumsq;
+    //_sumofweights = other._sumofweights;
+    //_max = other._max.null() ? NULL : new AccumType(*other._max);
+    //_min = other._min.null() ? NULL : new AccumType(*other._min);
+    //_minpos = other._minpos;
+    //_maxpos = other._maxpos;
     _calculateAsAdded = other._calculateAsAdded;
     _doMaxMin = other._doMaxMin;
-    _doMedAbsDevMed = False;
-    _currentStats = other._currentStats;
-    _median = other._median.null() ? NULL : new AccumType(*other._median);
-    _medAbsDevMed = other._medAbsDevMed.null()
-    	? NULL : new AccumType(*other._medAbsDevMed);
+    _doMedAbsDevMed = other._doMedAbsDevMed;
+    _mustAccumulate = other._mustAccumulate;
+    //_currentStats = other._currentStats;
+    //_median = other._median.null() ? NULL : new AccumType(*other._median);
+    //_medAbsDevMed = other._medAbsDevMed.null()
+    //	? NULL : new AccumType(*other._medAbsDevMed);
     return *this;
 }
 
@@ -94,8 +99,13 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	CountedPtr<AccumType> knownMax, uInt binningThreshholdSizeBytes,
 	Bool persistSortedArray
 ) {
+	/*
 	if (! _median.null()) {
 		return *_median;
+	}
+	*/
+	if (! _statsData.median.null()) {
+		return *_statsData.median;
 	}
 	std::set<uInt64> indices = _medianIndices(knownNpts);
 	std::map<uInt64, AccumType> indexToValue = _indicesToValues(
@@ -103,7 +113,8 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 		binningThreshholdSizeBytes/sizeof(AccumType),
 		indices, persistSortedArray
 	);
-	_median = indexToValue.size() == 1
+	//_median = indexToValue.size() == 1
+	_statsData.median = indexToValue.size() == 1
 		? new AccumType(indexToValue[*indices.begin()])
 		: new AccumType(
 			(
@@ -111,7 +122,8 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 				+ indexToValue[*indices.rbegin()]
 			)/AccumType(2)
 		);
-	return *_median;
+	//return *_median;
+	return *_statsData.median;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -136,8 +148,13 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	CountedPtr<AccumType> knownMax, uInt binningThreshholdSizeBytes,
 	Bool persistSortedArray
 ) {
+	/*
 	if (! _medAbsDevMed.null()) {
 		return *_medAbsDevMed;
+	}
+	*/
+	if (! _statsData.medAbsDevMed.null()) {
+		return *_statsData.medAbsDevMed;
 	}
 
 	// This call calculates the _median of the data set which is stored internally and
@@ -154,7 +171,8 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 		indices, persistSortedArray
 	);
 	_doMedAbsDevMed = False;
-	_medAbsDevMed = indexToValue.size() == 1
+	//_medAbsDevMed = indexToValue.size() == 1
+	_statsData.medAbsDevMed = indexToValue.size() == 1
 		? new AccumType(indexToValue[*indices.begin()])
 		: new AccumType(
 			(
@@ -162,7 +180,8 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 				+ indexToValue[*indices.rbegin()]
 			)/AccumType(2)
 		);
-	return *_medAbsDevMed;
+	//return *_medAbsDevMed;
+	return *_statsData.medAbsDevMed;
 }
 
 
@@ -176,7 +195,7 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	std::set<uInt64> medianIndices;
 	quantileToValue.clear();
 	CountedPtr<uInt64> mynpts = knownNpts.null() ? new uInt64(getNPts()) : knownNpts;
-	if (_median.null()) {
+	if (/*_median.null()*/ _statsData.median.null()) {
 		medianIndices = _medianIndices(mynpts);
 	}
 	std::map<Double, uInt64> quantileToIndex = StatisticsAlgorithm<
@@ -196,8 +215,9 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 		binningThreshholdSizeBytes/sizeof(AccumType),
 		indices, persistSortedArray
 	);
-	if (_median.null()) {
-		_median = *mynpts % 2 == 0
+	if (/*_median.null()*/ _statsData.median.null()) {
+		//_median = *mynpts % 2 == 0
+		_statsData.median = *mynpts % 2 == 0
 			? new AccumType(
 				(
 					indexToValue[*medianIndices.begin()]
@@ -212,14 +232,16 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 		quantileToValue[*qIter] = indexToValue[quantileToIndex[*qIter]];
 		++qIter;
 	}
-	return *_median;
+	//return *_median;
+	return *_statsData.median;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMinMax(
 	AccumType& mymin, AccumType& mymax
 ) {
-	if (_currentStats.empty() || ! _doMaxMin || _min.null() || _max.null()) {
+	//if (_currentStats.empty() || ! _doMaxMin || _min.null() || _max.null()) {
+	if ( _statsData.min.null() || _statsData.max.null()) {
 		ThrowIf(
 			_calculateAsAdded,
 			"Min and max cannot be calculated unless all data are available "
@@ -228,22 +250,23 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMinMax(
 		);
 		_doMinMax();
 	}
-	mymax = *_max;
-	mymin = *_min;
+	mymin = *_statsData.min;
+	mymax = *_statsData.max;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
 uInt64 ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getNPts() {
-	if (_currentStats.empty() || _npts == 0) {
+	if (/*_currentStats.empty() || */ _statsData.npts == 0 /*_npts == 0*/) {
 		ThrowIf(
 			_calculateAsAdded,
 			"npts cannot be calculated unless all data are available "
 			"simultaneously. To ensure that will be the case, call "
 			"setCalculateAsAdded(False) on this object"
 		);
-		_doNpts();
+		_statsData.npts = _doNpts();
 	}
-	return (uInt64)_npts;
+	// return (uInt64)_npts;
+	return (uInt64)_statsData.npts;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -350,10 +373,14 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::setStatsToCalc
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_addData() {
 	this->_setSortedArray(vector<AccumType>());
-	_median = NULL;
+	//_median = NULL;
+	_statsData.median = NULL;
+	/*
 	if (! _currentStats.empty()) {
 		_currentStats = Record();
 	}
+	*/
+	_mustAccumulate = True;
 	if (_calculateAsAdded) {
 		_getStatistics();
 		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_clearData();
@@ -368,20 +395,22 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_clearData() {
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_clearStats() {
-	_currentStats = Record();
-	_npts = 0;
-	_sumofweights = 0;
-	_sum = 0;
-	_mean = 0;
-	_nvariance = 0;
-	_sumsq = 0;
-	_max = NULL;
-	_min = NULL;
-	_maxpos = std::pair<uInt, uInt>(0, 0);
-	_minpos = std::pair<uInt, uInt>(0, 0);
+	//_currentStats = Record();
+	_statsData = initializeStatsData<AccumType>();
+	// _npts = 0;
+	//_sumofweights = 0;
+	//_sum = 0;
+	//_mean = 0;
+	//_nvariance = 0;
+	//_sumsq = 0;
+	//_max = NULL;
+	//_min = NULL;
+	//_maxpos = std::pair<uInt, uInt>(0, 0);
+	//_minpos = std::pair<uInt, uInt>(0, 0);
     _idataset = 0;
-	_median = NULL;
+	//_median = NULL;
 	_doMedAbsDevMed = False;
+	_mustAccumulate = True;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -415,10 +444,12 @@ std::pair<Int64, Int64> ClassicalStatistics<AccumType, InputIterator, MaskIterat
 	// this call will calculate maxpos and minpos
 	_getStatistics();
 	if (stat == StatisticsData::MAX) {
-		return _maxpos;
+		//return _maxpos;
+		return _statsData.maxpos;
 	}
 	else if (stat == StatisticsData::MIN) {
-		return _minpos;
+		//return _minpos;
+		return _statsData.minpos;
 	}
 	else {
 		ThrowCc(
@@ -446,25 +477,28 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStati
 
 template <class AccumType, class InputIterator, class MaskIterator>
 Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
-	if (! _currentStats.empty()) {
-		return _currentStats;
+	if (! /*_currentStats.empty() */ _mustAccumulate) {
+		return toRecord(_statsData);
 	}
 	//cout << __func__ << endl;
 	_initIterators();
-	Bool isMasked = False;
-	Bool isWeighted = False;
+	//Bool isMasked = False;
+	//Bool isWeighted = False;
+	_statsData.masked = False;
+	_statsData.weighted = False;
 	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
 		= this->_getDataProvider();
 	while (True) {
 		_initLoopVars();
-		AccumType mymin = _min.null() ? AccumType(0) : *_min;
-		AccumType mymax = _max.null() ? AccumType(0) : *_max;
+		AccumType mymin = _statsData.min.null() ? AccumType(0) : *_statsData.min;
+		AccumType mymax = _statsData.max.null() ? AccumType(0) : *_statsData.max;
 		Int64 minpos = -1;
 		Int64 maxpos = -1;
 		uInt64 ngood = 0;
 		if (_hasWeights) {
-			isWeighted = True;
+			_statsData.weighted = True;
 			if (_hasMask) {
+				_statsData.masked = True;
 				if (_hasRanges) {
 					_weightedStats(
 						mymin, mymax, minpos, maxpos,
@@ -497,7 +531,7 @@ Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatisti
 		}
 		else if (_hasMask) {
 			// this data set has no weights, but does have a mask
-			isMasked = True;
+			_statsData.masked = True;
 			if (_hasRanges) {
 				_unweightedStats(
 					ngood, mymin, mymax, minpos, maxpos,
@@ -529,7 +563,7 @@ Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatisti
 			);
 		}
 		if (! _hasWeights) {
-			_sumofweights += ngood;
+			_statsData.sumweights += ngood;
 		}
 		if (_doMaxMin) {
 			_updateMaxMin(mymin, mymax, minpos, maxpos, _myStride);
@@ -552,66 +586,8 @@ Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatisti
 			++_dataCount;
 		}
 	}
-	std::set<StatisticsData::STATS> stats = this->_getStatsToCalculate();
-	_currentStats.define("isMasked", isMasked);
-	_currentStats.define("isWeighted", isWeighted);
-	if (isWeighted) {
-		_currentStats.define(
-			StatisticsData::toString(StatisticsData::SUMWEIGHTS),
-			_sumofweights
-		);
-	}
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::MEAN), _mean
-	);
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::NPTS), (Int64)_npts
-	);
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::RMS),
-		sqrt(_sumsq/_sumofweights)
-	);
-	AccumType one = 1;
-	AccumType variance = _sumofweights > one ? _nvariance/(_sumofweights - one) : 0;
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::STDDEV),
-		sqrt(variance)
-	);
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::SUM), _sum
-	);
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::SUMSQ), _sumsq
-	);
-	_currentStats.define(
-		StatisticsData::toString(StatisticsData::VARIANCE), variance
-	);
-	if (
-		! _max.null() && (
-			stats.empty()
-			|| stats.find(StatisticsData::MAX) != stats.end()
-		)
-	) {
-		_currentStats.define(
-			StatisticsData::toString(StatisticsData::MAX), *_max
-		);
-		_currentStats.define("maxDatasetIndex", _maxpos.first);
-		_currentStats.define("maxIndex", _maxpos.second);
-	}
-	if (
-		! _min.null() &&
-			(
-				stats.empty()
-				|| stats.find(StatisticsData::MIN) != stats.end()
-			)
-	) {
-		_currentStats.define(
-			StatisticsData::toString(StatisticsData::MIN), *_min
-		);
-		_currentStats.define("minDatasetIndex", _minpos.first);
-		_currentStats.define("minIndex", _minpos.second);
-	}
-	return _currentStats;
+	_mustAccumulate = False;
+	return toRecord(_statsData);
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -797,15 +773,15 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumulate(
 ) {
 	if (_doMaxMin) {
 		StatisticsUtilities<AccumType>::accumulate (
-			_npts, _sum, _mean, _nvariance,
-			_sumsq, mymin, mymax, minpos,
+			/*_npts, */ _statsData.npts, /*_sum,*/ _statsData.sum, /*_mean, */ _statsData.mean, /*_nvariance,*/ _statsData.nvariance,
+			/*_sumsq,*/ _statsData.sumsq, mymin, mymax, minpos,
 			maxpos, datum, count
 		);
 	}
 	else {
 		StatisticsUtilities<AccumType>::accumulate (
-			_npts, _sum, _mean, _nvariance,
-			_sumsq, datum
+			/*_npts,*/ _statsData.npts, /*_sum,*/ _statsData.sum, /* _mean,*/ _statsData.mean, /* _nvariance,*/ _statsData.nvariance,
+			/*_sumsq,*/ _statsData.sumsq, datum
 		);
 	}
 }
@@ -817,15 +793,15 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumulate(
 ) {
 	if (_doMaxMin) {
 		StatisticsUtilities<AccumType>::waccumulate (
-			_npts, _sumofweights, _sum, _mean, _nvariance,
-			_sumsq, mymin, mymax, minpos,
+			/*_npts,*/ _statsData.npts, /*_sumofweights,*/ _statsData.sumweights, /*_sum,*/ _statsData.sum, /*_mean,*/ _statsData.mean, /*_nvariance,*/ _statsData.nvariance,
+			/*_sumsq,*/ _statsData.sumsq, mymin, mymax, minpos,
 			maxpos, datum, weight, count
 		);
 	}
 	else {
 		StatisticsUtilities<AccumType>::waccumulate (
-			_npts, _sumofweights, _sum, _mean, _nvariance,
-			_sumsq, weight, datum
+			/*_npts,*/ _statsData.npts, /*_sumofweights,*/ _statsData.sumweights, /*_sum,*/ _statsData.sum, /*_mean,*/ _statsData.mean, /*_nvariance,*/ _statsData.nvariance,
+			/*_sumsq,*/ _statsData.sumsq, weight, datum
 		);
 	}
 }
@@ -1473,12 +1449,14 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_doMinMax() {
 		mymax.null() || mymin.null(),
 		"No valid data found"
 	);
-	_max = mymax;
-	_min = mymin;
+	//_max = mymax;
+	//_min = mymin;
+	_statsData.min = mymin;
+	_statsData.max = mymax;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
-void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_doNpts() {
+Int64 ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_doNpts() {
 	//cout << __func__ << endl;
 	_initIterators();
 	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
@@ -1562,14 +1540,15 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_doNpts() {
 		}
 	}
 	ThrowIf (npts == 0, "No valid data found");
-	_npts = npts;
+	//_npts = npts;
+	return npts;
 }
 
 // Tried making this into an inline method, but performance decreased by 20 - 25% when
 // finding the median and quartiles on a 200 Mpix image. So the #define seems to be
 // the better choice from a performance standpoint.
 #define _findBinCode \
-	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
+	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_statsData.median) : *datum; \
 	if (myDatum >= bBinDesc->minLimit && myDatum < *maxLimit.rbegin()) { \
 		iCounts = bCounts; \
 		iSameVal = bSameVal; \
@@ -1913,7 +1892,8 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 		mymax = *knownMax;
 	}
 	if (_doMedAbsDevMed) {
-		mymax -= *_median;
+		//mymax -= *_median;
+		mymax -= *_statsData.median;
 		mymin = AccumType(0);
 	}
 	if (mymax == mymin) {
@@ -2108,7 +2088,8 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_isNptsSmaller
 			++_dataCount;
 		}
 	}
-	_npts = unsortedAry.size();
+	//_npts = unsortedAry.size();
+	_statsData.npts = unsortedAry.size();
 	return True;
 }
 
@@ -2333,7 +2314,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 
 // define rather than make a method to ensure this is called inline to maximize performance
 #define _populateArrayCode1 \
-	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
+	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_statsData.median) : *datum; \
 	ary.push_back(myDatum);
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2520,7 +2501,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 // less than current bin minimum value, it will not be in any remaining bins and
 // so we can break out of the loop without having to test each bin.
 #define _populateArraysCode \
-	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum; \
+	AccumType myDatum = _doMedAbsDevMed ? abs((AccumType)*datum - *_statsData.median) : *datum; \
 	if (myDatum >= includeLimits.begin()->first && myDatum < includeLimits.rbegin()->second) { \
 		iIncludeLimits = bIncludeLimits; \
 		iArys = bArys; \
@@ -2781,7 +2762,8 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	InputIterator datum = dataBegin;
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
-		ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum);
+		//ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum);
+		ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_statsData.median) : *datum);
 		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
@@ -2791,7 +2773,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 
 // define rather than make a method to ensure this is called inline to maximize performance
 #define _PopulateTestArrayCode \
-	ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum); \
+	ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_statsData.median) : *datum); \
 	++npts; \
 	if (npts > maxElements) { \
 		return True; \
@@ -2986,20 +2968,28 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
 		= this->_getDataProvider();
 	if (maxpos >= 0) {
-		_maxpos.first = _idataset;
-		_maxpos.second = maxpos * dataStride;
+		//_maxpos.first = _idataset;
+		//_maxpos.second = maxpos * dataStride;
+		_statsData.maxpos.first = _idataset;
+		_statsData.maxpos.second = maxpos * dataStride;
 		if (! dataProvider.null()) {
-			dataProvider->updateMaxPos(_maxpos);
+			//dataProvider->updateMaxPos(_maxpos);
+			dataProvider->updateMaxPos(_statsData.maxpos);
 		}
-        _max = new AccumType(mymax);
+        _statsData.max = new AccumType(mymax);
+        //_max = new AccumType(mymax);
 	}
 	if (minpos >= 0) {
-		_minpos.first = _idataset;
-		_minpos.second = minpos * dataStride;
+		//_minpos.first = _idataset;
+		//_minpos.second = minpos * dataStride;
+		_statsData.minpos.first = _idataset;
+		_statsData.minpos.second = minpos * dataStride;
 		if (! dataProvider.null()) {
-			dataProvider->updateMinPos(_minpos);
+			//dataProvider->updateMinPos(_minpos);
+			dataProvider->updateMinPos(_statsData.minpos);
 		}
-        _min = new AccumType(mymin);
+        //_min = new AccumType(mymin);
+        _statsData.min = new AccumType(mymin);
 	}
 }
 
@@ -3124,13 +3114,20 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_valuesFromSor
 		// make a copy
 		vector<AccumType> pSorted = this->_getSortedArray();
 		myArray = pSorted;
-		_convertToAbsDevMedArray(myArray, *_median);
+		//_convertToAbsDevMedArray(myArray, *_median);
+		_convertToAbsDevMedArray(myArray, *_statsData.median);
 	}
 	if (! _doMedAbsDevMed) {
 		myArray = this->_getSortedArray();
 	}
-	uInt64 myNpts = _npts > 0
+	/* uInt64 myNpts = _npts > 0
 		? (uInt64)_npts
+		: knownNpts.null()
+		  ? 0 : *knownNpts;
+		  */
+
+	uInt64 myNpts = _statsData.npts > 0
+		? (uInt64)_statsData.npts
 		: knownNpts.null()
 		  ? 0 : *knownNpts;
 	if (myArray.empty()) {

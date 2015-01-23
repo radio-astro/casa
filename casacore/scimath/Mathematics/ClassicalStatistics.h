@@ -30,6 +30,7 @@
 
 #include <scimath/Mathematics/StatisticsAlgorithm.h>
 
+#include <scimath/Mathematics/StatisticsTypes.h>
 #include <scimath/Mathematics/StatisticsUtilities.h>
 
 #include <set>
@@ -625,16 +626,17 @@ protected:
 
 
 private:
-	Double _npts;
+	StatsData<AccumType> _statsData;
+	//Double _npts;
 	uInt _idataset;
-	AccumType _mean, _nvariance, _sum, _sumsq, _sumofweights;
-    CountedPtr<AccumType> _max, _min;
+	//AccumType /*_mean,*/ /*_nvariance, */ /* _sum, _sumsq, _sumofweights*/;
+    //CountedPtr<AccumType> _max, _min;
 	// first element of pair is zero-based dataset number, second element
 	// is zero-based index of location in that dataset
-	std::pair<uInt, Int64> _minpos, _maxpos;
-	Bool _calculateAsAdded, _doMaxMin, _doMedAbsDevMed;
-	Record _currentStats;
-	CountedPtr<AccumType> _median, _medAbsDevMed;
+	//std::pair<uInt, Int64> _minpos, _maxpos;
+	Bool _calculateAsAdded, _doMaxMin, _doMedAbsDevMed, _mustAccumulate;
+	//Record _currentStats;
+	// CountedPtr<AccumType> _median, _medAbsDevMed;
 
 	// mutables, used to mitigate repeated code
 	mutable typename vector<InputIterator>::const_iterator _dend, _diter;
@@ -698,7 +700,7 @@ private:
 
 	void _doMinMax();
 
-	void _doNpts();
+	Int64 _doNpts();
 
 	// get the values for the specified indices in the sorted array of all good data
 	std::map<uInt64, AccumType> _indicesToValues(

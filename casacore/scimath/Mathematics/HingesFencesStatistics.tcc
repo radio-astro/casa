@@ -1052,7 +1052,7 @@ void HingesFencesStatistics<AccumType, InputIterator, MaskIterator>::_setRange()
 	quantiles.insert(0.75);
 	ClassicalStatistics<AccumType, InputIterator, MaskIterator> cs(*this);
 	std::map<Double, AccumType> quartiles = cs.getQuantiles(quantiles);
-	ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_clearStats();
+	//ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_clearStats();
 	AccumType iqr = quartiles[0.75] - quartiles[0.25];
 	CountedPtr<std::pair<AccumType, AccumType> > range = new std::pair<AccumType, AccumType>(
 		quartiles[0.25] - _f*iqr, quartiles[0.75] + _f*iqr
