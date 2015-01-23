@@ -348,13 +348,14 @@ void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const
 
   bl_contexts.resize(uniq_nchan.size());
   LIBSAKURA_SYMBOL(Status) status; 
+
   for (size_t i = 0; i < uniq_nchan.size(); ++i) {
     status = LIBSAKURA_SYMBOL(CreateBaselineContext)(baseline_type, 
 						     static_cast<uint16_t>(order), 
 						     uniq_nchan[i], 
 						     &bl_contexts[i]);
     if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-      std::cout << "   -- error occured in CreateBaselineContext()." << std::flush;
+      throw(AipsError("CreateBaselineContext() failed."));
     }
   }
 }
@@ -365,7 +366,7 @@ void SingleDishMS::destroy_baseline_contexts(Vector<LIBSAKURA_SYMBOL(BaselineCon
   for (size_t i = 0; i < bl_contexts.nelements(); ++i) {
     status = LIBSAKURA_SYMBOL(DestroyBaselineContext)(bl_contexts[i]);
     if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-      std::cout << "   -- error occured in DestroyBaselineContext()." << std::flush;
+      throw(AipsError("DestoyBaselineContext() failed."));
     }
   }
 }
@@ -429,7 +430,7 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   // 3. fit a polynomial to each spectrum and subtract it
   // 4. put single spectrum (or a block of spectra) to out_column
 
-   double tstart = gettimeofday_sec();
+  //double tstart = gettimeofday_sec();
 
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
@@ -501,8 +502,7 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   						    spec.data, 
   						    &bl_status);
   	  if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-  	    //raise exception?
-  	    std::cout << "   -- error occured in SubtractBaselineFloat()." << std::flush;
+	    throw(AipsError("SubtractBaselineFloat() failed."));
   	  }
   	  // set back a spectrum to data cube
   	  set_spectrum_to_cube(data_chunk, irow, ipol, num_chan, spec.data);
@@ -517,8 +517,8 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   // destroy baselint contexts
   destroy_baseline_contexts(bl_contexts);
 
-  double tend = gettimeofday_sec();
-  std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
+  //double tend = gettimeofday_sec();
+  //std::cout << "Elapsed time = " << (tend - tstart) << " sec." << std::endl;
 }
 
 void SingleDishMS::scale(float const factor,
