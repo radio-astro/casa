@@ -112,17 +112,17 @@ Record parseConfiguration(int argc, char **argv)
 		{
 			configuration.define ("datacolumn", value);
 		}
-		else if (parameter == string("-combinespws:"))
+		else if (parameter == string("-combinespws"))
 		{
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("combinespws", tmp);
 		}
-		else if (parameter == string("-chanaverage:"))
+		else if (parameter == string("-chanaverage"))
 		{
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("chanaverage", tmp);
 		}
-		else if (parameter == string("-chanbin:"))
+		else if (parameter == string("-chanbin"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("chanbin", tmp);
@@ -131,12 +131,12 @@ Record parseConfiguration(int argc, char **argv)
 		{
 			configuration.define ("useweights", value);
 		}
-		else if (parameter == string("-hanning:"))
+		else if (parameter == string("-hanning"))
 		{
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("hanning", tmp);
 		}
-		else if (parameter == string("-regridms:"))
+		else if (parameter == string("-regridms"))
 		{
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("regridms", tmp);
@@ -145,22 +145,22 @@ Record parseConfiguration(int argc, char **argv)
 		{
 			configuration.define ("mode", value);
 		}
-		else if (parameter == string("-nchan:"))
+		else if (parameter == string("-nchan"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("nchan", tmp);
 		}
-		else if (parameter == string("-start:"))
+		else if (parameter == string("-start"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("start", tmp);
 		}
-		else if (parameter == string("-width:"))
+		else if (parameter == string("-width"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("width", tmp);
 		}
-		else if (parameter == string("-nspw:"))
+		else if (parameter == string("-nspw"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("nspw", tmp);
@@ -185,7 +185,7 @@ Record parseConfiguration(int argc, char **argv)
 		{
 			configuration.define ("veltype", value);
 		}
-		else if (parameter == string("-timeaverage:"))
+		else if (parameter == string("-timeaverage"))
 		{
 			Bool tmp = Bool(atoi(value.c_str()));
 			configuration.define ("timeaverage", tmp);
@@ -198,12 +198,12 @@ Record parseConfiguration(int argc, char **argv)
 		{
 			configuration.define ("timespan", value);
 		}
-		else if (parameter == string("-maxuvwdistance:"))
+		else if (parameter == string("-maxuvwdistance"))
 		{
 			Double tmp = Double(atof(value.c_str()));
 			configuration.define ("maxuvwdistance", tmp);
 		}
-		else if (parameter == string("-minbaselines:"))
+		else if (parameter == string("-minbaselines"))
 		{
 			Int tmp = Int(atoi(value.c_str()));
 			configuration.define ("minbaselines", tmp);
@@ -347,6 +347,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 	// Open up transformed file
 	MeasurementSet ms(tmpFileName,Table::Old);
+
+	// Check existing datacolumn
+	Bool doCorrected = ms.tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA));
 
 	// Prepare Iterator
 	Block<Int> sortCols(7);
@@ -716,21 +719,25 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
-			if (pos.size() == 3)
+			if (doCorrected)
 			{
-				cout << RED;
-				cout << " visCubeCorrected does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
-						<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
-				keepIterating = False;
+				pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
+				if (pos.size() == 3)
+				{
+					cout << RED;
+					cout << " visCubeCorrected does not match in position (row,chan,corr)="
+							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+							<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
+							<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>visCubeCorrected match" << endl;
+				}
 			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>visCubeCorrected match" << endl;
-			}
+
 
 			/*
 			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);

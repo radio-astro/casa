@@ -108,6 +108,9 @@ void MSTransformBufferImpl::resetState()
 	channelNumbersTransformed_p = False;
 	rowIdsTransformed_p = False;
 
+	manager_p->weightSpectrumFlatFilled_p = False;
+	manager_p->weightSpectrumFromSigmaFilled_p = False;
+
 	return;
 }
 
@@ -654,13 +657,15 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 		RefRows dummyRefRows(0,0);
 		ArrayColumn<Complex> dummyDataCol;
 
+		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::DATA);
+
 		manager_p->dataBuffer_p = MSTransformations::visCube;
 		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCube(),
 										dummyDataCol,
 										NULL,
-										weightSpectrum_p);
+										applicableSpectrum);
 		flagCubeOk_p = True;
 		visCubeOk_p = True;
 	}
@@ -693,6 +698,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 
 		RefRows dummyRefRows(0,0);
 		ArrayColumn<Complex> dummyDataCol;
+
+		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::CORRECTED_DATA);
 
 		manager_p->dataBuffer_p = MSTransformations::visCubeCorrected;
 		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
@@ -733,6 +740,8 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 
 		RefRows dummyRefRows(0,0);
 		ArrayColumn<Complex> dummyDataCol;
+
+		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::MODEL_DATA);
 
 		manager_p->dataBuffer_p = MSTransformations::visCubeModel;
 		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
