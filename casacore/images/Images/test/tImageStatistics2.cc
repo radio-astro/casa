@@ -319,15 +319,17 @@ int main() {
 			cout << std::setprecision(15)  << median << endl;
         }
         */
-		/*
         {
             LatticeStatistics<Float> lattStats(im);
+            Array<Double> d;
+            lattStats.getStatistic(d, LatticeStatsBase::SUM);
+            cout << d << endl;
+            /*
             Array<Double> res;
             lattStats.getStatistic(res, LatticeStatsBase::MEDIAN);
             AlwaysAssert(near(*res.begin(), -0.00010517791088204831), AipsError);
-
+            */
         }
-		*/
 		/*
         {
 			cout << endl << "This should produce the desired results" << endl;
@@ -380,7 +382,7 @@ int main() {
         	AlwaysAssert(*res.begin() == 0, AipsError);
         }
 		*/
-
+        /*
 		{
 			String imageName2 = datadir + "regression/unittest/stats/stats2G.im";
 			if (! File(imageName2).exists()) {
@@ -394,7 +396,7 @@ int main() {
 			Array<Double> res;
 			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
 		}
-
+        */
 
     }
     catch (const AipsError& x) {

@@ -23,12 +23,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef SCIMATH_HINGESFENCESSTATISTICS_H
-#define SCIMATH_HINGESFENCESSTATISTICS_H
+#ifndef SCIMATH_CONSTRAINEDRANGESTATISTICS_H
+#define SCIMATH_CONSTRAINEDRANGESTATISTICS_H
 
 #include <casa/aips.h>
 
-#include <scimath/Mathematics/ConstrainedRangeStatistics.h>
+#include <scimath/Mathematics/ClassicalStatistics.h>
 
 #include <set>
 #include <vector>
@@ -36,30 +36,19 @@
 
 namespace casa {
 
-// Class to calculate statistics using the so-called hinges and fences algorithm. In this
-// algorithm, the data on which the statistics are computed from is limited to the range
-// of values between Q1 - f*D and Q3 + f*D, inclusive, where D = Q3 - Q1 and Q1 and Q3 are
-// the first and third quartiles, respectively.
+// Abstract base class for statistics algorithms which are characterized by
+// a range of good values. The range is usually calculated dynamically based on the entire distribution.
 
-template <class AccumType, class InputIterator, class MaskIterator=const Bool*> class HingesFencesStatistics
-	: public ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator> {
+template <class AccumType, class InputIterator, class MaskIterator=const Bool*> class ConstrainedRangeStatistics
+	: public ClassicalStatistics<AccumType, InputIterator, MaskIterator> {
 public:
 
-	// If <src>f</src> is negative, the full dataset is used; ie the object has the same
-	// behavior as a ClassicalStatistics object
-	HingesFencesStatistics(Double f=-1.0);
-
-	virtual ~HingesFencesStatistics();
+	virtual ~ConstrainedRangeStatistics();
 
 	// copy semantics
-	HingesFencesStatistics<AccumType, InputIterator, MaskIterator>& operator=(
-		const HingesFencesStatistics<AccumType, InputIterator, MaskIterator>& other
+	ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>& operator=(
+		const ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>& other
 	);
-
-	// get the algorithm that this object uses for computing stats
-	virtual StatisticsData::ALGORITHM algorithm() const {
-		return StatisticsData::HINGESFENCES;
-	};
 
 	// <group>
 	// In the following group of methods, if the size of the composite dataset
@@ -101,16 +90,19 @@ public:
 	// at index int(N/2) in the equivalent sorted dataset, where N is the number of points.
 	// For a dataset with an even number of points, the median is the mean of the values at
 	// indices int(N/2)-1 and int(N/2) in the sorted dataset.
-
-	/*
 	AccumType getMedian(
 		CountedPtr<uInt64> knownNpts=NULL, CountedPtr<AccumType> knownMin=NULL,
 		CountedPtr<AccumType> knownMax=NULL, uInt binningThreshholdSizeBytes=4096*4096,
 		Bool persistSortedArray=False
 	);
-	*/
 
-	/*
+	// get the median of the absolute deviation about the median of the data.
+	AccumType getMedianAbsDevMed(
+		CountedPtr<uInt64> knownNpts=NULL,
+		CountedPtr<AccumType> knownMin=NULL, CountedPtr<AccumType> knownMax=NULL,
+		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
+	);
+
 	// If one needs to compute both the median and quantile values, it is better to call
 	// getMedianAndQuantiles() rather than getMedian() and getQuantiles() seperately, as the
 	// first will scan large data sets fewer times than calling the seperate methods.
@@ -121,17 +113,7 @@ public:
 		CountedPtr<AccumType> knownMax=NULL,
 		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
 	);
-	*/
-	/*
-	// get the median of the absolute deviation about the median of the data.
-	AccumType getMedianAbsDevMed(
-		CountedPtr<uInt64> knownNpts=NULL,
-		CountedPtr<AccumType> knownMin=NULL, CountedPtr<AccumType> knownMax=NULL,
-		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
-	);
-	*/
 
-	/*
 	// Get the specified quantiles. <src>quantiles</src> must be between 0 and 1,
 	// noninclusive.
 	std::map<Double, AccumType> getQuantiles(
@@ -139,34 +121,28 @@ public:
 		CountedPtr<AccumType> knownMin=NULL, CountedPtr<AccumType> knownMax=NULL,
 		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
 	);
-	*/
 	// </group>
 
-	// scan the dataset(s) that have been added, and find the min and max.
-	// This method may be called even if setStatsToCaclulate has been called and
-	// MAX and MIN has been excluded. If setCalculateAsAdded(True) has previously been
-	// called after this object has been (re)initialized, an exception will be thrown.
-	// void getMinMax(AccumType& mymin, AccumType& mymax);
+	// get the min and max of the data set
+	virtual void getMinMax(AccumType& mymin, AccumType& mymax);
 
 	// scan the dataset(s) that have been added, and find the number of good points.
 	// This method may be called even if setStatsToCaclulate has been called and
 	// NPTS has been excluded. If setCalculateAsAdded(True) has previously been
 	// called after this object has been (re)initialized, an exception will be thrown.
-	//uInt64 getNPts();
+	virtual uInt64 getNPts();
 
 	// see base class description
-	//std::pair<uInt, uInt> getStatisticIndex(StatisticsData::STATS stat);
+	std::pair<Int64, Int64> getStatisticIndex(StatisticsData::STATS stat);
 
 	// reset object to initial state. Clears all private fields including data,
 	// accumulators, global range. It does not affect the fence factor (_f), which was
 	// set at object construction.
 	virtual void reset();
 
-	// This class does not allow statistics to be calculated as datasets are added, so
-	// an exception will be thrown if <src>c</src> is True.
-	void setCalculateAsAdded(Bool c);
-
 protected:
+	ConstrainedRangeStatistics();
+
 	// <group>
 	// scan through the data set to determine the number of good (unmasked, weight > 0,
 	// within range) points. The first with no mask, no
@@ -222,7 +198,6 @@ protected:
 	) const;
 	// </group>
 
-	// <group>
 	virtual void _findBins(
 		vector<vector<uInt64> >& binCounts,
 		vector<CountedPtr<AccumType> >& sameVal, vector<Bool>& allSame,
@@ -290,9 +265,34 @@ protected:
 	) const;
 	// </group>
 
-	AccumType _getStatistic(StatisticsData::STATS stat);
+	/*
+	// <group>
+	inline virtual CountedPtr<AccumType> _getMax() const { return _max; }
 
-	Record _getStatistics();
+	inline virtual std::pair<Int, Int64> _getMaxPos() const { return _maxpos; }
+
+	inline virtual CountedPtr<AccumType> _getMin() const { return _min; }
+
+	inline virtual std::pair<Int, Int64> _getMinPos() const { return _minpos; }
+
+	inline virtual void _setMax(AccumType x) { _max = new AccumType(x); }
+
+	inline virtual void _setMaxPos(const std::pair<Int, Int64>& x) { _maxpos = x; }
+
+	inline virtual void _setMin(AccumType x) { _min = new AccumType(x); }
+
+	inline virtual void _setMinPos(const std::pair<Int, Int64>& x) { _minpos = x; }
+
+	inline virtual void _setNPts(Int64 x) { _npts = x;}
+	// </group>
+
+	virtual AccumType _getStatistic(StatisticsData::STATS stat);
+
+	virtual Record _getStatistics();
+
+	inline Bool _hasRange() const { return ! _range.null(); }
+	*/
+	inline Bool _isInRange(const AccumType& datum) const;
 
 	// <group>
 	virtual void _minMax(
@@ -463,6 +463,7 @@ protected:
 	) const;
 	// </group>
 
+
 	// <group>
 	// no weights, no mask, no ranges
 	Bool _populateTestArray(
@@ -521,6 +522,19 @@ protected:
 		uInt maxElements
 	) const;
 	// </group>
+
+	// inline Bool _rangeHasBeenSet() const { return _rangeIsSet; }
+
+	// inline Bool _rangeIsBeingSet() const { return _settingRange; }
+
+	inline void _setRange(CountedPtr<std::pair<AccumType, AccumType> > r) { _range = r; }
+
+	// inline void _setRangeHasBeenSet(Bool b) { _rangeIsSet = b; }
+
+	// inline void _setRangeIsBeingSet(Bool b) { _settingRange = b; }
+
+	// derived classes need to implement how to set their respective range
+	virtual void _setRange() = 0;
 
 	// <group>
 	// no weights, no mask, no ranges
@@ -587,25 +601,22 @@ protected:
 	// </group>
 
 private:
-
-	// _f defined in inclusion range between Q1 - _f*D and Q3 + _f*D, where D = Q3 - Q1 and
-	// Q1 and Q3 are the first and third quartiles, respectively
-	Double _f;
-	Bool /*_doMedAbsDevMed, */_rangeIsSet, _hasRange;
-	//CountedPtr<std::pair<AccumType, AccumType> > _range;
-	//CountedPtr<AccumType> _median;
-
-	//inline Bool _isInRange(const AccumType& datum) const;
-
-	void _setRange();
-
+	// Bool _rangeIsSet , _settingRange;
+	CountedPtr<std::pair<AccumType, AccumType> > _range;
+	Bool _doMedAbsDevMed;
+	CountedPtr<AccumType> _median;
+	/*
+	Double _npts;
+	CountedPtr<AccumType> _max, _min;
+	std::pair<Int, Int64> _maxpos, _minpos;
+	*/
 
 };
 
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/HingesFencesStatistics.tcc>
-#endif //# CASACORE_NO_AUTO_TEMPLATES
+#include <scimath/Mathematics/ConstrainedRangeStatistics.tcc>
+#endif
 
 #endif

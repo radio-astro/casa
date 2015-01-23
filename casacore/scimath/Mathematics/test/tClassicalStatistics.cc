@@ -70,12 +70,12 @@ int main() {
     		AlwaysAssert(r.asDouble("variance") == 0.625, AipsError);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MAX)
-    			== std::pair<uInt COMMA uInt>(0, 3),
+    			== std::pair<Int64 COMMA Int64>(0, 3),
     			AipsError
     		);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MIN)
-    			== std::pair<uInt COMMA uInt>(0, 1),
+    			== std::pair<Int64 COMMA Int64>(0, 1),
     			AipsError
     		);
     		AlwaysAssert(cs.getStatistic(
@@ -107,12 +107,12 @@ int main() {
     		AlwaysAssert(r.asDouble("variance") == 0.625, AipsError);
     		AlwaysAssert(
     			cs1.getStatisticIndex(StatisticsData::MAX)
-    			== std::pair<uInt COMMA uInt>(0, 3),
+    			== std::pair<Int64 COMMA Int64>(0, 3),
     			AipsError
     		);
     		AlwaysAssert(
     			cs1.getStatisticIndex(StatisticsData::MIN)
-    			== std::pair<uInt COMMA uInt>(0, 1),
+    			== std::pair<Int64 COMMA Int64>(0, 1),
     			AipsError
     		);
     		AlwaysAssert(cs1.getStatistic(
@@ -146,12 +146,12 @@ int main() {
     		AlwaysAssert(r.asDouble("variance") == variance, AipsError);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MAX)
-    			== std::pair<uInt COMMA uInt>(1, 2),
+    			== std::pair<Int64 COMMA Int64>(1, 2),
     			AipsError
     		);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MIN)
-    			== std::pair<uInt COMMA uInt>(0, 1),
+    			== std::pair<Int64 COMMA Int64>(0, 1),
     			AipsError
     		);
     		AlwaysAssert(cs.getStatistic(
@@ -182,12 +182,12 @@ int main() {
     		AlwaysAssert(near(r.asDouble("variance"), variance), AipsError);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MAX)
-    			== std::pair<uInt COMMA uInt>(0, 2),
+    			== std::pair<Int64 COMMA Int64>(0, 2),
     			AipsError
     		);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MIN)
-    			== std::pair<uInt COMMA uInt>(1, 1),
+    			== std::pair<Int64 COMMA Int64>(1, 1),
     			AipsError
     		);
     		AlwaysAssert(cs.getStatistic(
@@ -534,12 +534,12 @@ int main() {
     		AlwaysAssert(near(r.asDouble("variance"), variance), AipsError);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MAX)
-    			== std::pair<uInt COMMA uInt>(1, 1),
+    			== std::pair<Int64 COMMA Int64>(1, 1),
     			AipsError
     		);
     		AlwaysAssert(
     			cs.getStatisticIndex(StatisticsData::MIN)
-    			== std::pair<uInt COMMA uInt>(0, 4),
+    			== std::pair<Int64 COMMA Int64>(0, 4),
     			AipsError
     		);
     		AlwaysAssert(cs.getStatistic(

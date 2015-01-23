@@ -23,38 +23,54 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef SCIMATH_STATISTICSTYPES_H
-#define SCIMATH_STATISTICSTYPES_H
+#ifndef SCIMATH_STATISTICSINCREMENTER_H
+#define SCIMATH_STATISTICSINCREMENTER_H
 
 #include <casa/aips.h>
 
-#include <utility>
-#include <vector>
-
 namespace casa {
 
-// Commonly used types in statistics framework.
+// Utility functions used for incrementing pointers in a data set used by the stats framework.
 
-#define DataRanges std::vector<std::pair<AccumType, AccumType> >
+template <class InputIterator, class MaskIterator=const Bool*>  class StatisticsIncrementer {
+public:
 
-/*
-template <class T> struct StatsData {
-	Bool masked;
-	T max;
-	uInt maxpos;
-	T mean;
-	T min;
-	uInt minpos;
-	T npts;
-	T rms;
-	T stddev;
-	T sum;
-	T sumsq;
-	T variance;
-	Bool weighted;
+	~StatisticsIncrementer() {}
+
+	//<group>
+	// <src> loopCount is always incremented by one, independent of the values
+	// of <src>dataStride</src> and <src>maskStride</src>
+	inline static void increment(
+		InputIterator& datum, Int64& loopCount, Bool unityStride, uInt dataStride
+	);
+
+	inline static void increment(
+		InputIterator& datum, Int64& loopCount, InputIterator& weight,
+		Bool unityStride, uInt dataStride
+	);
+
+	inline static void increment(
+		InputIterator& datum, Int64& loopCount, MaskIterator& mask,
+		Bool unityStride, uInt dataStride, uInt maskStride
+	);
+
+	inline static void increment(
+		InputIterator& datum, Int64& loopCount,
+		InputIterator& weight, MaskIterator& mask,
+		Bool unityStride, uInt dataStride, uInt maskStride
+	);
+	// </group>
+
+private:
+	// Just static methods, disallow constructor
+	StatisticsIncrementer() {}
+
 };
-*/
 
 }
+
+#ifndef CASACORE_NO_AUTO_TEMPLATES
+#include <scimath/Mathematics/StatisticsIncrementer.tcc>
+#endif
 
 #endif

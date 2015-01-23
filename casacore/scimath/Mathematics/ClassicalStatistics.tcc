@@ -25,6 +25,7 @@
 
 #include <scimath/Mathematics/ClassicalStatistics.h>
 
+#include <scimath/Mathematics/StatisticsIncrementer.h>
 #include <scimath/Mathematics/StatisticsUtilities.h>
 
 #include <iomanip>
@@ -43,6 +44,19 @@ ClassicalStatistics<AccumType, InputIterator, MaskIterator>::ClassicalStatistics
 
 template <class AccumType, class InputIterator, class MaskIterator>
 ClassicalStatistics<AccumType, InputIterator, MaskIterator>::~ClassicalStatistics() {}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+ClassicalStatistics<AccumType, InputIterator, MaskIterator>::ClassicalStatistics(
+    const ClassicalStatistics<AccumType, InputIterator, MaskIterator>& cs
+) : StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>(cs),
+    _npts(cs._npts), _idataset(cs._idataset), _sum(cs._sum), _sumsq(cs._sumsq),
+    _max(cs._max.null() ? NULL : new AccumType(*cs._max)),
+    _min(cs._min.null() ? NULL : new AccumType(*cs._min)), _minpos(cs._minpos),
+    _maxpos(cs._maxpos), _calculateAsAdded(cs._calculateAsAdded),
+    _doMaxMin(cs._doMaxMin), _doMedAbsDevMed(cs._doMedAbsDevMed),
+    _currentStats(cs._currentStats),
+    _median(cs._median.null() ? NULL : new AccumType(*cs._median)),
+    _medAbsDevMed(cs._medAbsDevMed.null() ? NULL : new AccumType(*cs._medAbsDevMed)) {}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 ClassicalStatistics<AccumType, InputIterator, MaskIterator>&
@@ -371,7 +385,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_clearStats() 
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
-std::pair<uInt, uInt> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getStatisticIndex(
+std::pair<Int64, Int64> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getStatisticIndex(
 	StatisticsData::STATS stat
 ) {
 	ThrowIf(
@@ -621,13 +635,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -647,7 +661,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 		if (*mask) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -668,13 +682,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			*mask && StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			*mask && StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -694,7 +708,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 		if (*weight > 0) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -715,13 +729,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -744,13 +758,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -771,7 +785,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
 		if (*mask && *weight > 0) {
 			++npts;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -1610,7 +1624,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
 		 _findBinCode
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -1642,13 +1656,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -1681,7 +1695,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 		if (*mask) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -1715,13 +1729,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			*mask && StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			*mask && StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -1754,7 +1768,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 		if (*weight > 0) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -1788,13 +1802,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -1830,13 +1844,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -1870,7 +1884,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
 		if (*mask && *weight > 0) {
 			_findBinCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2142,7 +2156,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
 		_minMaxCode
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2161,13 +2175,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2187,7 +2201,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 		if (*mask) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2208,13 +2222,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			*mask && StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			*mask && StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2234,7 +2248,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 		if (*weight > 0) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2255,13 +2269,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2284,13 +2298,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2311,7 +2325,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 		if (*mask && *weight > 0) {
 			_minMaxCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2331,7 +2345,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
 		_populateArrayCode1
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2349,13 +2363,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2374,7 +2388,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*mask) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2395,13 +2409,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*mask
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2420,7 +2434,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*weight > 0) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2441,13 +2455,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2467,7 +2481,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*mask && *weight > 0) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2489,13 +2503,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArrayCode1
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2543,7 +2557,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
 		_populateArraysCode
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2567,13 +2581,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2598,7 +2612,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*mask) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2625,13 +2639,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*mask
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2656,7 +2670,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*weight > 0) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2683,13 +2697,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2715,7 +2729,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 		if (*mask && *weight > 0) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2743,13 +2757,13 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_populateArraysCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2768,7 +2782,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	Bool unityStride = dataStride == 1;
 	while (count < nr) {
 		ary.push_back(_doMedAbsDevMed ? abs((AccumType)*datum - *_median) : *datum);
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2797,13 +2811,13 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -2825,7 +2839,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 		if (*mask) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2848,13 +2862,13 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	while (count < nr) {
 		if (
 			*mask
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2876,7 +2890,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 		if (*weight > 0) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2899,13 +2913,13 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -2928,7 +2942,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 		if (*mask && *weight > 0) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -2952,13 +2966,13 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestA
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
 			_PopulateTestArrayCode
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -3003,7 +3017,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 		_accumulate (
 			mymin, mymax, minpos, maxpos, *datum, count
 		);
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -3024,7 +3038,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
@@ -3033,7 +3047,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 			);
 			++ngood;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, unityStride, dataStride
 		);
 	}
@@ -3057,7 +3071,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 			);
 			++ngood;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -3080,7 +3094,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 	typename DataRanges::const_iterator endRange = ranges.end();
 	while (count < nr) {
 		if (
-			*mask && StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			*mask && StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
@@ -3089,7 +3103,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedSta
 			);
 			++ngood;
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -3190,7 +3204,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 				mymin, mymax, minpos, maxpos, *datum, *weight, count
 			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -3212,7 +3226,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 	while (count < nr) {
 		if (
 			*weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
@@ -3220,7 +3234,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 				mymin, mymax, minpos, maxpos, *datum, *weight, count
 			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, unityStride, dataStride
 		);
 	}
@@ -3244,7 +3258,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 	while (count < nr) {
 		if (
 			*mask && *weight > 0
-			&& StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_includeDatum(
+			&& StatisticsUtilities<AccumType>::includeDatum(
 				*datum, beginRange, endRange, isInclude
 			)
 		) {
@@ -3252,7 +3266,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 				mymin, mymax, minpos, maxpos, *datum, *weight, count
 			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}
@@ -3276,7 +3290,7 @@ void ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 				mymin, mymax, minpos, maxpos, *datum, *weight, count
 			);
 		}
-		StatisticsAlgorithm<AccumType, InputIterator, MaskIterator>::_increment(
+		StatisticsIncrementer<InputIterator, MaskIterator>::increment(
 			datum, count, weight, mask, unityStride, dataStride, maskStride
 		);
 	}

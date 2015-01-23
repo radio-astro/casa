@@ -232,6 +232,8 @@ Mathematics/AutoDiffX.h
 Mathematics/ClassicalStatistics.h
 Mathematics/ClassicalStatistics.tcc
 Mathematics/Combinatorics.h
+Mathematics/ConstrainedRangeStatistics.h
+Mathematics/ConstrainedRangeStatistics.tcc
 Mathematics/ConvolveGridder.h
 Mathematics/ConvolveGridder.tcc
 Mathematics/Convolver.h
@@ -287,6 +289,8 @@ Mathematics/StatsDataProvider.h
 Mathematics/StatsDataProvider.tcc
 Mathematics/StatisticsAlgorithm.h
 Mathematics/StatisticsAlgorithm.tcc
+Mathematics/StatisticsIncrementer.h
+Mathematics/StatisticsIncrementer.tcc
 Mathematics/StatisticsData.h
 Mathematics/StatisticsTypes.h
 Mathematics/StatisticsUtilities.h

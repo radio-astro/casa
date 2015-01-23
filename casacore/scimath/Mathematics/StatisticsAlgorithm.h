@@ -221,7 +221,7 @@ public:
 	// added. The second value is the zero-based index in that dataset. A data stride
 	// of greater than one is not accounted for, so the index represents the actual
 	// location in the data set, independent of the dataStride value.
-	virtual std::pair<uInt, uInt> getStatisticIndex(StatisticsData::STATS stat) = 0;
+	virtual std::pair<Int64, Int64> getStatisticIndex(StatisticsData::STATS stat) = 0;
 
 	virtual Record getStatistics();
 
@@ -340,11 +340,14 @@ protected:
 		return _weights;
 	}
 
+	/*
 	static Bool _includeDatum(
 		const AccumType& datum, typename DataRanges::const_iterator beginRange,
 		typename DataRanges::const_iterator endRange, Bool isInclude
 	);
+	*/
 
+	/*
 	inline static void _increment(
 		InputIterator& datum, Int64& loopCount, Bool unityStride, uInt dataStride
 	);
@@ -364,6 +367,7 @@ protected:
 		InputIterator& weight, MaskIterator& mask,
 		Bool unityStride, uInt dataStride, uInt maskStride
 	);
+	*/
 
 	// get the zero-based indices of the specified quantiles in sorted dataset with npts
 	// number of good points. The returned map maps quantiles to indices.
