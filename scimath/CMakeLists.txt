@@ -293,6 +293,7 @@ Mathematics/StatisticsIncrementer.h
 Mathematics/StatisticsIncrementer.tcc
 Mathematics/StatisticsData.h
 Mathematics/StatisticsTypes.h
+Mathematics/StatisticsTypes.tcc
 Mathematics/StatisticsUtilities.h
 Mathematics/StatisticsUtilities.tcc
 Mathematics/VanVleck.h
