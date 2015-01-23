@@ -112,9 +112,9 @@ MACRO (CASA_QT4_WRAP_UI outfiles )
 # in between; it's hard to track down.
 
   if (CMAKE_VERSION VERSION_LESS 2.8.12)
-    QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
+    QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
   else ()
-    QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
+    QT4_EXTRACT_OPTIONS(ui_files ui_options ui_target_ignored ${ARGN})
   endif (CMAKE_VERSION VERSION_LESS 2.8.12)
 
   FOREACH (it ${ui_files})
