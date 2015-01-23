@@ -448,31 +448,40 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Start masking the map using minweight = %f" % \
                      self.minweight, "INFO")
         my_ia.open(weightfile)
-        weight_val = my_ia.getchunk()
-        valid_pixels = numpy.where(weight_val > 0.0)
-        if len(valid_pixels[0]) == 0:
+        ###weight_val = my_ia.getchunk()
+        ###valid_pixels = numpy.where(weight_val > 0.0)
+        ####Never do the above in a task...it can swap out easily
+        stat=my_ia.statistics(mask="'"+weightfile+"' > 0.0", robust=True)
+        valid_pixels=stat['npts']
+        if len(valid_pixels) == 0:
             my_ia.close()
             casalog.post("All pixels weight zero. This indicates no data in MS is in image area. Mask will not be set. Please check your image parameters.","WARN")
             return
-        median_weight = numpy.median(weight_val[valid_pixels])
+        median_weight = stat['median'][0]
         casalog.post("Median of weight in the map is %f" % median_weight, \
                      "INFO")
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
                      (median_weight*self.minweight),"INFO")
-        mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
+        #mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
+        my_tb = gentools(['tb'])[0]
+        casalog.filter('ERROR') ### hide the useless message of tb.calc 
+        nmask_pixels=my_tb.calc('[select from "'+weightfile+'"  giving [ntrue(map <='+str(median_weight*self.minweight)+')]]')['0'][0]
+        casalog.filter()  ####set logging back to normal
         #weight_val[mask_pixels] = 0.
         #my_ia.putchunk(weight_val)
+        imsize=numpy.product(my_ia.shape())
         my_ia.close()
         # Modify default mask
         my_ia.open(self.outfile)
         my_ia.calcmask("'%s'>%f" % (weightfile,self.minweight), asdefault=True)
         my_ia.close()
-        masked_fraction = 100.*(1. - (weight_val.size - len(mask_pixels[0])) / float(len(valid_pixels[0])) )
+        #masked_fraction = 100.*(1. - (weight_val.size - len(mask_pixels[0])) / float(len(valid_pixels[0])) )
+        masked_fraction = 100.*(1. - (imsize - nmask_pixels) / float(valid_pixels[0]) )
         casalog.post("This amounts to %5.1f %% of the area with nonzero weight." % \
                     ( masked_fraction ),"INFO")
         casalog.post("The weight image '%s' is returned by this task, if the user wishes to assess the results in detail." \
                      % (weightfile), "INFO")
-        del weight_val, mask_pixels, valid_pixels
+        #del weight_val, mask_pixels, valid_pixels
 
     def _calc_PB(self, antenna):
         """
