@@ -35,7 +35,7 @@ namespace casa {
 template <class AccumType, class InputIterator, class MaskIterator>
 ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::ConstrainedRangeStatistics()
 	: ClassicalStatistics<AccumType, InputIterator, MaskIterator>(),
-	 /* _rangeIsSet(False), _settingRange(False),*/ _range(), _doMedAbsDevMed(False), _median() /*, _npts(0),
+	 _range(), _doMedAbsDevMed(False), _median() /*, _npts(0),
 	  _max(), _min(), _maxpos(-1, -1), _minpos(-1, -1) */ {
 	reset();
 }
@@ -52,18 +52,9 @@ ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::operator=(
         return *this;
     }
     ClassicalStatistics<AccumType, InputIterator, MaskIterator>::operator=(other);
-    // _rangeIsSet = other._rangeIsSet;
     _range = other._range;
     _doMedAbsDevMed = other._doMedAbsDevMed;
     _median = other._median.null() ? NULL : new AccumType(*other._median);
-    //_settingRange = other._settingRange;
-    /*
-    _npts = other._npts;
-    _max = other._max.null() ? NULL : new AccumType(*_max);
-    _min = other._min.null() ? NULL : new AccumType(*_min);
-    _maxpos = other._maxpos;
-    _minpos = other._minpos;
-    */
     return *this;
 }
 
@@ -126,41 +117,11 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getMinM
 	);
 }
 
-/*
-template <class AccumType, class InputIterator, class MaskIterator>
-void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getMinMax(
-	AccumType& mymin, AccumType& mymax
-) {
-	if (! _max.null() && ! _min.null()) {
-		mymin = *_min;
-		mymax = *_max;
-		return;
-	}
-	_setRange();
-	_doMinMax(mymin, mymax);
-	_min = new AccumType(mymin);
-	_max = new AccumType(mymax);
-}
-*/
-
 template <class AccumType, class InputIterator, class MaskIterator>
 uInt64 ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getNPts() {
 	_setRange();
 	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getNPts();
 }
-
-/*
-
-
-template <class AccumType, class InputIterator, class MaskIterator>
-uInt64 ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getNPts() {
-	if (_npts <= 0) {
-		_setRange();
-		_npts = this->_doNpts();
-	}
-	return (uInt64)_npts;
-}
-*/
 
 template <class AccumType, class InputIterator, class MaskIterator>
 std::map<Double, AccumType> ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getQuantiles(
@@ -185,19 +146,9 @@ std::pair<Int64, Int64> ConstrainedRangeStatistics<AccumType, InputIterator, Mas
 
 template <class AccumType, class InputIterator, class MaskIterator>
 void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::reset() {
-	// _rangeIsSet = False;
 	_range = NULL;
 	_doMedAbsDevMed = False;
 	_median = NULL;
-	//_settingRange = False;
-	/*
-	_min = NULL;
-	_max = NULL;
-	_minpos.first = -1;
-	_minpos.second = -1;
-	_maxpos.first = -1;
-	_maxpos.second = -1;
-	*/
 	ClassicalStatistics<AccumType, InputIterator, MaskIterator>::reset();
 }
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -205,7 +156,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	uInt64& npts,
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -217,14 +167,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -233,7 +175,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -252,14 +193,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, nr, dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -268,7 +201,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -281,14 +213,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, nr, dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -298,7 +222,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 	Bool isInclude
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -318,15 +241,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, nr, dataStride, maskBegin,
-			maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -335,7 +249,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -348,14 +261,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin,weightsBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -364,7 +269,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -384,15 +288,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, weightsBegin, nr,
-			dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -402,7 +297,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -423,15 +317,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, weightsBegin, nr,
-			dataStride, maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -440,7 +325,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -454,15 +338,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_accumN
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_accumNpts(
-			npts, dataBegin, weightsBegin, nr,
-			dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -471,23 +346,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_isInRa
 ) const {
 	return datum >= _range->first && datum <= _range->second;
 }
-
-/*
-template <class AccumType, class InputIterator, class MaskIterator>
-AccumType ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistic(
-	StatisticsData::STATS stat
-) {
-	_setRange();
-	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistic(stat);
-}
-
-template <class AccumType, class InputIterator, class MaskIterator>
-Record ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
-	_setRange();
-	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics();
-}
-*/
-
 
 #define _findBinCodeCR \
 	if (_isInRange(*datum)) { \
@@ -532,7 +390,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -553,15 +410,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin,
-			nr, dataStride, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -573,7 +421,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -602,15 +449,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, nr,
-			dataStride, ranges, isInclude, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -622,7 +460,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	// if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -646,15 +483,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, nr,
-			dataStride, maskBegin, maskStride, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -667,7 +495,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -697,15 +524,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -717,7 +535,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -741,15 +558,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, weightsBegin,
-			nr, dataStride, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -761,7 +569,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -792,15 +599,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, weightsBegin,
-			nr, dataStride, ranges, isInclude, binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -813,7 +611,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -845,16 +642,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride, ranges, isInclude,
-			binDesc, maxLimit
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -866,7 +653,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 	const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc,
 	const vector<AccumType>& maxLimit
 ) const {
-	//if (_hasRange) {
 		vector<vector<uInt64> >::iterator bCounts = binCounts.begin();
 		vector<vector<uInt64> >::iterator iCounts = bCounts;
 		typename vector<CountedPtr<AccumType> >::iterator bSameVal = sameVal.begin();
@@ -891,15 +677,20 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_findBins(
-			binCounts, sameVal, allSame, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride, binDesc, maxLimit
-		);
-	}
-	*/
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+AccumType ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistic(
+	StatisticsData::STATS stat
+) {
+	_setRange();
+	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistic(stat);
+}
+
+template <class AccumType, class InputIterator, class MaskIterator>
+Record ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
+	_setRange();
+	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics();
 }
 
 #define _minMaxCodeCR \
@@ -918,13 +709,11 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_findBi
 		} \
 	}
 
-
 template <class AccumType, class InputIterator, class MaskIterator>
 void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
 	CountedPtr<AccumType>& mymin, CountedPtr<AccumType>& mymax,
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -934,14 +723,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -950,7 +731,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -968,14 +748,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, nr, dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -984,7 +756,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -997,14 +768,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, nr, dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1014,7 +777,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 	Bool isInclude
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -1033,15 +795,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1050,7 +803,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride
 ) const {
-	//if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1063,14 +815,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, weightsBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1079,7 +823,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1099,15 +842,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, weightsBegin, nr, dataStride,
-			ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1117,7 +851,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -1138,15 +871,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, weightsBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1155,7 +879,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	// if (this->_hasRange()) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -1169,15 +892,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_minMax
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_minMax(
-			mymin, mymax, dataBegin, weightsBegin, nr, dataStride,
-			maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 // define rather than make a method to ensure this is called inline to maximize performance
@@ -1191,7 +905,6 @@ template <class AccumType, class InputIterator, class MaskIterator>
 void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
 	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr, uInt dataStride
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1;
@@ -1201,14 +914,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1216,7 +921,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr,
 	uInt dataStride, const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1;
@@ -1234,15 +938,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, nr, dataStride,
-			ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1250,7 +945,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	vector<AccumType>& ary, const InputIterator& dataBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	// if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1 && maskStride == 1;
@@ -1263,15 +957,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, nr, dataStride,
-			maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1280,7 +965,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1 && maskStride == 1;
@@ -1300,15 +984,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1316,7 +991,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	vector<AccumType>& ary, const InputIterator& dataBegin,
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1329,15 +1003,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, weightsBegin,
-			nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1346,7 +1011,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1366,15 +1030,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, weightsBegin,
-			nr, dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1382,7 +1037,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	vector<AccumType>& ary, const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -1396,15 +1050,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1413,7 +1058,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -1434,15 +1078,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArray(
-			ary, dataBegin, weightsBegin,	nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 // define rather than make a method to ensure this is called inline to maximize performance
@@ -1472,7 +1107,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	vector<vector<AccumType> >& arys, uInt& currentCount, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1487,15 +1121,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, nr, dataStride,
-			includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1504,7 +1129,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	uInt dataStride, const DataRanges& ranges, Bool isInclude,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1527,15 +1151,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, nr, dataStride,
-			ranges, isInclude, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1544,7 +1159,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1562,15 +1176,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, nr, dataStride,
-			maskBegin, maskStride, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1580,7 +1185,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const DataRanges& ranges, Bool isInclude,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1605,15 +1209,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1622,7 +1217,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1640,15 +1234,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1658,7 +1243,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const DataRanges& ranges, Bool isInclude,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1683,15 +1267,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, ranges, isInclude, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1700,7 +1275,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1719,15 +1293,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1737,7 +1302,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const DataRanges& ranges, Bool isInclude,
 	const vector<std::pair<AccumType, AccumType> > &includeLimits, uInt maxCount
 ) const {
-	//if (_hasRange) {
 		typename vector<vector<AccumType> >::iterator bArys = arys.begin();
 		typename vector<vector<AccumType> >::iterator iArys = bArys;
 		typename vector<std::pair<AccumType, AccumType> >::const_iterator bIncludeLimits = includeLimits.begin();
@@ -1763,15 +1327,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateArrays(
-			arys, currentCount, dataBegin, weightsBegin,	nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude, includeLimits, maxCount
-		);
-	}
-	*/
 }
 
 // define rather than make a method to ensure this is called inline to maximize performance
@@ -1784,13 +1339,11 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 		} \
 	}
 
-
 template <class AccumType, class InputIterator, class MaskIterator>
 Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
 	vector<AccumType>& ary, const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	uInt maxElements
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		uInt npts = ary.size();
 		InputIterator datum = dataBegin;
@@ -1802,14 +1355,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin,	nr, dataStride, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1818,7 +1363,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	uInt dataStride, const DataRanges& ranges, Bool isInclude,
 	uInt maxElements
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		uInt npts = ary.size();
 		InputIterator datum = dataBegin;
@@ -1838,14 +1382,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin,	nr, dataStride, ranges, isInclude, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1854,7 +1390,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	uInt maxElements
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1 && maskStride == 1;
@@ -1869,14 +1404,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin,	nr, dataStride, maskBegin, maskStride, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1885,7 +1412,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude, uInt maxElements
 ) const {
-	//if (_hasRange) {
 		Int64 count = 0;
 		InputIterator datum = dataBegin;
 		Bool unityStride = dataStride == 1 && maskStride == 1;
@@ -1907,15 +1433,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin,	nr, dataStride, maskBegin,
-			maskStride, ranges, isInclude, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1924,7 +1441,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
 	uInt maxElements
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1939,14 +1455,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin, weightsBegin, nr, dataStride, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1955,7 +1463,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude, uInt maxElements
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -1977,14 +1484,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin, weightsBegin, nr, dataStride, ranges, isInclude, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -1993,7 +1492,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	const InputIterator& weightsBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride, uInt maxElements
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -2009,15 +1507,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin, weightsBegin, nr, dataStride,
-			maskBegin, maskStride, maxElements
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2026,7 +1515,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude, uInt maxElements
 ) const {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -2049,15 +1537,6 @@ Bool ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_popula
 			);
 		}
 		return False;
-		/*
-	}
-	else {
-		return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_populateTestArray(
-			ary, dataBegin, weightsBegin, nr, dataStride,
-			maskBegin, maskStride, ranges, isInclude, maxElements
-		);
-	}
-	*/
 }
 
 // use a define to ensure code is compiled inline
@@ -2074,7 +1553,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 	Int64& minpos, Int64& maxpos,
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -2084,14 +1562,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedStats(
-			ngood, mymin, mymax, minpos, maxpos, dataBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2101,7 +1571,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const DataRanges& ranges, Bool isInclude
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		Int64 count = 0;
 		Bool unityStride = dataStride == 1;
@@ -2119,15 +1588,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 				datum, count, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedStats(
-			ngood, mymin, mymax, minpos, maxpos,
-			dataBegin, nr, dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2137,7 +1597,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 	const InputIterator& dataBegin, Int64 nr, uInt dataStride,
 	const MaskIterator& maskBegin, uInt maskStride
 ) {
-	//if (_hasRange) {
 	InputIterator datum = dataBegin;
 	MaskIterator mask = maskBegin;
 	Int64 count = 0;
@@ -2150,15 +1609,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 			datum, count, mask, unityStride, dataStride, maskStride
 		);
 	}
-	/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedStats(
-			ngood, mymin, mymax, minpos, maxpos,
-			dataBegin, nr, dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2169,7 +1619,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 	const MaskIterator& maskBegin, uInt maskStride, const DataRanges& ranges,
 	Bool isInclude
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		MaskIterator mask = maskBegin;
 		Int64 count = 0;
@@ -2188,15 +1637,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_unweig
 				datum, count, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_unweightedStats(
-			ngood, mymin, mymax, minpos, maxpos, dataBegin, nr,
-			dataStride, maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 // use #define to ensure code is compiled inline
@@ -2213,7 +1653,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -2226,15 +1665,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats(
-			mymin, mymax, minpos, maxpos, dataBegin,
-			weightsBegin, nr, dataStride
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2244,7 +1674,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const DataRanges& ranges, Bool isInclude
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		Int64 count = 0;
@@ -2264,15 +1693,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 				datum, count, weight, unityStride, dataStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats(
-			mymin, mymax, minpos, maxpos, dataBegin, weightsBegin,
-			nr, dataStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2283,7 +1703,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride,
 	const DataRanges& ranges, Bool isInclude
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -2304,15 +1723,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats(
-			mymin, mymax, minpos, maxpos, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride, ranges, isInclude
-		);
-	}
-	*/
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
@@ -2322,7 +1732,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 	const InputIterator& dataBegin, const InputIterator& weightsBegin,
 	Int64 nr, uInt dataStride, const MaskIterator& maskBegin, uInt maskStride
 ) {
-	//if (_hasRange) {
 		InputIterator datum = dataBegin;
 		InputIterator weight = weightsBegin;
 		MaskIterator mask = maskBegin;
@@ -2336,16 +1745,6 @@ void ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_weight
 				datum, count, weight, mask, unityStride, dataStride, maskStride
 			);
 		}
-		/*
-	}
-	else {
-		ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats(
-			mymin, mymax, minpos, maxpos, dataBegin, weightsBegin,
-			nr, dataStride, maskBegin, maskStride
-		);
-	}
-	*/
 }
 
 }
-
