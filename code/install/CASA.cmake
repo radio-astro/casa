@@ -111,11 +111,11 @@ MACRO (CASA_QT4_WRAP_UI outfiles )
 # the exact version where this cuts over could be somewhere 
 # in between; it's hard to track down.
 
-  if (CMAKE_VERSION VERSION_GREATER 2.8.5)
-    QT4_EXTRACT_OPTIONS(ui_files ui_options ui_target ${ARGN})
+  if (CMAKE_VERSION VERSION_LESS 2.8.12)
+    QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
   else ()
-    QT4_EXTRACT_OPTIONS(ui_files ui_options ${ARGN})
-  endif (CMAKE_VERSION VERSION_GREATER 2.8.5)
+    QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
+  endif (CMAKE_VERSION VERSION_LESS 2.8.12)
 
   FOREACH (it ${ui_files})
     GET_FILENAME_COMPONENT(outfile ${it} NAME_WE)
@@ -153,11 +153,11 @@ MACRO (CASA_QT4_ADD_RESOURCES outfiles )
 # a link error complaiing about a missing symbol containing
 # "resource" in its signature.
 
-  if (CMAKE_VERSION VERSION_GREATER 2.8.5)
-    QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
-  else ()
+  if (CMAKE_VERSION VERSION_LESS 2.8.12)
     QT4_EXTRACT_OPTIONS(rcc_files rcc_options ${ARGN})
-  endif (CMAKE_VERSION VERSION_GREATER 2.8.5)
+  else ()
+    QT4_EXTRACT_OPTIONS(rcc_files rcc_options rcc_target ${ARGN})
+  endif (CMAKE_VERSION VERSION_LESS 2.8.12)
 
   FOREACH (it ${rcc_files})
     GET_FILENAME_COMPONENT(outfilename ${it} NAME_WE)
