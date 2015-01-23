@@ -141,8 +141,17 @@ String SingleDishMS::get_field_as_casa_string(Record const &in_data,
 }
 
 
-bool SingleDishMS::prepare_for_process(string const& in_column_name,
-					string const& out_ms_name)
+bool SingleDishMS::prepare_for_process(string const &in_column_name,
+				       string const &out_ms_name)
+{
+  // Sort by single dish default
+  prepare_for_process(in_column_name, out_ms_name, Block<Int>(),true);
+}
+
+bool SingleDishMS::prepare_for_process(string const &in_column_name,
+				       string const &out_ms_name,
+				       Block<Int> const &sortColumns,
+				       bool const addDefaultSortCols)
 {
   LogIO os(_ORIGIN);
   AlwaysAssert(msname_!="", AipsError);
@@ -185,6 +194,8 @@ bool SingleDishMS::prepare_for_process(string const& in_column_name,
   os << LogIO::DEBUG1 << str << LogIO::POST;
   // Open the MS and select data
   sdh_->open();
+  // set sort column
+  sdh_->setSortColumns(sortColumns, addDefaultSortCols);
   // Set up the Data Handler
   sdh_->setup();
   return true;
@@ -205,12 +216,6 @@ void SingleDishMS::parse_selection(Record &selection)
   int exists = -1;
   // Select only auto-correlation
   exists = selection.fieldNumber ("baseline");
-  if (exists >= 0)
-    {
-      //selection.define("antenna", )
-    }
-  // Select only SPW ID
-  exists = selection.fieldNumber ("spw");
   if (exists >= 0)
     {
       //selection.define("antenna", )
@@ -428,10 +433,10 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
 
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
-  vi::SortColumns sc(columns,False);
-   LIBSAKURA_SYMBOL(Status) status;
+  //vi::SortColumns sc(columns,False);
+  LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
-  prepare_for_process(in_column_name, out_ms_name);
+  prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
 

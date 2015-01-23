@@ -24,6 +24,10 @@ public:
   // Copy constructor
   explicit SDMSManager(SDMSManager const &other);
 
+  // Set user defined Sort columns
+  void setSortColumns(Block<Int> sortColumns,
+		      bool addDefaultSortCols=false);
+
   SDMSManager &operator=(SDMSManager const &other);
   // Destructor
   ~SDMSManager();
@@ -35,6 +39,13 @@ protected:
 
   void fillCubeToDataCols(vi::VisBuffer2 *vb,RefRows &rowRef,
 		    Cube<Float> const &data_cube);
+
+  void setIterationApproach();
+
+  int getBlockId(Block<Int> const &data, Int const value);
+
+private:
+  Block<Int> userSortCols_;
 
 }; // class SingleDishMS -END
 

@@ -63,8 +63,13 @@ private:
   // unset MS selection
   void reset_selection();
 
-  bool prepare_for_process(string const& in_column_name,
-			   string const& out_ms_name);
+  bool prepare_for_process(string const &in_column_name,
+			   string const&out_ms_name);
+
+  bool prepare_for_process(string const &in_column_name,
+			   string const&out_ms_name,
+			   Block<Int> const &sortColumns,
+			   bool const addDefaultSortCols=false);
   void finalize_process();
 
   // check column 'in' is in input MS and set to 'out' if it exists.
