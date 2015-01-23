@@ -152,7 +152,7 @@ class finalDelaysPerAntennaChart(object):
 	        
 	            LOG.info("Plotting final calibration tables")
 	        
-	        
+	            '''
 	            task_args = {'vis'         : self.ms.name,
                                  'caltable'    : 'finaldelay.k',
                                  'xaxis'       : 'freq',
@@ -168,12 +168,12 @@ class finalDelaysPerAntennaChart(object):
                     
                     task = casa_tasks.plotbandpass(**task_args)
                     task.execute(dry_run=False)
+	           '''
 	        
 	        
-	        
-	            '''
+	            
 	            casa.plotcal(caltable='finaldelay.k', xaxis='freq', yaxis='delay', poln='',  field='', antenna=antPlot, spw='', timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[], showflags=False, plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
-	            '''
+	            
 	            #plots.append(figfile)
 
 	        except:
@@ -191,6 +191,8 @@ class finalDelaysPerAntennaChart(object):
             
                 root, ext = os.path.splitext(figfile)
                 real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+                real_figfile = figfile
+            
             
                 plot = logger.Plot(real_figfile, x_axis='Frequency', y_axis='Delay',
 		        field='',
@@ -429,6 +431,8 @@ class finalbpSolAmpPerAntennaChart(object):
             
                 root, ext = os.path.splitext(figfile)
                 real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+            
+                LOG.info("real_figfile: " + real_figfile)
             
                 plot = logger.Plot(real_figfile, x_axis='Freq', y_axis='Amp',
 		        field='',
@@ -867,6 +871,7 @@ class finalAmpFreqCalPerAntennaChart(object):
 	        try:
 	            LOG.info("Plotting final amp freqcal")
 	            
+	            '''
 	            task_args = {'vis'         : self.ms.name,
                                  'caltable'    : 'finalampgaincal.g',
                                  'xaxis'       : 'freq',
@@ -882,10 +887,11 @@ class finalAmpFreqCalPerAntennaChart(object):
 	            
 	            task = casa_tasks.plotbandpass(**task_args)
                     task.execute(dry_run=False)
+	            '''
 	            
-	            '''
+	            
 	            casa.plotcal(caltable='finalampgaincal.g', xaxis='freq', yaxis='amp', poln='', field='', antenna=antPlot, spw='',     timerange='', subplot=111, overplot=False, clearpanel='Auto', iteration='antenna', plotrange=[0,0,0,plotmax], showflags=False,        plotsymbol='o', plotcolor='blue', markersize=5.0, fontsize=10.0, showgui=False, figfile=figfile).execute()
-	            '''
+	            
 	            #plots.append(figfile)
 
 	        except:
@@ -904,6 +910,7 @@ class finalAmpFreqCalPerAntennaChart(object):
             
                 root, ext = os.path.splitext(figfile)
                 real_figfile = '%s.%s.spw%0.2d.%s%s' % (root, antName, 00, 't00',ext)
+                real_figfile = figfile
             
                 plot = logger.Plot(real_figfile, x_axis='freq', y_axis='Amp',
 		        field='',
