@@ -158,3 +158,4 @@ test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
 test_wvrgcal			dpetry@eso.org
+test_tsdcal                     masaya.kuniyoshi@nao.ac.jp
