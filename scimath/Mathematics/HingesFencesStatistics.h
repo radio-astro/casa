@@ -61,102 +61,6 @@ public:
 		return StatisticsData::HINGESFENCES;
 	};
 
-	// <group>
-	// In the following group of methods, if the size of the composite dataset
-	// is smaller than
-	// <src>binningThreshholdSizeBytes</src>, the composite dataset
-	// will be (perhaps partially) sorted and persisted in memory during the
-	// call. In that case, and if <src>persistSortedArray</src> is True, this
-	// sorted array will remain in memory after the call and will be used on
-	// subsequent calls of this method when <src>binningThreshholdSizeBytes</src>
-	// is greater than the size of the composite dataset. If
-	// <src>persistSortedArray</src> is False, the sorted array will not be
-	// stored after this call completes and so any subsequent calls for which the
-	// dataset size is less than <src>binningThreshholdSizeBytes</src>, the
-	// dataset will be sorted from scratch. Values which are not included due to
-	// non-unity strides, are not included in any specified ranges, are masked,
-	// or have associated weights of zero are not considered as dataset members
-	// for quantile computations.
-	// If one has a priori information regarding
-	// the number of points (npts) and/or the minimum and maximum values of the data
-	// set, these can be supplied to improve performance. Note however, that if these
-	// values are not correct, the resulting median
-	// and/or quantile values will also not be correct (although see the following notes regarding
-	// max/min). Note that if this object has already had getStatistics()
-	// called, and the min and max were calculated, there is no need to pass these values in
-	// as they have been stored internally and used (although passing them in shouldn't hurt
-	// anything). If provided, npts, the number of points falling in the specified ranges which are
-	// not masked and have weights > 0, should be exactly correct. <src>min</src> can be less than
-	// the true minimum, and <src>max</src> can be greater than the True maximum, but for best
-	// performance, these should be as close to the actual min and max as possible.
-	// In order for quantile computations to occur over multiple datasets, all datasets
-	// must be available. This means that if setCalculateAsAdded()
-	// was previously called by passing in a value of True, these methods will throw
-	// an exception as the previous call indicates that there is no guarantee that
-	// all datasets will be available. If one uses a data provider (by having called
-	// setDataProvider()), then this should not be an issue.
-
-	// get the median of the distribution.
-	// For a dataset with an odd number of good points, the median is just the value
-	// at index int(N/2) in the equivalent sorted dataset, where N is the number of points.
-	// For a dataset with an even number of points, the median is the mean of the values at
-	// indices int(N/2)-1 and int(N/2) in the sorted dataset.
-
-	/*
-	AccumType getMedian(
-		CountedPtr<uInt64> knownNpts=NULL, CountedPtr<AccumType> knownMin=NULL,
-		CountedPtr<AccumType> knownMax=NULL, uInt binningThreshholdSizeBytes=4096*4096,
-		Bool persistSortedArray=False
-	);
-	*/
-
-	/*
-	// If one needs to compute both the median and quantile values, it is better to call
-	// getMedianAndQuantiles() rather than getMedian() and getQuantiles() seperately, as the
-	// first will scan large data sets fewer times than calling the seperate methods.
-	// The return value is the median; the quantiles are returned in the <src>quantileToValue</src> map.
-	AccumType getMedianAndQuantiles(
-		std::map<Double, AccumType>& quantileToValue, const std::set<Double>& quantiles,
-		CountedPtr<uInt64> knownNpts=NULL, CountedPtr<AccumType> knownMin=NULL,
-		CountedPtr<AccumType> knownMax=NULL,
-		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
-	);
-	*/
-	/*
-	// get the median of the absolute deviation about the median of the data.
-	AccumType getMedianAbsDevMed(
-		CountedPtr<uInt64> knownNpts=NULL,
-		CountedPtr<AccumType> knownMin=NULL, CountedPtr<AccumType> knownMax=NULL,
-		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
-	);
-	*/
-
-	/*
-	// Get the specified quantiles. <src>quantiles</src> must be between 0 and 1,
-	// noninclusive.
-	std::map<Double, AccumType> getQuantiles(
-		const std::set<Double>& quantiles, CountedPtr<uInt64> knownNpts=NULL,
-		CountedPtr<AccumType> knownMin=NULL, CountedPtr<AccumType> knownMax=NULL,
-		uInt binningThreshholdSizeBytes=4096*4096, Bool persistSortedArray=False
-	);
-	*/
-	// </group>
-
-	// scan the dataset(s) that have been added, and find the min and max.
-	// This method may be called even if setStatsToCaclulate has been called and
-	// MAX and MIN has been excluded. If setCalculateAsAdded(True) has previously been
-	// called after this object has been (re)initialized, an exception will be thrown.
-	// void getMinMax(AccumType& mymin, AccumType& mymax);
-
-	// scan the dataset(s) that have been added, and find the number of good points.
-	// This method may be called even if setStatsToCaclulate has been called and
-	// NPTS has been excluded. If setCalculateAsAdded(True) has previously been
-	// called after this object has been (re)initialized, an exception will be thrown.
-	//uInt64 getNPts();
-
-	// see base class description
-	//std::pair<uInt, uInt> getStatisticIndex(StatisticsData::STATS stat);
-
 	// reset object to initial state. Clears all private fields including data,
 	// accumulators, global range. It does not affect the fence factor (_f), which was
 	// set at object construction.
@@ -289,10 +193,6 @@ protected:
 		const vector<typename StatisticsUtilities<AccumType>::BinDesc>& binDesc, const vector<AccumType>& maxLimit
 	) const;
 	// </group>
-
-	AccumType _getStatistic(StatisticsData::STATS stat);
-
-	Record _getStatistics();
 
 	// <group>
 	virtual void _minMax(
@@ -591,14 +491,9 @@ private:
 	// _f defined in inclusion range between Q1 - _f*D and Q3 + _f*D, where D = Q3 - Q1 and
 	// Q1 and Q3 are the first and third quartiles, respectively
 	Double _f;
-	Bool /*_doMedAbsDevMed, */_rangeIsSet, _hasRange;
-	//CountedPtr<std::pair<AccumType, AccumType> > _range;
-	//CountedPtr<AccumType> _median;
-
-	//inline Bool _isInRange(const AccumType& datum) const;
+	Bool _rangeIsSet, _hasRange;
 
 	void _setRange();
-
 
 };
 

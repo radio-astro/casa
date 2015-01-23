@@ -265,33 +265,10 @@ protected:
 	) const;
 	// </group>
 
-	/*
-	// <group>
-	inline virtual CountedPtr<AccumType> _getMax() const { return _max; }
+	AccumType _getStatistic(StatisticsData::STATS stat);
 
-	inline virtual std::pair<Int, Int64> _getMaxPos() const { return _maxpos; }
+	Record _getStatistics();
 
-	inline virtual CountedPtr<AccumType> _getMin() const { return _min; }
-
-	inline virtual std::pair<Int, Int64> _getMinPos() const { return _minpos; }
-
-	inline virtual void _setMax(AccumType x) { _max = new AccumType(x); }
-
-	inline virtual void _setMaxPos(const std::pair<Int, Int64>& x) { _maxpos = x; }
-
-	inline virtual void _setMin(AccumType x) { _min = new AccumType(x); }
-
-	inline virtual void _setMinPos(const std::pair<Int, Int64>& x) { _minpos = x; }
-
-	inline virtual void _setNPts(Int64 x) { _npts = x;}
-	// </group>
-
-	virtual AccumType _getStatistic(StatisticsData::STATS stat);
-
-	virtual Record _getStatistics();
-
-	inline Bool _hasRange() const { return ! _range.null(); }
-	*/
 	inline Bool _isInRange(const AccumType& datum) const;
 
 	// <group>
@@ -463,7 +440,6 @@ protected:
 	) const;
 	// </group>
 
-
 	// <group>
 	// no weights, no mask, no ranges
 	Bool _populateTestArray(
@@ -523,15 +499,7 @@ protected:
 	) const;
 	// </group>
 
-	// inline Bool _rangeHasBeenSet() const { return _rangeIsSet; }
-
-	// inline Bool _rangeIsBeingSet() const { return _settingRange; }
-
 	inline void _setRange(CountedPtr<std::pair<AccumType, AccumType> > r) { _range = r; }
-
-	// inline void _setRangeHasBeenSet(Bool b) { _rangeIsSet = b; }
-
-	// inline void _setRangeIsBeingSet(Bool b) { _settingRange = b; }
 
 	// derived classes need to implement how to set their respective range
 	virtual void _setRange() = 0;
@@ -601,15 +569,9 @@ protected:
 	// </group>
 
 private:
-	// Bool _rangeIsSet , _settingRange;
 	CountedPtr<std::pair<AccumType, AccumType> > _range;
 	Bool _doMedAbsDevMed;
 	CountedPtr<AccumType> _median;
-	/*
-	Double _npts;
-	CountedPtr<AccumType> _max, _min;
-	std::pair<Int, Int64> _maxpos, _minpos;
-	*/
 
 };
 
