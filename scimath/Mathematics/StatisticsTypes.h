@@ -34,6 +34,7 @@
 namespace casa {
 
 class Record;
+template <class T> class CountedPtr;
 
 // Commonly used types in statistics framework.
 
