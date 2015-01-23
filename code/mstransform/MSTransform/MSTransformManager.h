@@ -398,7 +398,7 @@ protected:
 
 	// Iterator set-up
 	void checkDataColumnsToFill();
-	void setIterationApproach();
+	virtual void setIterationApproach();
 	void generateIterator();
 
 	void initFrequencyTransGrid(vi::VisBuffer2 *vb);
