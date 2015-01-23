@@ -269,7 +269,7 @@ void SDMSManager::setSortColumns(Block<Int> sortColumns,
 	}
       }
       // shrink block
-      sortColumns.resize(num_elem, False, True);
+      sortColumns.resize(num_elem, True, True);
       userSortCols_ = sortColumns;
     } else {
       userSortCols_ = defaultCols;

@@ -433,9 +433,9 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
 
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
-  //vi::SortColumns sc(columns,False);
   LIBSAKURA_SYMBOL(Status) status;
   LIBSAKURA_SYMBOL(BaselineStatus) bl_status;
+
   prepare_for_process(in_column_name, out_ms_name, columns, false);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
@@ -538,6 +538,14 @@ void SingleDishMS::scale(float const factor,
   prepare_for_process(in_column_name, out_ms_name);
   vi::VisibilityIterator2 *vi = sdh_->getVisIter();
   vi::VisBuffer2 *vb = vi->getVisBuffer();
+
+  // //DEBUG
+  // Block<Int> scol = vi->getSortColumns().getColumnIds();
+  // cout << "sort columns of iterator = ";
+  // for (size_t i = 0; i < scol.nelements(); ++i)
+  //   cout << scol[i] << ", ";
+  // cout << endl;
+  // cout << "default added = " << (vi->getSortColumns().shouldAddDefaultColumns()? 'T' : 'F') << endl;
 
   for (vi->originChunks(); vi->moreChunks(); vi->nextChunk()) {
     for (vi->origin(); vi->more(); vi->next()) {
