@@ -463,10 +463,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
                      (median_weight*self.minweight),"INFO")
         #mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
-        my_tb = gentools(['tb'])[0]
-        casalog.filter('ERROR') ### hide the useless message of tb.calc 
-        nmask_pixels=my_tb.calc('[select from "'+weightfile+'"  giving [ntrue(map <='+str(median_weight*self.minweight)+')]]')['0'][0]
-        casalog.filter()  ####set logging back to normal
+        
+        nmask_pixels=my_ia.statistics(mask="'"+weightfile+"' <= "+str(median_weight*self.minweight))['npts'][0]
+    
         #weight_val[mask_pixels] = 0.
         #my_ia.putchunk(weight_val)
         imsize=numpy.product(my_ia.shape())
