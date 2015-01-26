@@ -8,20 +8,23 @@ import asap as sd
 
 tb = gentools(['tb'])[0]
 
-def asdatestring(mjd, timeonly=False):
+def asdatestring(mjd, digit, timeonly=False):
     datedict = qa.splitdate(qa.quantity(mjd, 'd'))
+    if digit > 10 : digit = 10
+    sstr_tmp = str(numpy.round(datedict['s'], digit)).split('.')
+    sstr = sstr_tmp[0] + '.' + sstr_tmp[1][0:digit]
     if timeonly:
-        return '%s:%s:%s'%(datedict['hour'],datedict['min'],datedict['sec'])
+        return '%s:%s:%s'%(datedict['hour'],datedict['min'],sstr)
     else:
-        return '%s/%s/%s/%s:%s:%s'%(datedict['year'],datedict['month'],datedict['monthday'],datedict['hour'],datedict['min'],datedict['sec'])
+        return '%s/%s/%s/%s:%s:%s'%(datedict['year'],datedict['month'],datedict['monthday'],datedict['hour'],datedict['min'],sstr)
 
-def astimerange(mjd0, mjd1):
-    if int(mjd0) == int(mjd1):
-        # same date, different time
-        return '%s~%s'%(asdatestring(mjd0), asdatestring(mjd1,timeonly=True))
-    else:
-        # different date
-        return '%s~%s'%(tuple(map(asdatestring,[mjd0,mjd1])))
+def astimerange(tmargin, mjd0, mjd1):
+    digit = numpy.abs(int(numpy.floor(numpy.log10(tmargin))))
+    if int(mjd0) == int(mjd1): # same date, different time
+        timeonly=True
+    else: # different date
+        timeonly=False
+    return '%s~%s'%(asdatestring(mjd0,digit), asdatestring(mjd1,digit,timeonly=timeonly))
 
 @contextlib.contextmanager
 def selection_manager(scantab, original_selection, **kwargs):
@@ -42,8 +45,11 @@ class Raster(object):
         self.rasters = None
         self.mjd_range = None
         self.mjd_range_raster = None
+        self.mjd_range_nomargin = None
+        self.mjd_range_nomargin_raster = None
         self.spw = None
         self.pol = None
+        self.margin = None
         self.gaplist = []
         self.gaplist_raster = []
         self.ngap = 0
@@ -130,8 +136,8 @@ class Raster(object):
         casalog.post(header)
         for i in xrange(self.nrow):
             self.select(rowid=i)
-            mjd_range = self.mjd_range
-            daterangestring = astimerange(*self.mjd_range)
+            mjd_range_nomargin = self.mjd_range_nomargin
+            daterangestring = astimerange(self.margin, *self.mjd_range_nomargin)
             casalog.post(formatline(i, daterangestring))
 
         casalog.post(separator)
@@ -139,8 +145,8 @@ class Raster(object):
         casalog.post(header)
         for i in xrange(self.nraster):
             self.select(rasterid=i)
-            mjd_range_raster = self.mjd_range_raster
-            daterangestring = astimerange(*self.mjd_range_raster)
+            mjd_range_nomargin_raster = self.mjd_range_nomargin_raster
+            daterangestring = astimerange(self.margin, *self.mjd_range_nomargin_raster)
             casalog.post(formatline(i, daterangestring))
 
 
@@ -156,21 +162,25 @@ class Raster(object):
 
         with selection_manager(self.scantab, self.original_selection, types=0, ifs=self.spw, pols=self.pol) as s:
             alltimes = numpy.array(map(lambda x: qa.quantity(x)['value'], s.get_time(prec=16)))
-            allintervals = numpy.array(s.get_inttime())
+            mean_interval = numpy.array(s.get_inttime()).mean()
+            self.margin = 0.1 * mean_interval
+            mjd_margin = self.margin / 86400.0
 
         if rowid is not None:
             times = alltimes[self.gaplist[rowid]:self.gaplist[rowid+1]]
-            mean_interval = allintervals.mean() / 86400.0
-
-            self.mjd_range = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
-            casalog.post('time range: %s ~ %s'%(self.mjd_range), priority='DEBUG')
-            
         else:
             times = alltimes[self.gaplist_raster[rasterid]:self.gaplist_raster[rasterid+1]]
-            mean_interval = allintervals.mean() / 86400.0
 
-            self.mjd_range_raster = (times.min() - 0.1 * mean_interval, times.max() + 0.1 * mean_interval,)
-            casalog.post('time range: %s ~ %s'%(self.mjd_range_raster), priority='DEBUG')
+        tmp_mjd_range = (times.min() - mjd_margin, times.max() + mjd_margin,)
+        tmp_mjd_range_nomargin = (times.min(), times.max(),)
+        casalog.post('time range: %s ~ %s'%(tmp_mjd_range_nomargin), priority='DEBUG')
+
+        if rowid is not None:
+            self.mjd_range = tmp_mjd_range
+            self.mjd_range_nomargin = tmp_mjd_range_nomargin
+        else:
+            self.mjd_range_raster = tmp_mjd_range
+            self.mjd_range_nomargin_raster = tmp_mjd_range_nomargin
             
     def asscantable(self, rowid=None, rasterid=None):
         s = sd.scantable(self.infile, average=False)
