@@ -1,17 +1,26 @@
 #!/usr/bin/env python
 import socket
 import traceback # To pretty-print tracebacks
+import subprocess as sp
+import os
+import sys
+
 
 class MPIEnvironment:
-    
+
     # Static variables #################################################################################################
-    
+
     # Set hostname
     hostname = socket.gethostname()
-    
+
     # Initialization
     mpi_initialized = False
     try:
+        # check if mpi starts up in second process, a failure would abort casa startup
+        with open(os.devnull, 'w') as null:
+            sp.check_call([sys.executable, '-c', 'from mpi4py import MPI'],
+                          stderr=null)
+
         # Set mpi4py runtime configuration
         from mpi4py import rc as __mpi_runtime_config
         # Automatic MPI initialization at import time
@@ -194,3 +203,4 @@ class MPIEnvironment:
         MPIEnvironment.__mpi_factory.Finalize()
         
 # EOF
+
