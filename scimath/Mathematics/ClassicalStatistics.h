@@ -329,6 +329,12 @@ protected:
 
 	StatsData<AccumType> _getStatistics();
 
+	// retreive stats structure. Allows derived classes to maintain their own
+	// StatsData structs.
+	inline virtual StatsData<AccumType>& _getStatsData() { return _statsData; }
+
+	inline virtual const StatsData<AccumType>& _getStatsData() const { return _statsData; }
+
 	// <group>
 	virtual void _minMax(
 		CountedPtr<AccumType>& mymin, CountedPtr<AccumType>& mymax,
