@@ -463,9 +463,25 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         casalog.post("Pixels in map with weight <= median(weight)*minweight = %f will be masked." % \
                      (median_weight*self.minweight),"INFO")
         #mask_pixels = numpy.where(weight_val <= median_weight*self.minweight)
-        
-        nmask_pixels=my_ia.statistics(mask="'"+weightfile+"' <= "+str(median_weight*self.minweight))['npts'][0]
+        ###Leaving the original logic to calculate the number of masked pixels via
+        ###product of median of and min_weight (which i don't understand the logic)
+        ### if one wanted to find how many pixel were masked one could easily count the
+        ### number of pixels set to false 
+        ### e.g  after masking self.outfile below one could just do this 
+        ### nmasked_pixels=tb.calc('[select from "'+self.outfile+'"/mask0'+'"  giving [nfalse(PagedArray )]]')
+        my_tb = gentools(['tb'])[0]
+        nmask_pixels=0
+        nchan=stat['trc'][3]+1
+        casalog.filter('ERROR') ### hide the useless message of tb.calc
     
+       
+        ### doing it by channel to make sure it does not go out of memory
+        ####tab.calc try to load the whole chunk in ram 
+        for k in range(nchan):
+            nmask_pixels += my_tb.calc('[select from "'+weightfile+'"  giving [ntrue(map[,,,'+str(k)+'] <='+str(median_weight*self.minweight)+')]]')['0'][0]
+        casalog.filter()  ####set logging back to normal
+        
+        casalog.filter()  ####set logging back to normal
         #weight_val[mask_pixels] = 0.
         #my_ia.putchunk(weight_val)
         imsize=numpy.product(my_ia.shape())
