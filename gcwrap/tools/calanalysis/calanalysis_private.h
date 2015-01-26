@@ -1,52 +1,52 @@
 
-String oCalTable;
-CalAnalysis* poCA;
+casa::String oCalTable;
+casa::CalAnalysis* poCA;
 
 std::string uint2string( const unsigned int &number );
 
-Bool parseInput( const ::casac::variant& field, const ::casac::variant& antenna,
+casa::Bool parseInput( const ::casac::variant& field, const ::casac::variant& antenna,
     const ::casac::variant& timerange, const ::casac::variant& spw,
     const ::casac::variant& feed, const std::string& axis,
     const std::string& ap, const bool& norm, const bool& unwrap,
-    const double& jumpmax, CalAnalysis::INPUT& oInput );
+    const double& jumpmax, casa::CalAnalysis::INPUT& oInput );
 
-Bool parseField( const ::casac::variant& field, Vector<uInt>& oField );
+casa::Bool parseField( const ::casac::variant& field, casa::Vector<casa::uInt>& oField );
 
-Bool parseAntenna( const ::casac::variant& antenna, Vector<uInt>& oAntenna1,
-    Vector<Int>& oAntenna2 );
+casa::Bool parseAntenna( const ::casac::variant& antenna, casa::Vector<casa::uInt>& oAntenna1,
+    casa::Vector<casa::Int>& oAntenna2 );
 
-Bool parseTimeRange( const ::casac::variant& timerange, Double& dStartTime,
-    Double& dStopTime, Vector<Double>& oTime );
+casa::Bool parseTimeRange( const ::casac::variant& timerange, casa::Double& dStartTime,
+    casa::Double& dStopTime, casa::Vector<casa::Double>& oTime );
 
-Bool parseSPW( const ::casac::variant& spw, Vector<uInt>& oSPW,
-    Vector<Vector<uInt> >& oChannel );
+casa::Bool parseSPW( const ::casac::variant& spw, casa::Vector<casa::uInt>& oSPW,
+    casa::Vector<casa::Vector<casa::uInt> >& oChannel );
 
-Bool parseFeed( const ::casac::variant& feed, Vector<String>& oFeed );
+casa::Bool parseFeed( const ::casac::variant& feed, casa::Vector<casa::String>& oFeed );
 
-Bool parseAxis( const std::string& axis, CalStats::AXIS& eAxisIterUserID );
+casa::Bool parseAxis( const std::string& axis, casa::CalStats::AXIS& eAxisIterUserID );
 
-Bool parseRAP( const std::string& ap, CalAnalysis::RAP& eRAP );
+casa::Bool parseRAP( const std::string& ap, casa::CalAnalysis::RAP& eRAP );
 
-Bool parseJumpMax( const double& jumpmax, Double& dJumpMax );
+casa::Bool parseJumpMax( const double& jumpmax, casa::Double& dJumpMax );
 
-Bool parseArg( const std::string& order, const std::string& type,
-    const bool& weight, CalStats::ARG<CalStatsFitter::FIT>& oArg );
+casa::Bool parseArg( const std::string& order, const std::string& type,
+    const bool& weight, casa::CalStats::ARG<casa::CalStatsFitter::FIT>& oArg );
 
-Bool parseOrder( const std::string& order, CalStatsFitter::ORDER& eOrder );
+casa::Bool parseOrder( const std::string& order, casa::CalStatsFitter::ORDER& eOrder );
 
-Bool parseType( const std::string& type, CalStatsFitter::TYPE& eType );
+casa::Bool parseType( const std::string& type, casa::CalStatsFitter::TYPE& eType );
 
-Bool parseWeight( const bool& weight, CalStatsFitter::WEIGHT& eWeight );
-
-template <typename T>
-Bool writeInput( const CalAnalysis::OUTPUT<T>& oOutput, const uInt& row,
-    const uInt& col, ::casac::record& oRecIter );
+casa::Bool parseWeight( const bool& weight, casa::CalStatsFitter::WEIGHT& eWeight );
 
 template <typename T>
-Bool writeData( const CalAnalysis::OUTPUT<T>& oOutput, const uInt& row,
-    const uInt& col, ::casac::record& oRecIter );
+casa::Bool writeInput( const casa::CalAnalysis::OUTPUT<T>& oOutput, const casa::uInt& row,
+    const casa::uInt& col, ::casac::record& oRecIter );
 
 template <typename T>
-Bool writeFit( const CalStats::ARG<T>& oArg,
-    const CalAnalysis::OUTPUT<T>& oOutput, const uInt& row, const uInt& col,
+casa::Bool writeData( const casa::CalAnalysis::OUTPUT<T>& oOutput, const casa::uInt& row,
+    const casa::uInt& col, ::casac::record& oRecIter );
+
+template <typename T>
+casa::Bool writeFit( const casa::CalStats::ARG<T>& oArg,
+    const casa::CalAnalysis::OUTPUT<T>& oOutput, const casa::uInt& row, const casa::uInt& col,
     ::casac::record& oRecIter );
