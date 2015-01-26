@@ -309,6 +309,29 @@ template <class T> Int compareVector(const Vector<T> &inp,const Vector<T> &ref,F
 	return res;
 }
 
+template <class T> IPosition compareMatrix(const Matrix<T> &inp,const Matrix<T> &ref,Float tolerance = FLT_EPSILON)
+{
+	IPosition res;
+	IPosition shape = inp.shape();
+
+	uInt nRowsToCompare = min(inp.shape()(1),ref.shape()(1));
+
+
+	for (uInt row=0;row < nRowsToCompare; row++)
+	{
+		for (uInt col=0;col < shape(0); col++)
+		{
+			if (abs(inp(col,row) - ref(col,row)) > tolerance )
+			{
+				res = IPosition(2,col,row);
+				break;
+			}
+		}
+	}
+
+	return res;
+}
+
 template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref,Float tolerance = FLT_EPSILON)
 {
 	IPosition res;
@@ -622,6 +645,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
+			// Non re-indexable Vectors
 			row = compareVector(visBuffer->time(),visBufferRef->time(),DBL_EPSILON );
 			if (row >= 0)
 			{
@@ -670,7 +694,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 
-			// Average-able vectors
 			row = compareVector(visBuffer->exposure(),visBufferRef->exposure(),DBL_EPSILON);
 			if (row >= 0)
 			{
@@ -702,60 +725,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>flagRow match" << endl;
 			}
 
-			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube(),FLT_EPSILON);
-			if (pos.size() == 3)
-			{
-				cout << RED;
-				cout << " visCube does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->visCube()(pos)
-						<< " transformFile=" << visBufferRef->visCube()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>visCube match" << endl;
-			}
-
-
-			if (doCorrected)
-			{
-				pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
-				if (pos.size() == 3)
-				{
-					cout << RED;
-					cout << " visCubeCorrected does not match in position (row,chan,corr)="
-							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-							<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
-							<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
-					keepIterating = False;
-				}
-				else
-				{
-					cout << GREEN;
-					cout 	<< "=>visCubeCorrected match" << endl;
-				}
-			}
-
-
-			/*
-			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);
-			if (pos.size() == 3)
-			{
-				cout << RED;
-				cout << " visCubeModel does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
-						<< " transformFile=" << visBufferRef->visCubeModel()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>visCubeModel match" << endl;
-			}
-			*/
+			// Virtual columns
 
 			Double time0 = visBufferRef->time()(0);
 
@@ -894,6 +864,148 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			{
 				cout << GREEN;
 				cout 	<< "=>rowIds match" << endl;
+			}
+
+			// Matrix cols
+
+			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),FLT_EPSILON);
+
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " uvw does not match in position (row,col)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->uvw()(pos)
+						<< " transformFile=" << visBufferRef->uvw()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>uvw match" << endl;
+			}
+
+			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),FLT_EPSILON);
+
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " weight does not match in position (row,pol)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->weight()(pos)
+						<< " transformFile=" << visBufferRef->weight()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>weight match" << endl;
+			}
+
+			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),FLT_EPSILON);
+
+			if (pos.size() == 2)
+			{
+				cout << RED;
+				cout << " sigma not match in position (row,pol)="
+						<< "("<< pos(1) << "," << pos(0) <<  ")"
+						<< " transformBuffer=" << visBuffer->sigma()(pos)
+						<< " transformFile=" << visBufferRef->sigma()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>sigma match" << endl;
+			}
+
+			// Vis cubes
+
+			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " visCube does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->visCube()(pos)
+						<< " transformFile=" << visBufferRef->visCube()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>visCube match" << endl;
+			}
+
+
+			if (doCorrected)
+			{
+				pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
+				if (pos.size() == 3)
+				{
+					cout << RED;
+					cout << " visCubeCorrected does not match in position (row,chan,corr)="
+							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+							<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
+							<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>visCubeCorrected match" << endl;
+				}
+			}
+
+
+			/*
+			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " visCubeModel does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
+						<< " transformFile=" << visBufferRef->visCubeModel()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>visCubeModel match" << endl;
+			}
+			*/
+
+			pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " weightSpectrum does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->weightSpectrum()(pos)
+						<< " transformFile=" << visBufferRef->weightSpectrum()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>weightSpectrum match" << endl;
+			}
+
+			pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),FLT_EPSILON);
+			if (pos.size() == 3)
+			{
+				cout << RED;
+				cout << " sigmaSpectrum does not match in position (row,chan,corr)="
+						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+						<< " transformBuffer=" << visBuffer->sigmaSpectrum()(pos)
+						<< " transformFile=" << visBufferRef->sigmaSpectrum()(pos) << endl;
+				keepIterating = False;
+			}
+			else
+			{
+				cout << GREEN;
+				cout 	<< "=>sigmaSpectrum match" << endl;
 			}
 
 			visIter->next();

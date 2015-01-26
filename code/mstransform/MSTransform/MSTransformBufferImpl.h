@@ -75,6 +75,7 @@ public:
     const Cube<Complex> & visCubeModel () const; // [nC,nF,nR]
     const Cube<Float> & visCubeFloat () const; // [nC,nF,nR]
     const Cube<Float> & weightSpectrum () const; // [nC,nF,nR]
+    const Cube<Float> & sigmaSpectrum () const; // [nC,nF,nR]
     const Array<Bool> & flagCategory () const; // [nC,nF,nCategories,nR]
 
 	IPosition getShape () const;
@@ -132,6 +133,7 @@ private:
 	mutable Cube<Complex> visCubeModel_p;
 	mutable Cube<Float> visCubeFloat_p;
 	mutable Cube<Float> weightSpectrum_p;
+	mutable Cube<Float> sigmaSpectrum_p;
 	mutable Array<Bool> flagCategory_p;
 	mutable Vector<Float> feedPa_p;
 	mutable Vector<Float> parang_p;
@@ -171,6 +173,7 @@ private:
 	mutable Bool visCubeModelOk_p;
 	mutable Bool visCubeFloatOk_p;
 	mutable Bool weightSpectrumOk_p;
+	mutable Bool sigmaSpectrumOk_p;
 	mutable Bool flagCategoryOk_p;
 	mutable Bool feedPaOk_p;
 	mutable Bool parangOk_p;
@@ -197,6 +200,9 @@ private:
 	mutable Bool feed1Transformed_p;
 	mutable Bool feed2Transformed_p;
 	mutable Bool flagRowTransformed_p;
+	mutable Bool uvwTransformed_p;
+	mutable Bool weightTransformed_p;
+	mutable Bool sigmaTransformed_p;
 	mutable Bool timeTransformed_p;
 	mutable Bool timeCentroidTransformed_p;
 	mutable Bool timeIntervalTransformed_p;
