@@ -688,7 +688,7 @@ AccumType ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_g
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
-Record ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
+StatsData<AccumType> ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
 	_setRange();
 	return ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics();
 }

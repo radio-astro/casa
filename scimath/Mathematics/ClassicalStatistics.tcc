@@ -464,7 +464,7 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStati
 	StatisticsData::STATS stat
 ) {
 	AccumType value;
-	Record r = _getStatistics();
+	Record r = toRecord(_getStatistics());
 	String statString = StatisticsData::toString(stat);
 	ThrowIf(
 		! r.isDefined(statString),
@@ -476,9 +476,10 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStati
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>
-Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
+StatsData<AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatistics() {
 	if (! /*_currentStats.empty() */ _mustAccumulate) {
-		return toRecord(_statsData);
+		//return toRecord(_statsData);
+		return _statsData;
 	}
 	//cout << __func__ << endl;
 	_initIterators();
@@ -587,7 +588,10 @@ Record ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_getStatisti
 		}
 	}
 	_mustAccumulate = False;
-	return toRecord(_statsData);
+	AccumType one = 1;
+	_statsData.variance = _statsData.sumweights > one ? _statsData.nvariance/(_statsData.sumweights - one) : 0;
+	//return toRecord(_statsData);
+	return _statsData;
 }
 
 template <class AccumType, class InputIterator, class MaskIterator>

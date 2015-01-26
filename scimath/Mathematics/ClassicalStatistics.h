@@ -327,7 +327,7 @@ protected:
 
 	AccumType _getStatistic(StatisticsData::STATS stat);
 
-	Record _getStatistics();
+	StatsData<AccumType> _getStatistics();
 
 	// <group>
 	virtual void _minMax(

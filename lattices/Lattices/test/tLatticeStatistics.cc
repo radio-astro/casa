@@ -361,7 +361,6 @@ void test1DFloat (LatticeStatistics<Float>& stats, const Vector<Float>& results,
            AlwaysAssert(a.shape()==IPosition(1,1),AipsError);
            AlwaysAssert(near(a(pos),results(i),tol), AipsError);
         }
-//
         Array<Float> b;
         if (t==LatticeStatsBase::FLUX) {
            AlwaysAssert(!stats.getConvertedStatistic (b, t, True), AipsError);

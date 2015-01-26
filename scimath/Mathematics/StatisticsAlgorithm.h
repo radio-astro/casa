@@ -223,7 +223,7 @@ public:
 	// location in the data set, independent of the dataStride value.
 	virtual std::pair<Int64, Int64> getStatisticIndex(StatisticsData::STATS stat) = 0;
 
-	virtual Record getStatistics();
+	virtual StatsData<AccumType> getStatistics();
 
 	// <group>
 	// setdata() clears any current datasets or data provider and then adds the specified data set as
@@ -324,7 +324,7 @@ protected:
 
 	virtual AccumType _getStatistic(StatisticsData::STATS stat) = 0;
 
-	virtual Record _getStatistics() = 0;
+	virtual StatsData<AccumType> _getStatistics() = 0;
 
 	const std::set<StatisticsData::STATS> _getStatsToCalculate() const {
 		return _statsToCalculate;
@@ -339,35 +339,6 @@ protected:
 	const std::map<uInt, InputIterator>& _getWeights() const {
 		return _weights;
 	}
-
-	/*
-	static Bool _includeDatum(
-		const AccumType& datum, typename DataRanges::const_iterator beginRange,
-		typename DataRanges::const_iterator endRange, Bool isInclude
-	);
-	*/
-
-	/*
-	inline static void _increment(
-		InputIterator& datum, Int64& loopCount, Bool unityStride, uInt dataStride
-	);
-
-	inline static void _increment(
-		InputIterator& datum, Int64& loopCount, InputIterator& weight,
-		Bool unityStride, uInt dataStride
-	);
-
-	inline static void _increment(
-		InputIterator& datum, Int64& loopCount, MaskIterator& mask,
-		Bool unityStride, uInt dataStride, uInt maskStride
-	);
-
-	inline static void _increment(
-		InputIterator& datum, Int64& loopCount,
-		InputIterator& weight, MaskIterator& mask,
-		Bool unityStride, uInt dataStride, uInt maskStride
-	);
-	*/
 
 	// get the zero-based indices of the specified quantiles in sorted dataset with npts
 	// number of good points. The returned map maps quantiles to indices.
