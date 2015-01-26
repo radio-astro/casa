@@ -934,48 +934,73 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	}
 
     	(*curSA)->setDataProvider(mydp);
-    	Record stats = (*curSA)->getStatistics();
     	if (! pProgressMeter.null()) {
-
     		dataProvider->setProgressMeter(CountedPtr<LattStatsProgress>(NULL));
     	}
+    	// Record stats = (*curSA)->getStatistics();
+    	StatsData<AccumType> stats = (*curSA)->getStatistics();
+    	/*
     	AccumType u;
     	stats.get(
     		StatisticsData::toString(StatisticsData::MEAN), u
     	);
     	pStoreLattice_p->putAt(u, posMean);
+    	*/
+    	pStoreLattice_p->putAt(stats.mean, posMean);
+    	/*
     	stats.get(
     		StatisticsData::toString(StatisticsData::NPTS), u
     	);
     	pStoreLattice_p->putAt(u, posNpts);
+    	*/
+    	pStoreLattice_p->putAt(stats.npts, posNpts);
+    	/*
     	stats.get(
     		StatisticsData::toString(StatisticsData::SUM), u
     	);
     	pStoreLattice_p->putAt(u, posSum);
+    	*/
+    	pStoreLattice_p->putAt(stats.sum, posSum);
+    	/*
     	stats.get(
     		StatisticsData::toString(StatisticsData::SUMSQ), u
     	);
     	pStoreLattice_p->putAt(u, posSumsq);
+    	*/
+    	pStoreLattice_p->putAt(stats.sumsq, posSumsq);
+    	/*
     	stats.get(
     		StatisticsData::toString(StatisticsData::VARIANCE), u
     	);
     	pStoreLattice_p->putAt(u, posVariance);
+    	*/
+    	pStoreLattice_p->putAt(stats.variance, posVariance);
     	if (fixedMinMax_p && ! noInclude_p) {
     		currentMax = range[0].second;
     	}
+    	/*
     	else if (stats.isDefined(StatisticsData::toString(StatisticsData::MAX))) {
     		stats.get(
     			StatisticsData::toString(StatisticsData::MAX), currentMax
     		);
     	}
+    	*/
+    	else if (! stats.max.null()) {
+    		currentMax = *stats.max;
+    	}
     	pStoreLattice_p->putAt(currentMax, posMax);
     	if (fixedMinMax_p && ! noInclude_p) {
     		currentMin = range[0].first;
     	}
+    	/*
     	else if (stats.isDefined(StatisticsData::toString(StatisticsData::MIN))) {
     		stats.get(
     			StatisticsData::toString(StatisticsData::MIN), currentMin
     		);
+    	}
+    	*/
+    	else if (! stats.min.null()) {
+    	    currentMin = *stats.min;
     	}
     	pStoreLattice_p->putAt(currentMin, posMin);
 

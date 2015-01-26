@@ -94,11 +94,9 @@ Record toRecord(const StatsData<AccumType>& stats) {
 		StatisticsData::toString(StatisticsData::RMS),
 		sqrt(stats.sumsq/stats.sumweights)
 	);
-	AccumType one = 1;
-	AccumType variance = stats.sumweights > one ? stats.nvariance/(stats.sumweights - one) : 0;
 	r.define(
 		StatisticsData::toString(StatisticsData::STDDEV),
-		sqrt(variance)
+		sqrt(stats.variance)
 	);
 	r.define(
 		StatisticsData::toString(StatisticsData::SUM), stats.sum
@@ -107,7 +105,7 @@ Record toRecord(const StatsData<AccumType>& stats) {
 		StatisticsData::toString(StatisticsData::SUMSQ), stats.sumsq
 	);
 	r.define(
-		StatisticsData::toString(StatisticsData::VARIANCE), variance
+		StatisticsData::toString(StatisticsData::VARIANCE), stats.variance
 	);
 	if (! stats.max.null()) {
 		r.define(

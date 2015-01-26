@@ -55,7 +55,7 @@ int main() {
     	{
     		HingesFencesStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.setData(v0.begin(), v0.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 3, AipsError);
@@ -92,7 +92,7 @@ int main() {
     		// just another way of specifying the data
     		HingesFencesStatistics<Double, Double*, Bool*> cs1;
     		cs1.setData(k, 5);
-    		Record r = cs1.getStatistics();
+    		Record r = toRecord(cs1.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 3, AipsError);
@@ -130,7 +130,7 @@ int main() {
     		HingesFencesStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.setData(v0.begin(), v0.size());
     		cs.addData(v1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (211.5 - 33.0*33.0/8.0)/7.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -167,7 +167,7 @@ int main() {
     		// should be the same except for min and max dataset locations
     		cs.setData(v1.begin(), v1.size());
     		cs.addData(v0.begin(), v0.size());
-            r = cs.getStatistics();
+            r = toRecord(cs.getStatistics());
             AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 10, AipsError);
@@ -218,7 +218,7 @@ int main() {
     		std::fill(t0.begin(), t0.begin()+t0.size(), 0);
     		cs.addData(t1.begin(), t1.size());
     		std::fill(t1.begin(), t1.begin()+t1.size(), 0);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 0, AipsError);
@@ -258,7 +258,7 @@ int main() {
     		HingesFencesStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> hfs;
     		hfs.setData(v0.begin(), v0.size(), 2);
     		hfs.addData(v1.begin(), v1.size());
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double variance = (201.5 - 29.0*29.0/6.0)/5.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -299,7 +299,7 @@ int main() {
     		r1[1].second = 7;
     		cs.setData(v0.begin(), v0.size(), r0);
     		cs.addData(v1.begin(), v1.size(), r1, False);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -332,7 +332,7 @@ int main() {
     		m1[2] = False;
     		cs.setData(v0.begin(), m0.begin(), v0.size());
     		cs.addData(v1.begin(), m1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -371,7 +371,7 @@ int main() {
     		r1[0].second = 9;
     		cs.setData(v0.begin(), m0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), m1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -404,7 +404,7 @@ int main() {
     		w1[2] = 3;
     		cs.setData(v0.begin(), w0.begin(), w0.size());
     		cs.addData(v1.begin(), w1.begin(), w1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (529.0 - 82.0*82.0/20.0)/19.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -444,7 +444,7 @@ int main() {
     		r1[0].second = 9;
     		cs.setData(v0.begin(), w0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), w1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -494,7 +494,7 @@ int main() {
     		r1[0].second = 12;
     		cs.setData(v0.begin(), w0.begin(), m0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), w1.begin(), m1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -554,7 +554,7 @@ int main() {
     		m1[2] = False;
     		cs.setData(v0.begin(), w0.begin(), m0.begin(), v0.size());
     		cs.addData(v1.begin(), w1.begin(), m1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -1292,7 +1292,7 @@ int main() {
     	{
     		HingesFencesStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> hfs(0);
     		hfs.setData(v0.begin(), v0.size());
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 47;
     		Double eNpts = 7;
     		Double eSumSq = 371;
@@ -1338,7 +1338,7 @@ int main() {
     		Double eNpts = 7;
     		Double eSumSq = 371;
     		Double eVar = 9.238095238095239;
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 11, AipsError);
@@ -1380,7 +1380,7 @@ int main() {
     		Double eNpts = 7;
     		Double eSumSq = 371;
     		Double eVar = 9.238095238095239;
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 11, AipsError);
@@ -1416,7 +1416,7 @@ int main() {
     		// should be the same except for min and max dataset locations
     		hfs.setData(v0.begin() + v0.size()/2, v0.size() - v0.size()/2);
     		hfs.addData(v0.begin(), v0.size()/2);
-    		r = hfs.getStatistics();
+    		r = toRecord(hfs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 11, AipsError);
@@ -1471,7 +1471,7 @@ int main() {
     		Double eNpts = 5;
     		Double eSumSq = 438;
     		Double eVar = 12.7;
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 14, AipsError);
@@ -1532,7 +1532,7 @@ int main() {
     		r1[1].second = 7;
     		hfs.setData(v0.begin(), v0.size()/2, r0);
     		hfs.addData(v0.begin() + v0.size()/2, v0.size() - v0.size()/2, r1, False);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 40;
     		Double eNpts = 4;
     		Double eSumSq = 482;
@@ -1591,7 +1591,7 @@ int main() {
     		m0[11] = True;
     		hfs.setData(v0.begin(), m0.begin(), v0.size()/2);
     		hfs.addData(v0.begin() + v0.size()/2, m0.begin() + m0.size()/2, v0.size() - v0.size()/2);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 35;
     		Double eNpts = 3;
     		Double eSumSq = 417;
@@ -1659,7 +1659,7 @@ int main() {
     	    r1[0].second = 21;
     	    hfs.setData(v0.begin(), m0.begin(), v0.size()/2, r0, False);
     	    hfs.addData(v0.begin() + v0.size()/2, m0.begin() + m0.size()/2, v0.size() - v0.size()/2, r1, True);
-    	    Record r = hfs.getStatistics();
+    	    Record r = toRecord(hfs.getStatistics());
     	    Double eSum = 35;
     	    Double eNpts = 5;
     	    Double eSumSq = 297;
@@ -1724,7 +1724,7 @@ int main() {
     		w0[11] = 2;
     		hfs.setData(v0.begin(), w0.begin(), v0.size()/2);
     		hfs.addData(v0.begin() + v0.size()/2, w0.begin() + w0.size()/2, v0.size() - v0.size()/2);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 137;
     		Double eSumWeights = 19;
     		Double eNpts = 6;
@@ -1801,7 +1801,7 @@ int main() {
     			v0.begin() + v0.size()/2, w0.begin() + w0.size()/2,
     			v0.size() - v0.size()/2, r1, True
     		);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 133;
     		Double eSumWeights = 17;
     		Double eNpts = 5;
@@ -1887,7 +1887,7 @@ int main() {
     			m0.begin() + m0.size()/2,
     			v0.size() - v0.size()/2, r1, True
     		);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 80;
     		Double eSumWeights = 9;
     		Double eNpts = 3;
@@ -1962,7 +1962,7 @@ int main() {
     			m0.begin() + m0.size()/2,
     			v0.size() - v0.size()/2
     		);
-    		Record r = hfs.getStatistics();
+    		Record r = toRecord(hfs.getStatistics());
     		Double eSum = 83;
     		Double eSumWeights = 12;
     		Double eNpts = 5;

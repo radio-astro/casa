@@ -52,7 +52,7 @@ int main() {
     	{
     		ClassicalStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.setData(v0.begin(), v0.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 3, AipsError);
@@ -89,7 +89,7 @@ int main() {
     		// just another way of specifying the data
     		ClassicalStatistics<Double, Double*, Bool*> cs1;
     		cs1.setData(k, 5);
-    		Record r = cs1.getStatistics();
+    		Record r = toRecord(cs1.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 3, AipsError);
@@ -127,7 +127,7 @@ int main() {
     		ClassicalStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.setData(v0.begin(), v0.size());
     		cs.addData(v1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (211.5 - 33.0*33.0/8.0)/7.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -164,7 +164,7 @@ int main() {
     		// should be the same except for min and max dataset locations
     		cs.setData(v1.begin(), v1.size());
     		cs.addData(v0.begin(), v0.size());
-            r = cs.getStatistics();
+            r = toRecord(cs.getStatistics());
             AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 10, AipsError);
@@ -215,7 +215,7 @@ int main() {
     		std::fill(t0.begin(), t0.begin()+t0.size(), 0);
     		cs.addData(t1.begin(), t1.size());
     		std::fill(t1.begin(), t1.begin()+t1.size(), 0);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
     		AlwaysAssert(r.asDouble("max") == 0, AipsError);
@@ -255,7 +255,7 @@ int main() {
     		std::fill(t0.begin(), t0.begin()+t0.size(), 0);
     		cs.addData(t1.begin(), t1.size());
     		std::fill(t1.begin(), t1.begin()+t1.size(), 0);
-    		r = cs.getStatistics();
+    		r = toRecord(cs.getStatistics());
     		Double variance = (211.5 - 33.0*33.0/8.0)/7.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -278,7 +278,7 @@ int main() {
     		ClassicalStatistics<Double, vector<Double>::const_iterator, vector<Bool>::const_iterator> cs;
     		cs.setData(v0.begin(), v0.size(), 2);
     		cs.addData(v1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (201.5 - 29.0*29.0/6.0)/5.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -319,7 +319,7 @@ int main() {
     		r1[1].second = 7;
     		cs.setData(v0.begin(), v0.size(), r0);
     		cs.addData(v1.begin(), v1.size(), r1, False);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -352,7 +352,7 @@ int main() {
     		m1[2] = False;
     		cs.setData(v0.begin(), m0.begin(), v0.size());
     		cs.addData(v1.begin(), m1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -391,7 +391,7 @@ int main() {
     		r1[0].second = 9;
     		cs.setData(v0.begin(), m0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), m1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (79.25 - 13.5*13.5/3.0)/2.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(! r.asBool("isWeighted"), AipsError);
@@ -424,7 +424,7 @@ int main() {
     		w1[2] = 3;
     		cs.setData(v0.begin(), w0.begin(), w0.size());
     		cs.addData(v1.begin(), w1.begin(), w1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (529.0 - 82.0*82.0/20.0)/19.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -464,7 +464,7 @@ int main() {
     		r1[0].second = 9;
     		cs.setData(v0.begin(), w0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), w1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(! r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -514,7 +514,7 @@ int main() {
     		r1[0].second = 12;
     		cs.setData(v0.begin(), w0.begin(), m0.begin(), v0.size(), r0, False);
     		cs.addData(v1.begin(), w1.begin(), m1.begin(), v1.size(), r1, True);
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
@@ -574,7 +574,7 @@ int main() {
     		m1[2] = False;
     		cs.setData(v0.begin(), w0.begin(), m0.begin(), v0.size());
     		cs.addData(v1.begin(), w1.begin(), m1.begin(), v1.size());
-    		Record r = cs.getStatistics();
+    		Record r = toRecord(cs.getStatistics());
     		Double variance = (195.25 - 40.5*40.5/11.0)/10.0;
     		AlwaysAssert(r.asBool("isMasked"), AipsError);
     		AlwaysAssert(r.asBool("isWeighted"), AipsError);
