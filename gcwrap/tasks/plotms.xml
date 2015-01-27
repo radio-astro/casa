@@ -138,6 +138,7 @@ MS Parameters
       <value>radialvelocity</value>
       <value>rho</value>
       <value>observation</value>
+      <value>intent</value>
     </allowed>
   </param>
   
@@ -243,6 +244,7 @@ MS Parameters
       <value>swpower</value>
       <value>switchedpower</value>
       <value>observation</value>
+      <value>intent</value>
     </allowed>
     </param>
     
@@ -618,6 +620,7 @@ Display Parameters
             <value>corr</value>
             <value>time</value>
             <value>observation</value>
+            <value>intent</value>
         </allowed>
     </param>
 
@@ -1025,6 +1028,7 @@ Constraints
       <equals value="row"/>
       <equals value="flagrow"/>
       <equals value="observation"/>
+      <equals value="intent"/>
     </when>
 
     
@@ -1103,6 +1107,7 @@ Constraints
       <equals value="row"/>
       <equals value="flagrow"/>
       <equals value="observation"/>
+      <equals value="intent"/>
     </when>
     
     <when param="selectdata">
@@ -1554,7 +1559,8 @@ Constraints
     coloraxis -- axis upon which to colorize the plotted points
                 options (= indicates synonyms):
                     'scan',  'field',  'spw',  'antenna1'='ant1',  'antenna2'='ant2',
-                    'baseline',  'channel'='chan',  'corr'='correlation', 'time', 'observation'
+                    'baseline',  'channel'='chan',  'corr'='correlation', 'time', 
+                    'observation', 'intent'
                 default: ''  (use a single color for all points)
 
     customflaggedsymbol -- If true, use a custom symbol for drawing flagged points
