@@ -599,10 +599,27 @@ protected:
 		return;
 	}
 
-	// Methods to transform and write matrix
+	// ------------------------------------------------------------------------------------
+	// Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
+	// into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
+	// ------------------------------------------------------------------------------------
+	template <class T> void mapMatrix(	const Matrix<T> &inputMatrix,Matrix<T> &outputMatrix)
+	{
+		// Get number of columns
+		uInt nCols = outputMatrix.shape()(0);
+
+		for (uInt index=0; index<rowIndex_p.size();index++)
+		{
+			for (uInt col = 0; col < nCols; col++)
+			{
+				outputMatrix(col,index) = inputMatrix(col,rowIndex_p[index]);
+			}
+		}
+
+		return;
+	}
 
 
-	template <class T> void mapMatrix(const Matrix<T> &inputMatrix, Matrix<T> &outputMatrix);
 	template <class T> void mapAndAverageMatrix(	const Matrix<T> &inputMatrix,
 													Matrix<T> &outputMatrix,
 													Bool convolveFlags=False,

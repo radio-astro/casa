@@ -5048,25 +5048,6 @@ void MSTransformManager::mapAndAverageVector(	const Vector<Bool> &inputVector,
 	return;
 }
 
-// ------------------------------------------------------------------------------------
-// Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWsxnScans/nStates]
-// into an output matrix with shape [nCol,nBaselinesxnScans/nStates]
-// ------------------------------------------------------------------------------------
-template <class T> void MSTransformManager::mapMatrix(	const Matrix<T> &inputMatrix,Matrix<T> &outputMatrix)
-{
-	// Get number of columns
-	uInt nCols = outputMatrix.shape()(0);
-
-	for (uInt index=0; index<rowIndex_p.size();index++)
-	{
-		for (uInt col = 0; col < nCols; col++)
-		{
-			outputMatrix(col,index) = inputMatrix(col,rowIndex_p[index]);
-		}
-	}
-
-	return;
-}
 
 // -----------------------------------------------------------------------------------
 // Fill the data from an input matrix with shape [nCol,nBaselinesxnSPWs] into an
