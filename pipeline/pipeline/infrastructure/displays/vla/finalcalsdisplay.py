@@ -404,6 +404,7 @@ class finalbpSolAmpPerAntennaChart(object):
                                  'showfdm'     : False,
                                  'subplot'     : 11,
                                  'plotrange'   : [0,0,0, ampplotmax],
+                                 'overlay'     : 'baseband',
                                  'figfile'     : figfile}
                                  
                     task = casa_tasks.plotbandpass(**task_args)
@@ -545,6 +546,7 @@ class finalbpSolPhasePerAntennaChart(object):
                                  'showfdm'     : False,
                                  'subplot'     : 11,
                                  'plotrange'   : [0,0,-phaseplotmax, phaseplotmax],
+                                 'overlay'     : 'baseband',
                                  'figfile'     : figfile}
 	            
 	            task = casa_tasks.plotbandpass(**task_args)
