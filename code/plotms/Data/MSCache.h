@@ -139,9 +139,15 @@ private:
 			  Vector<Int>& relids,
 			  Bool flag,
 			  PlotMSIndexer* indexer, int dataIndex);
-  
 
-
+  // Create map of intent names to "intent ids" 
+  // since state ids can duplicate intents.
+  // Then use map to assign intent ids to replace state ids
+  // (stateId -> intent string -> intentId)
+  map<String, Int> intentIds_; 
+  void mapIntentNamesToIds();   // create map
+  // Use map to assign intent ids
+  Vector<Int> assignIntentIds(Vector<Int>& stateIds);
 
   // A container for channel averaging bounds
   Vector<Matrix<Int> > chanAveBounds_p;

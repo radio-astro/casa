@@ -203,6 +203,7 @@ public:
   inline Double getWtSp(Int chnk,Int irel) { return *(wtsp_[chnk]->data()+irel); };
 
   inline Double getObsid(Int chnk,Int irel) { return *(obsid_[chnk]->data()+irel); };
+  inline Double getIntent(Int chnk,Int irel) { return *(intent_[chnk]->data()+irel); };
 
   // These are array-global (one value per chunk)
   inline Double getAz0(Int chnk,Int irel) { return az0_(chnk);  (void)irel; };
@@ -344,6 +345,7 @@ protected:
   PtrBlock<Vector<Int>*> chan_;
   PtrBlock<Vector<Int>*> corr_;
   PtrBlock<Vector<Int>*> obsid_;
+  PtrBlock<Vector<Int>*> intent_;
 
   // Optional parts of the cache
   PtrBlock<Vector<Float>*> pa_;
@@ -393,6 +395,7 @@ protected:
   Vector<String> stanames_; 	 
   Vector<String> antstanames_; 	 
   Vector<String> fldnames_;
+  Vector<String> intentnames_;
 
   PMS::Axis iterAxis;
   bool ephemerisInitialized;

@@ -122,7 +122,7 @@ public:
 	      GAMP,GPHASE,GREAL,GIMAG,
 	      DELAY,SWP,TSYS,OPAC,
 	      RADIAL_VELOCITY, RHO,
-	      OBSERVATION,
+	      OBSERVATION, INTENT,
 	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
@@ -137,7 +137,7 @@ public:
 	      "GainAmp","GainPhase","GainReal","GainImag",
 	      "Delay","SwPower","Tsys","Opac",
 	      "Radial Velocity [km/s]", "Distance (rho) [km]",
-	      "Observation",
+	      "Observation", "Intent",
 	      "None")
 
     // </group>

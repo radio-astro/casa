@@ -102,11 +102,15 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 		stanames_.resize();
 		antstanames_.resize();
 		fldnames_.resize();
-		antnames_=msCol.antenna().name().getColumn();
-		stanames_=msCol.antenna().station().getColumn();
-		fldnames_=msCol.field().name().getColumn();
+		intentnames_.resize();
 
-		antstanames_=antnames_+String("@")+stanames_;
+		antnames_    = msCol.antenna().name().getColumn();
+		stanames_    = msCol.antenna().station().getColumn();
+		fldnames_    = msCol.field().name().getColumn();
+		intentnames_ = msCol.state().obsMode().getColumn();
+
+		antstanames_ = antnames_+String("@")+stanames_;
+		mapIntentNamesToIds();  // eliminate duplicate intent names
 
 	}
 
@@ -464,6 +468,7 @@ void MSCache::loadChunks(ROVisibilityIterator& vi,
 
 	// Initialize the freq/vel calculator (in case we use it)
 	vbu_=VisBufferUtil(vb);
+
 
 	Int chunk = 0;
 	chshapes_.resize(4,nChunk_);
@@ -1298,6 +1303,12 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		*obsid_[vbnum] = vb.observationId();
 		break;
 
+	case PMS::INTENT:{
+		Vector<Int> states = vb.stateId();
+		*intent_[vbnum] = assignIntentIds(states);
+		break;
+	}
+
 	default:
 		throw(AipsError("Axis choice not supported for MS"));
 		break;
@@ -1510,6 +1521,32 @@ void MSCache::flagToDisk(const PlotMSFlagging& flagging,
 
 	logFlag(ss.str());
 
+}
+
+void MSCache::mapIntentNamesToIds() {
+	intentIds_.clear();
+	Int newId = 0;
+
+	for (uInt i=0; i<intentnames_.size(); i++) {
+		if (intentIds_.find(intentnames_[i]) == intentIds_.end()) {
+			intentIds_[intentnames_[i]] = newId;
+			newId++;
+		}
+	}
+}
+
+Vector<Int> MSCache::assignIntentIds(Vector<Int>& stateIds) {
+	Vector<Int> intents;
+	intents.resize(stateIds.size());
+
+	for (uInt i=0; i<stateIds.size(); i++) {
+		if ((intentnames_.size() > 0) && (stateIds[i] >= 0))
+			intents[i] = intentIds_[intentnames_[stateIds[i]]];
+		else
+			intents[i] = stateIds[i];
+	}
+
+	return intents;
 }
 
 }

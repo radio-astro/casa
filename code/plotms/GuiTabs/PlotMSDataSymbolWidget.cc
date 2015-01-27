@@ -63,6 +63,7 @@ PlotMSDataSymbolWidget::PlotMSDataSymbolWidget(PlotMSPlotter *parent)
 	 ui.colorizeChooser->addItem(PMS::axis(PMS::CORR).c_str());
 	 ui.colorizeChooser->addItem(PMS::axis(PMS::TIME).c_str());
 	 ui.colorizeChooser->addItem(PMS::axis(PMS::OBSERVATION).c_str());
+	 ui.colorizeChooser->addItem(PMS::axis(PMS::INTENT).c_str());
 
 	 connect(itsSymbolWidget_, SIGNAL(changed()), SIGNAL(symbolChanged()));
 	 connect(itsMaskedSymbolWidget_, SIGNAL(changed()), SIGNAL(symbolChanged()));

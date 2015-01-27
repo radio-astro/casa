@@ -179,6 +179,7 @@ String MSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesma
 			case PMS::FIELD:
 			case PMS::SPW:
 			case PMS::OBSERVATION:
+			case PMS::INTENT:
 				axisVol=sizeof(Int)*sum(nPerDDID_);
 				break;
 			case PMS::TIME:
