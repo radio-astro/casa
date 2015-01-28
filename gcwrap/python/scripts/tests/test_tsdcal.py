@@ -50,7 +50,7 @@ class tsdcal_test(unittest.TestCase):
 
 
     def test00(self):
-	"""Test1:Check the shapes of TSYS_SPECTRuM and FPARAM"""
+	"""Test00:Check the identification of TSYS_SPECTRuM and FPARAM"""
 	
 	tid = "00"
 	infile = self.infile1
@@ -72,18 +72,20 @@ class tsdcal_test(unittest.TestCase):
 	tb.close()
 	subt2.close()
 
-	if tsys1.all() == tsys2.all():
+        if tsys1.all() == tsys2.all():
 		print ''
 		print 'The shape of the MS/SYSCAL/TSYS_SPECTRUM', tsys1.shape
 		print 'The shape of the FPARAM extracted with tsdcal', tsys2.shape  
-		print 'Both tables are identical. '
+		print 'Both tables are identical.'
 	else:
+		print ''
 		print 'The shape of the MS/SYSCAL/TSYS_SPECTRUM', tsys1.shape
         	print 'The shape of the FPARAM of the extraction with tsdcal', tsys2.shape
         	print 'Both tables are not identical.'
+
        
         if flag.all()==0:
-		print 'ALL FLAGs are set to zero: OK'
+		print 'ALL FLAGs are set to zero.'
 
 
 	
