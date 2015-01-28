@@ -16,12 +16,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
 
         if (spw == ''): spw = '*'
         selection = ms.msseltoindex(vis=infile, spw=spw, field=field, 
-                                    baseline='%s&&&'%(antenna), time=timerange, 
+                                    baseline=str(antenna), time=timerange, 
                                     scan=scan, polarization=pol)
 
         sdms.open(infile)
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
-                           antenna='%s&&&'%(antenna), timerange=timerange, 
+                           antenna=str(antenna), timerange=timerange, 
                            scan=scan, polarization=pol)
         sdms.subtract_baseline_new(datacolumn=datacolumn,
                                    outfile=outfile,
