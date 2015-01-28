@@ -1138,8 +1138,10 @@ void SDGrid::get(VisBuffer& vb, Int row)
     blc-=blc; //set all values to 0
     trc=theImage.shape();
     trc-=1; // set trc to image size -1
-    if(nloop==1) 
+    if(nloop==1) {
       imCopy=& theImage;
+      nchanInMem=Nchan;
+    }
     else
       logIO()  << "Not enough memory to image in one go \n will process the image in   " 
 	       << nloop 
