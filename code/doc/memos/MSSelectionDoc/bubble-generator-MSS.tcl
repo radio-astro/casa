@@ -26,7 +26,7 @@ set all_graphs {
 	{optx LIMIT expr {optx {or OFFSET ,} expr}}
     }
     
-    spw-stmt 
+    SPW-EXPR
     {
 	loop 
 	{
@@ -65,7 +65,7 @@ set all_graphs {
 	loop
 	{
 	    line 
-	    {or nil ANTSPEC {line ( {loop ANTSPEC ,} )}}
+	    {or ANTSPEC {line ( {loop ANTSPEC ,} )}}
 	    {or nil {line @ {or STATIONSPEC {line ( {loop STATIONSPEC ,} )}}}}
 	} ,
     }
@@ -74,7 +74,7 @@ set all_graphs {
     {
 	loop
 	{
-	    line {or nil !} ANT-EXPR {or nil {line {or & &&} {or ANT-EXPR nil}} &&&}
+	    line {or nil !} ANT-EXPR {or nil {line {or & &&} {or nil ANT-EXPR}} &&&}
 	} ;
     }
 }

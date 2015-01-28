@@ -731,7 +731,7 @@ Table~\ref{Tab:RAILROAD_SPW} and explained in the following sections.
 \hline
 \small {Syntax of} & \small{Railroad Diagram}\\
 \hline
-   SPW[:FREQ] expression    &  \includegraphics[width=8cm]{spw-stmt.png}  \\
+   SPW[:FREQ] expression    &  \includegraphics[width=8cm]{SPW-EXPR.png}  \\
 \hline
    SPWID Spec.   &   \includegraphics[width=8cm]{SPWID.png}\\
 \hline
