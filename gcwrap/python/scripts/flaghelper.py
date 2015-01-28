@@ -878,6 +878,41 @@ def parseUnion(vis, flagdict):
          
     return dictpars
 
+def _merge_timerange(commands):
+    ''' merge manual commands that only differ in timerange and agentname
+        this speeds up manual flagging using large lists
+
+        cmd -> list of flagging commands
+
+        returns list of commands with unique key
+    '''
+    merged = dict()
+    lunique = []
+    for cmd in commands:
+        # only merge manual commands with timerange
+        if (cmd.get('mode') != 'manual') or ('timerange' not in cmd):
+            lunique.append(copy.deepcopy(cmd))
+            continue
+        try:
+            # create sorted list of command keys excluding agentname which
+            # changes for each manual flag
+            compound_key = sorted(x for x in cmd.keys() if x not in ('timerange', 'agentname'))
+            # create compound key of all command keys and their values (e.g. antenna:1)
+            compound = tuple((x, cmd[x]) for x in compound_key)
+
+            # merge timerange duplicate compound keys
+            try:
+                merged[compound]['timerange'] += ',' + cmd['timerange']
+            except KeyError:
+                merged[compound] = copy.deepcopy(cmd)
+        except:
+            # on error, e.g. non-hashable keys, no merging
+            lunique.append(copy.deepcopy(cmd))
+
+    # add merged keys to non-mergable keys
+    lunique.extend(merged.values())
+    return lunique
+
 def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
     ''' Setup the parameters of each agent and call the agentflagger tool
     
@@ -897,8 +932,9 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
     
     # Do not modify original dictionary
     myflagcmd = copy.deepcopy(flagdict)  
+    commands = []
         
-    # Setup the agent for each input line    
+    # Setup the agent for each input line and merge timeranges to one command
     for row in myflagcmd.keys():
         cmd = OrderedDict()
         cmd = myflagcmd[row]['command']
@@ -951,6 +987,15 @@ def parseAgents(aflocal, flagdict, myrows, apply, writeflags, display=''):
         casalog.post('Parsing parameters of mode %s in row %s'%(mode,row), 'DEBUG')
         casalog.post('%s'%cmd,'DEBUG')            
 
+        commands.append(cmd)
+
+    merged = _merge_timerange(commands)
+
+    if len(myflagcmd) != len(merged):
+        casalog.post('Reduced %d timerange flags into %d compound flags' %
+                     (len(myflagcmd), len(merged)))
+
+    for cmd in merged:
         # Parse the dictionary of parameters to the tool
         if (not aflocal.parseagentparameters(cmd)):
             casalog.post('Failed to parse parameters of mode %s in row %s' %(mode,row), 'WARN')
