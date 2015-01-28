@@ -52,6 +52,29 @@ set all_graphs {
 
     RANGE
     {
-	line NUMBER {or nil {line ~ NUMBER}}
+	line NUMBER ~ NUMBER
+    }
+
+    ANT-STATION-SPEC
+    {
+	line {or INTEGER {line INTEGER ~ INTEGER} STRING REGEX}
+    }
+
+    ANT-EXPR
+    {
+	loop
+	{
+	    line 
+	    {or nil ANTSPEC {line ( {loop ANTSPEC ,} )}}
+	    {or nil {line @ {or STATIONSPEC {line ( {loop STATIONSPEC ,} )}}}}
+	} ,
+    }
+
+    BASELINE-EXPR
+    {
+	loop
+	{
+	    line {or nil !} ANT-EXPR {or nil {line {or & &&} {or ANT-EXPR nil}} &&&}
+	} ;
     }
 }

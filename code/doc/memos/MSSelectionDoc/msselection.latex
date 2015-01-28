@@ -1,6 +1,7 @@
 \documentclass[12pt, twoside]{article}
 %\documentstyle[12pt,amsmath]{article}
-\usepackage{html}
+%\usepackage{html}
+\usepackage{hyperref}
 \usepackage{epsf}
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx, color}  % The figure package
@@ -330,6 +331,31 @@ specifications.  A baseline specification is an single ANT, ANT
 followed by an operator or a pair of ANT separated by an operator.  A
 baseline expression is single baseline specification or a semi-colon
 separated list of baseline specifications.
+
+The full antenna and baseline expression syntax is described in the
+Railroad Diagram format in Table~\ref{Tab:RAILROAD_BASELINE} and
+explained in the following sections.
+
+\begin{table}[h]
+\caption{Railroad diagrams for full baseline selection expression.
+  Note that this is often referred to as ``antenna selection'' as well.}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\small {Syntax of}         & \small{Railroad Diagram}\\
+\hline
+   BASELINE Expression     &  \includegraphics[width=8cm]{BASELINE-EXPR.png}\\
+\hline
+   Antenna Expression      & \includegraphics[width=8cm]{ANT-EXPR.png}  \\
+   (ANT-EXPR)              & \\
+\hline
+   Antenna/Station Spec.   & \includegraphics[width=8cm]{ANT-STATION-SPEC.png}\\
+   (ANTSPEC, STATIONSPEC)  & \\
+\hline
+\end{tabular}
+\label{Tab:RAILROAD_BASELINE}
+\end{center}
+\end{table}
 
 \subsection{Syntax}
 
@@ -694,6 +720,29 @@ result, list of SPWSPEC can be given in two ways: (1) a semi-colon
 separated list, (2) coma separated list.  This allows simple
 selections to remain simple and more complex selections consistent
 with the syntax for CHANSPEC list.
+
+The full syntax is shown in the Railroad Diagram format in
+Table~\ref{Tab:RAILROAD_SPW} and explained in the following sections.
+
+\begin{table}[h]
+\caption{Railroad diagrams for full frequency selection expression.}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\small {Syntax of} & \small{Railroad Diagram}\\
+\hline
+   SPW[:FREQ] expression    &  \includegraphics[width=8cm]{spw-stmt.png}  \\
+\hline
+   SPWID Spec.   &   \includegraphics[width=8cm]{SPWID.png}\\
+\hline
+   FREQ Spec.    &   \includegraphics[width=8cm]{FREQ.png}\\
+\hline
+   RANGE Spec.   &   \includegraphics[width=8cm]{RANGE.png}\\
+\hline
+\end{tabular}
+\label{Tab:RAILROAD_SPW}
+\end{center}
+\end{table}
 
 \subsection{Spectral Window Specification Syntax}
 
@@ -1221,8 +1270,8 @@ This mechanism of error handling is currently available for ANTENNA
 and STATE (a.k.a. ``intent selection'') selection expressions only.
 
 \newpage
-\section{Appendix: API Note - Using the {\tt MSSelection} module for
-  other MS-like Tables}
+\section{Appendix: API Note - Using the {\tt MSSelection} module for other
+  MS-like Tables}
 
 The \MSS\ module was originally written to provide a higher-level,
 simpler language called STaQL (Simpler TaQL) specifically for applying
