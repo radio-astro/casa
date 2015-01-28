@@ -86,26 +86,26 @@ def get_bar_class(pqascore):
     if score in (None, '', 'N/A'):
         return ''
     elif score <= SCORE_THRESHOLD_ERROR:
-        return ' bar-danger'
+        return ' progress-bar-danger'
     elif score <= SCORE_THRESHOLD_WARNING:
-        return ' bar-warning'
+        return ' progress-bar-warning'
     elif score <= SCORE_THRESHOLD_SUBOPTIMAL:
-        return ' bar-info'
+        return ' progress-bar-info'
     else:
-        return ' bar-success'
+        return ' progress-bar-success'
 
 def get_badge_class(pqascore):
     score = pqascore.score
     if score in (None, '', 'N/A'):
         return ''
     elif score <= SCORE_THRESHOLD_ERROR:
-        return ' badge-important'
+        return ' alert-danger'
     elif score <= SCORE_THRESHOLD_WARNING:
-        return ' badge-warning'
+        return ' alert-warning'
     elif score <= SCORE_THRESHOLD_SUBOPTIMAL:
-        return ' badge-info'
+        return ' alert-info'
     else:
-        return ' badge-success'
+        return ' alert-success'
 
 def get_bar_width(pqascore):
     if pqascore.score in (None, '', 'N/A'):
@@ -120,13 +120,13 @@ def format_score(pqascore):
 
 def get_symbol_badge(result):
     if get_errors_badge(result):
-        symbol = '<i class="icon-fixed-width fa fa-minus-circle text-error"></i>' 
+        symbol = '<span class="glyphicon glyphicon-remove-sign alert-danger transparent-bg" aria-hidden="true"></span>' 
     elif get_warnings_badge(result):
-        symbol = '<i class="icon-fixed-width fa fa-exclamation-triangle text-warning"></i>' 
+        symbol = '<span class="glyphicon glyphicon-exclamation-sign alert-warning transparent-bg" aria-hidden="true"></span>' 
     elif get_suboptimal_badge(result):
-        symbol = '<i class="icon-fixed-width fa fa-info-circle text-info"></i>' 
+        symbol = '<span class="glyphicon glyphicon-question-sign alert-info transparent-bg" aria-hidden="true"></span>' 
     else:
-        return '<i class="icon-fixed-width icon-blank"></i>'
+        return '<span class="glyphicon glyphicon-none" aria-hidden="true"></span>'
         
     return symbol
 
@@ -135,7 +135,7 @@ def get_warnings_badge(result):
     warning_qascores = utils.get_qascores(result, SCORE_THRESHOLD_ERROR, SCORE_THRESHOLD_WARNING)
     l = len(warning_logrecords) + len(warning_qascores)
     if l > 0:
-        return '<span class="badge badge-warning pull-right">%s</span>' % l
+        return '<span class="badge alert-warning pull-right">%s</span>' % l
     else:
         return ''
     
@@ -144,7 +144,7 @@ def get_errors_badge(result):
     error_qascores = utils.get_qascores(result, -0.1, SCORE_THRESHOLD_ERROR)
     l = len(error_logrecords) + len(error_qascores)
     if l > 0:
-        return '<span class="badge badge-important pull-right">%s</span>' % l
+        return '<span class="badge alert-important pull-right">%s</span>' % l
     else:
         return ''
 
@@ -152,6 +152,6 @@ def get_suboptimal_badge(result):
     suboptimal_qascores = utils.get_qascores(result, SCORE_THRESHOLD_WARNING, SCORE_THRESHOLD_SUBOPTIMAL)
     l = len(suboptimal_qascores)
     if l > 0:
-        return '<span class="badge badge-info pull-right">%s</span>' % l
+        return '<span class="badge alert-info pull-right">%s</span>' % l
     else:
         return ''

@@ -7,7 +7,7 @@ UTILS = (function () {
         var fullsizeToThumbs = {};
         var index = 0;
 
-        $("ul.thumbnails li:visible div a").each(function () {
+        $("div.thumbnail:visible a").each(function () {
             var mainImage = this.href; // Find Image href
             var title = this.title; // Find Image title
             if (mainImage == target) {
@@ -100,7 +100,7 @@ UTILS = (function () {
                     $(fakeframe).wrapInner("<pre />");
                     $(fakeframe).prepend('<div class="page-header">' +
                         '<h3>' + title +
-                        '<button class="btn btn-large pull-right" ' +
+                        '<button class="btn btn-default pull-right" ' +
                         'onclick="javascript:location.reload()">Back</button>' +
                         '</h3>' +
                         '</div>');
@@ -168,7 +168,7 @@ UTILS = (function () {
             var anchor = $("a[href='" + png + "']"),
                 score;
 
-            if ((filter === undefined) || ($(anchor).is(filter))) {
+            if ((filter === undefined) || ($(anchor).parent().is(filter))) {
             	png_scores_dict = scores_dict[png];            	
             	scores = scores.concat(module.getScoresForKey(png_scores_dict, key));
             }
@@ -238,11 +238,11 @@ FILTERS = (function () {
 
                 // .. and showing/hiding the thumbnail based on the aggregate
                 // filter state.
-                var li = $("a[href='" + png + "']").parent().parent();
+                var colDiv = $("a[href='" + png + "']").parent().parent();
                 if (isVisible) {
-                    li.show();
+                    colDiv.show();
                 } else {
-                    li.hide();
+                    colDiv.hide();
                 }
             }
 
@@ -626,7 +626,7 @@ PLOTS = function () {
             // The drawing code needs to reference a responsive elements dimensions
 
             // look to the fluid column rather than the div, as the div does not resize smaller than the histogram
-            width = shrinkFactor * $(reference).parent().parent().width() - margin.left - margin.right;
+            width = shrinkFactor * $(reference).parent().width() - margin.left - margin.right;
             svg.attr("width", width + margin.left + margin.right);
             clipPath.attr("width", width);
 

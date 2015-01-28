@@ -1,5 +1,5 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
 import os
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -51,38 +51,33 @@ $(document).ready(function() {
 <h3>Sky Level vs Frequency</h3>
 % for ms in summary_plots.keys():
     <h4><a class="replace"
-           href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}">${ms}</a>
+           href="${os.path.join(dirname, summary_subpage[ms])}">${ms}</a>
     </h4>
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, summary_subpage[ms]), pcontext.report_dir)}"
-                               class="replace"
-                               data-spw="${plot.parameters['spw']}">
-                               Spectral Window ${plot.parameters['spw']}
-                            </a>
-                        </h4>
-
-                        <p>Plot of sky level for spectral
-                            window ${plot.parameters['spw']}.
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
+    % for plot in summary_plots[ms]:
+        % if os.path.exists(plot.thumbnail):
+	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                   class="fancybox"
+	                   rel="thumbs">
+	                    <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                         title="Sky level summary for Spectral Window ${plot.parameters['spw']}"
+	                         data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                </a>
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${os.path.join(dirname, summary_subpage[ms])}"
+	                           class="replace"
+	                           data-spw="${plot.parameters['spw']}">
+	                           Spectral Window ${plot.parameters['spw']}
+	                        </a>
+	                    </h4>
+	
+	                    <p>Plot of sky level for spectral
+						window ${plot.parameters['spw']}.</p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
 %endfor

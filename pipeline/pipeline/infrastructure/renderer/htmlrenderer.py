@@ -19,13 +19,11 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.summary as summary
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.renderer.templates import resources
 from . import qaadapter
 from .. import utils
 from . import weblog
-import pipeline.hif.tasks.applycal.renderer as applycal_renderer
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -1168,6 +1166,30 @@ class WebLogGenerator(object):
         infile = os.path.join(src, 'fancybox.zip')
         z = zipfile.ZipFile(infile, 'r')        
         z.extractall(outdir)
+
+        distfile = os.path.join(src, 'bootstrap-3.3.1-dist.zip')
+        WebLogGenerator.unpack_bootstrap(distfile, outdir)
+
+    @staticmethod
+    def unpack_bootstrap(distfile, outdir):
+        zip_file = zipfile.ZipFile(distfile, 'r')
+        for member in zip_file.namelist():
+            filename = os.path.basename(member)
+            # skip directories
+            if not filename:
+                continue
+            
+            # omit the first component ('dest') from the destination paths 
+            # caution! this doesn't work if the path is absolute
+            parts = member.split(os.path.sep)
+            relocated = os.path.sep.join(parts[1:])
+            
+            # copy file
+            source = zip_file.open(member)
+            target = file(os.path.join(outdir, relocated), 'wb')
+            with source, target:
+                LOG.trace('Bootstrap copy: %s -> %s', source, target)
+                shutil.copyfileobj(source, target)
 
     @staticmethod
     def render(context):

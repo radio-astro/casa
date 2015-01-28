@@ -13,6 +13,40 @@ import pipeline.infrastructure.utils as utils
 def get_qascores(pool, lo, hi):
 	with_score = [s for s in pool if s.score not in ('', 'N/A', None)]
 	return [s for s in with_score if s.score > lo and s.score <= hi]
+	
+def get_notification_trs(result, alerts_info, alerts_success):
+	notifications = []
+	if result.qa.pool:
+		for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
+			n = format_notification('danger alert-danger', 'QA', qascore.longmsg, 'glyphicon glyphicon-remove-sign')
+			notifications.append(n)
+		for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
+			n = format_notification('warning alert-warning', 'QA', qascore.longmsg, 'glyphicon glyphicon-exclamation-sign')
+			notifications.append(n)
+	for logrecord in utils.get_logrecords(result, logging.ERROR):
+		n = format_notification('danger alert-danger', 'Error!', logrecord.msg)
+		notifications.append(n)
+	for logrecord in utils.get_logrecords(result, logging.WARNING):
+		n = format_notification('warning alert-warning', 'Warning!', logrecord.msg)
+		notifications.append(n)
+	if alerts_info is not UNDEFINED:
+		for msg in alerts_info:
+			n = format_notification('info alert-info', '', msg)
+			notifications.append(n)
+	if alerts_success is not UNDEFINED:
+		for msg in alerts_success:
+			n = format_notification('success alert-success', '', msg)
+			notifications.append(n)
+
+	return notifications
+
+def format_notification(tr_class, alert, msg, icon_class=None):
+	if icon_class:
+		icon = '<span class="%s"></span> ' % icon_class
+	else:
+		icon = ''
+	return '<tr class="%s"><td>%s<strong>%s</strong> %s</td></tr>' % (tr_class, icon, alert, msg)
+	
 %>
 
 <%def name="plot_group(plot_dict, url_fn, data_spw=False, data_field=False, data_baseband=False, data_tsysspw=False, plot_accessor=lambda d: [('No Intent', d)])">
@@ -30,6 +64,7 @@ def get_qascores(pool, lo, hi):
 			subpage_path = os.path.relpath(subpage_abspath, pcontext.report_dir)
 			subpage_exists = os.path.exists(subpage_abspath)
 		%>
+
 		<h4>
 			% if subpage_exists:
 			<a class="replace"
@@ -45,69 +80,68 @@ def get_qascores(pool, lo, hi):
 		 	${caller.ms_preamble(ms)}
 		% endif
 
-	    <ul class="thumbnails">
+	    <div class="row">
 	        % for intent, intent_plots in plot_accessor(ms_plots):					
 				% for plot in intent_plots:
+				<div class="col-md-3 col-sm-4">
 		            % if os.path.exists(plot.thumbnail):
 		            <%
 		            	fullsize_relpath = os.path.relpath(plot.abspath, pcontext.report_dir)
 		            	thumbnail_relpath = os.path.relpath(plot.thumbnail, pcontext.report_dir)
 		            %>
 		            
-		            <li class="span3">
-		                <div class="thumbnail">
-							<a href="${fullsize_relpath}"
-							   class="fancybox"
-							   rel="${relurl}"
-							   % if hasattr(caller, 'fancybox_caption'):
-							   caption="${caller.fancybox_caption(plot)}"
-							   % endif
-							   data-thumbnail="${thumbnail_relpath}">
-								<img src="${thumbnail_relpath}"
-									 % if hasattr(caller, 'mouseover'):
-							   		 title="${caller.mouseover(plot)}"
-							   		 % endif
-							   		 data-thumbnail="${thumbnail_relpath}">
-							   	</img>
-							</a>
+	                <div class="thumbnail">
+						<a href="${fullsize_relpath}"
+						   class="fancybox"
+						   rel="${relurl}"
+						   % if hasattr(caller, 'fancybox_caption'):
+						   title="${caller.fancybox_caption(plot)}"
+						   % endif
+						   data-thumbnail="${thumbnail_relpath}">
+							<img src="${thumbnail_relpath}"
+								 % if hasattr(caller, 'mouseover'):
+						   		 title="${caller.mouseover(plot)}"
+						   		 % endif
+						   		 data-thumbnail="${thumbnail_relpath}">
+						</a>
 
-		                    <div class="caption">
-								<h4>
-								% if subpage_exists:
-									<a href="${subpage_path}"
-									% if data_field:
-									   data-field="${cgi.escape(plot.parameters['field'], True)}"
-									% endif
-									% if data_spw:
-									   data-spw="${plot.parameters['spw']}"
-									% endif
-									% if data_tsysspw:
-									   data-spw="${plot.parameters['tsys_spw']}"
-									% endif
-									% if data_baseband:
-									   data-baseband="${plot.parameters['baseband']}"
-									% endif
-		   							   class="replace">
+	                    <div class="caption">
+							<h4>
+							% if subpage_exists:
+								<a href="${subpage_path}"
+								% if data_field:
+								   data-field="${cgi.escape(plot.parameters['field'], True)}"
 								% endif
-								${caller.caption_title(plot)}
-								% if subpage_exists:
-									</a>
+								% if data_spw:
+								   data-spw="${plot.parameters['spw']}"
 								% endif
-								</h4>
-								% if hasattr(caller, 'caption_subtitle'):
-									<h6>${caller.caption_subtitle(plot)}</h6>								
+								% if data_tsysspw:
+								   data-spw="${plot.parameters['tsys_spw']}"
 								% endif
-								
-								% if hasattr(caller, 'caption_text'):		
-		                        <p>${caller.caption_text(plot, intent)}</p>
-		                        % endif
-		                    </div>
-		                </div>
-		            </li>
+								% if data_baseband:
+								   data-baseband="${plot.parameters['baseband']}"
+								% endif
+	   							   class="replace">
+							% endif
+							${caller.caption_title(plot)}
+							% if subpage_exists:
+								</a>
+							% endif
+							</h4>
+							% if hasattr(caller, 'caption_subtitle'):
+								<h6>${caller.caption_subtitle(plot)}</h6>								
+							% endif
+							
+							% if hasattr(caller, 'caption_text'):		
+	                        <p>${caller.caption_text(plot, intent)}</p>
+	                        % endif
+	                    </div>
+	                </div>
 		            % endif
+				</div>
 		        % endfor
 	        % endfor
-	    </ul>
+	    </div><!-- end row -->
 
 	% endfor
 		
@@ -115,95 +149,77 @@ def get_qascores(pool, lo, hi):
 </%def>
 
 <div class="page-header">
-	<h1>${hr.get_stage_number(result)}. <%block name="title">Untitled Task</%block><%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
+	<h1>${hr.get_stage_number(result)}. <%block name="title">Untitled Task</%block><%block name="backbutton"><button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
 </div>
 
-<ul class="unstyled">
-%if result.qa.pool:
-	% for qascore in get_qascores(result.qa.pool, -0.1, rendererutils.SCORE_THRESHOLD_ERROR):
-	<li class="alert alert-error">
-		<i class="icon-remove-sign"></i> <strong>QA</strong> ${qascore.longmsg}
-	</li>
+<%
+	notification_trs = get_notification_trs(result, alerts_info, alerts_success)
+%>
+% if notification_trs:
+<table class="table table-bordered">
+	<thead>
+		<tr>
+			<th>Task notifications</th>
+		</tr>	
+	</thead>
+	<tbody>
+	% for tr in notification_trs:
+		${tr}
 	% endfor
-	% for qascore in get_qascores(result.qa.pool, rendererutils.SCORE_THRESHOLD_ERROR, rendererutils.SCORE_THRESHOLD_WARNING):
-	<li class="alert">
-		<i class="icon-question-sign"></i> <strong>QA</strong> ${qascore.longmsg}
-	</li>
-	% endfor
-%endif
-% for r in result:
-	% for logrecord in utils.get_logrecords(r, logging.ERROR):
-	<li class="alert alert-error">
-		<strong>Error!</strong> ${logrecord.msg}
-	</li>
-	% endfor
-	% for logrecord in utils.get_logrecords(r, logging.WARNING):
-	<li class="alert">
-		<strong>Warning!</strong> ${logrecord.msg}
-	</li>
-	% endfor
-	% if alerts_info is not UNDEFINED:
-	% for msg in alerts_info:
-	<li class="alert alert-info">
-		${msg}
-	</li>
-	% endfor
-	% endif
-	% if alerts_success is not UNDEFINED:
-	% for msg in alerts_success:
-	<li class="alert alert-success">
-		${msg}
-	</li>
-	% endfor
-	% endif
-%endfor	
-</ul>
+	</tbody>	
+</table>
+% endif
 
 ${next.body()}
 
-<div class="accordion" id="details-accordion">
-
-<%doc>
-Help disabled until the task descriptions from John's presentation are added
-
-%if taskhelp:
-
-	<div class="accordion-group">
-	    <div class="accordion-heading">
-			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseOne">
-	        	Task Help
-	      	</a>
-	    </div>
-	    <div id="collapseOne" class="accordion-body collapse">
-			<div class="accordion-inner">
-				${taskhelp}
+<div class="clearfix"></div>
+<div class="panel-group" id="details-accordion" role="tablist" aria-multiselectable="true">
+	
+	<%doc>
+	Help disabled until the task descriptions from John's presentation are added
+	
+	%if taskhelp:
+	
+		<div class="accordion-group">
+		    <div class="accordion-heading">
+				<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseOne">
+		        	Task Help
+		      	</a>
+		    </div>
+		    <div id="collapseOne" class="accordion-body collapse">
+				<div class="accordion-inner">
+					${taskhelp}
+				</div>
 			</div>
 		</div>
-	</div>
-%endif
-</%doc>
-
-	<div class="accordion-group">
-	    <div class="accordion-heading">
-			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo">
+	%endif
+	</%doc>
+	
+	<div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingTwo">
+	    	<h4 class="panel-title">
+				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
 	        	CASA Logs
-	      	</a>
+		      	</a>    	
+	    	</h4>
 	    </div>
-	    <div id="collapseTwo" class="accordion-body collapse">
-			<div class="accordion-inner">
-				<pre>${stagelog}</pre>
+	    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+			<div class="panel-body">
+				<pre class="smallpre">${stagelog}</pre>
 			</div>
 		</div>
 	</div>
 
-	<div class="accordion-group">
-		<div class="accordion-heading">
-			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseQA">
+	<div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingThree">
+	    	<h4 class="panel-title">
+				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
 	        	Pipeline QA
-	      	</a>
-		</div>
-		<div id="collapseQA" class="accordion-body collapse">
-			<div class="accordion-inner">
+		      	</a>    	
+	    	</h4>
+	    </div>
+	    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+			<div class="panel-body">
 				% if result.qa.pool:
 				<table class="table table-bordered" summary="Pipeline QA summary">
 					<caption>Pipeline QA summary for this task.</caption>
@@ -242,18 +258,20 @@ Help disabled until the task descriptions from John's presentation are added
 				% else:
 					No pipeline QA for this task.
 				% endif
-			</div>		
+			</div>
 		</div>
 	</div>
 
-	<div class="accordion-group">
-	    <div class="accordion-heading">
-			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseThree">
+	<div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingFour">
+	    	<h4 class="panel-title">
+				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
 	        	Input Parameters
-	      	</a>
+		      	</a>    	
+	    	</h4>
 	    </div>
-	    <div id="collapseThree" class="accordion-body collapse">
-			<div class="accordion-inner">
+	    <div id="collapseFour" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFour">
+			<div class="panel-body">
 				<dl class="dl-horizontal">
 				% for k, v in result.inputs.iteritems():
 					<dt>${str(k)}</dt>
@@ -264,14 +282,16 @@ Help disabled until the task descriptions from John's presentation are added
 		</div>
 	</div>
 
-	<div class="accordion-group">
-	    <div class="accordion-heading">
-			<a class="accordion-toggle" data-toggle="collapse" data-parent="#details-accordion" href="#collapseFour">
-				Task Execution Times
-	      	</a>
+	<div class="panel panel-default">
+	    <div class="panel-heading" role="tab" id="headingFive">
+	    	<h4 class="panel-title">
+				<a data-toggle="collapse" data-parent="#details-accordion" href="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+	        	Tasks Execution Statistics
+		      	</a>
+	    	</h4>
 	    </div>
-	    <div id="collapseFour" class="accordion-body collapse">
-			<div class="accordion-inner">
+	    <div id="collapseFive" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingFive">
+			<div class="panel-body">
 				<dl class="dl-horizontal">
 					<dt>Start time</dt>
 					<dd>${utils.format_datetime(result.timestamps.start, dp=3)}</dd>
@@ -285,5 +305,5 @@ Help disabled until the task descriptions from John's presentation are added
 			</div>
 		</div>
 	</div>
-
 </div>
+

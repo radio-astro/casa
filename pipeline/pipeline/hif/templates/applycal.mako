@@ -105,9 +105,6 @@ $(document).ready(function(){
 	    'placement': 'left',
 	    'container':'body'
 	  });
-
-    // fix the thumbnail margins for plots on the n>1 row
-    UTILS.fixThumbnailMargins();
 });
 </script>
 

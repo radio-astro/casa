@@ -182,7 +182,7 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
 
 class WvrcalflagMetricPlotsRenderer(basetemplates.CommonRenderer):
     def __init__(self, context, result, plots):
-        super(WvrcalflagMetricPlotsRenderer, self).__init__('wvrgcalflag_metric_view.mako', 
+        super(WvrcalflagMetricPlotsRenderer, self).__init__('generic_x_vs_y_spw_field_detail_plots.mako', 
                                                             context, result)
         self.plots = plots
         self.ms = os.path.basename(self.result.inputs['vis'])
@@ -248,5 +248,5 @@ class WvrgcalflagPhaseOffsetVsBaselinePlotRenderer(basetemplates.JsonPlotRendere
         outfile = filenamer.sanitize('phase_offsets_vs_baseline-%s.html' % vis)
         
         super(WvrgcalflagPhaseOffsetVsBaselinePlotRenderer, self).__init__(
-                'wvrgcalflag_phase_offset_vs_baseline_plots.mako', context, 
+                'generic_x_vs_y_spw_scan_plots.mako', context, 
                 result, plots, title, outfile)

@@ -1,14 +1,12 @@
 import os
-import json
-import contextlib
 
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.renderer.weblog as weblog
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.displays.singledish as displays
 
 LOG = logging.get_logger(__name__)
+
 
 class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     # Renderer class for stage summary
@@ -42,7 +40,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                 renderer = SingleDishClusterPlotsRenderer(context, results, name, _plots)
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                group_desc['html'] = renderer.filename
+                group_desc['html'] = os.path.basename(renderer.path)
                 group_desc['cover_plots'] = self._get_a_plot_per_spw(_plots)
                 plot_detail.append(group_desc)
             else:
@@ -71,61 +69,12 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                 plot_list.append(p)
         return plot_list
     
-class SingleDishClusterPlotsRenderer(object):
-    # take a look at WvrgcalflagPhaseOffsetVsBaselinePlotRenderer when we have
-    # scores and histograms to generate. there should be a common base class. 
-    template = 'hsd_cluster_plots.mako'
-    
+
+class SingleDishClusterPlotsRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, xytitle, plots):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.xy_title = "Clustering: %s" % xytitle
-        self.json = json.dumps(self._get_plot_info(plots))
+        outfile = filenamer.sanitize('%s.html' % (xytitle.lower().replace(" ", "_")))
+        new_title = "Clustering: %s" % xytitle
 
-    def _get_plot_info(self, plots): 
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            d[image_relpath] = {'thumbnail': thumbnail_relpath}
-            for key, val in plot.parameters.items():
-                d[image_relpath][key] = val
-        return d
-
-    def _get_display_context(self):
-        return {'pcontext'   : self.context,
-                'result'     : self.result,
-                'plots'      : self.plots,
-                'dirname'    : self.dirname,
-                'json'       : self.json,
-                'plot_title' : self.xy_title}
-
-    @property
-    def dirname(self):
-        stage = 'stage%s' % self.result.stage_number
-        return os.path.join(self.context.report_dir, stage)
-    
-    @property
-    def filename(self):        
-        filename = filenamer.sanitize('%s.html' % (self.xy_title.lower().replace(" ", "_")))
-        return filename
-    
-    @property
-    def path(self):
-        return os.path.join(self.dirname, self.filename)
-    
-    def get_file(self):
-        if not os.path.exists(self.dirname):
-            os.makedirs(self.dirname)
-            
-        file_obj = open(self.path, 'w')
-        return contextlib.closing(file_obj)
-    
-    def render(self):
-        display_context = self._get_display_context()
-        t = weblog.TEMPLATE_LOOKUP.get_template(self.template)
-        return t.render(**display_context)
+        super(SingleDishClusterPlotsRenderer, self).__init__(
+                'hsd_cluster_plots.mako', context, result, plots, new_title,
+                outfile)

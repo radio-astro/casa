@@ -2,13 +2,13 @@ import os
 import collections
 
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.renderer.basetemplates as basetemplates
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
-import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.displays.singledish as displays
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.renderer.basetemplates as basetemplates
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.renderer.sharedrenderer as sharedrenderer
 
-from ..common import renderer as sdsharedrenderer
 from ..baseline import renderer as baselinerenderer
 
 LOG = logging.get_logger(__name__)
@@ -83,18 +83,13 @@ class T2_4MDetailsSingleDishFlagBaselineRenderer(basetemplates.T2_4MDetailsDefau
         return ctx
 
 class T2_4MDetailsSingleDishPlotFlagBaselineRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='hsd_plotflagbaseline.mako',
+    def __init__(self, uri='hsd_plotflagbaseline.mako',
+                 description='Flag bad baselines',
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishPlotFlagBaselineRenderer, self).__init__(template,
-                                                                             always_rerender)
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishPlotFlagBaselineRenderer, self).get_display_context(context, 
-                                                                                              results)
-        stage_number = get_stage_number(results)
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-
+        super(T2_4MDetailsSingleDishPlotFlagBaselineRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
+        
+    def update_mako_context(self, ctx, context, results):
         plots = []
         for r in results:
             inputs = displays.SDBaselineAllDisplay.Inputs(context,result=r)
@@ -110,14 +105,11 @@ class T2_4MDetailsSingleDishPlotFlagBaselineRenderer(basetemplates.T2_4MDetailsD
                                                                'Intensity vs Frequency')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-            plot_list[name] = renderer.filename
+            plot_list[name] = os.path.basename(renderer.path)
                 
         # default dirname is relative path so replacing it with absolute path 
         ctx.update({'summary_subpage': plot_list,
-                    'summary_plots': summary_plots,
-                    'dirname': stage_dir})
-    
-        return ctx
+                    'summary_plots': summary_plots})
 
     def _group_by_vis(self, plots):
         plot_group = {}
@@ -142,8 +134,11 @@ class T2_4MDetailsSingleDishPlotFlagBaselineRenderer(basetemplates.T2_4MDetailsD
         return summary_plots
 
 
+class SingleDishPlotFlagBaselinePlotsRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, name, plots, plot_title):
+        outfile = filenamer.sanitize('%s-%s.html' % (plot_title.lower(), name))
+        new_title = '%s for %s' % (plot_title, name)
 
-
-
-class SingleDishPlotFlagBaselinePlotsRenderer(sdsharedrenderer.SingleDishGenericPlotsRenderer):
-    template = 'generic_x_vs_y_detail_plots.html'    
+        super(SingleDishPlotFlagBaselinePlotsRenderer, self).__init__(
+                'generic_x_vs_y_spw_ant_detail_plots.mako', context, result, 
+                plots, new_title, outfile)

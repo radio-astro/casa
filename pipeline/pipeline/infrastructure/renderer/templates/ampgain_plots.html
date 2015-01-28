@@ -9,7 +9,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
 
 <!-- include required files and styles for histograms -->
-<script src="${self.attr.rsc_path}resources/js/d3.v3.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/d3.min.js"></script>
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <script>
@@ -52,41 +52,35 @@ $(document).ready(function () {
     
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
-    $("ul.thumbnails li div a").click(function (evt) {
+    $("div.thumbnail a").click(function (evt) {
         evt.preventDefault();
         var target = this.href;
         UTILS.launchFancybox(target);
         return false;
     });
-
-    // fix the thumbnail margins for plots on the n>1 row
-    UTILS.fixThumbnailMargins();
 });
 </script>
 
 <div class="page-header">
-	<h1>Amp Gain Plots<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>Amp Gain Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <br>
 
-<div class="column-fluid">
-	<ul class="thumbnails">
-	% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
-		<li class="span2">
-			<div class="thumbnail">
-				<a class="fancybox"
-				   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-				   title="Antenna ${plot.parameters['ant']} "
-				   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-					<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-						 title="Antenna ${plot.parameters['ant']} "
-						   alt="">
-					</img>
-				</a>
-					<p class="text-center">Antenna ${plot.parameters['ant']}</p>
-			</div>
-		</li>
-	% endfor
-	</ul>
+% for plot in sorted(plots, key=lambda p: p.parameters['ant']):
+<div class="col-md-2 col-sm-3">
+	<div class="thumbnail">
+		<a class="fancybox"
+		   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		   title="Antenna ${plot.parameters['ant']} "
+		   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+			<img   src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+				 title="Antenna ${plot.parameters['ant']} "
+				   alt="">
+		</a>
+		<div class="caption">
+			<span class="text-center">Antenna ${plot.parameters['ant']}</span>
+		</div>
+	</div>
 </div>
+% endfor

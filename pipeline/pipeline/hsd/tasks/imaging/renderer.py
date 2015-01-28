@@ -9,20 +9,13 @@ from ..common import renderer as sdsharedrenderer
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='hsd_imaging.mako', 
+    def __init__(self, uri='hsd_imaging.mako', 
                  description='Image single dish data',
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(template,
-                                                                    description,
-                                                                    always_rerender)
+        super(T2_4MDetailsSingleDishImagingRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
         
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishImagingRenderer, self).get_display_context(context, results)
-        
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-            
+    def update_mako_context(self, ctx, context, results):            
         plots = []
         #for image_item in result.outcome:
         for r in results:
@@ -55,7 +48,7 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                                                           value['plot_title'])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                subpage[name] = renderer.filename
+                subpage[name] = os.path.basename(renderer.path)
             ctx.update({'%s_subpage'%(key): subpage,
                         '%s_plots'%(key): summary})
             if key == 'sparsemap':
@@ -71,10 +64,6 @@ class T2_4MDetailsSingleDishImagingRenderer(basetemplates.T2_4MDetailsDefaultRen
                             _ap[ant].append(pol)
                     profilemap_entries[field] = _ap
                 ctx.update({'profilemap_entries': profilemap_entries})
-
-        ctx.update({'dirname': stage_dir})
-
-        return ctx
     
     def _plots_per_field_with_type(self, plots, type_string):
         plot_group = {}

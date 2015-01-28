@@ -1,29 +1,21 @@
 import os
-import json
 
 import pipeline.infrastructure.displays.singledish as displays
+import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.renderer.basetemplates as basetemplates
 
-from ..common import renderer as sdsharedrenderer
-
 LOG = logging.get_logger(__name__)
 
+
 class T2_4MDetailsSingleDishInspectDataRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='hsd_inspectdata.mako',
+    def __init__(self, uri='hsd_inspectdata.mako',
                  description='Inspect data',
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishInspectDataRenderer, self).__init__(template, 
-                                                                        description,
-                                                                        always_rerender)
+        super(T2_4MDetailsSingleDishInspectDataRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
         
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishInspectDataRenderer, self).get_display_context(context, results)
-        
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(results[0].stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-   
+    def update_mako_context(self, ctx, context, results):
         plot_types = [{'type': 'pointing',
                        'renderer': displays.SDPointingDisplay,
                        'plot_title': 'Telescope Pointing on the Sky'},
@@ -62,16 +54,13 @@ class T2_4MDetailsSingleDishInspectDataRenderer(basetemplates.T2_4MDetailsDefaul
                                                                   _types['plot_title'])
                 with renderer.get_file() as fileobj:
                     fileobj.write(renderer.render())
-                plot_list[name] = renderer.filename
+                plot_list[name] = os.path.basename(renderer.path)
                 if not subpages.has_key(name):
                     subpages[name] = {}
-                subpages[name][_types['type']] = renderer.filename
+                subpages[name][_types['type']] = os.path.basename(renderer.path)
    
         ctx.update({'subplot': subpages,
-                    'summary': summary_plots,
-                    'dirname': stage_dir})
-        
-        return ctx
+                    'summary': summary_plots})
     
     def _group_by_vis(self, plots):
         plot_group = {}
@@ -90,44 +79,25 @@ class T2_4MDetailsSingleDishInspectDataRenderer(basetemplates.T2_4MDetailsDefaul
                     return plot
         return plot_group[vis][0]        
 
-class SingleDishInspectDataPlotsRenderer(sdsharedrenderer.SingleDishGenericPlotsRenderer):
-    template = 'hsd_inspectdata_plots.mako'   
 
-class SingleDishPointingPlotsRenderer(sdsharedrenderer.SingleDishGenericPlotsRenderer):
-    template = 'hsd_pointing_plots.mako'
-    
+class SingleDishInspectDataPlotsRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, name, plots, plot_title):
-        self.context = context
-        self.result = result
-        self.plots = plots
-        self.name = name
-        self.plot_title = str(plot_title)
+        outfile = filenamer.sanitize('%s-%s.html' % (plot_title.lower(), name))
+        new_title = '%s for %s' % (plot_title, name)
 
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            ant_id = plot.parameters['ant']
-            pol_id = plot.parameters['pol']
-            type_str = plot.parameters['type']
+        super(SingleDishInspectDataPlotsRenderer, self).__init__(
+                'hsd_inspectdata_plots.mako', context, result, plots, new_title,
+                outfile)
 
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
 
-            d[image_relpath] = {'spw'       : str(spw_id),
-                                'ant'       : ant_id,
-                                'pol'       : pol_id,
-                                'type'      : type_str,
-                                'thumbnail' : thumbnail_relpath}
+class SingleDishPointingPlotsRenderer(basetemplates.JsonPlotRenderer):
+    def __init__(self, context, result, name, plots, plot_title):
+        outfile = filenamer.sanitize('%s-%s.html' % (plot_title.lower(), name))
+        new_title = '%s for %s' % (plot_title, name)
 
-        self.json = json.dumps(d)
+        super(SingleDishPointingPlotsRenderer, self).__init__(
+                'hsd_pointing_plots.mako', context, result, plots, new_title,
+                outfile)
     
+    def update_json_dict(self, d, plot):
+        d['type'] = plot.parameters['type']

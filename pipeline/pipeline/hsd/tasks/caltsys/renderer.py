@@ -9,20 +9,13 @@ from ..common import renderer as sdsharedrenderer
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsSingleDishCalTsysRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='hsd_caltsys.mako', 
+    def __init__(self, uri='hsd_caltsys.mako', 
                  description='Generate Tsys calibration table',
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishCalTsysRenderer, self).__init__(template,
-                                                                    description,
-                                                                    always_rerender)
+        super(T2_4MDetailsSingleDishCalTsysRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
         
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishCalTsysRenderer, self).get_display_context(context, results)
-        
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-
+    def update_mako_context(self, ctx, context, results):
         inputs = displays.SDTsysDisplay.Inputs(context,results)
         task = displays.SDTsysDisplay(inputs)
         plots = task.plot()
@@ -37,14 +30,11 @@ class T2_4MDetailsSingleDishCalTsysRenderer(basetemplates.T2_4MDetailsDefaultRen
                                                       'Tsys vs Frequency')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-            plot_list[name] = renderer.filename
+            plot_list[name] = os.path.basename(renderer.path)
 
         ctx.update({'subpage': plot_list,
-                    'summary': summary_plots,
-                    'dirname': stage_dir})
-
-        return ctx
-
+                    'summary': summary_plots})
+        
     def _group_by_vis(self, plots):
         plot_group = {}
         for p in plots[0]:
@@ -57,8 +47,6 @@ class T2_4MDetailsSingleDishCalTsysRenderer(basetemplates.T2_4MDetailsDefaultRen
         for p in plots[1]:
             plot_group[p.parameters['vis']]['individual'].append(p)
         return plot_group
-
-        
         
     def _plots_per_type(self, plots, xaxis_list):
         plot_group = [[], []] #[summary plots, individual plots]

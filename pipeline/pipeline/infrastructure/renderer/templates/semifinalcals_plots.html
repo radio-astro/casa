@@ -9,7 +9,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <script src="${self.attr.rsc_path}resources/js/select2.min.js"></script>
 
 <!-- include required files and styles for histograms -->
-<script src="${self.attr.rsc_path}resources/js/d3.v3.min.js"></script>
+<script src="${self.attr.rsc_path}resources/js/d3.min.js"></script>
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <script>
@@ -65,7 +65,7 @@ $(document).ready(function () {
 </script>
 
 <div class="page-header">
-	<h1>Semi-finalcals ${plots[0].parameters['type'].title()} Plots<button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>Semi-finalcals ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <br>

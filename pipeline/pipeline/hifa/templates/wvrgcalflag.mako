@@ -1,11 +1,10 @@
 <%!
 rsc_path = ""
 import os
+import pipeline.infrastructure.filenamer as filenamer
 %>
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
-
-<%block name="title">WVR Calibration and Flagging</%block>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
@@ -45,6 +44,8 @@ $(document).ready(function() {
 });
 </script>
 
+<%block name="title">WVR Calibration and Flagging</%block>
+
 <p>This task checks whether the WVR radiometers are working as intended,
 interpolating for antennas that are not. The WVR caltable is only added to 
 subsequent pre-applys if it gives a tangible improvement.</p>
@@ -68,7 +69,7 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 			<td>${application.ms}</td>
 		  	<td>${application.gaintable}
 		  	<td>${application.interpolated}</td>
-		  	<td><i class="icon-${'ok' if application.applied else 'remove'}"></i></td>
+		  	<td><span class="glyphicon glyphicon-${'ok' if application.applied else 'remove'}"></span></td>
 		</tr>
 % endfor		
 	</tbody>
@@ -93,8 +94,8 @@ subsequent pre-applys if it gives a tangible improvement.</p>
 		<tr class="${'danger' if wvrinfo.flag else ''}">
 			<td>${ms}</td>
 		  	<td>${wvrinfo.antenna}</td>
-		  	<td><i class="icon-${'ok' if wvrinfo.wvr else 'remove'}"></i></td>
-		  	<td><i class="icon-${'ok' if wvrinfo.flag else 'remove'}"></i></td>
+		  	<td><span class="glyphicon glyphicon-${'ok' if wvrinfo.wvr else 'remove'}"></span></td>
+		  	<td><span class="glyphicon glyphicon-${'ok' if wvrinfo.flag else 'remove'}"></span></td>
 		  	<td>${wvrinfo.rms}</td>
 		  	<td>${wvrinfo.disc}</td>
 		</tr>
@@ -116,42 +117,28 @@ and comparing the resulting phase corrections evaluated both with and without
 application of WVR correction. Plots based on these data in these evaluation 
 caltables are presented below.</p>
 
-% if flag_plots:
-	<h3>Flagging plots</h3>
+<%self:plot_group plot_dict="${flag_plots}"
+				  url_fn="${lambda x: 'science_amp_vs_uv_%s.html' % filenamer.sanitize(x)}">
 
-        <p>The following plots show the flagging metric used by the pipeline to
+	<%def name="title()">
+		Flagging plots
+	</%def>
+
+	<%def name="preamble()">
+		<p>The following plots show the flagging metric used by the pipeline to
         determine which antennas to flag.</p>
+	</%def>
 
-	% for ms in flag_plots:
-	    <h4>${ms}</h4>
-	    <ul class="thumbnails">
-	        % for plot in flag_plots[ms]:
-	            % if os.path.exists(plot.thumbnail):
-	            <li class="span3">
-	                <div class="thumbnail">
-	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                       class="fancybox"
-	                       rel="flag-${ms}">
-	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                             title="Click to enlarge flag plot for Spectral Window ${plot.parameters['spw']}"
-	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-	                        </img>
-	                    </a>
-	
-	                    <div class="caption">
-	                        <h4>Spectral Window ${plot.parameters['spw']}</h4>
-	
-	                        <p>Flagging plot for spectral window 
-	                        ${plot.parameters['spw']}, all antennas.
-	                        </p>
-	                    </div>
-	                </div>
-	            </li>
-	            % endif
-	        % endfor
-	    </ul>
-	%endfor
-%endif
+	<%def name="mouseover(plot)">Click to enlarge flag plot for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">		
+		Spectral window: ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral window ${plot.parameters['spw']}
+	</%def>
+</%self:plot_group>
 
 % if metric_plots:
 <h3>Flagging metric views</h3>
@@ -168,113 +155,68 @@ measurement set.</p>
     </li>
 % endfor        
 </ul>
-
 % endif
 
-% if phase_offset_summary_plots:
-	<h3>Phase correction with/without WVR</h3>
+<%self:plot_group plot_dict="${phase_offset_summary_plots}"
+				  url_fn="${lambda x: 'phase_offsets_%s.html' % filenamer.sanitize(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Phase correction with/without WVR
+	</%def>
+
+	<%def name="preamble()">
+		<p>These plots show the deviation about the scan median phase before and after WVR application. 
+		Points are plotted per integration and per correlation.</p>
+		
+		<p>Click the summary plots to enlarge, or click the summary title for a gallery of more
+		detailed plots for individual antennas.</p>
+	</%def>
+
+	<%def name="mouseover(plot)">Click to show WVR phase offset plots for spw ${plot.parameters['spw']}</%def>
+
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}
+	</%def>
+
+	<%def name="caption_title(plot)">
+		Spectral window ${plot.parameters['spw']}
+	</%def>
+</%self:plot_group>
+
+<%self:plot_group plot_dict="${baseline_summary_plots}"
+				  url_fn="${lambda x: 'phase_offsets_vs_baseline_%s.html' % filenamer.sanitize(x)}"
+				  data_spw="${True}">
+
+	<%def name="title()">
+		Phase correction vs distance to reference antenna
+	</%def>
+
+	<%def name="preamble()">
+		<p>Plots show the phase offset (lower panel) and improvement ratio
+		(upper panel) vs distance to the reference antenna before and after 
+        WVR application.</p>
+		
+		<p>The lower panel of these plots show the median absolute deviation of the gaincal 
+		corrections with and without WVR correction applied. The upper panel shows the ratio of
+		the RMS deviations about the median for data with WVR correction applied to the RMS
+		deviations without WVR correction. One plot is generated per scan, with points plotted per
+		correlation and antenna as a function of distance from the reference antenna.</p>
 	
-	<p>These plots show the deviation about the scan median phase before and after WVR application. 
-	Points are plotted per integration and per correlation.</p>
+		<p>Click the summary plots to enlarge them, or the summary plot
+		title to show a gallery of phase offset plots for individual
+		antenna.</p> 
+	</%def>
 
-	<p>Click the summary plots to enlarge, or click the summary title for a gallery of more
-	detailed plots for individual antennas.</p> 
+	<%def name="mouseover(plot)">Click to show WVR phase offset vs baseline plots for spw ${plot.parameters['spw']}</%def>
 
-	% for ms in phase_offset_summary_plots:
-	    <h4><a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_%s.html' % ms), pcontext.report_dir)}">${ms}</a>
-	    </h4>
-	    <ul class="thumbnails">
-	        % for plot in phase_offset_summary_plots[ms]:
-	            % if os.path.exists(plot.thumbnail):
-	            <li class="span3">
-	                <div class="thumbnail">
-	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                       class="fancybox"
-	                       rel="offset-${ms}">
-	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                             title="Click to show WVR phase offset plots for Spectral Window ${plot.parameters['spw']}"
-	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-	                        </img>
-	                    </a>
-	
-	                    <div class="caption">
-		                    <h4>
-			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_%s.html' % ms), pcontext.report_dir)}"
-		    	                   class="replace"
-		        	               data-spw="${plot.parameters['spw']}">
-			                        Spectral Window ${plot.parameters['spw']}
-			                    </a>
-							</h4>
-	
-	                        <p>Deviation from scan median phase before and after WVR 
-	                        application for spectral window 
-	                        ${plot.parameters['spw']}, all antennas.
-	                        </p>
-	                    </div>
-	                </div>
-	            </li>
-	            % endif
-	        % endfor
-	    </ul>
-	%endfor
-%endif
+	<%def name="fancybox_caption(plot)">
+		Spectral window: ${plot.parameters['spw']}
+	</%def>
 
-%if baseline_summary_plots:
-	<h3>Phase correction vs distance to reference antenna</h3>
-
-	<p>The lower panel of these plots show the median absolute deviation of the gaincal 
-	corrections with and without WVR correction applied. The upper panel shows the ratio of
-	the RMS deviations about the median for data with WVR correction applied to the RMS
-	deviations without WVR correction.</p>
-
-	<p>One plot is generated per scan, with data plotted per correlation and antenna 
-	as a function of distance from the reference antenna.</p>
-
-	<p>
-	Click the summary plots to enlarge them, or the summary plot title to show a gallery of phase
-	offset plots for individual antenna. 
-	</p> 
-
-	% for ms in baseline_summary_plots:
-	    <h4><a class="replace"
-	           href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline_%s.html' % ms), pcontext.report_dir)}">${ms}</a>
-	    </h4>
-	    <ul class="thumbnails">
-	        % for plot in baseline_summary_plots[ms]:
-	            % if os.path.exists(plot.thumbnail):
-	            <li class="span3">
-	                <div class="thumbnail">
-	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-	                       class="fancybox"
-	                       rel="baseline-${ms}">
-	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                             title="Click to show WVR phase offset vs baseline plots for Spectral Window ${plot.parameters['spw']}"
-	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-	                        </img>
-	                    </a>
-	
-	                    <div class="caption">
-							<h4>
-			                    <a href="${os.path.relpath(os.path.join(dirname, 'phase_offsets_vs_baseline_%s.html' % ms), pcontext.report_dir)}"
-			                       class="replace"
-			                       data-spw="${plot.parameters['spw']}">
-				                   Spectral Window ${plot.parameters['spw']}
-			                    </a>
-							</h4>
-							
-	                        <p>Phase offset (lower) and improvement ratio (upper) 
-	                        vs distance to the reference antenna before and after 
-	                        WVR application for spectral window 
-	                        ${plot.parameters['spw']}, all antennas.
-	                        </p>
-	                    </div>
-	                </div>
-	            </li>
-	            % endif
-	        % endfor
-	    </ul>
-	%endfor
-%endif
+	<%def name="caption_title(plot)">
+		Spectral window ${plot.parameters['spw']}
+	</%def>
+</%self:plot_group>
 
 %endif

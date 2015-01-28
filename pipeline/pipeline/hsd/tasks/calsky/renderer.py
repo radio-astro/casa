@@ -9,19 +9,13 @@ from ..common import renderer as sdsharedrenderer
 LOG = logging.get_logger(__name__)
 
 class T2_4MDetailsSingleDishCalSkyRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
-    def __init__(self, template='hsd_calsky.mako',
+    def __init__(self, uri='hsd_calsky.mako',
                  description='Generate Sky calibration table', 
                  always_rerender=False):
-        super(T2_4MDetailsSingleDishCalSkyRenderer, self).__init__(template,
-                                                                   description,
-                                                                   always_rerender)
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishCalSkyRenderer, self).get_display_context(context, results)
+        super(T2_4MDetailsSingleDishCalSkyRenderer, self).__init__(uri=uri,
+                description=description, always_rerender=always_rerender)
         
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
-              
+    def update_mako_context(self, ctx, context, results):
         inputs = displays.SDSkyDisplay.Inputs(context,results)
         task = displays.SDSkyDisplay(inputs)
         # plots is list-of-list of plot instances
@@ -41,14 +35,11 @@ class T2_4MDetailsSingleDishCalSkyRenderer(basetemplates.T2_4MDetailsDefaultRend
                                                       'Sky Level vs Frequency')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
-            plot_list[name] = renderer.filename
+            plot_list[name] = os.path.basename(renderer.path)
                 
         # default dirname is relative path so replacing it with absolute path 
         ctx.update({'summary_subpage': plot_list,
-                    'summary_plots': summary_plots,
-                    'dirname': stage_dir})
-            
-        return ctx
+                    'summary_plots': summary_plots})
     
     def _group_by_vis(self, plots):
         plot_group = {}

@@ -72,33 +72,29 @@ $(document).ready(function() {
            href="${os.path.relpath(os.path.join(dirname, subpage[ms]), pcontext.report_dir)}">${ms}</a>
     </h4>
     
-    <ul class="thumbnails">
-        % for _summary in summary[ms]:
-            % if os.path.exists(_summary.thumbnail):
-                <li class="span3">
-                    <div class="thumbnail">
-                        <a href="${os.path.relpath(_summary.abspath, pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="thumbs">
-                            <img src="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}"
-                                 title="Tsys vs Frequency"
-                                 data-thumbnail="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}">
-                            </img>
-                        </a>
+    % for _summary in summary[ms]:
+        % if os.path.exists(_summary.thumbnail):
+            <div class="col-md-3">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(_summary.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="thumbs">
+                        <img src="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}"
+                             title="Tsys vs Frequency"
+                             data-thumbnail="${os.path.relpath(_summary.thumbnail, pcontext.report_dir)}">
+                    </a>
 
-                        <div class="caption">
-                            <h4>
-                                <a href="${os.path.relpath(os.path.join(dirname, subpage[ms]), pcontext.report_dir)}"
-                                   class="replace"
-				   data-ant="${_summary.parameters['ant']}">
-                                   Antenna ${_summary.parameters['ant']}
-                                </a>
-                            </h4>
-                        </div>
+                    <div class="caption">
+                        <h4>
+                            <a href="${os.path.relpath(os.path.join(dirname, subpage[ms]), pcontext.report_dir)}"
+                               class="replace"
+   							   data-ant="${_summary.parameters['ant']}">
+                               Antenna ${_summary.parameters['ant']}
+                            </a>
+                        </h4>
                     </div>
-                </li>
-            % endif
-        % endfor
-    </ul>
+                </div>
+            </div>
+        % endif
+    % endfor
 %endfor
-

@@ -1201,7 +1201,7 @@ def HtmlBaselineFit2(Directory):
     
     # tools for thumbnail plot
     #jQuery = getPath('jquery.js')
-    jQuery = getPath('templates/resources/jquery-1.9.1.js')
+    jQuery = getPath('templates/resources/jquery-2.1.3.min.js')
     fin = open(jQuery,'r')
     fout = open(Directory+'/BF_Fit/jquery.js','w')
     fout.write(fin.read())

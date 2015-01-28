@@ -90,7 +90,7 @@ def agent_data(agent, ms):
 		else:
 			return '<td>%s</td><td>N/A</td>' % flagfile		
 	else:
-		return '<td><i class="icon-ok"></i></td>'		
+		return '<td><span class="glyphicon glyphicon-ok"></span></td>'		
 
 def num_lines(relpath):
 	abspath = os.path.join(pcontext.report_dir, relpath)
@@ -119,77 +119,73 @@ def num_lines(relpath):
 % endif
 
 % if htmlreports:
-<div class="row-fluid">
 <h2>Flags</h2>
-	<table class="table table-bordered table-striped">
-		<caption>Report Files</caption>
-		<thead>
-			<tr>
-				<th>Measurement Set</th>
-				<th>Flagging Commands</th>
-				<th>Number of Statements</th>
-			</tr>
-		</thead>
-		<tbody>
-		% for msname, relpath in htmlreports.items():
-			<tr>
-				<td>${msname}</td>
-				<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
-				<td>${num_lines(relpath)}</td>
-	        </tr>
-		% endfor
-		</tbody>
-	</table>
-</div>
+<table class="table table-bordered table-striped">
+	<caption>Report Files</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>Flagging Commands</th>
+			<th>Number of Statements</th>
+		</tr>
+	</thead>
+	<tbody>
+	% for msname, relpath in htmlreports.items():
+		<tr>
+			<td>${msname}</td>
+			<td><a class="replace-pre" href="${relpath}">${os.path.basename(relpath)}</a></td>
+			<td>${num_lines(relpath)}</td>
+        </tr>
+	% endfor
+	</tbody>
+</table>
 
-<div class="row-fluid">
-	<h2>Flagged data summary</h2>
-	<table class="table table-bordered table-striped "
-		   summary="Flagged Data">
-		<caption>Summary of flagged data.</caption>
-		<thead>
-			<tr>
-				<th rowspan="2">Data Selection</th>
-				<!-- flags before task is always first agent -->
-				<th rowspan="2">${agent_description[agents[0]]}</th>
-				<th rowspan="2">${agent_description[agents[1]]}</th>
-				<th rowspan="2">Total</th>
-				<th colspan="${len(flags)}">Measurement Set</th>
-			</tr>
-			<tr>
-	%for ms in flags.keys():
-				<th>${ms}</th>
-	%endfor
-			</tr>
-		</thead>
-		<tbody>
-	%for k in ['TOTAL', 'SCIENCE SPWS', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']: 
-			<tr>
-				<th>${total_keys[k]}</th>		
-		% for agent in agents:
-				<td>${total_for_agent(agent, k)}</td>
-		% endfor
-				<td>${total_for_mses(flags.keys(), k)}</td>
-		% for ms in flags.keys():
-				<td>${total_for_mses([ms], k)}</td>
-		% endfor		
-			</tr>
-	%endfor
-	%for ms in flags.keys():
-			<tr>
-				<th>${ms}</th>
-		% for agent in agents:
-				<td>${total_for_agent(agent, 'TOTAL', [ms])}</td>
-		% endfor
-				<td>${total_for_mses([ms], 'TOTAL')}</td>
-		% for ms in flags.keys():
-				<td></td>
-		% endfor
-			</tr>
-	%endfor
-		</tbody>
-	</table>
-</div>
+<h2>Flagged data summary</h2>
+<table class="table table-bordered table-striped "
+	   summary="Flagged Data">
+	<caption>Summary of flagged data.</caption>
+	<thead>
+		<tr>
+			<th rowspan="2">Data Selection</th>
+			<!-- flags before task is always first agent -->
+			<th rowspan="2">${agent_description[agents[0]]}</th>
+			<th rowspan="2">${agent_description[agents[1]]}</th>
+			<th rowspan="2">Total</th>
+			<th colspan="${len(flags)}">Measurement Set</th>
+		</tr>
+		<tr>
+%for ms in flags.keys():
+			<th>${ms}</th>
+%endfor
+		</tr>
+	</thead>
+	<tbody>
+%for k in ['TOTAL', 'SCIENCE SPWS', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET']: 
+		<tr>
+			<th>${total_keys[k]}</th>		
+	% for agent in agents:
+			<td>${total_for_agent(agent, k)}</td>
+	% endfor
+			<td>${total_for_mses(flags.keys(), k)}</td>
+	% for ms in flags.keys():
+			<td>${total_for_mses([ms], k)}</td>
+	% endfor		
+		</tr>
+%endfor
+%for ms in flags.keys():
+		<tr>
+			<th>${ms}</th>
+	% for agent in agents:
+			<td>${total_for_agent(agent, 'TOTAL', [ms])}</td>
+	% endfor
+			<td>${total_for_mses([ms], 'TOTAL')}</td>
+	% for ms in flags.keys():
+			<td></td>
+	% endfor
+		</tr>
+%endfor
+	</tbody>
+</table>
 
 % endif
 

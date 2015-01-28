@@ -1,8 +1,6 @@
 <%!
 rsc_path = ""
-
 %>
-
 <%inherit file="t2-4m_details-base.html"/>
 
 <%block name="title">Compute Bandpass Smoothing Parameters</%block>
@@ -13,7 +11,6 @@ rsc_path = ""
 
 <p>The bandpass smoothing parameters required to achieve the required SNR are computed and stored in the pipeline context</p>
 
-<div class="row_fluid">
 <table class="table table-bordered table-striped" summary="Bandpass smoothing parameters">
 	<caption>Recommended Bandpass Smoothing Parameters</caption>
        <thead>
@@ -40,12 +37,3 @@ rsc_path = ""
 	%endfor
 	</tbody>
 </table>
-</div>
-
-
-
-
-
-
-
-

@@ -15,34 +15,32 @@ def get_tablerow_class(row):
 <%inherit file="base.html"/>
 
 <div class="page-header">
-	<h1>${next.title()}<%block name="backbutton"><button class="btn btn-large pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
+	<h1>${next.title()}<%block name="backbutton"><button class="btn btn-default pull-right" onClick="javascript:window.history.back();">Back</button></%block></h1>
 </div>
 
 % if topic.results_by_type:
-<div class="row-fluid">
-	<table class="table">
-		<thead>
-			<tr>
-				<th class="span9">Task</th>
-				<th class="span2">QA Score</th>
-				<th class="span1"></th>
-			</tr>
-		</thead>
-		<tbody>
-		% for result_type, results_list in topic.results_by_type.items():
-			% if results_list:
-				% for results in results_list:
-			<tr>
-				<td><a href="t2-4m.html?stage=${results.stage_number}">${hr.get_task_description(results)}</a><span class="pull-right">${scores[results.stage_number].shortmsg}</span></td>
-				<td><div class="progress" style="margin-bottom:0px;"><div class="bar${rendererutils.get_bar_class(scores[results.stage_number])}" style="width:${rendererutils.get_bar_width(scores[results.stage_number])}%;"><span class="text-center"></span></div></div></td>
-				<td><span class="badge${rendererutils.get_badge_class(scores[results.stage_number])}">${rendererutils.format_score(scores[results.stage_number])}</span></td>
-			</tr>
-				% endfor
-			% endif
-		% endfor
-		</tbody>
-	</table>
-</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th class="span9">Task</th>
+			<th class="span2">QA Score</th>
+			<th class="span1"></th>
+		</tr>
+	</thead>
+	<tbody>
+	% for result_type, results_list in topic.results_by_type.items():
+		% if results_list:
+			% for results in results_list:
+		<tr>
+			<td><a href="t2-4m.html?stage=${results.stage_number}">${hr.get_task_description(results)}</a><span class="pull-right">${scores[results.stage_number].shortmsg}</span></td>
+			<td><div class="progress" style="margin-bottom:0px;"><div class="progress-bar${rendererutils.get_bar_class(scores[results.stage_number])}" role="progressbar" style="width:${rendererutils.get_bar_width(scores[results.stage_number])}%;"><span class="text-center"></span></div></div></td>
+			<td><span class="badge${rendererutils.get_badge_class(scores[results.stage_number])}">${rendererutils.format_score(scores[results.stage_number])}</span></td>
+		</tr>
+			% endfor
+		% endif
+	% endfor
+	</tbody>
+</table>
 % else:
 <p>No tasks belong to this topic.</p>
 % endif

@@ -8,8 +8,7 @@ import os
 
 <p>Known spectral lines in flux calibrators are flagged and the reference spwmap for flux scaling is computed</p>
 
-<div class="row-fluid">
-    <table class="table table-bordered table-striped" summary="Targetflag flagging results">
+<table class="table table-bordered table-striped" summary="Targetflag flagging results">
 	<caption>Reference spwmap per measurement set.</caption>
         <thead>
 	    <tr>
@@ -20,14 +19,13 @@ import os
 	    </tr>
 	</thead>
 	<tbody>
-            %for r in result:
+    	%for r in result:
 		<tr>
 			<td>${os.path.basename(r._vis)}</td>
 			<td>${','.join([str(spwid) for spwid in r._refspwmap]).replace(',', ', ')}</td>
 			<td>${'<br>'.join(['field=%s line=%s spw=%d:%d~%d' % (line.fieldname, line.species, line.spwid, line.chanrange[0], line.chanrange[1]) for line in r._fluxcal_linelist])}</td>
 			<td>${'<br>'.join([str(cmd) for cmd in r._fluxcal_flagcmds])}</td>
 		</tr>
-            %endfor
+		%endfor
 	</tbody>
-    </table>
-</div>
+</table>

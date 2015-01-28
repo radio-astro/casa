@@ -84,13 +84,8 @@ $(document).ready(function(){
             }
         }
     });
-	
-    // fix the thumbnail margins for plots on the n>1 row
-    UTILS.fixThumbnailMargins();
 });
 </script>
-
-
 
 <%block name="title">Set model flux</%block>
 
@@ -154,8 +149,5 @@ $(document).ready(function(){
 		${plot.parameters['baseband']} for ${plot.parameters['intent']}
 		calibrator.
 	</%def>
-
-
-
 </%self:plot_group>
 

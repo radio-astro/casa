@@ -107,68 +107,62 @@ So far, final baseline and flag results are shown below.</p>
     href="${os.path.join(dirname, plots['html'])}">${plots['title']}
 <!--        href="${os.path.relpath(os.path.join(dirname, plots['html']), pcontext.report_dir)}">${plots['title']}-->
     </h3>
-    <ul class="thumbnails">
-        % for plot in plots['cover_plots']:
-            % if os.path.exists(plot.thumbnail):
-                <li class="span3">
-                    <div class="thumbnail">
-                        <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="thumbs">
-                           <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                                 title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
-                                 data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                           </img>
-                        </a>
-    
-                        <div class="caption">
-                            <h4>
-                                <a href="${os.path.join(dirname, plots['html'])}"
-                                   class="replace"
-                                   data-spw="${plot.parameters['spw']}">
-                                   Spectral Window ${plot.parameters['spw']}
-                                </a>
-                            </h4>
-    
-                            <p>Clustering plot of spectral
-                                window ${plot.parameters['spw']}.
-                            </p>
-                        </div>
+    % for plot in plots['cover_plots']:
+        % if os.path.exists(plot.thumbnail):
+            <div class="col-md-3">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="thumbs">
+                       <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
+                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                    </a>
+
+                    <div class="caption">
+                        <h4>
+                            <a href="${os.path.join(dirname, plots['html'])}"
+                               class="replace"
+                               data-spw="${plot.parameters['spw']}">
+                               Spectral Window ${plot.parameters['spw']}
+                            </a>
+                        </h4>
+
+                        <p>Clustering plot of spectral
+                            window ${plot.parameters['spw']}.
+                        </p>
                     </div>
-                </li>
-            % endif
-        % endfor
-    </ul>
+                </div>
+            </div>
+        % endif
+    % endfor
 % endfor
 
 <!-- No details -->
 % for plots in cover_only:
     <h3>${plots['title']}</h3>
-    <ul class="thumbnails">
-        % for plot in plots['cover_plots']:
-            % if os.path.exists(plot.thumbnail):
-                <li class="span3">
-                    <div class="thumbnail">
-                        <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           class="fancybox"
-                           rel="thumbs">
-                           <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                                 title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
-                                 data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                           </img>
-                        </a>
-    
-                        <div class="caption">
-                            <h4>Spectral Window ${plot.parameters['spw']}</h4>
-                            <p>Clustering plot of spectral window 
-                            ${plot.parameters['spw']}.
-                            </p>
-                        </div>
+    % for plot in plots['cover_plots']:
+        % if os.path.exists(plot.thumbnail):
+            <div class="col-md-3">
+                <div class="thumbnail">
+                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       class="fancybox"
+                       rel="thumbs">
+                       <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
+                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+                    </a>
+
+                    <div class="caption">
+                        <h4>Spectral Window ${plot.parameters['spw']}</h4>
+                        <p>Clustering plot of spectral window 
+                        ${plot.parameters['spw']}.
+                        </p>
                     </div>
-                </li>
-            % endif
-        % endfor
-    </ul>
+                </div>
+            </div>
+        % endif
+    % endfor
 % endfor
 
 % else:

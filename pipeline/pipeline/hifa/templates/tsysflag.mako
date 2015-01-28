@@ -103,81 +103,74 @@ $(document).ready(function() {
 
 </%self:plot_group>
 
-<div class="row-fluid">
-  <h2>Flagging steps</h2>
-  <table class="table table-bordered table-striped">
-    <thead>
-      <tr>
-        <th>Measurement Set</th>
-% for step in steps:
-        <th>${step}</th>
-% endfor
-      </tr>                           
-    </thead>
-    <tbody>
-% for ms in flags.keys():
-      <tr>
-        <td>${ms}</td>
-    % for step in steps:
-        % if flags[ms][step] is None:
-        <td><i class="icon-remove"></td>
-        % else:
-        <td><i class="icon-ok"></i></td>
-        % endif
-    % endfor
-      </tr>
-% endfor
-    </tbody>
-  </table>
-</div>
+<h2>Flagging steps</h2>
+<table class="table table-bordered table-striped">
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			% for step in steps:
+			<th>${step}</th>
+			% endfor
+		</tr>                           
+	</thead>
+	<tbody>
+	% for ms in flags.keys():
+		<tr>
+			<td>${ms}</td>
+			% for step in steps:
+			% if flags[ms][step] is None:
+			<td><span class="glyphicon glyphicon-remove"></span></td>
+      		% else:
+      		<td><span class="glyphicon glyphicon-ok"></span></td>
+      		% endif
+  			% endfor
+		</tr>
+	% endfor
+	</tbody>
+</table>
 
-<div class="row-fluid">
-  <h2>Flagged data summary</h2>
+<h2>Flagged data summary</h2>
 
 % for ms in flags.keys():
-
-  <h5>Table: ${ms}</h5>
-  <table class="table table-bordered table-striped ">
-    <caption>Summary of flagged data. Each cell states the amount of data 
-             flagged as a fraction of the specified data selection, with the 
-             <em>Flagging Step</em> columns giving this information per
-             flagging step.
-    </caption>
-    <thead>
-      <tr>
-        <th rowspan="2">Data Selection</th>
-        <!-- flags before task is always first agent -->
-        <th rowspan="2">flagged before</th>
-        <th colspan="${len(steps)}">Flagging Step</th>
-        <th rowspan="2">flagged after</th>
-      </tr>
-      <tr>
-    % for step in steps:
-        <th>${step}</th>
-    % endfor
-      </tr>
-    </thead>
-    <tbody>
-    % for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']: 
-      <tr>
-        <th>${k}</th>               
-        % for step in ['before'] + steps + ['after']:
-            % if flags[ms][step] is not None:
-            ##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
-            <td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
-            % else:
-            <td>0.0%</td>
-            % endif
-        % endfor
-      </tr>
-    % endfor
-    </tbody>
-  </table>
+<h4>Table: ${ms}</h4>
+<table class="table table-bordered table-striped ">
+	<caption>Summary of flagged data. Each cell states the amount of data 
+		flagged as a fraction of the specified data selection, with the 
+		<em>Flagging Step</em> columns giving this information per flagging
+		 step.
+	</caption>
+	<thead>
+		<tr>
+			<th rowspan="2">Data Selection</th>
+			<!-- flags before task is always first agent -->
+			<th rowspan="2">flagged before</th>
+			<th colspan="${len(steps)}">Flagging Step</th>
+			<th rowspan="2">flagged after</th>
+		</tr>
+		<tr>
+			% for step in steps:
+			<th>${step}</th>
+			% endfor
+		</tr>
+	</thead>
+	<tbody>
+		% for k in ['TOTAL', 'BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET','ATMOSPHERE']: 
+		<tr>
+			<th>${k}</th>               
+			% for step in ['before'] + steps + ['after']:
+			% if flags[ms][step] is not None:
+				##<td>${step} ${k} ${flags[ms][step]['Summary'][k]}</td>
+				<td>${percent_flagged(flags[ms][step]['Summary'][k])}</td>
+			% else:
+				<td>0.0%</td>
+			% endif
+			% endfor
+		</tr>
+		% endfor
+	</tbody>
+</table>
 
 % endfor
-
-</div> 
-
 
 <h2>Flag Step Details</h2>
 <ul>

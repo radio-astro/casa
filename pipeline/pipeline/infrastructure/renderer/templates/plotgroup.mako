@@ -7,10 +7,10 @@ import os
 <script src="${self.attr.rsc_path}resources/plotgroup.js"></script>
 
 <div class="page-header">
-	<h1>${plot_group.title} plots <button class="btn btn-large pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>${plot_group.title} plots <button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
-<div class="row-fluid">
+<div class="row">
 	<div class="span11">
 		% for selectors in plot_group.selectors:
 		<div class="row-fluid">
@@ -32,9 +32,9 @@ import os
 	</div>
 </div>
 
+% for plot in sorted(plot_group.plots, key=lambda plot: int(plot.parameters['spw'])):
 <div class="row-fluid">
 	<ul class="thumbnails">
-% for plot in sorted(plot_group.plots, key=lambda plot: int(plot.parameters['spw'])):
 		<li class="span2" data-value="${plot.css_class}">
 			<div class="thumbnail">
 				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"

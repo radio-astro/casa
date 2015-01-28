@@ -15,24 +15,30 @@ $(document).ready(function() {
     // return a function that sets the SPW text field to the given spw
     var createSpwSetter = function(spw) {
         return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
+        	if (typeof spw !== "undefined") {
+	            // trigger a change event, otherwise the filters are not changed
+	            $("#select-spw").select2("val", [spw]).trigger("change");
+        	}
         };
     };
 
     // return a function that sets the Antenna text field to the given spw
     var createAntennaSetter = function(ant) {
         return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-ant").select2("val", [ant]).trigger("change");
+        	if (typeof ant !== "undefined") {
+	            // trigger a change event, otherwise the filters are not changed
+	            $("#select-ant").select2("val", [ant]).trigger("change");
+        	}
         };
     };
 
     // return a function that sets the Polarization text field to the given spw
     var createPolarizationSetter = function(pol) {
         return function() {
-            // trigger a change event, otherwise the filters are not changed
-            $("#select-pol").select2("val", [pol]).trigger("change");
+        	if (typeof pol !== "undefined") {
+	            // trigger a change event, otherwise the filters are not changed
+	            $("#select-pol").select2("val", [pol]).trigger("change");
+        	}
         };
     };
 
@@ -40,9 +46,15 @@ $(document).ready(function() {
     var createMixedSetter = function(spw, ant, pol) {
         return function() {
             // trigger a change event, otherwise the filters are not changed
-            $("#select-spw").select2("val", [spw]).trigger("change");
-            $("#select-ant").select2("val", [ant]).trigger("change");
-            $("#select-pol").select2("val", [pol]).trigger("change");
+        	if (typeof spw !== "undefined") {
+	            $("#select-spw").select2("val", [spw]).trigger("change");
+        	}
+        	if (typeof ant !== "undefined") {
+	            $("#select-ant").select2("val", [ant]).trigger("change");
+        	}
+        	if (typeof pol !== "undefined") {
+	            $("#select-pol").select2("val", [pol]).trigger("change");
+        	}
         };
     };    
 
@@ -104,35 +116,32 @@ for st in pcontext.observing_run:
 % for ms in summary.keys():
     <h4>Overview plots for ${ms}</h4>
     
-    <ul class="thumbnails">
-        % for _type in plot_types:
-            % if os.path.exists(summary[ms][_type].thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(summary[ms][_type].abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(summary[ms][_type].thumbnail, pcontext.report_dir)}"
-                             title="${plot_titles[_type]}"
-                             data-thumbnail="${os.path.relpath(summary[ms][_type].thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.relpath(os.path.join(dirname, subplot[ms][_type]), pcontext.report_dir)}"
-                               class="replace">
-                               ${plot_titles[_type]}
-                            </a>
-                        </h4>
-
-                        <p>${plot_desc[_type]}</p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
+    % for _type in plot_types:
+        % if os.path.exists(summary[ms][_type].thumbnail):
+	        <div class="col-md-3">
+	            <div class="thumbnail">
+	                <a href="${os.path.relpath(summary[ms][_type].abspath, pcontext.report_dir)}"
+	                   class="fancybox"
+	                   rel="thumbs">
+	                    <img src="${os.path.relpath(summary[ms][_type].thumbnail, pcontext.report_dir)}"
+	                         title="${plot_titles[_type]}"
+	                         data-thumbnail="${os.path.relpath(summary[ms][_type].thumbnail, pcontext.report_dir)}">
+	                </a>
+	
+	                <div class="caption">
+	                    <h4>
+	                        <a href="${os.path.join(dirname, subplot[ms][_type])}"
+	                           class="replace">
+	                           ${plot_titles[_type]}
+	                        </a>
+	                    </h4>
+	
+	                    <p>${plot_desc[_type]}</p>
+	                </div>
+	            </div>
+	        </div>
+        % endif
+    % endfor
 %endfor
 
 <h4>Summary of Reduction Group</h4>

@@ -21,27 +21,25 @@ except Exception, e:
     raise e
 %>
 
-<div class="row-fluid">
-	<h2>Scaling Summary</h2>
-	<table class="table table-bordered table-striped">
-		<caption>Scaling per scantables</caption>	   
-		<thead>
-			<tr>
-				<th>Input</th>
-				<th>Factor</th>
-				<th>Output</th>
-			</tr>
-		</thead>
-		<tbody>
-% for row in table_data:
-			<tr>
-				%for elem in row:
-					<td>${elem}</td>
-				% endfor
-			</tr>
-% endfor
-		</tbody>
-	</table>
-</div>
+<h2>Scaling Summary</h2>
+<table class="table table-bordered table-striped">
+	<caption>Scaling per scantables</caption>	   
+	<thead>
+		<tr>
+			<th>Input</th>
+			<th>Factor</th>
+			<th>Output</th>
+		</tr>
+	</thead>
+	<tbody>
+	% for row in table_data:
+		<tr>
+			%for elem in row:
+				<td>${elem}</td>
+			% endfor
+		</tr>
+	% endfor
+	</tbody>
+</table>
 
 

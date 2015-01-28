@@ -86,11 +86,7 @@ $(document).ready(function() {
 });
 </script>
 
-
 <%block name="title">Phased-up fluxscale</%block>
-
-
-
 
 <h2>Results</h2>
 
@@ -100,19 +96,19 @@ $(document).ready(function() {
 
 <table class="table table-bordered table-striped" summary="Flux Scaling Antennas">
 	<caption>Antennas for Flux Calibration</caption>
-        <thead>
+	<thead>
 	    <tr>
 	        <th scope="col">Measurement Set</th>
 	        <th scope="col">Antennas</th>
 	    </tr>
 	</thead>
 	<tbody>
-%for single_result in result:
-      <tr>
-          <td>${os.path.basename(single_result.vis)}</td>
-          <td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
-      </tr>
-%endfor
+% for single_result in result:
+		<tr>
+			<td>${os.path.basename(single_result.vis)}</td>
+			<td>${single_result.resantenna.replace(',', ', ').replace('&', '')}</td>
+		</tr>
+% endfor
 	</tbody>
 </table>
 
@@ -153,16 +149,15 @@ $(document).ready(function() {
     Antenna selection used for flux transfer to the secondary calibrators.
 
 	% for ms in ampuv_allant_plots:
-	    <h4> ${ms} </h4>
+	    <h4>${ms}</h4>
 		% for intent in ampuv_allant_plots[ms]:
-		    <ul class="thumbnails">
 		        % for i, plot in enumerate(ampuv_allant_plots[ms][intent]):
 		        	<!--  Select on antenna -->
 		            <%
 		              antplot = ampuv_ant_plots[ms][intent][i]
 		            %>
 		            % if os.path.exists(plot.thumbnail):
-		            <li class="span3">
+		            <div class="col-md-3">
 		                <div class="thumbnail">
 		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
 		                       class="fancybox"
@@ -172,31 +167,24 @@ $(document).ready(function() {
 		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 		                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
 		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                        </img>
 		                    </a>
-		
 		                    <div class="caption">
-                                            <h4>Baseband ${plot.parameters['baseband']}</h4>
-					    <p>Amp vs. uvdist for 
-					    <%
-						antlist = plot.parameters.get('ant','').split(',')
-						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
-					    %>
-					    ${'all antennas.' if plot.parameters.get('ant','') == '' else 'antennas: '+antdisp}
-					    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
-					    </p>
+								<h4>Baseband ${plot.parameters['baseband']}</h4>
+							    <p>Amp vs. uvdist for 
+							    <%
+								antlist = plot.parameters.get('ant','').split(',')
+								antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+							    %>
+							    ${'all antennas.' if plot.parameters.get('ant','') == '' else 'antennas: '+antdisp}
+							    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
+							    </p>
+							</div>
+						</div>
 					</div>
-		                </div>
-
 		            % endif
 
-		            
-
 		            % if os.path.exists(antplot.thumbnail):
-
-		            
-		            
-
+		            <div class="col-md-3">
 		                <div class="thumbnail">
 		                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
 		                       class="fancybox"
@@ -206,34 +194,22 @@ $(document).ready(function() {
 		                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
 		                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
 		                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
-		                        </img>
 		                    </a>
-		
 		                    <div class="caption">
-                                            <h4>Baseband ${antplot.parameters['baseband']}</h4>
-					    <p>Selection for 
-					    <%
-						antlist = antplot.parameters.get('ant','').split(',')
-						antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
-					    %>
-					    ${' all antennas.' if antplot.parameters.get('ant','') == '' else ' antennas: '+antdisp}
-					    </p>
-					</div>
+								<h4>Baseband ${antplot.parameters['baseband']}</h4>
+							    <p>Selection for 
+							    <%
+								antlist = antplot.parameters.get('ant','').split(',')
+								antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+							    %>
+							    ${' all antennas.' if antplot.parameters.get('ant','') == '' else ' antennas: '+antdisp}
+							    </p>
+							</div>
 		                </div>
-		            </li>
+		            </div>
 		            % endif
 		            
-
-		            
 		        % endfor
-		    </ul>
 		% endfor
 	%endfor
 %endif
-
-
-
-
-
-
-
