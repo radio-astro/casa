@@ -55,7 +55,7 @@ private:
   // initialize member variables
   void initialize();
   // format selection parameters for single dish processing
-  void parse_selection(Record &selection);
+  void format_selection(Record &selection);
 
   // retrieve a field by name from Record as casa::String.
   String get_field_as_casa_string(Record const &in_data,

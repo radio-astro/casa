@@ -145,7 +145,7 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
 				       string const &out_ms_name)
 {
   // Sort by single dish default
-  prepare_for_process(in_column_name, out_ms_name, Block<Int>(),true);
+  return prepare_for_process(in_column_name, out_ms_name, Block<Int>(),true);
 }
 
 bool SingleDishMS::prepare_for_process(string const &in_column_name,
@@ -164,9 +164,11 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
     in_column_ = MS::DATA;
   else
     throw(AipsError("Invalid data column name"));
+  // destroy SDMSManager
+  if (sdh_) delete sdh_;
   // Configure record
   Record configure_param(selection_);
-  parse_selection(configure_param);
+  format_selection(configure_param);
   configure_param.define("inputms", msname_);
   configure_param.define("outputms", out_ms_name);
   String in_name(in_column_name);
@@ -181,7 +183,6 @@ bool SingleDishMS::prepare_for_process(string const &in_column_name,
   // - timeaverage, timebin, timespan, maxuvwdistance
 
   // Generate SDMSManager
-  if (sdh_) delete sdh_;
   sdh_ = new SDMSManager();
 
   // Configure SDMSManager
@@ -211,15 +212,44 @@ void SingleDishMS::finalize_process()
   }
 }
 
-void SingleDishMS::parse_selection(Record &selection)
+void SingleDishMS::format_selection(Record &selection)
 {
+  // At this moment sdh_ is not supposed to be generated yet.
+  LogIO os(_ORIGIN);
   int exists = -1;
+  // format spw
+  String const spwSel(get_field_as_casa_string(selection,"spw"));
+  selection.define("spw", spwSel=="" ? "*" : spwSel);
+
   // Select only auto-correlation
-  exists = selection.fieldNumber ("baseline");
-  if (exists >= 0)
-    {
-      //selection.define("antenna", )
+  String autoCorrSel("");
+  os << "Formatting antenna selection to select only auto-correlation"
+     << LogIO::POST;
+  String const antennaSel(get_field_as_casa_string(selection,"baseline"));
+  os << LogIO::DEBUG1 << "Input antenna expression = "<< antennaSel
+     << LogIO::POST;
+  if (antennaSel == "") { //Antenna selection is NOT set
+    autoCorrSel = String("*&&&");
+  } else { //User defined antenna selection
+    MeasurementSet MSobj = MeasurementSet(msname_);
+    MeasurementSet* theMS = &MSobj;
+    MSSelection theSelection;
+    theSelection.setAntennaExpr(antennaSel);
+    TableExprNode exprNode = theSelection.toTableExprNode(theMS);
+    Vector<Int> ant1Vec = theSelection.getAntenna1List();
+    os << LogIO::DEBUG1 << ant1Vec.nelements()
+       << " antenna(s) are selected. ID = ";
+    for (uInt i=0; i < ant1Vec.nelements(); ++i){
+      os << ant1Vec[i] << ", ";
+      if (autoCorrSel != "") autoCorrSel += ";";
+      autoCorrSel += String::toString(ant1Vec[i]) + "&&&";
     }
+  os << LogIO::POST;
+  }
+  os << LogIO::DEBUG1 << "Auto-correlation selection string: "
+     << autoCorrSel << LogIO::POST;
+  selection.define("baseline", autoCorrSel);
+
 }
 
 void SingleDishMS::get_data_cube_float(vi::VisBuffer2 const &vb,
