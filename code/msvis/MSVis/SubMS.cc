@@ -2447,10 +2447,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  // prepare correction for radial velocity if requested and possible
 	  if(doRadVelCorr && fldCols.needInterTime(theFieldId)){
 	    MRadialVelocity mRV = fldCols.radVelMeas(theFieldId, mainTimesV(mainTabRow));
-	    Quantity mrv = mRV.get("m/s");
-	    radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
-	    if(fabs(mrv.getValue())>1E-6){
-	      radVelSignificant = True;
+	    MRadialVelocity::Ref mRVR = mRV.getRef();
+	    if(mRVR.getType() == MRadialVelocity::GEO){
+	      Quantity mrv = mRV.get("m/s");
+	      radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+	      if(fabs(mrv.getValue())>1E-6){
+		radVelSignificant = True;
+	      }
+	    }
+	    else{
+	      os << LogIO::SEVERE << "Cannot perform radial velocity correction with ephemerides of type "  
+		 << MRadialVelocity::showType(mRVR.getType()) << ".\nType needs to be GEO." << LogIO::POST;
+	      return 0;
 	    }
 	  } 
 	
