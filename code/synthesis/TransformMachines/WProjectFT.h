@@ -255,7 +255,7 @@ protected:
   //Bool recordOnGrid(const VisBuffer& vb, Int rownr) const;
 
   /////for openmp sectioning
-  void   findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int& nxsub, Int& nysub); 
+  void   findGridSector(const Int& nxp, const Int& nyp, const Int& ixsub, const Int& iysub, const Int& minx, const Int& miny, const Int& icounter, Int& x0, Int& y0, Int& nxsub, Int& nysub, const Bool linear); 
 
 
   // Image cache

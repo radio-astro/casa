@@ -1151,6 +1151,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
     weight.resize(Npol, Nchan);
     Matrix<Float> wgtcopy(Npol, Nchan);
     
+    Bool isWgtZero=True;
     for (Int k=0; k < nloop; ++k){
       Int bchan=k*nchanInMem;
       Int echan=(k+1)*nchanInMem < Nchan ?  (k+1)*nchanInMem-1 : Nchan-1;
@@ -1201,14 +1202,22 @@ void SDGrid::get(VisBuffer& vb, Int row)
       finalizeToSky();
       // Normalize by dividing out weights, etc.
       getImage(wgtcopy, normalize);
-      if(max(wgtcopy)==0.0)
-	logIO() << LogIO::WARN 
-		<< "No useful data in SDGrid: weights all zero for image slice  " << k	
-		<< LogIO::POST;
+      if(max(wgtcopy)==0.0){
+	if(nloop > 1)
+	  logIO() << LogIO::WARN 
+		  << "No useful data in SDGrid: weights all zero for image slice  " << k	
+		  << LogIO::POST;
+      }
+      else
+	isWgtZero=False;
+        
       weight(Slice(0, Npol), Slice(bchan, echan-bchan+1))=wgtcopy;
       if(nloop >1) delete imCopy;
     }//loop k
-
+    if(isWgtZero)
+      logIO() << LogIO::EXCEPTION 
+	      << "No useful data in SDGrid: weights all zero"	
+	      << LogIO::POST;
   }
   
 
