@@ -17,12 +17,7 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                                                                      description,
                                                                    always_rerender)
         
-    def get_display_context(self, context, results):
-        ctx = super(T2_4MDetailsSingleDishBaselineRenderer, self).get_display_context(context, results)
-        
-        stage_dir = os.path.join(context.report_dir,'stage%d'%(results.stage_number))
-        if not os.path.exists(stage_dir):
-            os.mkdir(stage_dir)
+    def update_mako_context(self, ctx, context, results):
         plots = []
         for r in results:
             inputs = displays.ClusterDisplay.Inputs(context,result=r)
@@ -49,8 +44,6 @@ class T2_4MDetailsSingleDishBaselineRenderer(basetemplates.T2_4MDetailsDefaultRe
                 
         ctx.update({'detail': plot_detail,
                     'cover_only': plot_cover})
-        
-        return ctx
     
     def _group_by_axes(self, plots):
         plot_group = {}
@@ -78,3 +71,6 @@ class SingleDishClusterPlotsRenderer(basetemplates.JsonPlotRenderer):
         super(SingleDishClusterPlotsRenderer, self).__init__(
                 'hsd_cluster_plots.mako', context, result, plots, new_title,
                 outfile)
+        
+    def update_json_dict(self, d, plot):
+        d['type'] = plot.parameters['type']
