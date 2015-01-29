@@ -151,6 +151,7 @@ $(document).ready(function() {
 	% for ms in ampuv_allant_plots:
 	    <h4>${ms}</h4>
 		% for intent in ampuv_allant_plots[ms]:
+			<div class="row">
 		        % for i, plot in enumerate(ampuv_allant_plots[ms][intent]):
 		        	<!--  Select on antenna -->
 		            <%
@@ -207,9 +208,9 @@ $(document).ready(function() {
 							</div>
 		                </div>
 		            </div>
-		            % endif
-		            
+		            % endif		            
 		        % endfor
+			</div>
 		% endfor
 	%endfor
 %endif
