@@ -157,58 +157,56 @@ $(document).ready(function() {
 		            <%
 		              antplot = ampuv_ant_plots[ms][intent][i]
 		            %>
-		            % if os.path.exists(plot.thumbnail):
 		            <div class="col-md-3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
-                              Flux calibrator fields: ${plot.parameters['field']}."
-		                       rel="amp_vs_uv-${ms}">
-		                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
-		                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-		                    </a>
-		                    <div class="caption">
-								<h4>Baseband ${plot.parameters['baseband']}</h4>
-							    <p>Amp vs. uvdist for 
-							    <%
-								antlist = plot.parameters.get('ant','').split(',')
-								antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
-							    %>
-							    ${'all antennas.' if plot.parameters.get('ant','') == '' else 'antennas: '+antdisp}
-							    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
-							    </p>
+			            % if os.path.exists(plot.thumbnail):
+			                <div class="thumbnail">
+			                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+			                       class="fancybox"
+			                       title="Baseband ${plot.parameters['baseband']}.  ${'All antennas.' if plot.parameters.get('ant','') == '' else 'Antennas: '+str(plot.parameters['ant'])+'.' }
+	                              Flux calibrator fields: ${plot.parameters['field']}."
+			                       rel="amp_vs_uv-${ms}">
+			                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+			                             title="Click to show amplitude vs UV plot for Baseband ${plot.parameters['baseband']}"
+			                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+			                    </a>
+			                    <div class="caption">
+									<h4>Baseband ${plot.parameters['baseband']}</h4>
+								    <p>Amp vs. uvdist for 
+								    <%
+									antlist = plot.parameters.get('ant','').split(',')
+									antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+								    %>
+								    ${'all antennas.' if plot.parameters.get('ant','') == '' else 'antennas: '+antdisp}
+								    Color coded by spw.<br> Flux calibrator fields: ${plot.parameters['field']}.
+								    </p>
+								</div>
 							</div>
-						</div>
-					</div>
-		            % endif
+			            % endif
 
-		            % if os.path.exists(antplot.thumbnail):
-		            <div class="col-md-3">
-		                <div class="thumbnail">
-		                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
-		                       class="fancybox"
-		                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennas.' if antplot.parameters.get('ant','') == '' else 'Antennas: '+str(antplot.parameters['ant'])+'.' }
-                              Flux calibrator fields: ${antplot.parameters['field']}."
-		                       rel="amp_vs_uv-${ms}">
-		                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
-		                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
-		                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
-		                    </a>
-		                    <div class="caption">
-								<h4>Baseband ${antplot.parameters['baseband']}</h4>
-							    <p>Selection for 
-							    <%
-								antlist = antplot.parameters.get('ant','').split(',')
-								antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
-							    %>
-							    ${' all antennas.' if antplot.parameters.get('ant','') == '' else ' antennas: '+antdisp}
-							    </p>
-							</div>
-		                </div>
+			            % if os.path.exists(antplot.thumbnail):
+			                <div class="thumbnail">
+			                    <a href="${os.path.relpath(antplot.abspath, pcontext.report_dir)}"
+			                       class="fancybox"
+			                       title="Baseband ${antplot.parameters['baseband']}.  ${'All antennas.' if antplot.parameters.get('ant','') == '' else 'Antennas: '+str(antplot.parameters['ant'])+'.' }
+	                              Flux calibrator fields: ${antplot.parameters['field']}."
+			                       rel="amp_vs_uv-${ms}">
+			                        <img src="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}"
+			                             title="Click to show amplitude vs UV plot for Baseband ${antplot.parameters['baseband']}"
+			                             data-thumbnail="${os.path.relpath(antplot.thumbnail, pcontext.report_dir)}">
+			                    </a>
+			                    <div class="caption">
+									<h4>Baseband ${antplot.parameters['baseband']}</h4>
+								    <p>Selection for 
+								    <%
+									antlist = antplot.parameters.get('ant','').split(',')
+									antdisp = ' '.join([','.join(antlist[i:i+4])+'<br>' for i in range(0,len(antlist),4)])
+								    %>
+								    ${' all antennas.' if antplot.parameters.get('ant','') == '' else ' antennas: '+antdisp}
+								    </p>
+								</div>
+			                </div>
+		            	% endif		            
 		            </div>
-		            % endif		            
 		        % endfor
 			</div>
 		% endfor
