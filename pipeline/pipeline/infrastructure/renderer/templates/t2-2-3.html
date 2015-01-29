@@ -16,22 +16,20 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		<div class="tab-pane active" id="tabs-offsets">		
 			<h3>Antenna Positions</h3>	
 
-			<ul class="thumbnails">
-				<li class="span3">
-				  	<div class="thumbnail">
-						<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
-						   class="fancybox">
-							<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
-								 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
-  							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
-					    </a>
-					    <div class="caption">
-							<h4>Antenna Position</h4>
-							<p>Plot antenna latitude vs antenna longitude</p>
-						</div>
+			<div class="col-md-3">
+			  	<div class="thumbnail">
+					<a href="${os.path.relpath(plot_ants.abspath, pcontext.report_dir)}"
+					   class="fancybox">
+						<img src="${os.path.relpath(plot_ants.thumbnail, pcontext.report_dir)}"
+							 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+ 							     alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+				    </a>
+				    <div class="caption">
+						<h4>Antenna Position</h4>
+						<p>Plot antenna latitude vs antenna longitude</p>
 					</div>
-				</li>
-			</ul>
+				</div>
+			</div>
 			
 			<h3>Antenna Details</h3>
 			<div>
