@@ -101,6 +101,7 @@ plots_list = [{'title': 'Channel Map',
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
 
+<div class="row">
 <h3>Profile Map</h3>
 % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
@@ -157,8 +158,10 @@ It generates an image combined spectral data from whole antenna as well as image
         % endif
     % endfor
 %endfor
+</div>
 
 % for plots in plots_list:
+<div class="row">
     % if plots.has_key('note'):
         <h3> ${plots['title']} (${plots['note']})</h3>
     % else:
@@ -199,5 +202,6 @@ It generates an image combined spectral data from whole antenna as well as image
             % endif
         % endfor
     % endfor
+</div>
 % endfor
 
