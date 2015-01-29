@@ -30,14 +30,14 @@ def get_plot(plots, field, spw, i, colname):
 %if not len(result[0].targets):
     <p>There are no clean results.
 %else:
-    <table class="table table-bordered table-striped">
+    <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>field</th>
-                    <th>spw</th>
-                    <th>pol</th>
-                    <th>image details</th>
-                    <th>image result</th>
+                    <th>Field</th>
+                    <th>Spw</th>
+                    <th>Pol</th>
+                    <th colspan="2">Image details</th>
+                    <th>Image result</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -53,68 +53,11 @@ def get_plot(plots, field, spw, i, colname):
                         % for pol in pols:
                             %if info_dict.get((field,str(spw),pol,'frequency')) is not None:
                             <tr>
-                                <td rowspan="2">${field}</td>
-                                <td rowspan="2">${spw}</td>
-                                <td rowspan="2">${pol}</td>
-                                <td>
-                                    <table>
-                                    <tbody>
-                                        <tr>
-                                            <th>frequency</th>
-                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>beam</th>
-                                %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
-                                    <%
-                                    beam_major = casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)
-                                    beam_major = beam_major.replace('arcsec', '')
-                                    %>
-                                            <td>${beam_major}x${
-                                            casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                                        </tr>
-                                        <tr>
-                                            <th>beam p.a.</th> 
-                                %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
-                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                                        </tr>
-                                        <tr>
-                                            <th>image maximum </th>
-                                %if info_dict.get((field,str(spw),pol,'max')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'max')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                                        </tr>
-                                        <tr>
-                                            <th>residual rms</th>
-                                %if info_dict.get((field,str(spw),pol,'residual rms')) is not None:
-                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'residual rms')],
-                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                                        </tr>
-                                        <tr>
-                                            <th>channels</th>
-                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
-                                            <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
-                                                info_dict[(field,str(spw),pol,'width')])}</td>
-                                %else:
-                                            <td>-</td>
-                                %endif
-                                        </tr>
-                                    </tbody>
-                                    </table>
-                                </td>
-
+                                <td rowspan="7">${field}</td>
+                                <td rowspan="7">${spw}</td>
+                                <td rowspan="7">${pol}</td>
+								<th>frequency</th>
+								<td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'frequency')], 4)}</td>
                                 <% 
                                 try:
                                     final_iter = sorted(plots_dict[field][str(spw)].keys())[-1]
@@ -128,34 +71,68 @@ def get_plot(plots, field, spw, i, colname):
                                     with renderer.get_file() as fileobj:
                                         fileobj.write(renderer.render())
                                     %>
-                                <td rowspan="2">
-                                   <a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
-                                     <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                                       title="Iteration ${final_iter}: image"
-                                       alt="Iteration ${final_iter}: image">
-                                     </img>
-                                   </a>
+                                <td rowspan="6">
+										<a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
+										  <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+										       title="Iteration ${final_iter}: image"
+										       alt="Iteration ${final_iter}: image">
+										</a>
                                 </td>
                                 %else:
                                 <td>No image available</td>
                                 %endif
-                            </tr>
-
+							</tr>
                             <tr>
-                                <td colspan="6">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>image file</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>${info_dict[(field,str(spw),pol,'image name')]}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
+								<th>beam</th>
+                                %if info_dict.get((field,str(spw),pol,'beam major')) is not None:
+                                    <%
+                                    beam_major = casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam major')],2)
+                                    beam_major = beam_major.replace('arcsec', '')
+                                    %>
+                                <td>${beam_major}x${
+                                            casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam minor')],2)}</td>
+                                %else:
+                                <td>-</td>
+                                %endif
+							</tr>
+                            <tr>
+                                            <th>beam p.a.</th> 
+                                %if info_dict.get((field,str(spw),pol,'beam pa')) is not None:
+                                            <td>${casatools.quanta.tos(info_dict[(field,str(spw),pol,'beam pa')],1)}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                            <th>image maximum </th>
+                                %if info_dict.get((field,str(spw),pol,'max')) is not None:
+                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'max')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                <th>residual rms</th>
+                                %if info_dict.get((field,str(spw),pol,'residual rms')) is not None:
+                                            <td>${'%.2e %s' % (info_dict[(field,str(spw),pol,'residual rms')],
+                                                info_dict[(field,str(spw),pol,'brightness unit')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                                        <th>channels</th>
+                                %if info_dict.get((field,str(spw),pol,'nchan')) is not None:
+                                            <td>${'%d x %s' % (info_dict[(field,str(spw),pol,'nchan')],
+                                                info_dict[(field,str(spw),pol,'width')])}</td>
+                                %else:
+                                            <td>-</td>
+                                %endif
+                            </tr>
+                            <tr>
+                               <th>image file</th>
+                               <td colspan="2">${info_dict[(field,str(spw),pol,'image name')]}</td>
                             </tr>
                             %endif
                         %endfor
