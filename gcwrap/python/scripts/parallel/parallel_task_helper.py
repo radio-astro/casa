@@ -63,6 +63,18 @@ class ParallelTaskHelper:
         # jagonzal (Migration to MPI)
         if self._mpi_cluster:
             self._cluster.start_services()
+            
+    def getNumberOfServers(self):
+        """
+        Return the number of engines (iPython cluster) or the number of servers (MPI cluster)
+        """
+        if (self.__bypass_parallel_processing == 0):
+            if self._mpi_cluster:
+                return len(MPIEnvironment.mpi_server_rank_list())
+            else:
+                return len(self._cluster._cluster.get_engines())
+        else:
+            return None
 
     def generateJobs(self):
         """

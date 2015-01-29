@@ -1030,7 +1030,7 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
     # Check that the number of available scan/spw pairs is not greater than the number of subMSs
     if nsubms > nScanSPwPairs:
         casalog.post("Number of subMSs (%i) is greater than available scan,spw pairs (%i), setting nsubms to %i" 
-                     % (nsubms,nScanSPwPairs,nScanSPwPairs),"SEVERE","getPartitonMap")
+                     % (nsubms,nScanSPwPairs,nScanSPwPairs),"WARN","getPartitonMap")
         nsubms = nScanSPwPairs            
     
     spwArray = np.array(spwList)
