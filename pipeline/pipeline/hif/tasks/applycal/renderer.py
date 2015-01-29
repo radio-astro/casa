@@ -613,7 +613,7 @@ class ApplycalAmpVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('amp_vs_uv-%s.html' % vis)
         
         super(ApplycalAmpVsUVPlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)
 
 
@@ -624,7 +624,7 @@ class ApplycalPhaseVsUVPlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('phase_vs_uv-%s.html' % vis)
         
         super(ApplycalPhaseVsUVPlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)
 
 

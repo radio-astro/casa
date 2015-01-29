@@ -140,5 +140,5 @@ class SingleDishPlotFlagBaselinePlotsRenderer(basetemplates.JsonPlotRenderer):
         new_title = '%s for %s' % (plot_title, name)
 
         super(SingleDishPlotFlagBaselinePlotsRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, result, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, result, 
                 plots, new_title, outfile)

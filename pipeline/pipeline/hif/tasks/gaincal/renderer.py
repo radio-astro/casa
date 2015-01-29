@@ -177,7 +177,7 @@ class GaincalPhaseVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('phase_vs_time-%s.html' % vis)
         
         super(GaincalPhaseVsTimePlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)
 
 
@@ -292,7 +292,7 @@ class GaincalAmpVsTimePlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('amp_vs_time-%s.html' % vis)
         
         super(GaincalAmpVsTimePlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)
 
 
@@ -303,5 +303,5 @@ class GaincalAmpVsTimeDiagnosticPlotRenderer(basetemplates.JsonPlotRenderer):
         outfile = filenamer.sanitize('diagnostic_amp_vs_time-%s.html' % vis)
         
         super(GaincalAmpVsTimeDiagnosticPlotRenderer, self).__init__(
-                'generic_x_vs_y_spw_ant_detail_plots.mako', context, 
+                'generic_x_vs_y_spw_ant_plots.mako', context, 
                 result, plots, title, outfile)
