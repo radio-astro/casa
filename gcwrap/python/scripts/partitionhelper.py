@@ -1009,20 +1009,29 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
                 if not nVisPerField.has_key(fieldId):
                     nVisPerField[fieldId] = nvis
                 else:
-                    nVisPerField[fieldId] = nVisPerField[fieldId] + nvis                      
-          
+                    nVisPerField[fieldId] = nVisPerField[fieldId] + nvis         
+                    
             
     # Sort the scan/spw pairs depending on the number of visibilities
     spwList = list()
     scanList = list()
     fieldList = list()
     nVisList = list()
+    nScanSPwPairs = 0
     for scan in scanSpwMap:
         for spw in scanSpwMap[scan]:
             spwList.append(spw)
             scanList.append(scan)
             fieldList.append(scanSpwMap[scan][spw]['fieldId'])
             nVisList.append(scanSpwMap[scan][spw]['nVis'])
+            nScanSPwPairs += 1
+            
+                    
+    # Check that the number of available scan/spw pairs is not greater than the number of subMSs
+    if nsubms > nScanSPwPairs:
+        casalog.post("Number of subMSs (%i) is greater than available scan,spw pairs (%i), setting nsubms to %i" 
+                     % (nsubms,nScanSPwPairs,nScanSPwPairs),"SEVERE","getPartitonMap")
+        nsubms = nScanSPwPairs            
     
     spwArray = np.array(spwList)
     scanArray = np.array(scanList)
