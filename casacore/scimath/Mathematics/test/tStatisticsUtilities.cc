@@ -218,6 +218,7 @@ int main() {
     	center = 3;
     	viter = vbegin;
     	witer = wbegin;
+    	count = 0;
     	while (viter != vend) {
     		StatisticsUtilities<Double>::waccumulateSym(
     			npts, sumweights, nvariance, sumsq, datamin,
@@ -225,6 +226,7 @@ int main() {
     		);
     		++viter;
     		++witer;
+    		++count;
     	}
     	AlwaysAssert(npts == 10, AipsError);
     	AlwaysAssert(sumweights == 18, AipsError);

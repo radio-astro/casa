@@ -26,6 +26,7 @@
 #include <scimath/Mathematics/StatisticsData.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/BasicMath/Math.h>
 
 namespace casa {
 
@@ -60,4 +61,25 @@ namespace casa {
 			);
 		}
 	}
+
+
+std::map<Double, uInt64> StatisticsData::indicesFromQuantiles(
+	uInt64 npts, const std::set<Double>& quantiles
+) {
+	std::map<Double, uInt64> quantileToIndexMap;
+	std::set<Double>::const_iterator qiter = quantiles.begin();
+	std::set<Double>::const_iterator qend = quantiles.end();
+	while (qiter != qend) {
+		Double idxWRT1 = *qiter * npts;
+		Double myfloor = floor(idxWRT1);
+		if (near(idxWRT1, myfloor)) {
+			// prevent rounding due to finite machine precision
+			idxWRT1 = myfloor;
+		}
+		quantileToIndexMap[*qiter] = ((uInt64)ceil(idxWRT1) - 1);
+		++qiter;
+	}
+	return quantileToIndexMap;
+}
+
 }
