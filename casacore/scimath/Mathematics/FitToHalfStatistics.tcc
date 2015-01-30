@@ -487,7 +487,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 
 // use #define to ensure code is compiled inline
 #define _weightedStatsCodeFH \
-	if (_isInRange(*datum)) { \
+	if (this->_isInRange(*datum)) { \
 		StatisticsUtilities<AccumType>::waccumulateSym( \
 			_getStatsData().npts, _getStatsData().sumweights, _getStatsData().nvariance, \
 			_getStatsData().sumsq, mymin, mymax, minpos, maxpos, *datum, \
