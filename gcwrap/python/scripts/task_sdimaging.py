@@ -196,6 +196,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         imhelper.sortvislist(self.spw, self.mode, self.width)
         self.sorted_idx = imhelper.sortedvisindx
         selection_ids = self.get_selection_idx_for_ms(self.sorted_idx[0])
+#         selection_ids = self.get_selection_idx_for_ms(0)
+        self.__update_subtable_name(self.infiles[self.sorted_idx[0]])
         # field
         fieldid = selection_ids['field'][0] if type(selection_ids['field']) != int else selection_ids['field']
         sourceid=-1
@@ -386,6 +388,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['start'] = startval
         self.imager_param['step'] = widthval
         self.imager_param['nchan'] = imnchan #self.nchan
+
         
 
     def execute(self):
@@ -697,3 +700,17 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             x[idx] = (x[idx] - pi2) if pos[idx] in rot_pos else x[idx]
 
         return (x.min(), x.max())
+
+    def __update_subtable_name(self, msname):
+        self.open_table(msname)
+        keys = self.table.getkeywords()
+        self.close_table()
+        self.field_table = sdutil.get_subtable_name(keys['FIELD'])
+        self.spw_table = sdutil.get_subtable_name(keys['SPECTRAL_WINDOW'])
+        self.source_table = sdutil.get_subtable_name(keys['SOURCE'])
+        self.antenna_table = sdutil.get_subtable_name(keys['ANTENNA'])
+        self.polarization_table = sdutil.get_subtable_name(keys['POLARIZATION'])
+        self.observation_table = sdutil.get_subtable_name(keys['OBSERVATION'])
+        self.pointing_table = sdutil.get_subtable_name(keys['POINTING'])
+        self.data_desc_table = sdutil.get_subtable_name(keys['DATA_DESCRIPTION'])
+        self.pointing_table = sdutil.get_subtable_name(keys['POINTING'])        
