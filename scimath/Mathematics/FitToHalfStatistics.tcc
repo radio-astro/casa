@@ -31,6 +31,9 @@
 
 namespace casa {
 
+template <class AccumType, class InputIterator, class MaskIterator>
+const AccumType FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::TWO = AccumType(2);
+
 // min > max indicates that these quantities have not be calculated
 template <class AccumType, class InputIterator, class MaskIterator>
 FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::FitToHalfStatistics(
@@ -153,10 +156,10 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::getMinMax(
 		_realMin = new AccumType(mymin);
 		_realMax = new AccumType(mymax);
 		if (_useLower) {
-			mymax = 2*_centerValue - mymin;
+			mymax = TWO*_centerValue - mymin;
 		}
 		else {
-			mymin = 2*_centerValue - mymax;
+			mymin = TWO*_centerValue - mymax;
 		}
 		_getStatsData().min = new AccumType(mymin);
 		_getStatsData().max = new AccumType(mymax);
@@ -199,7 +202,9 @@ std::map<Double, AccumType> FitToHalfStatistics<AccumType, InputIterator, MaskIt
 				AccumType mymin, mymax;
 				getMinMax(mymin, mymax);
 			}
-			actual[*qiter] = _useLower ? *_realMax : 2*_centerValue - *_realMin;
+			actual[*qiter] = _useLower
+				? *_realMax
+				: TWO*_centerValue - *_realMin;
 			continue;
 		}
 		Bool isVirtualQ = (_useLower && *qiter > 0.5)
@@ -220,7 +225,9 @@ std::map<Double, AccumType> FitToHalfStatistics<AccumType, InputIterator, MaskIt
 					AccumType mymin, mymax;
 					getMinMax(mymin, mymax);
 				}
-				actual[*qiter] = _useLower ? 2*_centerValue - *_realMax : 2*_centerValue - *_realMin;
+				actual[*qiter] = _useLower
+					? TWO*_centerValue - *_realMax
+					: TWO*_centerValue - *_realMin;
 				continue;
 			}
 			else {
@@ -269,7 +276,7 @@ std::map<Double, AccumType> FitToHalfStatistics<AccumType, InputIterator, MaskIt
 			) {
 				// quantile in virtual part of the data set, reflect corresponding
 				// real value to get actual value
-				actualValue = 2*_centerValue - actualValue;
+				actualValue = TWO*_centerValue - actualValue;
 			}
 			actual[*qiter] = actualValue;
 		}
@@ -326,11 +333,6 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_setRange() {
 	if (_rangeIsSet) {
 		return;
 	}
-	/*
-	if (this->_rangeHasBeenSet() || this->_rangeIsBeingSet()) {
-		return;
-	}
-	*/
 	//this->_setRangeIsBeingSet(True);
 	ClassicalStatistics<AccumType, InputIterator, MaskIterator> cs(*this);
 	if (_centerType == FitToHalfStatisticsData::CMEAN || _centerType == FitToHalfStatisticsData::CMEDIAN) {
@@ -342,14 +344,11 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_setRange() {
 	_getStatsData().median = new AccumType(_centerValue);
 	AccumType mymin, mymax;
 	cs.getMinMax(mymin, mymax);
-	//this->_setRangeIsBeingSet(False);
 	CountedPtr<std::pair<AccumType, AccumType> > range = _useLower
 		? new std::pair<AccumType, AccumType>(mymin, _centerValue)
 		: new std::pair<AccumType, AccumType>(_centerValue, mymax);
 	ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::_setRange(range);
 	_rangeIsSet = True;
-	//this->_clearStats();
-	//this->_setRangeHasBeenSet(True);
 }
 
 // use a define to ensure code is compiled inline
@@ -470,7 +469,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 			dataProvider->updateMaxPos(_getStatsData().maxpos);
 		}
         _getStatsData().max = new AccumType(mymax);
-        _getStatsData().min = new AccumType(2*_centerValue - mymax);
+        _getStatsData().min = new AccumType(TWO*_centerValue - mymax);
 	}
 	else if (minpos >= 0 && _useLower) {
 		_getStatsData().minpos.first = currentDataset;
@@ -481,7 +480,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 			dataProvider->updateMinPos(_getStatsData().minpos);
 		}
         _getStatsData().min = new AccumType(mymin);
-        _getStatsData().max = new AccumType(2*_centerValue - mymin);
+        _getStatsData().max = new AccumType(TWO*_centerValue - mymin);
 	}
 }
 

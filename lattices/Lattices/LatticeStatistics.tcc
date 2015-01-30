@@ -68,6 +68,7 @@
 #include <casa/OS/Timer.h>
 
 #include <scimath/Mathematics/ClassicalStatistics.h>
+#include <scimath/Mathematics/FitToHalfStatistics.h>
 #include <scimath/Mathematics/HingesFencesStatistics.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -785,7 +786,10 @@ void LatticeStatistics<T>::setAlgorithm(
 ) {
 	if (_algorithm != algorithm) {
 		_algorithm = algorithm;
-		_algConf = Record();
+		_algConf.hf = -1;
+		_algConf.ct = FitToHalfStatisticsData::CMEAN;
+		_algConf.ud = FitToHalfStatisticsData::LE_CENTER;
+		_algConf.cv = 0;
 		needStorageLattice_p = True;
 	}
 }
@@ -796,8 +800,33 @@ void LatticeStatistics<T>::configureHingesFences(Double f) {
 		_algorithm != StatisticsData::HINGESFENCES,
 		"Logic Error: _algorithm is not set to HingesFences"
 	);
-	if (! _algConf.isDefined("hf") || ! near(_algConf.asDouble("hf"), f)) {
-		_algConf.define("hf", f);
+	if (! near(f, _algConf.hf)) {
+		_algConf.hf = f;
+		needStorageLattice_p = True;
+	}
+}
+
+template <class T>
+void LatticeStatistics<T>::configureFitToHalf(
+	FitToHalfStatisticsData::CENTER centerType,
+	FitToHalfStatisticsData::USE_DATA useData,
+	AccumType centerValue
+) {
+	ThrowIf(
+		_algorithm != StatisticsData::FITTOHALF,
+		"Logic Error: _algorithm is not set to FITTOHALF"
+	);
+	if (
+		centerType != _algConf.ct
+		|| useData != _algConf.ud
+		|| (
+			centerType == FitToHalfStatisticsData::CVALUE
+			&& ! near(centerValue, _algConf.cv)
+		)
+	) {
+		_algConf.ct = centerType;
+		_algConf.ud = useData;
+		_algConf.cv = centerValue;
 		needStorageLattice_p = True;
 	}
 }
@@ -842,8 +871,11 @@ Bool LatticeStatistics<T>::generateStorageLattice()
                                                  tileShape), useMemory);
 // Set up min/max location variables
 
-    minPos_p.resize(pInLattice_p->shape().nelements());
-    maxPos_p.resize(pInLattice_p->shape().nelements());
+    //minPos_p.resize(pInLattice_p->shape().nelements());
+    //maxPos_p.resize(pInLattice_p->shape().nelements());
+    maxPos_p.resize(0);
+    minPos_p.resize(0);
+
 
     CountedPtr<LattStatsProgress> pProgressMeter;
     if (showProgress_p) {
@@ -903,9 +935,11 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		dataProvider = new LatticeStatsDataProvider<T>(subLat);
     	}
 
+    	/*
     	if (! pProgressMeter.null()) {
     		dataProvider->setProgressMeter(pProgressMeter);
     	}
+    	*/
     	// FIXME having Bool variables that are true when a fundamental property is negated
     	// is incredibly confusing and certainly not best practice. Rename and adjust
     	// the meaning of noInclude_p and noExclude_p
@@ -924,9 +958,13 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		*curSA = new ClassicalStatistics<AccumType, const T*, const Bool*>();
     		break;
     	case StatisticsData::HINGESFENCES: {
-    		*curSA = _algConf.isDefined("hf")
-    			? new HingesFencesStatistics<AccumType, const T*, const Bool*>(_algConf.asDouble("hf"))
-    			: new HingesFencesStatistics<AccumType, const T*, const Bool*>();
+    		*curSA = new HingesFencesStatistics<AccumType, const T*, const Bool*>(_algConf.hf);
+    		break;
+    	}
+    	case StatisticsData::FITTOHALF: {
+    		*curSA = new FitToHalfStatistics<AccumType, const T*, const Bool*>(
+    			_algConf.ct, _algConf.ud, _algConf.cv
+    		);
     		break;
     	}
     	default:
@@ -937,7 +975,6 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	if (! pProgressMeter.null()) {
     		dataProvider->setProgressMeter(CountedPtr<LattStatsProgress>(NULL));
     	}
-    	// Record stats = (*curSA)->getStatistics();
     	StatsData<AccumType> stats = (*curSA)->getStatistics();
     	pStoreLattice_p->putAt(stats.mean, posMean);
     	pStoreLattice_p->putAt(stats.npts, posNpts);
@@ -969,10 +1006,14 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     			if (stepper.atStart()) {
     				IPosition myMaxPos, myMinPos;
     				dataProvider->minMaxPos(myMinPos, myMaxPos);
-    				minPos_p = subLat.positionInParent(myMinPos);
-    				maxPos_p = subLat.positionInParent(myMaxPos);
-    				overallMax = currentMax;
+    				if (myMinPos.size() > 0) {
+    					minPos_p = subLat.positionInParent(myMinPos);
+    				}
+    				if (myMaxPos.size() > 0) {
+    					maxPos_p = subLat.positionInParent(myMaxPos);
+    				}
     				overallMin = currentMin;
+    				overallMax = currentMax;
     			}
     			else if (
     				currentMax > overallMax || currentMin < overallMin
@@ -980,11 +1021,15 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     				IPosition myMaxPos, myMinPos;
     				dataProvider->minMaxPos(myMinPos, myMaxPos);
     				if (currentMin < overallMin) {
-    					minPos_p = subLat.positionInParent(myMinPos);
+    					if (myMinPos.size() > 0) {
+    						minPos_p = subLat.positionInParent(myMinPos);
+    					}
     					overallMin = currentMin;
     				}
     				if (currentMax > overallMax) {
-    					maxPos_p = subLat.positionInParent(myMaxPos);
+    					if (myMaxPos.size() > 0) {
+    						maxPos_p = subLat.positionInParent(myMaxPos);
+    					}
     					overallMax = currentMax;
     				}
     			}

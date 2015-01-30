@@ -95,25 +95,30 @@ Bool LatticeStatsDataProvider<T>::hasMask() const {
 
 template <class T>
 void LatticeStatsDataProvider<T>::reset() {
+	LatticeStatsDataProviderBase<T>::reset();
 	_iter.reset();
 }
 
 template <class T>
 void LatticeStatsDataProvider<T>::updateMaxPos(
-	const std::pair<uInt, Int64>& maxpos
+	const std::pair<Int64, Int64>& maxpos
 ) {
-	this->_updateMaxPos(
-		_iter.position() + toIPositionInArray(maxpos.second, _currentSlice.shape())
-	);
+	if (maxpos.first >=0 && maxpos.second >= 0) {
+		this->_updateMaxPos(
+			_iter.position() + toIPositionInArray(maxpos.second, _currentSlice.shape())
+		);
+	}
 }
 
 template <class T>
 void LatticeStatsDataProvider<T>::updateMinPos(
-	const std::pair<uInt, Int64>& minpos
+	const std::pair<Int64, Int64>& minpos
 ) {
-	this->_updateMinPos(
-		_iter.position() + toIPositionInArray(minpos.second, _currentSlice.shape())
-	);
+	if (minpos.first >=0 && minpos.second >= 0) {
+		this->_updateMinPos(
+			_iter.position() + toIPositionInArray(minpos.second, _currentSlice.shape())
+		);
+	}
 }
 
 template <class T>
