@@ -234,18 +234,18 @@ C norm will be the value we would get for the peak
 C at the phase center. We will want to normalize 
 C the final image by this term.
                         norm=0.0
-                        msupporty=-rsupport
-                        psupporty=rsupport
-                        psupportx=rsupport
-                        msupportx=-rsupport
-                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
-     $                       msupportx=  -(loc(1, ichan, irow)-x0)
-                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
-     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
-                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
-     $                       msupporty=  -(loc(2, ichan, irow)-y0)
-                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
-     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
+C                        msupporty=-rsupport
+C                        psupporty=rsupport
+C                        psupportx=rsupport
+C                        msupportx=-rsupport
+C                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
+C     $                       msupportx=  -(loc(1, ichan, irow)-x0)
+C                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
+C     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
+C                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
+C     $                       msupporty=  -(loc(2, ichan, irow)-y0)
+C                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
+C     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
                         do iy=msupporty,psupporty
                            posy=loc(2, ichan, irow)+iy
                            iloc(2)=1+abs(iy*sampling+off(2, ichan,irow))
@@ -367,18 +367,18 @@ C norm will be the value we would get for the peak
 C at the phase center. We will want to normalize 
 C the final image by this term.
                         norm=0.0
-                        msupporty=-rsupport
-                        psupporty=rsupport
-                        psupportx=rsupport
-                        msupportx=-rsupport
-                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
-     $                       msupportx=  -(loc(1, ichan, irow)-x0)
-                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
-     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
-                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
-     $                       msupporty=  -(loc(2, ichan, irow)-y0)
-                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
-     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
+C                        msupporty=-rsupport
+C                        psupporty=rsupport
+C                        psupportx=rsupport
+C                        msupportx=-rsupport
+C                        if((loc(1, ichan, irow)-rsupport) .lt. x0) 
+C     $                       msupportx=  -(loc(1, ichan, irow)-x0)
+C                        if((loc(1, ichan, irow)+rsupport).ge.(x0+nxsub)) 
+C     $                       psupportx=  x0+nxsub-loc(1, ichan, irow)-1   
+C                        if((loc(2, ichan, irow)-rsupport) .lt. y0) 
+C     $                       msupporty=  -(loc(2, ichan, irow)-y0)
+C                        if((loc(2, ichan, irow)+rsupport).ge.(y0+nysub)) 
+C     $                       psupporty=  y0+nysub-loc(2, ichan, irow)-1 
                         do iy=msupporty,psupporty
                            posy=loc(2, ichan, irow)+iy
                            iloc(2)=1+abs(iy*sampling+off(2, ichan,irow))
@@ -644,11 +644,11 @@ C      pos(3)=(scale(3)*uvw(3)*freq/c)+offset(3)+1.0;
      $     support
       integer, intent(out) :: msuppx, msuppy, psuppx, psuppy
       integer :: loc1sub, loc1plus, loc2sub, loc2plus
-      msuppx=merge(-support, nx0-loc(1), loc(1)-support >= nx0)
+      msuppx=merge(-support, nx0-loc(1), loc(1)-support  >= nx0)
       msuppy=merge(-support, ny0-loc(2), loc(2)-support >= ny0)
-      msuppx=merge(support, nx0+nxsub-loc(1)-1 , (loc(1)+support) 
+      psuppx=merge(support, nx0+nxsub-loc(1)-1 , (loc(1)+support) 
      $ < (nx0+nxsub))
-      msuppy=merge(support, ny0+nysub-loc(2)-1 , (loc(2)+support) 
+      psuppy=merge(support, ny0+nysub-loc(2)-1 , (loc(2)+support) 
      $ < (ny0+nysub))
       loc1sub=loc(1)-support
       loc1plus=loc(1)+support
