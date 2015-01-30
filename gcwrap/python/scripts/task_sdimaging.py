@@ -451,17 +451,18 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         ###weight_val = my_ia.getchunk()
         ###valid_pixels = numpy.where(weight_val > 0.0)
         ####Never do the above in a task...it can swap out easily
-        #stat=my_ia.statistics(mask="'"+weightfile+"' > 0.0", robust=True)
-        #valid_pixels=stat['npts']
-        #if len(valid_pixels) == 0:
-        # Avoid throwing exception when all weights are zero
-        stat = my_ia.statistics(robust=True)
-        if all(stat['max'] == 0.0) and all(stat['min'] == 0.0):
+        try:
+            stat=my_ia.statistics(mask="'"+weightfile+"' > 0.0", robust=True)
+            valid_pixels=stat['npts']
+        except RuntimeError, e:
+            if e.message.find('No valid data found.') >= 0:
+                valid_pixels = [0]
+            else:
+                raise e
+        if len(valid_pixels) == 0 or valid_pixels[0] == 0:
             my_ia.close()
             casalog.post("All pixels weight zero. This indicates no data in MS is in image area. Mask will not be set. Please check your image parameters.","WARN")
             return
-        stat=my_ia.statistics(mask="'"+weightfile+"' > 0.0", robust=True)
-        valid_pixels=stat['npts']
         median_weight = stat['median'][0]
         casalog.post("Median of weight in the map is %f" % median_weight, \
                      "INFO")
