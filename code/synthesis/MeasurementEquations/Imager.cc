@@ -5585,7 +5585,7 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
         stokesindex[3]=0.0;
         siModel.setStokesIndex(stokesindex);
         // still use iflux if q,u flux=0 but polindex and polangle is set
-        for (uInt ichn = 0; ichn < nchn; ichn++) { 
+        for (uInt ichn = 0; ichn < uInt(nchn); ichn++) { 
           iflux[ichn] = fluxUsed[0] * siModel.sample(cvt(mfreqs[selspw][ichn]));
         }
       }
@@ -5622,7 +5622,7 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       //     - returns qflux and uflux
         gotQUFlux = sjy_calcquflux(inpipars, inpapars, iflux, rotMeas, mfreqs[selspw], reffreq, qflux, uflux);
       }
-      else if (fluxUsed[1] != 0.0 || fluxUsed[2] != 0.0 | fluxUsed[3] != 0.0) {
+      else if (fluxUsed[1] != 0.0 || fluxUsed[2] != 0.0 || fluxUsed[3] != 0.0) {
         gotQUFlux=true;
         useFluxAsIs=true;
       }
@@ -5738,11 +5738,14 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     else 
       freqWidth = min(freqWidth,minChanWidth); 
   }
+  // ADDED for debug
+  //Int rawspwid = rawspwids[0];
   //Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
   //Int nchan=freqArray.shape()[0]   ;
   //Int nchan = Int(fabs(freqMax - freqMin)/freqWidth) + 1;
   Int nchan = Int(fabs(freqMax - freqMin)/freqWidth);
 
+  // UNCOMMENTED for debug
   //Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
   //Filling it with the LSRK values
   Vector<Double> freqArray(nchan);
@@ -5751,13 +5754,12 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   }
   //Vector<Double> freqInc = spwcols.chanWidth()(rawspwid);
   Double medianFreq = median(freqArray);
-  
   freqsOfScale.resize();
   freqscale.resize();
 
   // 2 bw channel extra
+  // UNCOMMENTED for debug
   //freqWidth = fabs(freqMax - freqMin) + 2 * max(freqInc);
-
   Matrix<Double> fluxUsedPerChan; // 4 rows nchan col ...will resize when needed
 
   // Set fluxUsedPerChan to the flux densities for each chan.
@@ -5807,7 +5809,6 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
       fluxUsedPerChan.column(k) = fluxUsed;
     }
   }
-
   PagedImage<Float> modimage(model);
   modimage.table().unmarkForDelete();
   IPosition imshape = modimage.shape();
@@ -5825,8 +5826,8 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   spcsys.setWorldAxisUnits(Vector<String>(1,
 					  //mfreqs[selspw][0].getUnit().getName()));
 					  mfreqs[0][0].getUnit().getName()));
-  spcsys.setIncrement(Vector<Double>(1, fabs(freqMax-freqMin)));
-  //cerr<<"fabs(freqMax-freqMin)="<<fabs(freqMax-freqMin)<<endl;
+  //make image freq. width wide enough for FTMachine to work correctly 
+  spcsys.setIncrement(Vector<Double>(1, 2*fabs(freqMax-freqMin)));
   // make a cube model if the model is a cube already
   if(modimage.shape()(freqAxis) >1){
     // model image is a cube...just regrid it then
