@@ -11,6 +11,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import DDMMSSs, HHMMSSss
 from .utils import sd_polmap as polmap
+from .utils import PlotObjectHandler
 from .common import DPIDetail, SDImageDisplay, ShowPlot
 
 LOG = infrastructure.get_logger(__name__)
@@ -68,7 +69,7 @@ class SparseMapAxesManager(object):
         for y in xrange(self.nv):
             a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 1 - y) * (self.nh + 1) + 1)
             a1.set_axis_off()
-            pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/        2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+            pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
         a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + 1)
         a1.set_axis_off()
         pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
@@ -149,7 +150,7 @@ class SDSparseMapDisplay(SDImageDisplay):
         
         # loop over pol
         for pol in xrange(self.npol):
-            plotted_objects = []
+            plot_helper = PlotObjectHandler()
             
             masked_data_p = masked_data.take([pol], axis=self.id_stokes).squeeze()
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
@@ -201,17 +202,17 @@ class SDSparseMapDisplay(SDImageDisplay):
             LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
 
             pl.gcf().sca(axes_integsp)
-            plotted_objects.extend(pl.plot(self.frequency[chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4))
+            plot_helper.plot(self.frequency[chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4)
             (_xmin,_xmax,_ymin,_ymax) = pl.axis()
             pl.axis((_xmin,_xmax,spmin,spmax))
 
             for x in xrange(NH):
                 for y in xrange(NV):
-                    pl.gcf().sca(axes_spmap[y+x*NV])
+                    pl.gcf().sca(axes_spmap[y+(NH-x-1)*NV])
                     if Plot[x][y].min() > NoDataThreshold:
-                        plotted_objects.extend(pl.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2))
+                        plot_helper.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2)
                     else:
-                        plotted_objects.append(pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1)))
+                        plot_helper.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1))
                     pl.axis([xmin, xmax, ymin, ymax])
 
             if ShowPlot: pl.draw()
@@ -220,8 +221,7 @@ class SDSparseMapDisplay(SDImageDisplay):
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
             pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
-            for obj in plotted_objects:
-                obj.remove()
+            plot_helper.clear()
             
             parameters = {}
             parameters['intent'] = 'TARGET'

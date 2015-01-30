@@ -4,6 +4,8 @@ import numpy
 import time
 import datetime
 
+import pylab as pl
+
 from matplotlib.dates import date2num, DateFormatter, MinuteLocator
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 
@@ -180,3 +182,22 @@ def utc_locator(start_time=None, end_time=None):
         tick_interval = int(dt/10) + 1
         #print tick_interval
         return MinuteLocator(byminute=range(0,60,tick_interval))
+
+class PlotObjectHandler(object):
+    def __init__(self):
+        self.storage = []
+    
+    def plot(self, *args, **kwargs):
+        object_list = pl.plot(*args, **kwargs)
+        self.storage.extend(object_list)
+        return object_list
+    
+    def text(self, *args, **kwargs):
+        object_list = pl.text(*args, **kwargs)
+        self.storage.append(object_list)
+        return object_list
+    
+    def clear(self):
+        for obj in self.storage:
+            obj.remove()
+        self.storage = []
