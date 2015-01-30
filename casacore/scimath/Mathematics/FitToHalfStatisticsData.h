@@ -35,7 +35,7 @@ namespace casa {
 class FitToHalfStatisticsData {
 public:
 
-	static const Int64 VIRTUAL_LOCATION;
+	// static const Int64 VIRTUAL_LOCATION;
 
 	 // choice of center point based on the corresponding statistics from the
 	// entire distribution of data, or simply an arbitrary value
@@ -52,7 +52,7 @@ public:
 	};
 };
 
-const Int64 FitToHalfStatisticsData::VIRTUAL_LOCATION = -1;
+// const Int64 FitToHalfStatisticsData::VIRTUAL_LOCATION = -1;
 
 }
 
