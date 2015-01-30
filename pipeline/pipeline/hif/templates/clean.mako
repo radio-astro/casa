@@ -75,7 +75,8 @@ def get_plot(plots, field, spw, i, colname):
 										<a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">
 										  <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
 										       title="Iteration ${final_iter}: image"
-										       alt="Iteration ${final_iter}: image">
+										       alt="Iteration ${final_iter}: image"
+										       class="img-responsive">
 										</a>
                                 </td>
                                 %else:

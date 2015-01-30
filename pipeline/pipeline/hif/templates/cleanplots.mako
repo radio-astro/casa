@@ -47,60 +47,88 @@ $(document).ready(function() {
         <h2>Clean results for ${field} SpW ${spw} <button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h2>
 </div>
 
-<!-- column headings -->
 <div class="row">
-    <!-- iteration column heading -->
-    <div class="col-md-2">
-        <h4 class="text-center">Iteration</h4>
-    </div>
-    <!-- headings for columns containing plots -->
-    <div class="col-md-10">
-    % for colname in colorder:
-        <div class="col-md-4">
-            <h4 class="text-center">${columns[colname]}</h4>
-        </div>
-    % endfor
-    </div>
-</div><!-- /div row-fluid -->
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Iteration</th>
+		    % for colname in colorder:
+	        	<th>${columns[colname]}</th>
+		    % endfor
+		</tr>
+	</thead>
+	<tbody>
 
-<!-- reverse iterations so final images are shown without scrolling -->
-% for i in sorted(plots_dict[field][spw].keys())[::-1]:
-<div class="row">
-    <!-- iteration row heading -->
-    <div class="col-md-2">
-        <h4 class="text-center">${i}</h4>
-    </div>
-    <!-- plots for this iteration, in column order -->
-    <div class="col-md-10">
-        % for colname in colorder:
-        <div class="col-md-4">
-            <% plot = get_plot(plots_dict, field, spw, i, colname) %>
-            <!-- use bootstrap markup for thumbnails -->
-                <!-- span 12 because the parent div has shrunk this
-                     container already -->					  
-                <div class="col-md-12">
-                    % if plot is not None:
-                    <div class="thumbnail">
-                        <a class="fancybox"
-                           href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           title="Iteration ${i}: ${columns[colname]}"
-                           data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                           rel="${colname}">
-                           <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                           		title="Iteration ${i}: ${columns[colname]}"
-                           		alt="Iteration ${i}: ${columns[colname]}">
-                        </a>
-                    </div>
-                    % endif
-                </div>
-        </div>					
-        % endfor <!-- /colname loop-->
-    </div>
-</div><!-- /div row-fluid -->			
-% endfor <!-- /iteration loop -->
+		% for i in sorted(plots_dict[field][spw].keys())[::-1]:
+		<tr>
+		    <!-- iteration row heading -->
+		    <td class="vertical-align"><p class="text-center">${i}</p></td>
+		    <!-- plots for this iteration, in column order -->
+	        % for colname in colorder:
+	        <td>
+	            <% plot = get_plot(plots_dict, field, spw, i, colname) %>
+	            <!-- use bootstrap markup for thumbnails -->
+	            % if plot is not None:
+	            <div class="thumbnail">
+	                <a class="fancybox"
+	                   href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                   title="Iteration ${i}: ${columns[colname]}"
+	                   % if colname in ['image', 'residual']:
+	                   rel="iteration"                   
+	                   % endif	
+	                   data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                   <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                   		title="Iteration ${i}: ${columns[colname]}"
+	                   		alt="Iteration ${i}: ${columns[colname]}"
+	                   		class="img-responsive">
+	                </a>
+	            </div>
+	            % endif
+	        </td>
+	        % endfor <!-- /colname loop-->
+	    </tr>
+		% endfor <!-- /iteration loop -->
 
+		<tr>
+			<td></td>
+		    % for colname in ['flux', 'psf', 'model']:
+		    	<td>
+		            <!-- flux and PSF plots are associated with iteration 0 -->
+		            % if colname == 'model':
+		                <% 
+		                lastiter = sorted(plots_dict[field][spw].keys())[-1]
+		                plot = get_plot(plots_dict, field, spw, lastiter, colname)
+		                %>
+		            % else:
+		                <% plot = get_plot(plots_dict, field, spw, 0, colname) %>
+		            % endif
+		            % if plot is not None:
+		                <div class="thumbnail">
+		                    <a class="fancybox"
+		                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+		                       title="${columns[colname]}"
+		                       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
+								<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+									 title="${columns[colname]}"
+								     alt="${columns[colname]}"]
+								     class="img-responsive">
+							</a>
+							<div class="caption">
+								<p class="text-center">${columns[colname]}</p>
+		               		</div>
+		         		</div>
+		            % endif
+		        </td>
+		    % endfor <!-- /colname loop -->			
+		</tr>
+
+	</tbody>
+</table>
+</div>
+
+<%doc>
 <div class="row">
-    <div class="col-md-10 col-md-offset-2">
+    <div class="col-md-11 col-md-offset-1">
     % for colname in ['flux', 'psf', 'model']:
         <div class="col-md-4">
             <!-- flux and PSF plots are associated with iteration 0 -->
@@ -112,24 +140,23 @@ $(document).ready(function() {
             % else:
                 <% plot = get_plot(plots_dict, field, spw, 0, colname) %>
             % endif
-                <div class="col-md-12">
-                % if plot is not None:
-                    <div class="thumbnail">
-                        <a class="fancybox"
-                           href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                           title="${columns[colname]}"
-                           data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
-							<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-	                             title="${columns[colname]}"
-    		                     alt="${columns[colname]}">
-                        </a>
-						<div class="caption">
-							<p class="text-center">${columns[colname]}</p>
-                     	</div>
+            % if plot is not None:
+                <div class="thumbnail">
+                    <a class="fancybox"
+                       href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+                       title="${columns[colname]}"
+                       data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">									   
+						<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+							 title="${columns[colname]}"
+						     alt="${columns[colname]}">
+					</a>
+					<div class="caption">
+						<p class="text-center">${columns[colname]}</p>
                		</div>
-                % endif
-                </div>
+         		</div>
+            % endif
         </div><!-- /div span4 -->
     % endfor <!-- /colname loop -->
 	</div>
 </div>
+</%doc>
