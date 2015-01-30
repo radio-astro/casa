@@ -1215,7 +1215,7 @@ void SDGrid::get(VisBuffer& vb, Int row)
       if(nloop >1) delete imCopy;
     }//loop k
     if(isWgtZero)
-      logIO() << LogIO::EXCEPTION 
+      logIO() << LogIO::SEVERE 
 	      << "No useful data in SDGrid: weights all zero"	
 	      << LogIO::POST;
   }
