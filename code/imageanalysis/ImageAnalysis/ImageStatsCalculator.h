@@ -70,6 +70,13 @@ public:
 
     Record calculate();
 
+    // configure fit to half algorithm
+    void configureFitToHalf(
+    	FitToHalfStatisticsData::CENTER centerType,
+    	FitToHalfStatisticsData::USE_DATA useData,
+    	Double centerValue
+    );
+
     // configure hinges-fences algorithm
     void configureHingesFences(Double f);
 
@@ -85,15 +92,15 @@ public:
 
     // List stats to logger? If you want no logging you should set this to False in addition to
     // calling setVerbosity()
-    inline void setList(const Bool l) {_list = l;}
+    inline void setList(Bool l) {_list = l;}
 
-    inline void setForce(const Bool f) {_force = f;}
+    void setDisk(Bool d); /* {_disk = d;} */
 
-    inline void setDisk(const Bool d) {_disk = d;}
+    void forceNewStorage() { _statistics.reset(); }
 
-    inline void setRobust(const Bool r) {_robust = r;}
+    void setRobust(Bool r);
 
-    inline void setVerbose(const Bool v) {_verbose = v;}
+    void setVerbose(Bool v);
 
     // set statistics algorithm to use
     void setAlgorithm(StatisticsData::ALGORITHM algorithm);
@@ -126,13 +133,13 @@ protected:
 private:
     std::auto_ptr<ImageStatistics<Float> > _statistics;
     std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
-    Bool _oldStatsStorageForce;
+    //Bool _oldStatsStorageForce;
     Vector<Int> _axes;
     Vector<Float> _includepix, _excludepix;
-    Bool _list, _force, _disk, _robust, _verbose;
+    Bool _list, /*_force,*/ _disk, _robust, _verbose;
 
     StatisticsData::ALGORITHM _algorithm;
-    Record _algConf;
+    LatticeStatistics<Float>::AlgConf _algConf;
 
     static const String _class;
 
