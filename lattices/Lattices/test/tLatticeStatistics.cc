@@ -40,7 +40,6 @@
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 #include <lattices/Lattices/LCSlicer.h>
-//#include <casa/System/PGPlotter.h>
 #include <scimath/Mathematics/ClassicalStatistics.h>
 
 #include <casa/iostream.h>
@@ -205,6 +204,8 @@ int main()
 			stats.getStatistic(v, LatticeStatsBase::MEAN, False);
 			Double m = *v.begin();
 			AlwaysAssert(near(m, casa::mean(data)), AipsError);
+			stats.getStatistic(v, LatticeStatsBase::MEDIAN, False);
+			AlwaysAssert(near(*v.begin(), m), AipsError);
 			stats.getStatistic(v, LatticeStatsBase::NPTS, False);
 			Int npts = (Int)*v.begin();
 			AlwaysAssert(npts == 592, AipsError);
@@ -221,6 +222,10 @@ int main()
 			stats.getMinMaxPos(minPos, maxPos);
 			AlwaysAssert(minPos.size() == 1 && minPos[0] == 999, AipsError);
 			AlwaysAssert(maxPos.size() == 0, AipsError);
+			stats.getStatistic(v, LatticeStatsBase::Q1, False);
+			AlwaysAssert(near(*v.begin(), -497025.0), AipsError);
+			stats.getStatistic(v, LatticeStatsBase::Q3, False);
+			AlwaysAssert(near(*v.begin(), 161375.0), AipsError);
 
 			stats.configureFitToHalf(
 				FitToHalfStatisticsData::CMEAN,
@@ -229,6 +234,8 @@ int main()
 			stats.getStatistic(v, LatticeStatsBase::MEAN, False);
 			m = *v.begin();
 			AlwaysAssert(near(m, casa::mean(data)), AipsError);
+			stats.getStatistic(v, LatticeStatsBase::MEDIAN, False);
+			AlwaysAssert(near(*v.begin(), m), AipsError);
 			stats.getStatistic(v, LatticeStatsBase::NPTS, False);
 			npts = (Int)*v.begin();
 			AlwaysAssert(npts == 1408, AipsError);
@@ -376,12 +383,12 @@ int main()
 			AlwaysAssert(maxPos.size() == 0, AipsError);
 
 		}
-
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		cerr << "aipserror: error " << x.getMesg() << endl;
 		return 1;
 	}
-  return 0;
+	return 0;
 }
  
 void doitFloat (LogIO& os) 

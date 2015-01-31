@@ -520,7 +520,6 @@ template <class T> Bool LatticeStatistics<T>::getStatistic(
    if (!goodParameterStatus_p) {
      return False;
    }
-
    if (needStorageLattice_p) generateStorageLattice();
    if (type==LatticeStatsBase::NPTS) {
       return retrieveStorageStatistic(stats, NPTS, dropDeg);
@@ -1055,7 +1054,6 @@ void LatticeStatistics<T>::generateRobust () {
 	for (uInt i=0; i<nCursorAxes; i++) {
 		cursorShape(cursorAxes_p(i)) = latticeShape(cursorAxes_p(i));
 	}
-
 	IPosition axisPath = cursorAxes_p;
 	axisPath.append(displayAxes_p);
 	LatticeStepper stepper(latticeShape, cursorShape, axisPath);
@@ -1065,7 +1063,7 @@ void LatticeStatistics<T>::generateRobust () {
 		quartiles.insert(0.75);
 	}
 	std::map<Double, AccumType> quantileToValue;
-    typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curCS = _sa.begin();
+    typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curSA = _sa.begin();
 	for (stepper.reset(); ! stepper.atEnd(); stepper++) {
 		IPosition pos = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDIAN);
 		IPosition pos2 = locInStorageLattice(stepper.position(), LatticeStatsBase::MEDABSDEVMED);
@@ -1086,18 +1084,18 @@ void LatticeStatistics<T>::generateRobust () {
 		// computing the median and the quartiles simultaneously minimizes
 		// the number of necessary data scans, as opposed to first calling
 		// getMedian() and getQuartiles() separately
-		AccumType median = (*curCS)->getMedianAndQuantiles(quantileToValue, quartiles);
+		AccumType median = (*curSA)->getMedianAndQuantiles(quantileToValue, quartiles);
 		AccumType q1 = quantileToValue[0.25];
 		AccumType q3 = quantileToValue[0.75];
 		AccumType iqr = q3 - q1;
-		AccumType medabsdevmed = (*curCS)->getMedianAbsDevMed();
+		AccumType medabsdevmed = (*curSA)->getMedianAbsDevMed();
 		// Whack results into storage lattice
 		pStoreLattice_p->putAt(median, pos);
 		pStoreLattice_p->putAt(medabsdevmed, pos2);
 		pStoreLattice_p->putAt(iqr, pos3);
 		pStoreLattice_p->putAt(q1, posQ1);
 		pStoreLattice_p->putAt(q3, posQ3);
-		++curCS;
+		++curSA;
 	}
 }
 
@@ -1112,13 +1110,13 @@ void LatticeStatistics<T>::listMinMax(ostringstream& osMin,
    if (!fixedMinMax_p) {
        os_p << LogIO::NORMAL << "Minimum value ";
       os_p.output() << setw(oWidth) << String(osMin);
-      if (type==TpFloat) {
+      if (type==TpFloat && minPos_p.size() > 0) {
          os_p <<  " at " << blcParent_p + minPos_p+1;
       }
       os_p.post();
       os_p << "Maximum value ";
       os_p.output() << setw(oWidth) << String(osMax);
-      if (type==TpFloat) {
+      if (type==TpFloat && maxPos_p.size() > 0) {
          os_p <<  " at " << blcParent_p + maxPos_p+1 << endl;
       }
       os_p << endl;
@@ -1923,8 +1921,6 @@ Bool LatticeStatistics<T>::display()
       os_p << LogIO::NORMAL1 << "There is nothing to plot or list" << LogIO::POST;
      return True;
    }
-
-
 // Set up some plotting things
 
    if (plotter_p.isAttached()) {
@@ -1934,7 +1930,6 @@ Bool LatticeStatistics<T>::display()
        plotter_p.svp(0.1,0.9,0.1,0.9);
    }
 
-
 // Generate storage lattice if required
 
    if (needStorageLattice_p) {
@@ -1943,7 +1938,6 @@ Bool LatticeStatistics<T>::display()
 // If we don't have any display axes just summarise the lattice statistics
    if (displayAxes_p.nelements() == 0) {
      summStats ();
-     
      return True;
    }
 
@@ -1969,7 +1963,6 @@ Bool LatticeStatistics<T>::display()
    IPosition matrixAxes(2);
    matrixAxes(0) = 0; 
    matrixAxes(1) = pStoreLattice_p->ndim()-1;
-
    LatticeStepper stepper(pStoreLattice_p->shape(), cursorShape,
                           matrixAxes, IPosition::makeAxisPath(pStoreLattice_p->ndim()));
    RO_LatticeIterator<AccumType> pixelIterator(*pStoreLattice_p, stepper);
@@ -3094,7 +3087,6 @@ void LatticeStatistics<T>::summStats ()
    AccumType nPts = stats(pos);
    pos(0) = SUM;
    AccumType  sum = stats(pos);
-
    pos(0) = MEDIAN;
    AccumType  median = stats(pos);
 
@@ -3112,7 +3104,6 @@ void LatticeStatistics<T>::summStats ()
 //
    pos(0) = SUMSQ;
    AccumType  sumSq = stats(pos);
-
    pos(0) = MEAN;
    AccumType  mean = stats(pos);
 
@@ -3136,7 +3127,6 @@ void LatticeStatistics<T>::summStats ()
     	   mean, var, rms, sigma, dMin, dMax, q1, q3
        );
    }
-   
 }
    
 template <class T>

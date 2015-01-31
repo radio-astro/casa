@@ -687,14 +687,14 @@ void ImageStatistics<T>::listMinMax(ostringstream& osMin,
 //
       os_p << "Minimum value "; 
       os_p.output() << setw(oWidth) << osMin.str();
-      if (type==TpFloat) {
-         os_p <<  " at " << blcParent_p + minPos_p+1 << " (" << minPosString << ")" << endl;
+      if (type==TpFloat && minPos_p.size() > 0) {
+          os_p <<  " at " << blcParent_p + minPos_p+1 << " (" << minPosString << ")" << endl;
       }
       os_p.post();
 //
       os_p << "Maximum value ";
       os_p.output() << setw(oWidth) << osMax.str();
-      if (type==TpFloat) {
+      if (type==TpFloat && maxPos_p.size() > 0) {
          os_p <<  " at " << blcParent_p + maxPos_p+1 << " (" << maxPosString << ")" << endl;
       }
       os_p << endl;
