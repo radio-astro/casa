@@ -218,16 +218,31 @@ std::map<Double, AccumType> FitToHalfStatistics<AccumType, InputIterator, MaskIt
 				allNPts, actualQ
 			);
 			uInt64 actualIdx = actualQToI[*qiter];
-			uInt64 realIdx = _useLower ? allNPts : allNPts/2;
-			realIdx -= actualIdx + 1;
-			if (fabs((Int)realIdx - (Int)actualIdx) == 1) {
-				if (_realMin.null() || _realMax.null()) {
+			uInt64 realIdx = 0;
+			if (_useLower) {
+				realIdx = allNPts - (actualIdx + 1);
+			}
+			else {
+				realIdx = allNPts/2 - (actualIdx + 1);
+			}
+			if (_useLower && (realIdx == allNPts/2 - 1)) {
+                // the actual index is the reflection of the maximum
+                // value of the real portion of the dataset
+				if (_realMax.null()) {
 					AccumType mymin, mymax;
 					getMinMax(mymin, mymax);
 				}
-				actual[*qiter] = _useLower
-					? TWO*_centerValue - *_realMax
-					: TWO*_centerValue - *_realMin;
+				actual[*qiter] = TWO*_centerValue - *_realMax;
+				continue;
+			}
+			else if (! _useLower && realIdx == 0) {
+                // the actual index is the reflection of the minimum
+                // value of the real portion ofthe dataset
+				if (_realMin.null()) {
+					AccumType mymin, mymax;
+					getMinMax(mymin, mymax);
+				}
+				actual[*qiter] = TWO*_centerValue - *_realMin;
 				continue;
 			}
 			else {
@@ -262,7 +277,7 @@ std::map<Double, AccumType> FitToHalfStatistics<AccumType, InputIterator, MaskIt
 	CountedPtr<AccumType> realMin, realMax;
 	_getRealMinMax(realMin, realMax, knownMin, knownMax);
 	std::map<Double, AccumType> realPart = ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>::getQuantiles(
-		realPortionQuantiles, realNPts, realMax, realMin, binningThreshholdSizeBytes,
+		realPortionQuantiles, realNPts, realMin, realMax, binningThreshholdSizeBytes,
 		persistSortedArray
 	);
 	qiter = quantiles.begin();
@@ -460,27 +475,33 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 ) {
 	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
 		= this->_getDataProvider();
-	if (maxpos >= 0 && ! _useLower) {
-		_getStatsData().maxpos.first = currentDataset;
-		_getStatsData().maxpos.second = maxpos * dataStride;
-		_getStatsData().minpos.first = -1;
-		_getStatsData().minpos.second = -1;
-		if (! dataProvider.null()) {
-			dataProvider->updateMaxPos(_getStatsData().maxpos);
+	if (maxpos >= 0) {
+		_realMax = new AccumType(mymax);
+		if (! _useLower) {
+			_getStatsData().maxpos.first = currentDataset;
+			_getStatsData().maxpos.second = maxpos * dataStride;
+			_getStatsData().minpos.first = -1;
+			_getStatsData().minpos.second = -1;
+			if (! dataProvider.null()) {
+				dataProvider->updateMaxPos(_getStatsData().maxpos);
+			}
+			_getStatsData().max = new AccumType(mymax);
+			_getStatsData().min = new AccumType(TWO*_centerValue - mymax);
 		}
-        _getStatsData().max = new AccumType(mymax);
-        _getStatsData().min = new AccumType(TWO*_centerValue - mymax);
 	}
-	else if (minpos >= 0 && _useLower) {
-		_getStatsData().minpos.first = currentDataset;
-		_getStatsData().minpos.second = minpos * dataStride;
-		_getStatsData().maxpos.first = -1;
-		_getStatsData().maxpos.second = -1;
-		if (! dataProvider.null()) {
-			dataProvider->updateMinPos(_getStatsData().minpos);
+	if (minpos >= 0) {
+		_realMin = new AccumType(mymin);
+		if (_useLower) {
+			_getStatsData().minpos.first = currentDataset;
+			_getStatsData().minpos.second = minpos * dataStride;
+			_getStatsData().maxpos.first = -1;
+			_getStatsData().maxpos.second = -1;
+			if (! dataProvider.null()) {
+				dataProvider->updateMinPos(_getStatsData().minpos);
+			}
+			_getStatsData().min = new AccumType(mymin);
+			_getStatsData().max = new AccumType(TWO*_centerValue - mymin);
 		}
-        _getStatsData().min = new AccumType(mymin);
-        _getStatsData().max = new AccumType(TWO*_centerValue - mymin);
 	}
 }
 

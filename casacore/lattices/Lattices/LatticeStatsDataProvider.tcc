@@ -103,22 +103,18 @@ template <class T>
 void LatticeStatsDataProvider<T>::updateMaxPos(
 	const std::pair<Int64, Int64>& maxpos
 ) {
-	if (maxpos.first >=0 && maxpos.second >= 0) {
-		this->_updateMaxPos(
-			_iter.position() + toIPositionInArray(maxpos.second, _currentSlice.shape())
-		);
-	}
+	this->_updateMaxPos(
+		_iter.position() + toIPositionInArray(maxpos.second, _currentSlice.shape())
+	);
 }
 
 template <class T>
 void LatticeStatsDataProvider<T>::updateMinPos(
 	const std::pair<Int64, Int64>& minpos
 ) {
-	if (minpos.first >=0 && minpos.second >= 0) {
-		this->_updateMinPos(
-			_iter.position() + toIPositionInArray(minpos.second, _currentSlice.shape())
-		);
-	}
+	this->_updateMinPos(
+		_iter.position() + toIPositionInArray(minpos.second, _currentSlice.shape())
+	);
 }
 
 template <class T>
