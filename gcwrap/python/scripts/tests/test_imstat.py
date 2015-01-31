@@ -459,6 +459,63 @@ class imstat_test(unittest.TestCase):
             self.assertTrue(hf0['npts'][0] == 51)
             self.assertTrue(hf0['mean'][0] == 49)
             self.assertTrue(hf0['q1'][0] == 36)
+    
+    def test_fithalf(self):
+        """Test fit to half algorithm"""
+        data = numpy.array(range(100))
+        data = data*data
+        myia = self._myia
+        imagename = "fhtest.im"
+        myia.fromarray(imagename, data)
+        myia.done()
+        for i in range(2):
+            for center in ["mean", "median", "zero"]:
+                for lside in [True, False]:
+                    if i == 0:
+                        myia.open(imagename)
+                        res = myia.statistics(
+                            robust=True, algorithm="f",
+                            center=center, lside=lside
+                        )
+                        myia.done()
+                    else:
+                        res = imstat(
+                            imagename=imagename, algorithm="f",
+                            center=center, lside=lside
+                        )
+                    if (lside):
+                        if (center == "mean"):
+                            self.assertTrue(res['npts'][0] == 116)
+                            self.assertTrue(res['mean'][0] == 3283.5)
+                            self.assertTrue(res['median'][0] == 3283.5)
+                            self.assertTrue(res['q1'][0] == 784.0)
+                        elif (center == "median"):
+                            self.assertTrue(res['npts'][0] == 100)
+                            self.assertTrue(res['mean'][0] == 2450.5)
+                            self.assertTrue(res['median'][0] == 2450.5)
+                            self.assertTrue(res['q1'][0] == 576.0)
+                        elif (center == "zero"):
+                            self.assertTrue(res['npts'][0] == 2)
+                            self.assertTrue(res['mean'][0] == 0)
+                            self.assertTrue(res['median'][0] == 0)
+                            self.assertTrue(res['q1'][0] == 0)
+                    else:
+                        if (center == "mean"):
+                            self.assertTrue(res['npts'][0] == 84)
+                            self.assertTrue(res['mean'][0] == 3283.5)
+                            self.assertTrue(res['median'][0] == 3283.5)
+                            self.assertTrue(res['q1'][0] == 326.0)
+                        elif (center == "median"):
+                            self.assertTrue(res['npts'][0] == 100)
+                            self.assertTrue(res['mean'][0] == 2450.5)
+                            self.assertTrue(res['median'][0] == 2450.5)
+                            self.assertTrue(res['q1'][0] == -724.0)
+                        elif (center == "zero"):
+                            self.assertTrue(res['npts'][0] == 200)
+                            self.assertTrue(res['mean'][0] == 0)
+                            self.assertTrue(res['median'][0] == 0)
+                            self.assertTrue(res['q1'][0] == -2500.0)
+    
  
 def suite():
     return [imstat_test]

@@ -9244,12 +9244,20 @@ ib.done()
           <value>true</value>
      </param>
      <param type="string"  name="algorithm">
-          <description>Algorithm to use. Supported values are "classic" and "hinges-fences". Minimum match is supported.</description>
+          <description>Algorithm to use. Supported values are "classic", "fit-half", and "hinges-fences". Minimum match is supported.</description>
           <value>classic</value>
      </param>
      <param type="double"  name="fence">
           <description>Fence value for hinges-fences. A negative value means use the entire data set (ie default to the "classic" algorithm). Ignored if filter is not "hinges-fences".</description>
           <value>-1</value>
+     </param>
+     <param type="string"  name="center">
+          <description>Center to use for fit-half. Valid choices are "mean", "median", and "zero". Ignored if filter is not "fit-half".</description>
+          <value>mean</value>
+     </param>
+     <param type="bool"  name="lside">
+          <description>For fit-half, real data are &lt;=; center? If false, real data are &gt;= center. Ignored if filter is not "fit-half".</description>
+          <value>true</value>
      </param>
 </input>
 
@@ -9385,6 +9393,19 @@ Several types of statistical algorithms are supported:
 
 * classic: This is the familiar algorithm, in which all unmasked data, subject to any
   specified pixel ranges are used.
+  
+* fit-half: This algorithm calculates statistics on a dataset created from real and virtual pixel values.
+  The real values are determined by the input parameters center and lside. The parameter center
+  tells the algorithm where the center value of the combined real+virtual dataset should be. Options
+  are the mean or the median of the input image's pixel values, or at zero. The lside parameter tells
+  the algorithm on which side of this center the real pixel values are located. True indicates that
+  the real pixel values to be used are &lt;= center. False indicates the real pixel values to be used
+  are &gt;= center. The virtual part of the dataset is then created by reflecting all the real values
+  through the center value, to create a perfectly symmetric dataset composed of a real and a virtual
+  component. Statistics are then calculated on this resultant dataset. These two parameters are
+  ignored if filter is not "fit-half". Because the maximum value is virtual if lside is True and the
+  minimum value is virtual if lside is False, the value of the maximum position (if lside=True) or
+  minimum position (if lside=False) is not reported in the returned record.
 
 * hinges-fences: This algorithm calculates statistics by including data in a range
   between Q1 - f*D and Q3 + f*D, inclusive, where Q1 is the first quartile of the distribution

@@ -4191,7 +4191,8 @@ record* image::statistics(
 	const vector<double>& excludepix, bool list, bool force,
 	bool disk, bool robust, bool verbose,
 	bool stretch, const string& logfile,
-	bool append, const string& algorithm, double fence
+	bool append, const string& algorithm, double fence,
+	const string& center, bool lside
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4253,18 +4254,43 @@ record* image::statistics(
 		if (myalg.startsWith("c")) {
 			_stats->setAlgorithm(StatisticsData::CLASSICAL);
 		}
+		else if (myalg.startsWith("f")) {
+			_stats->setAlgorithm(StatisticsData::FITTOHALF);
+			String mycenter = center;
+			mycenter.downcase();
+			FitToHalfStatisticsData::CENTER centerType;
+			if (mycenter.startsWith("mea")) {
+				centerType = FitToHalfStatisticsData::CMEAN;
+			}
+			else if (mycenter.startsWith("med")) {
+				centerType = FitToHalfStatisticsData::CMEDIAN;
+			}
+			else if (mycenter.startsWith("z")) {
+				centerType = FitToHalfStatisticsData::CVALUE;
+			}
+			else {
+				ThrowCc("Unsupported center value " + center);
+			}
+			FitToHalfStatisticsData::USE_DATA useData = lside
+				? FitToHalfStatisticsData::LE_CENTER
+				: FitToHalfStatisticsData::GE_CENTER;
+			_stats->configureFitToHalf(centerType, useData, 0.0);
+		}
 		else if (myalg.startsWith("h")) {
 			_stats->setAlgorithm(StatisticsData::HINGESFENCES);
 			_stats->configureHingesFences(fence);
 		}
 		else {
-			ThrowCc("Unsupported filter " + algorithm);
+			ThrowCc("Unsupported algorithm " + algorithm);
 		}
 		_stats->setAxes(tmpaxes);
 		_stats->setIncludePix(tmpinclude);
 		_stats->setExcludePix(tmpexclude);
 		_stats->setList(list);
-		_stats->setForce(force);
+        if (force) {
+            _stats->forceNewStorage();
+        }
+        //_stats->setForce(force);
 		_stats->setDisk(disk);
 		_stats->setRobust(robust);
 		_stats->setVerbose(verbose);

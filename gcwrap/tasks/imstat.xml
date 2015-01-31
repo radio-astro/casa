@@ -69,14 +69,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>append=True</example>
     </param>
     <param type="string"  name="algorithm">
-          <description>Algorithm to use. Supported values are "classic" and "hinges-fences". Minimum match is supported.</description>
+          <description>Algorithm to use. Supported values are "classic", "fit-half", and "hinges-fences". Minimum match is supported.</description>
           <value>classic</value>
      </param>
      <param type="double" name="fence" subparam="true">
           <description>Fence value for hinges-fences. A negative value means use the entire data set (ie default to the "classic" algorithm). Ignored if filter is not "hinges-fences".</description>
           <value>-1</value>
      </param>
-    <constraints>
+     <param type="string"  name="center" subparam="true">
+          <description>Center to use for fit-half. Valid choices are "mean", "median", and "zero". Ignored if filter is not "fit-half".</description>
+          <value>mean</value>
+     </param>
+     <param type="bool"  name="lside" subparam="true">
+          <description>For fit-half, use values &lt;= center for real data if True? If False, use values &gt;= center as real data. Ignored if filter is not "fit-half".</description>
+          <value>True</value>
+     </param>
+     <constraints>
         <when param="mask">
             <notequals type="string" value="">
                 <default param="stretch">
@@ -98,6 +106,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="string" value="hinges-fences">
                 <default param="fence">
                     <value>-1</value>
+                </default>
+            </equals>
+            <equals type="string" value="fit-half">
+                <default param="center">
+                    <value type="string">mean</value>
+                </default>
+                <default param="lside">
+                    <value>True</value>
                 </default>
             </equals>
         </when>
@@ -140,8 +156,13 @@ logfile      Name of file to write fit results.
 append       If logfile exists, append to it (True) or overwrite it (False).
 alogortihm   Algorithm to use to compute statistics. Supported values are "classic"
              and "hinges-fences" (minimum match supported.)
-fence        Fence factor when algorithm = "hinges-fences".
-
+fence        Fence factor when algorithm = "hinges-fences". Negative values are not
+             applicable and in these cases, the classic algorithm is used.
+center       Center to use for "fit-half". Valid choices are "mean" (mean value of the
+             selected pixels), "median" (median value of the selected pixels), and "zero"
+             (0.0 is used as the center value). Ignored if filter is not "fit-half".
+lside        For fit-half, use values &lt;= center for the real data? If false, use
+             values &gt;= center as the real data. Ignored if filter is not "fit-half"
 
       General procedure:
 
@@ -194,7 +215,20 @@ Several types of statistical algorithms are supported:
 
 * classic: This is the familiar algorithm, in which all unmasked data, subject to any
   specified pixel ranges are used.
-
+  
+* fit-half: This algorithm calculates statistics on a dataset created from real and virtual pixel values.
+  The real values are determined by the input parameters center and lside. The parameter center
+  tells the algorithm where the center value of the combined real+virtual dataset should be. Options
+  are the mean or the median of the input image's pixel values, or at zero. The lside parameter tells
+  the algorithm on which side of this center the real pixel values are located. True indicates that
+  the real pixel values to be used are &lt;= center. False indicates the real pixel values to be used
+  are &gt;= center. The virtual part of the dataset is then created by reflecting all the real values
+  through the center value, to create a perfectly symmetric dataset composed of a real and a virtual
+  component. Statistics are then calculated on this resultant dataset. These two parameters are
+  ignored if filter is not "fit-half". Because the maximum value is virtual if lside is True and the
+  minimum value is virtual if lside is False, the value of the maximum position (if lside=True) or
+  minimum position (if lside=False) is not reported in the returned record.
+  
 * hinges-fences: This algorithm calculates statistics by including data in a range
   between Q1 - f*D and Q3 + f*D, inclusive, where Q1 is the first quartile of the distribution
   of unmasked data, subject to any specified pixel ranges, Q3 is the third quartile, D = Q3 - Q1
