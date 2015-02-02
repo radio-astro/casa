@@ -58,32 +58,33 @@ of the bandpass calibrator has not yet been determined.</p>
         <a class="replace"
            href="${os.path.relpath(os.path.join(dirname, bpsolphase_subpages[ms]), pcontext.report_dir)}">BP Phase solution </a>
     </h4>
-    
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="testcalibratedBPcal-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="testBPdcals summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
-
-                    <div class="caption">
-                    	<h4>Initial calibrated bandpass
-                        </h4>
-
-                        <p>${plot.parameters['type']} plot of amp vs. freq
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-
 %endfor
+
+
+
+<%self:plot_group plot_dict="${summary_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            semiFinalBPdcals summary plot
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+        
+        
+        <%def name="mouseover(plot)">Summary window </%def>
+        
+        
+        
+        <%def name="fancybox_caption(plot)">
+          Semi-final calibrated bandpass
+        </%def>
+        
+        
+        <%def name="caption_title(plot)">
+           Semi-final calibrated bandpass
+        </%def>
+</%self:plot_group>

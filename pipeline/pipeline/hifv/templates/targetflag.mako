@@ -47,33 +47,41 @@ $(document).ready(function() {
 
 <p>Run all calibrated data (including target) through rflag.</p>
 
-% for ms in summary_plots:
-    
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="targetflag-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Model calibrator flux densities"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
 
-                    <div class="caption">
-                    	<h4>${plot.parameters['type']}
-                        </h4>
 
-                        <p>Plot of ${plot.y_axis} vs. ${plot.x_axis}
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
 
-%endfor
+
+
+<%self:plot_group plot_dict="${summary_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Targetflag summary plot
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+        
+        
+        <%def name="mouseover(plot)">Summary window </%def>
+        
+        
+        
+        <%def name="fancybox_caption(plot)">
+          Plot of ${plot.y_axis} vs. ${plot.x_axis}
+        </%def>
+        
+        
+        <%def name="caption_title(plot)">
+           ${plot.parameters['type']}
+        </%def>
+</%self:plot_group>
+
+
+
+
+
+
+

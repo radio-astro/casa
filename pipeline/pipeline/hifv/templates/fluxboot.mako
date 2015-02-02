@@ -48,34 +48,37 @@ $(document).ready(function() {
 <p>Make a gain table that includes gain and opacity corrections for final amp cal and for flux density bootstrapping.</p>
 <p>Fit the spectral index of calibrators with a power-law and put the fit in the model column.</p>
 
-% for ms in summary_plots:
+<%self:plot_group plot_dict="${summary_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Fluxboot summary plot
+        </%def>
+
+        <%def name="preamble()">
+
+
+        </%def>
+        
+        
+        <%def name="mouseover(plot)">Summary window </%def>
+        
+        
+        
+        <%def name="fancybox_caption(plot)">
+          Model calibrator flux densities. Plot of amp vs. freq
+        </%def>
+        
+        
+        <%def name="caption_title(plot)">
+           Model calibrator
+        </%def>
+</%self:plot_group>
     
-    <ul class="thumbnails">
-        % for plot in summary_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="bootstrappedFluxDensities-summary-${ms}">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="Model calibrator flux densities"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
 
-                    <div class="caption">
-                    	<h4>Model calibrator
-                        </h4>
 
-                        <p>Model calibrator flux densities.  Plot of amp vs. freq
-                        </p>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
+
+% for ms in summary_plots:
     
 <table class="table table-bordered table-striped table-condensed"
 	   summary="Spectral Indices">

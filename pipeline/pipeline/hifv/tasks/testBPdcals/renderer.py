@@ -66,7 +66,7 @@ class VLASubPlotRenderer(object):
 
 class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,uri='testbpdcals.mako', description='Initial test calibrations', 
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailstestBPdcalsRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     
@@ -141,7 +141,7 @@ class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'bpsolphase_plots.html', 'bpsolphase')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'bpsolphase_plots.mako', 'bpsolphase')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 bpsolphase_subpages[ms] = renderer.filename

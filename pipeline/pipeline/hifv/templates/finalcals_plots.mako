@@ -62,7 +62,7 @@ $(document).ready(function () {
 </script>
 
 <div class="page-header">
-	<h1>Testgains ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>Finalcals ${plots[0].parameters['type'].title()} Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <br>
@@ -79,7 +79,7 @@ $(document).ready(function () {
 				   alt="">
 		</a>
 		<div class="caption">
-			<span class="text-center">Antenna ${plot.parameters['ant']}</span>
+			<p class="text-center">Antenna ${plot.parameters['ant']}</p>
 		</div>
 	</div>
 </div>

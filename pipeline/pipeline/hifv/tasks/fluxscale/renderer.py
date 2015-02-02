@@ -70,7 +70,7 @@ class VLASubPlotRenderer(object):
 
 class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,uri='solint.mako', description='Determine solint and Test gain calibrations', 
-                 always_rerender=False):
+                 always_rerender=True):
         super(T2_4MDetailsSolintRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     
@@ -106,7 +106,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.html', 'amp')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.mako', 'amp')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 testgainsamp_subpages[ms] = renderer.filename
@@ -117,7 +117,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.html', 'phase')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testgains_plots.mako', 'phase')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 testgainsphase_subpages[ms] = renderer.filename
@@ -139,7 +139,7 @@ class T2_4MDetailsSolintRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
 
 class T2_4MDetailsfluxbootRenderer(basetemplates.T2_4MDetailsDefaultRenderer):
     def __init__(self,uri='fluxboot.mako', description='Determine solint and Test gain calibrations', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsfluxbootRenderer, self).__init__(uri=uri,
                 description=description, always_rerender=always_rerender)
     
