@@ -196,8 +196,8 @@ class BandpassflagchansWorker(basetask.StandardTaskTemplate):
               vis=inputs.vis,
               mode='channel',
               intent='PHASE',
-              minsnr=0.0,
-	      maxchannels=0)
+              minsnr=0.0)
+	      #maxchannels=0)
 
             task = bandpass.PhcorBandpass(view_inputs)
             view_result = self._executor.execute(task, merge=False)
