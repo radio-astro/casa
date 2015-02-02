@@ -73,11 +73,6 @@ window in each measurement set.
     <value type="string">inf</value>
   </param>
 
-  <param type="int" name="maxchannels" subparam="true">
-    <description>The smoothing factor in channels</description>
-    <value>240</value>
-  </param>
-
   <param type="string" name="combine">
     <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
     <value>scan</value>
@@ -232,12 +227,6 @@ hm_bandtype -- The type of bandpass. The options are 'channel' and
 solint --  Time and channel solution intervals in CASA syntax.
     default: 'inf,7.8125MHz'
     example: 'inf,10ch', 'inf'
-
-maxchannels --  The bandpass solution smoothing factor in channels. The
-    solution interval is bandwidth / 240. Set to 0 for no smoothing.
-    default: 240
-    example: 0
-
 
 combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
     or any comma-separated combination.

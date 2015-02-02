@@ -7,7 +7,7 @@ import pipeline.h.cli.utils as utils
 
 def hif_bandpass(vis=None, caltable=None, field=None, intent=None, spw=None, 
                  antenna=None, phaseup=None, phaseupsolint=None, 
-                 phaseupbw=None, hm_bandtype=None, solint=None, maxchannels=None, 
+                 phaseupbw=None, hm_bandtype=None, solint=None, 
                  combine=None, refant=None, solnorm=None, minblperant=None, 
                  minsnr=None, degamp=None, degphase=None, pipelinemode=None, 
                  dryrun=None, acceptresults=None):
