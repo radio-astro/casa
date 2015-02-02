@@ -2076,9 +2076,10 @@ VisibilityIteratorImpl2::setTileCache ()
 
                     MeasurementSet elms (refTables[kk]);
 
-                    // Skip existing but empty WEIGHT_SPECTRUM column
+                    // Skip existing but empty WEIGHT_SPECTRUM or SIGMA_SPECTRUM column
 
-                    if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM)){
+                    if (columns [k] == MS::columnName (MS::WEIGHT_SPECTRUM) ||
+                        columns [k] == MS::columnName (MS::SIGMA_SPECTRUM)) {
                         TableColumn tc (elms, columns [k]);
                         if (! tc.hasContent()){
                             continue;
