@@ -285,7 +285,7 @@ def importasdm(
         useversion = 'v3'
         theexecutable = 'asdm2MS'
 
-        execute_string = theexecutable + ' --icm "' + corr_mode \
+        execute_string = theexecutable + ' --ac-xc-per-timestamp "no"  --icm "' + corr_mode \
             + '" --isrt "' + srt + '" --its "' + time_sampling \
             + '" --ocm "' + ocorr_mode + '" --wvr-corrected-data "' \
             + wvr_corrected_data + '" --asis "' + asis \
