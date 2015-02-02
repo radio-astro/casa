@@ -101,7 +101,6 @@ plots_list = [{'title': 'Channel Map',
 <p>This task generates single dish images per source per spectral window. 
 It generates an image combined spectral data from whole antenna as well as images per antenna.</p>
 
-<div class="row">
 <h3>Profile Map</h3>
 % for field in sparsemap_subpage.keys():
     <h4><a class="replace"
@@ -157,13 +156,12 @@ It generates an image combined spectral data from whole antenna as well as image
 	        </div>
         % endif
     % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 %endfor
-</div>
 
 % for plots in plots_list:
-<div class="row">
     % if plots.has_key('note'):
-        <h3> ${plots['title']} (${plots['note']})</h3>
+        <h3>${plots['title']} (${plots['note']})</h3>
     % else:
         <h3>${plots['title']}</h3>
     % endif
@@ -173,35 +171,35 @@ It generates an image combined spectral data from whole antenna as well as image
         </h4>
         % for plot in plots['plot'][field]:
             % if os.path.exists(plot.thumbnail):
-            <div class="col-md-3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="thumbs">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                    </a>
-
-                    <div class="caption">
-                        <h4>
-                            <a href="${os.path.join(dirname, plots['subpage'][field])}"
-                               class="replace"
-                               data-spw="${plot.parameters['spw']}"
-                               data-ant="${plot.parameters['ant']}">
-                               Spectral Window ${plot.parameters['spw']}
-                            </a>
-                        </h4>
-
-                        <p>${plots['title']} for spectral
-                            window ${plot.parameters['spw']}.
-                        </p>
-                    </div>
-                </div>
-            </div>
+	            <div class="col-md-3">
+	                <div class="thumbnail">
+	                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+	                       class="fancybox"
+	                       rel="thumbs">
+	                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+	                             title="${plots['title']} for Spectral Window ${plot.parameters['spw']}"
+	                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
+	                    </a>
+	
+	                    <div class="caption">
+	                        <h4>
+	                            <a href="${os.path.join(dirname, plots['subpage'][field])}"
+	                               class="replace"
+	                               data-spw="${plot.parameters['spw']}"
+	                               data-ant="${plot.parameters['ant']}">
+	                               Spectral Window ${plot.parameters['spw']}
+	                            </a>
+	                        </h4>
+	
+	                        <p>${plots['title']} for spectral
+	                            window ${plot.parameters['spw']}.
+	                        </p>
+	                    </div>
+	                </div>
+	            </div>
             % endif
         % endfor
     % endfor
-</div>
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor
 

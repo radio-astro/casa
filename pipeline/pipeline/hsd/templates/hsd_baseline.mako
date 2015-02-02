@@ -99,6 +99,7 @@ and line free channels are used for baseline fitting. </p>
            	</div>
         % endif
     % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor
 
 <!-- No details -->
@@ -124,6 +125,7 @@ and line free channels are used for baseline fitting. </p>
 			</div>
         % endif
     % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 % endfor
 
 % else:

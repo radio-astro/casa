@@ -80,4 +80,5 @@ $(document).ready(function() {
 	        </div>
         % endif
     % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 %endfor

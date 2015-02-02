@@ -142,6 +142,7 @@ for st in pcontext.observing_run:
 	        </div>
         % endif
     % endfor
+	<div class="clearfix"></div><!--  flush plots, break to next row -->
 %endfor
 
 <h4>Summary of Reduction Group</h4>
