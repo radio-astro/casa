@@ -3874,29 +3874,28 @@ void fillMain(int		rowNum,
     return;
   }
 
-  CorrelationModeMod::CorrelationMode cm = r_p->getTable().getContainer().getConfigDescription().getRowByKey(r_p->getConfigDescriptionId())->getCorrelationMode();
-  unsigned int numDD = r_p->getTable().getContainer().getConfigDescription().getRowByKey(r_p->getConfigDescriptionId())->getDataDescriptionId().size();
-  unsigned int numOfMSRowsPerIntegration = 0;
-  unsigned int numAntenna = r_p->getNumAntenna();
-  unsigned int numBl =  r_p->getNumAntenna() * (r_p->getNumAntenna() - 1) / 2;
-  if (cm != CorrelationModeMod::CROSS_ONLY) numOfMSRowsPerIntegration += numAntenna;
-  if (cm != CorrelationModeMod::AUTO_ONLY) numOfMSRowsPerIntegration += numBl;
-  if (vmsData_p->v_antennaId1.size() % numOfMSRowsPerIntegration != 0) {
-    errstream.str("");
-    errstream << "The total number of rows to be writtren into the MS (" << vmsData_p->v_antennaId1.size()
-	      <<") is not a multiple of the number of MS rows per integration (" << numOfMSRowsPerIntegration << ").";
-    errstream << "This is not normal. Aborting !";
-    error(errstream.str());
-  }
-
-  unsigned int numIntegrations =  vmsData_p->v_antennaId1.size() / numOfMSRowsPerIntegration / numDD;
+ 
   vector <int> msRowReIndex_v(vmsData_p->v_antennaId1.size());
   for (unsigned int i = 0; i < msRowReIndex_v.size(); i++) 
     msRowReIndex_v[i] = i;
 
-
+  CorrelationModeMod::CorrelationMode cm = r_p->getTable().getContainer().getConfigDescription().getRowByKey(r_p->getConfigDescriptionId())->getCorrelationMode();
   if (cm == CorrelationModeMod::CROSS_AND_AUTO and ac_xc_per_timestamp) {
-    cout << "CROSS_AND_AUTO" << endl;
+    unsigned int numDD = r_p->getTable().getContainer().getConfigDescription().getRowByKey(r_p->getConfigDescriptionId())->getDataDescriptionId().size();
+    unsigned int numOfMSRowsPerIntegration = 0;
+    unsigned int numAntenna = r_p->getNumAntenna();
+    unsigned int numBl =  r_p->getNumAntenna() * (r_p->getNumAntenna() - 1) / 2;
+    if (cm != CorrelationModeMod::CROSS_ONLY) numOfMSRowsPerIntegration += numAntenna;
+    if (cm != CorrelationModeMod::AUTO_ONLY) numOfMSRowsPerIntegration += numBl;
+    unsigned int numIntegrations =  vmsData_p->v_antennaId1.size() / numOfMSRowsPerIntegration / numDD;
+    if (vmsData_p->v_antennaId1.size() % numOfMSRowsPerIntegration != 0) {
+      errstream.str("");
+      errstream << "The total number of rows to be writtren into the MS (" << vmsData_p->v_antennaId1.size()
+		<<") is not a multiple of the number of MS rows per integration (" << numOfMSRowsPerIntegration << ").";
+      errstream << "This is not normal. Aborting !";
+      throw ASDM2MSException(errstream.str());
+    }
+
     unsigned int i = 0;
     for (unsigned int iDD = 0; i < numDD; i++) {
       unsigned int ddOffset = iDD * numIntegrations * (numAntenna + numBl);
@@ -3904,14 +3903,14 @@ void fillMain(int		rowNum,
 	// First the auto correlations.
 	for (unsigned int iAnt = 0; iAnt < numAntenna; iAnt++)
 	  msRowReIndex_v[i++] = ddOffset + numAntenna * integration + iAnt;
-      
+	
 	// Then the cross correlations.
 	for (unsigned iBl = 0; iBl < numBl; iBl++)
 	  msRowReIndex_v[i++] = ddOffset + numIntegrations * numAntenna + integration * numBl + iBl;
       }
     }
   }
-
+  
   vector<vector<unsigned int> > filteredShape_vv = vmsData_p->vv_dataShape;
   for (unsigned int ipart = 0; ipart < filteredShape_vv.size(); ipart++) {
     if (filteredShape_vv.at(ipart).at(0) == 3) filteredShape_vv.at(ipart).at(0) = 4;
