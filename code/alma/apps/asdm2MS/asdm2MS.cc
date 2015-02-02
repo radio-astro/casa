@@ -4733,7 +4733,7 @@ int main(int argc, char *argv[]) {
 
   bool doparallel = false;
 
-  bool ac_xc_per_timestamp = true;
+  bool ac_xc_per_timestamp = false; // for the time being the option is 'preserve the old order'
 
   //   Process command line options and parameters.
   po::variables_map vm;
@@ -4776,7 +4776,7 @@ int main(int argc, char *argv[]) {
       //("parallel", "run with multithreading mode.")
       ("lazy", "defers the production of the observational data in the MS Main table (DATA column) - Purely experimental, don't use in production !")
       ("with-pointing-correction", "add (ASDM::Pointing::encoder - ASDM::Pointing::pointingDirection) to the value to be written in MS::Pointing::direction - (related with JIRA tickets CSV-2878 and ICT-1532))")
-      ("ac-xc-per-timestamp", po::value<string>()->default_value("yes"), "if set to yes, then the filler writes in that order autocorrelations and cross correlations rows for one given data description and timestamp. Otherwise auto correlations data are grouped for a sequence of time stamps and then come the cross correlations data for the same sequence of timestamps.")  ;
+      ("ac-xc-per-timestamp", po::value<string>()->default_value("no"), "if set to yes, then the filler writes in that order autocorrelations and cross correlations rows for one given data description and timestamp. Otherwise auto correlations data are grouped for a sequence of time stamps and then come the cross correlations data for the same sequence of timestamps.")  ;
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -5008,7 +5008,8 @@ int main(int argc, char *argv[]) {
     lazy = vm.count("lazy") != 0;
 
     // Do we consider another order than ac_xc_per_timestamp ?
-    ac_xc_per_timestamp = (vm.count("ac-xc-per-timestamp") == 0) || boost::algorithm::to_lower_copy(vm["ac-xc-per-timestamp"].as<string>()) == "yes";
+    ac_xc_per_timestamp = (vm.count("ac-xc-per-timestamp") == 0) ? false :
+      boost::algorithm::to_lower_copy(vm["ac-xc-per-timestamp"].as<string>()) == "yes";
   }
   catch (std::exception& e) {
     errstream.str("");
