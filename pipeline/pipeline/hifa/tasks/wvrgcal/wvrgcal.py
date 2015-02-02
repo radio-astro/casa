@@ -16,7 +16,7 @@ from pipeline.hif.heuristics import caltable as caltable_heuristic
 from pipeline.hifa.heuristics import wvrgcal as wvrgcal_heuristic
 from pipeline.hifa.heuristics import atm as atm_heuristic
 
-from pipeline.hif.tasks import bandpass
+from pipeline.hifa.tasks import bandpass
 from pipeline.hif.tasks import gaincal
 from . import resultobjects 
 from . import wvrg_qa
@@ -526,13 +526,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 'mode'        : 'channel',
                 'intent'      : intent,
                 'spw'         : inputs.qa_spw,
-                'solint'      : 'inf,7.8125MHz',
-                'maxchannels' : 0,
-                'qa_intent'  : '',
-                'run_qa'     : False}
+		'hm_phaseup'  : 'manual',
+		'hm_bandpass' : 'fixed',
+                'solint'      : 'inf,7.8125MHz'}
 
-        inputs = bandpass.PhcorBandpass.Inputs(inputs.context, **args)        
-        task = bandpass.PhcorBandpass(inputs)
+        inputs = bandpass.ALMAPhcorBandpass.Inputs(inputs.context, **args)        
+        task = bandpass.ALMAPhcorBandpass(inputs)
         result = self._executor.execute(task, merge=True)
 
         return result

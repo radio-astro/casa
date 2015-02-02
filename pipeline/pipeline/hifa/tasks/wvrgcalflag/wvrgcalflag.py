@@ -5,7 +5,7 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 
-from pipeline.hif.tasks import bandpass
+from pipeline.hifa.tasks import bandpass
 from ..wvrgcal import wvrgcal
 from . import resultobjects
 from . import wvrgcalflagsetter
@@ -57,10 +57,12 @@ class WvrgcalflagInputs(wvrgcal.WvrgcalInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('flag_intent')
 
+	# This is a somewhat complicated way to get the default
+	# intent.
         if self._flag_intent is None:
             # default to the intent that would be used for bandpass
             # calibration
-            bp_inputs = bandpass.PhcorBandpass.Inputs(
+            bp_inputs = bandpass.ALMAPhcorBandpass.Inputs(
               context=self.context,
               vis=self.vis,
               intent=None)
