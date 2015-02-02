@@ -52,7 +52,7 @@ $(document).ready(function () {
     
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
-    $("ul.thumbnails li div a").click(function (evt) {
+    $("div.thumbnail a").click(function (evt) {
         evt.preventDefault();
         var target = this.href;
         UTILS.launchFancybox(target);

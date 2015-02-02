@@ -97,7 +97,7 @@ class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testdelays_plots.html', 'testdelays')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'testdelays_plots.mako', 'testdelays')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 testdelay_subpages[ms] = renderer.filename
@@ -108,7 +108,7 @@ class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'ampgain_plots.html', 'ampgain')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'ampgain_plots.mako', 'ampgain')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 ampgain_subpages[ms] = renderer.filename
@@ -119,7 +119,7 @@ class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'phasegain_plots.html', 'phasegain')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'phasegain_plots.mako', 'phasegain')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 phasegain_subpages[ms] = renderer.filename
@@ -130,7 +130,7 @@ class T2_4MDetailstestBPdcalsRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
             json_path = plotter.json_filename
             
              # write the html for each MS to disk
-            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'bpsolamp_plots.html', 'bpsolamp')
+            renderer = VLASubPlotRenderer(context, result, plots, json_path, 'bpsolamp_plots.mako', 'bpsolamp')
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
                 bpsolamp_subpages[ms] = renderer.filename

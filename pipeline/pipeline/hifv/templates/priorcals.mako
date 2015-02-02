@@ -1,62 +1,56 @@
 <%!
 rsc_path = ""
-import os
-import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
-
 
 <%block name="title">Prior calibrations</%block>
 
 <p>Gain curves, opacities, antenna position corrections, and requantizer gains
 using the CASA task <b>gencal</b>.</p>
 
-<div class="row-fluid">
 	<h2>Gain Curves</h2>
 	Gain curve table written to:
 	
 	%for single_result in result:
 	    <p><b>${single_result.gc_result[0].inputs['caltable']}</b></p>
         %endfor
-</div>
 
-<div class="row-fluid">
-	<h2>Opacities</h2>
-	Opacities written to:
-	
-	%for single_result in result:
-	    <p><b>${single_result.oc_result[0].inputs['caltable']}</b></p>
-        %endfor
+
+<%self:plot_group plot_dict="${opacity_plots}"
+                                  url_fn="${lambda ms:  'noop'}">
+
+        <%def name="title()">
+            Opacities
+        </%def>
+
+        <%def name="preamble()">
+                Opacities written to:
+                
+                %for single_result in result:
+                        <p><b>${single_result.oc_result[0].inputs['caltable']}</b></p>
+                %endfor
+                
+                <p>Some description of the opacity plots goes here.
+                </p>
+        </%def>
         
-% for ms in opacity_plots:
-    
-    <ul class="thumbnails">
-        % for plot in opacity_plots[ms]:
-            % if os.path.exists(plot.thumbnail):
-            <li class="span3">
-                <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                       class="fancybox"
-                       rel="${ms}.plotweather.png">
-                        <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
-                             title="testBPdcals summary for Spectral Window ${plot.parameters['spw']}"
-                             data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">
-                        </img>
-                    </a>
+        
+        <%def name="mouseover(plot)">Summary window        </%def>
+        
+        
+        
+        <%def name="fancybox_caption(plot)">
+          Opacities
+        </%def>
+        
+        
+        <%def name="caption_title(plot)">
+           Opacities
+        </%def>
+</%self:plot_group>
 
-                    <div class="caption">
-                    	<h4>Opacities
-                        </h4>
-                    </div>
-                </div>
-            </li>
-            % endif
-        % endfor
-    </ul>
-
-%endfor
 
 
 % for ms in center_frequencies:
@@ -69,10 +63,8 @@ using the CASA task <b>gencal</b>.</p>
 	        <th scope="col" rowspan="2">Frequency [GHz]</th>
 		<th scope="col" rowspan="2">Opacity [Nepers]</th>
 	    </tr>
-
 	</thead>
 	<tbody>
-
 	% for i in range(len(center_frequencies[ms])):
 		<tr>
 		        <td>${spw[ms][i]}</td>
@@ -80,16 +72,12 @@ using the CASA task <b>gencal</b>.</p>
 			<td>${opacities[ms][i]}</td>
 		</tr>
 	% endfor
-
 	</tbody>
     </table>
 % endfor
 
         
-</div>
-
-<div class="row-fluid">
-	<h2>Antenna positions</h2>
+<h2>Antenna positions</h2>
 	Antenna position corrections written to:
 	
 	%for single_result in result:
@@ -104,13 +92,9 @@ using the CASA task <b>gencal</b>.</p>
             % endif
         %endfor
         
-</div>
-
-<div class="row-fluid">
 	<h2>Requantizer gains</h2>
 	Requantizer gains written to:
 	
 	%for single_result in result:
 	    <p><b>${single_result.rq_result[0].inputs['caltable']}</b></p>
         %endfor
-</div>

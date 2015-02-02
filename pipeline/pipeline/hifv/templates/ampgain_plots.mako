@@ -52,22 +52,20 @@ $(document).ready(function () {
     
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
-    $("ul.thumbnails li div a").click(function (evt) {
+    $("div.thumbnail a").click(function (evt) {
         evt.preventDefault();
         var target = this.href;
         UTILS.launchFancybox(target);
         return false;
     });
-
 });
 </script>
 
 <div class="page-header">
-	<h1>Bandpass Amp Solution Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
+	<h1>Amp Gain Plots<button class="btn btn-default pull-right" onClick="javascript:location.reload();">Back</button></h1>
 </div>
 
 <br>
-
 
 % for plot in sorted(plots, key=lambda p: p.parameters['ant']):
 <div class="col-md-2 col-sm-3">
@@ -85,6 +83,4 @@ $(document).ready(function () {
 		</div>
 	</div>
 </div>
-	% endfor
-	</ul>
-</div>
+% endfor
