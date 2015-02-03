@@ -122,6 +122,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                       '' % (ms.basename, inputs.refintent))
             return result
 
+        #Added Feb 2015
+        setjy_result = self._do_setjy(reffile=None, field=inputs.reference)
+
         refant = inputs.refant
         if refant == '':
             # get the reference antenna for this measurement set from the 
@@ -234,7 +237,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
                 # and finally, do a setjy, add its setjy_settings
                 # to the main result
-                setjy_result = self._do_setjy(reffile=reffile)
+                setjy_result = self._do_setjy(reffile=reffile, field=inputs.transfer)
 
                 # use the fluxscale measurements to get the uncertainties too.
                 # This makes the (big) assumption that setjy executed exactly
@@ -371,12 +374,12 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         
         return self._executor.execute(task, merge=True)
 
-    def _do_setjy(self, reffile):
+    def _do_setjy(self, reffile=None, field=None):
         inputs = self.inputs
         
         task_args = {'output_dir' : inputs.output_dir,
                      'vis'        : inputs.vis,
-                     'field'      : inputs.transfer,
+                     'field'      : field,
                      'intent'     : inputs.transintent,
                      'reffile'    : reffile}
 
