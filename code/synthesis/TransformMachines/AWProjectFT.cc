@@ -920,9 +920,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Extract the shape of the array to be sliced.
     //
     //    Array<Int> stokesForAllIFs = vb.msColumns().polarization().corrType().getColumn();
-    cerr << "############....temp code!!!!!!!!!! "
-	 << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
-	 <<endl;
+    log_l << "############....temp code!!!!!!!!!! "
+	  << SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0))
+	  << LogIO::DEBUG1;
     Vector<Int> polIDs=SynthesisUtils::mapSpwIDToPolID(vb,selectedSpw_p(0));
     if (polIDs.nelements()==0)
       log_l << "Internal Error: Selected SPW did not map to any pol!" << LogIO::EXCEPTION;

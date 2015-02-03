@@ -311,7 +311,7 @@ namespace casa{
 			  cfCacheTable_l[paPos].wList.push_back(wVal);
 			  cfCacheTable_l[paPos].muellerList.push_back(mVal);
 			  cfCacheTable_l[paPos].cfNameList.push_back(fileNames[i]);
-			  cerr << paPos << " " << fileNames[i] << endl;
+			  //			  cerr << paPos << " " << fileNames[i] << endl;
 			}
 		    }
 		  pm.update(Double(fileNames.nelements()));
@@ -524,7 +524,7 @@ namespace casa{
     Vector<Bool> axes(2); axes(0)=axes(1)=True;//axes(2)=True;
     Vector<Int> shape(2,convSize);
 
-    cerr << "CFC: " << shape << endl;
+    //    cerr << "CFC: " << shape << endl;
 
     Vector<Double>ref(4);
     ref(0)=ref(1)=ref(2)=ref(3)=0;
@@ -825,6 +825,7 @@ namespace casa{
       {
 	return NOTCACHED;
       }
+    log_l << "Loaded \"" << name.str() << "\"" << LogIO::POST;
     avgPBReady_p=True;
     return DISKCACHE;
   }

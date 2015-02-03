@@ -1351,6 +1351,7 @@ namespace casa{
 	    log_l << "Rotating the base CFB from PA=" << cfb->getCFCellPtr(0,0,0)->pa_p.getValue("deg") 
 		  << " to " << actualPA*57.2957795131 
 		  << " " << cfb->getCFCellPtr(0,0,0)->shape_p
+		  << " SPW: " << vb.spectralWindow() << " Field: " << vb.fieldId()
 		  << LogIO::POST;
 
 	    IPosition shp(cfb->shape());

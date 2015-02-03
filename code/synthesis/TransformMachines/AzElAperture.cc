@@ -60,7 +60,9 @@ namespace casa{
 	  // log_l  << actualPA << " " << currentCFPA << LogIO::POST;
 	  // cerr << "dPA = " << actualPA << " " << currentCFPA << " " 
 	  //      << actualPA - currentCFPA << " " << &(*cfc.getStorage()) << endl;
-	  log_l << "Rotating the base CFC from PA=" << cachedCFCPA_p*R2D << " to " << actualPA*R2D << " " << dPA*R2D << " " << inData.shape() << LogIO::POST;
+	  log_l << "Rotating the base CFC from PA=" << cachedCFCPA_p*R2D << " to " << actualPA*R2D << " " << dPA*R2D << " " << inData.shape() << " "
+		<< "SPW: " << vb.spectralWindow() << " Field: " << vb.fieldId()
+		<< LogIO::POST;
 	  SynthesisUtils::rotateComplexArray(log_l, inData, cfc.coordSys_p,
 					     *cfc.getStorage(),
 					     dPA);//,"LINEAR");

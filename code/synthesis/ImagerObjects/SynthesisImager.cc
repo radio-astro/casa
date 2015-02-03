@@ -237,16 +237,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       thisSelection.setStateExpr(selpars.state);
       os << "Selecting on Scan Intent/State : " << selpars.state << " | " ;//LogIO::POST;	
     }
-    if(selpars.taql != ""){
-	thisSelection.setTaQLExpr(selpars.taql);
-	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
-    }
+    // if(selpars.taql != ""){
+    // 	thisSelection.setTaQLExpr(selpars.taql);
+    // 	os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
+    // }
     os << "[Opened " << (readOnly_p?"in readonly mode":(useScratch_p?"with scratch model column":"with virtual model column"))  << "]" << LogIO::POST;
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull()))
       {
 	mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
-	mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+	MeasurementSet thisMSSelected0 = MeasurementSet(thisms(exprNode));
+	MSSelection mss0;
+	if(selpars.taql != "")
+	  {
+	    mss0.setTaQLExpr(selpars.taql);
+	    os << "Selecting via TaQL : " << selpars.taql << " | " ;//LogIO::POST;	
+	  }
+	TableExprNode tenWithTaQL=mss0.toTableExprNode(&thisMSSelected0);
+	MeasurementSet thisMSSelected1 = MeasurementSet(thisMSSelected0(tenWithTaQL));
+	//mss4vi_p[mss4vi_p.nelements()-1]=MeasurementSet(thisms(exprNode));
+	mss4vi_p[mss4vi_p.nelements()-1]=thisMSSelected1;
 	os << "  NRows selected : " << (mss4vi_p[mss4vi_p.nelements()-1]).nrow() << LogIO::POST;
       }
     else{

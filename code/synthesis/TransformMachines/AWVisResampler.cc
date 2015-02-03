@@ -165,14 +165,16 @@ namespace casa{
 	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])));
 
 	//	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,mNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
-	//	cerr << "Indexes+: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << ipol << " " << mRow << " " << convFuncV->shape().asVector() << endl;
+	// if (mNdx[ipol][mRow] != ipol)
+	//   cerr << "Indexes+: " << fndx << " " << wndx << " " << mNdx[ipol][mRow] << " " << ipol << " " << mRow << endl;
       }
     else
       {
 	cfcell=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])));
 
 	//	convFuncV=&(*(cfb.getCFCellPtr(fndx,wndx,conjMNdx[ipol][mRow])->getStorage()));//->getStorage(Dummy);
-	//	cerr << "Indexes-: " << fndx << " " << wndx << " " << conjMNdx[ipol][mRow] << " " << ipol << " " << mRow << " " << convFuncV->shape().asVector() << endl;
+	// if (conjMNdx[ipol][mRow] != ipol)
+	//   cerr << "Indexes-: " << fndx << " " << wndx << " " << conjMNdx[ipol][mRow] << " " << ipol << " " << mRow << endl;
       }
     convFuncV = &(*cfcell->getStorage());
     Complex *tt=convFuncV->getStorage(Dummy);
@@ -596,7 +598,7 @@ namespace casa{
 				      // ipol.
 				      for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 					{
-					  Complex* convFuncV;
+					  Complex* convFuncV=NULL;
 					  timer_p.mark();
 					  // if (vbs.conjBeams_p) convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, conjFNdx, 
 					  // 					       wndx, mNdx, conjMNdx, ipol,  mRow);
@@ -605,7 +607,7 @@ namespace casa{
 
 					  convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, cfFreqNdx,
 								  wndx, mNdx, conjMNdx, ipol,  mRow);
-					  
+
 					  runTimeG6_p += timer_p.real();
 					  // support.assign(scaledSupport);
 					  // sampling.assign(scaledSampling);
@@ -790,7 +792,8 @@ runTimeG7_p += timer_p.real();
 			cacheAxisIncrements(cfShape, cfInc_p);
 			convOrigin = (cfShape)/2;
 			if (finitePointingOffset)
-			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq());
+			  cachePhaseGrad_p(pointingOffset, cfShape, convOrigin, cfRefFreq, vbs.imRefFreq(),
+					   ((const Int)(vbs.vb_p)->spectralWindow()),((const Int)((vbs.vb_p)->fieldId())));
 			
 			//
 			// ALERT: The -1 in the expression for iloc

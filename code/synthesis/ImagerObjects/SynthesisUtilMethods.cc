@@ -163,33 +163,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    //	    rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[rowEndID];
 	    rowBeg=rowBegID; rowEnd = rowEndID;
-	    MVTime mvt0=mainCols.timeQuant()(rowBeg), mvt1=mainCols.timeQuant()(rowEnd);
-	    Time t0(mvt0.getTime()), t1(mvt1.getTime());
-	    Double mjdRef=t1.modifiedJulianDay(),
-	      mjdT0=t1.modifiedJulianDay();
-
-	    //	    while((fabs(mjdT0 - mjdRef) >= Tint) && (rowEndID < nRows))
-	    while((mjdT0 == mjdRef) && (rowEndID > rowBegID))
-	      {
-		rowEndID--;
-		//if ((rowEnd - rowBeg) > dRows) break;
-		//rowEnd = rowNumbers[rowEndID];
-		rowEnd = rowEndID;
-		MVTime mvt=mainCols.timeQuant()(rowEnd);
-		Time tt(mvt.getTime());
-		mjdT0=tt.modifiedJulianDay();
-	      }
-	    //	    rowEndID--;
-	    
-	    //rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[rowEndID];
-	    rowBeg=rowBegID; rowEnd = rowEndID;
-	    MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
-	    Time tB(mvtB.getTime()), tE(mvtE.getTime());
-	    timeSelPerPart[msID][partNo] = "[" + SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE) + "]";
-	    cerr << tB.toString() << "~" << tE.toString() << endl;
-	    cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " " << rowEnd - rowBeg << " " 
-	    	 << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
-	    	 << endl;	    
+	    stringstream taql;
+	    taql << "ROWNUMBER() >= " << rowBeg << " && ROWNUMBER() <= " << rowEnd;
+	    timeSelPerPart[msID][partNo] = taql.str();
 
 	    if (partNo == npart - 1) break;
 	    partNo++;
@@ -199,10 +175,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }
 
 	//rowBeg=rowNumbers[rowBegID]; rowEnd = rowNumbers[nRows-1];
+	stringstream taql;
 	rowBeg=rowBegID; rowEnd = nRows-1;
-	MVTime mvtB=mainCols.timeQuant()(rowBeg), mvtE=mainCols.timeQuant()(rowEnd);
-	Time tB(mvtB.getTime()), tE(mvtE.getTime());
-	timeSelPerPart[msID][partNo] = "[" + SynthesisUtils::mjdToString(tB) + "~" + SynthesisUtils::mjdToString(tE) + "]";
+	taql << "ROWNUMBER() >= " << rowBeg << " && ROWNUMBER() <= " << rowEnd;
+	timeSelPerPart[msID][partNo] = taql.str();
 	cerr << endl << "Rows = " << rowBeg << " " << rowEnd << " "
 	     << "[P][M]: " << msID << ":" << partNo << " " << timeSelPerPart[msID][partNo]
 	     << endl;	    
@@ -225,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    Record thisMS = thisPart.subRecord(RecordFieldId("ms"+String::toString(msID)));
 
-	    thisMS.define("timestr",timeSelPerPart[msID][iPart]);
+	    thisMS.define("taql",timeSelPerPart[msID][iPart]);
 	    thisPart.defineRecord(RecordFieldId("ms"+String::toString(msID)) , thisMS);
 	  }
 	allparts.defineRecord(RecordFieldId(String::toString(iPart)), thisPart);
