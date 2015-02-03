@@ -30,6 +30,15 @@ def tbmanager(vis, *args, **kwargs):
 def cbmanager(vis, *args, **kwargs):
     return toolmanager(vis, 'cb', *args, **kwargs)
 
+@contextlib.contextmanager
+def table_selector(table, taql, *args, **kwargs):
+    with tbmanager(table, *args, **kwargs) as tb:
+        tsel = tb.query(taql)
+        try:
+            yield tsel
+        finally:
+            tsel.close()
+
 def sdtask_decorator(func):
     """
     This is a decorator function for sd tasks. 
