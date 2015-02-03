@@ -219,6 +219,9 @@ public:
                          const Int& fitorder,
                          const Bool& display) {};
 
+  // Use generic data gathering mechanism for solve
+  virtual Bool useGenericGatherForSolve() { return False; };
+
   // Report state:
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
 		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
@@ -233,6 +236,10 @@ public:
   
   // New CalTable handling
   virtual void keepNCT();
+
+  // Self- gather and/or solve prototypes
+  //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
 
 protected:
 
@@ -291,6 +298,10 @@ public:
 
   // Specific specify() that performs position switch sky calibration
   virtual void specify(const Record& specify);
+
+  // Self- gather and/or solve prototypes
+  //  (triggered by useGenericGatherForSolve=F or useGenericSolveOne=F)
+  virtual void selfGatherAndSolve(VisSet& vs, VisEquation& ve);
 
 private:
   String configureSelection();

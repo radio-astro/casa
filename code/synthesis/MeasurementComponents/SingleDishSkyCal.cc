@@ -587,6 +587,13 @@ void SingleDishSkyCal::syncDiffMat()
   debuglog << "SingleDishSkyCal::syncDiffMat()" << debugpost;
 }
   
+void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
+{
+  debuglog << "SingleDishSkyCal::self.GatherAndSolve()" << debugpost;
+
+  throw AipsError("selfGatherAndSolve must be overridden in each subclass");
+}
+
 //
 // SingleDishPositionSwitchCal
 //
@@ -617,8 +624,7 @@ void SingleDishPositionSwitchCal::specify(const Record& specify)
   debuglog << "SingleDishPositionSwitchCal::specify()" << debugpost;
 
   // Pick up OFF spectra using STATE_ID
-  //Vector<uInt> stateIdList = getOffStateIdList(msName());
-  String taql = configureSelection(); //configureTaqlString(msName(), stateIdList);
+  String taql = configureSelection(); 
   debuglog << "taql = \"" << taql << "\"" << debugpost;
   MeasurementSet msSel(tableCommand(taql));
   debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
@@ -638,11 +644,50 @@ void SingleDishPositionSwitchCal::specify(const Record& specify)
   updateWeight(*ct_);
 }
 
+void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
+{
+  debuglog << "SingleDishPositionSwitchCal::self.GatherAndSolve()" << debugpost;
+
+  debuglog << "nspw = " << nSpw() << debugpost;
+  fillNChanParList(MeasurementSet(msName()), nChanParList());
+  debuglog << "nChanParList=" << toString(nChanParList()) << debugpost;
+
+  // Create a new caltable to fill up
+  createMemCalTable();
+
+  // Setup shape of solveAllRPar
+  nBln() = 1;
+  initSolvePar();
+
+  // Pick up OFF spectra using STATE_ID
+  String taql = configureSelection(); 
+  debuglog << "taql = \"" << taql << "\"" << debugpost;
+  MeasurementSet msSel(tableCommand(taql, vs.iter().ms()));
+  debuglog << "msSel.nrow()=" << msSel.nrow() << debugpost;
+  String dataColName = (msSel.tableDesc().isColumn("FLOAT_DATA")) ? "FLOAT_DATA" : "DATA";
+
+  if (msSel.tableDesc().isColumn("FLOAT_DATA")) {
+    traverseMS<FloatDataColumnAccessor>(msSel);
+  }
+  else {
+    traverseMS<DataColumnAccessor>(msSel);
+  }
+
+  assignCTScanField(*ct_, msName());
+
+  // update weight without Tsys
+  // formula is chanWidth [Hz] * interval [sec]
+  updateWeight(*ct_);
+
+  // store caltable
+  storeNCT();
+}
+
 String SingleDishPositionSwitchCal::configureSelection()
 {
   Vector<uInt> stateIdList = getOffStateIdList(msName());
   std::ostringstream oss;
-  oss << "SELECT FROM " << msName() << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
+  oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
       << toString(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return String(oss.str());  
