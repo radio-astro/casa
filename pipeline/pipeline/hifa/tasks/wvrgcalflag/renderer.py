@@ -4,7 +4,6 @@ Created on 10 Sep 2014
 @author: sjw
 '''
 import collections
-import json
 import os
 
 import pipeline.infrastructure.displays.image as image
@@ -180,45 +179,15 @@ class T2_4MDetailsWvrgcalflagRenderer(basetemplates.T2_4MDetailsDefaultRenderer)
         return applications
 
 
-class WvrcalflagMetricPlotsRenderer(basetemplates.CommonRenderer):
+class WvrcalflagMetricPlotsRenderer(basetemplates.JsonPlotRenderer):
     def __init__(self, context, result, plots):
-        super(WvrcalflagMetricPlotsRenderer, self).__init__('generic_x_vs_y_spw_field_detail_plots.mako', 
-                                                            context, result)
-        self.plots = plots
-        self.ms = os.path.basename(self.result.inputs['vis'])
+        vis = os.path.basename(result.inputs['vis'])
+        title = 'WVR flagging metric view for %s' % vis
+        outfile = filenamer.sanitize('flagging_metric-%s.html' % vis)
 
-        self.basename = filenamer.sanitize('flagging_metric-%s.html' % self.ms)
-        self.path = os.path.join(self.dirname, self.basename)
-
-        # all values set on this dictionary will be written to the JSON file
-        d = {}
-        for plot in plots:
-            # calculate the relative pathnames as seen from the browser
-            thumbnail_relpath = os.path.relpath(plot.thumbnail,
-                                                self.context.report_dir)
-            image_relpath = os.path.relpath(plot.abspath,
-                                            self.context.report_dir)
-            spw_id = plot.parameters['spw']
-            field = plot.parameters['field']
-
-            # Javascript JSON parser doesn't like Javascript floating point 
-            # constants (NaN, Infinity etc.), so convert them to null. We  
-            # do not omit the dictionary entry so that the plot is hidden
-            # by the filters.
-#             if math.isnan(ratio) or math.isinf(ratio):
-#                 ratio = 'null'
-
-            d[image_relpath] = {'spw'       : str(spw_id),
-                                'field'     : field,
-                                'thumbnail' : thumbnail_relpath}
-
-        # Javascript parser requires \" -> \\" conversion 
-        self.json = json.dumps(d).replace('\"', '\\"')
-         
-    def update_mako_context(self, mako_context):
-        mako_context.update({'plots'      : self.plots,
-                             'json'       : self.json,
-                             'plot_title' : 'WVR flagging metric view for %s' % self.ms})
+        super(WvrcalflagMetricPlotsRenderer, self).__init__(
+                'generic_x_vs_y_spw_field_detail_plots.mako', 
+                context, result, plots, title, outfile)
 
 
 class WvrgcalflagPhaseOffsetPlotRenderer(basetemplates.JsonPlotRenderer):

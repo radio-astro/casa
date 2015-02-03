@@ -27,7 +27,9 @@ so that the plot panels are ordered consistently.
 
 <%!
 rsc_path = ""
+import cgi
 import os
+import pipeline.infrastructure.utils as utils
 
 SELECTORS = []
 HISTOGRAM_LABELS = {}
@@ -54,15 +56,20 @@ SELECT2_PLACEHOLDER = {'spw' : 'Show all spectral windows',
 				       'type' : 'Show all types'}
 
 def get_options(selector, plots):
-	return format_options([p.parameters[selector] for p in plots])
+	options = format_options([p.parameters[selector] for p in plots])
+	if selector == 'field':
+		options = [cgi.escape(o, True) for o in options]
+	return options
 
 def format_options(options):
 	# remove any duplicates
 	no_dups = set(options)
+	# convert all options to sortable strings
+	as_strings = [str(o) for o in no_dups]  
 	# sort options
-	sorted_options = sorted(list(no_dups))
+	sorted_options = utils.numericSort(as_strings)
 	# return HTML element for each option
-	return ['<option>%s</option>' % option for option in sorted_options]
+	return ['%s' % option for option in sorted_options]
 %>
 
 <link href="${self.attr.rsc_path}resources/css/select2.css" rel="stylesheet"/>
@@ -131,7 +138,7 @@ $(document).ready(function () {
 					<label for="select-${selector}" class="control-label">${SELECT2_LABEL[selector]}</label>
 					<select id="select-${selector}" class="form-control select2" multiple data-placeholder="${SELECT2_PLACEHOLDER[selector]}">
 						% for option in get_options(selector, plots):
-						<option>${option}</option>
+							<option>${option}</option>
 						% endfor
 				    </select>			
 				</div>
