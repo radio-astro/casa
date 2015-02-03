@@ -74,8 +74,16 @@ public:
   // Construct from a VisBuffer (sets a MeasFrame)
   VisBufferUtil(const VisBuffer& vb);
 
-  // Same as above but with VisBuffer2
+  // Same as above but with VisBuffer2;
+  // It has to be attached to a VisIter2 as the frame is determined that way
+  // otherwise use one of the constructors below
   VisBufferUtil(const vi::VisBuffer2& vb);
+  // Construct with the vi2 to get access to the ms to define frame
+
+  VisBufferUtil(const vi::VisibilityIterator2& iter);
+
+  VisBufferUtil(const MeasFrame& mframe);
+
   // Make PSF VisBuffer
   void makePSFVisBuffer(VisBuffer& vb);
   
@@ -95,7 +103,10 @@ public:
   void convertFrequency(Vector<Double>& outFreq, 
 			const VisBuffer& vb, 
 			const MFrequency::Types freqFrame);
-
+  //This one is just to test VisBuffer2 internal conversions
+  void convertFrequency(Vector<Double>& outFreq, 
+			const vi::VisBuffer2& vb, 
+			const MFrequency::Types freqFrame);
   // Converts the frequency in this VisBuffer to velocity in the frame/def requested
   void toVelocity(Vector<Double>& outVel, 
 		  const VisBuffer& vb, 
@@ -103,6 +114,38 @@ public:
 		  const MVFrequency restFreq,
 		  const MDoppler::Types veldef);
 
+  // Converts the frequencies on given row of VisBuffer2 to velocity in the frame/def requested
+  // In this method the Visbuffer2 has to be attached to the iterator to get the direction and the
+  // spectral Frame of the observed spw
+  void toVelocity(Vector<Double>& outVel,
+  		  const vi::VisBuffer2& vb,
+  		  const MFrequency::Types freqFrame,
+  		  const MVFrequency restFreq,
+  		  const MDoppler::Types veldef,
+  		  const Int row=0);
+
+  /// same as above but can be a detached Visbuffer ...the iterator is used explicitly
+  /// to get some info like direction from field table and frame from spectral window table
+  void toVelocity(Vector<Double>& outVel,
+    		  const vi::VisBuffer2& vb,
+    		  const vi::VisibilityIterator2& iter,
+    		  const MFrequency::Types freqFrame,
+    		  const MVFrequency restFreq,
+    		  const MDoppler::Types veldef,
+    		  const Int row=0);
+
+
+  ////get the velocity values for the frequencies passed in
+  /// for  the epoch and direction.
+  /// If rest frequency is -ve then the middle channel is used as the rest value
+  void toVelocity(Vector<Double>& outVel,
+  		  const MFrequency::Types outfreqFrame,
+  		  const Vector<Double>& inFreq,
+  		  const MFrequency::Types inFreqFrame,
+  		  const MEpoch& ep,
+  		  const MDirection& dir,
+  		  const MVFrequency restFreq,
+  		  const MDoppler::Types veldef);
 
   //Rotate the uvw in the vb along with giving the phase needed to convert the visibilities to a new phasecenter
   // will return a False if it is a NoOP...don't need then to waste time
@@ -110,13 +153,18 @@ public:
    Bool rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
 		  Matrix<Double>& uvw, Vector<Double>& dphase);
 
+   /// get the pointing direction for a given integration and antenna id
+   /// will cache it for large pointing table specially so that it can be reused pronto
+   MDirection getPointingDir(const VisBuffer& vb, const Int antid, const Int row);
  private:
   void swapyz(Cube<Bool>& out, const Cube<Bool>& in);
   void swapyz(Cube<Complex>& out, const Cube<Complex>& in);
-
+  void rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval);
   // A MeasFrame for conversions
   MeasFrame mframe_;
-  
+  Int oldMSId_p;
+  Vector<std::map<String, Int> > timeAntIndex_p;
+  Vector<Vector<MDirection> > cachedPointingDir_p;
 
 };
 

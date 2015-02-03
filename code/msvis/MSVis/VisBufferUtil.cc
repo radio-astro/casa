@@ -36,9 +36,10 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <casa/OS/Timer.h>
 #include <measures/Measures/UVWMachine.h>
 #include <measures/Measures/MeasTable.h>
-
+#include <ms/MeasurementSets/MSPointingColumns.h>
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisibilityIterator.h>
@@ -46,6 +47,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/iostream.h>
+#include <iomanip>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -75,11 +77,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </todo>
 
 
-VisBufferUtil::VisBufferUtil() {};
+VisBufferUtil::VisBufferUtil(): oldMSId_p(-1), timeAntIndex_p(0), cachedPointingDir_p(0){};
 
 
 // Construct from a VisBuffer (sets frame info)
-VisBufferUtil::VisBufferUtil(const VisBuffer& vb) {
+VisBufferUtil::VisBufferUtil(const VisBuffer& vb): oldMSId_p(-1), timeAntIndex_p(0), cachedPointingDir_p(0) {
 
   // The nominal epoch 
   MEpoch ep=vb.msColumns().timeMeas()(0);
@@ -106,7 +108,7 @@ VisBufferUtil::VisBufferUtil(const VisBuffer& vb) {
 }
 
 // Construct from a VisBuffer (sets frame info)
-VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb) {
+VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb): oldMSId_p(-1) {
 
 	ROMSColumns msc(vb.getVi()->ms());
   // The nominal epoch
@@ -132,8 +134,37 @@ VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb) {
   mframe_=MeasFrame(ep, pos, dir);
 
 }
+VisBufferUtil::VisBufferUtil(const vi::VisibilityIterator2& iter): oldMSId_p(-1) {
 
-  Bool VisBufferUtil::rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
+	ROMSColumns msc(iter.ms());
+  // The nominal epoch
+  MEpoch ep=msc.timeMeas()(0);
+
+  // The nominal position
+  String observatory;
+  MPosition pos;
+  if (msc.observation().nrow() > 0) {
+    observatory = msc.observation().telescopeName()
+      (msc.observationId()(0));
+  }
+  if (observatory.length() == 0 ||
+      !MeasTable::Observatory(pos,observatory)) {
+    // unknown observatory, use first antenna
+    pos=msc.antenna().positionMeas()(0);
+  }
+
+  // The nominal direction
+  //MDirection dir=iter.phaseCenter();
+  MDirection dir=msc.field().phaseDirMeasCol()(0)(IPosition(1,0));
+  // The nominal MeasFrame
+  mframe_=MeasFrame(ep, pos, dir);
+
+}
+VisBufferUtil::VisBufferUtil(const MeasFrame& mframe): oldMSId_p(-1) {
+	mframe_=mframe;
+
+}
+Bool VisBufferUtil::rotateUVW(const vi::VisBuffer2&vb, const MDirection& desiredDir,
 				Matrix<Double>& uvw, Vector<Double>& dphase){
 
     Bool retval=True;
@@ -158,6 +189,7 @@ void VisBufferUtil::makePSFVisBuffer(VisBuffer& vb) {
   CStokesVector coh(Complex(1.0), Complex(0.0), Complex(0.0), Complex(1.0));
   vb.correctedVisibility()=coh;
 }
+
 
 Bool VisBufferUtil::interpolateFrequency(Cube<Complex>& data, 
 					 Cube<Bool>& flag, 
@@ -261,6 +293,67 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 
  }
 
+void VisBufferUtil::convertFrequency(Vector<Double>& outFreq, 
+				     const vi::VisBuffer2& vb, 
+				     const MFrequency::Types freqFrame){
+  Int spw=vb.spectralWindows()(0);
+  MFrequency::Types obsMFreqType=(MFrequency::Types)(ROMSColumns(vb.getVi()->ms()).spectralWindow().measFreqRef()(spw));
+
+  
+
+   // The input frequencies 
+  Vector<Int> chanNums=vb.getChannelNumbers(0);
+  
+  Vector<Double> inFreq(chanNums.nelements());
+  Vector<Double> spwfreqs=ROMSColumns(vb.getVi()->ms()).spectralWindow().chanFreq().get(spw);
+  for (uInt k=0; k < chanNums.nelements(); ++k){
+
+    inFreq[k]=spwfreqs[chanNums[k]];
+  }
+
+   // The output frequencies
+   outFreq.resize(inFreq.nelements());
+
+   MFrequency::Types newMFreqType=freqFrame;
+   if (freqFrame==MFrequency::N_Types)
+     // Opt out of conversion
+     newMFreqType=obsMFreqType;
+
+
+   // Only convert if the requested frame differs from observed frame
+   if(obsMFreqType != newMFreqType){
+
+     // Setting epoch to the first in this iteration
+     //     MEpoch ep=vb.msColumns().timeMeas()(0);
+     //     MEpoch ep(MVEpoch(vb.time()(0)/86400.0),MEpoch::UTC);
+     //     cout << "Time = " << ep.getValue()  << endl;
+
+     // Reset the timestamp (ASSUMES TIME is constant in the VisBuffer)
+     mframe_.resetEpoch(vb.time()(0)/86400.0);
+
+     // Reset the direction (ASSUMES phaseCenter is constant in the VisBuffer)
+     mframe_.resetDirection(vb.phaseCenter());
+
+     //     cout << "Frame = " << mframe_ << endl;
+
+     // The conversion engine:
+     MFrequency::Convert toNewFrame(obsMFreqType, 
+				    MFrequency::Ref(newMFreqType, mframe_));
+
+     // Do the conversion
+     for (uInt k=0; k< inFreq.nelements(); ++k)
+       outFreq(k)=toNewFrame(inFreq(k)).getValue().getValue();
+     
+   }
+   else{
+     // The requested frame is the same as the observed frame
+     outFreq=inFreq;
+   }
+
+   //cerr << std::setprecision(9) << " infreq " << inFreq[152] << "   " << outFreq[152] << " vb freq " << vb.getFrequencies(0, freqFrame)[152] << endl;
+
+ }
+
  void VisBufferUtil::toVelocity(Vector<Double>& outVel, 
 				const VisBuffer& vb, 
 				const MFrequency::Types freqFrame,
@@ -311,9 +404,167 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 
  }
 
+ void VisBufferUtil::toVelocity(Vector<Double>& outVel,
+ 				const vi::VisBuffer2& vb,
+ 				const MFrequency::Types freqFrame,
+ 				const MVFrequency restFreq,
+ 				const MDoppler::Types veldef, const Int row){
 
+
+	 toVelocity(outVel, vb, *(vb.getVi()), freqFrame, restFreq, veldef, row);
+ }
+ void VisBufferUtil::toVelocity(Vector<Double>& outVel,
+  				const vi::VisBuffer2& vb,
+  				const vi::VisibilityIterator2& iter,
+  				const MFrequency::Types freqFrame,
+  				const MVFrequency restFreq,
+  				const MDoppler::Types veldef, const Int row){
+
+ 	 // The input frequencies (a reference)
+ 	 Vector<Double> inFreq(vb.getFrequencies(row));
+ 	 ROMSColumns msc(iter.ms());
+
+     MEpoch ep(Quantity(vb.time()(row)/86400.0, "d"), msc.timeMeas()(0).getRef());
+ 	 MDirection dir(msc.field().phaseDirMeasCol()(vb.fieldId()(row))(IPosition(1,0)));
+ 	 Int spw=vb.spectralWindows()(row);
+ 	 MFrequency::Types obsMFreqType=(MFrequency::Types)(msc.spectralWindow().measFreqRef()(spw));
+ 	 toVelocity(outVel, freqFrame, inFreq, obsMFreqType, ep, dir, restFreq, veldef);
+  }
+ void VisBufferUtil::toVelocity(Vector<Double>& outVel,
+   		  const MFrequency::Types outFreqFrame,
+   		  const Vector<Double>& inFreq,
+   		  const MFrequency::Types inFreqFrame,
+   		  const MEpoch& ep,
+   		  const MDirection& dir,
+   		  const MVFrequency restFreq,
+   		  const MDoppler::Types veldef){
+
+
+
+	 // The output velocities
+	 outVel.resize(inFreq.nelements());
+
+	 // Reset the timestamp
+	 mframe_.resetEpoch(ep);
+
+	 // Reset the direction
+	 mframe_.resetDirection(dir);
+
+	 // The frequency conversion engine:
+
+	 MFrequency::Types newMFreqType=outFreqFrame;
+	 if (outFreqFrame==MFrequency::N_Types)
+		 // Don't convert frame
+		 newMFreqType=inFreqFrame;
+
+	 MFrequency::Convert toNewFrame(inFreqFrame,
+	 				  MFrequency::Ref(newMFreqType, mframe_));
+
+	 // The velocity conversion engine:
+	 MDoppler::Ref dum1(MDoppler::RELATIVISTIC);
+	 MDoppler::Ref dum2(veldef);
+	 MDoppler::Convert dopConv(dum1, dum2);
+
+	 // Cope with unspecified rest freq
+	 MVFrequency rf=restFreq;
+	 if (restFreq.getValue()<=0.0)
+	      rf=toNewFrame(inFreq(inFreq.nelements()/2)).getValue();
+
+	 // Do the conversions
+	 for (uInt k=0; k< inFreq.nelements(); ++k){
+		 MDoppler eh = toNewFrame(inFreq(k)).toDoppler(rf);
+		 MDoppler eh2 = dopConv(eh);
+		 outVel(k)=eh2.getValue().get().getValue();
+	 	}
+
+
+
+
+ }
+
+ MDirection VisBufferUtil::getPointingDir(const VisBuffer& vb, const Int antid, const Int vbrow){
+	 Timer tim;
+	 tim.mark();
+	 //MDirection outdir;
+	 if(oldMSId_p != vb.msId()){
+		 tim.mark();
+		 oldMSId_p=vb.msId();
+		 if(timeAntIndex_p.shape()(0) < (oldMSId_p+1)){
+			 timeAntIndex_p.resize(oldMSId_p+1, True);
+		 	 cachedPointingDir_p.resize(oldMSId_p+1, True);
+		 }
+		 if(  timeAntIndex_p[oldMSId_p].empty()){
+			 Vector<Double> tOrig;
+			 vb.msColumns().time().getColumn(tOrig);
+			 Vector<Double> t;
+			 rejectConsecutive(tOrig, t);
+			 Vector<uInt>  uniqIndx;
+			 uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
+			 uInt nAnt=vb.msColumns().antenna().nrow();
+			 const ROMSPointingColumns& mspc=vb.msColumns().pointing();
+			 Int guessIndex=0;
+			 for (uInt k=0; k <nTimes; ++k){
+				 for (uInt a=0; a < nAnt; ++a){
+					 std::ostringstream oss;
+					 oss.precision(13);
+					 oss << t[uniqIndx[k]] << "_" << a;
+					 String key=oss.str();
+					 //String key=String::toString(t[uniqIndx[k]])+String("_")+String::toString(a);
+					 Int row=mspc.pointingIndex(a, t[uniqIndx[k]], guessIndex);
+					 cerr << "String "<< key << "pointing row "<< row << endl;
+					 timeAntIndex_p[oldMSId_p][key]=row > -1 ? cachedPointingDir_p[oldMSId_p].shape()[0] : -1;
+					 guessIndex=row;
+					 if(row >-1){
+						 cachedPointingDir_p[oldMSId_p].resize(cachedPointingDir_p[oldMSId_p].nelements()+1, True);
+						 cachedPointingDir_p[oldMSId_p][cachedPointingDir_p[oldMSId_p].nelements()-1]=mspc.directionMeas(row);
+					 }
+
+				 }
+			 }
+
+		 }
+		 tim.show("After caching all ant pointings");
+	 }
+
+	 /////
+	 //	 String index=String::toString(vb.time()(vbrow))+String("_")+String::toString(antid);
+	 std::ostringstream oss;
+	 oss.precision(13);
+	 oss << vb.time()(vbrow) << "_" << antid  ;
+	 String index=oss.str();
+	 Int rowincache=timeAntIndex_p[oldMSId_p][index];
+	 cerr << "key "<< index << " index " << rowincache << endl;
+	 tim.show("retrieved cache");
+	 if(rowincache <0)
+		 return vb.phaseCenter();
+	 return cachedPointingDir_p[oldMSId_p][rowincache];
+
+
+
+ }
+
+ //utility to reject consecutive similar value for sorting
+ void VisBufferUtil::rejectConsecutive(const Vector<Double>& t, Vector<Double>& retval){
+     uInt n=t.nelements();
+     if(n >0){
+       retval.resize(n);
+       retval[0]=t[0];
+     }
+     else
+       return;
+     Int prev=0;
+     for (uInt k=1; k < n; ++k){
+       if(t[k] != retval(prev)){
+    	   ++prev;
+
+    	   retval[prev]=t[k];
+       }
+     }
+     retval.resize(prev+1, True);
+
+   }
 // helper function to swap the y and z axes of a Cube
- void VisBufferUtil::swapyz(Cube<Complex>& out, const Cube<Complex>& in)
+ void   VisBufferUtil::swapyz(Cube<Complex>& out, const Cube<Complex>& in)
 {
   IPosition inShape=in.shape();
   uInt nxx=inShape(0),nyy=inShape(2),nzz=inShape(1);
