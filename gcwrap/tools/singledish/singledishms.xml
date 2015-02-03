@@ -132,7 +132,7 @@ sdms.scale(factor=2.0)
 </method>
 
 <!--
-<method type="function" name="subtract_baseline">
+<method type="function" name="subtract_baseline_old">
   <shortdescription>Invoke baseline subtraction
   </shortdescription>
   <description>
@@ -169,7 +169,7 @@ sdms.subtract_baseline(order=3,clip_threshold_sigma=5.0,num_fitting_max=6)
 </method>
 -->
 
-<method type="function" name="subtract_baseline_new">
+<method type="function" name="subtract_baseline">
   <shortdescription>Invoke baseline subtraction
   </shortdescription>
   <description>

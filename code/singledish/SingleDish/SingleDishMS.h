@@ -41,12 +41,12 @@ public:
 
   // Invoke baseline subtraction
   // (polynomial, write results in CORRECTED_DATA column)
-  void subtract_baseline_new(string const& in_column_name,
-			      string const& out_ms_name,
-			      string const& spwch, 
-			      int const order, 
-			      float const clip_threshold_sigma=3.0, 
-			      int const num_fitting_max=1);
+  void subtract_baseline(string const& in_column_name,
+			 string const& out_ms_name,
+			 string const& spwch, 
+			 int const order, 
+			 float const clip_threshold_sigma=3.0, 
+			 int const num_fitting_max=1);
 
 private:
   /////////////////////////

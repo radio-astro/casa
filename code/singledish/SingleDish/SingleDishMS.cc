@@ -373,7 +373,7 @@ void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const
     } else {
       uniq_nchan.push_back(nchan[i]);
       ctx_indices[i] = uniq_nchan.size() - 1;
-    }
+     }
   }
 
   bl_contexts.resize(uniq_nchan.size());
@@ -385,7 +385,16 @@ void SingleDishMS::create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType) const
 						     uniq_nchan[i], 
 						     &bl_contexts[i]);
     if (status != LIBSAKURA_SYMBOL(Status_kOK)) {
-      throw(AipsError("CreateBaselineContext() failed."));
+      ostringstream oss;
+      oss << "sakura_CreateBaselineContext() failure -- ";
+      if (status == LIBSAKURA_SYMBOL(Status_kNoMemory)) {
+	oss << "memory allocation failed.";
+      } else if (status == LIBSAKURA_SYMBOL(Status_kInvalidArgument)) {
+	oss << "order (" << order << ") must be smaller than the minimum number of channels.";
+      } else if (status == LIBSAKURA_SYMBOL(Status_kNG)) {
+	oss << "runtime error occured.";
+      }
+      throw(AipsError(oss.str()));
     }
   }
 }
@@ -442,12 +451,12 @@ void SingleDishMS::get_flag_from_cube(Cube<Bool> &flag_cube,
 ////////////////////////////////////////////////////////////////////////
 ///// Atcual processing functions
 ////////////////////////////////////////////////////////////////////////
-void SingleDishMS::subtract_baseline_new(string const& in_column_name,
-					    string const& out_ms_name,
-					    string const &spwch,
-					    int const order, 
-					    float const clip_threshold_sigma, 
-					    int const num_fitting_max)
+void SingleDishMS::subtract_baseline(string const& in_column_name,
+				     string const& out_ms_name,
+				     string const &spwch,
+				     int const order, 
+				     float const clip_threshold_sigma, 
+				     int const num_fitting_max)
 {
   LogIO os(_ORIGIN);
   os << "Fitting and subtracting polynomial baseline order = " << order << LogIO::POST;
@@ -462,6 +471,11 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
 
   //double tstart = gettimeofday_sec();
 
+  //checking order
+  if (order < 0) {
+    throw(AipsError("order must be positive or zero."));
+  }
+
   Block<Int> columns(1);
   columns[0] = MS::DATA_DESC_ID;
   LIBSAKURA_SYMBOL(Status) status;
@@ -475,6 +489,20 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
   Vector<size_t> nchan;
   Vector<Vector<Bool> > in_mask;
   parse_spwch(spwch, spw, nchan, in_mask);
+  // checking nchan
+  int min_nchan = static_cast<int>(nchan(0));
+  for (size_t i = 0; i < nchan.nelements(); ++i) {
+    int nch = static_cast<int>(nchan(i));
+    if (nch < min_nchan) min_nchan = nch;
+  }
+  if (min_nchan < order + 1) { // for poly and/or chebyshev
+    ostringstream oss;
+    oss << "Order (=" << order << " given) must be smaller than " 
+	<< "the minimum number of channels in the input data (" 
+	<< min_nchan << ").";
+    throw(AipsError(oss.str()));
+  }
+
   Vector<size_t> ctx_indices;
   Vector<LIBSAKURA_SYMBOL(BaselineContext) *> bl_contexts;
   create_baseline_contexts(LIBSAKURA_SYMBOL(BaselineType_kPolynomial), 
@@ -495,8 +523,13 @@ void SingleDishMS::subtract_baseline_new(string const& in_column_name,
       get_data_cube_float(*vb, data_chunk);
       // get a flag cube (npol*nchan*nrow) from VisBuffer
       get_flag_cube(*vb, flag_chunk);
+      // get a flagrow vector (nrow) from VisBuffer
+      Vector<Bool> flagrow_chunk = vb->flagRow();
       // loop over MS rows
       for (size_t irow=0; irow < num_row; ++irow) {
+	// skip row-flagged spectra
+	if (flagrow_chunk(irow)) continue;
+
   	size_t idx = 0;
   	for (size_t ispw=0; ispw < spw.nelements(); ++ispw) {
   	  if (data_spw[irow] == spw[ispw]) {

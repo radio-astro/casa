@@ -23,12 +23,12 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         sdms.set_selection(spw=sdutil.get_spwids(selection), field=field, 
                            antenna=str(antenna), timerange=timerange, 
                            scan=scan, polarization=pol)
-        sdms.subtract_baseline_new(datacolumn=datacolumn,
-                                   outfile=outfile,
-                                   spwch=sdutil.get_spwchs(selection, infile), 
-                                   order=order, 
-                                   clip_threshold_sigma=clipthresh, 
-                                   num_fitting_max=clipniter+1)
+        sdms.subtract_baseline(datacolumn=datacolumn,
+                               outfile=outfile,
+                               spwch=sdutil.get_spwchs(selection, infile), 
+                               order=order, 
+                               clip_threshold_sigma=clipthresh, 
+                               num_fitting_max=clipniter+1)
         """
         for spwid in spw_list:
             nchan = nchanmap[spwid]
@@ -55,5 +55,5 @@ def tsdbaseline(infile=None, datacolumn=None, antenna=None, field=None, spw=None
         # file output (will be implemeted later)
 
     except Exception, instance:
-        print '*** Exception ***', instance
+        #print '*** Exception ***', instance
         raise Exception, instance

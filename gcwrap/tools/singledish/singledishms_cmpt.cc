@@ -116,7 +116,7 @@ singledishms::scale(float const factor, string const& datacolumn, string const& 
 }
 
 // bool
-// singledishms::subtract_baseline(std::vector<bool> const &mask,
+// singledishms::subtract_baseline_OLD(std::vector<bool> const &mask,
 // 				int const order,
 // 				float const clip_threshold_sigma,
 // 				int const num_fitting_max)
@@ -139,20 +139,20 @@ singledishms::scale(float const factor, string const& datacolumn, string const& 
 // }
 
 bool
-singledishms::subtract_baseline_new(string const& datacolumn,
-				    string const& outfile,
-				    string const& spwch,
-				    int const order,
-				    float const clip_threshold_sigma,
-				    int const num_fitting_max)
+singledishms::subtract_baseline(string const& datacolumn,
+				string const& outfile,
+				string const& spwch,
+				int const order,
+				float const clip_threshold_sigma,
+				int const num_fitting_max)
 {
   bool rstat(false);
   *itsLog << _ORIGIN;
   try {
     assert_valid_ms();
-    itsSd->subtract_baseline_new(datacolumn, outfile,spwch, order, 
-				 clip_threshold_sigma, 
-				 num_fitting_max);
+    itsSd->subtract_baseline(datacolumn, outfile,spwch, order, 
+			     clip_threshold_sigma, 
+			     num_fitting_max);
     rstat = true;
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
