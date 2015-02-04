@@ -88,8 +88,8 @@ Double ZScoreCalculator::getMaxZScore(uInt64 npts) {
 				distance = 1;
 			}
 			distance = lowiter->first > npts
-				? -casa::abs(distance)
-				: casa::abs(distance);
+				? -abs(distance)
+				: abs(distance);
 		}
 	}
 	Double lz = lowiter->second;
