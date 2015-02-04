@@ -76,7 +76,7 @@ public:
 
   // Same as above but with VisBuffer2;
   // It has to be attached to a VisIter2 as the frame is determined that way
-  // otherwise use one of the constructors below
+  // otherwise use one of the constructors below or the empty constructor above
   VisBufferUtil(const vi::VisBuffer2& vb);
   // Construct with the vi2 to get access to the ms to define frame
 
@@ -115,8 +115,6 @@ public:
 		  const MDoppler::Types veldef);
 
   // Converts the frequencies on given row of VisBuffer2 to velocity in the frame/def requested
-  // In this method the Visbuffer2 has to be attached to the iterator to get the direction and the
-  // spectral Frame of the observed spw
   void toVelocity(Vector<Double>& outVel,
   		  const vi::VisBuffer2& vb,
   		  const MFrequency::Types freqFrame,

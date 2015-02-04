@@ -109,7 +109,8 @@ VisBufferUtil::VisBufferUtil(const VisBuffer& vb): oldMSId_p(-1), timeAntIndex_p
 
 // Construct from a VisBuffer (sets frame info)
 VisBufferUtil::VisBufferUtil(const vi::VisBuffer2& vb): oldMSId_p(-1) {
-
+	if(vb.getVi() == NULL)
+		ThrowCc("Programmer Error: used a detached Visbuffer when it should not have been so");
 	ROMSColumns msc(vb.getVi()->ms());
   // The nominal epoch
   MEpoch ep=msc.timeMeas()(0);
@@ -397,6 +398,7 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 
    // Do the conversions
    for (uInt k=0; k< inFreq.nelements(); ++k){
+	 //cerr <<"old freq " << toNewFrame(inFreq(k)).getValue().get().getValue() << endl;
      MDoppler eh = toNewFrame(inFreq(k)).toDoppler(rf);
      MDoppler eh2 = dopConv(eh);
      outVel(k)=eh2.getValue().get().getValue();
@@ -410,8 +412,29 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
  				const MVFrequency restFreq,
  				const MDoppler::Types veldef, const Int row){
 
+	 	 Vector<Double> inFreq;
+	 	 inFreq=vb.getFrequencies(row, freqFrame);
+	 	// cerr << "Freqs " << inFreq << endl;
+	 	// The output velocities
+	 	 outVel.resize(inFreq.nelements());
+	 	 // The velocity conversion engine:
+	 	 MDoppler::Ref dum1(MDoppler::RELATIVISTIC);
+	 	 MDoppler::Ref dum2(veldef);
+	 	 MDoppler::Convert dopConv(dum1, dum2);
 
-	 toVelocity(outVel, vb, *(vb.getVi()), freqFrame, restFreq, veldef, row);
+	 	 // Cope with unspecified rest freq
+	 	 MVFrequency rf=restFreq;
+	 	 if (restFreq.getValue()<=0.0)
+	 	      rf=inFreq(inFreq.nelements()/2);
+
+	 	 // Do the conversions
+	 	 for (uInt k=0; k< inFreq.nelements(); ++k){
+	 		 MDoppler eh = MFrequency(Quantity(inFreq(k), "Hz"), freqFrame).toDoppler(rf);
+	 		 MDoppler eh2 = dopConv(eh);
+	 		 outVel(k)=eh2.getValue().get().getValue();
+	 	 	}
+
+
  }
  void VisBufferUtil::toVelocity(Vector<Double>& outVel,
   				const vi::VisBuffer2& vb,
