@@ -23,7 +23,6 @@
 #include <mstransform/MSTransform/MSTransformIteratorFactory.h>
 #include <msvis/MSVis/VisibilityIterator2.h>
 #include <msvis/MSVis/VisBuffer2.h>
-
 #include <string>
 #include <iostream>
 
@@ -263,14 +262,19 @@ Record parseConfiguration(int argc, char **argv)
 	return configuration;
 }
 
-String produceTmpTransformedMSToCompare(Record configuration)
+String produceTmpTransformedMSToCompare(Record configuration, dataColMap &myDataColMap)
 {
 	String tmpFileName = File::newUniqueName("").absoluteName();
+	configuration.define("realmodelcol",True);
+	configuration.define("usewtspectrum",True);
 	configuration.define("outputms",tmpFileName);
 	configuration.define("datacolumn",string("ALL"));
 	MSTransformManager *manager = new MSTransformManager(configuration);
 	manager->open();
 	manager->setup();
+
+	// Store data col map
+	myDataColMap = manager->getDataColMap();
 
 	vi::VisibilityIterator2 *visIter = manager->getVisIter();
 	vi::VisBuffer2 *vb = visIter->getVisBuffer();
@@ -335,7 +339,7 @@ template <class T> IPosition compareMatrix(const Matrix<T> &inp,const Matrix<T> 
 template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref,Float tolerance = FLT_EPSILON)
 {
 	IPosition res;
-	IPosition shape = inp.shape();
+	const IPosition &shape = inp.shape();
 
 	uInt nRowsToCompare = min(inp.shape()(2),ref.shape()(2));
 
@@ -348,6 +352,7 @@ template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref,F
 			{
 				if (abs(inp(corr,chan,row) - ref(corr,chan,row)) > tolerance )
 				{
+					res.resize(3,False);
 					res = IPosition(3,corr,chan,row);
 					break;
 				}
@@ -358,7 +363,27 @@ template <class T> IPosition compareCube(const Cube<T> &inp,const Cube<T> &ref,F
 	return res;
 }
 
-Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, String tmpFileName)
+const Cube<Complex> & getVisCubeToCompare(vi::VisBuffer2 *visBufferRef, MS::PredefinedColumns myCol, dataColMap &myDataColMap)
+{
+	switch (myDataColMap[myCol])
+	{
+		case MS::DATA:
+			return visBufferRef->visCube();
+			break;
+		case MS::CORRECTED_DATA:
+			return visBufferRef->visCubeCorrected();
+			break;
+		case MS::MODEL_DATA:
+			return visBufferRef->visCubeModel();
+			break;
+		default:
+			cerr << RED;
+			cerr << "Required column does not exist compare vs visCube by default" << endl;
+			return visBufferRef->visCube();
+	}
+}
+
+Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, String tmpFileName,dataColMap &myDataColMap)
 {
 	// Declare tmp variables
 	Int chunk = 0,buffer = 0,row = 0;
@@ -370,9 +395,6 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 	// Open up transformed file
 	MeasurementSet ms(tmpFileName,Table::Old);
-
-	// Check existing datacolumn
-	Bool doCorrected = ms.tableDesc().isColumn(MS::columnName(MS::CORRECTED_DATA));
 
 	// Prepare Iterator
 	Block<Int> sortCols(7);
@@ -400,8 +422,11 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 	while (visIter->moreChunks() and visIterRef.moreChunks() and keepIterating)
 	{
 		chunk += 1;
+		buffer = 0;
+
 		visIter->origin();
 		visIterRef.origin();
+
 		while (visIter->more() and visIterRef.more() and keepIterating)
 		{
 			buffer += 1;
@@ -661,6 +686,22 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>time match" << endl;
 			}
 
+			/*
+			if (True)
+			{
+				logger << "visBuffer->antenna1()=" << visBuffer->antenna1() << LogIO::POST;
+				logger << "visBufferRef->antenna1()=" << visBufferRef->antenna1() << LogIO::POST;
+				logger << "visBuffer->antenna2()=" << visBuffer->antenna2() << LogIO::POST;
+				logger << "visBufferRef->antenna2()=" << visBufferRef->antenna2() << LogIO::POST;
+
+				ostringstream oss;
+				oss.precision(30);
+				oss << " visBuffer->time()=" << visBuffer->time() << endl;
+				oss << " visBufferRef->time()=" << visBufferRef->time() << endl;
+				logger << oss.str() << LogIO::POST;
+			}
+			*/
+
 
 			row = compareVector(visBuffer->timeCentroid(),visBufferRef->timeCentroid(),DBL_EPSILON );
 			if (row >= 0)
@@ -868,8 +909,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 
 			// Matrix cols
 
+			pos.resize(0,False);
 			pos = compareMatrix(visBuffer->uvw(),visBufferRef->uvw(),FLT_EPSILON);
-
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -885,8 +926,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>uvw match" << endl;
 			}
 
+			pos.resize(0,False);
 			pos = compareMatrix(visBuffer->weight(),visBufferRef->weight(),FLT_EPSILON);
-
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -902,8 +943,8 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>weight match" << endl;
 			}
 
+			pos.resize(0,False);
 			pos = compareMatrix(visBuffer->sigma(),visBufferRef->sigma(),FLT_EPSILON);
-
 			if (pos.size() == 2)
 			{
 				cout << RED;
@@ -920,34 +961,67 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 			}
 
 			// Vis cubes
+			dataColMap::iterator iter;
 
-			pos = compareCube(visBuffer->visCube(),visBufferRef->visCube(),FLT_EPSILON);
+			pos.resize(0,False);
+			pos = compareCube(visBuffer->flagCube(),visBufferRef->flagCube(),0);
 			if (pos.size() == 3)
 			{
 				cout << RED;
-				cout << " visCube does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->visCube()(pos)
-						<< " transformFile=" << visBufferRef->visCube()(pos) << endl;
+				cout << " flagCube does not match in position (row,chan,corr)="
+					<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+					<< " transformBuffer=" << visBuffer->flagCube()(pos)
+					<< " transformFile=" << visBufferRef->flagCube()(pos) << endl;
 				keepIterating = False;
 			}
 			else
 			{
 				cout << GREEN;
-				cout 	<< "=>visCube match" << endl;
+				cout 	<< "=>flagCube match" << endl;
+			}
+
+			pos.resize(0,False);
+			iter = myDataColMap.find(MS::DATA);
+			if (iter != myDataColMap.end())
+			{
+				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::DATA,myDataColMap);
+				pos = compareCube(	visBuffer->visCube(),
+									visCubeRef,
+									FLT_EPSILON);
+
+				if (pos.size() == 3)
+				{
+					cout << RED;
+					cout << " visCube does not match in position (row,chan,corr)="
+							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+							<< " transformBuffer=" << visBuffer->visCube()(pos)
+							<< " transformFile=" << visCubeRef(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>visCube match" << endl;
+				}
 			}
 
 
-			if (doCorrected)
+			pos.resize(0,False);
+			iter = myDataColMap.find(MS::CORRECTED_DATA);
+			if (iter != myDataColMap.end())
 			{
-				pos = compareCube(visBuffer->visCubeCorrected(),visBufferRef->visCubeCorrected(),FLT_EPSILON);
+				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::CORRECTED_DATA,myDataColMap);
+				pos = compareCube(	visBuffer->visCubeCorrected(),
+									visCubeRef,
+									FLT_EPSILON);
+
 				if (pos.size() == 3)
 				{
 					cout << RED;
 					cout << " visCubeCorrected does not match in position (row,chan,corr)="
 							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
 							<< " transformBuffer=" << visBuffer->visCubeCorrected()(pos)
-							<< " transformFile=" << visBufferRef->visCubeCorrected()(pos) << endl;
+							<< " transformFile=" << visCubeRef(pos) << endl;
 					keepIterating = False;
 				}
 				else
@@ -957,25 +1031,32 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				}
 			}
 
-
-			/*
-			pos = compareCube(visBuffer->visCubeModel(),visBufferRef->visCubeModel(),FLT_EPSILON);
-			if (pos.size() == 3)
+			pos.resize(0,False);
+			iter = myDataColMap.find(MS::MODEL_DATA);
+			if (iter != myDataColMap.end())
 			{
-				cout << RED;
-				cout << " visCubeModel does not match in position (row,chan,corr)="
-						<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
-						<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
-						<< " transformFile=" << visBufferRef->visCubeModel()(pos) << endl;
-				keepIterating = False;
-			}
-			else
-			{
-				cout << GREEN;
-				cout 	<< "=>visCubeModel match" << endl;
-			}
-			*/
+				const Cube<Complex> &visCubeRef = getVisCubeToCompare(visBufferRef,MS::MODEL_DATA,myDataColMap);
+				pos = compareCube(	visBuffer->visCubeModel(),
+									visCubeRef,
+									FLT_MAX);
 
+				if (pos.size() == 3)
+				{
+					cout << RED;
+					cout << " visCubeModel does not match in position (row,chan,corr)="
+							<< "("<< pos(2) << "," << pos(1) << "," << pos(0) << ")"
+							<< " transformBuffer=" << visBuffer->visCubeModel()(pos)
+							<< " transformFile=" << visCubeRef(pos) << endl;
+					keepIterating = False;
+				}
+				else
+				{
+					cout << GREEN;
+					cout 	<< "=>visCubeModel match" << endl;
+				}
+			}
+
+			pos.resize(0,False);
 			pos = compareCube(visBuffer->weightSpectrum(),visBufferRef->weightSpectrum(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{
@@ -992,6 +1073,7 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout 	<< "=>weightSpectrum match" << endl;
 			}
 
+			pos.resize(0,False);
 			pos = compareCube(visBuffer->sigmaSpectrum(),visBufferRef->sigmaSpectrum(),FLT_EPSILON);
 			if (pos.size() == 3)
 			{
@@ -1025,9 +1107,10 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 int main(int argc, char **argv)
 {
 	Record configuration = parseConfiguration(argc, argv);
+	dataColMap myDataColMap;
 
-	String tmpFileName = produceTmpTransformedMSToCompare(configuration);
-	Bool result = test_compareTransformedFileWithTransformingBuffer(configuration,tmpFileName);
+	String tmpFileName = produceTmpTransformedMSToCompare(configuration,myDataColMap);
+	Bool result = test_compareTransformedFileWithTransformingBuffer(configuration,tmpFileName,myDataColMap);
 
 	if (result)
 	{

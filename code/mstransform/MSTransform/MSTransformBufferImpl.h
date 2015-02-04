@@ -43,6 +43,8 @@ public:
 	void setRowIdOffset(uInt rowOffset) {rowIdOffset_p = rowOffset;}
 	void shiftRowIdOffset(Int nRows) {rowIdOffset_p += nRows;}
 
+	const void generateWeights() const;
+
 	// Re-indexable Vectors
     const Vector<Int> & dataDescriptionIds () const; // [nR]
     const Vector<Int> & spectralWindows () const; // [nR]

@@ -41,7 +41,6 @@ install (FILES
 	DESTINATION include/casacode/mstransform/MSTransform
 	)
 
-casa_add_test( mstransform MSTransform/test/tMSTransformIterator.cc )
 casa_add_assay( mstransform MSTransform/test/tMSBin.cc )
 casa_add_executable( mstransform msuvbin apps/msuvbin/msuvbin.cc )
 casa_add_executable( mstransform fixspwbackport apps/fixspwbackport/fixspwbackport.cc )

@@ -696,3 +696,7 @@ casa_add_assay( synthesis CalTables/test/tCTPatchedInterp.cc )
 #casa_add_assay( synthesis CalTables/test/tCalTables.cc )
 casa_add_assay( synthesis CalTables/test/tCTSelection.cc )
 casa_add_assay( synthesis CalTables/test/tCTGenericFill.cc )
+
+
+casa_add_test( synthesis ../mstransform/MSTransform/test/tMSTransformIterator.cc )
+

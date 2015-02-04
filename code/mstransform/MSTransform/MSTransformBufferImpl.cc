@@ -121,6 +121,46 @@ void MSTransformBufferImpl::resetState()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+const void MSTransformBufferImpl::generateWeights() const
+{
+	// Make sure shape is defined
+	getShape();
+
+	// Make sure flags are updated
+	// (are needed to extract weight/sigma from the spectrum columns by using mean/median)
+	flagCube();
+
+	// Reshape arrays
+	sigmaSpectrum_p.resize(shape_p,False);
+	weightSpectrum_p.resize(shape_p,False);
+	weight_p.resize(nCorrelations_p,nRows_p,False);
+	sigma_p.resize(nCorrelations_p,nRows_p,False);
+
+	// Assign array pointers in the manager to the arrays resident in this buffer
+	manager_p->weight_p = &weight_p;
+	manager_p->sigma_p = &sigma_p;
+	manager_p->flagCube_p = &flagCube_p;
+	manager_p->sigmaSpectrum_p = &sigmaSpectrum_p;
+	manager_p->weightSpectrum_p = &weightSpectrum_p;
+
+	// Transform weight columns
+	RefRows dummyRefRows(0,0);
+	manager_p->fillWeightCols(manager_p->getVisBuffer(),dummyRefRows);
+
+	// Set state
+	weightOk_p = True;
+	sigmaOk_p = True;
+	weightSpectrumOk_p = True;
+	sigmaSpectrumOk_p = True;
+	sigmaTransformed_p = True;
+	weightTransformed_p = True;
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 const Vector<Int> & MSTransformBufferImpl::dataDescriptionIds () const
 {
 	if (not dataDescIdOk_p)
@@ -593,37 +633,45 @@ const Matrix<Float> & MSTransformBufferImpl::weight () const
 {
 	if (not weightOk_p)
 	{
-		getShape();
-		weight_p.resize(nCorrelations_p,nRows_p,False);
-
-		if (manager_p->combinespws_p)
+		if (manager_p->cubeTransformation_p)
 		{
-			if (manager_p->newWeightFactorMap_p.size() > 0)
-			{
-				manager_p->mapAndScaleMatrix(	manager_p->getVisBuffer()->weight(),
-												weight_p,
-												manager_p->newWeightFactorMap_p,
-												manager_p->getVisBuffer()->spectralWindows());
-			}
-			else
-			{
-				manager_p->mapMatrix(manager_p->getVisBuffer()->weight(),weight_p);
-			}
-			weightTransformed_p = True;
-		}
-		else if (manager_p->newWeightFactorMap_p.size() > 0)
-		{
-			// Apply scale factor
-			if ( 	(manager_p->newWeightFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newWeightFactorMap_p.end()) and
-					(manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )
-			{
-				weight_p *= manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
-			}
+			generateWeights();
 			weightTransformed_p = True;
 		}
 		else
 		{
-			weightTransformed_p = False;
+			getShape();
+			weight_p.resize(nCorrelations_p,nRows_p,False);
+
+			if (manager_p->combinespws_p)
+			{
+				if (manager_p->newWeightFactorMap_p.size() > 0)
+				{
+					manager_p->mapAndScaleMatrix(	manager_p->getVisBuffer()->weight(),
+													weight_p,
+													manager_p->newWeightFactorMap_p,
+													manager_p->getVisBuffer()->spectralWindows());
+				}
+				else
+				{
+					manager_p->mapMatrix(manager_p->getVisBuffer()->weight(),weight_p);
+				}
+				weightTransformed_p = True;
+			}
+			else if (manager_p->newWeightFactorMap_p.size() > 0)
+			{
+				// Apply scale factor
+				if ( 	(manager_p->newWeightFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newWeightFactorMap_p.end()) and
+						(manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )
+				{
+					weight_p *= manager_p->newWeightFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
+				}
+				weightTransformed_p = True;
+			}
+			else
+			{
+				weightTransformed_p = False;
+			}
 		}
 
 		weightOk_p = True;
@@ -644,52 +692,60 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 {
 	if (not sigmaOk_p)
 	{
-		getShape();
-		sigma_p.resize(nCorrelations_p,nRows_p,False);
-
-		if (manager_p->combinespws_p)
+		if (manager_p->cubeTransformation_p)
 		{
-			if (manager_p->correctedToData_p)
+			generateWeights();
+			sigmaTransformed_p = True;
+		}
+		else
+		{
+			getShape();
+			sigma_p.resize(nCorrelations_p,nRows_p,False);
+
+			if (manager_p->combinespws_p)
+			{
+				if (manager_p->correctedToData_p)
+				{
+					// Sigma must be redefined to 1/weight when corrected data becomes data
+					weight();
+					sigma_p = weight_p;
+					arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
+				}
+				else if (manager_p->newSigmaFactorMap_p.size() > 0)
+				{
+					manager_p->mapAndScaleMatrix(	manager_p->getVisBuffer()->sigma(),
+													sigma_p,
+													manager_p->newSigmaFactorMap_p,
+													manager_p->getVisBuffer()->spectralWindows());
+				}
+				else
+				{
+					manager_p->mapMatrix(manager_p->getVisBuffer()->sigma(),sigma_p);
+				}
+				sigmaTransformed_p = True;
+			}
+			else if (manager_p->correctedToData_p)
 			{
 				// Sigma must be redefined to 1/weight when corrected data becomes data
 				weight();
 				sigma_p = weight_p;
 				arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
+				sigmaTransformed_p = True;
 			}
 			else if (manager_p->newSigmaFactorMap_p.size() > 0)
 			{
-				manager_p->mapAndScaleMatrix(	manager_p->getVisBuffer()->sigma(),
-												sigma_p,
-												manager_p->newSigmaFactorMap_p,
-												manager_p->getVisBuffer()->spectralWindows());
+				// Apply scale factor
+				if ( 	(manager_p->newSigmaFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newSigmaFactorMap_p.end()) and
+						(manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )
+				{
+					sigma_p *= manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
+				}
+				sigmaTransformed_p = True;
 			}
 			else
 			{
-				manager_p->mapMatrix(manager_p->getVisBuffer()->sigma(),sigma_p);
+				sigmaTransformed_p = False;
 			}
-			sigmaTransformed_p = True;
-		}
-		else if (manager_p->correctedToData_p)
-		{
-			// Sigma must be redefined to 1/weight when corrected data becomes data
-			weight();
-			sigma_p = weight_p;
-			arrayTransformInPlace(sigma_p, vi::AveragingTvi2::weightToSigma);
-			sigmaTransformed_p = True;
-		}
-		else if (manager_p->newSigmaFactorMap_p.size() > 0)
-		{
-			// Apply scale factor
-			if ( 	(manager_p->newSigmaFactorMap_p.find(manager_p->getVisBuffer()->spectralWindows()(0))  != manager_p->newSigmaFactorMap_p.end()) and
-					(manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)] != 1) )
-			{
-				sigma_p *= manager_p->newSigmaFactorMap_p[manager_p->getVisBuffer()->spectralWindows()(0)];
-			}
-			sigmaTransformed_p = True;
-		}
-		else
-		{
-			sigmaTransformed_p = False;
 		}
 
 		sigmaOk_p = True;
@@ -708,7 +764,7 @@ const Matrix<Float> & MSTransformBufferImpl::sigma () const
 // -----------------------------------------------------------------------
 const Cube<Bool> & MSTransformBufferImpl::flagCube () const
 {
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->flagCube();
 	}
@@ -754,7 +810,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCube () const
 				<< "visCube requested but DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->visCube();
 	}
@@ -796,7 +852,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 				<< "visCubeCorrected requested but CORRECTED_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->visCubeCorrected();
 	}
@@ -832,13 +888,14 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 // -----------------------------------------------------------------------
 const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 {
+
 	if (not manager_p->modelDataColumnAvailable_p)
 	{
 		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
 				<< "visCubeModel requested but MODEL_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->visCubeModel();
 	}
@@ -880,7 +937,7 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 				<< "visCubeFloat requested but FLOAT_DATA column not present in input MS" << LogIO::POST;
 	}
 
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->visCubeFloat();
 	}
@@ -914,55 +971,13 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 // -----------------------------------------------------------------------
 const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 {
-	if (not weightSpectrumOk_p)
+	if (not manager_p->cubeTransformation_p)
 	{
-		if (manager_p->inputWeightSpectrumAvailable_p)
-		{
-			if (not manager_p->spectrumReshape_p)
-			{
-				return manager_p->getVisBuffer()->weightSpectrum();
-			}
-			else
-			{
-				weightSpectrum_p.resize(getShape(),False);
-				manager_p->weightSpectrum_p = &weightSpectrum_p;
-
-				RefRows dummyRefRows(0,0);
-				ArrayColumn<Float> dummyDataCol;
-
-				// Don't propagate auxiliary weight spectrum and use cumSum for average
-		    	manager_p->propagateWeights(False);
-		    	manager_p->setChannelAverageKernel(MSTransformations::cumSum);
-
-		    	// Transform weights
-				manager_p->dataBuffer_p = MSTransformations::weightSpectrum;
-				manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
-												dummyRefRows,
-												manager_p->getVisBuffer()->weightSpectrum(),
-												dummyDataCol,
-												NULL,
-												weightSpectrum_p);
-
-				// Go back to normal
-		    	manager_p->propagateWeights(manager_p->propagateWeights_p);
-		    	manager_p->setChannelAverageKernel(manager_p->weightmode_p);
-			}
-		}
-		// Fill WEIGHT_SPECTRUM with transformed WEIGHTS
-		else
-		{
-			weightSpectrum_p.resize(getShape(),False);
-			for (uInt row=0; row < nRows_p; row++)
-			{
-				Double scaleFactor = 1.0/nChannels_p;
-				Matrix<Float> weightSpectrumPlane = weightSpectrum_p.xyPlane(row);
-				for (uInt pol = 0; pol < nCorrelations_p; pol++)
-				{
-					weightSpectrumPlane.row(pol) = scaleFactor*weight_p(pol,row);
-				}
-			}
-		}
-
+		return manager_p->getVisBuffer()->weightSpectrum();
+	}
+	else if (not weightSpectrumOk_p)
+	{
+		generateWeights();
 		weightSpectrumOk_p = True;
 	}
 
@@ -974,23 +989,13 @@ const Cube<Float> & MSTransformBufferImpl::weightSpectrum () const
 // -----------------------------------------------------------------------
 const Cube<Float> & MSTransformBufferImpl::sigmaSpectrum () const
 {
-	if (not manager_p->spectrumReshape_p)
+	if (not manager_p->cubeTransformation_p)
 	{
 		return manager_p->getVisBuffer()->sigmaSpectrum();
 	}
-	else if (not sigmaSpectrumOk_p)
+	if (not sigmaSpectrumOk_p)
 	{
-		sigmaSpectrum_p.resize(getShape(),False);
-
-		sigma();
-		for (uInt row=0; row < nRows_p; row++)
-		{
-			for (uInt pol = 0; pol < nCorrelations_p; pol++)
-			{
-				sigmaSpectrum_p.xyPlane(row).row(pol) = sigma_p(pol,row);
-			}
-		}
-
+		generateWeights();
 		sigmaSpectrumOk_p = True;
 	}
 

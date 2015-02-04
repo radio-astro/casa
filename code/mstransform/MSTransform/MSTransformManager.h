@@ -108,7 +108,8 @@ namespace MSTransformations
 		visCubeCorrected,
 		visCubeModel,
 		visCubeFloat,
-		weightSpectrum
+		weightSpectrum,
+		sigmaSpectrum
 	  };
 
 	enum weightTransformation {
@@ -344,6 +345,9 @@ public:
 	vi::VisBuffer2 * getVisBuffer() {return visibilityIterator_p->getVisBuffer();}
 	IPosition getShape();
 
+	// Need by tMSTransformIterator
+	dataColMap getDataColMap() { return dataColMap_p;}
+
 
 
 protected:
@@ -434,6 +438,7 @@ protected:
 									Bool flushSpectrumCube);
 
 	const Cube<Float>& getApplicableSpectrum(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
+	ArrayColumn<Float>& getOutputWeightColumn(vi::VisBuffer2 *vb, MS::PredefinedColumns datacol);
 	const Cube<Float>& getWeightSpectrumFromSigmaSpectrum(vi::VisBuffer2 *vb);
 	const Cube<Float>& getWeightSpectrumFlat(vi::VisBuffer2 *vb);
 
@@ -1203,6 +1208,7 @@ protected:
 
 	// Buffer handling parameters
 	Bool bufferMode_p;
+	Bool userBufferMode_p;
 
 	// MS-related members
 	MSTransformDataHandler *dataHandler_p;
@@ -1226,6 +1232,7 @@ protected:
 	Bool doingModel_p;
 	dataColMap dataColMap_p;
 	MSMainEnums::PredefinedColumns mainColumn_p;
+	uInt nRowsToAdd_p;
 
 	// Frequency transformation members
 	uInt chansPerOutputSpw_p;
@@ -1274,10 +1281,10 @@ protected:
 	Cube<Float> weightSpectrumCubeDummy_p;
 
 	// Buffer handling members
-	uInt nRowsToAdd_p;
 	uInt dataBuffer_p;
 	uInt relativeRow_p;
 	Bool spectrumReshape_p;
+	Bool cubeTransformation_p;
 	Bool dataColumnAvailable_p;
 	Bool correctedDataColumnAvailable_p;
 	Bool modelDataColumnAvailable_p;
@@ -1288,6 +1295,10 @@ protected:
 	Cube<Complex> *visCubeModel_p;
 	Cube<Float> *visCubeFloat_p;
 	Cube<Float> *weightSpectrum_p;
+	Cube<Float> *sigmaSpectrum_p;
+	Matrix<Float> *weight_p;
+	Matrix<Float> *sigma_p;
+	ArrayColumn<Float> dummyWeightCol_p;
 
 	// Logging
 	LogIO logger_p;
