@@ -126,7 +126,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if inputs.ms.get_fields(inputs.reference, intent=inputs.transintent):
             setjy_result = self._do_setjy(reffile=None, field=inputs.reference)
         else:
-            LOG.warning('Field(s) \'%s\' in %s have no data with intent %s' % 
+            LOG.info('Flux calibrator field(s) \'%s\' in %s have no data with intent %s' % 
                         (inputs.reference, inputs.ms.basename, inputs.transintent))
 
         refant = inputs.refant
