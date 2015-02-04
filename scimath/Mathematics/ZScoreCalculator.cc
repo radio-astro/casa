@@ -24,6 +24,7 @@
 //#
 
 #include <scimath/Mathematics/ZScoreCalculator.h>
+#include <stdlib.h>
 
 #include <casa/BasicMath/Math.h>
 
@@ -88,8 +89,8 @@ Double ZScoreCalculator::getMaxZScore(uInt64 npts) {
 				distance = 1;
 			}
 			distance = lowiter->first > npts
-				? -abs(distance)
-				: abs(distance);
+				? -std::abs(distance)
+				: std::abs(distance);
 		}
 	}
 	Double lz = lowiter->second;
