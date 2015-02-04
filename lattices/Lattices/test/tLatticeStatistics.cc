@@ -171,34 +171,24 @@ int main()
 			AlwaysAssert(npts.size() == 0, AipsError);
 		}
 		{
-			// using setAlgorithm()
+			// using configure*() methods
 			ArrayLattice<Float> latt(data);
 			SubLattice<Float> subLatt(latt);
 			LatticeStatistics<Float> stats(subLatt);
-			stats.setAlgorithm(StatisticsData::CLASSICAL);
+			stats.configureClassical();
 			Array<Double> mean;
 			Float expec = casa::mean(data);
 			stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
 			AlwaysAssert(near(*mean.begin(), expec), AipsError);
-			stats.setAlgorithm(StatisticsData::HINGESFENCES);
 			stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
 			AlwaysAssert(near(*mean.begin(), expec), AipsError);
 			stats.configureHingesFences(0.0);
 			stats.getStatistic(mean, LatticeStatsBase::MEAN, False);
 			expec = -41960.081836;
 			AlwaysAssert(near(*mean.begin(), expec), AipsError);
-			Bool exceptionThrown = False;
-			try {
-				stats.configureFitToHalf();
-			}
-			catch (const AipsError& x) {
-				exceptionThrown = True;
-			}
-			AlwaysAssert(exceptionThrown, AipsError);
-			stats.setAlgorithm(StatisticsData::FITTOHALF);
 			stats.configureFitToHalf(
-					FitToHalfStatisticsData::CMEAN,
-					FitToHalfStatisticsData::LE_CENTER
+				FitToHalfStatisticsData::CMEAN,
+				FitToHalfStatisticsData::LE_CENTER
 			);
 			Array<Double> v;
 			stats.getStatistic(v, LatticeStatsBase::MEAN, False);
@@ -358,7 +348,6 @@ int main()
 			}
 			subLatt.setPixelMask(ArrayLattice<Bool>(mask), True);
 			stats = LatticeStatistics<Float>(subLatt);
-			stats.setAlgorithm(StatisticsData::FITTOHALF);
 			stats.configureFitToHalf(
 				FitToHalfStatisticsData::CMEAN,
 				FitToHalfStatisticsData::LE_CENTER

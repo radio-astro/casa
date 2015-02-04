@@ -203,6 +203,7 @@ public:
 	typedef typename NumericTraits<T>::PrecisionType AccumType;
 
 	struct AlgConf {
+		StatisticsData::ALGORITHM algorithm;
 		// hinges-fences f factor
 		Double hf;
 		// fit to have center type
@@ -211,6 +212,10 @@ public:
 		FitToHalfStatisticsData::USE_DATA ud;
 		// fit to half center value
 		AccumType cv;
+		// Chauvenet zscore
+		Double zs;
+		// Chauvenet max iterations
+		Int mi;
 	};
 
 // Constructor takes the lattice and a <src>LogIO</src> object for logging.
@@ -371,24 +376,23 @@ public:
 // Did we construct with a logger ?
    Bool hasLogger () const {return haveLogger_p;};
 
-   // set the statistics algorithm to use. This will reset any previous algorithm
-   // configuration data, so if you want the algorithm to have a different configuration
-   // beyond its default, you will need to call the appropriate configuration methods
-   // after you have called this method.
-   void setAlgorithm(
-		   StatisticsData::ALGORITHM algorithm
+   // configure object to use Classical Statistics
+   void configureClassical();
+
+   // configure to use fit to half algorithm.
+   void configureFitToHalf(
+		   FitToHalfStatisticsData::CENTER centerType=FitToHalfStatisticsData::CMEAN,
+		   FitToHalfStatisticsData::USE_DATA useData=FitToHalfStatisticsData::LE_CENTER,
+		   AccumType centerValue=0
    );
 
-   // throws exception if the algorithm has not been set to fit to half.
-   // <src>centerValue</src> is only used if <src>centerType</src>=CVALUE
-      void configureFitToHalf(
-    		  FitToHalfStatisticsData::CENTER centerType=FitToHalfStatisticsData::CMEAN,
-    		  FitToHalfStatisticsData::USE_DATA useData=FitToHalfStatisticsData::LE_CENTER,
-    		  AccumType centerValue=0
-      );
-
-   // throws exception if the algorithm has not been set to hinges-fences
+   // configure to use hinges-fences algorithm
    void configureHingesFences(Double f);
+
+   // configure to use Chauvenet's criterion
+   void configureChauvenet(
+		   Double zscore=-1, Int maxIterations=-1
+   );
 
 protected:
 
@@ -486,7 +490,6 @@ private:
 
    vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
 
-   StatisticsData::ALGORITHM _algorithm;
    AlgConf _algConf;
 
 // Summarize the statistics found over the entire lattice
