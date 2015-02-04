@@ -4192,7 +4192,8 @@ record* image::statistics(
 	bool disk, bool robust, bool verbose,
 	bool stretch, const string& logfile,
 	bool append, const string& algorithm, double fence,
-	const string& center, bool lside
+	const string& center, bool lside, double zscore,
+	int maxiter
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4251,11 +4252,13 @@ record* image::statistics(
 		}
 		String myalg = algorithm;
 		myalg.downcase();
-		if (myalg.startsWith("c")) {
-			_stats->setAlgorithm(StatisticsData::CLASSICAL);
+		if (myalg.startsWith("ch")) {
+			_stats->configureChauvenet(zscore, maxiter);
+		}
+		else if (myalg.startsWith("cl")) {
+			_stats->configureClassical();
 		}
 		else if (myalg.startsWith("f")) {
-			_stats->setAlgorithm(StatisticsData::FITTOHALF);
 			String mycenter = center;
 			mycenter.downcase();
 			FitToHalfStatisticsData::CENTER centerType;
@@ -4277,7 +4280,6 @@ record* image::statistics(
 			_stats->configureFitToHalf(centerType, useData, 0.0);
 		}
 		else if (myalg.startsWith("h")) {
-			_stats->setAlgorithm(StatisticsData::HINGESFENCES);
 			_stats->configureHingesFences(fence);
 		}
 		else {

@@ -9244,20 +9244,28 @@ ib.done()
           <value>true</value>
      </param>
      <param type="string"  name="algorithm">
-          <description>Algorithm to use. Supported values are "classic", "fit-half", and "hinges-fences". Minimum match is supported.</description>
+          <description>Algorithm to use. Supported values are "chauvenet", "classic", "fit-half", and "hinges-fences". Minimum match is supported.</description>
           <value>classic</value>
      </param>
      <param type="double"  name="fence">
-          <description>Fence value for hinges-fences. A negative value means use the entire data set (ie default to the "classic" algorithm). Ignored if filter is not "hinges-fences".</description>
+          <description>Fence value for hinges-fences. A negative value means use the entire data set (ie default to the "classic" algorithm). Ignored if algorithm is not "hinges-fences".</description>
           <value>-1</value>
      </param>
      <param type="string"  name="center">
-          <description>Center to use for fit-half. Valid choices are "mean", "median", and "zero". Ignored if filter is not "fit-half".</description>
+          <description>Center to use for fit-half. Valid choices are "mean", "median", and "zero". Ignored if algorithm is not "fit-half".</description>
           <value>mean</value>
      </param>
      <param type="bool"  name="lside">
-          <description>For fit-half, real data are &lt;=; center? If false, real data are &gt;= center. Ignored if filter is not "fit-half".</description>
+          <description>For fit-half, real data are &lt;=; center? If false, real data are &gt;= center. Ignored if algorithm is not "fit-half".</description>
           <value>true</value>
+     </param>
+     <param type="double"  name="zscore">
+          <description>For chauvenet, this is the target maximum number of standard deviations data may have to be included. If negative, use Chauvenet's criterion. Ignored if algorithm is not "chauvenet".</description>
+          <value>-1</value>
+     </param>
+     <param type="int"  name="maxiter">
+          <description>For chauvenet, this is the maximum number of iterations to attempt. Iterating will stop when either this limit is reached, or the zscore criterion is met. If negative, iterate until the zscore criterion is met. Ignored if algortihm is not "chauvenet".</description>
+          <value>-1</value>
      </param>
 </input>
 
@@ -9403,7 +9411,7 @@ Several types of statistical algorithms are supported:
   are &gt;= center. The virtual part of the dataset is then created by reflecting all the real values
   through the center value, to create a perfectly symmetric dataset composed of a real and a virtual
   component. Statistics are then calculated on this resultant dataset. These two parameters are
-  ignored if filter is not "fit-half". Because the maximum value is virtual if lside is True and the
+  ignored if algorithm is not "fit-half". Because the maximum value is virtual if lside is True and the
   minimum value is virtual if lside is False, the value of the maximum position (if lside=True) or
   minimum position (if lside=False) is not reported in the returned record.
 
@@ -9414,7 +9422,44 @@ Several types of statistical algorithms are supported:
   indicate that the full distribution is to be used (ie, the classic algorithm is used). Sufficiently
   large values of f will also be equivalent to using the classic algorithm. For f = 0, only data
   in the inner quartile range is used for computing statistics. The value of fence is silently
-  ignored if filter is not "hinges-fences".
+  ignored if algortihm is not "hinges-fences".
+  
+* chauvenet: The idea behind this algorithm is to eliminate outliers based on a maximum z-score value.
+  A z-score is the number of standard deviations a point is from the mean of a distribution. This
+  method thus is meant to be used for (nearly) normal distributions. In general, this is an iterative
+  process, with successive iterations discarding additional outliers as the remaining points become
+  closer to forming a normal distribution. Iterating stops when no additional points lie beyond the
+  specified zscore value, or, if zscore is negative, when Chauvenet's criterion is met (see below).
+  The parameter maxiter can be set to a non-negative value to prematurely abort this iterative
+  process.
+  
+  Chauvenet's criterion allows the target z-score to decrease as the number of points in the
+  distribution decreases on subsequent iterations. Essentially, the criterion is that the probability
+  of having one point in a normal distribution at a maximum z-score of z_max must be at least 0.5.
+  z_max is therefore a function of (only) the number of points in the distrbution and is given by
+  
+  npts = 0.5/erfc(z_max/sqrt(2))
+  
+  where erfc() is the complementary error function. As iterating proceeds, the number of remaining
+  points decreases as outliers are discarded, and so z_max likewise decreases. Convergence occurs when
+  all remaining points fall within a z-score of z_max. Below is an illustrative table of z_max values
+  and their corresponding npts values. For example, it is likely that there will be a 5-sigma "noise
+  bump" in a perfectly noisy image with one million independent elements.
+  
+  z_max    npts
+  1.0                1
+  1.5                3
+  2.0               10
+  2.5               40
+  3.0              185
+  3.5            1,074
+  4.0            7,893
+  4.5           73,579
+  5.0          872,138
+  5.5       13,165,126
+  6.0      253,398,672
+  6.5    6,225,098,696
+  7.0  195,341,107,722
 
 </description>
 
