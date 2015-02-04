@@ -67,6 +67,7 @@
 
 #include <casa/OS/Timer.h>
 
+#include <scimath/Mathematics/ChauvenetCriterionStatistics.h>
 #include <scimath/Mathematics/ClassicalStatistics.h>
 #include <scimath/Mathematics/FitToHalfStatistics.h>
 #include <scimath/Mathematics/HingesFencesStatistics.h>
@@ -98,14 +99,14 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf() {
+  _sa(), _algConf() {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);   
    range_p.resize(0);
    minPos_p.resize(0);
    maxPos_p.resize(0);
    blcParent_p.resize(0);
-
+   configureClassical();
    if (setNewLattice(lattice)) {
 
 // Cursor axes defaults to all
@@ -141,7 +142,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf()
+  _sa(), _algConf()
 {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);
@@ -149,7 +150,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
    minPos_p.resize(0);
    maxPos_p.resize(0);
    blcParent_p.resize(0);
-//
+   configureClassical();
    if (setNewLattice(lattice)) {
 
 // Cursor axes defaults to all
@@ -165,7 +166,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
 template <class T>
 LatticeStatistics<T>::LatticeStatistics(const LatticeStatistics<T> &other) 
 : pInLattice_p(0), pStoreLattice_p(0),
-  _sa(), _algorithm(StatisticsData::CLASSICAL), _algConf()
+  _sa(), _algConf()
 //
 // Copy constructor.  Storage lattice is not copied.
 //
@@ -232,7 +233,6 @@ LatticeStatistics<T> &LatticeStatistics<T>::operator=(const LatticeStatistics<T>
       minFull_p = other.minFull_p;
       maxFull_p = other.maxFull_p;
       _sa.resize(0);
-      _algorithm = other._algorithm;
       _algConf = other._algConf;
    }
    return *this;
@@ -780,26 +780,17 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
 }
 
 template <class T>
-void LatticeStatistics<T>::setAlgorithm(
-	StatisticsData::ALGORITHM algorithm
-) {
-	if (_algorithm != algorithm) {
-		_algorithm = algorithm;
-		_algConf.hf = -1;
-		_algConf.ct = FitToHalfStatisticsData::CMEAN;
-		_algConf.ud = FitToHalfStatisticsData::LE_CENTER;
-		_algConf.cv = 0;
-		needStorageLattice_p = True;
-	}
+void LatticeStatistics<T>::configureClassical() {
+	_algConf.algorithm = StatisticsData::CLASSICAL;
 }
 
 template <class T>
 void LatticeStatistics<T>::configureHingesFences(Double f) {
-	ThrowIf(
-		_algorithm != StatisticsData::HINGESFENCES,
-		"Logic Error: _algorithm is not set to HingesFences"
-	);
-	if (! near(f, _algConf.hf)) {
+	if (
+		_algConf.algorithm != StatisticsData::HINGESFENCES
+		|| ! near(f, _algConf.hf)
+	) {
+		_algConf.algorithm = StatisticsData::HINGESFENCES;
 		_algConf.hf = f;
 		needStorageLattice_p = True;
 	}
@@ -811,21 +802,35 @@ void LatticeStatistics<T>::configureFitToHalf(
 	FitToHalfStatisticsData::USE_DATA useData,
 	AccumType centerValue
 ) {
-	ThrowIf(
-		_algorithm != StatisticsData::FITTOHALF,
-		"Logic Error: _algorithm is not set to FITTOHALF"
-	);
 	if (
-		centerType != _algConf.ct
+		_algConf.algorithm != StatisticsData::FITTOHALF
+		|| centerType != _algConf.ct
 		|| useData != _algConf.ud
 		|| (
 			centerType == FitToHalfStatisticsData::CVALUE
 			&& ! near(centerValue, _algConf.cv)
 		)
 	) {
+		_algConf.algorithm = StatisticsData::FITTOHALF;
 		_algConf.ct = centerType;
 		_algConf.ud = useData;
 		_algConf.cv = centerValue;
+		needStorageLattice_p = True;
+	}
+}
+
+template <class T>
+void LatticeStatistics<T>::configureChauvenet(
+	Double zscore, Int maxIterations
+) {
+	if (
+		_algConf.algorithm != StatisticsData::CHAUVENETCRITERION
+		|| ! near(zscore, _algConf.zs)
+		|| maxIterations != _algConf.mi
+	) {
+		_algConf.algorithm = StatisticsData::CHAUVENETCRITERION;
+		_algConf.zs = zscore;
+		_algConf.mi = maxIterations;
 		needStorageLattice_p = True;
 	}
 }
@@ -952,7 +957,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     	CountedPtr<StatsDataProvider<AccumType, const T*, const Bool*> > mydp
     		= dynamic_cast<StatsDataProvider<AccumType, const T*, const Bool*> *>(dataProvider);
     	ThrowIf (mydp.null(), "Logic Error: dynamic cast failed");
-    	switch (_algorithm) {
+    	switch (_algConf.algorithm) {
     	case StatisticsData::CLASSICAL:
     		*curSA = new ClassicalStatistics<AccumType, const T*, const Bool*>();
     		break;
@@ -966,8 +971,17 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		);
     		break;
     	}
+    	case StatisticsData::CHAUVENETCRITERION: {
+    		*curSA = new ChauvenetCriterionStatistics<AccumType, const T*, const Bool*>(
+    			_algConf.zs, _algConf.mi
+    		);
+    		break;
+    	}
     	default:
-    		ThrowCc("Logic Error: Unhandled algorithm " + String::toString(_algorithm));
+    		ThrowCc(
+    			"Logic Error: Unhandled algorithm "
+    			+ String::toString(_algConf.algorithm)
+    		);
     	}
 
     	(*curSA)->setDataProvider(mydp);
@@ -1611,6 +1625,7 @@ Bool LatticeStatistics<T>::getLayerStats(
     Int layer = 0;
     for ( pixelIterator.reset(); !pixelIterator.atEnd(); pixelIterator++ ) {
 	IPosition dPos = pixelIterator.position();
+	/*
 	if (displayAxes_p.nelements() == 2) {
 	    if (zAx == 1)
 		if (dPos[1] != zLayer)
@@ -1625,6 +1640,29 @@ Bool LatticeStatistics<T>::getLayerStats(
 	}
 	if (displayAxes_p.nelements() == 1)
 	    layer = zLayer;
+	*/
+	if (displayAxes_p.nelements() == 2) {
+		if (zAx == 1) {
+			if (dPos[1] != zLayer) {
+				continue;
+			}
+			else {
+				layer = hLayer;
+			}
+		}
+		if (hAx == 1) {
+			if (dPos[1] != hLayer) {
+				continue;
+			}
+			else {
+				layer = zLayer;
+			}
+		}
+	}
+	if (displayAxes_p.nelements() == 1) {
+		layer = zLayer;
+	}
+
 
 	Matrix<AccumType>  matrix(pixelIterator.matrixCursor());
 	for (uInt i=0; i<n1; i++) {
@@ -1929,12 +1967,12 @@ Bool LatticeStatistics<T>::display()
        plotter_p.sch (1.2);
        plotter_p.svp(0.1,0.9,0.1,0.9);
    }
-
 // Generate storage lattice if required
 
    if (needStorageLattice_p) {
       if (!generateStorageLattice()) return False;
    }
+
 // If we don't have any display axes just summarise the lattice statistics
    if (displayAxes_p.nelements() == 0) {
      summStats ();
@@ -1948,14 +1986,12 @@ Bool LatticeStatistics<T>::display()
 // Allocate ordinate arrays for plotting and listing.  Try to preserve
 // the true Type of the data as long as we can.  Eventually, for 
 // plotting we have to make it real valued
-
    Matrix<AccumType> ord(n1,NSTATS);
 
 // Iterate through storage lattice by planes (first and last axis of storage lattice)
 // Specify which axes are the matrix  axes so that we can discard other
 // degenerate axes with the matrixCursor function.   n1 is only 
 // constrained to be n1 >= 1
-
    IPosition cursorShape(pStoreLattice_p->ndim(),1);
    cursorShape(0) = pStoreLattice_p->shape()(0);
    cursorShape(pStoreLattice_p->ndim()-1) = pStoreLattice_p->shape()(pStoreLattice_p->ndim()-1);
@@ -1969,25 +2005,11 @@ Bool LatticeStatistics<T>::display()
 
 // Get beam area
 
-   /*
-	* dmehring 2012may23: Changing beam area from Double to Array<Double> to support
-	* per plane beams. However, I'm quite confused at what this method is doing and so
-    * am not sure how to integrate the beamArea array into it. Is plotting of statistics
-    * even supported any longer? It doesn't seem to be from the casapy user interface;
-    * in ImageAnalysis::statistics, the plotting device is explicitly set "/NULL" independent
-    * of user inputs. Until I'm sure how to handle the Array of beam areas correctly and have
-    * definitive proof plotting of statistics is actually still used, I'm commenting out the
-    * beam specific code here and in the nested loop below.
-
-   Array<Double> beamArea;
-   Bool hasBeam = _getBeamArea(beamArea);
-   */
    Bool hasBeam = False;
 //
    for (pixelIterator.reset(); !pixelIterator.atEnd(); pixelIterator++) {
  
 // Convert accumulations to  mean, sigma, and rms.   
- 
       Matrix<AccumType>  matrix(pixelIterator.matrixCursor());   // Reference semantics
       for (uInt i=0; i<n1; i++) {
          const AccumType& nPts = matrix(i,NPTS);
@@ -2012,7 +2034,6 @@ Bool LatticeStatistics<T>::display()
         	 ord(j,i) = matrix(j,i);
          }
       }
-
 
 // Plot statistics
 
@@ -3081,7 +3102,6 @@ void LatticeStatistics<T>::summStats ()
    const IPosition shape = statsSliceShape();
    Array<AccumType> stats(shape);
    pStoreLattice_p->getSlice (stats, IPosition(1,0), shape, IPosition(1,1));
-
    IPosition pos(1);
    pos(0) = NPTS;
    AccumType nPts = stats(pos);
@@ -3092,7 +3112,6 @@ void LatticeStatistics<T>::summStats ()
 
    pos(0) = MEDABSDEVMED;
    AccumType  medAbsDevMed = stats(pos);
-//
    pos(0) = QUARTILE;
    AccumType  quartile= stats(pos);
 
@@ -3109,17 +3128,13 @@ void LatticeStatistics<T>::summStats ()
 
    pos(0) = VARIANCE;
    AccumType  var = stats(pos);
-//                         
-  // AccumType  mean = LattStatsSpecialize::getMean(sum, nPts);
-  //  AccumType  var = LattStatsSpecialize::getVariance(sum, sumSq, nPts);
    AccumType  rms = LattStatsSpecialize::getRms(sumSq, nPts);
    AccumType  sigma = LattStatsSpecialize::getSigma(var);
-//
+
    pos(0) = MIN;
    AccumType  dMin = stats(pos);
    pos(0) = MAX;
    AccumType  dMax = stats(pos);
-
    // Do this check so that we only print the stats when we have values.   
    if (LattStatsSpecialize::hasSomePoints(nPts)) {
 	   displayStats(

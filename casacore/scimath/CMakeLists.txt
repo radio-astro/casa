@@ -31,6 +31,7 @@ Mathematics/SquareMatrix2.cc
 Mathematics/StatisticsData.cc
 Mathematics/VectorKernel.cc
 Mathematics/VanVleck.cc
+Mathematics/ZScoreCalculator.cc
 )
 
 if( NOT NO_SOVERSION )
@@ -229,6 +230,8 @@ Mathematics/AutoDiffMath.tcc
 Mathematics/AutoDiffRep.h
 Mathematics/AutoDiffRep.tcc
 Mathematics/AutoDiffX.h
+Mathematics/ChauvenetCriterionStatistics.h
+Mathematics/ChauvenetCriterionStatistics.tcc
 Mathematics/ClassicalStatistics.h
 Mathematics/ClassicalStatistics.tcc
 Mathematics/Combinatorics.h
@@ -301,6 +304,7 @@ Mathematics/StatisticsUtilities.h
 Mathematics/StatisticsUtilities.tcc
 Mathematics/VanVleck.h
 Mathematics/VectorKernel.h
+Mathematics/ZScoreCalculator.h
 DESTINATION include/casacore/scimath/Mathematics
 )
 
