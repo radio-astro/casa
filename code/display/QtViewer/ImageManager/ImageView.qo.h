@@ -50,7 +50,7 @@ namespace casa {
 
 	public:
 		ImageView(QtDisplayData* data, QWidget *parent = 0);
-		typedef enum ColorCombinationMode {NO_COMBINATION, RGB, HUE_SATURATION };
+		enum ColorCombinationMode {NO_COMBINATION, RGB, HUE_SATURATION };
 
 		//Accessors
 		QString getName() const;
@@ -135,6 +135,8 @@ namespace casa {
 
 		//Reset the rest frequency back to its original value.
 		void resetRestFrequency();
+
+		//void _resetSpectralUnit();
 
 	private:
 		ImageView( const ImageView& other );
@@ -225,6 +227,7 @@ namespace casa {
 		QStringList frequencyUnits;
 		QStringList wavelengthUnits;
 		const String REST_FREQUENCY_KEY;
+		//const String SPECTRAL_UNIT_KEY;
 		const String VALUE_KEY;
 
 		//Opening/closing
@@ -234,6 +237,7 @@ namespace casa {
 
 		//Store original rest frequney value & units.
 		String originalFreq;
+		//String spectralUnit;
 
 		const int VIEWED_BORDER_SIZE;
 		const int NOT_VIEWED_BORDER_SIZE;

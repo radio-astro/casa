@@ -54,6 +54,7 @@ namespace casa {
 		  masterCoordinateColor("#BABABA" ),
 		  imageData( NULL ),
 		  REST_FREQUENCY_KEY("axislabelrestvalue"),
+		  //SPECTRAL_UNIT_KEY("axislabelspectypeunit"),
 		  VALUE_KEY( "value"),
 		  SIZE_COLLAPSED( 50 ), SIZE_EXPANDED( 200 ),
 		  VIEWED_BORDER_SIZE(5), NOT_VIEWED_BORDER_SIZE(2){
@@ -72,6 +73,8 @@ namespace casa {
 
 		if ( data != NULL ) {
 			imageData = data;
+			//connect( imageData, SIGNAL(dataRefresh()), this, SLOT(_resetSpectralUnit()));
+			//_resetSpectralUnit();
 			empty = false;
 		}
 		else {
@@ -110,22 +113,59 @@ namespace casa {
 		rgbModeChanged();
 	}
 
+	/*void ImageView::_resetSpectralUnit(){
+		qDebug() << "_resetSpectralUnit";
+		Record options = imageData->getOptions();
+
+		if ( options.isDefined( SPECTRAL_UNIT_KEY)){
+			Record unitRecord = options.asRecord( SPECTRAL_UNIT_KEY);
+			String unitStr = unitRecord.asString( VALUE_KEY );
+			if ( unitStr != spectralUnit ){
+				spectralUnit = unitStr;
+				qDebug() << "Spectral unit changed new unit="<<spectralUnit.c_str();
+			}
+		}
+	}*/
+
 	void ImageView::resetRestFrequency(){
 		ui.frequencyRadio->blockSignals( true );
 		ui.wavelengthRadio->blockSignals( true );
 		ui.restLineEdit->blockSignals( true );
 		ui.restUnitsCombo->blockSignals( true );
+
+		bool oldFreqSelected = ui.frequencyRadio->isChecked();
+		int oldIndex = ui.restUnitsCombo->currentIndex();
+
 		//Change the frequency/wavelength selection, if necessary & update the text field.
 		restUnits = updateRestUI( originalFreq );
 		//Update the unit combo
 		this->updateFreqUnitCombo();
 		//Select the appropriate unit from the unit combo.
 		this->selectRestUnits( restUnits );
+
+		_sendRestFrequencyChange( originalFreq );
+
+		//Reset
+		if ( oldFreqSelected != ui.frequencyRadio->isChecked()){
+			if ( oldFreqSelected ){
+				ui.frequencyRadio->setChecked( true );
+			}
+			else {
+				ui.wavelengthRadio->setChecked( true );
+			}
+			restChanged();
+		}
+		ui.restUnitsCombo->setCurrentIndex( oldIndex );
+		int unitIndex = originalFreq.index( restUnits.toStdString() );
+		if ( unitIndex > 0 ){
+			String restValue = originalFreq.before( unitIndex );
+			ui.restLineEdit->setText( restValue.c_str() );
+		}
+
 		ui.frequencyRadio->blockSignals( false );
 		ui.wavelengthRadio->blockSignals( false );
 		ui.restLineEdit->blockSignals( false );
 		ui.restUnitsCombo->blockSignals( false );
-		_sendRestFrequencyChange( originalFreq );
 	}
 
 
@@ -400,6 +440,7 @@ namespace casa {
 	void ImageView::restUnitsChanged(){
 		//Only use this if changing withen units withen a given category.
 		//I.e. Frequency in Hz->GHz
+		ui.restLineEdit->blockSignals( true );
 
 		QString newUnits = ui.restUnitsCombo->currentText();
 		bool categoryMatch = isCategoryMatch( newUnits, restUnits );
@@ -423,6 +464,7 @@ namespace casa {
 			}
 			restUnits = newUnits;
 		}
+		ui.restLineEdit->blockSignals( false );
 	}
 
 	void ImageView::restFrequencyChanged(){
@@ -440,6 +482,7 @@ namespace casa {
 		Record restRecord = dataOptions.asRecord( REST_FREQUENCY_KEY );
 		restRecord.define( VALUE_KEY, comboStr );
 		dataOptions.defineRecord( REST_FREQUENCY_KEY, restRecord );
+
 		//An AipsError occurs if we do not remove region and mask;
 		const String REGION_RECORD = "region";
 		if ( dataOptions.isDefined( REGION_RECORD)){
@@ -531,6 +574,8 @@ namespace casa {
 		if ( empty && other != NULL ){
 			empty = false;
 			imageData = other;
+			//connect( imageData, SIGNAL(dataRefresh()), this, SLOT(_resetSpectralUnit()));
+			//_resetSpectralUnit();
 			setTitle();
 			restoreSnapshot();
 		}
@@ -717,6 +762,7 @@ namespace casa {
 	}
 
 	void ImageView::restChanged(){
+		ui.restLineEdit->blockSignals( true );
 		updateFreqUnitCombo();
 
 		QString restValueStr = ui.restLineEdit->text();
@@ -744,6 +790,7 @@ namespace casa {
 			}
 
 		}
+		ui.restLineEdit->blockSignals( false );
 	}
 
 
