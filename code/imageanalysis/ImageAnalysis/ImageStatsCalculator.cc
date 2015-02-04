@@ -54,9 +54,10 @@ ImageStatsCalculator::ImageStatsCalculator(
 	_axes(),
 	_includepix(), _excludepix(),
 	_list(False), /*_force(False), */
-	_disk(False), _robust(False), _verbose(False), _algorithm(StatisticsData::CLASSICAL), _algConf() {
+	_disk(False), _robust(False), _verbose(False), _algConf() {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
+	_algConf.algorithm = StatisticsData::CLASSICAL;
 }
 
 ImageStatsCalculator::~ImageStatsCalculator() {}
@@ -102,40 +103,61 @@ Record ImageStatsCalculator::calculate() {
 	return retval;
 }
 
+void ImageStatsCalculator::configureChauvenet(
+	Double zscore, Int maxIterations
+) {
+	if (
+		_algConf.algorithm != StatisticsData::CHAUVENETCRITERION
+		|| ! near(_algConf.zs, zscore)
+		|| maxIterations != _algConf.mi
+	) {
+		_algConf.algorithm = StatisticsData::CHAUVENETCRITERION;
+		_algConf.zs = zscore;
+		_algConf.mi = maxIterations;
+		_statistics.reset();
+	}
+}
+
+
+void ImageStatsCalculator::configureClassical() {
+	if (_algConf.algorithm != StatisticsData::CLASSICAL) {
+		_algConf.algorithm = StatisticsData::CLASSICAL;
+		_statistics.reset();
+	}
+}
+
 void ImageStatsCalculator::configureFitToHalf(
 	FitToHalfStatisticsData::CENTER centerType,
 	FitToHalfStatisticsData::USE_DATA useData,
 	Double centerValue
 ) {
     if (
-        _algConf.ct != centerType
+    	_algConf.algorithm != StatisticsData::FITTOHALF
+    	|| _algConf.ct != centerType
         || _algConf.ud != useData
         || (
             centerType == FitToHalfStatisticsData::CVALUE
             && ! near(_algConf.cv, centerValue)
         )
     ) {
+    	_algConf.algorithm = StatisticsData::FITTOHALF;
+    	_algConf.ct = centerType;
+    	_algConf.ud = useData;
+    	_algConf.cv = centerValue;
         _statistics.reset();
     }
-	_algConf.ct = centerType;
-	_algConf.ud = useData;
-	_algConf.cv = centerValue;
+
 }
 
 void ImageStatsCalculator::configureHingesFences(Double f) {
-    if (! near(_algConf.hf, f)) {
+    if (
+    	_algConf.algorithm != StatisticsData::HINGESFENCES
+    	|| ! near(_algConf.hf, f)
+    ) {
+    	_algConf.algorithm = StatisticsData::HINGESFENCES;
+    	_algConf.hf = f;
         _statistics.reset();
     }
-	_algConf.hf = f;
-}
-
-void ImageStatsCalculator::setAlgorithm(
-	StatisticsData::ALGORITHM algorithm
-) {
-    if (_algorithm != algorithm) {
-        _statistics.reset();
-    }
-	_algorithm = algorithm;
 }
 
 void ImageStatsCalculator::setVerbose(Bool v) {
@@ -385,67 +407,30 @@ Record ImageStatsCalculator::statistics(
 			}
 		}
 	}
-	// Make new statistics object only if we need to.    This code is getting
-	// a bit silly. I should rework it somewhen.
-    /*
-    Bool forceNewStorage = _force;
-	if (_statistics.get() != 0 && _disk != _oldStatsStorageForce) {
-		forceNewStorage = True;
-	}
-	if (forceNewStorage) {
-		_statistics.reset(
-			_verbose
+    if (_statistics.get() == NULL) {
+        _statistics.reset(
+		    _verbose
 			? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
 			: new ImageStatistics<Float> (subImage, False, _disk)
 		);
 	}
 	else {
-        */
-		if (_statistics.get() == 0) {
-			// We are here if this is the first time or the image has
-			// changed (_statistics is deleted then)
-            _statistics.reset(
-				_verbose
-				? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
-				: new ImageStatistics<Float> (subImage, False, _disk)
-			);
-			/*
-			Array<Double> debugMax;
-			_statistics->getStatistic(debugMax, LatticeStatsBase::MAX);
-			*/
+		_statistics->resetError();
+		if (
+		    _haveRegionsChanged(
+				pRegionRegion, pMaskRegion,
+				_oldStatsRegion.get(), _oldStatsMask.get()
+			)
+		) {
+			_statistics->setNewImage(subImage);
 		}
-		else {
-			// We already have a statistics object.  We only have to set
-			// the new image (which will force the accumulation image
-			// to be recomputed) if the region has changed.  If the image itself
-			// changed, _statistics will already have been set to 0
-            /*
-			Bool reMake = (_verbose && !_statistics->hasLogger())
-								|| (!_verbose && _statistics->hasLogger());
-			if (reMake) {
-                _statistics.reset(
-					_verbose
-					? new ImageStatistics<Float> (subImage, *_getLog(), True, _disk)
-					: new ImageStatistics<Float> (subImage, True, _disk)
-				);
-			}
-			else {
-            */
-				_statistics->resetError();
-				if (
-					_haveRegionsChanged(
-						pRegionRegion, pMaskRegion,
-						_oldStatsRegion.get(), _oldStatsMask.get()
-					)
-				) {
-					_statistics->setNewImage(subImage);
-				}
-			//}
-		}
-	//}
-	_statistics->setAlgorithm(_algorithm);
-	switch (_algorithm) {
+	}
+	switch (_algConf.algorithm) {
+	case StatisticsData::CHAUVENETCRITERION:
+		_statistics->configureChauvenet(_algConf.zs, _algConf.mi);
+		break;
 	case StatisticsData::CLASSICAL:
+		_statistics->configureClassical();
 		break;
 	case StatisticsData::FITTOHALF:
 		_statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
@@ -456,7 +441,7 @@ Record ImageStatsCalculator::statistics(
 	default:
 		ThrowCc(
 			"Logic Error: Unhandled statistics algorithm "
-			+ String::toString(_algorithm)
+			+ String::toString(_algConf.algorithm)
 		);
 	}
 	if (messageStore != NULL) {
@@ -483,7 +468,6 @@ Record ImageStatsCalculator::statistics(
 		!_statistics->setList(_list),
 		_statistics->errorMessage()
 	);
-
 	// Recover statistics
 	Array<Double> npts, sum, sumsquared, min, max, mean, sigma;
 	Array<Double> rms, fluxDensity, med, medAbsDevMed, quartile, q1, q3;

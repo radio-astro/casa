@@ -70,6 +70,10 @@ public:
 
     Record calculate();
 
+    void configureChauvenet(Double zscore, Int maxIterations);
+
+    void configureClassical();
+
     // configure fit to half algorithm
     void configureFitToHalf(
     	FitToHalfStatisticsData::CENTER centerType,
@@ -101,9 +105,6 @@ public:
     void setRobust(Bool r);
 
     void setVerbose(Bool v);
-
-    // set statistics algorithm to use
-    void setAlgorithm(StatisticsData::ALGORITHM algorithm);
 
     inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
 
@@ -138,7 +139,7 @@ private:
     Vector<Float> _includepix, _excludepix;
     Bool _list, /*_force,*/ _disk, _robust, _verbose;
 
-    StatisticsData::ALGORITHM _algorithm;
+    //StatisticsData::ALGORITHM _algorithm;
     LatticeStatistics<Float>::AlgConf _algConf;
 
     static const String _class;
