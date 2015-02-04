@@ -306,7 +306,7 @@ class Setjy(basetask.StandardTaskTemplate):
         # could be the case when given multiple MSes, one of which could be
         # without an amplitude calibrator for instance.
         if not inputs.ms.get_fields(inputs.field, intent=inputs.intent):
-            LOG.info('Field(s) \'%s\' in %s have no data with intent %s' % 
+            LOG.warning('Field(s) \'%s\' in %s have no data with intent %s' % 
                         (inputs.field, inputs.ms.basename, inputs.intent))
             return result
 
