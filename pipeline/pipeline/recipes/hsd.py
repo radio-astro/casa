@@ -33,8 +33,10 @@ __rethrow_casa_exceptions = True
 # CASA imports
 from h_init_cli import h_init_cli as h_init
 from hsd_importdata_cli import hsd_importdata_cli as hsd_importdata
+from hsd_flagdata_cli import hsd_flagdata_cli as hsd_flagdata
+from hifa_tsyscal_cli import hifa_tsyscal_cli as hifa_tsyscal
+from hsd_mstoscantable_cli import hsd_mstoscantable_cli as hsd_mstoscantable
 from hsd_inspectdata_cli import hsd_inspectdata_cli as hsd_inspectdata
-from hsd_caltsys_cli import hsd_caltsys_cli as hsd_caltsys
 from hsd_calsky_cli import hsd_calsky_cli as hsd_calsky
 from hsd_applycal_cli import hsd_applycal_cli as hsd_applycal
 from hsd_simplescale_cli import hsd_simplescale_cli as hsd_simplescale
@@ -63,16 +65,22 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
         h_init()
 
         # Load the data
-        hsd_importdata (infiles=vislist, pipelinemode=pipelinemode)
+        hsd_importdata (vis=vislist, pipelinemode=pipelinemode)
         if importonly:
-           raise Exception(IMPORT_ONLY)
+            raise Exception(IMPORT_ONLY)
+       
+        # Deterministic flagging
+        hsd_flagdata (pipelinemode=pipelinemode)
+        
+        # Tsys calibration
+        hifa_tsyscal (pipelinemode=pipelinemode)
+        
+        # Convert MSs to Scantables
+        hsd_mstoscantable (pipelinemode=pipelinemode)
     
         # Inspect data
         hsd_inspectdata (pipelinemode=pipelinemode)
     
-        # Compute the system temperature calibration
-        hsd_caltsys (pipelinemode=pipelinemode)
-
         # Compute the sky calibration
         hsd_calsky (pipelinemode=pipelinemode)
         
@@ -96,7 +104,7 @@ def hsd (vislist, importonly=False, pipelinemode='automatic', interactive=True):
             hsd_imaging (pipelinemode=pipelinemode)
 
         # Export the data
-        hsd_exportdata(pipelinemode=pipelinemode)
+        hsd_exportdata (pipelinemode=pipelinemode)
     
     except Exception, e:
         if str(e) == IMPORT_ONLY:
