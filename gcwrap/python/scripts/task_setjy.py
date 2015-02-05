@@ -7,30 +7,104 @@ from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 import pdb
 
+# Helper class for Multi-MS processing (by SC)
+class SetjyHelper():
+    def __init__(self, msfile=None):
+        self.__msfile = msfile
+        
+    def resetModelCol(self):
+        rstatus = True
+        
+        # Hide the log info
+        casalog.post("Resetting the log filter to WARN", "DEBUG")
+        casalog.post("Initialize the MODEL columns of sub-MSs to default 1", "DEBUG")
+        casalog.filter('WARN')
+        myms = mstool()
+        try:
+            try:
+                myms.open(self.__msfile)
+                submslist = myms.getreferencedtables()
+            except:
+                if (os.path.exists(self.__msfile+'/SUBMSS')):
+                    casalog.post("MS may be corrupted. Try to initialize sub-MSs anyway...","DEBUG")
+                    submslist = [os.path.abspath(self.__msfile+'/SUBMSS/'+fn) 
+                                 for fn in os.listdir(self.__msfile+'/SUBMSS') if fn.endswith('.ms') ]
+                else:
+                    rstatus = False
+
+            mycb = cbtool()
+            for subms in submslist:
+                mycb.open(subms, addcorr=False, addmodel=True)
+                mycb.close()            
+        except:
+            rstatus = False
+                
+        casalog.filter('INFO')
+        return rstatus
+
+
 def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, intent=None, observation=None,
           scalebychan=None, standard=None, model=None, modimage=None, 
           listmodels=None, fluxdensity=None, spix=None, reffreq=None, polindex=None,
           polangle=None, rotmeas=None, fluxdict=None, 
-          useephemdir=None, interpolation=None, usescratch=None):
+          useephemdir=None, interpolation=None, usescratch=None, ismms=None):
     """Fills the model column for flux density calibrators."""
 
     casalog.origin('setjy')
     casalog.post("standard="+standard,'DEBUG1')
+    mylocals = locals()
+
+    sh = SetjyHelper(vis)
+    rstat = sh.resetModelCol()
 
     # Take care of the trivial parallelization
     if ( not listmodels and ParallelTaskHelper.isParallelMS(vis) and usescratch):
         # jagonzal: We actually operate in parallel when usescratch=True because only
         # in this case there is a good trade-off between the parallelization overhead
         # and speed up due to the load involved with MODEL_DATA column creation
-        helper = ParallelTaskHelper('setjy', locals())
-        retval = helper.go()           
+        # Create the default MODEL columns in all sub-MSs to avoid corruption of the MMS
+        # when there are NULL MS selections
+        #
+        # TT: Use ismms is used to change behavior of some of the execption handling
+        # for MMS case. It is a hidden task parameter only modified when input vis
+        # is identified as MMS via SetjyHelper.resetModel().
+      
+        #sh = SetjyHelper(vis)
+        #rstat = sh.resetModelCol()
+        casalog.post("rstat ="+str(rstat))
+        if rstat:
+            ismms=rstat
+            mylocals['ismms']=ismms
+            #print "mylocals now=",mylocals
+            helper = ParallelTaskHelper('setjy', mylocals)
+            helper._consolidateOutput = False
+            #helper._consolidateOutput = True
+            try:
+                retval = helper.go()
+
+                # Remove the subMS names from the returned dictionary
+                #print "remove subms names ...retval=",retval
+                if (any(isinstance(v,dict) for v in retval.itervalues())):
+                    for subMS in retval:
+                        dict_i = retval[subMS]
+                        if isinstance(dict_i,dict):
+                            retval = dict_i
+                            break
+                else:
+                    casalog.post("Error in parallel processing of MMS",'SEVERE')
+                    retval = False
+            except Exception, instance:
+                retval = False
+        else:
+            casalog.post("Could not initialize MODEL columns in sub-MSs", 'SEVERE')
+            retval = False
     else:
         retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, intent, observation, scalebychan, standard, model, 
                         modimage, listmodels, fluxdensity, spix, reffreq,
                         polindex, polangle, rotmeas, fluxdict, 
-                        useephemdir, interpolation, usescratch)
+                        useephemdir, interpolation, usescratch, ismms)
 
     #pdb.set_trace()
     return retval
@@ -41,7 +115,7 @@ def setjy_core(vis=None, field=None, spw=None,
                scalebychan=None, standard=None, model=None, modimage=None, listmodels=None,
                fluxdensity=None, spix=None, reffreq=None,
                polindex=None, polangle=None, rotmeas=None, fluxdict=None,
-               useephemdir=None, interpolation=None, usescratch=None):
+               useephemdir=None, interpolation=None, usescratch=None, ismms=None):
     """Fills the model column for flux density calibrators."""
 
     #retval = True
@@ -49,7 +123,6 @@ def setjy_core(vis=None, field=None, spw=None,
     # remove componentlist generated
     deletecomp = True
     #deletecomp = False 
-
     try:
         # Here we only list the models available, but don't perform any operation
         if listmodels:
@@ -89,9 +162,9 @@ def setjy_core(vis=None, field=None, spw=None,
 
             myms = mstool()
             myim = imtool()
-
+            if ismms==None: ismms=False
             if type(vis) == str and os.path.isdir(vis):
-                n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan, intent, usescratch)
+                n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan, intent, usescratch, ismms)
                 # jagonzal: When  usescratch=True, creating the MODEL column only on a sub-set of
                 # Sub-MSs causes problems because ms::open requires all the tables in ConCatTable 
                 # to have the same description (MODEL data column must exist in all Sub-MSs)
@@ -103,9 +176,13 @@ def setjy_core(vis=None, field=None, spw=None,
                 # Finally, This does not affect the normal MS case because nselrows throws an
                 # exception when the user enters an invalid data selection, but it works for the 
                 # MMS case because every sub-Ms contains a copy of the entire MMS sub-tables
-                if ((not n_selected_rows) and ((not usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
+                ##if ((not n_selected_rows) and ((not usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
+                #mylocals = locals()
+                if ((not n_selected_rows) and ((usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
+                #if ((not n_selected_rows) and ((mylocals['ismms']) or (standard=="Butler-JPL-Horizons 2012"))) :
                     # jagonzal: Turn this SEVERE into WARNING, as explained above
                     casalog.post("No rows were selected.", "WARNING")
+                    print "PASS here"
                     return True
                 else:
                     if (not n_selected_rows):
@@ -273,7 +350,11 @@ def setjy_core(vis=None, field=None, spw=None,
     except Exception, instance:
         casalog.post('%s' % instance,'SEVERE')
         #retval=False
-        raise instance
+	raise instance
+        #if not ismms: 
+        #    raise Exception, instance
+        #else:
+        #    pass
 
     finally:
         if standard=='Butler-JPL-Horizons 2012':
@@ -341,13 +422,12 @@ def findCalModels(target='CalModels',
     return retset             
 
 
-def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', usescratch=None):
+def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', usescratch=None, ismms=False):
 
     # modified to use ms.msselect. If no row is selected ms.msselect will
     # raise an exception  - TT 2013.12.13
     retval = 0
     myms = mstool()
-
     #msselargs = {'vis': vis}
     msselargs = {}
     if field:
@@ -411,6 +491,7 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
 #    mytb = tbtool()
 #    mytb.open(vis)
     myms = mstool()
+    casalog.post(str(msselargs))
     myms.open(vis)
 
     if (len(msselargs)==0):
@@ -426,9 +507,18 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent='', us
             retval = myms.nrow()
             myms.close()
         except Exception, instance:
-            casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
+            if ismms:
+                 casalog.post('nselrows: %s' % instance,'WARN')
+            else:
+                 # this is probably redundant as the exception will be handle in setjy()
+                 #casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
+                 pass
+            
             myms.close()
-            raise Exception, instance
+            if not ismms: 
+                raise Exception, instance
+            else:
+                casalog.post('Proceed as it appears to be dealing with a MMS...')
 
     return retval
 

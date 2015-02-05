@@ -178,6 +178,11 @@
 		  <value>False</value>
 		  </param>
 
+		<param type="bool" name="ismms" subparam="true" visibility="hidden">
+			<description>to be used internally for MMS</description>
+			<value>False</value>
+		</param>
+
                 <constraints>
                   <when param="selectdata">
 		    <equals type="bool" value="False"/>

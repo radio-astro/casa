@@ -18,6 +18,20 @@ Features tested:
 
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/'
 
+# Pick up alternative data directory to run tests on MMSs
+testmms = False
+if os.environ.has_key('TEST_DATADIR'):
+    DATADIR = str(os.environ.get('TEST_DATADIR'))+'/setjy/'
+    if os.path.isdir(DATADIR):
+        testmms = True
+        datapath = DATADIR
+
+print 'setjy tests will use data from '+datapath
+
+if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
+    ParallelTaskHelper.bypassParallelProcessing(1)
+
+
 class SetjyUnitTestBase(unittest.TestCase):
 
     def setUpMS(self,MS):
@@ -25,19 +39,26 @@ class SetjyUnitTestBase(unittest.TestCase):
         self.inpms = MS
 
         # Create working area
-        if not os.path.exists('unittest/setjy'):
-            print "\nCreate working area..."
-            os.system('mkdir -p unittest/setjy')
+        setjydatapath = 'unittest/setjy/'
+        # 2015-02-02 TT: this seems unnessary directory layer...
+        #if not os.path.exists(setjydatapath):
+        #    print "\nCreate working area..."
+        #    os.system('mkdir -p '+setjydatapath)
 
         # Create a new fresh copy of the MS
         print "\nCreate a new local copy of the MS..."
-        os.system('cp -rf ' + os.environ.get('CASAPATH').split()[0] + "/data/regression/" + self.inpms + ' unittest/setjy/')
+        #print " setjydatapath=",setjydatapath, " inpms=",self.inpms
+        if testmms:
+            os.system('cp -rf ' + datapath + self.inpms + ' '+self.inpms)
+        else:
+            os.system('cp -rf ' + os.environ.get('CASAPATH').split()[0] + "/data/regression/" + setjydatapath + self.inpms + ' ' + self.inpms)
 
     def resetMS(self):
 
         if os.path.exists(self.inpms):
             print "\nRemove local copy of MS from previous test..."
-            ret = os.system('rm -rf unittest/setjy/*')
+            #ret = os.system('rm -rf unittest/setjy/*')
+            shutil.rmtree(self.inpms)
 
     def get_last_history_line(self,vis, origin='setjy::imager::setjy()',
                               nback=0, maxnback=20, hint=''):
@@ -119,7 +140,8 @@ class test_SingleObservation(SetjyUnitTestBase):
     """Test single observation MS"""
 
     def setUp(self):
-        self.setUpMS("unittest/setjy/2528.ms")         # Uranus
+        #self.setUpMS("unittest/setjy/2528.ms")         # Uranus
+        self.setUpMS("2528.ms")         # Uranus
 
     def tearDown(self):
         self.resetMS()
@@ -487,7 +509,13 @@ class test_MultipleObservations(SetjyUnitTestBase):
     """Test multiple observation MS (CAS-3320)"""
 
     def setUp(self):
-        self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
+        prefix = 'multiobs' 
+        if testmms:
+            msname=prefix+'.mms'
+        else:
+            msname=prefix+'.ms'
+        #self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
+        self.setUpMS(msname)         # Titan
 
     def tearDown(self):
         self.resetMS()
@@ -507,21 +535,21 @@ class test_MultipleObservations(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
             sjran = setjy(self.inpms, field='Titan', spw='',
                           selectdata=True, observation=1, 
                           modimage='',
                           scalebychan=False, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2010', usescratch=True)
         except Exception, e:
-            print "\nError running setjy(field='Uranus')"
+            print "\nError running setjy(field='Titan')"
             raise e
 
         try:
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
                 record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
                 record[1] = tblocal.getcell('MODEL_DATA', 666)[0]
@@ -557,7 +585,7 @@ class test_MultipleObservations(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
             sjran = setjy(self.inpms, field='Titan', spw='',
                           selectdata=True, observation=1, 
                           modimage='',
@@ -571,7 +599,7 @@ class test_MultipleObservations(SetjyUnitTestBase):
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
                 record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
                 record[1] = tblocal.getcell('MODEL_DATA', 666)[0]
@@ -599,8 +627,10 @@ class test_MultipleObservations(SetjyUnitTestBase):
 class test_ModImage(SetjyUnitTestBase):
 
     def setUp(self):
+        ##### TODO: Should skip the importuvfits and start from MS!!!! (TT)
         self.inpuvf = datapath + '/ATST2/NGC1333/N1333_1.UVFITS'
-        self.inpms = 'unittest/setjy/n1333_1.ms'
+        #self.inpms = 'unittest/setjy/n1333_1.ms'
+        self.inpms = 'n1333_1.ms'
         self.field = '0542+498_1'
         self.modelim = '3C147_U.im'
         self.result = {}
@@ -608,9 +638,9 @@ class test_ModImage(SetjyUnitTestBase):
             raise EnvironmentError, "Missing input UVFITS file: " + datapath + self.inpuvf
 
         try:
-            if not os.path.exists('unittest/setjy'):
-                print "\nCreate working area..."
-                os.system('mkdir -p unittest/setjy')
+            #if not os.path.exists('unittest/setjy'):
+            #    print "\nCreate working area..."
+            #    os.system('mkdir -p unittest/setjy')
             print "Importing", self.inpuvf, "to an MS."
             importuvfits(fitsfile=self.inpuvf, vis=self.inpms,antnamescheme="new")
         except Exception, e:
@@ -769,7 +799,8 @@ class test_ModImage(SetjyUnitTestBase):
 class test_inputs(SetjyUnitTestBase):
     """Test input parameter checking"""
     def setUp(self):
-        self.setUpMS("unittest/setjy/2528.ms")         # Uranus
+        #self.setUpMS("unittest/setjy/2528.ms")         # Uranus
+        self.setUpMS("2528.ms")         # Uranus
 
     def tearDown(self):
         self.resetMS()
@@ -810,7 +841,13 @@ class test_conesearch(SetjyUnitTestBase):
     """Test search for field match by position (standard='Perley-Butler 2013')"""
 
     def setUp(self):
-        self.setUpMS('unittest/setjy/n1333_nonstdcalname.ms')
+        prefix = 'n1333_nonstdcalname' 
+        if testmms:
+            msname=prefix+'.mms'
+        else:
+            msname=prefix+'.ms'
+        #self.setUpMS('unittest/setjy/n1333_nonstdcalname.ms')
+        self.setUpMS(msname)
         self.field = 'myfcalsrc'
         self.modelim = '3C147_U.im'
         self.result = {}
@@ -846,7 +883,12 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
     """Test standard="fluxscale" mode"""
 
     def setUp(self):
-        self.setUpMS('unittest/setjy/ngc5921.ms')
+        prefix = 'ngc5921' 
+        if testmms:
+            msname=prefix+'.mms'
+        else:
+            msname=prefix+'.ms'
+        self.setUpMS(msname) 
         self.field = 'myfcalsrc'
         self.modelim = '3C147_U.im'
         self.result = {}
@@ -890,12 +932,19 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
                 print "FAIL: missing field = %s in the returned dictionary" % self.field
         self.check_eq(sjran['1']['0']['fluxd'][0],2.48362403,0.0001)
         self.assertTrue(ret)
+        print "sjran=",sjran
 
 class test_setpol(SetjyUnitTestBase):
     """Test multi-term spix and polarization parameter setting"""
 
     def setUp(self):
-        self.setUpMS('unittest/setjy/3c391calonly.ms')
+        prefix = '3c391calonly'
+        if testmms:
+            msfile = prefix + '.mms'
+        else:
+            msfile = prefix + '.ms'
+        #self.setUpMS('unittest/setjy/3c391calonly.ms')
+        self.setUpMS(msfile)
         self.result = {}
 
     def tearDown(self):
@@ -916,7 +965,8 @@ class test_setpol(SetjyUnitTestBase):
             ret = False
         #else:
         #    print sjran 
-        
+        #print "fluxdic=",sjran 
+ 
         self.check_eq(sjran['0']['0']['fluxd'][0],7.81694, 0.0001)
         self.assertTrue(ret)
 
