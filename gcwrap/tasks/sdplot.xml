@@ -553,6 +553,9 @@ plottype -- type of plot
                 example: maximum of 16 stacked spectra
                          stack by pol, beam, if, time, scan
                 Note stack selection is ignored when panel='r'.
+                Note behavior of stack='t' depends on plottype:
+                   * stack by time in plottype='spectra'
+                   * stack by source type in plottype='totalpower' and 'pointing'
         panel -- code for splitting into multiple panels for spectral plotting
                 options: 'p','b','i','t','s','r' or
                          'pol', 'beam', 'if', 'time', 'scan', 'row'
