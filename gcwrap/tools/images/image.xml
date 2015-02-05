@@ -9431,7 +9431,8 @@ Several types of statistical algorithms are supported:
   closer to forming a normal distribution. Iterating stops when no additional points lie beyond the
   specified zscore value, or, if zscore is negative, when Chauvenet's criterion is met (see below).
   The parameter maxiter can be set to a non-negative value to prematurely abort this iterative
-  process.
+  process. When verbose=T, the "N iter" column in the table that is logged represents the number
+  of iterations that were executed.
   
   Chauvenet's criterion allows the target z-score to decrease as the number of points in the
   distribution decreases on subsequent iterations. Essentially, the criterion is that the probability
