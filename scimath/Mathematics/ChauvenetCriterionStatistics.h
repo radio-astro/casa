@@ -76,11 +76,15 @@ public:
 	// an exception will be thrown if <src>c</src> is True.
 	void setCalculateAsAdded(Bool c);
 
+	// get the number of iterations
+	uInt getNiter() const { return _niter; }
+
 private:
 
 	Double _zscore;
 	Int _maxIterations;
 	Bool _rangeIsSet;
+	uInt _niter;
 
 	void _setRange();
 };

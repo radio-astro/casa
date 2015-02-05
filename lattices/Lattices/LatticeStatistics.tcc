@@ -99,7 +99,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _sa(), _algConf() {
+  _sa(), _algConf(), _chauvIters() {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);   
    range_p.resize(0);
@@ -142,7 +142,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
   showProgress_p(showProgress),
   forceDisk_p(forceDisk),
   doneFullMinMax_p(False),
-  _sa(), _algConf()
+  _sa(), _algConf(), _chauvIters()
 {
    nxy_p.resize(0);
    statsToPlot_p.resize(0);
@@ -166,7 +166,7 @@ LatticeStatistics<T>::LatticeStatistics (const MaskedLattice<T>& lattice,
 template <class T>
 LatticeStatistics<T>::LatticeStatistics(const LatticeStatistics<T> &other) 
 : pInLattice_p(0), pStoreLattice_p(0),
-  _sa(), _algConf()
+  _sa(other._sa), _algConf(other._algConf), _chauvIters(other._chauvIters)
 //
 // Copy constructor.  Storage lattice is not copied.
 //
@@ -232,8 +232,9 @@ LatticeStatistics<T> &LatticeStatistics<T>::operator=(const LatticeStatistics<T>
       doneFullMinMax_p= other.doneFullMinMax_p;
       minFull_p = other.minFull_p;
       maxFull_p = other.maxFull_p;
-      _sa.resize(0);
+      _sa = other._sa;
       _algConf = other._algConf;
+      _chauvIters = other._chauvIters;
    }
    return *this;
 }
@@ -908,6 +909,7 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     T overallMin = 0;
     Bool isReal = whatType(&currentMax);
     _sa.resize(storeLatticeShape.product()/storeLatticeShape.last());
+    _chauvIters.clear();
     typename vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > >::iterator curSA = _sa.begin();
     for (stepper.reset(); ! stepper.atEnd(); stepper++, ++curSA) {
         IPosition curPos = stepper.position();
@@ -989,6 +991,18 @@ Bool LatticeStatistics<T>::generateStorageLattice()
     		dataProvider->setProgressMeter(CountedPtr<LattStatsProgress>(NULL));
     	}
     	StatsData<AccumType> stats = (*curSA)->getStatistics();
+    	if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+    		ChauvenetCriterionStatistics<AccumType, const T*, const Bool*> *ch
+    			= dynamic_cast<ChauvenetCriterionStatistics<AccumType, const T*, const Bool*> *>(
+    				&(*(*curSA))
+    			);
+    		ostringstream os;
+    		os << curPos;
+    		// using strings as keys rather than the IPosition objects directly because for some reason,
+    		// only one IPosition gets added to the map, and then no other ones get added.
+    		// I don't understand, things seem to work OK when I try this in tIPosition, but not here.
+    		_chauvIters[os.str()] = ch->getNiter();
+    	}
     	pStoreLattice_p->putAt(stats.mean, posMean);
     	pStoreLattice_p->putAt(stats.npts, posNpts);
     	pStoreLattice_p->putAt(stats.sum, posSum);

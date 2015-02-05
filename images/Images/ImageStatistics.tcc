@@ -64,7 +64,7 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 //
 : LatticeStatistics<T>(image, os, showProgress, forceDisk),
   pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
-  precision_(-1), _showRobust(False), _recordMessages(False), _messages()
+  precision_(-1), _showRobust(False), _recordMessages(False), _listStats(True),  _messages()
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -80,7 +80,7 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 //
 : LatticeStatistics<T>(image, showProgress, forceDisk),
   pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
-  precision_(-1), _showRobust(False), _recordMessages(False), _messages()
+  precision_(-1), _showRobust(False), _recordMessages(False), _listStats(True), _messages()
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -278,7 +278,7 @@ Bool ImageStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 //   Bool    Indicates coordinate transformations failed
 //
 {
-   if (!haveLogger_p) {
+   if (!haveLogger_p || ! _listStats) {
 
 // We will consider this situation as successful
 

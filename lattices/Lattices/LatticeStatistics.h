@@ -33,6 +33,7 @@
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
+//#include <casa/Containers/HashMap.h>
 #include <lattices/Lattices/LatticeStatsBase.h>
 #include <lattices/Lattices/TiledCollapser.h>
 #include <lattices/Lattices/TiledCollapser.h>
@@ -394,6 +395,9 @@ public:
 		   Double zscore=-1, Int maxIterations=-1
    );
 
+   // get number of iterations associated with Chauvenet criterion algorithm
+   std::map<String, uInt> getChauvenetNiter() const { return _chauvIters; }
+
 protected:
 
    LogIO os_p;
@@ -491,6 +495,8 @@ private:
    vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
 
    AlgConf _algConf;
+   std::map<String, uInt> _chauvIters;
+
 
 // Summarize the statistics found over the entire lattice
    virtual void summStats();
