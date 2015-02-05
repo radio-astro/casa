@@ -1,4 +1,4 @@
-//# tSubImage.cc: Test program for class SubImage
+//# t_subImage.cc: Test program for class _subImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -50,11 +50,9 @@ ImageStatsCalculator::ImageStatsCalculator(
 		image, "", regionPtr, "", "",
 		"", maskInp, "", False
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
-	/*_oldStatsStorageForce(False), */
-	_axes(),
-	_includepix(), _excludepix(),
-	_list(False), /*_force(False), */
-	_disk(False), _robust(False), _verbose(False), _algConf() {
+	_axes(), _includepix(), _excludepix(), _list(False),
+	_disk(False), _robust(False), _verbose(False), _algConf(),
+	_subImage() {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
 	_algConf.algorithm = StatisticsData::CLASSICAL;
@@ -73,16 +71,15 @@ Record ImageStatsCalculator::calculate() {
 		if (writeFile) {
 			for (
 				vector<String>::const_iterator iter=messageStore->begin();
-				iter != messageStore->end(); iter++
+				iter != messageStore->end(); ++iter
 			) {
 				_writeLogfile("# " + *iter, False, False);
 			}
 		}
-		SPIIF clone(_getImage()->cloneII());
 		ImageCollapser<Float> collapsed(
-			clone,
+			SPCIIF(_subImage.cloneII()),
 			_axes.nelements() == 0
-				? IPosition::makeAxisPath(clone->ndim()).asVector()
+				? IPosition::makeAxisPath(_getImage()->ndim()).asVector()
 				: _axes,
 			False, ImageCollapserData::ZERO, "", False
 		);
@@ -215,21 +212,21 @@ void ImageStatsCalculator::_reportDetailedStats(
 		if (imShape[stokesCol] > 1) {
 			reportAxes.prepend(IPosition(1, stokesCol));
 		}
-		myloc++;
+		++myloc;
 	}
 	if (freqCol >= 0) {
 		idx[myloc] = freqCol;
 		if (imShape[freqCol] > 1) {
 			reportAxes.prepend(IPosition(1, freqCol));
 		}
-		myloc++;
+		++myloc;
 	}
 	if (decCol >= 0) {
 		idx[myloc] = decCol;
 		if (imShape[decCol] > 1) {
 			reportAxes.prepend(IPosition(1, decCol));
 		}
-		myloc++;
+		++myloc;
 	}
 	if (raCol >= 0) {
 		idx[myloc] = raCol;
@@ -239,9 +236,9 @@ void ImageStatsCalculator::_reportDetailedStats(
 		myloc++;
 	}
 	if (otherCol.nelements() > 0) {
-		for (uInt i=0; i<otherCol.nelements(); i++) {
+		for (uInt i=0; i<otherCol.nelements(); ++i) {
 			idx[myloc] = otherCol[i];
-			myloc++;
+			++myloc;
 			if (imShape[otherCol[i]] > 1) {
 				reportAxes.append(IPosition(1, otherCol[i]));
 			}
@@ -249,22 +246,30 @@ void ImageStatsCalculator::_reportDetailedStats(
 	}
 
 	ostringstream oss;
-	oss << "# ";
-	for (uInt i=0; i<reportAxes.nelements(); i++) {
+	for (uInt i=0; i<reportAxes.nelements(); ++i) {
 		String gg = worldAxes[reportAxes[i]];
 		gg.upcase();
 		uInt width = gg == "STOKES" ? 6 : gg == "FREQUENCY"?  16: 15;
 		colwidth.push_back(width);
 		oss << setw(width) << worldAxes[reportAxes[i]] << "  "
 			<< worldAxes[reportAxes[i]] << "(Plane)" << " ";
-		width = worldAxes[reportAxes[i]].size() + 9;
+		width = worldAxes[reportAxes[i]].size() + 8;
 		colwidth.push_back(width);
 	}
 	Vector<Int> axesMap = reportAxes.asVector();
 	GenSort<Int>::sort(axesMap);
-	oss << "Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     " << endl;
-	for (uInt i=0; i<7; i++) {
+	oss << "Npts          Sum           Mean          Rms           Std dev       Minimum       Maximum     ";
+	std::map<String, uInt> chauvIters;
+	if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+		chauvIters = _statistics->getChauvenetNiter();
+		oss << "  N Iter";
+	}
+	oss << endl;
+	for (uInt i=0; i<7; ++i) {
 		colwidth.push_back(12);
+	}
+	if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+		colwidth.push_back(6);
 	}
 	TileStepper ts(
 		tempIm->niceCursorShape(),
@@ -275,11 +280,12 @@ void ImageStatsCalculator::_reportDetailedStats(
 	);
 	Vector<Double> world;
 	IPosition arrayIndex(axesMap.nelements(), 0);
-	IPosition position(tempIm->ndim(), 0);
+	IPosition blc = _statistics->getBlc();
+    IPosition position(tempIm->ndim());
 	oss << std::scientific;
 	uInt width = 13;
 	Vector<Vector<String> > coords(reportAxes.size());
-	for (uInt i=0; i<reportAxes.size(); i++) {
+	for (uInt i=0; i<reportAxes.size(); ++i) {
 		Vector<Double> indices(imShape[reportAxes[i]]);
 		indgen(indices);
 		uInt prec = reportAxes[i] == freqCol ? 9 : 5;
@@ -289,23 +295,24 @@ void ImageStatsCalculator::_reportDetailedStats(
 			True
 		);
 	}
-	for (inIter.reset(); ! inIter.atEnd(); inIter++) {
+	uInt count = 0;
+	for (inIter.reset(); ! inIter.atEnd(); ++inIter) {
 		uInt colNum = 0;
 		position = inIter.position();
-		for (uInt i=0; i<reportAxes.nelements(); i++) {
+		for (uInt i=0; i<reportAxes.nelements(); ++i) {
 			oss << setw(colwidth[colNum]);
 			oss	<< coords[i][position[reportAxes[i]]];// world[reportAxes[i]];
-			colNum++;
+			++colNum;
 			oss << " " << setw(colwidth[colNum])
-				<< position[reportAxes[i]] << " ";
-			colNum++;
+				<< (position[reportAxes[i]] + blc[reportAxes[i]]) << " ";
+			++colNum;
 	    }
 		csys.toWorld(world, position);
 		if (axesMap.nelements() == 0) {
 			arrayIndex = IPosition(1, 0);
 		}
 		else {
-			for (uInt i=0; i<axesMap.nelements(); i++) {
+			for (uInt i=0; i<axesMap.nelements(); ++i) {
 				arrayIndex[i] = position[axesMap[i]];
 			}
 		}
@@ -319,7 +326,14 @@ void ImageStatsCalculator::_reportDetailedStats(
 				<< std::setw(width) << retval.asArrayDouble("rms")(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("sigma")(arrayIndex) << " "
 				<< std::setw(width) << retval.asArrayDouble("min")(arrayIndex) << " "
-				<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex) << endl;
+				<< std::setw(width) << retval.asArrayDouble("max")(arrayIndex);
+			if (_algConf.algorithm == StatisticsData::CHAUVENETCRITERION) {
+				ostringstream pos;
+				pos << position;
+				oss << std::setw(6) << " " << chauvIters[pos.str()];
+				++count;
+			}
+			oss << endl;
 		}
 		if (_verbose) {
 			*_getLog() << LogIO::NORMAL << oss.str() << LogIO::POST;
@@ -343,19 +357,19 @@ Record ImageStatsCalculator::statistics(
 	}
 	SPIIF clone(_getImage()->cloneII());
 	Record regionRec = *_getRegion();
-	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
+	_subImage = SubImageFactory<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *clone, regionRec, mtmp,
 		(_verbose ? _getLog().get() : 0), False, AxesSpecifier(),
 		_getStretch()
 	);
 	*_getLog() << myOrigin;
 
-	// Find BLC of subimage in pixels and world coords, and output the
+	// Find BLC of _subImage in pixels and world coords, and output the
 	// information to the logger.
-	// NOTE: ImageStatitics can't do this because it only gets the subimage
+	// NOTE: ImageStatitics can't do this because it only gets the _subImage
 	//       not a region and the full image.
-	IPosition blc(subImage.ndim(), 0);
-	IPosition trc(subImage.shape() - 1);
+	IPosition blc(_subImage.ndim(), 0);
+	IPosition trc(_subImage.shape() - 1);
 	if (pRegionRegion != 0) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
 				_getImage()->coordinates(), _getImage()->shape());
@@ -371,7 +385,7 @@ Record ImageStatsCalculator::statistics(
 		DirectionCoordinate dirCoord = csys.directionCoordinate(0);
 		Vector<String> dirUnits = dirCoord.worldAxisUnits();
 		Vector<Double> dirIncs = dirCoord.increment();
-		for (uInt i=0; i< dirUnits.size(); i++) {
+		for (uInt i=0; i< dirUnits.size(); ++i) {
 			Quantity inc(dirIncs[i], dirUnits[i]);
 			inc.convert("s");
 			Int newPrecis = abs(int(floor(log10(inc.getValue()))));
@@ -383,10 +397,61 @@ Record ImageStatsCalculator::statistics(
 	blcf = CoordinateUtil::formatCoordinate(blc, csys, precis);
 	trcf = CoordinateUtil::formatCoordinate(trc, csys, precis);
 
+
+    if (_statistics.get() == NULL) {
+        _statistics.reset(
+		    _verbose
+			? new ImageStatistics<Float> (_subImage, *_getLog(), False, _disk)
+			: new ImageStatistics<Float> (_subImage, False, _disk)
+		);
+	}
+	else {
+		_statistics->resetError();
+		if (
+		    _haveRegionsChanged(
+				pRegionRegion, pMaskRegion,
+				_oldStatsRegion.get(), _oldStatsMask.get()
+			)
+		) {
+			_statistics->setNewImage(_subImage);
+		}
+	}
+    // prevent the table of stats we no longer use from being logged
+    _statistics->setListStats(False);
+    String myAlg;
+	switch (_algConf.algorithm) {
+	case StatisticsData::CHAUVENETCRITERION:
+		_statistics->configureChauvenet(_algConf.zs, _algConf.mi);
+		myAlg = "Chauvenet Criterion/Z-score";
+		break;
+	case StatisticsData::CLASSICAL:
+		_statistics->configureClassical();
+		myAlg = "Classic";
+		break;
+	case StatisticsData::FITTOHALF:
+		_statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
+		myAlg = "Fit-to-Half";
+		break;
+	case StatisticsData::HINGESFENCES:
+		_statistics->configureHingesFences(_algConf.hf);
+		myAlg = "Hinges-Fences";
+		break;
+	default:
+		ThrowCc(
+			"Logic Error: Unhandled statistics algorithm "
+			+ String::toString(_algConf.algorithm)
+		);
+	}
 	if (_list) {
+		*_getLog() << myOrigin << LogIO::NORMAL;
+		String algInfo = "Statistics calculated using "
+			+ myAlg + " algorithm";
+		*_getLog() << algInfo << LogIO::POST;
+		if (messageStore) {
+			messageStore->push_back(algInfo + "\n");
+		}
 		// Only write to the logger if the user wants it displayed.
 		Vector<String> x(5);
-		*_getLog() << myOrigin << LogIO::NORMAL;
 		ostringstream y;
 		x[0] = "Regions --- ";
 		y << "         -- bottom-left corner (pixel) [blc]:  " << blc;
@@ -400,49 +465,12 @@ Record ImageStatsCalculator::statistics(
 		y.str("");
 		y << "         -- top-right corner (world) [trcf]:   " << trcf;
 		x[4] = y.str();
-		for (uInt i=0; i<x.size(); i++) {
+		for (uInt i=0; i<x.size(); ++i) {
 			*_getLog() << x[i] << LogIO::POST;
 			if (messageStore != 0) {
 				messageStore->push_back(x[i] + "\n");
 			}
 		}
-	}
-    if (_statistics.get() == NULL) {
-        _statistics.reset(
-		    _verbose
-			? new ImageStatistics<Float> (subImage, *_getLog(), False, _disk)
-			: new ImageStatistics<Float> (subImage, False, _disk)
-		);
-	}
-	else {
-		_statistics->resetError();
-		if (
-		    _haveRegionsChanged(
-				pRegionRegion, pMaskRegion,
-				_oldStatsRegion.get(), _oldStatsMask.get()
-			)
-		) {
-			_statistics->setNewImage(subImage);
-		}
-	}
-	switch (_algConf.algorithm) {
-	case StatisticsData::CHAUVENETCRITERION:
-		_statistics->configureChauvenet(_algConf.zs, _algConf.mi);
-		break;
-	case StatisticsData::CLASSICAL:
-		_statistics->configureClassical();
-		break;
-	case StatisticsData::FITTOHALF:
-		_statistics->configureFitToHalf(_algConf.ct, _algConf.ud, _algConf.cv);
-		break;
-	case StatisticsData::HINGESFENCES:
-		_statistics->configureHingesFences(_algConf.hf);
-		break;
-	default:
-		ThrowCc(
-			"Logic Error: Unhandled statistics algorithm "
-			+ String::toString(_algConf.algorithm)
-		);
 	}
 	if (messageStore != NULL) {
 		_statistics->recordMessages(True);
@@ -457,7 +485,7 @@ Record ImageStatsCalculator::statistics(
 	_oldStatsMask.reset(pMaskRegion);
 	//_oldStatsStorageForce = _disk;
 	// Set cursor axes
-	*_getLog() << LogOrigin(_class, __func__);
+	*_getLog() << myOrigin;
 	ThrowIf(! _statistics->setAxes(_axes), _statistics->errorMessage());
 	ThrowIf(
 		!_statistics->setInExCludeRange(_includepix, _excludepix, False),
@@ -477,7 +505,7 @@ Record ImageStatsCalculator::statistics(
 		if (csys.hasSpectralAxis() || csys.hasPolarizationCoordinate()) {
 			Int spAxis = csys.spectralAxisNumber();
 			Int poAxis = csys.polarizationAxisNumber();
-			for (Int i=0; i<(Int)_axes.size(); i++) {
+			for (Int i=0; i<(Int)_axes.size(); ++i) {
 				if (_axes[i] == spAxis || _axes[i] == poAxis) {
 					*_getLog() << LogIO::WARN << "At least one cursor axis contains multiple beams. "
 							<< "You should thus use care in interpreting these statistics. Flux densities "
@@ -567,8 +595,8 @@ Record ImageStatsCalculator::statistics(
 	if (messageStore != 0) {
 		vector<String> messages = _statistics->getMessages();
 		for (
-				vector<String>::const_iterator iter=messages.begin();
-				iter!=messages.end(); iter++
+			vector<String>::const_iterator iter=messages.begin();
+			iter!=messages.end(); ++iter
 		) {
 			messageStore->push_back(*iter + "\n");
 		}

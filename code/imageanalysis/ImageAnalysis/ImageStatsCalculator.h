@@ -106,7 +106,7 @@ public:
 
     void setVerbose(Bool v);
 
-    inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes);}
+    inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes); GenSort<Int>::sort(_axes);}
 
     // moved from ImageAnalysis
     // if messageStore != 0, log messages, stripped of time stampe and priority, will also
@@ -134,13 +134,11 @@ protected:
 private:
     std::auto_ptr<ImageStatistics<Float> > _statistics;
     std::auto_ptr<ImageRegion> _oldStatsRegion, _oldStatsMask;
-    //Bool _oldStatsStorageForce;
     Vector<Int> _axes;
     Vector<Float> _includepix, _excludepix;
-    Bool _list, /*_force,*/ _disk, _robust, _verbose;
-
-    //StatisticsData::ALGORITHM _algorithm;
+    Bool _list, _disk, _robust, _verbose;
     LatticeStatistics<Float>::AlgConf _algConf;
+    SubImage<Float> _subImage;
 
     static const String _class;
 
