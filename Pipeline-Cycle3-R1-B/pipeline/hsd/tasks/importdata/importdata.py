@@ -16,18 +16,20 @@ from .. import common
 from ..common import utils
 
 import pipeline.hif.tasks.importdata.importdata as importdata
+import pipeline.hifa.tasks.importdata.almaimportdata as almaimportdata
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDImportDataInputs(importdata.ImportDataInputs):
+class SDImportDataInputs(almaimportdata.ALMAImportDataInputs):
     @basetask.log_equivalent_CASA_call
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
-         session=None, overwrite=None, save_flagonline=None,
-         bdfflags=None, with_pointing_correction=None):
+         session=None, overwrite=None, bdfflags=None, save_flagonline=None,
+         dbservice=None, with_pointing_correction=None):
         self._init_properties(vars())
 
-    with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
+    asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
+    #with_pointing_correction = basetask.property_with_default('with_pointing_correction', True)
 
 class SDImportDataResults(basetask.Results):
     '''
