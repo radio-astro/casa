@@ -875,7 +875,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeCorrected () const
 											manager_p->getVisBuffer()->visCubeCorrected(),
 											dummyDataCol,
 											NULL,
-											weightSpectrum_p);
+											applicableSpectrum);
 		flagCubeOk_p = True;
 		visCubeCorrectedOk_p = True;
 	}
@@ -918,7 +918,7 @@ const Cube<Complex> & MSTransformBufferImpl::visCubeModel () const
 										manager_p->getVisBuffer()->visCubeModel(),
 										dummyDataCol,
 										NULL,
-										weightSpectrum_p);
+										applicableSpectrum);
 		flagCubeOk_p = True;
 		visCubeModelOk_p= True;
 	}
@@ -952,13 +952,15 @@ const Cube<Float> & MSTransformBufferImpl::visCubeFloat () const
 		RefRows dummyRefRows(0,0);
 		ArrayColumn<Float> dummyDataCol;
 
+		const Cube<Float> &applicableSpectrum = manager_p->getApplicableSpectrum(manager_p->getVisBuffer(),MS::MODEL_DATA);
+
 		manager_p->dataBuffer_p = MSTransformations::visCubeFloat;
 		manager_p->transformCubeOfData(	manager_p->getVisBuffer(),
 										dummyRefRows,
 										manager_p->getVisBuffer()->visCubeFloat(),
 										dummyDataCol,
 										NULL,
-										weightSpectrum_p);
+										applicableSpectrum);
 		flagCubeOk_p = True;
 		visCubeFloatOk_p = True;
 	}

@@ -229,14 +229,10 @@ Record parseConfiguration(int argc, char **argv)
 			if (exists == 0)
 			{
 				configuration.define ("inputms", filename);
-				configuration.define ("spw", "8,9,10,11");
-				configuration.define ("antenna", "0&&1");
-				configuration.define ("combinespws", False);
-				configuration.define ("regridms", False);
-				configuration.define ("mode", "channel");
-				configuration.define ("width", "2");
-				configuration.define ("timeaverage", False);
-				configuration.define ("timebin", "30s");
+				configuration.define ("spw", "0");
+				configuration.define ("scan", "30");
+				configuration.define ("timeaverage", True);
+				configuration.define ("timebin", "2s");
 				configuration.define ("chanaverage", True);
 				configuration.define ("chanbin", 2);
 				configuration.define ("datacolumn", string("DATA"));
