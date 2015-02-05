@@ -35,9 +35,8 @@ template <class AccumType, class InputIterator, class MaskIterator>
 ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::ChauvenetCriterionStatistics(
 	Double zscore, Int maxIterations
 )
-	: ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>(),
-	  _zscore(zscore), _maxIterations(maxIterations), _rangeIsSet(False) {
-}
+  : ConstrainedRangeStatistics<AccumType, InputIterator, MaskIterator>(),
+    _zscore(zscore), _maxIterations(maxIterations), _rangeIsSet(False), _niter(0) {}
 
 template <class AccumType, class InputIterator, class MaskIterator>
 ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::~ChauvenetCriterionStatistics() {}
@@ -53,6 +52,7 @@ ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::operator=(
     ClassicalStatistics<AccumType, InputIterator, MaskIterator>::operator=(other);
     _zscore = other._zscore;
     _maxIterations = other._maxIterations;
+    _niter = other._niter;
     return *this;
 }
 
@@ -77,12 +77,11 @@ void ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::_setR
 	if (_rangeIsSet) {
 		return;
 	}
-	uInt niter = 0;
 	uInt maxI = _maxIterations >= 0 ? _maxIterations : 1000;
 	uInt prevNpts = 0;
 	StatsData<AccumType> sd;
-	while (niter <= maxI) {
-		if (niter == 0) {
+	while (_niter <= maxI) {
+		if (_niter == 0) {
 			ClassicalStatistics<AccumType, InputIterator, MaskIterator> cs(*this);
 			sd = cs.getStatistics();
 		}
@@ -100,8 +99,9 @@ void ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::_setR
 		// _rangeIsSet is set here to prevent infinite recursion on next loop iteration
 		_rangeIsSet = True;
 		prevNpts = (uInt64)sd.npts;
-		++niter;
+		++_niter;
 	}
+	--_niter;
 }
 
 }
