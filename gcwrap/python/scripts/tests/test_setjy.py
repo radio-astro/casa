@@ -627,25 +627,31 @@ class test_MultipleObservations(SetjyUnitTestBase):
 class test_ModImage(SetjyUnitTestBase):
 
     def setUp(self):
-        ##### TODO: Should skip the importuvfits and start from MS!!!! (TT)
-        self.inpuvf = datapath + '/ATST2/NGC1333/N1333_1.UVFITS'
+        #self.inpuvf = datapath + '/ATST2/NGC1333/N1333_1.UVFITS'
         #self.inpms = 'unittest/setjy/n1333_1.ms'
-        self.inpms = 'n1333_1.ms'
+        prefix = 'n1333_1' 
+        if testmms:
+            msname=prefix+'.mms'
+        else:
+            msname=prefix+'.ms'
+        #self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
+        self.setUpMS(msname)         # Titan
+        #self.inpms = 'n1333_1.ms'
         self.field = '0542+498_1'
         self.modelim = '3C147_U.im'
         self.result = {}
-        if not os.path.exists(self.inpuvf):
-            raise EnvironmentError, "Missing input UVFITS file: " + datapath + self.inpuvf
+        #if not os.path.exists(self.inpuvf):
+        #    raise EnvironmentError, "Missing input UVFITS file: " + datapath + self.inpuvf
 
-        try:
+        #try:
             #if not os.path.exists('unittest/setjy'):
             #    print "\nCreate working area..."
             #    os.system('mkdir -p unittest/setjy')
-            print "Importing", self.inpuvf, "to an MS."
-            importuvfits(fitsfile=self.inpuvf, vis=self.inpms,antnamescheme="new")
-        except Exception, e:
-            print "importuvfits error:"
-            raise e
+        #    print "Importing", self.inpuvf, "to an MS."
+        #    importuvfits(fitsfile=self.inpuvf, vis=self.inpms,antnamescheme="new")
+        #except Exception, e:
+        #    print "importuvfits error:"
+        #    raise e
     
     def test1_UBandModelwithQBandMS(self):
         """ Test U-Band model with Q-Band data to see impact of flux density scale """
