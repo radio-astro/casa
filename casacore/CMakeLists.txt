@@ -170,6 +170,20 @@ if(ENABLE_MULTI_THREADING)
     add_definitions(-DUSE_MULTI_THREADING)
 endif(ENABLE_MULTI_THREADING)
 
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+# use faster fortran rules for complex operations, removes restoring complex
+# infinities if naive computation results in NAN + NAN * I
+check_cxx_compiler_flag(-fcx-fortran-rules HAS_GXX_FORTRAN_RULES)
+check_c_compiler_flag(-fcx-fortran-rules HAS_GCC_FORTRAN_RULES)
+# added before cmake flags so it can be disabled with
+# -fno-cx-fortran-rules for testing
+if (HAS_GXX_FORTRAN_RULES)
+    set(CMAKE_CXX_FLAGS "-fcx-fortran-rules ${CMAKE_CXX_FLAGS}")
+endif()
+if (HAS_GCC_FORTRAN_RULES)
+    set(CMAKE_C_FLAGS "-fcx-fortran-rules ${CMAKE_C_FLAGS}")
+endif()
 
 #
 # Choose to have correct RPATHs both in the build tree and

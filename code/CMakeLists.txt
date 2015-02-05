@@ -162,6 +162,21 @@ set( DEFAULT_CXX_FLAGS "-pipe -Wall -Wextra -Wno-non-template-friend -Wcast-alig
 
 set( DEFAULT_C_FLAGS "-pipe -Wall -Wextra -Wcast-align -Wno-comment" )
 
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+# use faster fortran rules for complex operations, removes restoring complex
+# infinities if naive computation results in NAN + NAN * I
+check_cxx_compiler_flag(-fcx-fortran-rules HAS_GXX_FORTRAN_RULES)
+check_c_compiler_flag(-fcx-fortran-rules HAS_GCC_FORTRAN_RULES)
+# added before cmake flags so it can be disabled with
+# -fno-cx-fortran-rules for testing
+if (HAS_GXX_FORTRAN_RULES)
+    set(DEFAULT_CXX_FLAGS "-fcx-fortran-rules ${DEFAULT_CXX_FLAGS}")
+endif()
+if (HAS_GCC_FORTRAN_RULES)
+    set(DEFAULT_C_FLAGS "-fcx-fortran-rules ${DEFAULT_C_FLAGS}")
+endif()
+
 # OpenMP
 find_package( OpenMP )
 if( OPENMP_FOUND )

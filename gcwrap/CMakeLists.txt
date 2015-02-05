@@ -166,6 +166,21 @@ if( OPENMP_FOUND )
   set( DEFAULT_C_FLAGS   "${DEFAULT_C_FLAGS}   ${OpenMP_C_FLAGS}" )
 endif()
 
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+# use faster fortran rules for complex operations, removes restoring complex
+# infinities if naive computation results in NAN + NAN * I
+check_cxx_compiler_flag(-fcx-fortran-rules HAS_GXX_FORTRAN_RULES)
+check_c_compiler_flag(-fcx-fortran-rules HAS_GCC_FORTRAN_RULES)
+# added before cmake flags so it can be disabled with
+# -fno-cx-fortran-rules for testing
+if (HAS_GXX_FORTRAN_RULES)
+    set(DEFAULT_CXX_FLAGS "-fcx-fortran-rules ${DEFAULT_CXX_FLAGS}")
+endif()
+if (HAS_GCC_FORTRAN_RULES)
+    set(DEFAULT_C_FLAGS "-fcx-fortran-rules ${DEFAULT_C_FLAGS}")
+endif()
+
 # Test driver which requires that test programs are up-to-date
 # before running. (The built-in "test" does not.)
 add_custom_target( check ${CMAKE_CTEST_COMMAND} )
