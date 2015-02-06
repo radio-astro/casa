@@ -4052,6 +4052,8 @@ void fillMain(int		rowNum,
 	  correctedData_v.push_back(uncorrectedData_v.at(iData)); // <-------- Here we re-use the autodata already present in the uncorrected data and which have been
                                                                   // already reindexed !!!
 	  correctedFlag_v.push_back(vmsData_p->v_flag.at(msRowReIndex_v[iData]));
+	  correctedFilteredShape_vv.push_back(filteredShape_vv.at(msRowReIndex_v[iData]));
+	
 	}
 	else {
 	  /*
@@ -4076,6 +4078,7 @@ void fillMain(int		rowNum,
 				      iter->second);
 	  correctedData_v.push_back(theData);
 	  correctedFlag_v.push_back(vmsData_p->v_flag.at(msRowReIndex_v[iData]));
+	  correctedFilteredShape_vv.push_back(filteredShape_vv.at(msRowReIndex_v[iData]));
 	}
       }
     }
@@ -4602,6 +4605,7 @@ void fillSysPower(const string asdmDirectory, ASDM* ds_p, bool ignoreTime, const
       errstream << e.what();
       error(errstream.str());      
     }
+    
   }
   LOGEXIT("fillSysPower");
 }
@@ -7128,11 +7132,13 @@ int main(int argc, char *argv[]) {
       errstream << e.getMessage();
       error(errstream.str());
     }
+    /*
     catch ( std::exception & e) {
       errstream.str("");
       errstream << e.what();
       error(errstream.str());      
     }
+    */
     catch (Error & e) {
       errstream.str("");
       errstream << e.getErrorMessage();
