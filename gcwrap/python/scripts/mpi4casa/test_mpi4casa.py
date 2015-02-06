@@ -762,6 +762,7 @@ class test_MPICommandServer(unittest.TestCase):
     client = MPICommandClient()
     client.start_services()
         
+    @unittest.skip('Skip until CAS-7322 is fixed')
     def test_server_not_responsive(self):
         
         # First find a sutiable server

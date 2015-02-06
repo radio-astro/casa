@@ -173,19 +173,19 @@ class MPIEnvironment:
                 
     # Set progression profile
     if is_mpi_enabled:
-        mpi_start_service_sleep_time = 0.1 # Aggressive, the condition already exists and its temporal
-        mpi_stop_service_sleep_time = 0.1 # Aggressive, the condition already exists and its temporal
-        mpi_check_start_service_sleep_time = 0.1 # Aggressive, the condition already exists and its temporal
-        mpi_check_stop_service_sleep_time = 0.1 # Aggressive, the condition already exists and its temporal
-        mpi_monitor_status_service_heartbeat = 3 # Not aggressive, the condition exists permanently
-        mpi_monitor_status_service_timeout = 15 # Corresponds to 3 consecutive heartbeats w/o response
-        mpi_ping_status_request_handler_service_sleep_time = 1 # Not aggressive, the condition exists permanently
-        mpi_ping_status_response_handler_service_sleep_time = 1 # Not aggressive, the condition exists permanently
-        mpi_ping_status_request_handler_service_timeout = 15 # Corresponds to 2 consecutive heartbeats w/o request
-        mpi_command_request_handler_service_sleep_time = 0.1 # Aggressive, idle state should only be temporal
-        mpi_command_response_handler_service_sleep_time = 0.1 # Aggressive, idle state should only be temporal
-        mpi_command_request_queue_service_sleep_time = 0.1 # Aggressive, this determines the responsiveness of the system
-        mpi_push_command_request_block_mode_sleep_time = 0.1 # Aggressive, this determines the responsiveness of the system
+        mpi_start_service_sleep_time = 0.1 # Aggressive, not concurrent with command execution (at the server)
+        mpi_stop_service_sleep_time = 3 # Not aggressive, concurrent with command execution (at the server)
+        mpi_check_start_service_sleep_time = 0.1 # Aggressive, temporal and not concurrent with command execution (at the client)
+        mpi_check_stop_service_sleep_time = 0.1 # Aggressive, temporal and not concurrent with command execution (at the client)
+        mpi_monitor_status_service_heartbeat = 5 # Not aggressive, permanent and concurrent with command execution (at the client)
+        mpi_monitor_status_service_timeout = 36 # Corresponds to 3 consecutive heartbeats w/o response
+        mpi_ping_status_request_handler_service_sleep_time = 3  # Not aggressive, concurrent with command execution (at the server)
+        mpi_ping_status_response_handler_service_sleep_time = 3 # Not aggressive, concurrent with command execution (at the client)
+        mpi_ping_status_request_handler_service_timeout = 24 # Corresponds to 2 consecutive heartbeats w/o request
+        mpi_command_request_handler_service_sleep_time = 0.1 # Aggressive, not concurrent with command execution (at the server)
+        mpi_command_response_handler_service_sleep_time = 0.1 # Aggressive, triggered (at the client)
+        mpi_command_request_queue_service_sleep_time = 0.1 # Aggressive, triggered (at the client)
+        mpi_push_command_request_block_mode_sleep_time = 0.1 # Aggressive, used for getting response in blocking mode (at the client)
     
     # Static methods ###################################################################################################       
         

@@ -126,8 +126,7 @@ class MPIMonitorClient:
                     else:
                         elapsed_time = int(round(time.time() - self.__server_status_list[rank]['ping_time']))
                         # Notify when a server reaches timeout condition
-                        if ((elapsed_time > 0) and 
-                            (elapsed_time % MPIEnvironment.mpi_monitor_status_service_timeout == 0) and 
+                        if ((elapsed_time > MPIEnvironment.mpi_monitor_status_service_timeout) and 
                             (not self.__server_status_list[rank]['timeout'])):
                             casalog.post("Ping status response from server %s not received in the last %ss" % 
                                          (str(rank),str(int(elapsed_time))),"SEVERE",casalog_call_origin)

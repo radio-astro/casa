@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import thread # To handle service threads like monitoring
+import threading
 import time # To handle sleep times
 import traceback # To pretty-print tracebacks
 import atexit # To handle destructors
@@ -81,12 +82,16 @@ class MPICommandClient:
             self.__command_response_handler_service_on = False
             self.__command_response_handler_service_running = False
             self.__command_response_handler_service_thread = None 
+            self.__command_response_handler_service_event_controller = threading.Event()       
+            self.__command_response_handler_service_event_controller.clear()            
             
             # Initialize command request queue service state
             self.__command_request_queue = []
             self.__command_request_queue_service_on = False
             self.__command_request_queue_service_running = False
             self.__command_request_queue_service_thread = None             
+            self.__command_request_queue_service_event_controller = threading.Event()       
+            self.__command_request_queue_service_event_controller.clear()    
             
             # Instantiate MPICommunicator reference
             self.__communicator = MPICommunicator()
@@ -118,6 +123,10 @@ class MPICommandClient:
                           
             while (self.__command_response_handler_service_on):
                 
+                # Wait until there are command request whose response is pending
+                if len(self.__command_response_list) == len(self.__command_request_list):
+                    self.__command_response_handler_service_event_controller.wait()
+                
                 # First check if there is a command response msg available
                 msg_available = False
                 try:
@@ -140,6 +149,9 @@ class MPICommandClient:
                         self.__monitor_client.set_server_status_keyword(server,'busy',False)
                         # Store command response
                         self.__command_response_list[command_id] = command_response 
+                        # If there are no pending command responses clear the event controller
+                        if len(self.__command_response_list) == len(self.__command_request_list):
+                            self.__command_response_handler_service_event_controller.clear()                             
                         # Mark command request as received
                         self.__command_request_list[command_id]['status'] = 'response received' 
                         self.__command_response_list[command_id]['status'] = 'response received' 
@@ -198,6 +210,8 @@ class MPICommandClient:
                 return             
 
             self.__command_response_handler_service_on = False
+            # Send signal to the thread to be awakened
+            self.__command_response_handler_service_event_controller.set()            
         
             while (self.__command_response_handler_service_running):
                 time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
@@ -213,6 +227,11 @@ class MPICommandClient:
             self.__command_request_queue_service_running = True                    
                        
             while self.__command_request_queue_service_on:
+                
+                # Wait until there are pending command responses
+                if len(self.__command_request_queue) == 0:
+                    self.__command_request_queue_service_event_controller.wait()
+                
                 # Get list of available servers
                 available_servers_list = self.__monitor_client.get_server_rank_available()
                 if len(available_servers_list) >= 1:
@@ -232,6 +251,9 @@ class MPICommandClient:
                         # Extract command request from queue and send it
                         if command_request_found:
                             command_request = self.__command_request_queue.pop(command_request_queue_idx)
+                            # If command request queue us empty clear the event controller
+                            if len(self.__command_request_queue) == 0:
+                                self.__command_request_queue_service_event_controller.clear()                            
                             server = command_request['server']
                             try:
                                 # Mark assigned server as busy and set command info in server status
@@ -335,6 +357,8 @@ class MPICommandClient:
                 return             
 
             self.__command_request_queue_service_on = False
+            # Send signal to the thread to be awakened
+            self.__command_request_queue_service_event_controller.set()
         
             while (self.__command_request_queue_service_running):
                 time.sleep(MPIEnvironment.mpi_check_stop_service_sleep_time)
@@ -621,6 +645,10 @@ class MPICommandClient:
             else:
                 command_request_id = self.__register_command_request(command_request,None)
                 command_request_id_list.append(command_request_id)
+                
+            # Wake up command request/response service threads
+            self.__command_request_queue_service_event_controller.set()
+            self.__command_response_handler_service_event_controller.set()
             
             # In blocking mode wait until command response is received otherwise return request id
             if block:
