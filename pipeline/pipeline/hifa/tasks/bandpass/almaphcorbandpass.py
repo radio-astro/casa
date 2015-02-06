@@ -179,7 +179,9 @@ class ALMAPhcorBandpass(bandpassworker.BandpassWorker):
                     # time for 'int' in seconds. This wil be carried forward
                     # to the quanta tool calls.
                     timedelta = solints.pop()
-                    old_solint = timedelta.total_seconds() 
+                    # note the extra s to denote units, otherwise the quanta
+                    # tool can't make a comparison 
+                    old_solint = '%ss' % timedelta.total_seconds() 
                     
                 newsolint = quanta.tos(quanta.mul(old_solint, factor))
                 LOG.warning('Resetting estimated phaseup solint for spw %s from %s to %s in MS %s',
