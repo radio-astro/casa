@@ -67,6 +67,16 @@ struct IntAry
 
 };
 
+struct uIntAry
+{
+  uIntAry( ) { }
+  uIntAry(std::vector<unsigned int> arg0, std::vector<int> arg1) : value(arg0), shape(arg1) { }
+  std::vector<unsigned int> value;
+  std::vector<int> shape;
+
+};
+
+
 struct StringAry
 {
   StringAry( ) { }
@@ -78,6 +88,7 @@ struct StringAry
 typedef  std::vector<record> RecordVec;
 typedef StringAry StringVec;
 typedef IntAry IntVec;
+typedef uIntAry uIntVec;
 typedef DoubleAry DoubleVec;
 typedef BoolAry BoolVec;
 typedef ComplexAry ComplexVec;
