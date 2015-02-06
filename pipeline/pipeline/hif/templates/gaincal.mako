@@ -45,7 +45,7 @@ $(document).ready(function() {
             }
         },
     	beforeShow : function() {
-        	this.title = $(this.element).attr('caption');
+        	this.title = $(this.element).attr('title');
        	}    
     }); 
  });
