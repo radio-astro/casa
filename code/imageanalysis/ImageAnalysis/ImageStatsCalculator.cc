@@ -63,13 +63,13 @@ ImageStatsCalculator::~ImageStatsCalculator() {}
 
 Record ImageStatsCalculator::calculate() {
 	*_getLog() << LogOrigin(_class, __func__);
-        CountedPtr<LogFile> _logfile;
-        std::auto_ptr<vector<String> > messageStore(0);
-        if(_getLogFile() != _logfile )
-           std::auto_ptr<vector<String> > messageStore(new vector<String>());
-	//std::auto_ptr<vector<String> > messageStore(
-		//_getLogFile() == 0 ? 0 : new vector<String>()
-	//);
+        //CountedPtr<LogFile> _logfile;
+        //std::auto_ptr<vector<String> > messageStore(0);
+        //if(_getLogFile() != _logfile )
+        //   std::auto_ptr<vector<String> > messageStore(new vector<String>());
+	std::auto_ptr<vector<String> > messageStore(
+		_getLogFile() == 0 ? 0 : new vector<String>()
+	);
 	Record retval = statistics(messageStore.get());
 	Bool writeFile = _openLogfile();
 	if (_verbose || writeFile) {

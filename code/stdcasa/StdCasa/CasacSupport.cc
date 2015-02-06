@@ -250,11 +250,11 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
           case TpUShort :
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asShort(i)));
                break;
-          case TpInt :
-               transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asInt(i)));
-               break;
           case TpUInt :
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asuInt(i)));
+               break;
+          case TpInt :
+               transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asInt(i)));
                break;
           case TpInt64 :
 	       {
@@ -555,6 +555,9 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
             case TpInt :
 	         theV = new casac::variant(theVH.asInt());
                  break;
+            case TpUInt :
+                 theV = new casac::variant(theVH.asuInt());
+                 break;
             case TpInt64 :
 	         theV = new casac::variant(theVH.asInt64());
                  break;
@@ -638,6 +641,17 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
 		    theV = new casac::variant(tData, tShape);
 	         }
                  break;
+            case TpArrayUInt :
+                 {
+                    Array<uInt> tArr(theVH.asArrayuInt());
+                    Vector<Int> ts = tArr.shape().asVector();
+                    std::vector<int> tShape;
+                    std::vector<uInt> tData;
+                    ts.tovector(tShape);
+                    tArr.tovector(tData);
+                    theV = new casac::variant(tData, tShape);
+                 }
+                 break;
             case TpArrayFloat :
 	         {
 		    Array<Float> tArr(theVH.asArrayFloat());
@@ -709,7 +723,7 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
             case TpRecord :
 		    theV = new casac::variant(fromRecord(theVH.asRecord()));
                  break;
-	     default :
+	    default :
                  throw(AipsError("Unknown casa DataType!"));
 	         break;
 	  }
