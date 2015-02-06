@@ -40,6 +40,9 @@ UTILS = (function () {
                     }
                 }
             },
+            afterLoad: function() {
+            	this.title = '<div class="pull-left">' + this.title + '</div><div class="pull-right"><a href="' + this.href + '">Full Size</a><div>';
+            },
         });
     };
 
