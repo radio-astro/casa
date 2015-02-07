@@ -131,7 +131,9 @@ def gpcal_calc(caltable):
  
                 phase3 = []
                 for i in range(ngains-1):
-                    phase3.append( phase1[0][0][i+1] - phase1[0][0][i] )
+                    # don't use flagged points (see CAS-6804)
+                    if ((flag1[0][0][i+1]==False) and (flag1[0][0][i]==False)):
+                        phase3.append( phase1[0][0][i+1] - phase1[0][0][i] )
 
                 if removeoutliers == True:
                     phase3 = filters.outlierFilter(phase3, 3.0)
@@ -186,8 +188,7 @@ def gpcal_score(gpcal_stats):
     # Need to check if we have to distinguish by band.
 
     xyScorer = scorers.erfScorer(4.25e-6, 8.4e-5)
-    #x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
-    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-2)
+    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
 
     totalXYMetrics = []
 
