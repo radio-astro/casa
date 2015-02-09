@@ -113,7 +113,8 @@ class SDSimpleScale(common.SingleDishTaskTemplate):
                           'factor': factor,
                           'scaletsys': False,
                           'outfile': out_name,
-                          'overwrite': True}
+                          'overwrite': True,
+                          'verbose': False}
             LOG.info('Processing %s' % scale_args['infile'])
             LOG.info('\tscaling factor = %f' % scale_args['factor'])
             LOG.info("\toutput file name = '%s'" % scale_args['outfile'])
