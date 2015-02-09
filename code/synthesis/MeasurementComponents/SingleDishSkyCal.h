@@ -167,7 +167,12 @@ public:
   virtual String typeName()     { return "SD SKY"; };
   virtual String longTypeName() { return "SD SKY (sky spectra)"; };
 
-  // Sky spectra are Float parameters
+  // Return Matrix type
+  // single dish calibration is antenna-based
+  virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; };
+
+  // Return the parameter type
+  // so far single dish calibration is real
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
 
   // Number of pars per ant/bln
@@ -296,6 +301,10 @@ public:
   // Destructor
   virtual ~SingleDishPositionSwitchCal();
 
+  // Return type name as string (ditto)
+  virtual String typeName()     { return "SDSKY_PS"; };
+  virtual String longTypeName() { return "SDSKY_PS (position switch sky subtraction)"; };
+
   // Specific specify() that performs position switch sky calibration
   virtual void specify(const Record& specify);
 
@@ -319,6 +328,10 @@ public:
   // Destructor
   virtual ~SingleDishRasterCal();
 
+  // Return type name as string (ditto)
+  virtual String typeName()     { return "SDSKY_RASTER"; };
+  virtual String longTypeName() { return "SDSKY_RASTER (position switch sky subtraction specific to OTF raster observation)"; };
+
   // Specific specify() that performs raster sky calibration
   virtual void specify(const Record& specify);
 
@@ -337,6 +350,10 @@ public:
 
   // Destructor
   virtual ~SingleDishOtfCal();
+
+  // Return type name as string (ditto)
+  virtual String typeName()     { return "SDSKY_OTF"; };
+  virtual String longTypeName() { return "SDSKY_OTF (position switch sky subtraction specific to OTF fast scan)"; };
 
   // Specific specify() that performs otf sky calibration
   virtual void specify(const Record& specify);
