@@ -207,12 +207,13 @@ $(document).ready(function() {
 	<ul>
 		% for vis, renderer in stdplots[component].items():
 		<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${std_plot_desc[component]} ${vis}.</li>
+		% endfor
 	    % if component in extraplots:
 			% for vis, renderer in extraplots[component].items():
 			<li><a class="replace" href="${os.path.relpath(renderer.path, pcontext.report_dir)}">${renderer.shorttitle}</a> ${extra_plot_desc[component]} ${vis}.</li>
 			% endfor
 		% endif
-		% endfor
+
 	</ul>
     % endif
  </li>
