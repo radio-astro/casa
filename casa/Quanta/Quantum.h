@@ -342,8 +342,19 @@ template <class Qtype> class Quantum : public QBase{
   // </group>
   // Get value in canonical base units
   Qtype getBaseValue() const;
-  // Get value in specified units
-  Qtype getValue(const Unit &other) const;
+
+  // Get value in specified units. If the <src>other</src> units do not conform to
+  // the units of this object and requireConform is True, an exception is thrown,
+  // with the following excepions:
+  // angle to/from time conversions are implicitly supported, frequency to/from
+  // wavelength conversions are implicitly supported.
+  // Note, I added requireConform and made the default value False for backward
+  // compatibility. However, I think that ultimately requireConform should be removed
+  // and an exception should be thrown if the units do not conform. It's not clear to
+  // me what this was not in the original implementation; it's much to easy for
+  // non-conformation bugs to slip by unnoticed. - dmehring 09feb2015
+  Qtype getValue(const Unit &other, Bool requireConform=False) const;
+
   // Get the unit (as Unit) that is attached to the Quantum. (use getUnit() if
   // interested in the String part only, e.g. for output)
   virtual const Unit &getFullUnit() const;
