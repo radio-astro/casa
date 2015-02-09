@@ -206,7 +206,7 @@ template<class T> Record PixelValueManipulator<T>::_doWorld(
 	if (! unit.empty() && unit != axisUnit) {
 		if (t.isConform(axisUnit)) {
 			Quantum<Vector<Double> > q(coords, axisUnit);
-			coords = q.getValue(unit);
+			coords = q.getValue(unit, True);
 		}
 		else {
 			_doNoncomformantUnit(
@@ -231,7 +231,7 @@ template<class T> void PixelValueManipulator<T>::_doNoncomformantUnit(
 	);
 	SpectralCoordinate sp = csys.spectralCoordinate();
 	if (restFreq) {
-		Double value = restFreq->getValue(axisUnit);
+		Double value = restFreq->getValue(axisUnit, True);
 		sp.setRestFrequency(value, False);
 		sp.selectRestFrequency(value);
 	}
