@@ -1641,16 +1641,18 @@ Bool LatticeStatistics<T>::getLayerStats(
 	IPosition dPos = pixelIterator.position();
 	/*
 	if (displayAxes_p.nelements() == 2) {
-	    if (zAx == 1)
+	    if (zAx == 1) {
 		if (dPos[1] != zLayer)
 		    continue;
 		else
 		    layer = hLayer;
-	    if (hAx == 1)
+	    }
+	    if (hAx == 1) {
 		if (dPos[1] != hLayer)
 		    continue;
 		else
 		    layer = zLayer;
+	    }
 	}
 	if (displayAxes_p.nelements() == 1)
 	    layer = zLayer;
