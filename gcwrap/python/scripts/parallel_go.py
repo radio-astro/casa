@@ -150,7 +150,7 @@ class cluster(object):
       p=Popen(cmd, stdout=out, stderr=err)
       sts = os.waitpid(p.pid, 0)
       if sts[1] != 0:
-          casalog.post("Command failed: %s" % str(join(cmd)),"WARN","start_engine")
+          casalog.post("Command failed: %s" % (" ".join(cmd)),"WARN","start_engine")
       
       cmd = self._cp(self.__ipythondir+'/'+self.__start_engine_file,
                 node_name,
@@ -159,7 +159,7 @@ class cluster(object):
       p=Popen(cmd, stdout=out, stderr=err)
       sts = os.waitpid(p.pid, 0)
       if sts[1] != 0:
-         casalog.post("Command failed: %s" % str(join(cmd)),"WARN","start_engine")
+         casalog.post("Command failed: %s" % (" ".join(cmd)),"WARN","start_engine")
       for i in range(1, num_engine+1):
          args='bash '+self.__prefix+self.__start_engine_file
          cmd = self._do(node_name, args)
