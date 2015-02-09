@@ -24,6 +24,11 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: ArrayOpsDiffShapes.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+
+
+#ifndef CASA_ARRAY_OPSDIFFSHAPE_TCC
+#define CASA_ARRAY_OPSDIFFSHAPE_TCC
+
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 //#include <casa/Arrays/ArrayUtil.h>
@@ -176,3 +181,5 @@ void binOpExpandInPlace(Array<L>& leftarr, const Array<R>& rightarr, BinaryOpera
 }
 
 } //#End casa namespace
+
+#endif

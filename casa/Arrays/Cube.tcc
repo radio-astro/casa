@@ -25,6 +25,9 @@
 //#
 //# $Id: Cube.tcc 21159 2011-12-13 02:59:29Z ben.h@bigpond.net.au $
 
+#ifndef CASA_ARRAY_CUBE_TCC
+#define CASA_ARRAY_CUBE_TCC
+
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Slice.h>
@@ -374,3 +377,5 @@ void Cube<T>::takeStorage(const IPosition &shape, const T *storage)
 }
 
 } //#End casa namespace
+
+#endif

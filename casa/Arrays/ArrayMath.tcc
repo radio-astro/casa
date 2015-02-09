@@ -25,6 +25,9 @@
 //#
 //# $Id: ArrayMath.tcc 21195 2012-03-14 08:10:42Z gervandiepen $
 
+#ifndef CASA_ARRAY_MATH_TCC
+#define CASA_ARRAY_MATH_TCC
+
 #include <casa/iostream.h>
 
 #include <casa/Arrays/ArrayMath.h>
@@ -1358,3 +1361,5 @@ template<class T, class U> void convertArray(Array<T> &to,
 }
 
 } //# NAMESPACE CASA - END
+
+#endif

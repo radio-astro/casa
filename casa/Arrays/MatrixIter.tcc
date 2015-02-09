@@ -25,6 +25,9 @@
 //#
 //# $Id: MatrixIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+#ifndef CASA_ARRAY_MATRIX_ITER_TCC
+#define CASA_ARRAY_MATRIX_ITER_TCC
+
 #include<casa/Arrays/MatrixIter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -50,3 +53,5 @@ template<class T> MatrixIterator<T>::MatrixIterator(Array<T> &a,
 }
 
 } //# NAMESPACE CASA - END
+
+#endif

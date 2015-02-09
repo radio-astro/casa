@@ -25,6 +25,10 @@
 //#
 //# $Id: MaskArrLogi.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+
+#ifndef CASA_ARRAY_MASKARRLOGI_TCC
+#define CASA_ARRAY_MASKARRLOGI_TCC
+
 #include <casa/Arrays/MaskArrLogi.h>
 #include <casa/Arrays/ArrayError.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -1476,3 +1480,4 @@ MaskedLogicalArray operator || (const T &val,
 
 } //# NAMESPACE CASA - END
 
+#endif

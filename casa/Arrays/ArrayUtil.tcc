@@ -25,6 +25,9 @@
 //#
 //# $Id: ArrayUtil.tcc 21285 2012-11-14 15:36:59Z gervandiepen $
 
+#ifndef CASA_ARRAY_ARRAYUTIL_TCC
+#define CASA_ARRAY_ARRAYUTIL_TCC
+
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayError.h>
 #include <casa/Utilities/Copy.h>
@@ -199,3 +202,5 @@ Array<T> reverseArray (const Array<T>& array, const IPosition& reversedAxes,
 }
 
 } //# NAMESPACE CASA - END
+
+#endif

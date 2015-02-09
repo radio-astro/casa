@@ -25,6 +25,9 @@
 //#
 //# $Id: ArrayLogical.tcc 21195 2012-03-14 08:10:42Z gervandiepen $
 
+#ifndef CASA_ARRAY_LOGICAL_TCC
+#define CASA_ARRAY_LOGICAL_TCC
+
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayError.h>
@@ -802,3 +805,4 @@ template<class T> Array<uInt> partialNFalse (const Array<T>& array,
 
 } //# NAMESPACE CASA - END
 
+#endif

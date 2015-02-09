@@ -25,6 +25,10 @@
 //#
 //# $Id: MatrixMath.tcc 21159 2011-12-13 02:59:29Z ben.h@bigpond.net.au $
 
+
+#ifndef CASA_ARRAY_MATRIXMATH_TCC
+#define CASA_ARRAY_MATRIXMATH_TCC
+
 #include <casa/Arrays/MatrixMath.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
@@ -168,3 +172,4 @@ Matrix<T> directProduct(const  Matrix<T> &A, const Matrix<T> &B) {
 
 } //# NAMESPACE CASA - END
 
+#endif

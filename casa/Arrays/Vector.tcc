@@ -25,6 +25,10 @@
 //#
 //# $Id: Vector.tcc 21179 2012-03-07 10:28:37Z gervandiepen $
 
+
+#ifndef CASA_ARRAY_VECTOR_TCC
+#define CASA_ARRAY_VECTOR_TCC
+
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayError.h>
 #include <casa/Arrays/Slice.h>
@@ -308,3 +312,5 @@ template<class T> Bool Vector<T>::ok() const
 }
 
 } //#End casa namespace
+
+#endif

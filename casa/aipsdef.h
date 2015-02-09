@@ -28,6 +28,8 @@
 #ifndef CASA_AIPSDEF_H
 #define CASA_AIPSDEF_H
 
+#include <casa/aipstype.h>
+
 //# Define the aips++ global macros
 
 //# Defined the "aips_name2" macro which is used to join two tokens.
