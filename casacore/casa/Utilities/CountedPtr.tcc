@@ -25,6 +25,9 @@
 //#
 //# $Id: CountedPtr.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+#ifndef CASA_UTIL_COUNTEDPTR_TCC
+#define CASA_UTIL_COUNTEDPTR_TCC
+
 #include <casa/Utilities/CountedPtr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -89,3 +92,4 @@ CountedPtr<t>::CountedPtr(const CountedPtr<t> &val)
 
 } //# NAMESPACE CASA - END
 
+#endif

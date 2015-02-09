@@ -25,6 +25,10 @@
 //#
 //# $Id: Array.tcc 21130 2011-10-18 07:39:05Z gervandiepen $
 
+#ifndef CASA_ARRAY_TCC
+#define CASA_ARRAY_TCC
+
+
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Slicer.h>
@@ -972,3 +976,5 @@ vector<T> Array<T>::tovector() const {
 
 
 } //#End casa namespace
+
+#endif

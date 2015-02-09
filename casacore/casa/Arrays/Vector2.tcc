@@ -25,6 +25,10 @@
 //#
 //# $Id: Vector2.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+
+#ifndef CASA_ARRAY_VECTOR2_TCC
+#define CASA_ARRAY_VECTOR2_TCC
+
 #include <casa/Arrays/Vector.h>
 #include <casa/stdvector.h>
 
@@ -84,3 +88,4 @@ template void Array<X>::tovector(vector<X> &) const;
 
 } //# NAMESPACE CASA - END
 
+#endif

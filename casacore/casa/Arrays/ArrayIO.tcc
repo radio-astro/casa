@@ -25,6 +25,10 @@
 //#
 //# $Id: ArrayIO.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
+
+#ifndef CASA_ARRAY_ARRAYIO_TCC
+#define CASA_ARRAY_ARRAYIO_TCC
+
 //# Includes
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/Array.h>
@@ -717,3 +721,4 @@ Bool readArrayBlock(istream &s, Bool &trans,
 
 } //# NAMESPACE CASA - END
 
+#endif

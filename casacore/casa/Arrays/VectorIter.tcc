@@ -25,6 +25,9 @@
 //#
 //# $Id: VectorIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+#ifndef CASA_ARRAY_VECTORITER_TCC
+#define CASA_ARRAY_VECTORITER_TCC
+
 #include<casa/Arrays/VectorIter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -39,3 +42,5 @@ template<class T> VectorIterator<T>::VectorIterator(Array<T> &a, uInt axis)
 }
 
 } //# NAMESPACE CASA - END
+
+#endif

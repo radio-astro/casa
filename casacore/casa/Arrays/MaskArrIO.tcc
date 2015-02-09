@@ -25,6 +25,9 @@
 //#
 //# $Id: MaskArrIO.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+#ifndef CASA_ARRAY_MASKARRIO_TCC
+#define CASA_ARRAY_MASKARRIO_TCC
+
 #include <casa/iostream.h>
 
 #include <casa/aips.h>
@@ -51,3 +54,4 @@ ostream & operator<< (ostream &s, const MaskedArray<T> &a)
 
 } //# NAMESPACE CASA - END
 
+#endif

@@ -25,6 +25,9 @@
 //#
 //# $Id: MaskArrMath.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
+#ifndef CASA_ARRAY_MASKARRMATH_TCC
+#define CASA_ARRAY_MASKARRMATH_TCC
+
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/BasicMath/Math.h>
@@ -1774,3 +1777,4 @@ Array<T> slidingArrayMath (const MaskedArray<T>& array,
 
 } //# NAMESPACE CASA - END
 
+#endif

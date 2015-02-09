@@ -24,6 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: ArrayIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//
+
+#ifndef CASA_ARRAY_ITER_TCC
+#define CASA_ARRAY_ITER_TCC
 
 #include <casa/Arrays/ArrayIter.h>
 #include <casa/Arrays/ArrayError.h>
@@ -156,3 +160,5 @@ template<class T> ArrayBase& ArrayIterator<T>::getArray()
 }
 
 } //# NAMESPACE CASA - END
+
+#endif

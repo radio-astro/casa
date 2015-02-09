@@ -25,6 +25,9 @@
 //#
 //# $Id: MaskedArray.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
+#ifndef CASA_ARRAY_MASKEDARRAY_TCC
+#define CASA_ARRAY_MASKEDARRAY_TCC
+
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayLogical.h>
@@ -917,3 +920,4 @@ template<class T, class U>
 
 } //# NAMESPACE CASA - END
 
+#endif

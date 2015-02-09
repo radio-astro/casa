@@ -26,6 +26,10 @@
 //#
 //# $Id: COWPtr.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
+
+#ifndef CASA_UTILS_COWPTR_TCC
+#define CASA_UTILS_COWPTR_TCC
+
 #include <casa/Utilities/COWPtr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -63,3 +67,4 @@ template <class T> Bool COWPtr<T>::makeUnique()
 
 } //# NAMESPACE CASA - END
 
+#endif
