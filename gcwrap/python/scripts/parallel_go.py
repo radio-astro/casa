@@ -166,7 +166,7 @@ class cluster(object):
          q=Popen(cmd)
          sts = os.waitpid(q.pid, 0)
          if sts[1] != 0:
-            casalog.post("Command failed: %s" % str(join(cmd)),"WARN","start_engine")
+            casalog.post("Command failed: %s" % (" ".join(cmd)),"WARN","start_engine")
          casalog.post("start engine %s on %s" % (i, node_name),"INFO","start_engine")
       self.__engines=self.__update_cluster_info(num_engine, work_dir,omp_num_nthreads)
       
