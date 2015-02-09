@@ -32,6 +32,7 @@ casa_add_python( tools tools_mpi4casa_python python/${PYTHONV}/mpi4casa
   MPICommandServer.py
   MPIMonitorClient.py
   MPIMonitorServer.py
+  MPIInterface.py
   mpi4casapy.py
   task_macros.py
   task_wrappers.py  

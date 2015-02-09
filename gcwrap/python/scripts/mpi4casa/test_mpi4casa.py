@@ -1,13 +1,15 @@
 import os
 import time
 import signal
+import socket
 import unittest
 import testhelper
-from taskinit import mstool,tbtool,cbtool,casalog
+from taskinit import mstool,tbtool,cbtool,casalog,casac
 from tasks import setjy,flagdata,applycal,uvcontsub
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from mpi4casa.MPICommandClient import MPICommandClient
 from mpi4casa.MPICommandServer import MPICommandServer
+from mpi4casa.MPIInterface import MPIInterface
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 
@@ -853,6 +855,69 @@ class test_MPICommandServer(unittest.TestCase):
             
         self.assertEqual(instantiated, False, "It should not be possible to instantiate MPICommandServer in the client")
         
+        
+class test_MPIInterface(unittest.TestCase):            
+            
+    sc = None
+    CL = None
+        
+    def test_PyParallelImagerHelper_interface(self):
+        
+        # Get cluster
+        self.sc = MPIInterface.getCluster()
+        self.CL = self.sc._cluster
+        
+        # Ger engines
+        engines = self.CL.get_engines()
+        self.assertEqual(engines,range(1,MPIEnvironment.mpi_world_size),"Error getting list of engines")
+        
+        # Get nodes
+        nodes = self.CL.get_nodes()
+        self.assertEqual(nodes[0],socket.gethostname(),"Error getting list of nodes")
+        
+        # Run imports in all engines
+        self.CL.pgc('import os')
+        self.CL.pgc('from numpy import array,int32')
+        os_is_module = self.CL.pgc('os is not None')[0]['ret']
+        self.assertEqual(os_is_module,True,"Error importing os module")
+        
+        # Change current working directory
+        cwd=os.getcwd()
+        self.CL.pgc('os.chdir("' + cwd + '")')
+        res = self.CL.pgc('os.getcwd()')[0]['ret']
+        self.assertEqual(res,cwd,"Error changing work directory")
+        
+        # Get engine working directory
+        cwd=os.getcwd()
+        res = self.sc.get_engine_store(1)
+        self.assertEqual(res,cwd,"Error getting engine store")
+        
+        # Push/Pull variable to/from all servers
+        self.CL.pgc("initrec = casac.utils().hostinfo()['endian']")
+        res = self.CL.pull('initrec')
+        self.assertEqual(res[1],casac.utils().hostinfo()['endian'],"Error pulling a variable")
+        
+        # Run various commands in parallel
+        self.CL.pgc({1:'ya=3',2:'ya="b"'})
+        res = self.CL.pull('ya',[1,2])
+        self.assertEqual(res,{1: 3, 2: 'b'},"Error running various commands in parallel")        
+        
+        # Async execution of a job in a subset of servers
+        jobIds = self.CL.odo("time.sleep(5)",1)
+        status = self.CL.check_job(jobIds)
+        ntries = 0
+        while status == False and ntries < 10:
+            ntries += 1
+            time.sleep(1)
+            status = self.CL.check_job(jobIds)        
+        self.assertEqual(status,True,"Error executing a job asynchronously")   
+        
+        # Check queue status
+        jobIds = self.CL.odo("time.sleep(5)",1)
+        time.sleep(1)
+        status = self.sc.get_status()
+        self.assertEqual(len(status)-1,len(self.CL.get_command_request_list()),"Error retrieving job queue status")
+      
 
 class test_mpi4casa_flagdata(unittest.TestCase):
 
@@ -1117,6 +1182,7 @@ class test_mpi4casa_uvcont(unittest.TestCase):
 def suite():
     return [test_MPICommandClient,
             test_MPICommandServer,
+            test_MPIInterface,
             test_mpi4casa_flagdata,
             test_mpi4casa_setjy,
             test_mpi4casa_applycal,

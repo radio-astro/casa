@@ -740,5 +740,14 @@ class MPICommandClient:
         
         def get_server_status(self,server=None):
             return self.__monitor_client.get_server_status(server)
+        
+        
+        def get_command_request_list(self):
+            return self.__command_request_list
+        
+        def get_command_response_list(self):
+            return self.__command_response_list        
+            
+            
    
 # EOF

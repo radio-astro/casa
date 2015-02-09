@@ -122,15 +122,22 @@ class MPICommandServer:
                         
                 # Finally process command request and send back response
                 if (msg_received):
+                    
+                    # Start timer
+                    command_start_time = time.time()
                                      
                     # Update server state
                     self.__monitor_server.set_status('busy',True)
                     self.__monitor_server.set_status('command',command_request['command'])
-                    self.__monitor_server.set_status('command_start_time',time.time())            
+                    self.__monitor_server.set_status('command_start_time',command_start_time)            
                     # Get command request id 
                     command_request_id = command_request['id']
                     # Prepare command response
                     command_response = dict(command_request)  
+                    
+                    # Set command start time
+                    command_response['command_start_time'] = command_start_time
+                    
                     # Execute/Evaluate command request
                     try:
                         # Add dict-defined parameters to globals
@@ -154,6 +161,7 @@ class MPICommandServer:
                         # Set command response parameters
                         command_response['successful'] = True
                         command_response['traceback'] = None
+                        
                     except Exception, instance:
                         formatted_traceback = traceback.format_exc()
                         casalog.post("Exception executing command request via eval: %s" 
@@ -173,6 +181,11 @@ class MPICommandServer:
                                     formatted_traceback = traceback.format_exc()
                                     casalog.post("Exception deleting parameter variable '%s' from global environment: %s" 
                                                  % (str(parameter),str(formatted_traceback)),"WARN",casalog_call_origin)
+                                    
+                    # Set command stop time
+                    command_stop_time = time.time()
+                    command_response['command_stop_time'] = command_stop_time
+                        
                     # Update server state 
                     self.__monitor_server.set_status('busy',False)
                     self.__monitor_server.set_status('command',None)
