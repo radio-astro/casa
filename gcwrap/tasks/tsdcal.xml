@@ -321,10 +321,11 @@ calmode -- Calibration mode. If you want to generate calibration table
                      Set True only if observed area is elongated 
                      in one direction.
                 default: False
-        tsysavg -- Whether Tsys is averaged in spectral axis or not.
+<!--
+        tsysavg \-\- Whether Tsys is averaged in spectral axis or not.
                 default: False
                 options: (bool) True, False
-        tsysspw -- list of IF IDs (spectral windows) and their channel
+        tsysspw \-\- list of IF IDs (spectral windows) and their channel
                    ranges of averaging for Tsys calibration.
                    It does no effect if you don't want to do Tsys 
                    calibration. the user is able to specify channel
@@ -333,6 +334,7 @@ calmode -- Calibration mode. If you want to generate calibration table
                 example: tsysspw='3,5,7' (IF IDs 3,5,7; all channels)
                          tsysspw='&lt;2' (IF IDs less than 2; all channels)
                          tsysspw='1:0~100' (IF ID1; between channels 0 and 100)
+-->
         applytable -- List of sky/Tsys calibration tables you want to 
                       apply.
                 default: ''
@@ -515,6 +517,7 @@ It is intended to select data to be calibrated so that the list should
 contain spectral windows for both science target and Tsys measurement.
 The task will fail if you use 'spw' instead of 'tsysspw'. 
 
+
 For Tsys calibration, the user is able to choose whether Tsys is
 averaged in spectral axis or not. If tsysavg is False (default),
 resulting Tsys is spectral value. On the other hand, when tsysavg
@@ -536,7 +539,6 @@ ranges together and output single averaged value. You can specify multiple
 spws by separating comma.
 
     tsysspw = '1:0~100,3:400~500'
-
 Note that specified channel range is ignored if tsysavg is False.
   </example>
 
