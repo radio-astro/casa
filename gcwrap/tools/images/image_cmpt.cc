@@ -53,6 +53,7 @@
 #include <lattices/Lattices/RegionType.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <measures/Measures/Stokes.h>
+#include <../casacore/measures/Measures/MeasIERS.h>
 #include <scimath/Fitting/LinearFitSVD.h>
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/VectorKernel.h>
@@ -959,7 +960,8 @@ bool image::close() {
 		_log << _ORIGIN;
 		_image.reset();
 		_stats.reset(0);
-		return True;
+        MeasIERS::closeTables();
+        return True;
 	} catch (const AipsError& x) {
 		_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
@@ -1639,6 +1641,7 @@ bool image::done(const bool remove, const bool verbose) {
 			}
 		}
 		_image.reset();
+        MeasIERS::closeTables();
 		return True;
 	}
 	catch (const AipsError& x) {
