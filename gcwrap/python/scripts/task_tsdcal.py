@@ -41,10 +41,10 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 			if(type(spwmap)!=types.ListType and (type(spwmap)!=types.DictType)):
 				raise Exception, 'type of the spwmap must be list or dictionary.'
 			
-			if (type(spwmap)==types.ListType):
-				applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')
+			#if (type(spwmap)==types.ListType):
+			#	applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')
 				#raise UserWarning, 'spwmap is list'
-			elif (type(spwmap)==types.DictType):
+			if (type(spwmap)==types.DictType):
 
 				MS = infile
 				tb.open(MS+'/SPECTRAL_WINDOW')
@@ -60,8 +60,9 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 							index = spwmap_list.index(v)
 							spwmap_list[index]=int(key)
 
-				spwmap = spwmap_list	
-				applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')	
+				spwmap = spwmap_list
+					
+			applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calonly')	
 
 		calmodemap = {'tsys': 'tsys','ps': 'sdsky_ps'}
 
