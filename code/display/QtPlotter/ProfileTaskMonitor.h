@@ -58,7 +58,7 @@ namespace casa {
 		virtual void postStatus( String str ) = 0;
 		virtual void plotMainCurve() = 0;
 		virtual std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName = "") const = 0;
-		virtual const void getPixelBounds( Vector<double>& xPixels, Vector<double>& yPixels) const = 0;
+		virtual void getPixelBounds( Vector<double>& xPixels, Vector<double>& yPixels) const = 0;
 		virtual MFrequency::Types getReferenceFrame() const = 0;
 		//Specific to Moments
 		virtual void persist( const QString& key, const QString& value ) = 0;
