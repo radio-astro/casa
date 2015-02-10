@@ -361,8 +361,8 @@ def setjy_core(vis=None, field=None, spw=None,
             for cln in clnamelist:
                 if deletecomp and os.path.exists(cln) and os.path.isdir(cln):
                     shutil.rmtree(cln,True) 
-            if os.path.exists("_tmp_setjyCLfile"):
-                shutil.rmtree("_tmp_setjyCLfile")
+            if os.path.exists(os.path.basename(vis)+"_tmp_setjyCLfile"):
+                shutil.rmtree(os.path.basename(vis)+"_tmp_setjyCLfile")
 
     return retval
 
