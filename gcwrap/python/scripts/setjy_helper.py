@@ -303,7 +303,10 @@ class ss_setjy_helper:
 	    mjd=inparams[vfid]['mjds'][0]
 	    tmlabel = '%.1fd' % (mjd)
 	    #clabel = src+'_spw'+str(spwids[j])+'_'+freqlabel+'_'+tmlabel
-	    clabel0 = src+'_'+freqlabel+'_'+tmlabel
+	    #clabel0 = src+'_'+freqlabel+'_'+tmlabel
+            #pid=str(os.getpid())
+	    #clname = clpath+clabel0+"_"+pid+'.cl'
+	    clabel0 = src+'_'+freqlabel+'_'+tmlabel+"_"+os.path.basename(self.vis)
 	    clname = clpath+clabel0+'.cl'
             #debug
             self._casalog.post("Create componentlist: %s for vfid=%s" % (clname,vfid),'DEBUG1')
@@ -451,21 +454,28 @@ class ss_setjy_helper:
                raise Exception, "Inconsistency in generated componentlist...Please submit a bug report."
             for icomp in range(ncomp): 
 	      #self.im.selectvis(spw=spwids[icomp],field=field,observation=observation,time=timerange,intent=intent)
-	      self.im.selectvis(spw=spwids[icomp],field=vfid,observation=observation,time=timerange,intent=intent)
-              newclinrec = {}
-              newclinrec['nelements']=1
-              newclinrec['component0']=clinrec['component'+str(icomp)]
-              mycl.fromrecord(newclinrec)
-              if os.access("./",os.W_OK):
-                tmpclpath = "./"
-              elif os.access("/tmp",os.W_OK):
-                tmpclpath = "/tmp/"
-              tmpclpath=tmpclpath+"_tmp_setjyCLfile"
-              if os.path.exists(tmpclpath):
-                 shutil.rmtree(tmpclpath)
-              mycl.rename(tmpclpath)
-              mycl.close(False)
-	      self.im.ft(complist=tmpclpath)
+	      ok = self.im.selectvis(spw=spwids[icomp],field=vfid,observation=observation,time=timerange,intent=intent)
+              # for MMS, particular subms may not contain the particular spw, so skip for such a case
+              if ok: 
+                  newclinrec = {}
+                  newclinrec['nelements']=1
+                  newclinrec['component0']=clinrec['component'+str(icomp)]
+                  mycl.fromrecord(newclinrec)
+                  cdir = os.getcwd()
+                  if os.access(cdir,os.W_OK):
+                      tmpclpath = cdir+"/"
+                  elif os.access("/tmp",os.W_OK):
+                      tmpclpath = "/tmp/"
+                  #tmpclpath=tmpclpath+"_tmp_setjyCLfile_"+pid
+                  tmpclpath=tmpclpath+os.path.basename(self.vis)+"_tmp_setjyCLfile"
+                  self._casalog.post("tmpclpath="+tmpclpath)
+                  if os.path.exists(tmpclpath):
+                      shutil.rmtree(tmpclpath)
+                  mycl.rename(tmpclpath)
+                  mycl.close(False)
+                  self._casalog.post("Now tmpclpath="+tmpclpath)
+	          self.im.ft(complist=tmpclpath)
+             
 
             # --------------------------------------------------------------------------------------------
             # Currently this does not work properly for some case. Need ft can handle multi-component CL

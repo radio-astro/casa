@@ -49,14 +49,14 @@ class SetjyUnitTestBase(unittest.TestCase):
         print "\nCreate a new local copy of the MS..."
         #print " setjydatapath=",setjydatapath, " inpms=",self.inpms
         if testmms:
-            os.system('cp -rf ' + datapath + self.inpms + ' '+self.inpms)
+            os.system('cp -rH ' + datapath + self.inpms + ' '+self.inpms)
         else:
             os.system('cp -rf ' + os.environ.get('CASAPATH').split()[0] + "/data/regression/" + setjydatapath + self.inpms + ' ' + self.inpms)
 
     def resetMS(self):
 
         if os.path.exists(self.inpms):
-            print "\nRemove local copy of MS from previous test..."
+            print "\nRemoving a local copy of MS from the previous test..."
             #ret = os.system('rm -rf unittest/setjy/*')
             shutil.rmtree(self.inpms)
 
@@ -101,6 +101,7 @@ class SetjyUnitTestBase(unittest.TestCase):
 
     def check_history(self,histline, items):
         isok = True
+        #print "\nhistline=",histline, " items=",items
         for item in items:
             if item not in histline:
                 isok = False
@@ -140,14 +141,26 @@ class test_SingleObservation(SetjyUnitTestBase):
     """Test single observation MS"""
 
     def setUp(self):
+        # Replaced with a realistic ALMA data 
+        #  - use modified version of CASAGuide's TWHya data (X3c1_wvrtsys.ms with only first 4scans)
+        #    4 spws (wvr spw is already split out) 
         #self.setUpMS("unittest/setjy/2528.ms")         # Uranus
-        self.setUpMS("2528.ms")         # Uranus
+        #self.setUpMS("2528.ms")         # Uranus
+        # Use TWHYA data (Titan)
+        prefix = 'twhya_setjy' 
+        self.ismms = False
+        if testmms:
+            msname=prefix+'.mms'
+            self.ismms = True
+        else:
+            msname=prefix+'.ms'
+        self.setUpMS(msname)        
 
     def tearDown(self):
         self.resetMS()
 
     def test1_SingleObservationOldModel(self):
-        """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model"""
+        """ Test vs an MS with a single observation using the Butler-JPL-Horizons 2010 model"""
 
         os.system("mv " + self.inpms + " " + self.inpms + ".test1")
         self.inpms += ".test1"
@@ -161,10 +174,13 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
-            sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            #print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
+            #sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            sjran = setjy(vis=self.inpms, field='Titan', spw='', modimage='',
                           scalebychan=False, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2010', usescratch=True)
+            #print "sjran=",sjran
         except Exception, e:
             print "\nError running setjy(field='Uranus')"
             raise e
@@ -173,45 +189,73 @@ class test_SingleObservation(SetjyUnitTestBase):
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                #raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
-                record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
-                record['long3'] = tblocal.getcell('MODEL_DATA', 11)
-                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
-                record['med4'] = tblocal.getcell('MODEL_DATA', 4)
-                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                #record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
+                #record['long3'] = tblocal.getcell('MODEL_DATA', 11)
+                #record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                #record['med4'] = tblocal.getcell('MODEL_DATA', 4)
+                #record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                # for Titan
+                # mms - sorted by spw so row no. of a specific data will be different from 
+                # normal ms case...
+                if self.ismms:
+                    record['auto2'] = tblocal.getcell('MODEL_DATA', 1892)
+                    record['long2'] = tblocal.getcell('MODEL_DATA', 1930)
+                    record['auto3'] = tblocal.getcell('MODEL_DATA', 2838)
+                    record['med3'] = tblocal.getcell('MODEL_DATA', 2854)
+                    record['long3'] = tblocal.getcell('MODEL_DATA', 2868)
+                else:
+		    record['auto2'] = tblocal.getcell('MODEL_DATA', 270)
+		    record['long2'] = tblocal.getcell('MODEL_DATA', 310)
+		    record['auto3'] = tblocal.getcell('MODEL_DATA', 408)
+		    record['med3'] = tblocal.getcell('MODEL_DATA', 424)
+		    record['long3'] = tblocal.getcell('MODEL_DATA', 438)
                 tblocal.close()
                 #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint='Uranus')
-                record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Uranus')
+                #record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Uranus')
+                record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Titan')
                 self.result = record
         except AssertionError, e:
             print "\nError accesing MODEL_DATA"
             tblocal.close()
             raise e
 
-        """Flux density in HISTORY (Uranus)?"""
-        self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        #"""Flux density in HISTORY (Uranus)?"""
+        """Flux density in HISTORY (Titan)?"""
+        #self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        #print "history =",self.result['history']
+        self.check_history(self.result['history'], ["Titan", "V=0] Jy"])
         """Returned fluxes """
-        self.assertTrue(sjran.has_key('0')) 
-        self.check_eq(sjran['0']['1']['fluxd'][0],65.23839313,0.0001)
-        """WVR spw"""
-        self.check_eq(self.result['wvr'], numpy.array([[26.40653229+0.j,26.40653229+0.j]]),0.0001)
-        """Zero spacing of spw 3"""
-        self.check_eq(self.result['auto3'], numpy.array([[65.80638885+0.j],[65.80638885+0.j]]),0.0001)
+        self.assertTrue(sjran.has_key('1')) 
+        #self.check_eq(sjran['0']['1']['fluxd'][0],65.23839313,0.0001)
+        self.check_eq(sjran['1']['1']['fluxd'][0],3.33542042,0.0001)
+
+        #"""WVR spw"""
+        #self.check_eq(self.result['wvr'], numpy.array([[26.40653229+0.j,26.40653229+0.j]]),0.0001)
+
+        """Zero spacing of spw 2"""
+        #self.check_eq(self.result['auto3'], numpy.array([[65.80638885+0.j],[65.80638885+0.j]]),0.0001)
+        self.check_eq(self.result['auto2'][0][0], (3.12483382+0.j),0.0001)
         """Long spacing of spw 3"""
-        self.check_eq(self.result['long3'], numpy.array([[4.76111794+0.j],[4.76111794+0.j]]),0.0001)
-        """Zero spacing of spw 4"""
-        self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
-        """Medium spacing of spw 4"""
-        self.check_eq(self.result['med4'], numpy.array([[38.01076126+0.j],[38.01076126+0.j]]),0.0001)
-        """Long spacing of spw 4"""
-        self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+        #self.check_eq(self.result['long3'], numpy.array([[4.76111794+0.j],[4.76111794+0.j]]),0.0001)
+        self.check_eq(self.result['long2'][0][0],(2.84687614 +5.76921887e-12j),0.0001)
+        """Zero spacing of spw 3"""
+        #self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
+        self.check_eq(self.result['auto3'][0][0], (3.08946729+0.j),0.0001)
+        """Medium spacing of spw 3"""
+        #self.check_eq(self.result['med4'], numpy.array([[38.01076126+0.j],[38.01076126+0.j]]),0.0001)
+        self.check_eq(self.result['med3'][0][0],(3.05192709 -1.08149264e-12j) ,0.0001)
+        """Long spacing of spw 3"""
+        #self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+        self.check_eq(self.result['long3'][0][0], (2.62474346 +6.37270531e-12j),0.0001)
         
         return sjran
 
-    def test2_SingleObservationSelectByChan(self):
-        """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model and selecting by channel"""
+    def test2_SingleObservationScaleByChan(self):
+        """ Test vs an MS with a single observation using the Butler-JPL-Horizons 2010 model and scalying by channel"""
 
         os.system("mv " + self.inpms + " " + self.inpms + ".test2")
         self.inpms += ".test2"
@@ -225,26 +269,42 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
-            sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            #print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
+            #sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            sjran = setjy(vis=self.inpms, field='Titan', spw='', modimage='',
                           scalebychan=True, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2010', usescratch=True)
         except Exception, e:
-            print "\nError running setjy(field='Uranus')"
+            #print "\nError running setjy(field='Uranus')"
+            print "\nError running setjy(field='Titan')"
             raise e
         try:
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
+ 
             if 'MODEL_DATA' not in cols:
                 raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
             else:
-                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
-                record['auto1'] = tblocal.getcell('MODEL_DATA', 18)
-                record['long1'] = tblocal.getcell('MODEL_DATA', 19)
-                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
-                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                #record['auto1'] = tblocal.getcell('MODEL_DATA', 18)
+                #record['long1'] = tblocal.getcell('MODEL_DATA', 19)
+                #record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                #record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                # Titan
+                if self.ismms:
+		    record['auto0'] = tblocal.getcell('MODEL_DATA', 45)
+		    record['long0'] = tblocal.getcell('MODEL_DATA', 78)
+		    record['auto3'] = tblocal.getcell('MODEL_DATA', 2835)
+		    record['long3'] = tblocal.getcell('MODEL_DATA', 2868)
+                else:
+		    record['auto0'] = tblocal.getcell('MODEL_DATA', 45)
+		    record['long0'] = tblocal.getcell('MODEL_DATA', 78)
+		    record['auto3'] = tblocal.getcell('MODEL_DATA', 405)
+		    record['long3'] = tblocal.getcell('MODEL_DATA', 438)
                 tblocal.close()
             #    record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
+                #record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
@@ -253,37 +313,61 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise e
 
         """Flux density in HISTORY (scalebychan)?"""
-        self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
-        """WVR spw with scalebychan"""
-        self.check_eq(self.result['wvr'], numpy.array([[25.93320656+0.j,
-                                                        26.88228607+0.j]]),
-                 0.003)
+        #self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        self.check_history(self.result['history'], ["Titan", "V=0] Jy"])
+
+        #"""WVR spw with scalebychan"""
+        #self.check_eq(self.result['wvr'], numpy.array([[25.93320656+0.j,
+        #                                                26.88228607+0.j]]),
+        #         0.003)
+
         """Zero spacing of spw 1 with scalebychan"""
         # 8 (decreasing freq!) chans, XX & YY.
-        self.check_eq(self.result['auto1'],
-                 numpy.array([[65.49415588+0.j, 65.42105865+0.j,
-                               65.34798431+0.j, 65.27491760+0.j,
-                               65.20187378+0.j, 65.12883759+0.j,
-                               65.05581665+0.j, 64.98281097+0.j],
-                              [65.49415588+0.j, 65.42105865+0.j,
-                               65.34798431+0.j, 65.27491760+0.j,
-                               65.20187378+0.j, 65.12883759+0.j,
-                               65.05581665+0.j, 64.98281097+0.j]]),0.0001)
+        #self.check_eq(self.result['auto1'],
+        #         numpy.array([[65.49415588+0.j, 65.42105865+0.j,
+        #                       65.34798431+0.j, 65.27491760+0.j,
+        #                       65.20187378+0.j, 65.12883759+0.j,
+        #                       65.05581665+0.j, 64.98281097+0.j],
+        #                      [65.49415588+0.j, 65.42105865+0.j,
+        #                       65.34798431+0.j, 65.27491760+0.j,
+        #                       65.20187378+0.j, 65.12883759+0.j,
+        #                       65.05581665+0.j, 64.98281097+0.j]]),0.0001)
+        # Titan ------------
+        # check spw0, YY chan 0, 1920, 3839
+        self.check_eq(self.result['auto0'][1][0], 3.30965233+0.j, 0.0001)
+        self.check_eq(self.result['auto0'][1][1920], 3.31375313+0j, 0.0001)
+        self.check_eq(self.result['auto0'][1][3839], 3.31785417+0j, 0.0001)
+
         """Long spacing of spw 1 with scalebychan"""
-        self.check_eq(self.result['long1'],
-                 numpy.array([[4.92902184+0.j, 4.96826363+0.j,
-                               5.00747252+0.j, 5.04664850+0.j,
-                               5.08579159+0.j, 5.12490082+0.j,
-                               5.16397619+0.j, 5.20301771+0.j],
-                              [4.92902184+0.j, 4.96826363+0.j,
-                               5.00747252+0.j, 5.04664850+0.j,
-                               5.08579159+0.j, 5.12490082+0.j,
-                               5.16397619+0.j, 5.20301771+0.j]]),0.0001)
+        #self.check_eq(self.result['long1'],
+        #         numpy.array([[4.92902184+0.j, 4.96826363+0.j,
+        #                       5.00747252+0.j, 5.04664850+0.j,
+        #                       5.08579159+0.j, 5.12490082+0.j,
+        #                       5.16397619+0.j, 5.20301771+0.j],
+        #                      [4.92902184+0.j, 4.96826363+0.j,
+        #                       5.00747252+0.j, 5.04664850+0.j,
+        #                       5.08579159+0.j, 5.12490082+0.j,
+        #                       5.16397619+0.j, 5.20301771+0.j]]),0.0001)
+        # Titan
+        self.check_eq(self.result['long0'][1][0],(2.77658414+6.98719121e-12j),0.0001)
+        self.check_eq(self.result['long0'][1][1920],(2.77936244+6.99878090e-12j),0.0001)
+        self.check_eq(self.result['long0'][1][3839],(2.78213906+7.01037362e-12j),0.0001)
+
         # spw 4 only has 1 chan, so it should be the same as without scalebychan.
-        """Zero spacing of spw 4 with scalebychan"""
-        self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
-        """Long spacing of spw 4 with scalebychan"""
-        self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+        #"""Zero spacing of spw 4 with scalebychan"""
+        #self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
+        """Zero spacing of spw 3 with scalebychan"""
+        self.check_eq(self.result['auto3'][1][0], (3.0934467+0j),0.0001)
+        self.check_eq(self.result['auto3'][1][1920], (3.08946729+0j),0.0001)
+        self.check_eq(self.result['auto3'][1][3839], (3.08549213+0j),0.0001)
+
+        #"""Long spacing of spw 4 with scalebychan"""
+        #self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+
+        """Long spacing of spw 3 with scalebychan"""
+        self.check_eq(self.result['long3'][1][0],(2.62812424+6.38091359e-12j) ,0.0001)
+        self.check_eq(self.result['long3'][1][1920],(2.62534332+6.36981873e-12j) ,0.0001)
+        self.check_eq(self.result['long3'][1][3839],(2.62256360+6.35873776e-12j) ,0.0001)
 
         return sjran
 
@@ -305,8 +389,10 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
-            sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            #print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
+            #sjran = setjy(vis=self.inpms, field='Uranus', spw='', modimage='',
+            sjran = setjy(vis=self.inpms, field='Titan', spw='', modimage='',
                           scalebychan=False, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2012', usescratch=True)
         except Exception, e:
@@ -316,16 +402,31 @@ class test_SingleObservation(SetjyUnitTestBase):
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                #raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
-                record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
-                record['long3'] = tblocal.getcell('MODEL_DATA', 11)
-                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
-                record['med4'] = tblocal.getcell('MODEL_DATA', 4)
-                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                #record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
+                #record['long3'] = tblocal.getcell('MODEL_DATA', 11)
+                #record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                #record['med4'] = tblocal.getcell('MODEL_DATA', 4)
+                #record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #Titan
+                if self.ismms:
+                    record['auto2'] = tblocal.getcell('MODEL_DATA', 1892)
+                    record['long2'] = tblocal.getcell('MODEL_DATA', 1930)
+                    record['auto3'] = tblocal.getcell('MODEL_DATA', 2838)
+                    record['med3'] = tblocal.getcell('MODEL_DATA', 2854)
+                    record['long3'] = tblocal.getcell('MODEL_DATA', 2868)
+                else:
+                    record['auto2'] = tblocal.getcell('MODEL_DATA', 270)
+                    record['long2'] = tblocal.getcell('MODEL_DATA', 310)
+                    record['auto3'] = tblocal.getcell('MODEL_DATA', 408)
+                    record['med3'] = tblocal.getcell('MODEL_DATA', 424)
+                    record['long3'] = tblocal.getcell('MODEL_DATA', 438)
                 tblocal.close()
-                record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+                record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Titan')
                 self.result = record
         except AssertionError, e:
             print "\nError accesing MODEL_DATA"
@@ -334,35 +435,52 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         if debug:
           print "self.result['history']=",self.result['history']
-          print "self.result['wvr']=",self.result['wvr']
+          print "self.result['auto0']=",self.result['auto0']
           print "self.result['auto3']=",self.result['auto3']
-          print "self.result['auto4']=",self.result['auto4']
 
-        """Flux density in HISTORY (Uranus)?"""
-        self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
+        #"""Flux density in HISTORY (Uranus)?"""
+        #self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
+        """Flux density in HISTORY (Titan)?"""
+        self.check_history(self.result['history'], ["Titan:", "V=0.0] Jy"])
+
         """Returned fluxes """
-        self.assertTrue(sjran.has_key('0')) 
-        self.check_eq(sjran['0']['1']['fluxd'][0],66.112953186035156,0.0001)
-        """WVR spw"""
+        self.assertTrue(sjran.has_key('1')) 
+        self.check_eq(sjran['1']['1']['fluxd'][0],3.27488661,0.0001)
+
+        #"""WVR spw"""
         #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-        self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
-        """Zero spacing of spw 3"""
+        #self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
+
+        #"""Zero spacing of spw 3"""
 	#self.check_eq(self.result['auto3'], numpy.array([[ 66.72530365+0.j],[ 66.72530365+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-	self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
-        """Zero spacing of spw 4"""
+	#self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
+        #"""Zero spacing of spw 4"""
         #self.check_eq(self.result['auto4'], numpy.array([[ 70.40153503+0.j],[ 70.40153503+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-        self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
+        #self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
+        """Zero spacing of spw 2"""
+        self.check_eq(self.result['auto2'][0][0], (6.69543791+0.j),0.0001)
 
+        """Long spacing of spw 2"""
+        self.check_eq(self.result['long2'][0][0],(6.09987020 +2.47228783e-11j),0.0001)
+
+        """Zero spacing of spw 3"""
+        self.check_eq(self.result['auto3'][0][0], (3.13487768+0.j),0.0001)
+
+        """Medium spacing of spw 3"""
+        self.check_eq(self.result['med3'][0][0],(3.09678578 -2.19477778e-12j) ,0.0001)
+
+        """Long spacing of spw 3"""
+        self.check_eq(self.result['long3'][0][0], (2.66332293 +1.29327478e-11j),0.0001)
         return sjran
 
     def test4_SingleObservationSelectByIntent(self):
         """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model with the selection by intent"""
 
-        os.system("mv " + self.inpms + " " + self.inpms + ".test2")
-        self.inpms += ".test2"
+        os.system("mv " + self.inpms + " " + self.inpms + ".test4")
+        self.inpms += ".test4"
         record = {}
 
         tblocal = tbtool()
@@ -373,25 +491,39 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
+            #print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
             sjran = setjy(vis=self.inpms, field='', spw='', modimage='',
                           selectdata=True, intent="*AMPLI*",
                           scalebychan=True, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2010', usescratch=True)
         except Exception, e:
-            print "\nError running setjy(field='Uranus')"
+            #print "\nError running setjy(field='Uranus')"
+            print "\nError running setjy(field='Titan')"
             raise e
         try:
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                #raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
-                record['auto1'] = tblocal.getcell('MODEL_DATA', 18)
-                record['long1'] = tblocal.getcell('MODEL_DATA', 19)
-                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
-                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                #record['auto1'] = tblocal.getcell('MODEL_DATA', 18)
+                #record['long1'] = tblocal.getcell('MODEL_DATA', 19)
+                #record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                #record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #Titan
+                if self.ismms:
+                    record['auto0'] = tblocal.getcell('MODEL_DATA', 45)
+                    record['long0'] = tblocal.getcell('MODEL_DATA', 78)
+		    record['auto3'] = tblocal.getcell('MODEL_DATA', 2835)
+		    record['long3'] = tblocal.getcell('MODEL_DATA', 2868)
+                else:
+                    record['auto0'] = tblocal.getcell('MODEL_DATA', 45)
+                    record['long0'] = tblocal.getcell('MODEL_DATA', 78)
+                    record['auto3'] = tblocal.getcell('MODEL_DATA', 405)
+                    record['long3'] = tblocal.getcell('MODEL_DATA', 438)
                 tblocal.close()
                 #record['history'] = self.get_last_history_line(self.inpms, origin='setjy::imager::setjy()', hint="V=0] Jy")
                 record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
@@ -401,49 +533,59 @@ class test_SingleObservation(SetjyUnitTestBase):
             tblocal.close()
             raise e
 
-        """Flux density in HISTORY (scalebychan)?"""
-        self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
-        """WVR spw with scalebychan"""
-        self.check_eq(self.result['wvr'], numpy.array([[25.93320656+0.j,
-                                                        26.88228607+0.j]]),
-                 0.003)
-        """Zero spacing of spw 1 with scalebychan"""
+        """Flux density in HISTORY (selectbyIntent)?"""
+        #self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        self.check_history(self.result['history'], ["Titan", "V=0] Jy"])
+
+        #"""WVR spw with selectbyIntent"""
+        #self.check_eq(self.result['wvr'], numpy.array([[25.93320656+0.j,
+        #                                                26.88228607+0.j]]),
+        #         0.003)
+
+        #"""Zero spacing of spw 1 with scalebychan"""
         # 8 (decreasing freq!) chans, XX & YY.
-        self.check_eq(self.result['auto1'],
-                 numpy.array([[65.49415588+0.j, 65.42105865+0.j,
-                               65.34798431+0.j, 65.27491760+0.j,
-                               65.20187378+0.j, 65.12883759+0.j,
-                               65.05581665+0.j, 64.98281097+0.j],
-                              [65.49415588+0.j, 65.42105865+0.j,
-                               65.34798431+0.j, 65.27491760+0.j,
-                               65.20187378+0.j, 65.12883759+0.j,
-                               65.05581665+0.j, 64.98281097+0.j]]),0.0001)
-        """Long spacing of spw 1 with scalebychan"""
-        self.check_eq(self.result['long1'],
-                 numpy.array([[4.92902184+0.j, 4.96826363+0.j,
-                               5.00747252+0.j, 5.04664850+0.j,
-                               5.08579159+0.j, 5.12490082+0.j,
-                               5.16397619+0.j, 5.20301771+0.j],
-                              [4.92902184+0.j, 4.96826363+0.j,
-                               5.00747252+0.j, 5.04664850+0.j,
-                               5.08579159+0.j, 5.12490082+0.j,
-                               5.16397619+0.j, 5.20301771+0.j]]),0.0001)
+        #self.check_eq(self.result['auto1'],
+        #         numpy.array([[65.49415588+0.j, 65.42105865+0.j,
+        #                       65.34798431+0.j, 65.27491760+0.j,
+        #                       65.20187378+0.j, 65.12883759+0.j,
+        #                       65.05581665+0.j, 64.98281097+0.j],
+        #                      [65.49415588+0.j, 65.42105865+0.j,
+        #                       65.34798431+0.j, 65.27491760+0.j,
+        #                       65.20187378+0.j, 65.12883759+0.j,
+        #                       65.05581665+0.j, 64.98281097+0.j]]),0.0001)
+
+        #"""Long spacing of spw 1 with scalebychan"""
+        #self.check_eq(self.result['long1'],
+        #         numpy.array([[4.92902184+0.j, 4.96826363+0.j,
+        #                       5.00747252+0.j, 5.04664850+0.j,
+        #                       5.08579159+0.j, 5.12490082+0.j,
+        #                       5.16397619+0.j, 5.20301771+0.j],
+        #                      [4.92902184+0.j, 4.96826363+0.j,
+        #                       5.00747252+0.j, 5.04664850+0.j,
+        #                       5.08579159+0.j, 5.12490082+0.j,
+        #                       5.16397619+0.j, 5.20301771+0.j]]),0.0001)
+
         # spw 4 only has 1 chan, so it should be the same as without scalebychan.
-        """Zero spacing of spw 4 with scalebychan"""
-        self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
-        """Long spacing of spw 4 with scalebychan"""
-        self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+        #"""Zero spacing of spw 4 with scalebychan"""
+        #self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
+        #"""Long spacing of spw 4 with scalebychan"""
+        #self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+
+        """Zero spacing of spw 3 with scalebychan, selectbyintent"""
+        self.check_eq(self.result['auto3'][1][0], (3.0934467+0j),0.0001)
+        self.check_eq(self.result['auto3'][1][1920], (3.08946729+0j),0.0001)
+        self.check_eq(self.result['auto3'][1][3839], (3.08549213+0j),0.0001)
 
         return sjran
 
-    def test5_SingleObservationNewModel(self):
+    def test5_SingleObservationSelectByIntentNewModel(self):
         """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2012 model with the selection by intent"""
 
         # print out some values for debugging
         debug=False
 
-        os.system("mv " + self.inpms + " " + self.inpms + ".test3")
-        self.inpms += ".test3"
+        os.system("mv " + self.inpms + " " + self.inpms + ".test5")
+        self.inpms += ".test5"
         record = {}
 
         tblocal = tbtool()
@@ -454,28 +596,45 @@ class test_SingleObservation(SetjyUnitTestBase):
             raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
 
         try:
-            print "\nRunning setjy(field='Uranus')."
+            #print "\nRunning setjy(field='Uranus')."
+            print "\nRunning setjy(field='Titan')."
             sjran = setjy(vis=self.inpms, field='', spw='', modimage='',
                           selectdata=True, intent="*AMPLI*",
                           scalebychan=False, fluxdensity=-1,
                           standard='Butler-JPL-Horizons 2012', usescratch=True)
         except Exception, e:
-            print "\nError running setjy(field='Uranus')"
+            #print "\nError running setjy(field='Uranus')"
+            print "\nError running setjy(field='Titan')"
             raise e
         try:
             tblocal.open(self.inpms)
             cols = tblocal.colnames()
             if 'MODEL_DATA' not in cols:
-                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                #raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
-                record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
-                record['long3'] = tblocal.getcell('MODEL_DATA', 11)
-                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
-                record['med4'] = tblocal.getcell('MODEL_DATA', 4)
-                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                #record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                #record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
+                #record['long3'] = tblocal.getcell('MODEL_DATA', 11)
+                #record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                #record['med4'] = tblocal.getcell('MODEL_DATA', 4)
+                #record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                # Titan
+                if self.ismms:
+                    record['auto2'] = tblocal.getcell('MODEL_DATA', 1892)
+                    record['long2'] = tblocal.getcell('MODEL_DATA', 1930)
+                    record['auto3'] = tblocal.getcell('MODEL_DATA', 2838)
+                    record['med3'] = tblocal.getcell('MODEL_DATA', 2854)
+                    record['long3'] = tblocal.getcell('MODEL_DATA', 2868)
+                else:
+		    record['auto2'] = tblocal.getcell('MODEL_DATA', 270)
+		    record['long2'] = tblocal.getcell('MODEL_DATA', 310)
+		    record['auto3'] = tblocal.getcell('MODEL_DATA', 408)
+		    record['med3'] = tblocal.getcell('MODEL_DATA', 424)
+		    record['long3'] = tblocal.getcell('MODEL_DATA', 438)
                 tblocal.close()
-                record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+                #record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+                record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Titan')
                 self.result = record
         except AssertionError, e:
             print "\nError accesing MODEL_DATA"
@@ -484,24 +643,38 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         if debug:
           print "self.result['history']=",self.result['history']
-          print "self.result['wvr']=",self.result['wvr']
+          print "self.result['auto0']=",self.result['auto0']
           print "self.result['auto3']=",self.result['auto3']
-          print "self.result['auto4']=",self.result['auto4']
 
-        """Flux density in HISTORY (Uranus)?"""
-        self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
-        """WVR spw"""
+        #"""Flux density in HISTORY (Uranus)?"""
+        #self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
+        #"""WVR spw"""
         #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-        self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
-        """Zero spacing of spw 3"""
+        #self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
+        #"""Zero spacing of spw 3"""
 	#self.check_eq(self.result['auto3'], numpy.array([[ 66.72530365+0.j],[ 66.72530365+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-	self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
-        """Zero spacing of spw 4"""
+	#self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
+        #"""Zero spacing of spw 4"""
         #self.check_eq(self.result['auto4'], numpy.array([[ 70.40153503+0.j],[ 70.40153503+0.j]]),0.0001)
         # new value after code and ephemeris data update 2012-10-03
-        self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
+        #self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
+        #Titan
+        """Zero spacing of spw 2"""
+        self.check_eq(self.result['auto2'][0][0], (6.69543791+0.j),0.0001)
+
+        """Long spacing of spw 2"""
+        self.check_eq(self.result['long2'][0][0],(6.09987020 +2.47228783e-11j),0.0001)
+
+        """Zero spacing of spw 3"""
+        self.check_eq(self.result['auto3'][0][0], (3.13487768+0.j),0.0001)
+
+        """Medium spacing of spw 3"""
+        self.check_eq(self.result['med3'][0][0],(3.09678578 -2.19477778e-12j) ,0.0001)
+
+        """Long spacing of spw 3"""
+        self.check_eq(self.result['long3'][0][0], (2.66332293 +1.29327478e-11j),0.0001)
 
         return sjran
 
@@ -510,8 +683,10 @@ class test_MultipleObservations(SetjyUnitTestBase):
 
     def setUp(self):
         prefix = 'multiobs' 
+        self.ismms = False
         if testmms:
-            msname=prefix+'.mms'
+            msname = prefix+'.mms'
+            self.ismms = True
         else:
             msname=prefix+'.ms'
         #self.setUpMS("unittest/setjy/multiobs.ms")         # Titan
@@ -551,9 +726,14 @@ class test_MultipleObservations(SetjyUnitTestBase):
             if 'MODEL_DATA' not in cols:
                 raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
-                record[1] = tblocal.getcell('MODEL_DATA', 666)[0]
-                record[2] = tblocal.getcell('MODEL_DATA', 950)[0, 0]
+                if self.ismms:
+		    record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
+		    record[1] = tblocal.getcell('MODEL_DATA', 386)[0]
+		    record[2] = tblocal.getcell('MODEL_DATA', 544)[0, 0]
+                else:
+		    record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
+		    record[1] = tblocal.getcell('MODEL_DATA', 666)[0]
+		    record[2] = tblocal.getcell('MODEL_DATA', 950)[0, 0]
                 tblocal.close()
                 self.result = record
         except AssertionError, e:
@@ -570,7 +750,7 @@ class test_MultipleObservations(SetjyUnitTestBase):
         """Was obsID 2 left alone?"""
         self.check_eq(self.result[2], 1.0+0.0j, 0.003)
 
-    def test2_MultipleObservationOldModel(self):
+    def test2_MultipleObservationNewModel(self):
         """ Test vs an MS with multiple observations using the Butler-JPL-Horizons 2012 model"""
 
         os.system("mv " + self.inpms + " " + self.inpms + ".test2")
@@ -601,10 +781,14 @@ class test_MultipleObservations(SetjyUnitTestBase):
             if 'MODEL_DATA' not in cols:
                 raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
             else:
-                record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
-                record[1] = tblocal.getcell('MODEL_DATA', 666)[0]
-                record[1] = tblocal.getcell('MODEL_DATA', 671)[0]
-                record[2] = tblocal.getcell('MODEL_DATA', 950)[0, 0]
+                if self.ismms:
+		    record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
+		    record[1] = tblocal.getcell('MODEL_DATA', 979)[0]
+		    record[2] = tblocal.getcell('MODEL_DATA', 544)[0, 0]
+                else:
+		    record[0] = tblocal.getcell('MODEL_DATA', 0)[0, 0]
+		    record[1] = tblocal.getcell('MODEL_DATA', 671)[0]
+		    record[2] = tblocal.getcell('MODEL_DATA', 950)[0, 0]
                 tblocal.close()
                 self.result = record
         except AssertionError, e:
@@ -938,7 +1122,6 @@ class test_fluxscaleStandard(SetjyUnitTestBase):
                 print "FAIL: missing field = %s in the returned dictionary" % self.field
         self.check_eq(sjran['1']['0']['fluxd'][0],2.48362403,0.0001)
         self.assertTrue(ret)
-        print "sjran=",sjran
 
 class test_setpol(SetjyUnitTestBase):
     """Test multi-term spix and polarization parameter setting"""

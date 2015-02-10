@@ -5389,7 +5389,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
 
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
-                                 tempCLs, "_setjy_");
+                                 tempCLs, ms_p->tableName()+"_setjy_");
   }
   if(!foundSrc){
     if(standard == String("SOURCE")){
@@ -5660,6 +5660,7 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
       siModel.setIndex(0.0);
     }
+  
     // TODO: call tabular form method for full pol specification....
     //
     // No worries about varying fluxes or sizes here, so any time will do.
