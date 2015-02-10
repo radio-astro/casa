@@ -1142,7 +1142,7 @@ Bool ClarkCleanModel::stopnow() {
   }
 }
 
-const Float ClarkCleanModel::threshold()
+Float ClarkCleanModel::threshold()
 {
   Float thresh = Iterate::threshold();
   if (theCycleSpeedup > 0.0) {

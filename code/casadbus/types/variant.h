@@ -155,9 +155,9 @@ namespace casa {
 
 //      Const
 //      ---------------------------------------------------
-	    const bool getBool( ) const throw(error);
-	    const int getInt( ) const  throw(error);
-	    const double getDouble( ) const throw(error);
+	    bool getBool( ) const throw(error);
+	    int getInt( ) const  throw(error);
+	    double getDouble( ) const throw(error);
 	    const std::complex<double> &getComplex( ) const throw(error);
 	    const std::string &getString( ) const throw(error);
 	    const std::vector<int> &getIntVec( ) const throw(error);

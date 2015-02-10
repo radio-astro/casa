@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const IPosition dataShape() const {
 			return IPosition( );
 		}
-		const uInt dataDim() const {
+		uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {
@@ -95,8 +95,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the number of display elements (ie. drawable images) in
 		// this DisplayData.
 		// <group>
-		virtual const uInt nelements(const WorldCanvasHolder &wcHolder) const;
-		virtual const uInt nelements() const;
+		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const;
+		virtual uInt nelements() const;
 		// </group>
 
 		// Install the default options for this DisplayData.

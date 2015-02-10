@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void recreateEmptyLattices(uInt changedScanNumber = 0);
 
 		virtual const IPosition dataShape() const;
-		virtual const uInt dataDim() const;
+		virtual uInt dataDim() const;
 		virtual const Unit dataUnit() const;
 		virtual void setupElements();
 		virtual void getMinAndMax();
@@ -122,8 +122,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		virtual String showValue(const Vector<Double> &world);
-		virtual const Float dataValue(IPosition pos);
-		virtual const Bool maskValue(const IPosition &pos);
+		virtual Float dataValue(IPosition pos);
+		virtual Bool maskValue(const IPosition &pos);
 
 		virtual Vector<String> worldAxisNames() const;
 		virtual Vector<String> worldAxisUnits() const;

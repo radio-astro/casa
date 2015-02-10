@@ -351,11 +351,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return dataMax;
 	}
 
-	const uInt NBody::nelements(const WorldCanvasHolder &) const {
+	uInt NBody::nelements(const WorldCanvasHolder &) const {
 		return 1;
 	}
 
-	const uInt NBody::nelements() const {
+	uInt NBody::nelements() const {
 		return 1;
 	}
 

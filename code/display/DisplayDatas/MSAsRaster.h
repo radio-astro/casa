@@ -200,7 +200,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const IPosition dataShape() const {
 			return IPosition( );
 		}
-		const uInt dataDim() const {
+		uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {
@@ -220,10 +220,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// return the size of the animation axis.
 		// <group>
-		virtual const uInt nelements() const {
+		virtual uInt nelements() const {
 			return msShape_[axisOn_(Z)];
 		}
-		virtual const uInt nelements(const WorldCanvasHolder &) const {
+		virtual uInt nelements(const WorldCanvasHolder &) const {
 			return msShape_[axisOn_(Z)];
 		}
 		// </group>

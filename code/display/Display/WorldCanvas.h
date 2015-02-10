@@ -1026,7 +1026,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Check if a named restriction exists.
-		const Bool existRestriction(const String& name) const;
+		Bool existRestriction(const String& name) const;
 
 		// Remove the named restriction, or all restrictions, from the
 		// WorldCanvas.

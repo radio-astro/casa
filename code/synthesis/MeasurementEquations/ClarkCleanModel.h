@@ -235,7 +235,7 @@ public:
   virtual void setCycleSpeedup(const Float speedup ); 
   virtual Float getCycleSpeedup(); 
   // We are overwriting Iterate's threshold() method to put out speedup in it
-  virtual const Float threshold();
+  virtual Float threshold();
   // The user can be asked whether to stop after every minor cycle
   virtual void setChoose(const Bool askForChoice);
   virtual Bool getChoose();

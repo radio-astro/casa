@@ -213,7 +213,7 @@ const MVFrequency &GBTLO1File::lo1freq(const MVEpoch &time, uInt state) const
     return itsLo1freq;
 }
 
-const Double GBTLO1File::vframe(const MVEpoch &time) const
+Double GBTLO1File::vframe(const MVEpoch &time) const
 {
     Double result = 0.0;
     if (itsLO1Table) {
@@ -223,7 +223,7 @@ const Double GBTLO1File::vframe(const MVEpoch &time) const
     return result;
 }
 
-const Double GBTLO1File::rvsys(const MVEpoch &time) const
+Double GBTLO1File::rvsys(const MVEpoch &time) const
 {
     Double result = 0.0;
     if (itsLO1Table) {

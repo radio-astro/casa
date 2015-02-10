@@ -146,15 +146,15 @@ namespace LibAIR2 {
 	
 	\returns The path difference in m
      */
-    const double deltaPath(size_t timei,
-			   size_t i,
-			   size_t j) const;
+    double deltaPath(size_t timei,
+		     size_t i,
+		     size_t j) const;
 
     /** \brief Convenience accessor for getting absolute path on
 	antenna i at time index timei
     */
-    const double absPath(size_t timei,
-			 size_t i) const;
+    double absPath(size_t timei,
+		   size_t i) const;
 
     /** \brief The greatest path RMS on a baseline
      */

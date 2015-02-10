@@ -115,7 +115,7 @@ public:
     const MVFrequency &restfrq() const {return itsRestfrq;}
 
     // The requested doppler tolerance in Hz
-    const Double reqdptol() const {return itsReqdptol;}
+    Double reqdptol() const {return itsReqdptol;}
 
     // Get values from the LO1TABLE at the specified time (UTC) - or
     // the first row before that time if there is not a row near that time.
@@ -127,9 +127,9 @@ public:
     // from the LO1TABLE.  If that state isn't found, an offset of 0.0 is used.
     const MVFrequency &lo1freq(const MVEpoch &time, uInt state) const ;
     // radial velocity of the reference frame wrt the observer
-    const Double vframe(const MVEpoch &time) const;
+    Double vframe(const MVEpoch &time) const;
     // radial velociy of the source wrt the observer
-    const Double rvsys(const MVEpoch &time) const;
+    Double rvsys(const MVEpoch &time) const;
     // </group>
 
     // the SOUVEL binary table

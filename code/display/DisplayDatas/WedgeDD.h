@@ -103,7 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const IPosition dataShape() const {
 			return IPosition( );
 		}
-		const uInt dataDim() const {
+		uInt dataDim() const {
 			return 0;
 		}
 		std::vector<int> displayAxes( ) const {

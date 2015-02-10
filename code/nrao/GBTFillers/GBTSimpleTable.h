@@ -116,7 +116,7 @@ public:
 
     // the current value of the index, returns -1 if this table isn't 
     // indexed
-    const Int index() { return index_p;}
+    Int index() { return index_p;}
 
     // return a const reference to the underlying table being filled
     const Table &table() {return *tab_p;}

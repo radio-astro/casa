@@ -94,8 +94,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Return the number of elements in this DisplayData.
-		virtual const uInt nelements(const WorldCanvasHolder& wcHolder) const;
-		virtual const uInt nelements() const;
+		virtual uInt nelements(const WorldCanvasHolder& wcHolder) const;
+		virtual uInt nelements() const;
 
 		// Add a restriction for item <src>itemNum</src> of this
 		// DisplayData.

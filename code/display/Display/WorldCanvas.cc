@@ -2995,7 +2995,7 @@ void WorldCanvas::setRestriction(const Attribute &restriction) {
 void WorldCanvas::setRestrictions(const AttributeBuffer &resBuff) {
 	itsRestrictions.set(resBuff);
 }
-const Bool WorldCanvas::existRestriction(const String &name) const {
+Bool WorldCanvas::existRestriction(const String &name) const {
 	return itsRestrictions.exists(name);
 }
 void WorldCanvas::removeRestriction(const String &restrictionName) {

@@ -3264,7 +3264,7 @@ namespace casa {
 		return image;
 	}
 
-	const void QtProfile::getPixelBounds( Vector<double>& pixelX, Vector<double>& pixelY) const {
+	void QtProfile::getPixelBounds( Vector<double>& pixelX, Vector<double>& pixelY) const {
 		pixelX = lastPX;
 		pixelY = lastPY;
 	}

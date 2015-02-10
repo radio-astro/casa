@@ -101,7 +101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CalTable2(const CalTable2& other);
     
     //
-    const Int parType() {return parType_;};
+    Int parType() {return parType_;};
     // Assignment operator
     CalTable2& operator= (const CalTable2& other);
     

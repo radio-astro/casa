@@ -269,7 +269,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Query the dimension of the lattice
 	template <class T>
-	const uInt LatticePADisplayData<T>::dataDim() const {
+	uInt LatticePADisplayData<T>::dataDim() const {
 		if (!itsMaskedLatticePtr) {
 			throw(AipsError("LatticePADisplayData<T>::dataDim - "
 			                "no lattice is available"));
@@ -293,7 +293,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	template <class T>
-	const Bool LatticePADisplayData<T>::maskValue(const IPosition &pos) {
+	Bool LatticePADisplayData<T>::maskValue(const IPosition &pos) {
 		if (!itsMaskedLatticePtr) {
 			throw(AipsError("LatticePADisplayData<T>::maskValue - "
 			                "no lattice available"));

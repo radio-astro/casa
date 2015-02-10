@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                               Bool ignoreRefresh = False);
 
 		// How many DisplayDatas are registered?
-		virtual const uInt nDisplayDatas() const;
+		virtual uInt nDisplayDatas() const;
 
 		// Install a single restriction, or a buffer of restrictions, on the
 		// WorldCanvasHolder which DisplayData must match in order that they
@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// </group>
 
 		// Check if a named restriction exists.
-		const Bool existRestriction(const String& name) const {
+		Bool existRestriction(const String& name) const {
 			return itsWorldCanvas->existRestriction(name);
 		}
 
@@ -217,7 +217,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Maximum number of animation frames of all registered
 		// DDs which are valid for the WC's current CS state.
-		virtual const uInt nelements();
+		virtual uInt nelements();
 
 		// Force a cleanup of all the DisplayDatas which are registered with
 		// this WorldCanvasHolder.

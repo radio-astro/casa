@@ -160,7 +160,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		worldCanvas()->release();
 	}
 
-	const uInt WorldCanvasHolder::nDisplayDatas() const {
+	uInt WorldCanvasHolder::nDisplayDatas() const {
 		return itsDisplayList.size();
 	}
 
@@ -869,7 +869,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	const uInt WorldCanvasHolder::nelements() {
+	uInt WorldCanvasHolder::nelements() {
 		// Returns the maximum animation frames of all registered DDs
 		// compatible with the current WC CS.  (This supports, e.g., blinking
 		// between a continuum image and a selected slice of a spectral one;

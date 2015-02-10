@@ -117,8 +117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Return the number of display elements (eg. drawable images) in this
 		// DisplayData
 		// <group>
-		virtual const uInt nelements(const WorldCanvasHolder &wcHolder) const;
-		virtual const uInt nelements() const;
+		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const;
+		virtual uInt nelements() const;
 		// </group>
 
 		// Set and retrieve the minimum and maximum data values

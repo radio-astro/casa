@@ -475,7 +475,7 @@ public:
   {
     return bits.none();
   }
-  static const void enumEnumerators(std::vector<enum_type>& v)
+  static void enumEnumerators(std::vector<enum_type>& v)
   {
     typename std::map<enum_type,EnumPar<val_type> >::iterator it, itb(map_traits::m_.begin()), ite(map_traits::m_.end());
     for(it=itb; it!=ite; ++it)v.push_back(it->first);

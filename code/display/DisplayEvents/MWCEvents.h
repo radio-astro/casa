@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// caller sets skipRefresh=True iff it is handling refresh itself.
 		ResetCrosshairEvent(Bool skipRefresh=False):
 			DisplayEvent(), skipRefresh_(skipRefresh) {  }
-		virtual const Bool skipRefresh() const {
+		virtual Bool skipRefresh() const {
 			return skipRefresh_;
 		}
 
@@ -84,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// caller sets skipRefresh=True iff it is handling refresh itself.
 		ResetRTRegionEvent(Bool skipRefresh=False):
 			DisplayEvent(), skipRefresh_(skipRefresh) {  }
-		virtual const Bool skipRefresh() const {
+		virtual Bool skipRefresh() const {
 			return skipRefresh_;
 		}
 

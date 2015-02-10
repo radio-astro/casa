@@ -267,8 +267,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Do we already have this WorldCanvasHolder/DisplayData registered?
 		// <group>
-		const Bool isAlreadyRegistered(const WorldCanvasHolder &holder);
-		const Bool isAlreadyRegistered(const DisplayData &displaydata);
+		Bool isAlreadyRegistered(const WorldCanvasHolder &holder);
+		Bool isAlreadyRegistered(const DisplayData &displaydata);
 		// </group>
 
 		// Add/remove all the DisplayDatas to/from a WorldCanvasHolder.

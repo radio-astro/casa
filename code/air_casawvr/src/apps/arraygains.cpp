@@ -196,15 +196,15 @@ namespace LibAIR2 {
     }
   }
 
-  const double ArrayGains::deltaPath(size_t timei,
-				     size_t i,
-				     size_t j) const
+  double ArrayGains::deltaPath(size_t timei,
+			       size_t i,
+			       size_t j) const
   {
     return path[timei][i]-path[timei][j];
   }
 
-  const double ArrayGains::absPath(size_t timei,
-				   size_t i) const
+  double ArrayGains::absPath(size_t timei,
+			     size_t i) const
   {
     return path[timei][i];
   }

@@ -290,7 +290,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return itsLatticeConcatPtr->shape();
 	}
 
-	const uInt ScrollingRasterDD::dataDim() const {
+	uInt ScrollingRasterDD::dataDim() const {
 		return itsLatticeConcatPtr->ndim();
 	}
 
@@ -431,7 +431,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	const Float ScrollingRasterDD::dataValue(IPosition pos) {
+	Float ScrollingRasterDD::dataValue(IPosition pos) {
 		if (!itsLatticeConcatPtr) {
 			throw(AipsError("ScrollingRasterDD::dataValue - "
 			                "no lattice is available"));
@@ -444,7 +444,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-	const Bool ScrollingRasterDD::maskValue(const IPosition &pos) {
+	Bool ScrollingRasterDD::maskValue(const IPosition &pos) {
 		if (!itsLatticeConcatPtr) {
 			throw(AipsError("ScrollingRasterDD::maskValue - "
 			                "no lattice available"));

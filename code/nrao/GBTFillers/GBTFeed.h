@@ -173,7 +173,7 @@ public:
     // file,  This is a direct translation of the String NAME column
     // in the FITS file to an integer.  Only those feeds which have
     // simple integer names will ever be used here..
-    const Int fitsFeedId() const {return itsFitsFeedId;}
+    Int fitsFeedId() const {return itsFitsFeedId;}
 
     // The original feed name
     const String name() const {return itsName;}
@@ -188,7 +188,7 @@ public:
     // It therefore represents the fitsFeedId() for the other feed.
     // If both SRFEED1 and SRFEED2 are <= 0 then that implies that
     // no switching is going on.  In that case srFitsFeedId() == fitsFeedId().
-    const Int srFitsFeedId() const {return itsSRFitsFeedId;}
+    Int srFitsFeedId() const {return itsSRFitsFeedId;}
 
     // Return a pointer to the associated switching feed.  This 
     // is the value set by setSRFeedPtr.  It should not be deleted.

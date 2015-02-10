@@ -595,12 +595,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return retval;
 	}
 
-	const uInt PrincipalAxesDD::nelements(const WorldCanvasHolder
+	uInt PrincipalAxesDD::nelements(const WorldCanvasHolder
 	                                      &/*wcHolder*/) const {
 		return itsNumImages;
 	}
 
-	const uInt PrincipalAxesDD::nelements() const {
+	uInt PrincipalAxesDD::nelements() const {
 		return itsNumImages;
 	}
 

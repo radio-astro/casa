@@ -363,9 +363,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Returns the number of elements in this DisplayData (mainly for movie
 		// purposes).  First one is no. of elements for specific WCanvas.
-		virtual const uInt nelements(const WorldCanvasHolder &wcHolder) const = 0;
+		virtual uInt nelements(const WorldCanvasHolder &wcHolder) const = 0;
 		// and non-specific
-		virtual const uInt nelements() const = 0;
+		virtual uInt nelements() const = 0;
 
 		// Add general restrictions or a restriction for item <src>itemNum</src> of
 		// this DisplayData. Note that the item versions of the restriction
@@ -619,7 +619,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual String dataType( ) const = 0;
 		virtual const IPosition dataShape( ) const = 0;
-		virtual const uInt dataDim( ) const = 0;
+		virtual uInt dataDim( ) const = 0;
 		virtual const Unit dataUnit( ) const = 0;
 		virtual std::vector<int> displayAxes( ) const = 0;
 

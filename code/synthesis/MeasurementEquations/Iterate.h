@@ -60,9 +60,9 @@ public:
   void setMode(const String m) {mode_=m;};
 
   Int numberIterations() {return numberIterations_;};
-  const Float gain() {return gain_;};
-  const Float tolerance() {return tolerance_;};
-  virtual const Float threshold() {return threshold_;};
+  Float gain() {return gain_;};
+  Float tolerance() {return tolerance_;};
+  virtual Float threshold() {return threshold_;};
   const String mode() {return mode_;};
 
 private:    

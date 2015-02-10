@@ -157,7 +157,7 @@ namespace casa {
 		QString getImagePath() const;
 		std::tr1::shared_ptr<const ImageInterface<Float> > getImage( const QString& imageName="") const;
 		virtual bool getBeamInfo( const QString& curveName, Double& beamAngle, Double& beamArea ) const;
-		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
+		void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
 		void persist( const QString& key, const QString& value );
 		QString read( const QString & key ) const;
 		void imageCollapsed(String path, String dataType, String displayType,

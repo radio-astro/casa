@@ -68,11 +68,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return axisUnits;
 	}
 
-	const uInt PassiveCachingDD::nelements(const WorldCanvasHolder &/*wcHolder*/) const {
+	uInt PassiveCachingDD::nelements(const WorldCanvasHolder &/*wcHolder*/) const {
 		return 0;
 	}
 
-	const uInt PassiveCachingDD::nelements() const {
+	uInt PassiveCachingDD::nelements() const {
 		return 0;
 	}
 

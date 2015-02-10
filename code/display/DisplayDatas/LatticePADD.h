@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// required functions to help inherited "setup" amongst other things
 		virtual const IPosition dataShape() const;
-		virtual const uInt dataDim() const;
+		virtual uInt dataDim() const;
 		virtual const T dataValue(IPosition pos);
 		virtual const Unit dataUnit() const;
 
@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void getMinAndMax();
 
 		// return mask value at given position
-		virtual const Bool maskValue(const IPosition &pos);
+		virtual Bool maskValue(const IPosition &pos);
 
 		// install the default options for this DisplayData
 		virtual void setDefaultOptions();

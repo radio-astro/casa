@@ -372,7 +372,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Do we already have this WorldCanvasHolder/DisplayData registered?
-	const Bool MultiWCHolder::isAlreadyRegistered(const WorldCanvasHolder
+	Bool MultiWCHolder::isAlreadyRegistered(const WorldCanvasHolder
 	        &holder) {
 		ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);
 		localWCHLI.toStart();
@@ -384,7 +384,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		return False;
 	}
-	const Bool MultiWCHolder::isAlreadyRegistered(const DisplayData &displaydata) {
+	Bool MultiWCHolder::isAlreadyRegistered(const DisplayData &displaydata) {
 		ListIter<DisplayData *> localDDLI(itsDDList);
 		localDDLI.toStart();
 		while (!localDDLI.atEnd()) {

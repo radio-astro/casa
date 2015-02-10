@@ -97,7 +97,7 @@ public:
   virtual TableDesc& calMainDesc();
   virtual TableDesc calHistoryDesc();
   virtual TableDesc calDescDesc();
-  const Int parType() {return parType_;}
+  Int parType() {return parType_;}
   // Generate the default table descriptor for fit parameters
   TableDesc defaultFitDesc();
   void addDesc (const TableDesc& sourceTableDesc, TableDesc& targetTableDesc);

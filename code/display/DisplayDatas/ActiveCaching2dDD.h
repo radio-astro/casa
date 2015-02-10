@@ -86,10 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// two-dimensional DisplayData, and can only have one view.  That
 		// is, there is no third axis to iterate over for multiple views.
 		// <group>
-		virtual const uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const {
+		virtual uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const {
 			return nelements();
 		}
-		virtual const uInt nelements() const {
+		virtual uInt nelements() const {
 			return 1;
 		}
 		// </group>
