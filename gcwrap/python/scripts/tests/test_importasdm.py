@@ -588,7 +588,25 @@ class asdm_import4(test_base):
         
         # auto-correlation should have been written to online flags               
         self.assertTrue(cmds[0].__contains__('&&*'))
+
+    def test_autocorr_no_append(self):
+        '''importasdm: online flags should not be appended to existing file'''
+        outfile='scan3flags1.txt'
+        importasdm(asdm=self.asdm, vis='x54.ms', scans='3', savecmds=True, outfile=outfile)
+        self.assertTrue(os.path.exists(outfile))
+        ff = open(outfile,'r')
+        cmds = ff.readlines()
+        self.assertEqual(cmds.__len__(), 2832)
         
+        # Run again and verify that the online flags are not overwritten
+        os.system('rm -rf x54.ms*')
+        importasdm(asdm=self.asdm, vis='x54.ms', scans='3', savecmds=True, outfile=outfile, overwrite=False)
+        print 'Expected Error!'
+        ff = open(outfile,'r')
+        cmds = ff.readlines()
+        self.assertEqual(cmds.__len__(), 2832)
+        
+       
     def test_flagautocorr1(self):
         '''importasdm: test that auto-correlations from online flags are correctly flagged'''        
         importasdm(asdm=self.asdm, vis='scan3.ms', scans='3', applyflags=True)

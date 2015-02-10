@@ -1267,7 +1267,7 @@ def writeFlagCommands(msfile, flagdict, applied, add_reason, outfile, append=Tru
         if newrows == 0:
             casalog.post('Did not save any rows to FLAG_CMD')
         else:
-            casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD')
+            casalog.post('Saved ' + str(newrows) + ' rows to FLAG_CMD of %s'%msfile)
         
         tblocal.close()
         

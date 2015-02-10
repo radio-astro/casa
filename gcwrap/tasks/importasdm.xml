@@ -127,9 +127,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>True</value>
     </param>
 
-    <param type="string" name="outfile" subparam="true">
+    <param type="any" name="outfile" subparam="true">
         <description>Name of ASCII file to save flag commands</description>
-        <value></value>
+        <any type="variant" limittypes="string stringArray"/>
+        <value type="string"></value>
     </param>
 
     <param type="bool" name="flagbackup">
@@ -143,7 +144,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="overwrite">
-	    <description>Over write an existing MS</description>
+	    <description>Over write an existing MS(s)</description>
 	    <value>False</value>
     </param>
 
@@ -300,23 +301,30 @@ process_flags    -- Create online flags based on the Flag.xml, Antenna.xml and S
                  integrations.
 
                  applyflags -- Apply the online flags to the MS.
-                 default: False
+                   default: False
 
 
                 savecmds -- Save the flag commands to an ASCII file given by the parameter outfile. 
-                default: False
+                  default: False
                     
-                outfile -- Filename where to save the flag commands.
-                default: ' ' --> by default it will save on a filename composed from the MS name.
+                outfile -- Filename or list of filenames where to save the online flag commands.
+                  default: ' ' --> by default it will save on a filename composed from the MS name(s).
                     Example: vis='uid_A02.ms', the outfile will be 'uid_A02_cmd.txt'. 
+                             vis='uid_A02-wvr-corrected.ms', the outfile will be 'uid_A02-wvr-corrected_cmd.txt'.  
                     
-                    NOTE: The file is open to save in append mode.
 
 flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions 
                 default: True
   
 verbose     -- produce log output as asdm2MS is being run
-                    default: False
+                default: False
+      
+overwrite   -- overwrite an existing MS or MS(s), if the option wvr_corrected_data='both'
+                default: False (do not overwrite)
+      
+                NOTE: the overwrite parameter affects all the output of the task. If any of the following
+                      exist, it will not overwrite them. MS(s), .flagversions, online flag files. When set to
+                      True, it will overwrite the MS, .flagversions and online flag file.      
 
 showversion -- report the version of the asdm2MS being used.
                     default: False

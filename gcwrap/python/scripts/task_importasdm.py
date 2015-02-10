@@ -310,9 +310,9 @@ def importasdm(
             
         if verbose:
             execute_string = execute_string + ' --verbose'
-        if not overwrite and os.path.exists(viso):
-            raise Exception, \
-                'You have specified an existing MS and have indicated you do not wish to overwrite it'
+#         if not overwrite and os.path.exists(viso):
+#             raise Exception, \
+#                 'You have specified an existing MS and have indicated you do not wish to overwrite it'
 
         # Compression
         if compression:
@@ -320,11 +320,16 @@ def importasdm(
             viso = viso.rstrip('.ms') + '.compressed.ms'
             visoc = visoc.rstrip('.ms') + '.compressed.ms'
 
-        vistoproc = [] # the output MSs to postprocess
+        vistoproc = [] # the output MSs to post-process
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
             vistoproc.append(viso)
         if (wvr_corrected_data == 'yes' or wvr_corrected_data == 'both') : 
             vistoproc.append(visoc)
+
+        for ff in vistoproc:
+            if not overwrite and os.path.exists(ff):
+                raise Exception, \
+                    'You have specified an existing MS and have indicated you do not wish to overwrite it: %s'%ff
 
         # If viso+".flagversions" then process differently depending on the value of overwrite..
         #
@@ -342,7 +347,34 @@ def importasdm(
                                      % dotFlagversion)
                         raise Exception, "Found '%s' but can't overwrite it." \
                             % dotFlagversion
-
+               
+        # Make outfile always a list             
+        if isinstance(outfile, str):
+            if outfile == '': 
+                outfile = []
+            else:
+                noutfile = [outfile]
+                outfile = noutfile
+            
+        if savecmds:
+            if len(outfile) == 0:
+                # Create default names for the online flags
+                for myviso in vistoproc:
+                    outfile.append(myviso.replace('.ms','_cmd.txt'))
+            elif len(outfile) != len(vistoproc):
+                casalog.post('List of outfile names does not match list of MSs','WARN')
+                casalog.post('Will save online flags to temporary filenames', 'WARN')
+                outfile = []
+                for myviso in vistoproc:
+                    online_file = myviso.replace('.ms','_TEMP_cmd.txt')
+                    outfile.append(online_file)
+                                     
+            if not overwrite:
+                for of in outfile:
+                    if os.path.exists(of):
+                        raise Exception, "Cannot overwrite online flags file '%s'; overwrite is set to False."% of
+                
+            
         execute_string = execute_string + ' ' + asdm + ' ' + viso
 
         if showversion:
@@ -480,6 +512,7 @@ def importasdm(
                                 
                 # Apply flags to the MS
                 if nflags > 0:
+                    idx = 0
                     for myviso in vistoproc:
                         if applyflags:
                             # Open the MS and attach it to the tool
@@ -492,13 +525,13 @@ def importasdm(
                             aflocal.init()
                             # Run the tool
                             aflocal.run(True, True)
-                            casalog.post('Applied %s flag commands to data'%str(nflags))
+                            casalog.post('Applied %s flag commands to %s'%(nflags,myviso))
                             # Destroy the tool and de-attach the MS
                             aflocal.done()
                             # Save to FLAG_CMD table. APPLIED is set to True.
                             fh.writeFlagCommands(myviso, flagcmds, True, '', '', True)       
                         else:
-                            casalog.post('Will not apply flags (apply_flags=False), use flagcmd to apply')
+                            casalog.post('Will not apply flags to %s (apply_flags=False), use flagcmd to apply'%myviso)
 
                             # Write to FLAG_CMD, APPLIED is set to False
                             fh.writeFlagCommands(myviso, flagcmds, False, '', '', True)
@@ -506,11 +539,9 @@ def importasdm(
                         # Save the flag cmds to an ASCII file
                         if savecmds:
                             # Save to standard filename
-                            if outfile == '': 
-                                outfile = myviso.replace('.ms','_cmd.txt')
-                            
-                            fh.writeFlagCommands(myviso, flagcmds, False, '', outfile, True)
-                            casalog.post('Saved %s flag commands to %s'%(nflags,outfile))
+                            fh.writeFlagCommands(myviso, flagcmds, False, '', outfile[idx], False)
+                            casalog.post('Saved %s flag commands to %s'%(nflags,outfile[idx]))
+                            idx += 1
                     
                 else:
                     casalog.post('There are no flag commands to process')
