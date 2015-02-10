@@ -863,10 +863,11 @@ class test_MPIInterface(unittest.TestCase):
         
     def test_PyParallelImagerHelper_interface(self):
         
-        # Get cluster
+        # Get cluster (getCluster should automatically initialize it)
         self.sc = MPIInterface.getCluster()
         self.CL = self.sc._cluster
-        
+        self.assertEqual(self.sc.isClusterRunning(),True,"Error instantiating cluster")
+
         # Ger engines
         engines = self.CL.get_engines()
         self.assertEqual(engines,range(1,MPIEnvironment.mpi_world_size),"Error getting list of engines")
@@ -892,31 +893,90 @@ class test_MPIInterface(unittest.TestCase):
         res = self.sc.get_engine_store(1)
         self.assertEqual(res,cwd,"Error getting engine store")
         
-        # Push/Pull variable to/from all servers
+        # pgc/Pull variable to/from all servers
         self.CL.pgc("initrec = casac.utils().hostinfo()['endian']")
         res = self.CL.pull('initrec')
         self.assertEqual(res[1],casac.utils().hostinfo()['endian'],"Error pulling a variable")
+        
+        # Push/Pull variable to/from a subset of servers
+        var_dict={}
+        var_dict['a'] = 33
+        var_dict['b'] = {'test':29.2}
+        self.CL.push(var_dict,[1,2])
+        res = self.CL.pull('a',[1,2])
+        self.assertEqual(res[1],var_dict['a'],"Error pulling a variable after a push operation to a subset of servers")
+        res = self.CL.pull('b',[1,2])
+        self.assertEqual(res[2],var_dict['b'],"Error pulling a variable after a push operation to a subset of servers")      
+        
+        # Push/Pull variable to/from all servers
+        var_dict={}
+        var_dict['c'] = False
+        var_dict['d'] = "bla"
+        self.CL.push(var_dict)
+        res = self.CL.pull('c')
+        self.assertEqual(res[1],var_dict['c'],"Error pulling a variable after a push operation to all servers")
+        res = self.CL.pull('d')
+        self.assertEqual(res[2],var_dict['d'],"Error pulling a variable after a push operation to all servers")           
         
         # Run various commands in parallel
         self.CL.pgc({1:'ya=3',2:'ya="b"'})
         res = self.CL.pull('ya',[1,2])
         self.assertEqual(res,{1: 3, 2: 'b'},"Error running various commands in parallel")        
         
-        # Async execution of a job in a subset of servers
-        jobIds = self.CL.odo("time.sleep(5)",1)
+        # Async execution of a job in a subset of servers via odo
+        jobIds = self.CL.odo("time.sleep(2.5)",1)
         status = self.CL.check_job(jobIds)
         ntries = 0
         while status == False and ntries < 10:
             ntries += 1
             time.sleep(1)
             status = self.CL.check_job(jobIds)        
-        self.assertEqual(status,True,"Error executing a job asynchronously")   
+        self.assertEqual(status,True,"Error executing a job asynchronously via odo")   
+        
+        # Async execution of a job in a subset of servers via do_and_record with defined target server
+        jobIds = self.sc.do_and_record("time.sleep(2.5)",1)
+        status = self.CL.check_job(jobIds)
+        ntries = 0
+        while status == False and ntries < 10:
+            ntries += 1
+            time.sleep(1)
+            status = self.CL.check_job(jobIds)        
+        self.assertEqual(status,True,"Error executing a job asynchronously via do_and_record with defined target server")   
+        
+        # Async execution of a job in a subset of servers via do_and_record with undefined target server
+        jobIds = self.sc.do_and_record("time.sleep(2.5)")
+        status = self.CL.check_job(jobIds)
+        ntries = 0
+        while status == False and ntries < 10:
+            ntries += 1
+            time.sleep(1)
+            status = self.CL.check_job(jobIds)        
+        self.assertEqual(status,True,"Error executing a job asynchronously via do_and_record with undefined target server")          
+        
+        # Re-throw exception
+        jobIds = self.CL.odo("1/0",[1, 2])
+        ntries = 0
+        res = False
+        rethrow = False
+        while res == False and ntries < 10:
+            try:
+                res = self.CL.check_job(jobIds)
+                time.sleep(1)
+                ntries += 1
+            except:
+                rethrow = True
+                break
+        self.assertEqual(rethrow,True,"Exception not retrown")             
         
         # Check queue status
         jobIds = self.CL.odo("time.sleep(5)",1)
         time.sleep(1)
         status = self.sc.get_status()
         self.assertEqual(len(status)-1,len(self.CL.get_command_request_list()),"Error retrieving job queue status")
+        
+        # Stop cluster
+        # status = self.sc.stop_cluster()
+        # self.assertEqual(self.sc.isClusterRunning(),False,"Error stoping cluster")
       
 
 class test_mpi4casa_flagdata(unittest.TestCase):

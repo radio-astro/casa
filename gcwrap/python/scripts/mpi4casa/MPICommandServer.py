@@ -145,17 +145,22 @@ class MPICommandServer:
                             globals().update(command_request['parameters'])
 
                         # Execute command
-                        if (command_request['mode']=='eval'):
+                        if command_request['mode']=='eval':
                             casalog.post("Going to evaluate command request with id# %s as an expression via eval: %s" 
                                          % (str(command_request_id),str(command_request['command'])),
                                          "INFO",casalog_call_origin) 
                             command_response['ret'] = eval(command_request['command'])
-                        else:
+                        elif command_request['mode']=='exec':
                             casalog.post("Going to execute command request with id# %s as a statement via exec: %s" 
                                          % (str(command_request_id),command_request['command']),
                                          "INFO",casalog_call_origin)      
                             code = compile(command_request['command'], '<string>', 'exec')                                                   
                             exec(code)
+                            command_response['ret'] = None
+                        elif command_request['mode']=='push':
+                            casalog.post("Command request with id# %s is a push operation" 
+                                         % str(command_request_id),
+                                         "INFO",casalog_call_origin)  
                             command_response['ret'] = None
                                     
                         # Set command response parameters
@@ -173,7 +178,7 @@ class MPICommandServer:
                     # Variables are cleaned from the environment regardless of the result
                     finally:
                         # Clear parameter variables
-                        if isinstance(command_request['parameters'],dict):
+                        if isinstance(command_request['parameters'],dict) and command_request['mode']!='push':
                             for parameter in command_request['parameters']:
                                 try:
                                     del globals()[parameter]

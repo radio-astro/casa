@@ -505,6 +505,11 @@ class MPICommandClient:
         ################################################################################################################
             
             
+        def get_lifecyle_state(self):
+            
+            return self.__life_cycle_state
+        
+            
         def start_services(self):
             
             casalog_call_origin = "MPICommandClient::start_services"
@@ -611,22 +616,27 @@ class MPICommandClient:
             command_request['parameters'] = parameters
             
             # Determine whether command is a statement or an expression
-            try:
-                code = compile(command_request['command'],"send_command_request", "eval")
-                command_request['mode']='eval'
-                casalog.post("Command will be evaluated as an expression with return value",
-                             "DEBUG",casalog_call_origin)                
-            except Exception, instance:
+            if command == "push":
+                command_request['mode']='push'
+                casalog.post("Requested push operation","DEBUG",casalog_call_origin)                   
+            else:
+                # Determine whether command is a statement or an expression
                 try:
-                    code = compile(command_request['command'],"send_command_request", "exec")
-                    command_request['mode']='exec'
-                    casalog.post("Command will be executed as an statement w/o return code",
-                                 "DEBUG",casalog_call_origin)                    
+                    code = compile(command_request['command'],"send_command_request", "eval")
+                    command_request['mode']='eval'
+                    casalog.post("Command will be evaluated as an expression with return value",
+                                 "DEBUG",casalog_call_origin)                
                 except Exception, instance:
-                     formatted_traceback = traceback.format_exc()
-                     casalog.post("Command cannot be executed neither as a statement nor as an expression, it will be rejected" 
-                                  % str(formatted_traceback),"SEVERE",casalog_call_origin)
-                     return None   
+                    try:
+                        code = compile(command_request['command'],"send_command_request", "exec")
+                        command_request['mode']='exec'
+                        casalog.post("Command will be executed as an statement w/o return code",
+                                     "DEBUG",casalog_call_origin)                    
+                    except Exception, instance:
+                        formatted_traceback = traceback.format_exc()
+                        casalog.post("Command cannot be executed neither as a statement nor as an expression, it will be rejected: %s" 
+                                     % str(formatted_traceback),"SEVERE",casalog_call_origin)
+                        return None   
             
             # Validate target servers
             target_server_validated = None

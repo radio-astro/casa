@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from taskinit import casalog # Import casalog
+
 import time # To calculate elapsed times
 
 # Import MPIEnvironment static class
@@ -66,9 +68,14 @@ class MPIInterfaceCore:
             self.__monitor_client = MPIMonitorClient()
         
         
-        def start_engines(self):
+        def start_cluster(self, cl_file=None):
             
             self.__command_client.start_services()
+            
+            
+        def stop_cluster(self):
+
+            self.__command_client.stop_services()        
             
             
         def get_engines(self):
@@ -92,49 +99,40 @@ class MPIInterfaceCore:
             return hostnames_not_repeated
         
         
-        def pgc(self,args,kwargs=None):
-            """Execute a dictionary of jobs with defined target nodes or the same job in all engines
-               (Equivalent to various calls to odo/execute)
+        def pgc(self,commands,block=True):
+            """This method has two modes:
             
-            @param *args: There are 2 modes for this parameter
-                - Simple command string to be executed in all engines            
-                - Dictionary of commands where the key of the dictionary is the engine id
-                
-            @param **kwargs: Dictionary with the job execution options
-                - block: Boolean (True/False)
-            
+               - When the input command is a dictionary of commands execute  
+                 each command taking the dictionary key as target node
+                 (Equivalent to various calls to odo/execute)  
+                 
+               - When commands is a single command execute it in all engines          
             """
             
-            # Determine job execution mode
-            block_mode=True
-            if isinstance(kwargs,dict):
-                for key in kwargs:
-                    if key.lower()=='block': block_mode = kwargs[key]
-                    
             # Get list of jobs and commands
             ret = None
-            if isinstance(args,dict):
+            if isinstance(commands,dict):
                 
                 # Spawn jobs in non-blocking mode
                 jobId_list = []
-                for server in args:
-                    cmd = args[server]
+                for server in commands:
+                    cmd = commands[server]
                     jobId = self.__command_client.push_command_request(   cmd,
                                                                           block=False,
                                                                           target_server=server)
                     jobId_list.append(jobId[0])
                 
                 # If user requests blocking mode wait until execution is completed    
-                ret = self.__command_client.get_command_response(jobId_list,block=block_mode,verbose=True)
+                ret = self.__command_client.get_command_response(jobId_list,block=block,verbose=True)
                     
                 
             else:
-                cmd = args
+                cmd = commands
                 # Get list of all servers
                 all_servers_list = MPIEnvironment.mpi_server_rank_list()
                 # Execute command in all servers          
                 ret = self.__command_client.push_command_request(   cmd,
-                                                                    block=block_mode,
+                                                                    block=block,
                                                                     target_server=all_servers_list)
             
             # Return result
@@ -156,6 +154,26 @@ class MPIInterfaceCore:
             
             return result_list      
         
+        
+        def push(self, variables, targets=None):
+            """Set variables in a sub-set of engines"""
+            
+            # Determine target servers
+            target_server = []
+            if targets is None or targets == 'all':
+                target_server = MPIEnvironment.mpi_server_rank_list()
+            else:
+                target_server = list(targets)
+                
+            # Push variables
+            ret = self.__command_client.push_command_request(   "push",
+                                                                block=True,
+                                                                target_server=target_server,
+                                                                parameters=dict(variables))
+            
+            # Return request result for further processing
+            return ret
+            
         
         def pull(self, varname="", targets=None):
             """Retrieve a variable from a sub-set of engines"""
@@ -179,12 +197,35 @@ class MPIInterfaceCore:
         def check_job(self, jobId, verbose=True):
             """Check the status of a non-blocking job"""
             
-            command_response = self.__command_client.get_command_response(jobId,block=False,verbose=verbose)
-
-            if len(command_response) == len(list(jobId)):
-                return True
-            else:
-                return False
+            jobId_list = list(jobId)
+            command_response_list = self.__command_client.get_command_response(jobId_list,block=False,verbose=verbose)
+            
+            # Aggregate exceptions and completed jobIds
+            error_msg = ''
+            completed_jobs = []
+            for command_response in command_response_list:
+                if not command_response['successful']:
+                    if len(error_msg) > 0: error_msg += "\n"
+                    
+                    error_msg += "Exception executing command in server %s: %s" % (command_response['server'],
+                                                                                  command_response['traceback'])
+                else:
+                    completed_jobs.append(command_response['id'])
+                    
+            # Re-throw aggregated exception
+            if len(error_msg) > 0:
+                casalog.post(error_msg,"SEVERE","MPIInterfaceCore::check_job")    
+                raise Exception(error_msg) 
+                    
+            # Check that all jobs have been completed
+            completed = True
+            for jobId in jobId_list:
+                if jobId not in completed_jobs:
+                    completed = False
+                    break
+            
+            # Return completion status
+            return completed
             
             
         def get_server_status(self):
@@ -252,6 +293,8 @@ class MPIInterface:
             cluster = MPIInterface()
         else:
             cluster = MPIInterface.__instance
+            if not cluster.isClusterRunning():
+                cluster.init_cluster()
         
         # Initialize cluster
         cluster.start_cluster()
@@ -274,10 +317,22 @@ class MPIInterface:
         
         def __init__(self):
             
+            # Reference to inner cluster object (equivalent to parallel_go)
             self._cluster = MPIInterfaceCore()
+            
+            # Direct reference to MPICommandClient for methods not resorting to the inner cluster
+            self.__command_client = MPICommandClient()
+            
+            
+        def isClusterRunning(self):
+            
+            if self.__command_client.get_lifecyle_state() == 1:
+                return True
+            else:
+                return False    
 
             
-        def init_cluster(self, clusterfile='', project=''):
+        def init_cluster(self, clusterfile=None, project=None):
             
             # NOTE: In the MPI framework the clusterfile is processed by mpirun
             #       So it is not necessary to process and validate clusterfile here
@@ -287,7 +342,18 @@ class MPIInterface:
         def start_cluster(self):
             
             # TODO: This should set OMP_NUM_THREADS as well
-            self._cluster.start_engines()
+            self._cluster.start_cluster()
+            
+            
+        def stop_cluster(self):
+
+            self._cluster.stop_cluster()    
+            
+    
+        def do_and_record(self, cmd, id=None, group='', subMS=''):
+            
+            jobId = self._cluster.odo(cmd,id)
+            return jobId
             
             
         def get_engine_store(self, id):
@@ -307,7 +373,7 @@ class MPIInterface:
             status_list = ['request sent','holding queue','timeout','response received']
             
             # Generate job status table
-            job_status_list = [['SERVER','HOSTNAME','STATUS','COMMAND','ELAPSED TIME']]
+            job_status_list = [['JOB ID','SERVER','HOSTNAME','QUEUE STATUS','COMMAND','ELAPSED TIME (s)','EXECUTION STATUS']]
             for status in status_list:
                 for jobId in command_request_list:
                         
@@ -320,11 +386,12 @@ class MPIInterface:
                         
                         # Create job status info
                         job_status = []
+                        job_status.append(str(jobId))
                         job_status.append(str(server))
                         job_status.append(hostname)
                         job_status.append(command_request_list[jobId]['status'])
                         job_status.append(command_request_list[jobId]['command'])
-                        
+                                               
                         # Add run time 
                         elapsed_time = ''
                         if status == status_list[1]: # holding queue
@@ -332,18 +399,39 @@ class MPIInterface:
                         elif status == status_list[0] or status == status_list[2]: # request sent / timeout
                             start_time = server_status[server]['command_start_time'] 
                             if start_time is not None:
-                                elapsed_time = str(int(round(time.time() - start_time)))
+                                elapsed_time = "%.2f" % (time.time() - start_time)
                             else:
                                 elapsed_time = 'unset'
                         elif status == status_list[3]: # 'response received'
                             start_time = command_response_list[jobId]['command_start_time']
                             stop_time = command_response_list[jobId]['command_stop_time']
                             if start_time is not None and stop_time is not None:
-                                elapsed_time = str(int(round(stop_time - start_time)))
+                                elapsed_time = "%.2f" % (stop_time- start_time)
                             else:
                                 elapsed_time = 'unset'
                                                        
                         job_status.append(elapsed_time)
+                        
+                        # Add job execution status
+                        execution_status = ''
+                        if status == status_list[0] or status == status_list[1]: # request sent / holding queue
+                            execution_status = 'pending'
+                        elif status == status_list[2]: # timeout
+                            execution_status = 'timeout'
+                        elif status == status_list[3]: # response received
+                            if command_response_list[jobId]['successful']:
+                                ret = command_response_list[jobId]['ret']
+                                if isinstance(ret,bool):
+                                    if ret == True:
+                                        execution_status = 'completed - True'
+                                    else:
+                                        execution_status = 'completed - False'
+                                else:
+                                    execution_status = 'completed'
+                            else:
+                                execution_status = 'exception raised'
+                                
+                        job_status.append(execution_status)
                         
                         # Append job status info to list
                         job_status_list.append(job_status)
