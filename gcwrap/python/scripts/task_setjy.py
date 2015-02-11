@@ -72,7 +72,7 @@ def setjy(vis=None, field=None, spw=None,
       
         #sh = SetjyHelper(vis)
         #rstat = sh.resetModelCol()
-        casalog.post("rstat ="+str(rstat))
+
         if rstat:
             ismms=rstat
             mylocals['ismms']=ismms
@@ -182,8 +182,8 @@ def setjy_core(vis=None, field=None, spw=None,
                 #if ((not n_selected_rows) and ((mylocals['ismms']) or (standard=="Butler-JPL-Horizons 2012"))) :
                     # jagonzal: Turn this SEVERE into WARNING, as explained above
                     casalog.post("No rows were selected.", "WARNING")
-                    print "PASS here"
-                    return True
+                    #return True
+                    return False
                 else:
                     if (not n_selected_rows):
                         raise Exception, "No rows were selected. Please check your data selection"
