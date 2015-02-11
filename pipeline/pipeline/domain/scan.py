@@ -59,7 +59,7 @@ class Scan(object):
 
             dt_start = utils.get_epoch_as_datetime(range_start_epoch)
             dt_end = utils.get_epoch_as_datetime(range_end_epoch)
-            self.__mean_intervals[spw_id] = (dt_end - dt_start) / len(epochs)            
+            self.__mean_intervals[spw_id] = (dt_end - dt_start)            
 
             # set start time as earliest time over all spectral windows
             if self.__start_time is None or qt.lt(min_val, self.__start_time['m0']):
