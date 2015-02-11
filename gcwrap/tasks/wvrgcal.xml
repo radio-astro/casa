@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </param>
       
       <param type="stringArray" name="sourceflag" subparam="true">
-	<description>Flag the WVR data for these source(s) as bad and do not produce corrections for it (requires segsource=True)</description>
+	<description>Regard the WVR data for these source(s) as bad and do not produce corrections for it (requires segsource=True)</description>
 	<value></value>
       </param>
       
@@ -53,7 +53,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </param>
             
       <param type="stringArray" name="wvrflag">
-	<description>Flag the WVR data for these antenna(s) as bad and replace its data with interpolated values</description>
+	<description>Regard the WVR data for these antenna(s) as bad and replace its data with interpolated values from neighbouring antennas</description>
 	<value></value>
       </param>
       
