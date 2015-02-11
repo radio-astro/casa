@@ -101,7 +101,8 @@ class sdplot_unittest_base:
         retdic = {}
         ax0 = sd.plotter._plotter.subplots[0]['axes']
         retdic['npanel'] = len(sd.plotter._plotter.subplots)
-        retdic['nstack'] = len(sd.plotter._plotter.subplots[0]['lines'])
+        #retdic['nstack'] = len(sd.plotter._plotter.subplots[0]['lines'])
+        retdic['nstack'] = len(ax0.get_lines())
         retdic['rows'] = sd.plotter._rows
         retdic['cols'] = sd.plotter._cols
         retdic['xlabel'] = ax0.get_xlabel()
@@ -297,6 +298,24 @@ class sdplot_errorTest( sdplot_unittest_base, unittest.TestCase ):
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(err)))
 
+    def test_illeagalStack( self ):
+        """
+        test_illeagalStack: unsuppoerted stack='r' in pottype='totalpower'
+        """
+        infile = self.infile
+        plottype = 'totalpower'
+        header = False
+        stack = 'r'
+        try:
+            result = sdplot(infile=infile,plottype=plottype,header=header,
+                            stack=stack)
+            self.assertTrue(False,
+                            msg='The task must throw exception')
+        except Exception, err:
+            pos=str(err).find("stack mode = '%s' is not supported by plottype='%s'" % (stack, plottype))
+            self.assertNotEqual(pos,-1,
+                                msg='Unexpected exception was thrown: %s'%(str(err)))
+
 
 #####
 # Tests on basic task parameters
@@ -373,7 +392,7 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         self.assertEqual(result,None)
         self.assertEqual(len(pl.gcf().axes),2)
         self.assertEqual(len(pl.gca().get_lines()),1)
-        self.assertEqual(pl.gca().get_xlabel(),'Time (UT [hour])')
+        self.assertEqual(pl.gca().get_xlabel(),'Time (UT)')
         self.assertEqual(pl.gca().get_ylabel(),'Az [deg.]')
         self._checkOutFile(outfile,self.compare)
 
@@ -404,9 +423,9 @@ class sdplot_basicTest( sdplot_unittest_base, unittest.TestCase ):
         plottype = 'totalpower'
         header = False
         result = sdplot(infile=infile,plottype=plottype,header=header,
-                        outfile=outfile, stack='r')
-        locinfo = {'npanel': 1, 'nstack': 1,
-                   'xlabel': 'row number',
+                        outfile=outfile, stack='p')
+        locinfo = {'npanel': 1, 'nstack': 2,
+                   'xlabel': 'Time (UTC)',
                    'ylabel': 'Brightness Temperature (K)'}
         # Tests
         self.assertEqual(result,None)
@@ -2176,7 +2195,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         data = [ sp.mean() for sp in self.masked_spec ]
         mask = [ 0, 1, 0, 0 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower', stack='r')
+        self.run_test(refdata, 'totalpower', stack='i')
         
     def test_totalpowerCflag(self):
         """test channel flag in plottype='totalpower'"""
@@ -2191,7 +2210,7 @@ class sdplot_flagTest(sdplot_unittest_base,unittest.TestCase):
         data = [ sp.mean() for sp in self.masked_spec ]
         mask = [ 0, 0, 1, 0 ]
         refdata = [ numpy.ma.masked_array(data, mask) ]
-        self.run_test(refdata, 'totalpower', stack='r')
+        self.run_test(refdata, 'totalpower', stack='i')
 
     ####################
     # Helper functions
