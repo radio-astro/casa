@@ -557,8 +557,16 @@ def field_arg_to_id(ms_path, field_arg):
     :param field_arg: the field selection in CASA format
     :return: a list of field IDs 
     """
-    all_indices = _convert_arg_to_id('field', ms_path, str(field_arg))    
-    return all_indices['field'].tolist()
+    try:
+        all_indices = _convert_arg_to_id('field', ms_path, str(field_arg))    
+        return all_indices['field'].tolist()
+    except RuntimeError:
+        # SCOPS-1666
+        # msselect throws exceptions with numeric field names beginning with
+        # zero. Try again, encapsulating the argument in quotes.
+        quoted_arg = '"%s"' % str(field_arg)
+        all_indices = _convert_arg_to_id('field', ms_path, quoted_arg)    
+        return all_indices['field'].tolist()
 
 def spw_arg_to_id(ms_path, spw_arg):
     """
