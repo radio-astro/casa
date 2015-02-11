@@ -58,7 +58,10 @@ class Field(object):
 
     @property
     def name(self):
-        if self._name != self.clean_name:
+        # SCOPS-1666
+        # work around CASA data selection problems with names consisting
+        # entirely of digits
+        if self._name.isdigit() or self._name != self.clean_name:
             return '"{0}"'.format(self._name)
         return self._name
         
