@@ -178,8 +178,8 @@ def setjy_core(vis=None, field=None, spw=None,
                 # MMS case because every sub-Ms contains a copy of the entire MMS sub-tables
                 ##if ((not n_selected_rows) and ((not usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
                 #mylocals = locals()
-                if ((not n_selected_rows) and ((usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
-                #if ((not n_selected_rows) and ((mylocals['ismms']) or (standard=="Butler-JPL-Horizons 2012"))) :
+                #if ((not n_selected_rows) and ((usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
+                if ((not n_selected_rows) and ((ismms) or (standard=="Butler-JPL-Horizons 2012"))) :
                     # jagonzal: Turn this SEVERE into WARNING, as explained above
                     casalog.post("No rows were selected.", "WARNING")
                     #return True
