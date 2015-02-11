@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import datetime
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -21,26 +22,27 @@ class Scan(object):
         self.states = frozenset(states)
         self.data_descriptions = frozenset(data_descriptions)
 
-        # the exposure time should not vary per subscan, so we can construct
-        # the exposure-time-per-spw mapping directly from the first subscan
-        # entry. The MS spec states that these exposure values are given in
-        # seconds, which is just what we want
-        self.__exposure_time = {k : v[0][1]['value'] for k,v in scan_times.iteritems()}
-
-        # will hold the mean interval per spw
-        self.__mean_intervals = {}
+        # the integration time should not vary per subscan, so we can
+        # construct the integration-time-per-spw mapping directly from the
+        # first subscan entry. The MS spec states that these integration 
+        # values are given in seconds, which is just what we want
+        int_seconds = {k : v[0][1]['value']
+                       for k,v in scan_times.iteritems()}
+        self.__mean_intervals = {k : datetime.timedelta(seconds=v)
+                                 for k, v in int_seconds.items()}
 
         # will hold the start and end epochs per spw
         self.__start_time = None
         self.__end_time = None
         
-        # midpoints is a list of tuple of (midpoint epochs, exposure time)            
+        # midpoints is a list of tuple of (midpoint epochs, integation time)            
         sorted_epochs = {spw_id : sorted(midpoints, key=lambda e: e[0]['m0']['value'])
                              for spw_id, midpoints in scan_times.iteritems()}
 
         qt = casatools.quanta
         mt = casatools.measures            
                 
+        self.__exposure_time = {}
         for spw_id, epochs in sorted_epochs.iteritems():
             (min_epoch, exposure) = epochs[0]
             max_epoch = epochs[-1][0]
@@ -59,7 +61,7 @@ class Scan(object):
 
             dt_start = utils.get_epoch_as_datetime(range_start_epoch)
             dt_end = utils.get_epoch_as_datetime(range_end_epoch)
-            self.__mean_intervals[spw_id] = (dt_end - dt_start)            
+            self.__exposure_time[spw_id] = dt_end - dt_start            
 
             # set start time as earliest time over all spectral windows
             if self.__start_time is None or qt.lt(min_val, self.__start_time['m0']):
@@ -100,23 +102,6 @@ class Scan(object):
 
     def mean_interval(self, spw_id):
         return self.__mean_intervals[spw_id]
-
-    def __calculate_mean_interval(self, sorted_epochs):
-        """
-        Calculate the mean interval for this scan for the given spectral window.
-        """   
-        qa = casatools.quanta
-              
-        start_epoch = sorted_epochs[0][0]['m0']
-
-        
-        end_epoch = qa.add(sorted_epochs[-1][0]['m0'], sorted_epochs[-1][1])
-        
-        start = utils.get_epoch_as_datetime(start_epoch)
-        end = utils.get_epoch_as_datetime(end_epoch)
-        
-        mean = (end - start) / len(sorted_scan_times)
-        return mean
 
     @property
     def spws(self):
