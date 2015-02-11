@@ -12,54 +12,45 @@ from . import measures
 Baseline = collections.namedtuple('Baseline', 'antenna1 antenna2 length')
 
 class AntennaArray(object):    
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, name, position):
+        self.__name = name
+        self.__position = position
         self.antennas = []
 
     @property
     def name(self):
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        self._name = value
-        
-        me = casatools.measures
-        self._position = me.observatory(self.name)
+        return self.__name
 
     @property
     def position(self):
-        '''
-        Get the array locate as a CASA measures position.
-        ''' 
-        return self._position
+        return self.__position
 
     @property
     def elevation(self):
         '''
         Get the array elevation as a CASA quantity.
         '''
-        return self.position['m2']
+        return self.__position['m2']
 
     @property
     def latitude(self):
         '''
         Get the array latitude as a CASA quantity.
         '''
-        return self.position['m1']
+        return self.__position['m1']
 
     @property
     def longitude(self):
         '''
         Get the array longitude as a CASA quantity.
         '''
-        return self.position['m0']
+        return self.__position['m0']
 
     @property
     def centre(self):
-        datum = self._position['refer']
+        datum = self.__position['refer']
         if datum == 'ITRF':
-            return self._position
+            return self.__position
 
         qa = casatools.quanta       
         longitude = qa.convert(self.longitude, 'rad')
@@ -85,20 +76,20 @@ class AntennaArray(object):
         qa = casatools.quanta
         
         def diff(ant1, ant2, attr):
-            v1 = qa.getvalue(ant1.position[attr])[0]
-            v2 = qa.getvalue(ant2.position[attr])[0]
+            v1 = qa.getvalue(ant1.offset[attr])[0]
+            v2 = qa.getvalue(ant2.offset[attr])[0]
             return v1-v2
         
         baselines = []
         for (ant1, ant2) in itertools.combinations(self.antennas, 2):
-            raw_length = math.sqrt(diff(ant1, ant2, 'm0')**2 + 
-                                   diff(ant1, ant2, 'm1')**2 + 
-                                   diff(ant1, ant2, 'm2')**2)
+            raw_length = math.sqrt(diff(ant1, ant2, 'longitude offset')**2 + 
+                                   diff(ant1, ant2, 'latitude offset')**2 + 
+                                   diff(ant1, ant2, 'elevation offset')**2)
             domain_length = measures.Distance(raw_length, 
                                               measures.DistanceUnits.METRE)
             baselines.append(Baseline(ant1, ant2, domain_length))
 
-        if len(baselines) == 0:
+        if len(baselines) is 0:
             zero_length = measures.Distance(0.0,
                                             measures.DistanceUnits.METRE)
             baselines.append(Baseline(self.antennas[0], self.antennas[0], zero_length))
@@ -109,41 +100,47 @@ class AntennaArray(object):
         '''
         Get the offset of the given antenna from the centre of the array.
         '''
-        qa = casatools.quanta       
-        longitude = qa.convert(self.longitude, 'rad')
-        latitude = qa.convert(self.latitude, 'rad')
-        elevation = qa.convert(self.elevation, 'm')
-        datum = self._position['refer']
+#         qa = casatools.quanta       
+#         longitude = qa.convert(self.longitude, 'rad')
+#         latitude = qa.convert(self.latitude, 'rad')
+#         elevation = qa.convert(self.elevation, 'm')
+#         datum = self._position['refer']
+# 
+#         (cx, cy, cz) = (qa.getvalue(longitude)[0],
+#                         qa.getvalue(latitude)[0],
+#                         qa.getvalue(elevation)[0])        
+# 
+#         s = simutil.simutil()
+#         if datum != 'ITRF':
+#             (cx, cy, cz) = s.long2xyz(cx, cy, cz, datum)
+#         
+#         ant_x = qa.getvalue(antenna.position['m0'])[0]
+#         ant_y = qa.getvalue(antenna.position['m1'])[0]
+#         ant_z = qa.getvalue(antenna.position['m2'])[0]
+# 
+#         # As of CASA 4.2, itrf2loc also returns the elevation offset, but we
+#         # discard it.
+#         xs, ys, _ = s.itrf2loc((ant_x,), (ant_y,), (ant_z,), cx, cy, cz)
+# 
+#         x_offset = measures.Distance(xs[0], measures.DistanceUnits.METRE)
+#         y_offset = measures.Distance(ys[0], measures.DistanceUnits.METRE)
 
-        (cx, cy, cz) = (qa.getvalue(longitude)[0],
-                        qa.getvalue(latitude)[0],
-                        qa.getvalue(elevation)[0])        
+        dx = antenna.offset['longitude offset']['value']
+        dy = antenna.offset['latitude offset']['value']
 
-        s = simutil.simutil()
-        if datum != 'ITRF':
-            (cx, cy, cz) = s.long2xyz(cx, cy, cz, datum)
-        
-        ant_x = qa.getvalue(antenna.position['m0'])[0]
-        ant_y = qa.getvalue(antenna.position['m1'])[0]
-        ant_z = qa.getvalue(antenna.position['m2'])[0]
-
-        # As of CASA 4.2, itrf2loc also returns the elevation offset, but we
-        # discard it.
-        xs, ys, _ = s.itrf2loc((ant_x,), (ant_y,), (ant_z,), cx, cy, cz)
-
-        x_offset = measures.Distance(xs[0], measures.DistanceUnits.METRE)
-        y_offset = measures.Distance(ys[0], measures.DistanceUnits.METRE)
+        x_offset = measures.Distance(dx, measures.DistanceUnits.METRE)
+        y_offset = measures.Distance(dy, measures.DistanceUnits.METRE)
 
         return (x_offset, y_offset)
     
     def get_baseline(self, antenna1, antenna2):
-        if isinstance(antenna1, str) and isinstance(antenna2, str):            
-            attr_getter = lambda antenna: antenna.name
-        elif isinstance(antenna1, int) and isinstance(antenna2, int):            
+        try:
+            int(antenna1)
+            int(antenna2)
             attr_getter = lambda antenna: antenna.id
-        else:
-            raise TypeError
-            
+        except ValueError:
+            attr_getter = lambda antenna: antenna.name
+        
         matching = [b for b in self.baselines
                     if attr_getter(b.antenna1) in (antenna1, antenna2)
                     and attr_getter(b.antenna2) in (antenna1, antenna2)]

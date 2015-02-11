@@ -263,7 +263,7 @@ class Polarization(SingleDishBase):
         self._init_properties(vars())
 
         
-class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
+class Frequencies(spectralwindow.SpectralWindow, SingleDishBase):
 
     frame_map = { 0: 'REST',
                   1: 'LSRK',
@@ -316,16 +316,22 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                             baseband=spw.baseband)
         return entry
         
-    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None,name=None,sideband=None,baseband=None):
+    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None,name=None,sideband=None,baseband=None, hif_spw=None):
         if increment is not None and nchan is not None:
-            chan_widths = [[increment]] * nchan
+            chan_widths = [increment] * nchan
         else:
             chan_widths = None
         if refpix is not None and refval is not None:
-            chan_freqs = [[refval + refpix * increment * ichan] for ichan in xrange(nchan)]
+            chan_freqs = [refval + refpix * increment * ichan for ichan in xrange(nchan)]
         else:
             chan_freqs = None
-        spectralwindow.SpectralWindow.__init__(self, id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
+
+#       spectralwindow.SpectralWindow.__init__(self, id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
+        # assume reference frequency and mean frequency are one and the same
+        mean_freq = numpy.mean(chan_freqs)
+        ref_freq = mean_freq
+        spectralwindow.SpectralWindow.__init__(self, id, name, type, bandwidth, ref_freq, mean_freq, chan_freqs, chan_widths, sideband, baseband)
+
         self._init_properties(vars(),kw_ignore=['self','bandwidth'])
         intents = self.intent.split(':')
         for intent in intents:
@@ -333,9 +339,6 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                 self.intents.add(self.type)
             else:
                 self.intents.add(intent)
-
-        # dummy group
-        self.group = frequencygroup.FrequencyGroup(0,'default')
 
     @property
     def frequency_range(self):

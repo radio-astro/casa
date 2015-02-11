@@ -18,7 +18,7 @@ import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
 from pipeline.extern import analysis_scripts
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
-import shutil
+
 
 LOG = infrastructure.get_logger(__name__)
 DISABLE_PLOTMS = True
@@ -540,8 +540,8 @@ class PlotAntsChart2(object):
         self.site = casatools.measures.observatory(ms.antenna_array.name)
 
     def plot(self):
-#        if os.path.exists(self.figfile):
-#            return self._get_plot_object()
+        if os.path.exists(self.figfile):
+            return self._get_plot_object()
 
         # map: with pad names
         plf1 = pylab.figure(1)
@@ -566,31 +566,6 @@ class PlotAntsChart2(object):
                            y_axis='Antenna Latitude',
                            parameters={'vis' : self.ms.basename})
 
-    def geo_to_site(self, antenna):
-        """
-        Convert the geocentric coordinates into the local (horizontal) ones.
-        """
-        qt = casatools.quanta
-        site_lon = qt.getvalue(self.site['m0'])
-        site_lat = qt.getvalue(self.site['m1'])
-        
-        ant_lon = qt.getvalue(antenna.position['m0'])
-        ant_lat = qt.getvalue(antenna.position['m1'])
-        ant_z = qt.getvalue(antenna.position['m2'])
-        
-        local = [0, 0, 0]
-        local[0] = - ant_lon * math.sin(site_lon) + \
-                     ant_lat * math.cos(site_lon)
-        local[1] = - ant_lon * math.cos(site_lon) * math.sin(site_lat) - \
-                     ant_lat * math.sin(site_lon) * math.sin(site_lat) + \
-                     ant_z * math.cos(site_lat)
-        local[2] = ant_lon * math.cos(site_lon) * math.cos(site_lat) + \
-                   ant_lat * math.sin(site_lon) * math.cos(site_lat) + \
-                   ant_z * math.sin(site_lat)
-
-        return local
-
-
     def draw_pad_map_in_subplot(self, subpl, antennas, xlimit=None, 
                                 ylimit=None, showemptypads=True):
         """
@@ -602,7 +577,6 @@ class PlotAntsChart2(object):
         xlimit, ylimit: lists (or tuples, arrays) for the x and y axis limits.
                         if not given, automatically adjusted.
         showemptypads: set False not to draw pads and their names
-        showbaselinelength: set True to display baseline length
         """
         subpl.clear()
 
@@ -645,11 +619,13 @@ class PlotAntsChart2(object):
             subpl.set_ylim(ylimit[0], ylimit[1])
 
     def get_position(self, antenna):
-        pos = self.geo_to_site(antenna)
-
 #        if self.ms.antenna_array.name == 'ALMA':
 #            # Arbitrarily shift ALMA coord so that central cluster comes 
 #            # around (0, 0).
 #            pos = (pos[0]+480., pos[1]-14380., pos[2])
+
+        pos = [[antenna.offset['longitude offset']['value']],
+               [antenna.offset['latitude offset']['value']],
+               [antenna.offset['elevation offset']['value']]]
 
         return pylab.array(pos)

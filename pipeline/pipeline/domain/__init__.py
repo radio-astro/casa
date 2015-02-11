@@ -4,7 +4,6 @@ from .antennaarray import AntennaArray
 from .datadescription import DataDescription
 from .field import Field
 from .fluxmeasurement import FluxMeasurement
-from .frequencygroup import FrequencyGroup
 from .measurementset import MeasurementSet
 from .polarization import Polarization
 from .observingrun import ObservingRun

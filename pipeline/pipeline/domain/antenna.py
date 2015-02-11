@@ -40,8 +40,7 @@ class Antenna(object):
     
         the J2000 position on the sky to which this antenna points
     """
-    def __init__(self, antenna_id, name, m_position, rad_position, diameter,
-                station):
+    def __init__(self, antenna_id, name, station, position, offset, diameter):
         self.id = antenna_id
 
         # work around NumPy bug with empty strings
@@ -50,13 +49,14 @@ class Antenna(object):
         self.station = str(station)
 
         self.diameter = diameter
-        self.position = m_position
+        self.position = position
+        self.offset = offset
 
         # The longitude, latitude and height of a CASA position are given in
         # canonical units, so we don't need to perform any further conversion
-        self.longitude = rad_position['m0']
-        self.latitude = rad_position['m1']
-        self.height = rad_position['m2']
+        self.longitude = position['m0']
+        self.latitude = position['m1']
+        self.height = position['m2']
         
         mt = casatools.measures
         self.direction = mt.direction(v0=self.longitude, v1=self.latitude)

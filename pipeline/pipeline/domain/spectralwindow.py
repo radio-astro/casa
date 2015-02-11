@@ -34,41 +34,39 @@ class SpectralWindow(object):
 
         the channel width
 
-    .. py:attribute:: group
-    
-        the calibration group to which this spectral window belongs
-        
     .. py:attribute:: intents
 
         the observing intents that have been observed using this spectral
         window
     """
     
-    __slots__ = ('id', 'band', 'bandwidth', 'channels', 'group', 'intents',
-                 'ref_frequency', 'name', 'baseband', 'sideband')
+    __slots__ = ('id', 'band', 'bandwidth', 'channels', 'type', 'intents',
+                 'ref_frequency', 'name', 'baseband', 'sideband',
+                 'mean_frequency')
 
     def __getstate__(self):
-        return (self.id, self.band, self.bandwidth, self.channels, self.group,
+        return (self.id, self.band, self.bandwidth, self.channels, self.type,
             self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband)
+            self.sideband, self.mean_frequency)
 
     def __setstate__(self, state):
-        (self.id, self.band, self.bandwidth, self.channels, self.group,
+        (self.id, self.band, self.bandwidth, self.channels, self.type,
             self.intents, self.ref_frequency, self.name, self.baseband, 
-            self.sideband) = state
+            self.sideband, self.mean_frequency) = state
     
-    def __init__(self, spw_id, bandwidth, ref_frequency, chan_widths, 
-                 chan_freqs, name, sideband, baseband, group=None, 
-                 band='Unknown'):
+    def __init__(self, spw_id, name, spw_type, bandwidth, ref_freq, mean_freq,
+                 chan_freqs, chan_widths, sideband, baseband, band='Unknown'):
         self.id = spw_id
         self.bandwidth = measures.Frequency(bandwidth,
                                             measures.FrequencyUnits.HERTZ)
-        self.ref_frequency = measures.Frequency(ref_frequency, 
+        self.ref_frequency = measures.Frequency(ref_freq, 
                                                 measures.FrequencyUnits.HERTZ)
-        self.group = group
-        self.intents = set()
+        self.mean_frequency = measures.Frequency(mean_freq, 
+                                                 measures.FrequencyUnits.HERTZ)
         self.band = band
-
+        self.type = spw_type
+        self.intents = set()
+        
         # work around NumPy bug with empty strings
         # http://projects.scipy.org/numpy/ticket/1239
         self.name = str(name)
@@ -77,8 +75,8 @@ class SpectralWindow(object):
         
         channels = []
         for centre, width in zip(chan_freqs, chan_widths):
-            dec_centre = decimal.Decimal(str(centre[0]))
-            dec_width= decimal.Decimal(str(width[0]))
+            dec_centre = decimal.Decimal(str(centre))
+            dec_width= decimal.Decimal(str(width))
             delta = dec_width / decimal.Decimal('2') 
             
             f_lo = measures.Frequency(dec_centre - delta,
@@ -150,7 +148,7 @@ class SpectralWindow(object):
 
     def __repr__(self):
         args = map(str, [self.id, self.centre_frequency, self.bandwidth, 
-                         self.group.name])
+                         self.type])
         return 'SpectralWindow({0})'.format(', '.join(args))
 
         

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
+
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
@@ -13,37 +15,59 @@ class Scan(object):
                  states=[], data_descriptions=[], scan_times=[]):
         self.id = id
         
-        self.antennas = set(antennas)
-        self.fields = set(fields)
-        self.intents = set(intents)
-        self.states = set(states)
-        self.data_descriptions = set(data_descriptions)
-        
-        sorted_scan_times = {}
-        for dd, dd_times in scan_times.items():
-            sorted_scan_times[dd] = sorted(dd_times,
-                                           key=lambda t:utils.get_epoch_as_datetime(t[0]))
+        self.antennas = frozenset(antennas)
+        self.fields = frozenset(fields)
+        self.intents = frozenset(intents)
+        self.states = frozenset(states)
+        self.data_descriptions = frozenset(data_descriptions)
 
-        # set start time as earliest time over all data descriptions
-        min_times = sorted([v[0] for v in sorted_scan_times.values()],
-                           key=lambda t:utils.get_epoch_as_datetime(t[0]))
-        self.__start_time = min_times[0][0]
-        
-        # set end time as latest time over all data descriptions
-        max_times = sorted([v[-1] for v in sorted_scan_times.values()],
-                            key=lambda t:utils.get_epoch_as_datetime(t[1]))
-        self.__end_time = max_times[-1][1]
+        # the exposure time should not vary per subscan, so we can construct
+        # the exposure-time-per-spw mapping directly from the first subscan
+        # entry. The MS spec states that these exposure values are given in
+        # seconds, which is just what we want
+        self.__exposure_time = {k : v[0][1]['value'] for k,v in scan_times.iteritems()}
 
-        # calculate mean intervals for each spectral window observed by this scan
-        spw_ids = [dd.spw.id for dd in data_descriptions]
-        self.__mean_intervals = dict((spw_id, 
-                                      self.__calculate_mean_interval(sorted_scan_times, 
-                                                                     spw_id))
-                                     for spw_id in spw_ids)
-        self.__exposure_time = dict((spw_id, 
-                                     self.__calculate_exposure_time(sorted_scan_times, 
-                                                                    spw_id))
-                                    for spw_id in spw_ids)
+        # will hold the mean interval per spw
+        self.__mean_intervals = {}
+
+        # will hold the start and end epochs per spw
+        self.__start_time = None
+        self.__end_time = None
+        
+        # midpoints is a list of tuple of (midpoint epochs, exposure time)            
+        sorted_epochs = {spw_id : sorted(midpoints, key=lambda e: e[0]['m0']['value'])
+                             for spw_id, midpoints in scan_times.iteritems()}
+
+        qt = casatools.quanta
+        mt = casatools.measures            
+                
+        for spw_id, epochs in sorted_epochs.iteritems():
+            (min_epoch, exposure) = epochs[0]
+            max_epoch = epochs[-1][0]
+                         
+            # add and subtract half the exposure to get the start and
+            # end exposure times for this spw in the scan
+            half_exposure = qt.div(exposure, 2)
+            min_val = qt.sub(mt.getvalue(min_epoch)['m0'], half_exposure)
+            max_val = qt.add(mt.getvalue(max_epoch)['m0'], half_exposure)
+
+            # recalculate epochs for these adjusted times, which we can use to
+            # set the mean interval for this spw and potentially for the
+            # global start and end epochs for this scan
+            range_start_epoch = mt.epoch(v0=min_val, rf=mt.getref(min_epoch))
+            range_end_epoch = mt.epoch(v0=max_val, rf=mt.getref(max_epoch))
+
+            dt_start = utils.get_epoch_as_datetime(range_start_epoch)
+            dt_end = utils.get_epoch_as_datetime(range_end_epoch)
+            self.__mean_intervals[spw_id] = (dt_end - dt_start) / len(epochs)            
+
+            # set start time as earliest time over all spectral windows
+            if self.__start_time is None or qt.lt(min_val, self.__start_time['m0']):
+                self.__start_time = range_start_epoch
+
+            # set end time as latest time over all spectral windows
+            if self.__end_time is None or qt.gt(max_val, self.__end_time['m0']):
+                self.__end_time =  range_end_epoch
 
     def __repr__(self):
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
@@ -74,56 +98,24 @@ class Scan(object):
     def exposure_time(self, spw_id):
         return self.__exposure_time[spw_id]
 
-    def __calculate_exposure_time (self, scan_times, spw_id):
-        """
-        Calculate the exposure time for the given spectral window.
-        """         
-        dds_with_spw = [dd for dd in self.data_descriptions
-                        if spw_id == dd.spw.id]
-        if not dds_with_spw:
-            raise ValueError('Scan %s not linked to spectral '
-                             'window %s' % (self.id, spw_id))
-
-        # I don't think it's possible to have the same spw associated with
-        # a scan more than once via multiple data descriptions, but assert
-        # just in case
-        assert len(dds_with_spw) is 1, ('Expected 1 data description for spw '
-                                        '%s but got %s' % (spw_id, 
-                                                           len(dds_with_spw)))
-        
-        times_for_spw = scan_times[dds_with_spw[0]]
-        exposure_time = 0.0
-        for time in times_for_spw:
-            start = utils.get_epoch_as_datetime(time[0])
-            end = utils.get_epoch_as_datetime(time[1])
-            diff = end - start
-            exposure_time = exposure_time + diff.total_seconds()        
-        return exposure_time
-
     def mean_interval(self, spw_id):
         return self.__mean_intervals[spw_id]
 
-    def __calculate_mean_interval(self, scan_times, spw_id):
+    def __calculate_mean_interval(self, sorted_epochs):
         """
         Calculate the mean interval for this scan for the given spectral window.
-        """         
-        dds_with_spw = [dd for dd in self.data_descriptions
-                        if spw_id == dd.spw.id]
-        if not dds_with_spw:
-            raise ValueError('Scan %s not linked to spectral '
-                             'window %s' % (self.id, spw_id))
-        
-        # I don't think it's possible to have the same spw associated with
-        # a scan more than once via multiple data descriptions, but assert
-        # just in case
-        assert len(dds_with_spw) is 1, ('Expected 1 data description for spw '
-                                        '%s but got %s' % (spw_id, 
-                                                           len(dds_with_spw)))
+        """   
+        qa = casatools.quanta
+              
+        start_epoch = sorted_epochs[0][0]['m0']
 
-        times_for_spw = scan_times[dds_with_spw[0]]
-        start = utils.get_epoch_as_datetime(times_for_spw[0][0])
-        end = utils.get_epoch_as_datetime(times_for_spw[-1][1])
-        mean = (end - start) / len(times_for_spw)
+        
+        end_epoch = qa.add(sorted_epochs[-1][0]['m0'], sorted_epochs[-1][1])
+        
+        start = utils.get_epoch_as_datetime(start_epoch)
+        end = utils.get_epoch_as_datetime(end_epoch)
+        
+        mean = (end - start) / len(sorted_scan_times)
         return mean
 
     @property

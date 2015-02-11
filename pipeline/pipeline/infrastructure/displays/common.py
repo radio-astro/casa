@@ -645,7 +645,7 @@ class PhaseVsBaselineData(object):
         self.ms = ms
         self.corr = corr_id
         self.data_for_corr = self.data.data[corr_id]
-        self.__refant_id = refant_id
+        self.__refant_id = int(refant_id)
 
         if len(self.data_for_corr) is 0:
             raise ValueError('No data for spw %s ant %s scan %s' % (data.spw[0],

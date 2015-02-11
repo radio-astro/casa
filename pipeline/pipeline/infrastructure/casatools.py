@@ -35,6 +35,7 @@ vpmanager = casac.vpmanager()
 vlafillertask = casac.vlafillertask()
 atmosphere = casac.atmosphere()
 utils = casac.utils()
+msmd = casac.msmetadata()
 
 # Unless we set the log file, output will be sent to casapy.log rather than the
 # timestamped log file, which is where standard CASA output is sent.
@@ -78,6 +79,7 @@ CalAnalysis = context_manager_factory(calanalysis)
 ImageReader = context_manager_factory(image)
 MSReader = context_manager_factory(ms)
 TableReader = context_manager_factory(table)
+MSMDReader = context_manager_factory(msmd)
 
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle

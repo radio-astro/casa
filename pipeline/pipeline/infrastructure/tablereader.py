@@ -9,7 +9,6 @@ import numpy
 
 from . import casatools
 from . import logging
-from . import utils
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 
@@ -32,17 +31,17 @@ class ObservingRunReader(object):
 
 class MeasurementSetReader(object):
     @staticmethod
-    def get_scans(ms):
+    def get_scans(msmd, ms):
         LOG.debug('Analysing scans in {0}'.format(ms.name))
         with casatools.TableReader(ms.name) as openms:
             scan_number_col = openms.getcol('SCAN_NUMBER')
             time_col = openms.getcol('TIME')
             antenna1_col = openms.getcol('ANTENNA1')
             antenna2_col = openms.getcol('ANTENNA2')
-            exposure_col = openms.getcol('EXPOSURE')
+#             exposure_col = openms.getcol('EXPOSURE')
             data_desc_id_col = openms.getcol('DATA_DESC_ID')
-            field_id_col = openms.getcol('FIELD_ID')
-            state_id_col = openms.getcol('STATE_ID')
+#             field_id_col = openms.getcol('FIELD_ID')
+#             state_id_col = openms.getcol('STATE_ID')
 
             # get columns and tools needed to create scan times
             time_colkeywords = openms.getcolkeywords('TIME')
@@ -52,83 +51,76 @@ class MeasurementSetReader(object):
             qt = casatools.quanta
 
             scans = []
-            for scan_id in set(scan_number_col):
+            for scan_id in msmd.scannumbers():
+                states = [s for s in ms.states
+                          if s.id in msmd.statesforscan(scan_id)]
+
+                intents = reduce(lambda s, t: s.union(t.intents), states, set())
+                
+                fields = [f for f in ms.fields 
+                          if f.id in msmd.fieldsforscan(scan_id)]
+
+                # can't use msmd.timesforscan as we need unique times grouped by 
+                # spw
+#                 scan_times = msmd.timesforscan(scan_id)
+                
+                exposures = {spw_id : msmd.exposuretime(scan=scan_id, spwid=spw_id)
+                             for spw_id in msmd.spwsforscan(scan_id)}
+                
                 scan_mask = (scan_number_col==scan_id)                
 
-                # get the states, fields and intents used for this scan, 
-                # using the intents on the state if possible, otherwise
-                # falling back to the intents on the field
-                state_ids = set(state_id_col[scan_mask])
-                states = [ms.get_state(state_id=i) for i in state_ids]
-                states = [state for state in states if state is not None]
-
-                field_ids = set(field_id_col[scan_mask])
-                fields = [ms.get_fields(field_id=i)[0] for i in field_ids]
-                fields = [field for field in fields if field is not None]
-
-                intents = set()
-                if states:
-                    for state in states:
-                        intents.update(state.intents)
-                else:
-                    for field in fields:
-                        intents.update(field.intents)
-                        
                 # get the antennas used for this scan 
+                LOG.trace('Calculating antennas used for scan %s', scan_id)
                 antenna_ids = set()
                 scan_antenna1 = antenna1_col[scan_mask]
                 scan_antenna2 = antenna2_col[scan_mask] 
                 antenna_ids.update(scan_antenna1)
                 antenna_ids.update(scan_antenna2)
-                ant_ids = ','.join([str(i) for i in antenna_ids]) 
-                antennas = ms.get_antenna(ant_ids)
+                antennas = [o for o in ms.antennas if o.id in antenna_ids]
 
                 # get the data descriptions for this scan
+                LOG.trace('Calculating data descriptions used for scan %s', scan_id)
                 scan_data_desc_id = set(data_desc_id_col[scan_mask])
-                data_descriptions = [ms.get_data_description(id=i) 
-                                     for i in scan_data_desc_id]
+                data_descriptions = [o for o in ms.data_descriptions 
+                                     if o.id in scan_data_desc_id]
 
                 # times are specified per data description, so we must
                 # re-mask and calculate times per dd
                 scan_times = {}  
+                LOG.trace('Processing scan times for scan %s', scan_id)
                 for dd in data_descriptions:
                     dd_mask = (scan_number_col==scan_id) & (data_desc_id_col==dd.id)
 
                     raw_midpoints = list(time_col[dd_mask])
                     unique_midpoints = set(raw_midpoints)
-                    exposures = list(exposure_col[dd_mask])
-    
-                    # get the exposure times that correspond to the unique midpoint
-                    # times that we just found 
-                    exposure_for_midpoints = []
-                    for midpoint in unique_midpoints:
-                        idx = raw_midpoints.index(midpoint)
-                        exposure_for_midpoints.append(exposures[idx])
-                        
-                    dd_times = []
-                    for raw_midpoint, exposure in zip(unique_midpoints, 
-                                                      exposure_for_midpoints):
-                        # measurement set spec states that exposure is recorded in 
-                        # seconds
-                        exposure = qt.quantity(exposure, 's')
-                        half_exposure = qt.div(exposure, 2)
-                        
-                        # add and subtract half the exposure to get the start and
-                        # end times for the exposure
-                        midpoint_epoch = qt.quantity(raw_midpoint, time_unit)
-                        start_epoch = qt.sub(midpoint_epoch, half_exposure)
-                        end_epoch = qt.add(midpoint_epoch, half_exposure)
-                        
-                        start = mt.epoch(time_ref, start_epoch)
-                        end = mt.epoch(time_ref, end_epoch)
-                        
-                        dd_times.append((start, end, exposure))
+                    epoch_midpoints = [mt.epoch(time_ref, qt.quantity(o, time_unit))
+                                       for o in unique_midpoints]
+                    
+#                     dd_times = 
+#                     for raw_midpoint in unique_midpoints:
+#                         # measurement set spec states that exposure is recorded in 
+#                         # seconds
+#                         exposure = exposures[dd.spw.id]
+#                         half_exposure = qt.div(exposure, 2)
+#                         
+#                         # add and subtract half the exposure to get the start and
+#                         # end times for the exposure
+#                         midpoint_epoch = qt.quantity(raw_midpoint, time_unit)
+#                         start_epoch = qt.sub(midpoint_epoch, half_exposure)
+#                         end_epoch = qt.add(midpoint_epoch, half_exposure)
+#                         
+#                         start = mt.epoch(time_ref, start_epoch)
+#                         end = mt.epoch(time_ref, end_epoch)
+#                         
+#                         dd_times.append((raw_midpoint, exposure))
 
-                    scan_times[dd] = dd_times
+                    scan_times[dd.spw.id] = zip(epoch_midpoints,
+                                                itertools.repeat(exposures[dd.spw.id]))
 
+                LOG.trace('Creating domain object for scan %s', scan_id)
                 scan = domain.Scan(id=scan_id, states=states, fields=fields,
-                    data_descriptions=data_descriptions, antennas=antennas,
-                    scan_times=scan_times, intents=intents)
+                            data_descriptions=data_descriptions, antennas=antennas,
+                            scan_times=scan_times, intents=intents)
                 scans.append(scan)
 
                 LOG.trace('{0}'.format(scan))
@@ -138,7 +130,7 @@ class MeasurementSetReader(object):
     @staticmethod
     def add_band_to_spws(ms):
         for spw in ms.spectral_windows:
-            if 'WVR' in spw.name:
+            if spw.type == 'WVR':
                 spw.band = 'WVR'
                 continue
         
@@ -152,84 +144,82 @@ class MeasurementSetReader(object):
             
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
-            if spw.num_channels == 4 and ms.antenna_array.name == 'ALMA':
-                spw.band = 'WVR'
         
     @staticmethod
-    def link_intents_to_spws(ms):
-        container = ms.states if ms.states else ms.fields
-        column = 'STATE_ID' if ms.states else 'FIELD_ID'
-        
-        with casatools.TableReader(ms.name) as table:
-            for dd in ms.data_descriptions:
-                spw = dd.spw
-                for obj in container:
-                    # if the spw has already been tagged with this state's
-                    # intents, go on to the next state
-                    if obj.intents.issubset(spw.intents):
-                        continue
-                        
-                    subTable = table.query(
-                        'DATA_DESC_ID=={dd_id} '
-                        '&& {column}=={identifier}'
-                        '&& NOT(FLAG_ROW) '
-                        '&& NOT(ALL(FLAG))'.format(dd_id=dd.id, 
-                                                   column=column,
-                                                   identifier=obj.id))
-                    
-                    if subTable.nrows() > 0:
-                        spw.intents.update(obj.intents)
-                    subTable.close()
-        
+    def link_intents_to_spws(msmd, ms):
+        # we can't use msmd.intentsforspw directly as we may have a modified
+        # obsmode mapping
         for spw in ms.spectral_windows:
+            scan_ids = msmd.scansforspw(spw.id)
+            state_ids = [msmd.statesforscan(i) for i in scan_ids]
+            state_ids = set(itertools.chain(*state_ids))
+            states = [s for s in ms.states if s.id in state_ids] 
+
+            for state in states:
+                spw.intents.update(state.intents)
+
             LOG.trace('Intents for spw #{0}: {1}'
                       ''.format(spw.id, ','.join(spw.intents)))
+            
+#         container = ms.states if ms.states else ms.fields
+#         column = 'STATE_ID' if ms.states else 'FIELD_ID'
+#        
+#         with casatools.TableReader(ms.name) as table:
+#             for dd in ms.data_descriptions:
+#                 spw = dd.spw
+#                 for obj in container:
+#                     # if the spw has already been tagged with this state's
+#                     # intents, go on to the next state
+#                     if obj.intents.issubset(spw.intents):
+#                         continue
+#                         
+#                     subTable = table.query(
+#                         'DATA_DESC_ID=={dd_id} '
+#                         '&& {column}=={identifier}'
+#                         '&& NOT(FLAG_ROW) '
+#                         '&& NOT(ALL(FLAG))'.format(dd_id=dd.id, 
+#                                                    column=column,
+#                                                    identifier=obj.id))
+#                     
+#                     if subTable.nrows() > 0:
+#                         spw.intents.update(obj.intents)
+#                     subTable.close()
+#         
+#         for spw in ms.spectral_windows:
+#             LOG.trace('Intents for spw #{0}: {1}'
+#                       ''.format(spw.id, ','.join(spw.intents)))
     
     @staticmethod
-    def link_fields_to_states(ms):
-        with casatools.TableReader(ms.name) as table:
-            field_ids = table.getcol('FIELD_ID')
-            state_ids = table.getcol('STATE_ID')
+    def link_fields_to_states(msmd, ms):
+        # for each field..
+        for field in ms.fields:
+            # Find the state IDs for the field by first identifying the scans
+            # for the field, then finding the state IDs for those scans
+            scan_ids = msmd.scansforfield(field.id)
+            state_ids = [msmd.statesforscan(i) for i in scan_ids]
+            # flatten the state IDs to a 1D list
+            state_ids = set(itertools.chain(*state_ids))            
+            states = [ms.get_state(i) for i in state_ids]
+            field.states.update(states)
+            for state in states:
+                field.intents.update(state.intents)
             
-            # for each field..
-            for field in ms.fields:
-                intents = set()
-                # .. find the state IDs associated with this field, ..
-                for state_id in set(state_ids[field_ids==field.id]):
-                    # .. then find the State object with this ID..
-                    state = ms.get_state(state_id=state_id)                    
-                    if state != None:
-                        # .. and add its associated intents
-                        intents.update(state.intents)
-                        field.states.add(state)
-
-                # if we resolved states to intents for this field..
-                if intents:
-                    # .. set the field intents accordingly
-                    field.intents.update(intents)
-
     @staticmethod
-    def link_fields_to_sources(ms):
+    def link_fields_to_sources(msmd, ms):        
         for source in ms.sources:
-            for field in ms.fields:
-                if source.id == field.source_id:
-                    source.fields.append(field)
-                    field.source = source
+            field_ids = msmd.fieldsforsource(source.id, False)
+            fields = [f for f in ms.fields if f.id in field_ids]
+
+            source.fields[:] = fields
+            for field in fields:
+                field.source = source
 
     @staticmethod
-    def add_valid_spws_to_fields(ms):
-        # get list of field/spw combinations that actually contain data.
-        with casatools.TableReader(ms.name) as table:
-            data_desc_id = table.getcol('DATA_DESC_ID')
-            field_id = table.getcol('FIELD_ID')
-            antenna1 = table.getcol('ANTENNA1')
-            antenna2 = table.getcol('ANTENNA2')
-
-            for field in ms.fields:
-                for dd in ms.data_descriptions:
-                    if numpy.any((data_desc_id==dd.id) & (field_id==field.id) & 
-                                 (antenna1 != antenna2)):
-                        field.valid_spws.add(dd.spw)
+    def link_spws_to_fields(msmd, ms):
+        for field in ms.fields:
+            spws = [spw for spw in ms.spectral_windows
+                    if spw.id in msmd.spwsforfield(field.id)]
+            field.valid_spws.update(spws)
     
     @staticmethod
     def get_measurement_set(ms_file):
@@ -237,26 +227,32 @@ class MeasurementSetReader(object):
         ms = domain.MeasurementSet(ms_file)
         
         # populate ms properties with results of table readers 
-        ms.antenna_array = AntennaTable.get_antenna_array(ms)
-        ms.frequency_groups = SpectralWindowTable.get_frequency_groups(ms)
-        ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
-        ms.polarizations = PolarizationTable.get_polarizations(ms)
-        with casatools.MSReader(ms.name) as openms:
-            for dd in ms.data_descriptions:
-                openms.selectinit(dd.id)
-                ms_info = openms.getdata(['axis_info','time'])
-                dd.obs_time = numpy.mean(ms_info['time'])                
-                dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
-                dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
-                dd.group_name = dd.spw.group.name
+        with casatools.MSMDReader(ms_file) as msmd:
+            ms.antenna_array = AntennaTable.get_antenna_array(msmd)
+            ms.spectral_windows = SpectralWindowTable.get_spectral_windows(msmd)
+            ms.states = StateTable.get_states(msmd)
+            ms.fields = FieldTable.get_fields(msmd)
 
-        ms.fields = FieldTable.get_fields(ms)
-        ms.sources = SourceTable.get_sources(ms)        
-        ms.states = StateTable.get_states(ms)
-        MeasurementSetReader.link_fields_to_states(ms)
-        MeasurementSetReader.link_fields_to_sources(ms)
-        MeasurementSetReader.add_valid_spws_to_fields(ms)
-        MeasurementSetReader.link_intents_to_spws(ms)
+            # No MSMD functions to help populating DDs and pols yet
+            ms.data_descriptions = DataDescriptionTable.get_descriptions(ms)
+            ms.polarizations = PolarizationTable.get_polarizations(ms)
+            with casatools.MSReader(ms.name) as openms:
+                for dd in ms.data_descriptions:
+                    openms.selectinit(dd.id)
+                    ms_info = openms.getdata(['axis_info','time'])
+                    dd.obs_time = numpy.mean(ms_info['time'])                
+                    dd.chan_freq = ms_info['axis_info']['freq_axis']['chan_freq'].tolist()
+                    dd.corr_axis = ms_info['axis_info']['corr_axis'].tolist()
+    
+            ms.sources = SourceTable.get_sources(ms)        
+
+            # now back to pure MSMD calls
+            MeasurementSetReader.link_fields_to_states(msmd, ms)
+            MeasurementSetReader.link_fields_to_sources(msmd, ms)
+            MeasurementSetReader.link_intents_to_spws(msmd, ms)
+            MeasurementSetReader.link_spws_to_fields(msmd, ms)
+            ms.scans = MeasurementSetReader.get_scans(msmd, ms)
+
         MeasurementSetReader.add_band_to_spws(ms)
 
         (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(ms)
@@ -268,13 +264,6 @@ class MeasurementSetReader(object):
 
         ms.schedblock_id = schedblock_id
         ms.execblock_id = execblock_id
-        
-#        # ..and main table properties too
-#        ms.all_field_ids = map(int, 
-#            MeasurementSetReader._get_range(ms.name, 'field_id'))
-
-        # get names, types of fields
-        ms.scans = MeasurementSetReader.get_scans(ms)
 
         return ms
 
@@ -287,85 +276,57 @@ class MeasurementSetReader(object):
 
 class SpectralWindowTable(object):
     @staticmethod
-    def get_frequency_groups(ms):
-        groups = {}
-        for row in SpectralWindowTable._read_table(ms):
-            SpectralWindowTable._add_spectral_window(groups, *row)
-        
-        for group in groups.values():
-            group.measurement_set = ms
-        
-        return groups
-    
-    @staticmethod
-    def _add_spectral_window(groups, spw_id, group_id, group_name, bandwidth,
-                             ref_freq, chan_width, chan_freqs, name, sideband,
-                             baseband):
-        # ensure that group names are Python str strings, other string 
-        # flavours such as numpy can cause trouble with pickling. Also
-        # construct names if none set, otherwise all SpW get lumped into a
-        # group with name ''.
-        if group_name is None or string.strip(group_name) is '':
-            group_name = 'Heuristics{0}'.format(group_id)
-        
-        # get the FrequencyGroup with the given name, creating it if it
-        # doesn't exist
-        group = groups.setdefault(group_name,
-                                  domain.FrequencyGroup(group_id, group_name))
+    def get_spectral_windows(msmd):
+        # map spw ID to spw type
+        spw_types = {i:'FDM' for i in msmd.fdmspws()}
+        spw_types.update({i:'TDM' for i in msmd.tdmspws()})
+        spw_types.update({i:'WVR' for i in msmd.wvrspws()})
+        spw_types.update({i:'CHANAVG' for i in msmd.chanavgspws()})
+        spw_types.update({i:'SQLD' for i in msmd.almaspws(sqld=True)})
 
-        # create and add a new SpectralWindow to the frequency group
-        spw = domain.SpectralWindow(spw_id, bandwidth, ref_freq, chan_width,
-                                    chan_freqs, name, sideband, baseband)
-        group.add_spw(spw)
-        
-        return spw
-
-    @staticmethod
-    def _read_table(ms):
-        """Read the SPECTRAL_WINDOW table of the given measurement set.
-        """
-        LOG.debug('Analysing SPECTRAL_WINDOW table')
-        ms = _get_ms_name(ms)
-        spectral_window_table = os.path.join(ms, 'SPECTRAL_WINDOW')        
+        LOG.trace('Opening SPECTRAL_WINDOW table to read '
+                  'SPECTRAL_WINDOW.REF_FREQUENCY')
+        spectral_window_table = os.path.join(msmd.name(), 'SPECTRAL_WINDOW')        
         with casatools.TableReader(spectral_window_table) as table:
-            group_ids = table.getcol('FREQ_GROUP')
-            group_names = table.getcol('FREQ_GROUP_NAME')
-            bandwidths = table.getcol('TOTAL_BANDWIDTH')
             ref_frequency = table.getcol('REF_FREQUENCY')
-            vchan_widths = table.getvarcol('CHAN_WIDTH')
-            vchan_freqs = table.getvarcol('CHAN_FREQ')
-            spw_ids = range(len(group_ids))
-            names = table.getcol('NAME')
-            sidebands = table.getcol('NET_SIDEBAND')
 
-            if 'BBC_NO' in table.colnames():
-                basebands = table.getcol('BBC_NO')
-            else:
-                basebands = [None] * table.ncols()
-             
-            chan_widths = []
-            chan_freqs = []
-            for i in spw_ids:
-                chan_widths.append(vchan_widths['r%s'%(i+1)])
-                chan_freqs.append(vchan_freqs['r%s'%(i+1)])
+        # these msmd functions don't need a spw argument. They return a list of
+        # values, one for each spw
+        spw_names = msmd.namesforspws()            
+        bandwidths = msmd.bandwidths()
 
-            chan_widths = itertools.chain(chan_widths)
-            chan_freqs = itertools.chain(chan_freqs)
+        spws = []        
+        for i, spw_name in enumerate(spw_names):
+            # get this spw's values from our precalculated lists and dicts
+            bandwidth = bandwidths[i]
+            ref_freq = ref_frequency[i]
+            spw_type = spw_types.get(i, 'UNKNOWN')
 
-            rows = zip(spw_ids, group_ids, group_names, bandwidths, ref_frequency,
-                       chan_widths, chan_freqs, names, sidebands, basebands)
-            return rows
+            # the following msmd functions need a spw argument, so they have
+            # to be contained within the spw loop
+            mean_freq = msmd.meanfreq(i)
+            chan_freqs = msmd.chanfreqs(i)
+            chan_widths = msmd.chanwidths(i)            
+            sideband = msmd.sideband(i)
+            baseband = msmd.baseband(i)                            
+            
+            spw = domain.SpectralWindow(i, spw_name, spw_type, bandwidth,
+                    ref_freq, mean_freq, chan_freqs, chan_widths, sideband,
+                    baseband)
+            spws.append(spw)
+
+        return spws
 
 
 class ObservationTable(object):
     @staticmethod
     def get_telescope_name(ms):
         LOG.debug('Analysing OBSERVATION table')
-        ms = _get_ms_name(ms)
-        table_filename = os.path.join(ms, 'OBSERVATION')
-        with casatools.TableReader(table_filename) as table:
-            telescope_name = table.getcol('TELESCOPE_NAME')[0]
-            return telescope_name
+        vis = _get_ms_name(ms)
+        with casatools.MSMDReader(vis) as msmd:
+            names = set(msmd.observatorynames())
+            assert len(names) is 1
+            return names.pop()
 
     @staticmethod
     def get_project_info(ms):
@@ -431,92 +392,84 @@ class ObservationTable(object):
 
 class AntennaTable(object):
     @staticmethod
-    def get_antenna_array(ms):
-        telescope_name = ObservationTable.get_telescope_name(ms)
-        # create a new antenna array..
-        array = domain.AntennaArray(telescope_name)
+    def get_antenna_array(msmd):
+        position = msmd.observatoryposition()            
+        names = set(msmd.observatorynames())
+        assert len(names) is 1
+        name = names.pop()
+        array = domain.AntennaArray(name, position)
+
         # .. and add a new Antenna for each row in the ANTENNA table
-        for antenna in AntennaTable.get_antennas(ms):
+        for antenna in AntennaTable.get_antennas(msmd):
             array.add_antenna(antenna)
         return array
 
     @staticmethod
-    def get_antennas(ms):
-        return [AntennaTable._create_antenna(*row) 
-                for row in AntennaTable._read_table(ms)]
+    def get_antennas(msmd):
+        antenna_table = os.path.join(msmd.name(), 'ANTENNA')
+        LOG.trace('Opening ANTENNA table to read ANTENNA.FLAG_ROW and '
+                  'ANTENNA.DISH_DIAMETER')
+        with casatools.TableReader(antenna_table) as table:
+            flags = table.getcol('FLAG_ROW')
+            diameters = table.getcol('DISH_DIAMETER')
+
+        antennas = []
+        for (i, name, station) in zip(msmd.antennaids(), 
+                                      msmd.antennanames(),
+                                      msmd.antennastations()):
+            # omit this antenna if it has been flagged
+            if flags[i]:
+                continue
+
+            position = msmd.antennaposition(i)
+            offset = msmd.antennaoffset(i)
+            diameter = diameters[i]
+            
+            antenna = domain.Antenna(i, name, station, position, offset,
+                                     diameter)
+            antennas.append(antenna)
+            
+        return antennas
     
     @staticmethod
-    def _create_antenna(antenna_id, name, positions, keywords, flag, diameter,
-                        station):
+    def _create_antenna(antenna_id, name, station, diameter, position, offset,
+                        flag):
         # omit this antenna if it has been flagged
-        if flag == True:
+        if flag is True:
             return
 
-        # get the x, y, z values from the positions tuple
-        x = positions[0]
-        y = positions[1]
-        z = positions[2]
-
-        # find out what units these values are in
-        ref_keyword = keywords['MEASINFO']['Ref']
-        x_units = keywords['QuantumUnits'][0]
-        y_units = keywords['QuantumUnits'][1]
-        z_units = keywords['QuantumUnits'][2]
-
-        # save these as we'll need them to work round a CASA bug which converts
-        # all positions to radians
-        qt = casatools.quanta
-        v0=qt.quantity(x, x_units)
-        v1=qt.quantity(y, y_units)
-        v2=qt.quantity(z, z_units)
-
-        # so we can create a CASA position..
-        mt = casatools.measures   
-        rad_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-
-        # and now for our workaround..
-        m_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
-        m_position['m0'] = v0
-        m_position['m1'] = v1
-        m_position['m2'] = v2
+#         # get the x, y, z values from the positions tuple
+#         x = position['m0']
+#         y = position['m1']
+#         z = position['m2']
+# 
+#         # find out what units these values are in
+#         ref_keyword = keywords['MEASINFO']['Ref']
+#         x_units = keywords['QuantumUnits'][0]
+#         y_units = keywords['QuantumUnits'][1]
+#         z_units = keywords['QuantumUnits'][2]
+# 
+#         # save these as we'll need them to work round a CASA bug which converts
+#         # all positions to radians
+#         qt = casatools.quanta
+#         v0=qt.quantity(x, x_units)
+#         v1=qt.quantity(y, y_units)
+#         v2=qt.quantity(z, z_units)
+# 
+#         # so we can create a CASA position..
+#         mt = casatools.measures   
+#         rad_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
+# 
+#         # and now for our workaround..
+#         m_position = mt.position(rf=ref_keyword, v0=v0, v1=v1, v2=v2)
+#         m_position['m0'] = v0
+#         m_position['m1'] = v1
+#         m_position['m2'] = v2
     
         # .. with which we can create an Antenna
-        antenna = domain.Antenna(antenna_id, name, m_position, rad_position,
-                                 diameter, station)
+        antenna = domain.Antenna(antenna_id, name, station, position, offset, 
+                                 diameter)
         return antenna
-
-    @staticmethod
-    def _read_table(ms):
-        """Read the ANTENNA table of the given measurement set, returning a
-        list of tuples; each item in the list corresponds to a row in the 
-        table. 
-        
-        """
-        LOG.debug('Analysing ANTENNA table')
-        ms = _get_ms_name(ms)
-
-        table_filename = os.path.join(ms, 'ANTENNA')
-        with casatools.TableReader(table_filename) as table:
-            names = table.getcol('NAME')
-            positions = table.getcol('POSITION')
-            position_keywords = table.getcolkeywords('POSITION')
-            flags = table.getcol('FLAG_ROW')
-            diameter = table.getcol('DISH_DIAMETER')
-            stations = table.getcol('STATION')
-            
-            # transpose list to get n tuples of x,y,z for each antenna rather
-            # than 3 lists of all x,y,z values
-            positions = zip(*positions)
-
-            # construct a list of keywords of the same length as the other
-            # lists so we can zip it together names, positions and flags
-            keywords = [position_keywords] * len(names)
-
-            ids = range(len(names))
-
-            rows = zip(ids, names, positions, keywords, flags, diameter, 
-                       stations)
-            return rows
 
 
 class DataDescriptionTable(object):
@@ -660,86 +613,87 @@ class SourceTable(object):
 
 class StateTable(object):
     @staticmethod
-    def get_states(ms):
-        facility = ObservationTable.get_telescope_name(ms)
-        start, _ = ObservationTable.get_time_range(ms)
-        state_factory = domain.state.StateFactory(facility, start)        
+    def get_states(msmd):
+        state_factory = StateTable.get_state_factory(msmd)
 
-        states = [state_factory.create_state(*row) 
-                  for row in StateTable._read_table(ms)]        
-        return states            
-        
-    @staticmethod
-    def _read_table(ms):
-        """Read the STATE table of the given measurement set.
-        """
-        LOG.debug('Analysing STATE table')
-        ms = _get_ms_name(ms)
-        state_table = os.path.join(ms, 'STATE')
-
+        LOG.trace('Opening STATE table to read STATE.OBS_MODE')
+        state_table = os.path.join(msmd.name(), 'STATE')
         with casatools.TableReader(state_table) as table:
             obs_modes = table.getcol('OBS_MODE')
-            state_ids = range(len(obs_modes))
-            return zip(state_ids, obs_modes)
+        
+        states = []
+        for i in range(msmd.nstates()):
+            obs_mode = obs_modes[i]
+            state = state_factory.create_state(i, obs_mode)
+            states.append(state)
+        return states
+
+    @staticmethod
+    def get_state_factory(msmd):
+        names = set(msmd.observatorynames())
+        assert len(names) is 1
+        facility = names.pop()
+
+        first_scan = min(msmd.scannumbers())
+        scan_start = min(msmd.timesforscan(first_scan))
+
+        LOG.trace('Opening MS to read TIME keyword to avoid '
+                  'msmd.timesforscan() units ambiguity')
+        with casatools.TableReader(msmd.name()) as table:
+            time_colkeywords = table.getcolkeywords('TIME')
+            time_unit = time_colkeywords['QuantumUnits'][0]
+            time_ref = time_colkeywords['MEASINFO']['Ref']    
+        
+        me = casatools.measures
+        qa = casatools.quanta
+                
+        epoch_start = me.epoch(time_ref, qa.quantity(scan_start, time_unit))
+        str_start = qa.time(epoch_start['m0'], form=['fits'])[0]
+        dt_start = datetime.datetime.strptime(str_start, '%Y-%m-%dT%H:%M:%S')
+
+        return domain.state.StateFactory(facility, dt_start)        
 
 
 class FieldTable(object):
     @staticmethod
-    def get_fields(ms):
-        return [FieldTable._create_field(*row) 
-                for row in FieldTable._read_table(ms)]
-    
-    @staticmethod
-    def _create_field(field_id, name, source_id, time, source_type,
-     phase_dir_ref_type, phase_dir_quanta):
-        # .. with which we can create an Antenna
-        field = domain.Field(field_id, name, source_id, time,
-         phase_dir_ref_type, phase_dir_quanta)
-        if source_type:
-            field.set_source_type(source_type)
-        return field
-    
-    @staticmethod
-    def _read_table(ms):
-        """Read the FIELD table of the given measurement set.
-        """
-        LOG.debug('Analysing FIELD table')
-        ms = _get_ms_name(ms)
-        field_table = os.path.join(ms, 'FIELD')      
+    def _read_table(msmd):
+        num_fields = msmd.nfields()
+        field_ids = range(num_fields)
+        field_names = msmd.namesforfields()
+        times = [msmd.timesforfield(i) for i in field_ids]
+            
+        LOG.trace('Opening FIELD table to read FIELD.PHASE_DIR, '
+                  'FIELD.SOURCE_ID and FIELD.SOURCE_TYPE')
+        field_table = os.path.join(msmd.name(), 'FIELD')
         with casatools.TableReader(field_table) as table:
-            names = table.getcol('NAME')
+            # we need msmd.sourcesforfield() to eliminate this read
             source_ids = table.getcol('SOURCE_ID')
-            times = table.getcol('TIME')
 
-            # get array of phase dir quantities
-            field_ids = range(len(names))
             phase_dir = table.getcol('PHASE_DIR')
             phase_dir_keywords = table.getcolkeywords('PHASE_DIR')
             phase_dir_quanta = []
             for field_id in field_ids:
-                field_dir_quanta = ['%s%s' % (phase_dir[0,0,field_id],
-                 phase_dir_keywords['QuantumUnits'][0]),
-                 '%s%s' % (phase_dir[1,0,field_id],
-                 phase_dir_keywords['QuantumUnits'][1])]
+                field_dir_quanta = [
+                        '%s%s' % (phase_dir[0,0,field_id],
+                                  phase_dir_keywords['QuantumUnits'][0]),
+                        '%s%s' % (phase_dir[1,0,field_id],
+                                  phase_dir_keywords['QuantumUnits'][1])]
                 phase_dir_quanta.append(field_dir_quanta)
 
             # get array of phase dir ref types
-            if 'VarRefCol' in phase_dir_keywords['MEASINFO']:
+            meas_info = phase_dir_keywords['MEASINFO']
+            if 'VarRefCol' in meas_info:
                 # ref varies with row
-                phase_dir_ref = table.getcol(
-                 phase_dir_keywords['MEASINFO']['VarRefCol'])
-                phase_dir_ref_types = phase_dir_keywords['MEASINFO']\
-                 ['TabRefTypes']
-                phase_dir_ref_codes = phase_dir_keywords['MEASINFO']\
-                 ['TabRefCodes']
+                phase_dir_ref = table.getcol(meas_info['VarRefCol'])
+                phase_dir_ref_types = meas_info['TabRefTypes']
+                phase_dir_ref_codes = meas_info['TabRefCodes']
             else:
                 # ref fixed for all rows,
                 # construct as though variable reference with all refs
                 # the same
                 phase_dir_ref = numpy.zeros([numpy.shape(phase_dir)[2]], 
                                             numpy.int)
-                phase_dir_ref_types = numpy.array(
-                        [phase_dir_keywords['MEASINFO']['Ref']])
+                phase_dir_ref_types = numpy.array([meas_info['Ref']])
                 phase_dir_ref_codes = numpy.array([0])
             phase_dir_ref_type = []
             for field_id in field_ids:
@@ -751,19 +705,33 @@ class FieldTable(object):
             if 'SOURCE_TYPE' in table.colnames():
                 source_types = table.getcol('SOURCE_TYPE')
             else:
-                source_types = [None] * len(names)
+                source_types = [None] * num_fields
 
-            field_ids = range(len(names))
-
-            return zip(field_ids, names, source_ids, times, source_types,
-             phase_dir_ref_type, phase_dir_quanta)
+            return zip(field_ids, field_names, source_ids, times, 
+                       source_types, phase_dir_ref_type, phase_dir_quanta)
+    
+    @staticmethod
+    def get_fields(msmd):
+        return [FieldTable._create_field(*row) 
+                for row in FieldTable._read_table(msmd)]
+    
+    @staticmethod
+    def _create_field(field_id, name, source_id, time, source_type,
+                      phase_dir_ref_type, phase_dir_quanta):
+        # .. with which we can create an Antenna
+        field = domain.Field(field_id, name, source_id, time,
+                             phase_dir_ref_type, phase_dir_quanta)
+        if source_type:
+            field.set_source_type(source_type)
+        return field    
 
 
 def _make_range(f_min, f_max):
     return measures.FrequencyRange(measures.Frequency(f_min),
                                    measures.Frequency(f_max))
     
-class BandDescriber(object):    
+    
+class BandDescriber(object):
     alma_bands = {_make_range(31.3, 45) : 'ALMA Band 1',
                   _make_range(67, 90) : 'ALMA Band 2',
                   _make_range(84, 116) : 'ALMA Band 3',

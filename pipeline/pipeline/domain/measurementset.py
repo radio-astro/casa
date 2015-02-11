@@ -22,8 +22,8 @@ class MeasurementSet(object):
         self.name = name
         self.antenna_array = None
         self.data_descriptions = []
+        self.spectral_windows = []
         self.fields = []
-        self.frequency_groups = []
         self.states = []
         self.reference_antenna = None
         self.reference_spwmap= None
@@ -48,13 +48,6 @@ class MeasurementSet(object):
     def __repr__(self):
         return 'MeasurementSet({0})'.format(self.name)
         
-    @property
-    def spectral_windows(self):
-        spws = []
-        for group in self.frequency_groups.values():
-            spws.extend(group.windows)
-        return spws
-
     @property
     def intents(self):
         intents = set()
@@ -229,25 +222,6 @@ class MeasurementSet(object):
             spws.append(proxy)
         return spws
 
-    def get_frequency_groups_for_intent(self, intent):
-        # get the valid spectral windows for fields observed with this intent
-        valid_spws = [field.valid_spws for field in self.fields 
-                      if intent in field.intents]
-        # .. and remove any duplicates..
-        valid_spws = set(*valid_spws)
-    
-        if not valid_spws:
-            raise LookupError(('No valid spectral windows '
-                               'with intent {0}'.format(intent)))
-    
-        # .. now get the frequency group for each of these valid windows
-        freq_groups = [spw.group for spw in self.spectral_windows 
-                       if spw in valid_spws]
-        # .. removing any duplicates
-        freq_groups = set(freq_groups)
-        
-        return freq_groups
-    
     def get_original_intent(self, intent=None):
         """
         Get the original obs_modes that correspond to the given pipeline
@@ -434,12 +408,6 @@ class MeasurementSet(object):
             with contextlib.closing(table.query(taql)) as subtable:
                 integration = subtable.getcol('INTERVAL')          
             return numpy.median(integration)
-    
-    
-    
-    
-    
-    
     
     @property
     def session(self):
