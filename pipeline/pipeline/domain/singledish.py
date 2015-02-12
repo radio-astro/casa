@@ -4,7 +4,6 @@ import os
 import re
 
 from . import antenna
-from . import frequencygroup
 from . import measures
 from . import observingrun
 from . import source
