@@ -112,6 +112,7 @@ def gpcal_calc(caltable):
                 phase1 = np.angle(phase1)
                 phase1 = np.unwrap(phase1)
  
+
                 if len(phase1) == 2:
  
                     phase2 = []
@@ -120,7 +121,7 @@ def gpcal_calc(caltable):
                         if ((flag1[0][0][i]==False) and (flag1[1][0][i]==False)):
                             phase2.append( phase1[0][0][i] - phase1[1][0][i] )
  
-                    # Unwrap the difference
+                    # Unwrap the difference *after* flagging
                     phase2 = np.unwrap(np.array(phase2))
 
                     # Outlier removal turned on according to new comments in
@@ -128,49 +129,44 @@ def gpcal_calc(caltable):
                     if removeoutliers == True:
                         phase2 = filters.outlierFilter(phase2, 5.0)
  
-                    if len(phase2) == 0:
-                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
-                        gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
-                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
-                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
-                        continue
-
                 phase3 = []
                 for i in range(ngains-1):
-                    phase3.append( phase1[0][0][i+1] - phase1[0][0][i] )
+                    # don't use flagged points (see CAS-6804)
+                    if ((flag1[0][0][i+1]==False) and (flag1[0][0][i]==False)):
+                        phase3.append( phase1[0][0][i+1] - phase1[0][0][i] )
 
                 if removeoutliers == True:
                     phase3 = filters.outlierFilter(phase3, 3.0)
 
-                if len(phase3) == 0:
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
-                    continue
-
                 if caltableformat == 'new':
 
-                    if len(phase1) == 2:
+                    if ((len(phase1) == 2) and (len(phase2) != 0)):
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = np.rad2deg(np.std(phase2))
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = np.std(phase2)*(2.9979e8/(2*np.pi*chanfreqs[spwId]))
                     else:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
     
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = np.std(phase3)*(2.9979e8/(2*np.pi*chanfreqs[spwId]))
+                    if (len(phase3) != 0):
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = np.std(phase3)*(2.9979e8/(2*np.pi*chanfreqs[spwId]))
+                    else:
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
 
                 else:
  
-                    if len(phase1) == 2:
+                    if ((len(phase1) == 2) and (len(phase2) != 0)):
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = np.rad2deg(np.std(phase2))
                     else:
                         gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (deg)'] = 'C/C'
 
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X-Y (m)'] = 'C/C'
     
-                    gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
+                    if (len(phase3) != 0):
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = np.rad2deg(np.std(phase3))
+                    else:
+                        gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (deg)'] = 'C/C'
                     gpcal_stats['STATS'][fieldId][spwId][antId]['X2-X1 (m)'] = 'C/C'
 
     tb1.close()
@@ -192,8 +188,7 @@ def gpcal_score(gpcal_stats):
     # Need to check if we have to distinguish by band.
 
     xyScorer = scorers.erfScorer(4.25e-6, 8.4e-5)
-    #x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
-    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-2)
+    x2x1Scorer = scorers.erfScorer(3.08e-5, 2.24e-4)
 
     totalXYMetrics = []
 
