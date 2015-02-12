@@ -4,7 +4,7 @@ import time
 import unittest
 import testhelper as th
 import partitionhelper as ph
-from tasks import partition, flagdata, flagmanager, split, setjy, listpartition
+from tasks import partition, flagdata, flagmanager, split, setjy, listpartition, listobs
 from taskinit import msmdtool, mstool, aftool, tbtool
 from __main__ import default
 from parallel.parallel_task_helper import ParallelTaskHelper
@@ -110,6 +110,18 @@ class test_base(unittest.TestCase):
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default('partition')   
+        
+    def setUp_3c84scan1(self):
+        
+        # Define the root for the data files
+        datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
+
+        self.vis = '3c84scan1.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default('partition')         
 
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -820,6 +832,43 @@ class test_partiton_subtables_alma(test_base):
         res = th.compareSubTables(self.outputms+subtable,self.vis+subtable,None,excluded_cols)
         self.assertTrue(res[0],"Error comparing " + res[1] + " column from " + subtable + " sub-table")           
         
+        
+class test_partition_balanced(test_base):
+    '''Test new balanced partition mode'''
+    
+    def setUp(self):
+        
+        self.vis = ""
+        self.outputms = ""
+                
+        self.setUp_3c84scan1()
+        
+    def tearDown(self):
+        os.system("rm -rf " + self.vis)
+        os.system("rm -rf " + self.outputms)
+    
+    def test_partition_balanced_repeated_spws(self):
+        '''mstransform: Check that balanced mode properly distributes the chunks when one SPW is
+        pointed by more than one DDI (with different correlation setups)'''
+        
+        self.outputms = "test_partition_balanced_repeated_spws.mms"
+        
+        partition(self.vis, outputvis=self.outputms,separationaxis='balanced',spw='0,2',numsubms=3,flagbackup=False)
+        listpartition_dict = listpartition(self.outputms, createdict=True)
+        self.assertEqual(listpartition_dict[0]['scanId'][1]['spwIds'], [1], "Wrong SPWIds in subMS 0")         
+        self.assertEqual(listpartition_dict[1]['scanId'][1]['spwIds'], [0], "Wrong SPWIds in subMS 1")  
+        self.assertEqual(listpartition_dict[2]['scanId'][1]['spwIds'], [0], "Wrong SPWIds in subMS 2")                      
+        
+    def test_partition_balanced_repeated_nsubms_greater_than_available_pairs(self):
+        '''mstransform: Check that balanced mode properly handles the case when the number of requests
+        subMSs is greater than the number of available ddi,scan pairs'''
+        
+        self.outputms = "test_partition_balanced_repeated_nsubms_greater_than_available_pairs.mms"
+        
+        partition(self.vis, outputvis=self.outputms,separationaxis='balanced',numsubms=64,flagbackup=False)
+        listpartition_dict = listpartition(self.outputms, createdict=True)       
+        self.assertEqual(len(listpartition_dict), 4, "Number of subMS should be 3")          
+        
 
 # Cleanup class 
 class partition_cleanup(test_base):
@@ -837,6 +886,7 @@ def suite():
             partition_float,
             test_partiton_subtables_evla,
             test_partiton_subtables_alma,
+            test_partition_balanced,
             partition_cleanup]
 
 

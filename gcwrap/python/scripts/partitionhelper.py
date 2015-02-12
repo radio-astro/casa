@@ -938,9 +938,9 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
         myMsTool.msselect(items=selection)
         
         
-    # Get list of spws and timestamps per scan
+    # Get list of DDIs and timestamps per scan
     scanSummary = myMsTool.getscansummary()
-    spectralWindowInfo = myMsTool.getspectralwindowinfo()
+    ddIspectralWindowInfo = myMsTool.getspectralwindowinfo()
 
 
     # Close ms tool
@@ -954,52 +954,51 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
     myMsMetaDataTool.close()
     
     
-    # Mark WVR SPWs as identified by the ms metadata tool
-    for spw in spectralWindowInfo:
-        if int(spw) in wvrspws:
-            spectralWindowInfo[spw]['isWVR'] = True
+    # Mark WVR DDIs as identified by the ms metadata tool
+    for ddi in ddIspectralWindowInfo:
+        if ddIspectralWindowInfo[ddi] in wvrspws:
+            ddIspectralWindowInfo[ddi]['isWVR'] = True
         else:
-            spectralWindowInfo[spw]['isWVR'] = False
+            ddIspectralWindowInfo[ddi]['isWVR'] = False
             
-            
-    # Make an array for total number of visibilites per spw and scan separatelly
-    nVisPerSPW = {}
+    # Make an array for total number of visibilites per ddi and scan separatelly
+    nVisPerDDI = {}
     nVisPerScan = {}
     nVisPerField = {}
-    
+            
             
     # Iterate over scan list
-    scanSpwMap = {}
+    scanDdiMap = {}
     for scan in scanSummary:
         # Initialize scan sub-map
-        scanSpwMap[scan] = {}
+        scanDdiMap[scan] = {}
         # Iterate over timestamps for this scan
         for timestamp in scanSummary[scan]:
-            # Get list of spws for this timestamp
-            SpwIds = scanSummary[scan][timestamp]['SpwIds']
+            # Get list of ddis for this timestamp
+            DDIds = scanSummary[scan][timestamp]['DDIds']
             fieldId = str(scanSummary[scan][timestamp]['FieldId'])
-            # Get number of rows per spw (assume all SPWs have the same number of rows)
-            # In ALMA data WVR SPW has only one row per antenna but it is separated from the other SPWs
-            nrowsPerSPW = scanSummary[scan][timestamp]['nRow'] / len(SpwIds)
-            # Iterate over SPWs for this timestamp
-            for spw in SpwIds:
+            # Get number of rows per ddi (assume all DDIs have the same number of rows)
+            # In ALMA data WVR DDI has only one row per antenna but it is separated from the other DDIs
+            nrowsPerDDI = scanSummary[scan][timestamp]['nRow'] / len(DDIds)
+            # Iterate over DDIs for this timestamp
+            for ddi in DDIds:
                 # Convert to string to be used as a map key
-                spw = str(spw)
-                # Check if SPW entry is already present for this scan, otherwise initialize it
-                if not scanSpwMap[scan].has_key(spw):
-                    scanSpwMap[scan][spw] = {}
-                    scanSpwMap[scan][spw]['nVis'] = 0                   
-                    scanSpwMap[scan][spw]['fieldId'] = fieldId                    
-                    scanSpwMap[scan][spw]['isWVR'] = spectralWindowInfo[spw]['isWVR']
+                ddi = str(ddi)
+                # Check if DDI entry is already present for this scan, otherwise initialize it
+                if not scanDdiMap[scan].has_key(ddi):
+                    scanDdiMap[scan][ddi] = {}
+                    scanDdiMap[scan][ddi]['nVis'] = 0                   
+                    scanDdiMap[scan][ddi]['fieldId'] = fieldId                    
+                    scanDdiMap[scan][ddi]['isWVR'] = ddIspectralWindowInfo[ddi]['isWVR']
                 # Calculate number of visibilities
-                nvis = nrowsPerSPW*spectralWindowInfo[spw]['NumChan']
+                nvis = nrowsPerDDI*ddIspectralWindowInfo[ddi]['NumChan']*ddIspectralWindowInfo[ddi]['NumCorr']
                 # Add number of rows and vis from this timestamp
-                scanSpwMap[scan][spw]['nVis'] = scanSpwMap[scan][spw]['nVis'] + nvis
-                # Update spw nvis
-                if not nVisPerSPW.has_key(spw):
-                    nVisPerSPW[spw] = nvis
+                scanDdiMap[scan][ddi]['nVis'] = scanDdiMap[scan][ddi]['nVis'] + nvis
+                # Update ddi nvis
+                if not nVisPerDDI.has_key(ddi):
+                    nVisPerDDI[ddi] = nvis
                 else:
-                    nVisPerSPW[spw] = nVisPerSPW[spw] + nvis
+                    nVisPerDDI[ddi] = nVisPerDDI[ddi] + nvis
                 # Update scan nvis
                 if not nVisPerScan.has_key(scan):
                     nVisPerScan[scan] = nvis
@@ -1011,36 +1010,36 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
                 else:
                     nVisPerField[fieldId] = nVisPerField[fieldId] + nvis         
                     
-            
-    # Sort the scan/spw pairs depending on the number of visibilities
-    spwList = list()
+
+    # Sort the scan/ddi pairs depending on the number of visibilities
+    ddiList = list()
     scanList = list()
     fieldList = list()
     nVisList = list()
-    nScanSPwPairs = 0
-    for scan in scanSpwMap:
-        for spw in scanSpwMap[scan]:
-            spwList.append(spw)
+    nScanDDIPairs = 0
+    for scan in scanDdiMap:
+        for ddi in scanDdiMap[scan]:
+            ddiList.append(ddi)
             scanList.append(scan)
-            fieldList.append(scanSpwMap[scan][spw]['fieldId'])
-            nVisList.append(scanSpwMap[scan][spw]['nVis'])
-            nScanSPwPairs += 1
+            fieldList.append(scanDdiMap[scan][ddi]['fieldId'])
+            nVisList.append(scanDdiMap[scan][ddi]['nVis'])
+            nScanDDIPairs += 1
             
                     
-    # Check that the number of available scan/spw pairs is not greater than the number of subMSs
-    if nsubms > nScanSPwPairs:
-        casalog.post("Number of subMSs (%i) is greater than available scan,spw pairs (%i), setting nsubms to %i" 
-                     % (nsubms,nScanSPwPairs,nScanSPwPairs),"WARN","getPartitonMap")
-        nsubms = nScanSPwPairs            
+    # Check that the number of available scan/ddi pairs is not greater than the number of subMSs
+    if nsubms > nScanDDIPairs:
+        casalog.post("Number of subMSs (%i) is greater than available scan,ddi pairs (%i), setting nsubms to %i" 
+                     % (nsubms,nScanDDIPairs,nScanDDIPairs),"WARN","getPartitonMap")
+        nsubms = nScanDDIPairs            
     
-    spwArray = np.array(spwList)
+    ddiArray = np.array(ddiList)
     scanArray = np.array(scanList)
     nVisArray = np.array(nVisList)
     
     nVisSortIndex = np.argsort(nVisArray)
     nVisSortIndex[:] = nVisSortIndex[::-1]
     
-    spwArray = spwArray[nVisSortIndex]
+    ddiArray = ddiArray[nVisSortIndex]
     scanArray = scanArray[nVisSortIndex]
     nVisArray = nVisArray[nVisSortIndex]
           
@@ -1051,10 +1050,10 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
         scanNvisDistributionPerSubMs[scan] = np.zeros(nsubms)
      
      
-    # Make a map for the contribution of each subMS to each spw   
-    spwNvisDistributionPerSubMs = {}
-    for spw in spectralWindowInfo:
-        spwNvisDistributionPerSubMs[spw] = np.zeros(nsubms)
+    # Make a map for the contribution of each subMS to each ddi   
+    ddiNvisDistributionPerSubMs = {}
+    for ddi in ddIspectralWindowInfo:
+        ddiNvisDistributionPerSubMs[ddi] = np.zeros(nsubms)
         
         
     # Make a map for the contribution of each subMS to each field   
@@ -1069,24 +1068,24 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
         
         
     # Initialize final map of scans/pw pairs per subms
-    submScanSpwMap = {}
+    submScanDdiMap = {}
     for subms in range (0,nsubms):
-        submScanSpwMap[subms] = {}
-        submScanSpwMap[subms]['scanList'] = list()
-        submScanSpwMap[subms]['spwList'] = list()
-        submScanSpwMap[subms]['fieldList'] = list()
-        submScanSpwMap[subms]['nVisList'] = list()
-        submScanSpwMap[subms]['nVisTotal'] = 0
+        submScanDdiMap[subms] = {}
+        submScanDdiMap[subms]['scanList'] = list()
+        submScanDdiMap[subms]['ddiList'] = list()
+        submScanDdiMap[subms]['fieldList'] = list()
+        submScanDdiMap[subms]['nVisList'] = list()
+        submScanDdiMap[subms]['nVisTotal'] = 0
         
         
-    # Iterate over the scan/spw map and assign each pair to a subMS
-    for pair in range(len(spwArray)):
+    # Iterate over the scan/ddi map and assign each pair to a subMS
+    for pair in range(len(ddiArray)):
         
-        spw = spwArray[pair]
+        ddi = ddiArray[pair]
         scan = scanArray[pair]
-        field = scanSpwMap[scan][spw]['fieldId']
+        field = scanDdiMap[scan][ddi]['fieldId']
                    
-        # Select the subMS that with bigger (scan/spw/field gap)
+        # Select the subMS that with bigger (scan/ddi/field gap)
         # We use the average as a refLevel to include global structure information
         # But we also take into account the actual max value in case we are distributing large uneven chunks
         jointNvisGap = np.zeros(nsubms)
@@ -1094,8 +1093,8 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
             refLevel = max(nVisPerScan[scan]/nsubms,scanNvisDistributionPerSubMs[scan].max())
             jointNvisGap = jointNvisGap + refLevel - scanNvisDistributionPerSubMs[scan]
         if 'spw' in axis:
-            refLevel = max(nVisPerSPW[spw]/nsubms,spwNvisDistributionPerSubMs[spw].max())
-            jointNvisGap = jointNvisGap + refLevel - spwNvisDistributionPerSubMs[spw]
+            refLevel = max(nVisPerDDI[ddi]/nsubms,ddiNvisDistributionPerSubMs[ddi].max())
+            jointNvisGap = jointNvisGap + refLevel - ddiNvisDistributionPerSubMs[ddi]
         if 'field' in axis:
             refLevel = max(nVisPerField[field]/nsubms,fieldNvisDistributionPerSubMs[field].max())
             jointNvisGap = jointNvisGap + refLevel - fieldNvisDistributionPerSubMs[field]        
@@ -1110,18 +1109,18 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
         else:
             optimalSubMs = optimalSubMs[0]        
                 
-        # Store the scan/spw pair info in the selected optimal subms
-        nVis = scanSpwMap[scan][spw]['nVis']
+        # Store the scan/ddi pair info in the selected optimal subms
+        nVis = scanDdiMap[scan][ddi]['nVis']
         nvisPerSubMs[optimalSubMs] = nvisPerSubMs[optimalSubMs] + nVis
-        submScanSpwMap[optimalSubMs]['scanList'].append(int(scan))
-        submScanSpwMap[optimalSubMs]['spwList'].append(int(spw))
-        submScanSpwMap[optimalSubMs]['fieldList'].append(field)
-        submScanSpwMap[optimalSubMs]['nVisList'].append(nVis)
-        submScanSpwMap[optimalSubMs]['nVisTotal'] = submScanSpwMap[optimalSubMs]['nVisTotal'] + nVis
+        submScanDdiMap[optimalSubMs]['scanList'].append(int(scan))
+        submScanDdiMap[optimalSubMs]['ddiList'].append(int(ddi))
+        submScanDdiMap[optimalSubMs]['fieldList'].append(field)
+        submScanDdiMap[optimalSubMs]['nVisList'].append(nVis)
+        submScanDdiMap[optimalSubMs]['nVisTotal'] = submScanDdiMap[optimalSubMs]['nVisTotal'] + nVis
         
-        # Also update the counters for the subms-scan and subms-spw maps            
+        # Also update the counters for the subms-scan and subms-ddi maps            
         scanNvisDistributionPerSubMs[scan][optimalSubMs] = scanNvisDistributionPerSubMs[scan][optimalSubMs] + nVis
-        spwNvisDistributionPerSubMs[spw][optimalSubMs] = spwNvisDistributionPerSubMs[spw][optimalSubMs] + nVis
+        ddiNvisDistributionPerSubMs[ddi][optimalSubMs] = ddiNvisDistributionPerSubMs[ddi][optimalSubMs] + nVis
         fieldNvisDistributionPerSubMs[field][optimalSubMs] = fieldNvisDistributionPerSubMs[field][optimalSubMs] + nVis
             
 
@@ -1130,53 +1129,34 @@ def getPartitonMap(msfilename, nsubms, selection={}, axis=['field','spw','scan']
         plt.close()
         plotname_prefix = os.path.basename(msfilename) + ' axis ' + string.join(axis)
         plotVisDistribution(nVisPerScan,scanNvisDistributionPerSubMs,plotname_prefix,'scan',plotMode=plotMode)
-        plotVisDistribution(nVisPerSPW,spwNvisDistributionPerSubMs,plotname_prefix,'spw',plotMode=plotMode)
+        plotVisDistribution(nVisPerDDI,ddiNvisDistributionPerSubMs,plotname_prefix,'ddi',plotMode=plotMode)
         plotVisDistribution(nVisPerField,fieldNvisDistributionPerSubMs,plotname_prefix,'field',plotMode=plotMode)
             
-        
-    # Get SPW from DDI sub-table
-    myTableTool = tbtool()
-    myTableTool.open(msfilename + '/DATA_DESCRIPTION')
-    ddiToSpwId = myTableTool.getcol('SPECTRAL_WINDOW_ID')
-    myTableTool.close()
-    
-    
-    # Make a map from SPW to DDI
-    spwToDdi = {}
-    for ddi in range(len(ddiToSpwId)):
-        spw = ddiToSpwId[ddi]
-        if not spwToDdi.has_key(spw): spwToDdi[spw] = list()
-        spwToDdi[spw].append(ddi) 
-        
-        
+               
     # Generate list of taql commands
-    for subms in submScanSpwMap:
+    for subms in submScanDdiMap:
         # Initialize taql command
         initialized = False
         mytaql = ''
-        # Iterate over scan/spw pairs for this subms
-        for pair in range(len(submScanSpwMap[subms]['scanList'])):
-            # Get scans/spw for this pair
-            spw = submScanSpwMap[subms]['spwList'][pair]
-            scan = submScanSpwMap[subms]['scanList'][pair]
-            # Get ddi list for this spw
-            ddiList = spwToDdi[spw]
-            # Iterate over list of DDIs for this SPW
-            for ddi in ddiList:
-                # Add or clause only for the pairs after the first one
-                joinClause = ' OR'
-                if not initialized:
-                    joinClause = ''
-                    initialized = True 
-                # Add pair to taql command
-                mytaql = mytaql + joinClause + ' (DATA_DESC_ID==%i AND SCAN_NUMBER==%i)' % (ddi,scan)
+        # Iterate over scan/ddi pairs for this subms
+        for pair in range(len(submScanDdiMap[subms]['scanList'])):
+            # Get scan/ddi for this pair
+            ddi = submScanDdiMap[subms]['ddiList'][pair]
+            scan = submScanDdiMap[subms]['scanList'][pair]
+            
+            joinClause = ' OR'
+            if not initialized:
+                joinClause = ''
+                initialized = True 
+                
+            mytaql = mytaql + joinClause + ' (DATA_DESC_ID==%i AND SCAN_NUMBER==%i)' % (ddi,scan)
             
         # Store taql
-        submScanSpwMap[subms]['taql'] = mytaql
+        submScanDdiMap[subms]['taql'] = mytaql
 
 
-    # Return map of scan/spw pairs per subMs
-    return submScanSpwMap
+    # Return map of scan/ddi pairs per subMs
+    return submScanDdiMap
 
 
 def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,filename,idLabel,plotMode=1):
@@ -1234,7 +1214,7 @@ def plotVisDistribution(nvisMap,idNvisDistributionPerSubMs,filename,idLabel,plot
         if len(colorVectorEven) > 0: colorVector.append(colorVectorEven.pop())
     
     
-    # Generate spw plot
+    # Generate stacked bar plot
     coloridx = 0 # color index
     width = 0.35 # bar width
     nsubms = len(idNvisDistributionPerSubMs[idNvisDistributionPerSubMs.keys()[0]])
