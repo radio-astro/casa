@@ -21,6 +21,7 @@ def mstransform(
              numsubms,
              disableparallel,    # HIDDEN parameter to create MMS in sequential
              ddistart,           # HIDDEN internal parameter for the sub-table re-indexing
+             taql,               # HIDDEN internal parameter
              tileshape,          # tiling
              field,
              spw, 
@@ -159,6 +160,13 @@ def mstransform(
             taqlstr = ''
         else:
             taqlstr = "NOT (FLAG_ROW OR ALL(FLAG))"
+        
+        # MMS taql selection
+        if taql != '' and taql != None:
+            if not keepflags:
+                taqlstr = taqlstr + " AND "+taql
+            else:
+                taqlstr = taql
         
         config = pdh.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,

@@ -15,7 +15,6 @@ from numpy.f2py.auxfuncs import throw_error
 from mpi4casa.MPIEnvironment import MPIEnvironment
 from mpi4casa.MPICommandClient import MPICommandClient
 
-
 # Decorator function to print the arguments of a function
 def dump_args(func):
     "This decorator dumps out the arguments passed to a function before calling it"
@@ -132,8 +131,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         # It should be a counter of spw IDs starting at 0
         if self.__args.has_key('ddistart'):
               self.__ddistart = self.__args['ddistart']
-                                
-                                                                
+                                        
     def setTaskName(self, thistask=''):        
         self.__taskname = thistask       
         
@@ -463,8 +461,8 @@ class ParallelDataHelper(ParallelTaskHelper):
         """
         
         # It needs to use the updated list of parameters!!!
-        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)            
-    
+        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)         
+            
 #    @dump_args
     def setupParameters(self, **pars):
         """ Create a dictionary with non-empty parameters 
@@ -636,19 +634,6 @@ class ParallelDataHelper(ParallelTaskHelper):
             else:
                 # Use a default
                 self.__createDefaultSeparationCommands()
-#         else:
-#             # TODO: REVIEW this later. 
-#             # Single mms case
-#             singleCmd = copy.copy(self._arg)
-#             scanList = self.__selectionScanList
-# #           if scanList is None:
-# #               self._selectMS()
-# #               scanList = self._getScanList()
-#             if scanList is not None:
-#                 singleCmd['scan'] = ParallelTaskHelper.\
-#                                     listToCasaString(scanList)
-#             self._executionList.append(
-#                 simple_cluster.JobData(self._taskName, singleCmd))
             
 #    @dump_args
     def __createScanSeparationCommands(self):
@@ -664,6 +649,11 @@ class ParallelDataHelper(ParallelTaskHelper):
         # Make sure we have enough scans to create the needed number of
         # subMSs.  If not change the total expected.
         numSubMS = self._arg['numsubms']
+        if isinstance(numSubMS,str) and numSubMS == 'auto':
+            # Create the best load balance based on the number of nodes
+            numSubMS = self.getNumberOfServers()
+            if numSubMS == None:
+                numSubMS = 8
         numSubMS = min(len(scanList),numSubMS)
         
         partitionedScans = self.__partition(scanList, numSubMS)        
@@ -689,6 +679,11 @@ class ParallelDataHelper(ParallelTaskHelper):
         self.__selectMS()
         spwList = self.__getSPWUniqueList()
         numSubMS = self._arg['numsubms']
+        if isinstance(numSubMS,str) and numSubMS == 'auto':
+            # Create the best load balance based on the number of nodes
+            numSubMS = self.getNumberOfServers()
+            if numSubMS == None:
+                numSubMS = 8
         numSubMS = min(len(spwList),numSubMS)
 
         # Get a dictionary of the spws parted for each subMS
@@ -738,6 +733,7 @@ class ParallelDataHelper(ParallelTaskHelper):
                 self._executionList.append([self._taskName + '()',mmsCmd])
             
 #    @dump_args
+#    TO BE DEPRECATED
     def __createDefaultSeparationCommands(self):
         """ This method is to generate a list of commands to partition
              the data based on both scan/spw axes.
@@ -754,6 +750,11 @@ class ParallelDataHelper(ParallelTaskHelper):
 
         # Check if we can just divide on SPW or if we need to do SPW and scan
         numSubMS = self._arg['numsubms']
+        if isinstance(numSubMS,str) and numSubMS == 'auto':
+            # Create the best load balance based on the number of nodes
+            numSubMS = self.getNumberOfServers()
+            if numSubMS == None:
+                numSubMS = 8
         numSpwPartitions = min(len(spwList),numSubMS)
         numScanPartitions = int(math.ceil(numSubMS/float(numSpwPartitions)))
 
@@ -844,21 +845,28 @@ class ParallelDataHelper(ParallelTaskHelper):
             
             sindex += 1 # index of subMS name
             
+#    @dump_args
     def __createBalancedSeparationCommands(self):
-        """ Generate a list of partion commands based on table lenguage 
+        """ Generate a list of partition commands based on table language 
             queries that distribute the scan/spw pairs among subMSs to
-            balance the load along field, spw and scan axis
+            balance the load along field, spw and scan axes
         """
         
-        casalog.post('Automatically distribute the scan/spw pairs to balance the load along field, spw and scan axis')
+        casalog.post('Automatically distribute the scan/spw pairs to balance the load along field, spw and scan axes')
 
         # Get parameters for the partition map function 
         msfilename = self._arg['vis']
-        nsubms = self._arg['numsubms']
+        numSubMS = self._arg['numsubms']
+        if isinstance(numSubMS,str) and numSubMS == 'auto':
+            # Create the best load balance based on the number of nodes
+            numSubMS = self.getNumberOfServers()
+            if numSubMS == None:
+                numSubMS = 8
+        
         selection = self.__getSelectionFilter()
         
         # Get partition map
-        partitionMap = ph.getPartitonMap(msfilename, nsubms, selection, axis=['field','spw','scan'],plotMode=2)
+        partitionMap = ph.getPartitonMap(msfilename, numSubMS, selection, axis=['field','spw','scan'],plotMode=2)
 
         # Iterate over list of subMSs
         for subms in partitionMap:
@@ -1397,7 +1405,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         # creates the indices from it. After the indices are worked out, 
         # it applies MS selection. We do not need to consolidate either.
                                        
-        # If axis is spw or auto, give a list of the subMSs
+        # If axis is spw, give a list of the subMSs
         # that need to be consolidated. This list is pre-organized
         # inside the separation functions above.
         
@@ -1406,6 +1414,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         if self._arg.has_key('createmms') and self._arg['createmms'] == True:
             if (self._arg['separationaxis'] == 'spw' or 
                 self._arg['separationaxis'] == 'auto'):   
+#            if (self._arg['separationaxis'] == 'spw'):   
                 
                 casalog.post('Consolidate the sub-tables')
              
@@ -1455,7 +1464,7 @@ class ParallelDataHelper(ParallelTaskHelper):
         if self._arg.has_key('createmms') and self._arg['createmms'] == True:
             parallel_axis = self._arg['separationaxis']
 
-        if parallel_axis == 'auto' or parallel_axis == 'both':
+        if parallel_axis == 'auto' or parallel_axis == 'both' or parallel_axis == 'balanced':
             parallel_axis = 'scan,spw'
             
         # Copy sub-tables from first subMS to the others. The tables in
@@ -1468,7 +1477,8 @@ class ParallelDataHelper(ParallelTaskHelper):
     
         thesubmscontainingdir = os.path.dirname(subMSList[0].rstrip('/'))
             
-        os.rmdir(thesubmscontainingdir)
+#        os.rmdir(thesubmscontainingdir)
+        shutil.rmtree(thesubmscontainingdir)
             
         return True
     

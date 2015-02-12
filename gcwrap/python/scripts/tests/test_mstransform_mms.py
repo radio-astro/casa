@@ -131,7 +131,7 @@ class test_mms_transformations(test_base):
         self.setUp_jupiter()
         self.outputms = 'combspw13.mms'
         mstransform(vis=self.vis, outputvis=self.outputms, combinespws=False, spw='0,1',field = '12',
-             datacolumn='DATA', createmms=True, separationaxis='scan')
+             datacolumn='DATA', createmms=True, separationaxis='scan', numsubms=6)
 
         self.assertTrue(os.path.exists(self.outputms))
 
@@ -404,7 +404,7 @@ class test_mms_freqavg(test_base):
         '''mstranform: Average using different bins, channel selection, both axes, output MMS'''
         self.outputms = "favg10.ms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='2,12,10:1~10', chanaverage=True,
-                    chanbin=[32,128,5], createmms=True, separationaxis='auto')
+                    chanbin=[32,128,5], createmms=True, separationaxis='auto', numsubms=6)
 
         self.assertTrue(os.path.exists(self.outputms))
 
@@ -495,7 +495,7 @@ class test_mms_parallel(test_base):
         '''mstransform: verify spw sub-table consolidation in sequential'''
         self.outputms = "parallel4.mms"
         mstransform(vis=self.vis, outputvis=self.outputms, spw='3,5:10~20,7,9,15',createmms=True,
-                    separationaxis='spw')
+                    separationaxis='spw', numsubms=5)
         self.assertTrue(os.path.exists(self.outputms))
 
         # spw=5 should be spw=1 after consolidation, with 10 channels
@@ -515,7 +515,7 @@ class test_mms_parallel(test_base):
         self.setUp_jupiter()
         self.outputms = 'parallel5.mms'
         mstransform(vis=self.vis, outputvis=self.outputms, combinespws=False, spw='0,1',field = '12',
-             datacolumn='DATA', createmms=True, separationaxis='scan')
+             datacolumn='DATA', createmms=True, separationaxis='scan',numsubms=6)
 
         self.assertTrue(os.path.exists(self.outputms))
 
@@ -529,7 +529,7 @@ class test_mms_parallel(test_base):
         ret = th.verifyMS(self.outputms, 2, 1, 0)
         self.assertTrue(ret[0],ret[1])
 
-
+#@unittest.skip('Skip until support for this data is included in getPartitonMap() is fixed')
 class test_mms_spw_poln(test_base):
     '''tests for spw with different correlation shapes'''
 
@@ -942,7 +942,7 @@ class test_mms_input(test_base):
         except Exception, instance:
             print 'Expected error: %s'%instance
 
-    @unittest.skip('Skip until CAS-6946 is fixed')
+#    @unittest.skip('Skip until CAS-6946 is fixed')
     def test_split_MMS_weight_corr_sel(self):
         '''mstransform: Split MMS in parallel. Check WEIGHT shape when selecting correlation'''
         # Create an MMS in the setup. It creates self.testmms

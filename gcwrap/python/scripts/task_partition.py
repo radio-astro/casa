@@ -42,7 +42,7 @@ def partition(vis,
                    default = 'auto'
                    Options: 'scan','spw','auto'
         numsubms -- Number of sub-MSs to create.
-                    default: 64
+                    default: 'auto'
         flagbackup -- Backup the FLAG column of the output MMS
                    default: True
                    

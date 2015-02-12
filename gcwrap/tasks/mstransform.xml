@@ -79,17 +79,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw,auto).</description>
+            <description>Axis to do parallelization across(scan,spw,auto,balanced).</description>
             <value>auto</value>
             <allowed kind="enum" ignorecase="true">
                 <value>auto</value>
                 <value>spw</value>
                 <value>scan</value>
+                <value>balanced</value>
             </allowed>
         </param>
-        <param type="int" name="numsubms" subparam="true">
-            <description>The number of Sub-MSs to create.</description>
-            <value>64</value>
+        <param type="any" name="numsubms" subparam="true">
+            <description>The number of Sub-MSs to create (auto or any number)</description>
+        <any type="variant" limittypes="string int"/>
+         <value type="string">auto</value>
         </param>
         <param type="bool" name="disableparallel" subparam="true" visibility="hidden">
             <description>Hidden parameter for internal use only. Do not change it!</description>
@@ -99,7 +101,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Hidden parameter for internal use only. Do not change it!</description>
             <value>-1</value>
         </param>
-
+        <param type="string" name="taql" subparam="true" visibility="hidden">
+            <description>Table query for nested selections</description>
+            <value type="string"></value>
+        </param>             
+        
     <param type="intArray" name="tileshape">
         <description>List with 1 or 3 elements giving the tile shape of the disk data columns.</description>
         <value type="intArray">0</value>
@@ -343,7 +349,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
                   <default param="separationaxis"><value type="string">auto</value></default>
-                  <default param="numsubms"><value type="int">64</value></default>
+                  <default param="numsubms"><value type="string">auto</value></default>
             </equals>
           </when>
           <when param="datacolumn">
@@ -417,18 +423,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
-            options: 'scan', 'spw', 'auto'
-            The 'auto' option will try to partition in both spw and scan axes. It will calculate the
-            output partitions in the following way:
+            options: 'scan', 'spw', 'auto', 'balanced'
+            The 'balanced' option will partition per scan/spw to obtain optimal load balancing with the
+             following criteria:
     
-            1) Calculate the number of possible spw partitions:
-                spw_partitions = min ((len(list_of_spws),numsubms))
+            1 - Maximize the scan/spw/field distribution across sub-MSs
+            2 - Generate sub-MSs with similar size
+               
+        numsubms -- The number of sub-MSs to create.
+            default: 'auto'
+            Options: any integer number (example: numsubms=4)
     
-            2) Calculate the number of possible scan partitions:
-                scan_partitions = int(math.ceil(numsubms/float(spw_partitions)))
-
-        numsubms -- The number of sub-MSs to create (int).
-            default: 64
+               The default 'auto' is to partition using the number of available servers in the cluster.
+               If the task is unable to determine the number of running servers, it
+               uses 8 as the default.
                 
     tileshape -- List with 1 or 3 elements describing the tile shape that will be used
                  to save the columns to disk. (list)
