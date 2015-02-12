@@ -217,16 +217,16 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         # Index arrays
         i,j = np.indices(np.shape(data))
 
-        flagging = True
-        while flagging:
-            flagging = False
+        rdata = np.ravel(data)
+        rflag = np.ravel(flag)
+        valid_data = rdata[np.logical_not(rflag)]
 
-            rdata = np.ravel(data)
-            rflag = np.ravel(flag)
-            valid_data = rdata[np.logical_not(rflag)]
-            data_median, data_mad = arrayflaggerbase.median_and_mad(
-              valid_data)
+        # If there is valid data (non-flagged), then proceed with flagging
+        if len(valid_data) > 0:
 
+            # calculate statistics for valid data
+            data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
+            
             # flag data according to each rule in turn
             for rule in rules:
                 rulename = rule['name']
@@ -861,13 +861,14 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         # Index arrays
         i = np.indices(np.shape(data))
 
-        flagging = True
-        while flagging:
-            flagging = False
+        rdata = np.ravel(data)
+        rflag = np.ravel(flag)
+        valid_data = rdata[np.logical_not(rflag)]
 
-            rdata = np.ravel(data)
-            rflag = np.ravel(flag)
-            valid_data = rdata[np.logical_not(rflag)]
+        # If there is valid data (non-flagged), then proceed with flagging
+        if len(valid_data) > 0:
+
+            # calculate statistics for valid data
             data_median, data_mad = arrayflaggerbase.median_and_mad(valid_data)
 
             # flag data according to each rule in turn
