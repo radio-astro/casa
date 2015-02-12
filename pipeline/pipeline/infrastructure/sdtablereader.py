@@ -463,7 +463,7 @@ class VirtualMeasurementSetFiller(object):
         ms = domain.virtualms.VirtualMeasurementSet(st)
         ms.antenna_array = VirtualMeasurementSetFiller.get_antenna_array(st)
         ms.sources = VirtualMeasurementSetFiller.get_source(st)
-        ms.frequency_groups = VirtualMeasurementSetFiller.get_frequency_group(st)
+        ms.spectral_windows = VirtualMeasurementSetFiller.get_spectral_windows(st)
         ms.fields = VirtualMeasurementSetFiller.get_field(st)
         ms.scans = VirtualMeasurementSetFiller.get_scan(st, ms)
         ms.data_descriptions = VirtualMeasurementSetFiller.get_data_description(st)
@@ -540,19 +540,12 @@ class VirtualMeasurementSetFiller(object):
     
 
     @staticmethod
-    def get_frequency_group(st):
+    def get_spectral_windows(st):
         # assume all scantables have same frequency setting
         spectral_windows = [None] * len(st[0].spectral_window)
         for (k,v) in st[0].spectral_window.items():
             spectral_windows[k] = v
-
-        group_id = 0
-        group_name = 'DUMMY%s'%(group_id)
-        frequency_group = domain.FrequencyGroup(group_id, group_name)
-        for spw in spectral_windows:
-            frequency_group.add_spw(spw)
-
-        return {group_name: frequency_group}
+        return spectral_windows
             
     @staticmethod
     def get_scan(st, ms):
