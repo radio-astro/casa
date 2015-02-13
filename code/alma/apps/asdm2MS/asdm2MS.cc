@@ -2303,8 +2303,7 @@ void fillState(MainRow* r_p) {
     errstream.str("");
     errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
 	      <<", scanNumber="<< r_p->getScanNumber()
-	      <<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
-	      << endl;
+	      <<", subscanNum=" << r_p->getSubscanNumber() << ").";
     throw ASDM2MSException(errstream.str());
   }	  
 
@@ -2532,10 +2531,36 @@ void fillMainLazily2(const string& dsName,
   try {
     for (vector<MainRowCUStruct>::iterator iter=mRCU_s_v.begin(); iter!=mRCU_s_v.end(); iter++) {
       MainRow* mR_p = iter->mR_p;
+      SDMDataObjectStreamReader sdosr;
+      sdosr.open(iter->bdfName);
+      LOG("Processing " + iter->bdfName);
+      unsigned int numberOfAntennas = sdosr.numAntenna();
+      unsigned int numberOfBaselines = numberOfAntennas * (numberOfAntennas - 1) / 2 ;
+      ProcessorType processorType = sdosr.processorType();
+      CorrelationMode correlationMode = sdosr.correlationMode();
+      const SDMDataObject::DataStruct& dataStruct = sdosr.dataStruct();
+
+      infostream.str("");
+      infostream << "ASDM Main row #" << iter->index
+		 << " (scan #" << mR_p->getScanNumber()
+		 <<", subscan #" <<  mR_p->getSubscanNumber()
+		 <<", " << mR_p->getConfigDescriptionId().toString() << ") "
+		 << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
+      info(infostream.str());
+
       /**
        * Take care of the MS State table prior to the Main.
        */
-      fillState(mR_p);
+      try {
+	fillState(mR_p);
+      }
+      catch (ASDM2MSException e) {
+	// The State table could not be filled, then let's forget this Main table row.
+	infostream.str("");
+	infostream << e.getMessage() << ". The main row # " << iter->index << " is ignored.";
+	info(infostream.str());
+	continue;
+      }
       
       /**
        * And then work on the MS Main rows
@@ -2549,33 +2574,12 @@ void fillMainLazily2(const string& dsName,
       int			processorId	   = cdR->getProcessorId().getTagValue();
       int			scanNumber	   = mR_p->getScanNumber();
       int			arrayId		   = 0;
-      
-      infostream.str("");
-      infostream << "ASDM Main row #" << iter->index << " - BDF file size is " << mR_p->getDataSize() << " bytes for " << mR_p->getNumIntegration() << " integrations (this value can only approximative !!!).";
-      infostream.str("");
-      
+            
       if (iter->uncorrected and produceUncorrected)
 	bdf2AsdmStManIndexU.setNumberOfDataDescriptions(dataDescriptionIds.size());
 
       if (iter->corrected and produceCorrected)
 	bdf2AsdmStManIndexC.setNumberOfDataDescriptions(dataDescriptionIds.size());
-
-      SDMDataObjectStreamReader sdosr;
-      sdosr.open(iter->bdfName);
-      LOG("Processing " + iter->bdfName);
-      
-      unsigned int numberOfAntennas = sdosr.numAntenna();
-      
-      unsigned int numberOfBaselines = numberOfAntennas * (numberOfAntennas - 1) / 2 ;
-      
-      ProcessorType processorType = sdosr.processorType();
-      infostream.str("");
-      infostream << "ASDM Main row #" << iter->index << " contains data produced by a '" << CProcessorType::name(processorType) << "'." ;
-      info(infostream.str());
-
-      CorrelationMode correlationMode = sdosr.correlationMode();
-      
-      const SDMDataObject::DataStruct& dataStruct = sdosr.dataStruct();
       
       unsigned int numberOfSpectralWindows = 0;
       BOOST_FOREACH (const SDMDataObject::Baseband& bb , dataStruct.basebands()) {
@@ -4001,8 +4005,8 @@ void fillMain(int		rowNum,
   for (unsigned int iData = 0; iData < vmsData_p->v_m_data.size(); iData++) {
     if ((iter=vmsData_p->v_m_data.at(msRowReIndex_v[iData]).find(AtmPhaseCorrectionMod::AP_UNCORRECTED)) != vmsData_p->v_m_data.at(msRowReIndex_v[iData]).end()){
       uncorrectedData_v.push_back(cdf.to4Pol(vmsData_p->vv_dataShape.at(msRowReIndex_v[iData]).at(0),
-					   vmsData_p->vv_dataShape.at(msRowReIndex_v[iData]).at(1),
-					   iter->second));
+					     vmsData_p->vv_dataShape.at(msRowReIndex_v[iData]).at(1),
+					     iter->second));
     }
 	    
     // Have we asked to write an MS with corrected data + radiometric data ?
@@ -6985,19 +6989,19 @@ int main(int argc, char *argv[]) {
 
     MSMainRowsInSubscanChecker msMainRowsInSubscanChecker;
 
-    try {
-      unsigned int  nMain = v.size();
+    unsigned int  nMain = v.size();      
+    const VMSData *vmsDataPtr = 0;
+
+    // Initialize an UVW coordinates engine.
+    UvwCoords uvwCoords(ds);
       
-      const VMSData *vmsDataPtr = 0;
-      // Initialize an UVW coordinates engine.
-      UvwCoords uvwCoords(ds);
+    ostringstream oss;
+    EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
+    es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
       
-      ostringstream oss;
-      EnumSet<AtmPhaseCorrection> es_query_ap_uncorrected;
-      es_query_ap_uncorrected.fromString("AP_UNCORRECTED");
-      
-      // For each selected main row.      
-      for (unsigned int i = 0; i < nMain; i++) {
+    // For each selected main row.      
+    for (unsigned int i = 0; i < nMain; i++) {
+      try {
 	// What's the processor for this Main row ?
 	Tag cdId = v[i]->getConfigDescriptionId();
 	ConfigDescriptionTable& cT = ds->getConfigDescription();
@@ -7012,18 +7016,31 @@ int main(int argc, char *argv[]) {
 
 	string absBDFpath = complete(path(dsName)).string() + "/ASDMBinary/" + replace_all_copy(replace_all_copy(v[i]->getDataUID().getEntityId().toString(), ":", "_"), "/", "_");
 	infostream.str("");
-	infostream << "ASDM Main row #" << mainRowIndex[i] << " - BDF file '" << absBDFpath << "' - Size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
+	infostream << "ASDM Main row #" << mainRowIndex[i]
+		   << " (scan #" << v[i]->getScanNumber()
+		   <<", subscan #" <<  v[i]->getSubscanNumber()
+		   <<", " << v[i]->getConfigDescriptionId().toString() << ")"
+		   << " - BDF file '" << absBDFpath << "' - Size is " << v[i]->getDataSize() << " bytes for " << v[i]->getNumIntegration() << " integrations." << endl;
 	info(infostream.str());
 
         if(v[i]->getNumIntegration()==0 ||v[i]->getDataSize()==0) {
 	  infostream.str("");
-          infostream << "No valid data in this BDF. Skip this."<< endl;
+          infostream << "No valid data in this BDF. The main row # "<<  mainRowIndex[i] << " is ignored." ;
           info(infostream.str());
           continue;
         } 
 
 	// Populate the State table.
-	fillState(v[i]);
+	try {
+	  fillState(v[i]);
+	}
+	catch (ASDM2MSException e) {
+	  // The State table could not be filled, then let's forget this Main table row.
+	  infostream.str("");
+	  infostream << e.getMessage() << ". The main row # " <<  mainRowIndex[i] << " is ignored.";
+	  info(infostream.str());
+	  continue;	  
+	}
 
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
@@ -7096,56 +7113,57 @@ int main(int argc, char *argv[]) {
 	  }
 	}
       }
+      
+      catch ( ConversionException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( IllegalAccessException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( SDMDataObjectParserException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( SDMDataObjectStreamReaderException& e ) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch ( SDMDataObjectReaderException& e ) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch (ConversionException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      catch (ASDM2MSException& e) {
+	infostream.str("");
+	infostream << e.getMessage();
+	info(infostream.str());
+      }
+      /*
+	catch ( std::exception & e) {
+	infostream.str("");
+	infostream << e.what();
+	info(infostream.str());      
+	}
+      */
+      catch (Error & e) {
+	infostream.str("");
+	infostream << e.getErrorMessage();
+	info(infostream.str());
+      }
     }
-    catch ( ConversionException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( IllegalAccessException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( SDMDataObjectParserException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( SDMDataObjectStreamReaderException& e ) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch ( SDMDataObjectReaderException& e ) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch (ConversionException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    catch (ASDM2MSException& e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
-    }
-    /*
-    catch ( std::exception & e) {
-      errstream.str("");
-      errstream << e.what();
-      error(errstream.str());      
-    }
-    */
-    catch (Error & e) {
-      errstream.str("");
-      errstream << e.getErrorMessage();
-      error(errstream.str());
-    }
-
-
+  
+    
     // Did we have problem with BDF with data not falling in the time range of their scan/subscan pair ?
     const vector<string>& report = msMainRowsInSubscanChecker.report();
     for_each(report.begin(), report.end(), bind(warning, _1)); 
@@ -7153,17 +7171,17 @@ int main(int argc, char *argv[]) {
     infostream.str("");
     infostream << "The dataset has "  << stateT.size() << " state(s)..." ;
     info(infostream.str());
-
+    
     if (stateT.size()) {
       infostream.str("");
       infostream << "converted in " << msFiller->ms()->state().nrow() << " state(s) in the measurement set.";
       info(infostream.str());
     }
-
+    
     infostream.str("");
     infostream << "The dataset has " << mainT.size() << " main(s)...";
     info(infostream.str());
-
+    
     if (mainT.size()) {
       for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
 	   iter != msFillers.end();
@@ -7175,7 +7193,9 @@ int main(int argc, char *argv[]) {
       }
     }
   }
- 
+    
+    
+    
   // Do we also want to store the verbatim copies of some tables of the ASDM dataset ?
   if (vm.count("asis")) {
     try {
@@ -7191,23 +7211,23 @@ int main(int argc, char *argv[]) {
       }
     }
     catch (ConversionException e) {
-      errstream.str("");
-      errstream << e.getMessage();
-      error(errstream.str());
+      infostream.str("");
+      infostream << e.getMessage();
+      info(infostream.str());
     }
   }
-
+  
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
        iter != msFillers.end();
        ++iter)
     iter->second->end(0.0);
- 
-
+  
+  
   for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
        iter != msFillers.end();
        ++iter)
     delete iter->second;
-
+  
   delete ds;
   return 0;
 }
