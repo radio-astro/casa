@@ -38,6 +38,8 @@
 #include <lattices/Lattices/TiledCollapser.h>
 #include <lattices/Lattices/TiledCollapser.h>
 #include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/Lattices/LatticeStatsDataProvider.h>
+#include <lattices/Lattices/MaskedLatticeStatsDataProvider.h>
 #include <scimath/Mathematics/NumericTraits.h>
 #include <casa/System/PGPlotter.h>
 #include <casa/Utilities/DataType.h>
@@ -492,7 +494,7 @@ private:
    T minFull_p, maxFull_p;
    Bool doneFullMinMax_p;
 
-   vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
+   // vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
 
    AlgConf _algConf;
    std::map<String, uInt> _chauvIters;
@@ -608,6 +610,13 @@ private:
    void _latticePosToStoragePos(
 		 IPosition& storagePos, const IPosition& latticePos
    );
+
+   CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > _createStatsAlgorithm() const;
+
+   void _configureDataProviders(
+		   LatticeStatsDataProvider<T>& lattDP,
+		   MaskedLatticeStatsDataProvider<T>& maskedLattDP
+	) const;
 };
 
 // <summary> Generate statistics, tile by tile, from a masked lattice </summary>

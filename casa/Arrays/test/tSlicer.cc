@@ -32,7 +32,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/ArrayError.h>
 #include <casa/iostream.h>
-
+#include <casa/Utilities/Assert.h>
 #include <casa/namespace.h>
 // <summary> Test the Slicer class </summary>
 
@@ -40,13 +40,27 @@
 
 void a();
 
-int main()
-{
-    try {
-	a();
-    } catch (AipsError x) {
-	cout << "Caught an exception: " << x.getMesg() << endl;
-	return 1;
+int main() {
+	try {
+		a();
+		{
+			// setStart() and setEnd()
+			IPosition start = IPosition(2,3,5);
+			IPosition end = IPosition(2,4,11);
+			Slicer s(start, end, Slicer::endIsLast);
+			AlwaysAssert(s.start() == start, AipsError);
+			AlwaysAssert(s.end() == end, AipsError);
+			start = IPosition(2, 2, 1);
+			s.setStart(start);
+			AlwaysAssert(s.start() == start, AipsError);
+			end = IPosition(2, 5, 12);
+			s.setEnd(end);
+			AlwaysAssert(s.end() == end, AipsError);
+		}
+    }
+	catch (const AipsError& x) {
+		cout << "Caught an exception: " << x.getMesg() << endl;
+		return 1;
     } 
     return 0;                           // exit with success status
 }

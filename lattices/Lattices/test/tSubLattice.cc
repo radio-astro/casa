@@ -460,6 +460,28 @@ int main (int argc, const char* argv[])
     		AipsError
     	);
     }
+    {
+    	// setRegion
+    	ArrayLattice<Int> parent((IPosition(3, 20, 20, 20)));
+    	Slicer slice(
+    		IPosition(3, 1, 1, 1), IPosition(3, 16, 17, 18),
+    		Slicer::endIsLast
+    	);
+    	SubLattice<Int> sub(parent, slice);
+    	AlwaysAssert(sub.shape() == IPosition(3, 16, 17, 18), AipsError);
+    	slice = Slicer(
+    		IPosition(3, 1, 1, 1), IPosition(3, 5, 6, 7),
+    		Slicer::endIsLast
+        );
+    	sub.setRegion(slice);
+    	AlwaysAssert(sub.shape() == IPosition(3, 5, 6, 7), AipsError);
+    	slice.setEnd(IPosition(3, 7, 9, 11));
+    	sub.setRegion(slice);
+    	AlwaysAssert(sub.shape() == IPosition(3, 7, 9, 11), AipsError);
+    	slice.setStart(IPosition(3, 2, 2, 2));
+    	sub.setRegion(slice);
+    	AlwaysAssert(sub.shape() == IPosition(3, 6, 8, 10), AipsError);
+    }
   } catch (const AipsError& x) {
     cerr << "Caught exception: " << x.getMesg() << endl;
     cout << "FAIL" << endl;

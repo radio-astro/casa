@@ -394,6 +394,19 @@ public:
     // Are all values fixed (i.e., no MimicSource given)?
     Bool isFixed() const;
 
+    // set the start and end positions. No explicit checking is done that
+    // the input parameters make sense, so you must be certain if you
+    // call these. These are useful if you have a loop with many iterations
+    // and you do not wish the overhead of creating a new Slicer object
+    // for each iteration if the only thing you are doing is adjusting
+    // the start and end positions. Other than for performance reasons,
+    // these methods should not be called and you should prefer the
+    // error checking provided by constructing a new Slicer object.
+    inline void setStart(const IPosition& start) { start_p = start; }
+
+    inline void setEnd(const IPosition& end) { end_p = end; }
+
+
 private:
     LengthOrLast asEnd_p;
     IPosition    start_p;
