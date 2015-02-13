@@ -101,8 +101,8 @@ private:
 
 	// necessary to improve performance
 	void _doMedian(
-		SPCIIT image,
-		TempImage<T>& outImage
+		TempImage<T>& outImage,
+		const SubImage<T>& image
 	) const;
 
 	void _attachOutputMask(
