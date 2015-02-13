@@ -43,8 +43,10 @@ class semifinalBPdcalsSummaryChart(object):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = context.evla['msinfo'][m.name].field_ids
-        field_names = context.evla['msinfo'][m.name].field_names
+        #field_ids = context.evla['msinfo'][m.name].field_ids
+        field_ids = m.get_vla_field_ids()
+        #field_names = context.evla['msinfo'][m.name].field_names
+        field_names = m.get_vla_field_names()
         channels = context.evla['msinfo'][m.name].channels
         
         ms_active = m.name
@@ -116,8 +118,10 @@ class DelaysPerAntennaChart(object):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = context.evla['msinfo'][m.name].field_ids
-        field_names = context.evla['msinfo'][m.name].field_names
+        #field_ids = context.evla['msinfo'][m.name].field_ids
+        field_ids = m.get_vla_field_ids()
+        #field_names = context.evla['msinfo'][m.name].field_names
+        field_names = m.get_vla_field_names()
         channels = context.evla['msinfo'][m.name].channels
         
         ms_active = m.name
@@ -210,8 +214,10 @@ class semifinalphaseGainPerAntennaChart(object):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = context.evla['msinfo'][m.name].field_ids
-        field_names = context.evla['msinfo'][m.name].field_names
+        #field_ids = context.evla['msinfo'][m.name].field_ids
+        field_ids = m.get_vla_field_ids()
+        #field_names = context.evla['msinfo'][m.name].field_names
+        field_names = m.get_vla_field_names()
         channels = context.evla['msinfo'][m.name].channels
         
         ms_active = m.name
@@ -303,8 +309,10 @@ class semifinalbpSolAmpPerAntennaChart(object):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = context.evla['msinfo'][m.name].field_ids
-        field_names = context.evla['msinfo'][m.name].field_names
+        #field_ids = context.evla['msinfo'][m.name].field_ids
+        field_ids = m.get_vla_field_ids()
+        #field_names = context.evla['msinfo'][m.name].field_names
+        field_names = m.get_vla_field_names()
         channels = context.evla['msinfo'][m.name].channels
         
         ms_active = m.name
@@ -424,8 +432,10 @@ class semifinalbpSolPhasePerAntennaChart(object):
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         calibrator_scan_select_string = context.evla['msinfo'][m.name].calibrator_scan_select_string
         calibrator_field_select_string = context.evla['msinfo'][m.name].calibrator_field_select_string
-        field_ids = context.evla['msinfo'][m.name].field_ids
-        field_names = context.evla['msinfo'][m.name].field_names
+        #field_ids = context.evla['msinfo'][m.name].field_ids
+        field_ids = m.get_vla_field_ids()
+        #field_names = context.evla['msinfo'][m.name].field_names
+        field_names = m.get_vla_field_names()
         channels = context.evla['msinfo'][m.name].channels
         
         ms_active = m.name
