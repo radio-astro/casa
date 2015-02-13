@@ -301,13 +301,23 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
           case TpArrayShort :
           case TpArrayUShort :
           case TpArrayInt :
-          case TpArrayUInt :
                {
                Array<Int> tmpArray = theRec.asArrayInt(i);
                Vector<Int> tmpShape = (tmpArray.shape()).asVector();
                std::vector<Int> vecShape;
                tmpShape.tovector(vecShape);
                std::vector<Int> tmpVec;
+               tmpArray.tovector(tmpVec);
+               transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
+               }
+               break;
+          case TpArrayUInt :
+               {
+               Array<uInt> tmpArray = theRec.asArrayuInt(i);
+               Vector<Int> tmpShape = (tmpArray.shape()).asVector();
+               std::vector<Int> vecShape;
+               tmpShape.tovector(vecShape);
+               std::vector<uInt> tmpVec;
                tmpArray.tovector(tmpVec);
                transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
                }

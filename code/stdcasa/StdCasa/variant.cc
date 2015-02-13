@@ -361,6 +361,8 @@ std::vector<bool> variant::toBoolVec( ) const {
     break;									\
     }
 
+typedef unsigned int uInt;
+
 std::string variant::toString( bool no_brackets ) const {
     switch( typev ) {
 	case BOOL:
@@ -379,6 +381,8 @@ std::string variant::toString( bool no_brackets ) const {
 	    VECTOSTRING(bool,bool,bv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case INTVEC:
 	    VECTOSTRING(int,int,iv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
+        case UINTVEC:
+            VECTOSTRING(unsigned int,int,uiv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case LONGVEC:
 	    VECTOSTRING(long long,long ,lv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case DOUBLEVEC:
@@ -414,6 +418,8 @@ std::vector<std::string> variant::toStringVec( ) const {
 	    VECTOSTRINGVEC(bool,bool,bv,)
 	case INTVEC:
 	    VECTOSTRINGVEC(int,int,iv,)
+        case UINTVEC:
+            VECTOSTRINGVEC(unsigned int,int,uiv,)
 	case LONGVEC:
 	    VECTOSTRINGVEC(long long ,long,lv,)
 	case DOUBLEVEC:
@@ -951,6 +957,7 @@ std::vector<TYPE> &variant::NAME( int size ) {					\
 }
 
 ASNUMERICVEC(asIntVec,int,int,INTVEC,iv)
+ASNUMERICVEC(asuIntVec,unsigned int,int,UINTVEC,uiv)
 ASNUMERICVEC(asLongVec,long long,long,INTVEC,lv)
 ASNUMERICVEC(asDoubleVec,double,double,DOUBLEVEC,dv)
 
@@ -1312,6 +1319,8 @@ std::string &variant::asString( ) {
 		VECASSTRING(bool,bool,bv,,"[","]",",","[]")
 	    case INTVEC:
 		VECASSTRING(int,int,iv,,"[","]",",","[]")
+            case UINTVEC:
+                VECASSTRING(unsigned int,int,uiv,,"[","]",",","[]")
 	    case DOUBLEVEC:
 		VECASSTRING(double,double,dv,,"[","]",",","[]")
 	    case COMPLEXVEC:
@@ -1371,6 +1380,8 @@ std::vector<std::string> &variant::asStringVec( int size ) {
 		VECASSTRINGVEC(bool,bool,bv,,,)
 	    case INTVEC:
 		VECASSTRINGVEC(int,int,iv,,,)
+            case UINTVEC:
+                VECASSTRINGVEC(unsigned int,int,uiv,,,)
 	    case DOUBLEVEC:
 		VECASSTRINGVEC(double,double,dv,,,)
 	    case COMPLEXVEC:
@@ -1491,6 +1502,9 @@ void variant::as( TYPE t, int size ) {
         case INTVEC:
 	    asIntVec(size);
 	    break;
+        case UINTVEC:
+            asuIntVec(size);
+            break;
         case LONGVEC:
 	    asLongVec(size);
 	    break;
