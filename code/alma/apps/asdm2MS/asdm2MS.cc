@@ -2303,7 +2303,7 @@ void fillState(MainRow* r_p) {
     errstream.str("");
     errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r_p->getExecBlockId().toString()
 	      <<", scanNumber="<< r_p->getScanNumber()
-	      <<", subscanNum=" << r_p->getSubscanNumber() << "). Aborting. "
+	      <<", subscanNum=" << r_p->getSubscanNumber() << ")."
 	      << endl;
     throw ASDM2MSException(errstream.str());
   }	  
@@ -2535,7 +2535,16 @@ void fillMainLazily2(const string& dsName,
       /**
        * Take care of the MS State table prior to the Main.
        */
-      fillState(mR_p);
+      try {
+	fillState(mR_p);
+      }
+      catch  (ASDM2MSException e) {
+	// The State table could not be filled, then let's forget this Main table row.
+	infostream.str("");
+	infostream << e.getMessage() << ". The main row # " << iter->index << " is ignored.";
+	info(infostream.str());
+	continue;
+      }
       
       /**
        * And then work on the MS Main rows
@@ -6943,7 +6952,16 @@ int main(int argc, char *argv[]) {
         } 
 
 	// Populate the State table.
-	fillState(v[i]);
+	try {
+	  fillState(v[i]);
+	}
+	catch (ASDM2MSException e) {
+	  // The State table could not be filled, then let's forget this Main table row.
+	  infostream.str("");
+	  infostream << e.getMessage() << ". The main row # " <<  mainRowIndex[i] << " is ignored.";
+	  info(infostream.str());
+	  continue;	  
+	}
 
 	if (processorType == RADIOMETER) {
 	  if (!sdmBinData.acceptMainRow(v[i])) {
