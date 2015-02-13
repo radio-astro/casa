@@ -328,9 +328,7 @@ class MeasurementSet(object):
         return list(spws)
     
     def get_vla_field_ids(self):
-        '''
-        Find field ids
-        '''
+        ''' Find field ids '''
         
         vis = self.name
         
@@ -341,9 +339,7 @@ class MeasurementSet(object):
         return field_ids
         
     def get_vla_field_names(self):
-        '''
-        Find field names
-        '''
+        ''' Find field names  '''
         
         vis = self.name
         
@@ -353,9 +349,7 @@ class MeasurementSet(object):
         return field_names
         
     def get_vla_field_spws(self):
-        '''
-        Find field spws
-        '''
+        ''' Find field spws  '''
         
         vis = self.name
         
