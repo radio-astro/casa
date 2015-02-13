@@ -1071,6 +1071,21 @@ endif ( NOT GSL_FOUND )
 
 set( DL_LIBRARIES ${CMAKE_DL_LIBS} )
 
+# libsakura
+if( NOT DEFINED LIBSAKURA_ROOT_DIR )
+  ## default for NAOJ servers
+  #set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+  set( LIBSAKURA_ROOT_DIR ${casa_packages} )
+endif()
+casa_find( LIBSAKURA
+  VERSION 0.1
+  INCLUDES libsakura/sakura.h libsakura/config.h
+  LIBS sakura
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
+
 casa_config_end()
 
 # The modules must be defined in dependency order!
@@ -1108,6 +1123,8 @@ casa_add_module( alma CASACORE LIBXML2 LIBXSLT Boost synthesis msvis)
 casa_add_module( dish CASACORE Boost)
 casa_add_module( nrao CASACORE Boost)
 casa_add_module( miriad CASACORE Boost components)
+casa_add_module( casa_sakura CASACORE LIBSAKURA)
+casa_add_module( singledish CASACORE casa_sakura msvis mstransform)
 if( USE_ALMAWVR )
   casa_add_module( air_casawvr CASACORE ALMAWVR Boost synthesis WCSLIB CFITSIO LAPACK )
 else()
