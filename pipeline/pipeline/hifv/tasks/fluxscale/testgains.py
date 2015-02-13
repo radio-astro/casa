@@ -56,7 +56,8 @@ class Testgains(basetask.StandardTaskTemplate):
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
-        soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        #soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         print soltimes
         
         solints = ['int', str(soltimes[1])+'s', str(soltimes[2])+'s']
@@ -163,7 +164,8 @@ class Testgains(basetask.StandardTaskTemplate):
         m = context.observing_run.measurement_sets[0]
 
         calibrator_scan_select_string=context.evla['msinfo'][m.name].calibrator_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         #Do this to get the reference antenna string
         #temp_inputs = gaincal.GTypeGaincal.Inputs(context)

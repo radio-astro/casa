@@ -159,7 +159,8 @@ class Fluxgains(basetask.StandardTaskTemplate):
     def _do_gaincal(self, context, calMs, caltable, calmode, gaintablelist, solint='int', minsnr=3.0, refAnt=None):
         
         m = context.observing_run.measurement_sets[0]
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
         #Do this to get the reference antenna string
         #temp_inputs = gaincal.GTypeGaincal.Inputs(context)

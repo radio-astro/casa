@@ -561,15 +561,14 @@ class VLAUtils(basetask.StandardTaskTemplate):
         """
         
         casatools.table.open(self.inputs.vis+'/FIELD')
-        self.numFields = casatools.table.nrows()
-        self.field_positions = casatools.table.getcol('PHASE_DIR')
-        self.field_ids=range(self.numFields)
+        numFields = casatools.table.nrows()
+        self.field_ids=range(numFields)
         self.field_names=casatools.table.getcol('NAME')
         casatools.table.close()
         
         #Map field IDs to spws
         self.field_spws = []
-        for ii in range(self.numFields):
+        for ii in range(numFields):
             self.field_spws.append(self.spwsforfield(ii))
         
         return True
@@ -580,10 +579,16 @@ class VLAUtils(basetask.StandardTaskTemplate):
         # Identify scan numbers, map scans to field ID, and run scan summary
         # (needed for figuring out integration time later)
         
+        casatools.table.open(self.inputs.vis+'/FIELD')
+        numFields = casatools.table.nrows()
+        casatools.table.close()
+        
+        
         casatools.table.open(self.inputs.vis)
         self.scanNums = sorted(numpy.unique(casatools.table.getcol('SCAN_NUMBER')))
         self.field_scans = []
-        for ii in range(0,self.numFields):
+        
+        for ii in range(0,numFields):
             subtable = casatools.table.query('FIELD_ID==%s'%ii)
             self.field_scans.append(list(numpy.unique(subtable.getcol('SCAN_NUMBER'))))
         casatools.table.close()
@@ -1115,6 +1120,10 @@ class VLAUtils(basetask.StandardTaskTemplate):
         """
         
         self.positions = []
+        
+        casatools.table.open(self.inputs.vis+'/FIELD')
+        self.field_positions = casatools.table.getcol('PHASE_DIR')
+        casatools.table.close()
 
         for ii in range(0,len(self.field_positions[0][0])):
             self.positions.append([self.field_positions[0][0][ii], self.field_positions[1][0][ii]])

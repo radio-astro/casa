@@ -617,7 +617,8 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
             
             m = context.observing_run.measurement_sets[0]
             quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
-            int_time = context.evla['msinfo'][m.name].int_time
+            #int_time = context.evla['msinfo'][m.name].int_time
+            int_time = m.get_vla_max_integration_time()
             
             quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + \
                 ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False reason=quack name=quack'

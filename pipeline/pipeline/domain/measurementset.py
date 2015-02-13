@@ -310,8 +310,64 @@ class MeasurementSet(object):
         
         return int_time
        
+    def vla_spws_for_field(self,field):
+    
+        vis = self.name
+    
+        # get observed DDIDs for specified field from MAIN
+        with casatools.TableReader(vis) as table:
+            st = table.query('FIELD_ID=='+str(field))
+            ddids=pylab.unique(st.getcol('DATA_DESC_ID'))
+            st.close()
+    
+        # get SPW_IDs corresponding to those DDIDs
+        with casatools.TableReader(vis+'/DATA_DESCRIPTION') as table:
+            spws=table.getcol('SPECTRAL_WINDOW_ID')[ddids]
+        
+        # return as a list
+        return list(spws)
+    
+    def get_vla_field_ids(self):
+        '''
+        Find field ids
+        '''
+        
+        vis = self.name
+        
+        with casatools.TableReader(vis+'/FIELD') as table:
+            numFields = table.nrows()
+            field_ids = range(numFields)
+        
+        return field_ids
+        
+    def get_vla_field_names(self):
+        '''
+        Find field names
+        '''
+        
+        vis = self.name
+        
+        with casatools.TableReader(vis+'/FIELD') as table:
+            field_names = table.getcol('NAME')
+        
+        return field_names
+        
+    def get_vla_field_spws(self):
+        '''
+        Find field spws
+        '''
+        
+        vis = self.name
+        
+        with casatools.TableReader(vis+'/FIELD') as table:
+            numFields = table.nrows()
+            
+        #Map field IDs to spws
+        field_spws = []
+        for ii in range(numFields):
+            field_spws.append(self.vla_spws_for_field(ii))
        
-       
+        return field_spws
     
     def get_median_integration_time(self, intent=None):
         """Get the median integration time used to get data for the given

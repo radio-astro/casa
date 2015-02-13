@@ -45,7 +45,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
         m = self.inputs.context.observing_run.measurement_sets[0]
-        soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        #soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        soltimes = [m.get_vla_max_integration_time() * x for x in soltimes]
         solints = ['int', '3.0s', '10.0s']
         soltime = soltimes[0]
         solint = solints[0]
@@ -162,7 +163,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
         tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
         #need to add scan?
         #ref antenna string needs to be lower case for gaincal
@@ -194,7 +196,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
         tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         #Add appropriate temporary tables to the callibrary
         calto = callibrary.CalTo(self.inputs.vis)
@@ -252,7 +255,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         tst_bpass_spw = context.evla['msinfo'][m.name].tst_bpass_spw
         delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
         
         
         #Add appropriate temporary tables to the callibrary
@@ -290,7 +294,8 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         m = context.observing_run.measurement_sets[0]
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        #minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        minBL_for_cal = max(3,int(len(m.antennas)/2.0))
 
         #bandtype = 'B'
         bandpass_inputs = bandpass.ChannelBandpass.Inputs(context,

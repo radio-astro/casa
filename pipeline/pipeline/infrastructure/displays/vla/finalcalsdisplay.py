@@ -35,7 +35,8 @@ class finalcalsSummaryChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        #numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         
         ms_active = m.name
 
@@ -109,7 +110,8 @@ class finalDelaysPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        #numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -227,7 +229,7 @@ class finalphaseGainPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -321,7 +323,7 @@ class finalbpSolAmpPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -467,7 +469,7 @@ class finalbpSolPhasePerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -608,7 +610,7 @@ class finalbpSolPhaseShortPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -727,7 +729,7 @@ class finalAmpTimeCalPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -825,7 +827,7 @@ class finalAmpFreqCalPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
@@ -947,7 +949,7 @@ class finalPhaseGainCalPerAntennaChart(object):
         result = self.result
         m = context.observing_run.measurement_sets[0]
         
-        numAntenna = context.evla['msinfo'][m.name].numAntenna
+        numAntenna = len(m.antennas)
         bandpass_field_select_string = context.evla['msinfo'][m.name].bandpass_field_select_string
         bandpass_scan_select_string = context.evla['msinfo'][m.name].bandpass_scan_select_string
         corrstring = context.evla['msinfo'][m.name].corrstring
