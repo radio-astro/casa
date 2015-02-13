@@ -90,6 +90,8 @@ at = casac.atmosphere()
 ca = casac.calanalysis()
 mttool = casac.mstransformer
 mt = mttool()
+sdmstool = casac.singledishms
+sdms = sdmstool()
 
 from simple_cluster import simple_cluster
 clustermanager = simple_cluster()
@@ -130,16 +132,18 @@ def gentools(tools=None):
 		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
 		 'cl': 'cltool()', 'cs' :'cstool()', 'rg':'rgtool()',
 		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()',
-         'msmd':'msmdtool()','fi':'fitool()','fn':'fntool()', 'imd': 'imdtool()'}
+		 'msmd':'msmdtool()','fi':'fitool()','fn':'fntool()', 
+		 'imd':'imdtool()','sdms':'sdmstool()'}
 	reqtools=[]
         if (not tools) or not hasattr(tools, '__iter__'):
 		reqtools=['im', 'cb', 'ms','tb', 'me', 'ia', 'po',
-                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 'msmd', 'fi', 'fn', 'imd']
+                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp', 
+			  'msmd', 'fi', 'fn', 'imd', 'sdms']
 	else:
 		reqtools=tools
 	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
 
-im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
+im,cb,ms,tb,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd,sdms=gentools()
 
 def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=False):
         """

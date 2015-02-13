@@ -1405,6 +1405,13 @@ casa['state']['startup'] = False
 if (thelogfile == 'null' or thelogfile != 'casapy.log') and os.path.exists('casapy.log'):
     os.remove('casapy.log')
 
+# initialize/finalize Sakura library
+if hasattr(casac,'sakura'):
+    casalog.post('Managing Sakura lifecycle')
+    casac.sakura().initialize_sakura()
+    import atexit
+    atexit.register(lambda: __import__('casac').casac.sakura().cleanup_sakura())
+    
 import shutil
 
 ###

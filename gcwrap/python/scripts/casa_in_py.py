@@ -248,6 +248,7 @@ try:
     #import asap as sd
     from sdbaseline_pg import sdbaseline_pg as sdbaseline
     from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
+    from tsdbaseline_pg import tsdbaseline_pg as tsdbaseline
     from sdcal_pg import sdcal_pg as sdcal
     from sdcoadd_pg import sdcoadd_pg as sdcoadd
     from sdflag_pg import sdflag_pg as sdflag
@@ -275,6 +276,7 @@ except ImportError, e:
     sdfit = None
     sdbaseline = None
     sdbaseline2 = None
+    tsdbaseline = None
     sdstat = None
     sdsave = None
     sdflag = None
@@ -442,6 +444,7 @@ def go(taskname=None):
 #    from sdsmooth_pg import sdsmooth_pg as sdsmooth
 #    from sdbaseline_pg import sdbaseline_pg as sdbaseline
 #    from sdbaseline2_pg import sdbaseline2_pg as sdbaseline2
+#    from tsdbaseline_pg import tsdbaseline_pg as tsdbaseline
 #    from sdreduce_pg import sdreduce_pg as sdreduce
 #    from sdcoadd_pg import sdcoadd_pg as sdcoadd
 #    from sdsave_pg import sdsave_pg as sdsave
@@ -458,6 +461,7 @@ def go(taskname=None):
 #    myf['sdsmooth']=sdsmooth
 #    myf['sdbaseline']=sdbaseline
 #    myf['sdbaseline2']=sdbaseline2
+#    myf['tsdbaseline']=tsdbaseline
 #    myf['sdreduce']=sdreduce
 #    myf['sdcoadd']=sdcoadd
 #    myf['sdsave']=sdsave

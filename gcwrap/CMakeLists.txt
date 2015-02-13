@@ -621,6 +621,21 @@ if( DL_LIBRARIES STREQUAL "dl" )
   set( DL_LIBRARIES "-ldl" CACHE STRING "dl libraries" FORCE )
 endif()
 
+# libsakura
+if( NOT DEFINED LIBSAKURA_ROOT_DIR )
+  ## default for NAOJ servers
+  #set( LIBSAKURA_ROOT_DIR "$ENV{HOME}/workspace/libsakura/build/installed" )
+  set( LIBSAKURA_ROOT_DIR ${casa_packages} )
+endif()
+casa_find( LIBSAKURA
+  VERSION 0.1
+  INCLUDES libsakura/sakura.h libsakura/config.h
+  LIBS sakura
+  PREFIX_HINTS ${LIBSAKURA_ROOT_DIR} ${LIBSAKURA_ROOT_DIR}/lib/libsakura/default
+  CPP_VERSION "LIBSAKURA_VERSION_MAJOR << '.' << LIBSAKURA_VERSION_MINOR"
+  NO_LINK    # The library may depend on newer gcc. Skip generating executable.
+)
+
 # CASACore
 # - Some header files exported by CASACore include WCSLIB headers
 # - CASACore header files declare symbols which are defined in LAPACK and BLAS
@@ -716,11 +731,13 @@ else()
        mstransform
        nrao
        plotms
+       singledish
        spectrallines
        stdcasa
        synthesis
        asdmstman
        msvis
+       casa_sakura
        )
 endif()
 
@@ -735,7 +752,8 @@ casa_find( CASACODE
            INCLUDES_SUFFIXES casacode
            LIBS ${casacode_libs}
            PREFIX_HINTS ${casacode_prefix}
-	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL )
+	   DEPENDS CASACORE LAPACK CFITSIO WCSLIB FFTW3 DL LIBSAKURA
+	   NO_LINK )
 
 
 # ALMAWVR
@@ -1140,7 +1158,7 @@ endif()
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
 
-casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS ATM READLINE DL XERCES CASACODE )
+casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS ATM READLINE DL XERCES LIBSAKURA CASACODE )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

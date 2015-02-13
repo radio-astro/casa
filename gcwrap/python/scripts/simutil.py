@@ -15,7 +15,7 @@ import pylab as pl
 #qa = qatool.create()
 
 
-im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
+im, cb, ms, tb, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd, sdms = gentools()
 # 4.2.2:
 #im, cb, ms, tb, fl, me, ia, po, sm, cl, cs, rg, sl, dc, vp, msmd, fi, fn, imd = gentools()
 

@@ -166,6 +166,7 @@ try:
     from sdsmooth import sdsmooth
     from sdbaseline import sdbaseline
     from sdbaseline2 import sdbaseline2
+    from tsdbaseline import tsdbaseline
     from sdreduce import sdreduce
     from sdcoadd import sdcoadd
     from sdsave import sdsave
@@ -189,6 +190,7 @@ except ImportError:
     sdfit = None
     sdbaseline = None
     sdbaseline2 = None
+    tsdbaseline = None
     sdstat = None
     sdsave = None
     sdflag = None
