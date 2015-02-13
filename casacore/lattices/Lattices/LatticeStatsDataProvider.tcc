@@ -28,11 +28,19 @@
 namespace casa {
 
 template <class T>
+LatticeStatsDataProvider<T>::LatticeStatsDataProvider()
+	: LatticeStatsDataProviderBase<T>(),
+	_iter(), _currentSlice(),
+	_currentPtr(0), _delData(False), _atEnd(False) {}
+
+template <class T>
 LatticeStatsDataProvider<T>::LatticeStatsDataProvider(
-	Lattice<T>& lattice
+	const Lattice<T>& lattice, uInt iteratorLimitBytes
 ) : LatticeStatsDataProviderBase<T>(),
-	_iter(RO_LatticeIterator<T>(lattice)), _currentSlice(),
-	_currentPtr(0), _delData(False) {}
+	_iter(), _currentSlice(),
+	_currentPtr(0), _delData(False), _atEnd(False) {
+	setLattice(lattice, iteratorLimitBytes);
+}
 
 template <class T>
 LatticeStatsDataProvider<T>::~LatticeStatsDataProvider() {}
@@ -40,14 +48,22 @@ LatticeStatsDataProvider<T>::~LatticeStatsDataProvider() {}
 template <class T>
 void LatticeStatsDataProvider<T>::operator++() {
 	_freeStorage();
-	++_iter;
-	this->_updateProgress();
+	if (_iter.null()) {
+		_atEnd = True;
+	}
+	else {
+		++(*_iter);
+		this->_updateProgress();
+	}
 }
 
 template <class T>
 uInt LatticeStatsDataProvider<T>::estimatedSteps() const {
-	IPosition lattShape = _iter.latticeShape();
-	IPosition cursShape = _iter.cursor().shape();
+	if (_iter.null()) {
+		return 1;
+	}
+	IPosition lattShape = _iter->latticeShape();
+	IPosition cursShape = _iter->cursor().shape();
 	uInt ndim = lattShape.size();
 	uInt count = 1;
 	for (uInt i=0; i<ndim; i++) {
@@ -62,7 +78,10 @@ uInt LatticeStatsDataProvider<T>::estimatedSteps() const {
 
 template <class T>
 Bool LatticeStatsDataProvider<T>::atEnd() const {
-	return _iter.atEnd();
+	if (_iter.null()) {
+		return _atEnd;
+	}
+	return _iter->atEnd();
 }
 
 template <class T>
@@ -73,12 +92,17 @@ void LatticeStatsDataProvider<T>::finalize() {
 
 template <class T>
 uInt64 LatticeStatsDataProvider<T>::getCount() {
-	return _iter.cursor().size();
+	if (_iter.null()) {
+		return _currentSlice.size();
+	}
+	return _iter->cursor().size();
 }
 
 template <class T>
 const T* LatticeStatsDataProvider<T>::getData() {
-	_currentSlice.assign(_iter.cursor());
+	if (! _iter.null()) {
+		_currentSlice.assign(_iter->cursor());
+	}
 	_currentPtr = _currentSlice.getStorage(_delData);
 	return _currentPtr;
 }
@@ -96,25 +120,47 @@ Bool LatticeStatsDataProvider<T>::hasMask() const {
 template <class T>
 void LatticeStatsDataProvider<T>::reset() {
 	LatticeStatsDataProviderBase<T>::reset();
-	_iter.reset();
+	if (! _iter.null()) {
+		_iter->reset();
+	}
+}
+
+template <class T>
+void LatticeStatsDataProvider<T>::setLattice(
+	const Lattice<T>& lattice, uInt iteratorLimitBytes
+) {
+	finalize();
+	if (lattice.size() > iteratorLimitBytes/sizeof(T)) {
+		_iter = new RO_LatticeIterator<T>(lattice);
+	}
+	else {
+		_iter = NULL;
+		_currentSlice.assign(lattice.get());
+		_atEnd = False;
+	}
+	reset();
 }
 
 template <class T>
 void LatticeStatsDataProvider<T>::updateMaxPos(
 	const std::pair<Int64, Int64>& maxpos
 ) {
-	this->_updateMaxPos(
-		_iter.position() + toIPositionInArray(maxpos.second, _currentSlice.shape())
-	);
+	IPosition p = toIPositionInArray(maxpos.second, _currentSlice.shape());
+	if (! _iter.null()) {
+		p += _iter->position();
+	}
+	this->_updateMaxPos(p);
 }
 
 template <class T>
 void LatticeStatsDataProvider<T>::updateMinPos(
 	const std::pair<Int64, Int64>& minpos
 ) {
-	this->_updateMinPos(
-		_iter.position() + toIPositionInArray(minpos.second, _currentSlice.shape())
-	);
+	IPosition p = toIPositionInArray(minpos.second, _currentSlice.shape());
+	if (! _iter.null()) {
+		p += _iter->position();
+	}
+	this->_updateMinPos(p);
 }
 
 template <class T>
