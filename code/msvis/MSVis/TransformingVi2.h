@@ -547,6 +547,14 @@ protected:
 
     TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi);
 
+    void configureNewSubchunk ();
+    void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
+                               Bool isNewArrayId, Bool isNewFieldId,
+                               Bool isNewSpectralWindow, const Subchunk & subchunk,
+                               Int nRows, Int nChannels, Int nCorrelations,
+                               const Vector<Int> & correlations,
+                               CountedPtr<WeightScaling> weightScaling);
+
     VisibilityIterator2 * getVi () const;
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);

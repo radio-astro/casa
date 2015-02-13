@@ -100,6 +100,56 @@ TransformingVi2::azel0 (Double time)  const
 }
 
 void
+TransformingVi2::configureNewSubchunk (){
+
+
+    // Configure the VisBuffer for the new subchunk.  Most information comes from
+    // the Transforming VI2 superclass which in turn gets it from its VI implementation
+    // object.  The main addition is the need to provide the name of the MS output and
+    // the MS index which is always zero since we only support a single output MS.
+
+    Vector<Int> channels = getChannels (0, 0); // args are ignored
+    Int nChannels = channels.nelements();
+
+    configureNewSubchunk (msId(), // always the first MS
+                          ms().tableName(),
+                          isNewMs(),
+                          isNewArrayId (),
+                          isNewFieldId (),
+                          isNewSpectralWindow (),
+                          getSubchunkId (),
+                          nRows(),
+                          nChannels,
+                          nPolarizationIds(),
+                          getCorrelations(),
+                          getWeightScaling());
+}
+
+void
+TransformingVi2::configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
+                                       Bool isNewArrayId, Bool isNewFieldId,
+                                       Bool isNewSpectralWindow, const Subchunk & subchunk,
+                                       Int nRows, Int nChannels, Int nCorrelations,
+                                       const Vector<Int> & correlations,
+                                       CountedPtr<WeightScaling> weightScaling)
+{
+    getVisBuffer()->configureNewSubchunk (msId, // always the first MS
+                                          msName,
+                                          isNewMs,
+                                          isNewArrayId,
+                                          isNewFieldId,
+                                          isNewSpectralWindow,
+                                          subchunk,
+                                          nRows,
+                                          nChannels,
+                                          nCorrelations,
+                                          correlations,
+                                          weightScaling);
+}
+
+
+
+void
 TransformingVi2::corrType (Vector<Int> & corrTypes)  const
 {
      getVii()->corrType (corrTypes);

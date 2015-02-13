@@ -138,6 +138,7 @@ class VisBuffer2 : private boost::noncopyable {
 
     friend class VisibilityIteratorImpl2;
     friend class FinalTvi2;
+    friend class TransformingVi2;
 
 public:
 
@@ -565,6 +566,14 @@ protected:
 
 private:
 
+};
+
+class VisBufferUtil2 {
+
+public:
+
+  static void phaseCenterShift(VisBuffer2 & vb, const Vector<Double>& phase);
+  static void phaseCenterShift(VisBuffer2 & vb, Double dx, Double dy);
 };
 
 

@@ -28,30 +28,30 @@ FinalTvi2::~FinalTvi2 ()
 {
 }
 
-void
-FinalTvi2::configureNewSubchunk ()
-{
-    // Configure the VisBuffer for the new subchunk.  Most information comes from
-    // the Transforming VI2 superclass which in turn gets it from its VI implementation
-    // object.  The main addition is the need to provide the name of the MS output and
-    // the MS index which is always zero since we only support a single output MS.
-
-    Vector<Int> channels = getChannels (0, 0); // args are ignored
-    Int nChannels = channels.nelements();
-
-    getVisBuffer()->configureNewSubchunk (0, // always the first MS
-                                          ms_p.tableName(),
-                                          False,
-                                          isNewArrayId (),
-                                          isNewFieldId (),
-                                          isNewSpectralWindow (),
-                                          getSubchunkId (),
-                                          nRows(),
-                                          nChannels,
-                                          getVii()->nPolarizationIds(),
-                                          getVii()->getCorrelations(),
-                                          getVii()->getWeightScaling());
-}
+//void
+//FinalTvi2::configureNewSubchunk ()
+//{
+//    // Configure the VisBuffer for the new subchunk.  Most information comes from
+//    // the Transforming VI2 superclass which in turn gets it from its VI implementation
+//    // object.  The main addition is the need to provide the name of the MS output and
+//    // the MS index which is always zero since we only support a single output MS.
+//
+//    Vector<Int> channels = getChannels (0, 0); // args are ignored
+//    Int nChannels = channels.nelements();
+//
+//    getVisBuffer()->configureNewSubchunk (0, // always the first MS
+//                                          ms_p.tableName(),
+//                                          False,
+//                                          isNewArrayId (),
+//                                          isNewFieldId (),
+//                                          isNewSpectralWindow (),
+//                                          getSubchunkId (),
+//                                          nRows(),
+//                                          nChannels,
+//                                          getVii()->nPolarizationIds(),
+//                                          getVii()->getCorrelations(),
+//                                          getVii()->getWeightScaling());
+//}
 
 
 void

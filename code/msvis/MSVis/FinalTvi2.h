@@ -169,7 +169,7 @@ public:
 
 protected:
 
-    void configureNewSubchunk ();
+    //void configureNewSubchunk ();
 
     // These are the methods that actually write the data in the VB2 out to the new
     // MS when called by writeBackChanges.  The VB's data are handled as four categories:
