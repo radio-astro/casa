@@ -792,7 +792,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     casalog.post('Putting mask in T/F','INFO')
 		    ia.open(sum_tmp_outfile)
 		    ia.calcmask(mask='%s==1.0' % sum_tmp_outfile,name=outbmask,asdefault=True)
-                    print "outbmask=",outbmask
                     # mask only pixel == 0.0 (for a new outfile), mask region !=1.0 and preserve
                     # the pixel values if outfile exists
                     #if os.path.isdir(outparentim):
