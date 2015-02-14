@@ -51,6 +51,7 @@ class test_copy(makemaskTestBase):
     inimage='ngc5921.cube1.mask'
     inimage2='ngc5921.cube2.mask'
     inimage3='ngc5921.cube1.bmask'
+    inimage4='ngc5921.cube1.image' # actual cube image
 
     outimage1='ngc5921.cube1.copy.mask'
     outimage2='ngc5921.cube1.copyinmage.mask'
@@ -60,7 +61,7 @@ class test_copy(makemaskTestBase):
         #for img in [self.inimage,self.outimage1,self.outimage2, self.outimage3]:
         #    if os.path.isdir(img):
         #        shutil.rmtree(img)
-        for img in [self.inimage,self.inimage2,self.inimage3]:
+        for img in [self.inimage,self.inimage2,self.inimage3, self.inimage4]:
             if not os.path.isdir(img):
                 shutil.copytree(datapath+img,img)
 
@@ -170,7 +171,7 @@ class test_copy(makemaskTestBase):
         """ (copy mode) testcopy7: copying an internal mask to a new internal mask in a new image """ 
         #shutil.copytree(self.inimage,self.outimage1)
         try:
-            makemask(mode='copy',inpimage=self.inimage,inpmask=self.inimage3+":maskoo", output=self.outimage1+":newmask")
+            makemask(mode='copy',inpimage=self.inimage4,inpmask=self.inimage3+":maskoo", output=self.outimage1+":newmask")
         except Exception, e:
             print "\nError running makemask"
             raise e
@@ -191,7 +192,8 @@ class test_merge(makemaskTestBase):
 
     #data in repository
     inimage='ngc5921.cube1.mask'
-    inimage2='ngc5921.cube1.bmask'
+    #inimage2='ngc5921.cube1.bmask'
+    inimage2='ngc5921.cube1.bmask3'
     inimage3='ngc5921.cube2.mask'
     infile1='ellipse_rg.txt'
 
@@ -223,9 +225,12 @@ class test_merge(makemaskTestBase):
 
     def test1_mergemasks(self):
         """ (copy mode) mergetest1: merging image mask (1/0 mask) and T/F mask and  overwrite to an existing image(1/0) mask"""
+
+        #Only overwrapped regions is valid
         try:
             shutil.copytree(self.inimage,self.outimage1)
-            makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage,self.inimage2+':maskoo'], output=self.outimage1, overwrite=True)
+        #    makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage,self.inimage2+':maskoo'], output=self.outimage1, overwrite=True)
+            makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage,self.inimage2+':maskformergetest'], output=self.outimage1, overwrite=True)
         except Exception, e:
             print "\nError running makemask"
             raise e
@@ -238,7 +243,8 @@ class test_merge(makemaskTestBase):
         """ (copy mode) mergetest2 :merging two image mask (1/0 mask) with different chan width and a  T/F mask to create(overwrite) an image(1/0) mask"""
         try:
             #shutil.copytree(self.inimage,self.outimage1)
-            makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage, self.inimage3, self.inimage2+':maskoo'], output=self.outimage1)
+            #makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage, self.inimage3, self.inimage2+':maskoo'], output=self.outimage1)
+            makemask(mode='copy',inpimage=self.inimage,inpmask=[self.inimage, self.inimage3, self.inimage2+':maskformergetest'], output=self.outimage1)
         except Exception, e:
             print "\nError running makemask"
             raise e
@@ -256,7 +262,8 @@ class test_merge(makemaskTestBase):
             if not os.path.exists(self.infile1):
                 shutil.copy(datapath+self.infile1, self.infile1)
             makemask(mode='copy',inpimage=self.inimage,\
-                    inpmask=[self.inimage3, self.inimage2+':maskoo','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
+            #        inpmask=[self.inimage3, self.inimage2+':maskoo','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
+                    inpmask=[self.inimage3, self.inimage2+':maskformergetest','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
                     output=self.outimage1, overwrite=True)
         except Exception, e:
             print "\nError running makemask"
@@ -269,12 +276,15 @@ class test_merge(makemaskTestBase):
 
     def test4_mergemasks(self):
         """ (copy mode) mergetest4: merging multiple masks (image mask, boolean mask, regions) to a new internal mask"""
+        # T/F mask converted to 1/0 image would be the same as the test3 output
+        # but the output image itself different as the input image is copied to output and T/F mask is applied on it.
         try:
             #shutil.copytree(self.inimage,self.outimage1)
             if not os.path.exists(self.infile1):
                 shutil.copy(datapath+self.infile1, self.infile1)
             makemask(mode='copy',inpimage=self.inimage,\
-                    inpmask=[self.inimage3, self.inimage2+':maskoo','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
+                    #inpmask=[self.inimage3, self.inimage2+':maskoo','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
+                    inpmask=[self.inimage3, self.inimage2+':maskformergetest','ellipse_rg.txt','box[[130pix,135pix],[160pix,165pix]]'],\
                     output=self.outimage1+":newmask")
         except Exception, e:
             print "\nError running makemask"
