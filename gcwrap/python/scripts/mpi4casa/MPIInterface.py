@@ -70,6 +70,7 @@ class MPIInterfaceCore:
         
         def start_cluster(self, cl_file=None):
             
+            self.__command_client.set_log_mode(MPIInterface._log_mode)
             self.__command_client.start_services()
             
             
@@ -248,6 +249,9 @@ class MPIInterface:
     
     # Storage for the MPIInterface singleton instance reference
     __instance = None
+    
+    # Log mode is static so that it can be accessed by getCluster
+    _log_mode = 'unified'
 
 
     def __init__(self):
@@ -285,6 +289,11 @@ class MPIInterface:
         return setattr(self.__instance, attr, value)    
       
       
+    @staticmethod
+    def set_log_mode(logmode):
+        
+        MPIInterface._log_mode = logmode     
+                  
     @staticmethod
     def getCluster():
             

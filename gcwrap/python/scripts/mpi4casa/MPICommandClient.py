@@ -103,6 +103,9 @@ class MPICommandClient:
             if start_services:
                 self.start_services()
                 
+            # Log mode
+            self.__log_mode = 'unified'
+                
             # Register exit handler
             # NOTE: It is not guaranteed that __del__() methods are called 
             #       for objects that still exist when the interpreter exits.
@@ -376,6 +379,7 @@ class MPICommandClient:
             request = {}
             request['signal'] = 'start'
             request['casa'] = casa # The request contains the global casa dictionary to be used by the servers
+            request['logmode'] = self.__log_mode
             
             # Send request to all servers
             self.__communicator.control_service_request_broadcast(request,casalog)
@@ -757,6 +761,9 @@ class MPICommandClient:
         
         def get_command_response_list(self):
             return self.__command_response_list        
+        
+        def set_log_mode(self,logmode):
+            self.__log_mode = logmode
             
             
    

@@ -72,14 +72,15 @@ def sortFile(input_file,output_file,sort_order=None):
     
 
 class test_MPICommandClient(unittest.TestCase):
-    
-    client = MPICommandClient()
-    server_list = MPIEnvironment.mpi_server_rank_list()
-    client.start_services()
-    
-            
-    def test_exec_undefined_target_blocking_mode_str_params_successful(self):
+       
+    def setUp(self):
         
+        self.client = MPICommandClient()
+        self.client.set_log_mode('unified')
+        self.server_list = MPIEnvironment.mpi_server_rank_list()
+        self.client.start_services()
+                    
+    def test_exec_undefined_target_blocking_mode_str_params_successful(self):
         
         command_response_list = self.client.push_command_request("import time; time.sleep(3)",True,None)
         self.assertEqual(len(command_response_list), 1, "Command response list should contain one element")
@@ -761,8 +762,12 @@ class test_MPICommandClient(unittest.TestCase):
             
 class test_MPICommandServer(unittest.TestCase):            
             
-    client = MPICommandClient()
-    client.start_services()
+    def setUp(self):
+        
+        self.client = MPICommandClient()
+        self.client.set_log_mode('unified')
+        self.server_list = MPIEnvironment.mpi_server_rank_list()
+        self.client.start_services()
         
     @unittest.skip('Skip until CAS-7322 is fixed')
     def test_server_not_responsive(self):
@@ -857,9 +862,12 @@ class test_MPICommandServer(unittest.TestCase):
         
         
 class test_MPIInterface(unittest.TestCase):            
-            
-    sc = None
-    CL = None
+    
+    def setUp(self):
+        
+        MPIInterface.set_log_mode('redirect')
+        self.sc = MPIInterface.getCluster()
+        self.CL = self.sc._cluster
         
     def test_PyParallelImagerHelper_interface(self):
         
@@ -868,7 +876,7 @@ class test_MPIInterface(unittest.TestCase):
         self.CL = self.sc._cluster
         self.assertEqual(self.sc.isClusterRunning(),True,"Error instantiating cluster")
 
-        # Ger engines
+        # Get engines
         engines = self.CL.get_engines()
         self.assertEqual(engines,range(1,MPIEnvironment.mpi_world_size),"Error getting list of engines")
         

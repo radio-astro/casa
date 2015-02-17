@@ -43,6 +43,9 @@ class MPIEnvironment:
         mpi_world_size = __mpi_factory.COMM_WORLD.Get_size()
         mpi_processor_rank = __mpi_factory.COMM_WORLD.Get_rank()
         
+        # Get pid
+        mpi_pid = os.getpid()
+        
         # Get version and vendor info
         mpi_version_info = __mpi_factory.Get_version()
         mpi_vendor_info = __mpi_factory.get_vendor()

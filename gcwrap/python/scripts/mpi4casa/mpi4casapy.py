@@ -39,13 +39,24 @@ def run():
         # Get CASA environment dictionary
         global casa
         casa = request['casa']
+        
+        # Re-set log file
+        if request['logmode'] == 'separated' or request['logmode'] == 'redirect':
+            casa['files']['logfile'] = '%s-server-%s-host-%s-pid-%s' % (casa['files']['logfile'],
+                                                                       str(MPIEnvironment.mpi_processor_rank),
+                                                                       str(MPIEnvironment.hostname),
+                                                                       str(MPIEnvironment.mpi_pid))
     
-        # Import logger
+        # Import logger, logfile is set at taskinit retrieving from the casa dict. from the stack
         from taskinit import casalog
         
         # Set log origin so that the processor origin is updated
         casalog_call_origin = "mpi4casapy"
         casalog.origin(casalog_call_origin)
+        
+        # If log mode is separated activate showconsole to have all logs sorted by time at the terminal
+        if request['logmode'] == 'redirect':
+            casalog.showconsole(True)
         
         # Post MPI welcome msg
         casalog.post(MPIEnvironment.mpi_info_msg,"INFO",casalog_call_origin)
