@@ -320,7 +320,7 @@ public:
 	MSTransformManager();
 	MSTransformManager(Record configuration);
 
-	~MSTransformManager();
+	virtual ~MSTransformManager();
 
 	void initialize();
 	void configure(Record &configuration);
