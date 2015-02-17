@@ -60,12 +60,18 @@ ${pcontext.project_summary.proposal_code} -
 <nav class="navbar navbar-default navbar-fixed-top hidden-print">
     <div class="container-fluid">
 	    <div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
 	    	<a class="navbar-brand" href="#">
 	    		<img alt="${pcontext.project_summary.telescope}" 
 	    		     src="${self.attr.rsc_path}resources/img/${pcontext.project_summary.telescope.lower()}logo.gif"/>
 	    	</a>
 	    </div>
-        <div class="navbar-collapse collapse">
+        <div class="collapse navbar-collapse" id="navbar-collapse-1">
             <ul class="nav navbar-nav navbar-left">
                 <li class="${'active' if self.attr.navbar_active == 'Home' else ''}">
                 	<a href="t1-1.html"><span class="glyphicon glyphicon-home"></span> Home</a>
