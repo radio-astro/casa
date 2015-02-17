@@ -193,7 +193,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   Float absmax=threshold();
   Block< Matrix<Int> > iterations(numberOfModels());
   Int maxIterations=0;
-
+  Int oldMaxIterations=-1;
     
   // Loop over major cycles
   /*if (displayProgress_p) {
@@ -410,7 +410,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		  modified_p=True;
 		  
 		  subImage.copyData( LatticeExpr<Float>( subImage + subDeltaImage));
-		  
+		 
 		  if (cleaner[model]->queryStopPointMode()) {
 		    stop = True;		
 		    os << LogIO::NORMAL    // Loglevel INFO
@@ -430,6 +430,15 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	  }
 	} // if solveable
       } // for model
+      if(maxIterations==oldMaxIterations){
+	 os << LogIO::NORMAL    // Loglevel INFO
+                       << "MSClean terminating because components search stopped " 
+		       << LogIO::POST;
+	stop=True;
+      }
+      else{
+	oldMaxIterations=maxIterations; 
+      }
     }
   }
 
@@ -438,7 +447,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
        << "Finalizing residual images for all fields" << LogIO::POST;
     makeNewtonRaphsonStep(se, False, True);
     Float finalabsmax=maxField(resmax, resmin);
-    setNumberIterations(maxIterations);
+    setNumberIterations(numberIterations()-maxIterations);
     converged=(finalabsmax < 1.05 * threshold());
     setThreshold(finalabsmax);
       os << LogIO::NORMAL    // Loglevel INFO
