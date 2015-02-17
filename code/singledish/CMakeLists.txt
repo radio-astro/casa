@@ -1,6 +1,6 @@
 #
 # CASA - Common Astronomy Software Applications
-# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+# Copyright (C) 2014-2015 by NAOJ (in the framework of the ALMA collaboration)
 #
 # This file is part of CASA.
 #
@@ -19,17 +19,14 @@
 #
 
 casa_add_library( singledish
-    #SingleDish/SingleDishDummy.cc
     SingleDish/SingleDishMS.cc
     SingleDish/SDMSManager.cc
 )
 
 install (FILES
-    #SingleDish/SingleDishDummy.h
     SingleDish/SingleDishMS.h
     SingleDish/SDMSManager.h
     DESTINATION include/casacode/singledish/SingleDish
 )
 
-#casa_add_assay( singledish  SingleDish/test/tSingleDishDummy.cc SingleDish/test/tSingleDishMS.cc )
 casa_add_assay( singledish  SingleDish/test/tSingleDishMS.cc )
