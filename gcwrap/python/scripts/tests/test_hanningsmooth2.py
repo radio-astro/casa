@@ -139,12 +139,20 @@ class hanningsmooth2_test1(test_base):
 
     def test4(self):
         '''hanningsmooth2 - Test 4: Theoretical and calculated values should be the same for MMS-case'''
+	
+        # Split the input to decrease the running time
+        split2(self.msfile, outputvis='splithan.ms',scan='1,2',datacolumn='data')
+        self.msfile = 'splithan.ms'
         
         # create a test MMS. It creates self.testmms
         self.createMMS(self.msfile)
         self.outputms = 'hann4.mms'
         
       # check correct flagging (just for one row as a sample)
+        ms.open(self.msfile)
+        ms.sort('sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        ms.close()
+        self.msfile = 'sorted.ms'
         flag_col = th.getVarCol(self.msfile, 'FLAG')
         self.assertTrue(flag_col['r1'][0][0] == [False])
         self.assertTrue(flag_col['r1'][0][1] == [False])
@@ -154,6 +162,12 @@ class hanningsmooth2_test1(test_base):
         data_col = th.getVarCol(self.msfile, 'DATA')        
         hanningsmooth2(vis=self.testmms, outputvis=self.outputms, datacolumn='data', keepmms=True)
         self.assertTrue(ParallelDataHelper.isParallelMS(self.outputms), 'Output should be an MMS')
+
+      # Sort the MMS
+        ms.open(self.outputms)
+        ms.sort('sorted.mms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        ms.close()
+        self.outputms = 'sorted.mms'
         
         corr_col = th.getVarCol(self.outputms, 'DATA')
         nrows = len(corr_col)

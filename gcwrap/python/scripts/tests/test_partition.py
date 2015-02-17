@@ -853,7 +853,7 @@ class test_partition_balanced(test_base):
         
         self.outputms = "test_partition_balanced_repeated_spws.mms"
         
-        partition(self.vis, outputvis=self.outputms,separationaxis='balanced',spw='0,2',numsubms=3,flagbackup=False)
+        partition(self.vis, outputvis=self.outputms,separationaxis='auto',spw='0,2',numsubms=3,flagbackup=False)
         listpartition_dict = listpartition(self.outputms, createdict=True)
         self.assertEqual(listpartition_dict[0]['scanId'][1]['spwIds'], [1], "Wrong SPWIds in subMS 0")         
         self.assertEqual(listpartition_dict[1]['scanId'][1]['spwIds'], [0], "Wrong SPWIds in subMS 1")  
@@ -863,9 +863,9 @@ class test_partition_balanced(test_base):
         '''mstransform: Check that balanced mode properly handles the case when the number of requests
         subMSs is greater than the number of available ddi,scan pairs'''
         
-        self.outputms = "test_partition_balanced_repeated_nsubms_greater_than_available_pairs.mms"
+        self.outputms = "test_partition_3c84scan1.mms"
         
-        partition(self.vis, outputvis=self.outputms,separationaxis='balanced',numsubms=64,flagbackup=False)
+        partition(self.vis, outputvis=self.outputms,separationaxis='auto',numsubms=64,flagbackup=False)
         listpartition_dict = listpartition(self.outputms, createdict=True)       
         self.assertEqual(len(listpartition_dict), 4, "Number of subMS should be 3")          
         

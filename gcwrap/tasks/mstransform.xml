@@ -79,13 +79,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
-            <description>Axis to do parallelization across(scan,spw,auto,balanced).</description>
+            <description>Axis to do parallelization across(scan,spw,auto).</description>
             <value>auto</value>
             <allowed kind="enum" ignorecase="true">
                 <value>auto</value>
                 <value>spw</value>
                 <value>scan</value>
-                <value>balanced</value>
             </allowed>
         </param>
         <param type="any" name="numsubms" subparam="true">
@@ -423,8 +422,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         separationaxis -- Axis to do parallelization across. 
             default: 'auto'
-            options: 'scan', 'spw', 'auto', 'balanced'
-            The 'balanced' option will partition per scan/spw to obtain optimal load balancing with the
+            options: 'scan', 'spw', 'auto'
+            The 'auto' option will partition per scan/spw to obtain optimal load balancing with the
              following criteria:
     
             1 - Maximize the scan/spw/field distribution across sub-MSs

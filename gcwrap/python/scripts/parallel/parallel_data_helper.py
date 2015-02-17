@@ -628,9 +628,9 @@ class ParallelDataHelper(ParallelTaskHelper):
             elif self._arg['separationaxis'].lower() == 'spw':
                 self.__createSPWSeparationCommands()
             elif self._arg['separationaxis'].lower() == 'auto':
-                self.__createDefaultSeparationCommands()
-            elif self._arg['separationaxis'].lower() == 'balanced':
                 self.__createBalancedSeparationCommands()
+#            elif self._arg['separationaxis'].lower() == 'balanced':
+#                self.__createBalancedSeparationCommands()
             else:
                 # Use a default
                 self.__createDefaultSeparationCommands()
@@ -1411,9 +1411,9 @@ class ParallelDataHelper(ParallelTaskHelper):
         
         # Only when input is MS or MS-like and createmms=True
         # Only partition and mstransform have the createmms parameter
-        if self._arg.has_key('createmms') and self._arg['createmms'] == True:
-            if (self._arg['separationaxis'] == 'spw' or 
-                self._arg['separationaxis'] == 'auto'):   
+        if self._arg.has_key('createmms') and self._arg['createmms'] == True and self._arg['separationaxis'] == 'spw':
+#            if (self._arg['separationaxis'] == 'spw' or 
+#                self._arg['separationaxis'] == 'auto'):   
 #            if (self._arg['separationaxis'] == 'spw'):   
                 
                 casalog.post('Consolidate the sub-tables')
@@ -1464,7 +1464,8 @@ class ParallelDataHelper(ParallelTaskHelper):
         if self._arg.has_key('createmms') and self._arg['createmms'] == True:
             parallel_axis = self._arg['separationaxis']
 
-        if parallel_axis == 'auto' or parallel_axis == 'both' or parallel_axis == 'balanced':
+#        if parallel_axis == 'auto' or parallel_axis == 'both' or parallel_axis == 'balanced':
+        if parallel_axis == 'auto' or parallel_axis == 'both':
             parallel_axis = 'scan,spw'
             
         # Copy sub-tables from first subMS to the others. The tables in
