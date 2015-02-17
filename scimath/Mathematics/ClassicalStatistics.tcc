@@ -162,7 +162,11 @@ AccumType ClassicalStatistics<AccumType, InputIterator, MaskIterator>::getMedian
 	std::set<uInt64> medianIndices;
 	quantiles.clear();
 	CountedPtr<uInt64> mynpts = knownNpts.null() ? new uInt64(getNPts()) : knownNpts;
-	if (_getStatsData().median.null()) {
+    ThrowIf(
+        *mynpts == 0,
+        "No valid data found"
+    );
+    if (_getStatsData().median.null()) {
 		medianIndices = _medianIndices(mynpts);
 	}
 	std::map<Double, uInt64> quantileToIndex = StatisticsData::indicesFromFractions(
@@ -253,7 +257,8 @@ std::map<Double, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 		"Value of all quantiles must be between 0 and 1 (noninclusive)"
 	);
 	uInt64 mynpts = knownNpts.null() ? getNPts() : *knownNpts;
-	std::map<Double, uInt64> quantileToIndexMap = StatisticsData::indicesFromFractions(
+    ThrowIf(mynpts == 0, "No valid data found");
+    std::map<Double, uInt64> quantileToIndexMap = StatisticsData::indicesFromFractions(
 		mynpts, fractions
 	);
 	// This seemingly convoluted way of doing things with maps is necessary because
@@ -1828,7 +1833,7 @@ std::map<uInt64, AccumType> ClassicalStatistics<AccumType, InputIterator, MaskIt
 	const std::set<uInt64>& indices, Bool persistSortedArray
 ) {
 	std::map<uInt64, AccumType> indexToValue;
-	if (
+    if (
 		_valuesFromSortedArray(
 			indexToValue, knownNpts, indices, maxArraySize, persistSortedArray
 		)
@@ -3070,6 +3075,7 @@ Bool ClassicalStatistics<AccumType, InputIterator, MaskIterator>::_valuesFromSor
 		? (uInt64)_getStatsData().npts
 		: knownNpts.null()
 		  ? 0 : *knownNpts;
+    ThrowIf(myNpts == 0, "No valid data found");
 	if (myArray.empty()) {
 		if (myNpts > 0) {
 			// we have already computed npts
