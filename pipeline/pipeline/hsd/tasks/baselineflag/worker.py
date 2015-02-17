@@ -420,8 +420,8 @@ class SDBLFlagWorker(object):
                     continue
                 valid_data_index = numpy.where(stat[x] != INVALID_STAT)[0]
                 LOG.debug('valid_data_index=%s'%(valid_data_index))
-                mask[x][numpy.where(stat[x] == INVALID_STAT)] = 0
-                Unflag = int(numpy.sum(mask[x] * 1.0))
+                #mask[x][numpy.where(stat[x] == INVALID_STAT)] = 0
+                Unflag = len(valid_data_index) #int(numpy.sum(mask[x] * 1.0))
                 if Unflag == 0:
                     # all data are invalid
                     threshold.append([-1, -1])
@@ -537,11 +537,13 @@ class SDBLFlagWorker(object):
                 stats[6] = expectedRMS * ThreExpectedRMSPreFit
                 DataTable.putcell('STATISTICS',ID,stats)
                 flags = DataTable.getcell('FLAG',ID)
-                if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
+                #if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
+                if PostFitRMS != INVALID_STAT and (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
                     flags[5] = 0
                 else:
                     flags[5] = 1
-                if is_baselined and (PreFitRMS == INVALID_STAT or PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                #if is_baselined and (PreFitRMS == INVALID_STAT or PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                if is_baselined and (PreFitRMS != INVALID_STAT and PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
                     flags[6] = 0
                 else:
                     flags[6] = 1

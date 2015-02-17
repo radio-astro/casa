@@ -162,7 +162,7 @@ class SDBLFlagSummary(object):
         # Plot statistics
         NROW = len(ids)
         # Store data for plotting
-        FlaggedRowsCategory = [[],[],[],[],[],[],[],[],[]]
+        FlaggedRowsCategory = [[],[],[],[],[],[],[],[],[],[]]
         FlaggedRows = []
         PermanentFlag = []
         NPpdata = numpy.zeros((7,NROW), numpy.float)
@@ -196,37 +196,40 @@ class SDBLFlagSummary(object):
             # User flag
             if tPFLAG[2] == 0:
                 FlaggedRowsCategory[2].append(row)
+            # Online flag
+            if tPFLAG[3] == 0:
+                FlaggedRowsCategory[3].append(row)
 
             NPprows[1][N] = row
             # RMS flag before baseline fit
             NPpdata[1][N] = tSTAT[2]
             NPpflag[1][N] = tFLAG[2]
             if tFLAG[2] == 0:
-                FlaggedRowsCategory[4].append(row)
+                FlaggedRowsCategory[5].append(row)
             NPpdata[2][N] = tSTAT[1]
             NPpflag[2][N] = tFLAG[1]
             if tFLAG[1] == 0:
-                FlaggedRowsCategory[3].append(row)
+                FlaggedRowsCategory[4].append(row)
             # Running mean flag before baseline fit
             NPpdata[3][N] = tSTAT[4]
             NPpflag[3][N] = tFLAG[4]
             if tFLAG[4] == 0:
-                FlaggedRowsCategory[6].append(row)
+                FlaggedRowsCategory[7].append(row)
             # Running mean flag after baseline fit
             NPpdata[4][N] = tSTAT[3]
             NPpflag[4][N] = tFLAG[3]
             if tFLAG[3] == 0:
-                FlaggedRowsCategory[5].append(row)
+                FlaggedRowsCategory[6].append(row)
             # Expected RMS flag before baseline fit
             NPpdata[5][N] = tSTAT[6]
             NPpflag[5][N] = tFLAG[6]
             if tFLAG[6] == 0:
-                FlaggedRowsCategory[8].append(row)
+                FlaggedRowsCategory[9].append(row)
             # Expected RMS flag after baseline fit
             NPpdata[6][N] = tSTAT[5]
             NPpflag[6][N] = tFLAG[5]
             if tFLAG[5] == 0:
-                FlaggedRowsCategory[7].append(row)
+                FlaggedRowsCategory[8].append(row)
             N += 1
         # data store finished
 
@@ -353,12 +356,13 @@ class SDBLFlagSummary(object):
             print >> Out, _format_table_row_html('User', FlagRule_local['UserFlag']['isActive'], FlagRule_local['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]), NROW)
             print >> Out, _format_table_row_html('Weather', FlagRule_local['WeatherFlag']['isActive'], FlagRule_local['WeatherFlag']['Threshold'], len(FlaggedRowsCategory[1]), NROW)
             print >> Out, _format_table_row_html('Tsys', FlagRule_local['TsysFlag']['isActive'], FlagRule_local['TsysFlag']['Threshold'], len(FlaggedRowsCategory[0]), NROW)
-            print >> Out, _format_table_row_html('RMS baseline (pre-fit)', FlagRule_local['RmsPreFitFlag']['isActive'], FlagRule_local['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[4]), NROW)
-            print >> Out, _format_table_row_html('RMS baseline (post-fit)', FlagRule_local['RmsPostFitFlag']['isActive'], FlagRule_local['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[3]), NROW)
-            print >> Out, _format_table_row_html('Running Mean (pre-fit)', FlagRule_local['RunMeanPreFitFlag']['isActive'], FlagRule_local['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[6]), NROW)
-            print >> Out, _format_table_row_html('Running Mean (post-fit)', FlagRule_local['RunMeanPostFitFlag']['isActive'], FlagRule_local['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[5]), NROW)
-            print >> Out, _format_table_row_html('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), NROW)
-            print >> Out, _format_table_row_html('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), NROW)
+            print >> Out, _format_table_row_html('on-line', True, "N/A", len(FlaggedRowsCategory[3]), NROW)
+            print >> Out, _format_table_row_html('RMS baseline (pre-fit)', FlagRule_local['RmsPreFitFlag']['isActive'], FlagRule_local['RmsPreFitFlag']['Threshold'], len(FlaggedRowsCategory[5]), NROW)
+            print >> Out, _format_table_row_html('RMS baseline (post-fit)', FlagRule_local['RmsPostFitFlag']['isActive'], FlagRule_local['RmsPostFitFlag']['Threshold'], len(FlaggedRowsCategory[4]), NROW)
+            print >> Out, _format_table_row_html('Running Mean (pre-fit)', FlagRule_local['RunMeanPreFitFlag']['isActive'], FlagRule_local['RunMeanPreFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), NROW)
+            print >> Out, _format_table_row_html('Running Mean (post-fit)', FlagRule_local['RunMeanPostFitFlag']['isActive'], FlagRule_local['RunMeanPostFitFlag']['Threshold'], len(FlaggedRowsCategory[6]), NROW)
+            print >> Out, _format_table_row_html('Expected RMS (pre-fit)', FlagRule_local['RmsExpectedPreFitFlag']['isActive'], FlagRule_local['RmsExpectedPreFitFlag']['Threshold'], len(FlaggedRowsCategory[9]), NROW)
+            print >> Out, _format_table_row_html('Expected RMS (post-fit)', FlagRule_local['RmsExpectedPostFitFlag']['isActive'], FlagRule_local['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[8]), NROW)
             print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW)
             print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
             #print >> Out, '</table>\n</body>\n</html>'
@@ -385,30 +389,34 @@ class SDBLFlagSummary(object):
         LOG.info('Number of rows flagged by Tsys = %d /%d' % (len(FlaggedRowsCategory[0]), NROW))
         if len(FlaggedRowsCategory[0]) > 0:
             LOG.debug('Flagged rows by Tsys =%s ' % FlaggedRowsCategory[0])
-        # Pre-fit RMS
-        LOG.info('Number of rows flagged by the baseline fluctuation (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[4]), NROW))
-        if len(FlaggedRowsCategory[4]) > 0:
-            LOG.debug('Flagged rows by the baseline fluctuation (pre-fit) =%s ' % FlaggedRowsCategory[4])
-        # Post-fit RMS
-        if is_baselined: LOG.info('Number of rows flagged by the baseline fluctuation (post-fit) = %d /%d' % (len(FlaggedRowsCategory[3]), NROW))
+        # Tsys
+        LOG.info('Number of rows flagged by on-line flag = %d /%d' % (len(FlaggedRowsCategory[3]), NROW))
         if len(FlaggedRowsCategory[3]) > 0:
-            LOG.debug('Flagged rows by the baseline fluctuation (post-fit) =%s ' % FlaggedRowsCategory[3])
-        # Pre-fit running mean
-        LOG.info('Number of rows flagged by the difference from running mean (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[6]), NROW))
-        if len(FlaggedRowsCategory[6]) > 0:
-            LOG.debug('Flagged rows by the difference from running mean (pre-fit) =%s ' % FlaggedRowsCategory[6])
-        # Post-fit running mean
-        if is_baselined: LOG.info('Number of rows flagged by the difference from running mean (post-fit) = %d /%d' % (len(FlaggedRowsCategory[5]), NROW))
+            LOG.debug('Flagged rows by Tsys =%s ' % FlaggedRowsCategory[3])
+        # Pre-fit RMS
+        LOG.info('Number of rows flagged by the baseline fluctuation (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[5]), NROW))
         if len(FlaggedRowsCategory[5]) > 0:
-            LOG.debug('Flagged rows by the difference from running mean (post-fit) =%s ' % FlaggedRowsCategory[5])
-        # Pre-fit expected RMS
-        LOG.info('Number of rows flagged by the expected RMS (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[8]), NROW))
-        if len(FlaggedRowsCategory[8]) > 0:
-            LOG.debug('Flagged rows by the expected RMS (pre-fit) =%s ' % FlaggedRowsCategory[8])
-        # Post-fit expected RMS
-        if is_baselined: LOG.info('Number of rows flagged by the expected RMS (post-fit) = %d /%d' % (len(FlaggedRowsCategory[7]), NROW))
+            LOG.debug('Flagged rows by the baseline fluctuation (pre-fit) =%s ' % FlaggedRowsCategory[5])
+        # Post-fit RMS
+        if is_baselined: LOG.info('Number of rows flagged by the baseline fluctuation (post-fit) = %d /%d' % (len(FlaggedRowsCategory[4]), NROW))
+        if len(FlaggedRowsCategory[4]) > 0:
+            LOG.debug('Flagged rows by the baseline fluctuation (post-fit) =%s ' % FlaggedRowsCategory[4])
+        # Pre-fit running mean
+        LOG.info('Number of rows flagged by the difference from running mean (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[7]), NROW))
         if len(FlaggedRowsCategory[7]) > 0:
-            LOG.debug('Flagged rows by the expected RMS (post-fit) =%s ' % FlaggedRowsCategory[7])
+            LOG.debug('Flagged rows by the difference from running mean (pre-fit) =%s ' % FlaggedRowsCategory[7])
+        # Post-fit running mean
+        if is_baselined: LOG.info('Number of rows flagged by the difference from running mean (post-fit) = %d /%d' % (len(FlaggedRowsCategory[6]), NROW))
+        if len(FlaggedRowsCategory[6]) > 0:
+            LOG.debug('Flagged rows by the difference from running mean (post-fit) =%s ' % FlaggedRowsCategory[6])
+        # Pre-fit expected RMS
+        LOG.info('Number of rows flagged by the expected RMS (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[9]), NROW))
+        if len(FlaggedRowsCategory[9]) > 0:
+            LOG.debug('Flagged rows by the expected RMS (pre-fit) =%s ' % FlaggedRowsCategory[9])
+        # Post-fit expected RMS
+        if is_baselined: LOG.info('Number of rows flagged by the expected RMS (post-fit) = %d /%d' % (len(FlaggedRowsCategory[8]), NROW))
+        if len(FlaggedRowsCategory[8]) > 0:
+            LOG.debug('Flagged rows by the expected RMS (post-fit) =%s ' % FlaggedRowsCategory[8])
         # All categories
         LOG.info('Number of rows flagged by all active categories = %d /%d' % (len(FlaggedRows), NROW))
         if len(FlaggedRows) > 0:

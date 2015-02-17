@@ -41,7 +41,7 @@ try:
            nrows.append(summary['nrow'])
            flags.append(summary['nflags'])
 
-   flag_types = ['Total', 'Tsys', 'Weather', 'User']
+   flag_types = ['Total', 'Tsys', 'Weather', 'User', 'Online']
    fit_flags = ['Baseline RMS', 'Running mean', 'Expected RMS']
 except Exception, e:
    print 'hsd_imaging html template exception:', e
