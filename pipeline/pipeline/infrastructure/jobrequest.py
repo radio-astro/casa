@@ -33,6 +33,7 @@ import polcal_cli
 import setjy_cli
 import split_cli
 import statwt_cli
+import tclean_cli
 import wvrgcal_cli
 import visstat_cli
 casa_version = map(int,casadef.casa_version.split('.'))
@@ -361,6 +362,9 @@ class CASATaskJobGenerator(object):
     
     def statwt(self, *v, **k):
         return self._get_job(statwt_cli.statwt_cli, *v, **k)
+
+    def tclean(self, *v, **k):
+        return self._get_job(tclean_cli.tclean_cli, *v, **k)
 
     def wvrgcal(self, *v, **k):
         return self._get_job(wvrgcal_cli.wvrgcal_cli, *v, **k)

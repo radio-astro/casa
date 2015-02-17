@@ -22,11 +22,14 @@ from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, KTypeGaincal
 from .importdata import ImportData
 from .lowgainflag import Lowgainflag
 from .makecleanlist import MakeCleanList
+from .makeimages import MakeImages
+from .makeimlist import MakeImList
 from .rawflagchans import Rawflagchans
 from .refant import RefAnt
 from .restoredata import RestoreData
 from .setmodel import Setjy
 from .setmodel import SetModel
+from .tclean import Tclean
 #from .tsyscal import Tsyscal
 #from .tsysflag import Tsysflag, Tsysflagchans
 #from .wvrgcal import Wvrgcal

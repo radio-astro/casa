@@ -7,7 +7,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="header" />
 
-<%block name="title">Make clean/image list</%block>
+<%block name="title">Make clean list</%block>
 
 <h2>List of Clean Targets</h2>
 

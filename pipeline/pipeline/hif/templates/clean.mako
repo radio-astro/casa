@@ -23,7 +23,7 @@ def get_plot(plots, field, spw, i, colname):
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
 
-<%block name="title">Clean/CleanList</%block>
+<%block name="title">Clean/CleanList/MakeImages</%block>
 
 <h2>Image Details</h2>
 

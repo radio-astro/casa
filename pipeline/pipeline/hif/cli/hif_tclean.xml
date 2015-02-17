@@ -4,7 +4,7 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="hif_clean" category="pipeline">
+<task type="function" name="hif_tclean" category="pipeline">
 <shortdescription>Compute clean map</shortdescription>
 <description>
 Compute a clean map.  
@@ -501,13 +501,13 @@ Make an 'mfs' image of calibrator 3c279 using data in spectral window 1.
 The cell size is set to 0.2 arcsec in RA and Dec. Other clean parameters
 are derived from heuristics:
 
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='mfs')
+hif_tclean(field='3c279', cell='0.2arcsec', spw='1', mode='mfs')
 
 Make a cube of calibrator 3c279 using data in spectral window 1. The
 cube planes will be evenly spaced in frequency in the LSRK frame. Other
 clean parameters are derived from heuristics.
  
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
+hif_tclean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
  outframe='LSRK')
 
 </example>
