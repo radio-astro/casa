@@ -45,6 +45,9 @@ Modification history:
 
 namespace casa {
 
+const uInt CalStatsPhase::NUM_ITER_UNWRAP = 50;
+const Double CalStatsPhase::NEW_RANGE_FACTOR = 5.0;
+
 // -----------------------------------------------------------------------------
 // Start of CalStatsReal class
 // -----------------------------------------------------------------------------
