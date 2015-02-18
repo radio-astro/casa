@@ -60,6 +60,16 @@ class ImageStatsCalculator: public ImageTask<Float> {
 
 public:
 
+	enum PreferredClassicalAlgorithm {
+		// old algorithm
+		TILED_APPLY,
+		// new algorithm
+		STATS_FRAMEWORK,
+		// decide based on size and number of steps needed for
+		// stats
+		AUTO
+	};
+
    	ImageStatsCalculator(
    		const SPCIIF image,
     	const Record *const &regionPtr,
@@ -72,7 +82,7 @@ public:
 
     void configureChauvenet(Double zscore, Int maxIterations);
 
-    void configureClassical();
+    void configureClassical(PreferredClassicalAlgorithm p);
 
     // configure fit to half algorithm
     void configureFitToHalf(
@@ -84,7 +94,15 @@ public:
     // configure hinges-fences algorithm
     void configureHingesFences(Double f);
 
+    void forceNewStorage() { _statistics.reset(); }
+
     inline String getClass() const {return _class;}
+
+    inline void setAxes(const Vector<Int>& axes) {
+    	_axes.assign(axes); GenSort<Int>::sort(_axes);
+    }
+
+    void setDisk(Bool d);
 
     // Set range of pixel values to include in the calculation. Should be a two element
     // Vector
@@ -98,15 +116,9 @@ public:
     // calling setVerbosity()
     inline void setList(Bool l) {_list = l;}
 
-    void setDisk(Bool d); /* {_disk = d;} */
-
-    void forceNewStorage() { _statistics.reset(); }
-
     void setRobust(Bool r);
 
     void setVerbose(Bool v);
-
-    inline void setAxes(const Vector<Int>& axes) {_axes.assign(axes); GenSort<Int>::sort(_axes);}
 
     // moved from ImageAnalysis
     // if messageStore != 0, log messages, stripped of time stampe and priority, will also
@@ -139,6 +151,7 @@ private:
     Bool _list, _disk, _robust, _verbose;
     LatticeStatistics<Float>::AlgConf _algConf;
     SubImage<Float> _subImage;
+    PreferredClassicalAlgorithm _prefClassStatsAlg;
 
     static const String _class;
 

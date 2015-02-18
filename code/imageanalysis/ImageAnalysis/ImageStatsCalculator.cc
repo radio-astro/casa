@@ -52,7 +52,7 @@ ImageStatsCalculator::ImageStatsCalculator(
 	), _statistics(0), _oldStatsRegion(0), _oldStatsMask(0),
 	_axes(), _includepix(), _excludepix(), _list(False),
 	_disk(False), _robust(False), _verbose(False), _algConf(),
-	_subImage() {
+	_subImage(), _prefClassStatsAlg(AUTO) {
 	_construct(beVerboseDuringConstruction);
 	_setSupportsLogfile(True);
 	_algConf.algorithm = StatisticsData::CLASSICAL;
@@ -115,10 +115,15 @@ void ImageStatsCalculator::configureChauvenet(
 	}
 }
 
-
-void ImageStatsCalculator::configureClassical() {
-	if (_algConf.algorithm != StatisticsData::CLASSICAL) {
+void ImageStatsCalculator::configureClassical(
+	PreferredClassicalAlgorithm p
+) {
+	if (
+		_algConf.algorithm != StatisticsData::CLASSICAL
+		|| p != _prefClassStatsAlg
+	) {
 		_algConf.algorithm = StatisticsData::CLASSICAL;
+		_prefClassStatsAlg = p;
 		_statistics.reset();
 	}
 }
@@ -143,7 +148,6 @@ void ImageStatsCalculator::configureFitToHalf(
     	_algConf.cv = centerValue;
         _statistics.reset();
     }
-
 }
 
 void ImageStatsCalculator::configureHingesFences(Double f) {
@@ -425,7 +429,19 @@ Record ImageStatsCalculator::statistics(
 		myAlg = "Chauvenet Criterion/Z-score";
 		break;
 	case StatisticsData::CLASSICAL:
-		_statistics->configureClassical();
+		switch (_prefClassStatsAlg) {
+		case AUTO:
+			_statistics->configureClassical();
+			break;
+		case TILED_APPLY:
+			_statistics->configureClassical(0, 0, 1, 1);
+			break;
+		case STATS_FRAMEWORK:
+			_statistics->configureClassical(1, 1, 0, 0);
+			break;
+		default:
+			ThrowCc("Unhandled classical stats type");
+		}
 		myAlg = "Classic";
 		break;
 	case StatisticsData::FITTOHALF:
