@@ -421,7 +421,7 @@ class SDBLFlagWorker(object):
                 valid_data_index = numpy.where(stat[x] != INVALID_STAT)[0]
                 LOG.debug('valid_data_index=%s'%(valid_data_index))
                 #mask[x][numpy.where(stat[x] == INVALID_STAT)] = 0
-                Unflag = len(valid_data_index) #int(numpy.sum(mask[x] * 1.0))
+                Unflag = int(numpy.sum(mask[x][valid_data_index] * 1.0))
                 if Unflag == 0:
                     # all data are invalid
                     threshold.append([-1, -1])
