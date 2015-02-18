@@ -920,16 +920,16 @@ else( )
   set( DBUS_LIBRARIES ${DBUSPP_LIBRARIES} )
 endif( )
 
-# ATM
-casa_find( ATM
-  VERSION 0.5
-  INCLUDES ATMEnumerations.h ATMVersion.h
-  INCLUDES_SUFFIXES ATM
-  LIBS aatm
-  CPP_VERSION ATM_VERSION
-  RUN_VERSION "atm::getVersion()" 
-  PREFIX_HINTS ${ATM_ROOT_DIR}
-)
+## ATM
+#casa_find( ATM
+#  VERSION 0.5
+#  INCLUDES ATMEnumerations.h ATMVersion.h
+#  INCLUDES_SUFFIXES ATM
+#  LIBS aatm
+#  CPP_VERSION ATM_VERSION
+#  RUN_VERSION "atm::getVersion()" 
+#  PREFIX_HINTS ${ATM_ROOT_DIR}
+#)
 
 # XML2
 casa_find( LIBXML2
@@ -1101,6 +1101,7 @@ else()
     casa_add_module( graphics CASACORE X11 WCSLIB Boost)
   endif()
 endif()
+casa_add_module( atmosphere )
 casa_add_module( stdcasa CASACORE )
 casa_add_module( casadbus CASACORE DBUS Boost)
 casa_add_module( casaqt CASACORE QT4 QWT XERCES graphics stdcasa Boost)
@@ -1110,7 +1111,7 @@ casa_add_module( imageanalysis CASACORE Boost components)
 casa_add_module( asdmstman CASACORE )
 casa_add_module( msvis CASACORE Boost asdmstman )
 casa_add_module( mstransform CASACORE stdcasa imageanalysis msvis)
-casa_add_module( synthesis CASACORE ATM stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis mstransform)
+casa_add_module( synthesis CASACORE atmosphere stdcasa casadbus asdmstman Boost SQLITE imageanalysis msvis mstransform)
 casa_add_module( flagging CASACORE Boost stdcasa casadbus synthesis casaqt QT4 msvis)
 casa_add_module( spectrallines CASACORE imageanalysis Boost SQLITE)
 casa_add_module( guitools CASACORE QT4 QWT synthesis)

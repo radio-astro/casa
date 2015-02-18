@@ -38,44 +38,44 @@
 
 using namespace std;
 
-#ifndef CASA_STANDALONE
-#include <ATMRefractiveIndexProfile.h>
-#include <ATMPercent.h>
-#include <ATMPressure.h>
-#include <ATMNumberDensity.h>
-#include <ATMMassDensity.h>
-#include <ATMTemperature.h>
-#include <ATMLength.h>
-#include <ATMInverseLength.h>
-#include <ATMOpacity.h>
-#include <ATMHumidity.h>
-#include <ATMFrequency.h>
-#include <ATMWaterVaporRadiometer.h>
-#include <ATMWVRMeasurement.h>
-#include <ATMProfile.h>
-#include <ATMSpectralGrid.h>
-#include <ATMRefractiveIndex.h>
-#include <ATMSkyStatus.h>
-#include <ATMAngle.h>
-#else
-//#ATM Not available; mimic the classes and functions used
-namespace atm{
-class Angle
-{
-public:
-  double get(string) const {return 0.0;}
-};
-class RefractiveIndexProfile
-{
-public:
-  Angle getDispersiveWetPhaseDelay(int,int) const {return Angle();}
-};
-class AtmProfile;
-class SkyStatus;
-class SpectralGrid;
+//#ifndef CASA_STANDALONE //libatmosphere should always be available now
+#include <atmosphere/ATM/ATMRefractiveIndexProfile.h>
+#include <atmosphere/ATM/ATMPercent.h>
+#include <atmosphere/ATM/ATMPressure.h>
+#include <atmosphere/ATM/ATMNumberDensity.h>
+#include <atmosphere/ATM/ATMMassDensity.h>
+#include <atmosphere/ATM/ATMTemperature.h>
+#include <atmosphere/ATM/ATMLength.h>
+#include <atmosphere/ATM/ATMInverseLength.h>
+#include <atmosphere/ATM/ATMOpacity.h>
+#include <atmosphere/ATM/ATMHumidity.h>
+#include <atmosphere/ATM/ATMFrequency.h>
+#include <atmosphere/ATM/ATMWaterVaporRadiometer.h>
+#include <atmosphere/ATM/ATMWVRMeasurement.h>
+#include <atmosphere/ATM/ATMProfile.h>
+#include <atmosphere/ATM/ATMSpectralGrid.h>
+#include <atmosphere/ATM/ATMRefractiveIndex.h>
+#include <atmosphere/ATM/ATMSkyStatus.h>
+#include <atmosphere/ATM/ATMAngle.h>
+/* #else */
+/* //#ATM Not available; mimic the classes and functions used */
+/* namespace atm{ */
+/* class Angle */
+/* { */
+/* public: */
+/*   double get(string) const {return 0.0;} */
+/* }; */
+/* class RefractiveIndexProfile */
+/* { */
+/* public: */
+/*   Angle getDispersiveWetPhaseDelay(int,int) const {return Angle();} */
+/* }; */
+/* class AtmProfile; */
+/* class SkyStatus; */
+/* class SpectralGrid; */
 
-}
-#endif
+/* } */
+/* #endif */
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
