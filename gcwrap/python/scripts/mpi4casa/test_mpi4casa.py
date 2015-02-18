@@ -882,7 +882,7 @@ class test_MPIInterface(unittest.TestCase):
         
         # Get nodes
         nodes = self.CL.get_nodes()
-        self.assertEqual(nodes[0],socket.gethostname(),"Error getting list of nodes")
+        self.assertTrue(socket.gethostname() in nodes,"Error getting list of nodes")
         
         # Run imports in all engines
         self.CL.pgc('import os')
