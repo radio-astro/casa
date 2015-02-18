@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import socket
 import traceback # To pretty-print tracebacks
-import subprocess as sp
 import os
-import sys
 
 
 class MPIEnvironment:
@@ -16,10 +14,13 @@ class MPIEnvironment:
     # Initialization
     mpi_initialized = False
     try:
-        # check if mpi starts up in second process, a failure would abort casa startup
-        with open(os.devnull, 'w') as null:
-            sp.check_call([sys.executable, '-c', 'from mpi4py import MPI'],
-                          stderr=null)
+        # don't load mpi unless we are already running under mpi
+        # trying to load a broken mpi installation will abort the process not
+        # giving us a chance to run in the serial mode
+        # testing mpi via a forked import causes deadlock on process end when
+        # running test_mpi4casa[test_server_not_responsive]
+        if 'OMPI_COMM_WORLD_RANK' not in os.environ:
+            raise ValueError('MPI disabled')
 
         # Set mpi4py runtime configuration
         from mpi4py import rc as __mpi_runtime_config
