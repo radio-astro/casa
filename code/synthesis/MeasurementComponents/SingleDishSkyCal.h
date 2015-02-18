@@ -36,11 +36,12 @@
 //#! If you are contributing a new class to one of these packages, be
 //#! sure to replace "AIPS_" with (for instance) "DISH_" or "ATNF_".
 
-#if !defined(SINGLEDISH_SKYCAL_H)
-#define SINGLEDISH_SKYCAL_H
+#ifndef _SYNTHESIS_SINGLEDISH_SKY_CAL_H_
+#define _SYNTHESIS_SINGLEDISH_SKY_CAL_H_
 
 //#! Includes go here
 #include <synthesis/MeasurementComponents/SolvableVisCal.h>
+#include <synthesis/MeasurementComponents/SkyCal.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -171,6 +172,9 @@ public:
   // single dish calibration is antenna-based
   virtual VisCalEnum::MatrixType matrixType() { return VisCalEnum::JONES; };
 
+  // Mueller matrix type (must be implemented in Mueller specializations!)
+  virtual Mueller::MuellerType muellerType() { return Mueller::AddDiag2; };  
+
   // Return the parameter type
   // so far single dish calibration is real
   virtual VisCalEnum::VCParType parType() { return VisCalEnum::REAL; };
@@ -193,13 +197,13 @@ public:
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
   virtual void differentiate(CalVisBuffer& cvb) {};
   virtual void differentiate(VisBuffer& vb,        
-			     Cube<Complex>& V,     
-			     Array<Complex>& dV,
-			     Matrix<Bool>& Vflg) {};
+        		     Cube<Complex>& V,     
+        		     Array<Complex>& dV,
+        		     Matrix<Bool>& Vflg) {};
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-		       Array<Complex>& dV) {};
+  		       Array<Complex>& dV) {};
 
   // Apply refant (implemented in SVJ)
   virtual void reReference() {};
@@ -250,10 +254,15 @@ protected:
 
   // The number of sets of parameters under consideration
   // This states size of third axis of SolveAllRPar
-  virtual Int& nElem() { return nBln(); }
+  virtual Int& nElem() { return nAnt(); }
 
   // Number of Calibration matrices on ant/bln axis
-  virtual Int nCalMat() { return 0; }
+  virtual Int nCalMat() { return nAnt(); }
+
+  // Are the parameters the matrix elements? 
+  //   (or is a non-trivial calculation required?)
+  //    (Must be implemented in specializations!)
+  virtual Bool trivialMuellerElem() { return False; };
 
   // Initialize solve parameters (shape)
   virtual void initSolvePar();
@@ -262,7 +271,7 @@ protected:
   inline virtual void invalidateDiffCalMat() {};
 
   // Sync matrices generically for current meta data 
-  virtual void syncCalMat(const Bool& doInv=False) {};
+  virtual void syncCalMat(const Bool& doInv=False);
 
   // Synchronize the differentiated calibration 
   virtual void syncDiffMat();
@@ -274,10 +283,10 @@ protected:
   virtual void invalidateCalMat() {};
 
   // Row-by-row apply to a Cube<Complex> (generic)
-  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False) {};
+  virtual void applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial=False);
   virtual void applyCal2(vi::VisBuffer2& vb, 
-			 Cube<Complex>& Vout,Cube<Float>& Wout,
-			 Bool trial=False) {};
+        		 Cube<Complex>& Vout,Cube<Float>& Wout,
+        		 Bool trial=False);
 
   // Fill caltable by traversing MS
   // Accessor is responsible for accessing data stored either
@@ -285,9 +294,26 @@ protected:
   template<class Accessor>
   inline void traverseMS(MeasurementSet const &ms);
 
+  // access to current calibration data
+  inline Cube<Complex> &currentSky() { return (*currentSky_[currSpw()]); };
+  inline Cube<Bool> &currentSkyOK() { return (*currentSkyOK_[currSpw()]); };
+  inline SkyCal<Complex, Complex> &engineC() { return (*engineC_[currSpw()]); };
+  inline SkyCal<Float, Float> &engineF() { return (*engineF_[currSpw()]); };
+
   // current antenna
   Int currAnt_;
   Vector<Double> interval_;
+
+  // Single Dish Calibration algebra wrapper (per Spw)
+  PtrBlock<SkyCal<Complex, Complex> *> engineC_;
+  PtrBlock<SkyCal<Float, Float> *> engineF_;
+
+  // Current Sky spectra
+  PtrBlock<Cube<Complex> *> currentSky_; // [nSpw]([1,2],nChanMat,nAnt)
+  PtrBlock<Cube<Bool> *> currentSkyOK_;  // [nSpw]([1,2],nChanMat,nAnt)
+private:
+  void initializeSky();
+  void finalizeSky();
 };
 
 class SingleDishPositionSwitchCal : public SingleDishSkyCal 
@@ -362,6 +388,6 @@ public:
 
 } //# NAMESPACE CASA - END
 
-#endif /* SINGLEDISH_SKYCAL_H */
+#endif /* _SYNTHESIS_SINGLEDISH_SKY_CAL_H_ */
 
 

@@ -349,25 +349,39 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)
   : VisCal(vs),
     SolvableVisCal(vs),
-    currAnt_(-1)
+    currAnt_(-1),
+    engineC_(vs.numberSpw(), NULL),
+    engineF_(vs.numberSpw(), NULL),
+    currentSky_(vs.numberSpw(), NULL),
+    currentSkyOK_(vs.numberSpw(), NULL)
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(VisSet& vs)" << debugpost;
   append() = False;
+
+  initializeSky();
 }
   
 SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)
   : VisCal(nAnt),
     SolvableVisCal(nAnt),
-    currAnt_(-1)
+    currAnt_(-1),
+    engineC_(1, NULL),
+    engineF_(1, NULL),
+    currentSky_(1, NULL),
+    currentSkyOK_(1, NULL)
 {
   debuglog << "SingleDishSkyCal::SingleDishSkyCal(const Int& nAnt)" << debugpost;
   append() = False;
+
+  initializeSky();
 }
 
 // Destructor
 SingleDishSkyCal::~SingleDishSkyCal()
 {
   debuglog << "SingleDishSkyCal::~SingleDishSkyCal()" << debugpost;
+
+  finalizeSky();
 }
 
 void SingleDishSkyCal::setSpecify(const Record& specify)
@@ -582,16 +596,148 @@ void SingleDishSkyCal::initSolvePar()
   interval_.resize(nElem());
 }
 
+void SingleDishSkyCal::syncCalMat(const Bool &doInv)
+{
+  debuglog << "SingleDishSkyCal::syncCalMat" << debugpost;
+  debuglog << "nAnt()=" << nAnt() << ", nElem()=" << nElem() << ", nBln()=" << nBln() << debugpost;
+  debuglog << "Spw " << currSpw() << "nchanmat, ncalmat" << nChanMat() << ", " << nCalMat() << debugpost;
+  debuglog << "nChanPar = " << nChanPar() << debugpost;
+  currentSky().resize(2, nChanMat(), nCalMat());
+  currentSky().unique();
+  currentSkyOK().resize(currentSky().shape());
+  currentSkyOK().unique();
+  debuglog << "currentSkyOK.shape()=" << currentSkyOK().shape() << debugpost;
+  currentSkyOK() = False;
+
+  // sky data from caltable
+  debuglog << "currRPar().shape()=" << currRPar().shape() << debugpost;
+  if (currRPar().shape().product() > 0) {
+    debuglog << "currRPar() = " << currRPar().xzPlane(0) << debugpost;
+  }
+
+  convertArray(currentSky(), currRPar());
+  currentSkyOK() = currParOK();
+  debuglog << "currentSky() = " << currentSky().xzPlane(0) << debugpost;
+  debuglog << "currParOK() = " << currParOK().xzPlane(0) << debugpost;
+
+  debuglog << "SingleDishSkyCal::syncCalMat DONE" << debugpost;
+}
+  
 void SingleDishSkyCal::syncDiffMat()
 {
   debuglog << "SingleDishSkyCal::syncDiffMat()" << debugpost;
 }
   
+void SingleDishSkyCal::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial)
+{
+  throw AipsError("Single dish calibration doesn't support applyCal. Please use applyCal2");
+}
+
+void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<Float> &Wout,
+                                 Bool trial)
+{
+  debuglog << "SingleDishSkyCal::applycal2" << debugpost;
+  debuglog << "nrow, nchan=" << vb.nRows() << "," << vb.nChannels() << debugpost;
+  debuglog << "antenna1: " << vb.antenna1() << debugpost;
+  debuglog << "antenna2: " << vb.antenna2() << debugpost;
+  debuglog << "spw: " << vb.spectralWindows() << debugpost;
+
+  // References to VB2's contents' _data_
+  Vector<Bool> flagRv(vb.flagRow());
+  Vector<Int>  a1v(vb.antenna1());
+  Vector<Int>  a2v(vb.antenna2());
+  Cube<Bool> flagCube(vb.flagCube());
+  Cube<Complex> visCube(Vout);
+  ArrayIterator<Float> wt(Wout,2);
+  Matrix<Float> wtmat;
+
+  // Data info/indices
+  Int* dataChan;
+  Bool* flagR=&flagRv(0);
+  Int* a1=&a1v(0);
+  Int* a2=&a2v(0);
+  
+  // iterate rows
+  Int nRow=vb.nRows();
+  Int nChanDat=vb.nChannels();
+  Vector<Int> dataChanv(vb.getChannelNumbers(0));  // All rows have same chans
+  //    cout << currSpw() << " startChan() = " << startChan() << " nChanMat() = " << nChanMat() << " nChanDat="<<nChanDat <<endl;
+
+  // setup calibration engine
+  engineC().setNumChannel(nChanDat);
+  engineC().setNumPolarization(vb.nCorrelations());
+
+  debuglog << "typesize=" << engineC().typesize() << debugpost;
+
+  // Matrix slice of visCube
+  // TODO: storage must be aligned for future use
+  Matrix<Complex> visCubeSlice;
+  Matrix<Bool> flagCubeSlice;
+  
+  for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
+    assert(*a1 == *a2);
+    
+    // Solution channel registration
+    Int solCh0(0);
+    dataChan=&dataChanv(0);
+      
+    // If cal _parameters_ are not freqDep (e.g., a delay)
+    //  the startChan() should be the same as the first data channel
+    if (freqDepMat() && !freqDepPar())
+      startChan()=(*dataChan);
+
+    // Solution and data array registration
+    engineC().sync(currentSky()(0,solCh0,*a1), currentSkyOK()(0,solCh0,*a1));
+    visCubeSlice.reference(visCube.xyPlane(row));
+    flagCubeSlice.reference(flagCube.xyPlane(row));
+
+    if (trial) {
+      // only update flag info
+      engineC().flag(flagCubeSlice);
+    }
+    else {
+      // apply calibration
+      engineC().apply(visCubeSlice, flagCubeSlice);
+    }
+    
+    // If requested, update the weights
+    if (!trial && calWt()) {
+      wtmat.reference(wt.array());
+      //updateWt2(wtmat,*a1,*a2);
+    }
+    
+    if (!trial)
+      wt.next();
+    
+  }
+}
+
 void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
 {
   debuglog << "SingleDishSkyCal::self.GatherAndSolve()" << debugpost;
 
   throw AipsError("selfGatherAndSolve must be overridden in each subclass");
+}
+
+void SingleDishSkyCal::initializeSky()
+{
+  debuglog << "SingleDishSkyCal::initializeSky()" << debugpost;
+  for (Int ispw=0;ispw<nSpw(); ispw++) {
+    currentSky_[ispw] = new Cube<Complex>();
+    currentSkyOK_[ispw] = new Cube<Bool>();
+    engineC_[ispw] = new SkyCal<Complex, Complex>();
+  }
+}
+
+void SingleDishSkyCal::finalizeSky()
+{
+  for (Int ispw=0;ispw<nSpw(); ispw++) {
+    if (currentSky_[ispw]) delete currentSky_[ispw];
+    if (currentSkyOK_[ispw]) delete currentSkyOK_[ispw];
+    if (engineC_[ispw]) delete engineC_[ispw];
+    if (engineF_[ispw]) delete engineF_[ispw];
+  }
+
 }
 
 //
@@ -656,7 +802,7 @@ void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve
   createMemCalTable();
 
   // Setup shape of solveAllRPar
-  nBln() = 1;
+  nElem() = 1;
   initSolvePar();
 
   // Pick up OFF spectra using STATE_ID

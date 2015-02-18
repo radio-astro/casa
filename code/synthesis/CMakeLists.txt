@@ -226,6 +226,7 @@ casa_add_library( synthesis
  MeasurementComponents/SimACohCalc.cc
  MeasurementComponents/SimACoh.cc
  MeasurementComponents/SingleDishSkyCal.cc
+ MeasurementComponents/SkyCal.cc
  MeasurementComponents/SolvableVisCal.cc
  MeasurementComponents/StandardVisCal.cc
  MeasurementComponents/SteepestDescentSolver.cc
