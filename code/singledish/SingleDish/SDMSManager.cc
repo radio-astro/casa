@@ -24,15 +24,10 @@ SDMSManager::SDMSManager()
 {
 }
 
-SDMSManager::SDMSManager(SDMSManager const &other)
-{
-  
-}
-
-SDMSManager &SDMSManager::operator=(SDMSManager const &other)
-{
-  return *this;
-}
+// SDMSManager &SDMSManager::operator=(SDMSManager const &other)
+// {
+//   return *this;
+// }
 
 SDMSManager::~SDMSManager()
 {

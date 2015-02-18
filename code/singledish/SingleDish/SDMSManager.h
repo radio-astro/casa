@@ -21,14 +21,12 @@ public:
   SDMSManager();
   // Construct from MS name string
   explicit SDMSManager(string const& ms_name);
-  // Copy constructor
-  explicit SDMSManager(SDMSManager const &other);
 
   // Set user defined Sort columns
   void setSortColumns(Block<Int> sortColumns,
 		      bool addDefaultSortCols=false);
 
-  SDMSManager &operator=(SDMSManager const &other);
+  //SDMSManager &operator=(SDMSManager const &other);
   // Destructor
   ~SDMSManager();
 

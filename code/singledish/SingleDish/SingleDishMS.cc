@@ -216,7 +216,6 @@ void SingleDishMS::format_selection(Record &selection)
 {
   // At this moment sdh_ is not supposed to be generated yet.
   LogIO os(_ORIGIN);
-  int exists = -1;
   // format spw
   String const spwSel(get_field_as_casa_string(selection,"spw"));
   selection.define("spw", spwSel=="" ? "*" : spwSel);
