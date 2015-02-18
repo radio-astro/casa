@@ -4196,7 +4196,7 @@ record* image::statistics(
 	bool stretch, const string& logfile,
 	bool append, const string& algorithm, double fence,
 	const string& center, bool lside, double zscore,
-	int maxiter
+	int maxiter, const string& clmethod
 ) {
 	_log << _ORIGIN;
 	if (detached()) {
@@ -4259,7 +4259,22 @@ record* image::statistics(
 			_stats->configureChauvenet(zscore, maxiter);
 		}
 		else if (myalg.startsWith("cl")) {
-			_stats->configureClassical();
+			String mymethod = clmethod;
+			mymethod.downcase();
+			ImageStatsCalculator::PreferredClassicalAlgorithm method;
+			if (mymethod.startsWith("a")) {
+				method = ImageStatsCalculator::AUTO;
+			}
+			else if (mymethod.startsWith("t")) {
+				method = ImageStatsCalculator::TILED_APPLY;
+			}
+			else if (mymethod.startsWith("f")) {
+				method = ImageStatsCalculator::STATS_FRAMEWORK;
+			}
+			else {
+				ThrowCc("Unsupported classical method " + clmethod);
+			}
+			_stats->configureClassical(method);
 		}
 		else if (myalg.startsWith("f")) {
 			String mycenter = center;

@@ -9267,6 +9267,10 @@ ib.done()
           <description>For chauvenet, this is the maximum number of iterations to attempt. Iterating will stop when either this limit is reached, or the zscore criterion is met. If negative, iterate until the zscore criterion is met. Ignored if algortihm is not "chauvenet".</description>
           <value>-1</value>
      </param>
+     <param type="string"  name="clmethod">
+          <description>Method to use for calculating classical statistics. Supported methods are "auto", "tiled", and "framework". Ignored if algorithm is not "classic".</description>
+          <value>auto</value>
+     </param>
 </input>
 
 <returns type="record">
@@ -9399,8 +9403,19 @@ ALGORITHMS
 
 Several types of statistical algorithms are supported:
 
-* classic: This is the familiar algorithm, in which all unmasked data, subject to any
-  specified pixel ranges are used.
+* classic: This is the familiar algorithm, in which all unmasked pixels, subject to any
+  specified pixel ranges, are used. One may choose one of two methods, which vary only by
+  performance, for computing classic statistics, via the clmethod parameter. The "tiled"
+  method is the old method and is fastest in cases where there are a large number of
+  individual sets of statistics to be computed and a small number of data points per set.
+  This can occur when one sets the axes parameter, which causes several individual sets of
+  statistics to be computed. The "framework" method uses the new statistics framework to
+  compute statistics. This method is fastest in the regime where one has a small number of
+  individual sets of statistics to calculate, and each set has a large number of points.
+  For example, this method is fastest when computing statistics over an entire image in one
+  go (no axes specified). A third option, "auto", chooses which method to use by predicting
+  which be faster based on the number of pixels in the image and the choice of the axes
+  parameter.
   
 * fit-half: This algorithm calculates statistics on a dataset created from real and virtual pixel values.
   The real values are determined by the input parameters center and lside. The parameter center
