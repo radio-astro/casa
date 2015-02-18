@@ -1,5 +1,6 @@
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+# Copyright (C) 2010 by NAOJ (in the framework of the ALMA collaboration)
 # Copyright (C) 2010 Associated Universities, Inc. Washington DC, USA.
 #
 # This file is part of CASA.
@@ -721,6 +722,7 @@ else()
   endif()
   set( casacode_libs
        alma 
+       atmosphere
        calanalysis
        casadbus
        casaqt
@@ -959,16 +961,16 @@ else( )
   set( DBUS_LIBRARIES ${DBUSPP_LIBRARIES} )
 endif( )
 
-# ATM
-casa_find( ATM
-  VERSION 0.5
-  INCLUDES ATMEnumerations.h ATMVersion.h
-  INCLUDES_SUFFIXES ATM
-  LIBS aatm
-  CPP_VERSION ATM_VERSION
-  RUN_VERSION "atm::getVersion()" 
-  PREFIX_HINTS ${ATM_ROOT_DIR}
-)
+## ATM
+#casa_find( ATM
+#  VERSION 0.5
+#  INCLUDES ATMEnumerations.h ATMVersion.h
+#  INCLUDES_SUFFIXES ATM
+#  LIBS aatm
+#  CPP_VERSION ATM_VERSION
+#  RUN_VERSION "atm::getVersion()" 
+#  PREFIX_HINTS ${ATM_ROOT_DIR}
+#)
 
 # XML2
 casa_find( LIBXML2
@@ -1161,7 +1163,7 @@ endif()
 # The modules must be defined in dependency order!
 # This will set up include paths, and which libraries to link to
 
-casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS ATM READLINE DL XERCES LIBSAKURA CASACODE )
+casa_add_module( tools CASACORE Boost PYTHON QT4 DBUS READLINE DL XERCES LIBSAKURA CASACODE )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.

@@ -1,8 +1,8 @@
-#include <ATMProfile.h>
-#include <ATMRefractiveIndexProfile.h>
-#include <ATMSpectralGrid.h>
-#include <ATMSkyStatus.h>
-#include <ATMVersion.h>
+#include <atmosphere/ATM/ATMProfile.h>
+#include <atmosphere/ATM/ATMRefractiveIndexProfile.h>
+#include <atmosphere/ATM/ATMSpectralGrid.h>
+#include <atmosphere/ATM/ATMSkyStatus.h>
+#include <atmosphere/ATM/ATMVersion.h>
 
 
 namespace atm
