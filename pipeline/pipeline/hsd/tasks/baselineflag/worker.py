@@ -539,11 +539,13 @@ class SDBLFlagWorker(object):
                 flags = DataTable.getcell('FLAG',ID)
                 #if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS) or PostFitRMS == INVALID_STAT:
                 if PostFitRMS != INVALID_STAT and (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
+                    #LOG.debug("Row=%d flagged by expected RMS postfit: %f > %f (expected)" %(ID, PostFitRMS, ThreExpectedRMSPostFit * expectedRMS))
                     flags[5] = 0
                 else:
                     flags[5] = 1
                 #if is_baselined and (PreFitRMS == INVALID_STAT or PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
-                if is_baselined and (PreFitRMS != INVALID_STAT and PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                if is_baselined and PreFitRMS != INVALID_STAT and (PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                    #LOG.debug("Row=%d flagged by expected RMS postfit: %f > %f (expected)" %(ID, PreFitRMS, ThreExpectedRMSPreFit * expectedRMS))
                     flags[6] = 0
                 else:
                     flags[6] = 1
