@@ -412,7 +412,7 @@ int main() {
 				True, True, LatticeStatsBase::MEAN
 			);
 		}
-		*/
+	*/
 		/*
 		{
 			cout << "begin 2" << endl;
@@ -446,6 +446,38 @@ int main() {
             }
         }
 */
+/*
+		{
+			if (! File(imageName).exists()) {
+				cout << "Cannot find image " << imageName << " so some tests cannot be run" << endl;
+				return 0;
+			}
+			cout << "Calc stats on 200M image" << endl;
+			LatticeStatistics<Float> lattStats(im);
+			Vector<Int> axes(2, 1);
+			axes[1] = 2;
+			lattStats.setAxes(axes);
+			lattStats.setClassicalStatsTimingCoeffs(0,0,1,1);
+			Array<Double> res;
+			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
+			cout << "shpae res " << res.shape() << endl;
+		}
+		*/
+		/*
+		{
+			CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
+			PagedImage<Float> im3(
+				TiledShape(IPosition(3,1,3000,3000)), csys, "mytimings.im"
+			);
+			LatticeStatistics<Float> lattStats(im3);
+			lattStats.setAxes(Vector<Int>(1, 0));
+			lattStats.configureClassical(0,0,1,1);
+			Array<Double> res;
+			lattStats.getStatistic(res, LatticeStatsBase::MEAN);
+			cout << "shpae res " << res.shape() << endl;
+		}
+		*/
+
 
     }
     catch (const AipsError& x) {

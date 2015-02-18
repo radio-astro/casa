@@ -380,7 +380,28 @@ public:
    Bool hasLogger () const {return haveLogger_p;};
 
    // configure object to use Classical Statistics
+   // The time, t_x, it takes to compute classical statistics using algorithm x, can
+   // be modeled by
+   // t_x = n_sets*(a_x + b_x*n_el)
+   // where n_sets is the number of independent sets of data to compute stats on,
+   // each containing n_el number of elements. a_x is the time it takes to compute
+   // stats a a single set of data, and b_x is the time it takes to accumulate
+   // a single point.
+   // The old algorithm was developed in the early history of the project, I'm guessing
+   // by Neil Kileen, while the new algorithm was developed in 2015 by Dave Mehringer
+   // as part of the stats framework project. The old algorithm is faster in the regime
+   // of large n_sets and small n_el, while the new algorithm is faster in the
+   // regime of small n_sets and large n_el.
+   // If one always wants to use one of these algorithms, that algorithm's coefficients
+   // should be set to 0, while setting the other algorithm's coefficients to positive
+   // values. Note that it's the relative, not the absolute, values of these
+   // coeffecients that is important
+   // The version that takes no parameters uses the default values of the coefficients;
+   // <group>
    void configureClassical();
+
+   void configureClassical(Double aOld, Double bOld, Double aNew, Double bNew);
+   // </group>
 
    // configure to use fit to half algorithm.
    void configureFitToHalf(
@@ -482,7 +503,7 @@ protected:
 private:
 
    const MaskedLattice<T>* pInLattice_p;
-   TempLattice<AccumType>* pStoreLattice_p;
+   CountedPtr<TempLattice<AccumType> > pStoreLattice_p;
    Vector<Int> nxy_p, statsToPlot_p;
    Vector<T> range_p;
    PGPlotter plotter_p;
@@ -494,11 +515,20 @@ private:
    T minFull_p, maxFull_p;
    Bool doneFullMinMax_p;
 
-   // vector<CountedPtr<StatisticsAlgorithm<AccumType, const T*, const Bool*> > > _sa;
-
    AlgConf _algConf;
    std::map<String, uInt> _chauvIters;
 
+   Double _aOld, _bOld, _aNew, _bNew;
+
+   void _setDefaultCoeffs() {
+	   // coefficients from timings run on PagedImages on
+	   // etacarinae.cv.nrao.edu (dmehring's development
+	   // machine)
+       _aOld = 4.7e-7;
+       _bOld = 2.3e-8;
+       _aNew = 1.6e-5;
+       _bNew = 1.5e-8;
+   }
 
 // Summarize the statistics found over the entire lattice
    virtual void summStats();
@@ -617,6 +647,8 @@ private:
 		   LatticeStatsDataProvider<T>& lattDP,
 		   MaskedLatticeStatsDataProvider<T>& maskedLattDP
 	) const;
+
+   void _doStatsLoop(uInt nsets, CountedPtr<LattStatsProgress> progressMeter);
 };
 
 // <summary> Generate statistics, tile by tile, from a masked lattice </summary>
@@ -687,6 +719,7 @@ private:
 //   <li> 
 // </todo>
 
+/*
 template <class T, class U=T>
 class StatsTiledCollapser : public TiledCollapser<T,U>
 {
@@ -737,6 +770,7 @@ private:
     DataType _type;
     vector<Bool> _first;
 };
+*/
 
 } //# NAMESPACE CASA - END
 

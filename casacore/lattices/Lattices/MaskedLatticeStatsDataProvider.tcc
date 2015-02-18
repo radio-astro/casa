@@ -25,6 +25,8 @@
 
 #include <lattices/Lattices/MaskedLatticeStatsDataProvider.h>
 
+#include <lattices/Lattices/TileStepper.h>
+
 namespace casa {
 
 template <class T>
@@ -53,8 +55,8 @@ void MaskedLatticeStatsDataProvider<T>::operator++() {
 	}
 	else {
 		++(*_iter);
-		this->_updateProgress();
 	}
+	this->_updateProgress();
 }
 
 template <class T>
@@ -140,7 +142,12 @@ void MaskedLatticeStatsDataProvider<T>::setLattice(
 ) {
 	finalize();
 	if (lattice.size() > iteratorLimitBytes/sizeof(T)) {
-		_iter = new RO_MaskedLatticeIterator<T>(lattice);
+		TileStepper stepper(
+			lattice.shape(), lattice.niceCursorShape(
+				lattice.advisedMaxPixels()
+			)
+		);
+		_iter = new RO_MaskedLatticeIterator<T>(lattice, stepper);
 	}
 	else {
 		_iter = NULL;
@@ -148,7 +155,6 @@ void MaskedLatticeStatsDataProvider<T>::setLattice(
 		_currentMaskSlice.assign(lattice.getMask());
 		_atEnd = False;
 	}
-	reset();
 }
 
 

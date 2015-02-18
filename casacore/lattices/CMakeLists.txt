@@ -221,6 +221,8 @@ Lattices/TempLattice.tcc
 Lattices/TempLatticeImpl.h
 Lattices/TempLatticeImpl.tcc
 Lattices/TileStepper.h
+Lattices/StatsTiledCollapser.h
+Lattices/StatsTiledCollapser.tcc
 Lattices/TiledCollapser.h
 Lattices/TiledCollapser.tcc
 Lattices/TiledLineStepper.h
