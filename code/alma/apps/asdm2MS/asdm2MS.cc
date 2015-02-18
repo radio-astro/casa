@@ -4629,7 +4629,7 @@ void partitionMS(vector<int> SwIds,
   for (int i=0; i<SwIds.size(); i++) {
     ostringstream oss;
     oss<< SwIds.at(i);
-    string msname_suffix = ".SpW"+oss;
+    string msname_suffix = ".SpW"+oss.str( );
     //cerr<<"msname_prefix="<<msname_suffix<<endl;
     for (map<AtmPhaseCorrection, string>::iterator iter = msNames.begin(); iter != msNames.end(); ++iter) {
       msFillers[iter->first] = new ASDM2MSFiller(msNames[iter->first]+msname_suffix,
