@@ -26,6 +26,7 @@
 //# $Id: SkyComponent.cc 21292 2012-11-28 14:58:19Z gervandiepen $
 
 #include <casa/Quanta/QMath.h>
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/SkyComponent.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>

@@ -23,8 +23,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
+#include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/SkyComponentFactory.h>
-
 #include <casa/Quanta/MVAngle.h>
 #include <components/ComponentModels/GaussianDeconvolver.h>
 #include <components/ComponentModels/GaussianShape.h>
