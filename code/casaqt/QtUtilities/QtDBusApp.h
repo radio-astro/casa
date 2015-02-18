@@ -31,6 +31,7 @@
 #include <string>
 #include <QString>
 #include <QDBusConnection>
+#include <sys/types.h>
 
 namespace casa {
 
