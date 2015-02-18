@@ -44,6 +44,8 @@
 #include <casa/sstream.h>
 #include <casa/fstream.h>
 
+#include <casa/OS/Timer.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>

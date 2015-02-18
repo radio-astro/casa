@@ -25,6 +25,8 @@
 
 #include <lattices/Lattices/LatticeStatsDataProvider.h>
 
+#include <lattices/Lattices/TileStepper.h>
+
 namespace casa {
 
 template <class T>
@@ -53,8 +55,8 @@ void LatticeStatsDataProvider<T>::operator++() {
 	}
 	else {
 		++(*_iter);
-		this->_updateProgress();
 	}
+	this->_updateProgress();
 }
 
 template <class T>
@@ -131,14 +133,18 @@ void LatticeStatsDataProvider<T>::setLattice(
 ) {
 	finalize();
 	if (lattice.size() > iteratorLimitBytes/sizeof(T)) {
-		_iter = new RO_LatticeIterator<T>(lattice);
+		TileStepper stepper(
+			lattice.shape(), lattice.niceCursorShape(
+				lattice.advisedMaxPixels()
+			)
+		);
+		_iter = new RO_LatticeIterator<T>(lattice, stepper);
 	}
 	else {
 		_iter = NULL;
 		_currentSlice.assign(lattice.get());
 		_atEnd = False;
 	}
-	reset();
 }
 
 template <class T>
