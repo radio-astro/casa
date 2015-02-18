@@ -449,6 +449,9 @@ Record *toRecord(const ::casac::record &theRec){
             case ::casac::variant::INT :
               {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
                break;
+            case ::casac::variant::UINT :
+              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getuInt()));}
+               break;
             case ::casac::variant::DOUBLE :
               transcribedRec->define(RecordFieldId((*rec_it).first), (*rec_it).second.getDouble());
                break;
@@ -483,6 +486,20 @@ Record *toRecord(const ::casac::record &theRec){
                for(Array<Int>::iterator iter = intArr.begin();
                                          iter != intArrend; ++iter)
                    *iter = intVec[i++];
+               transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
+               }
+               break;
+            case ::casac::variant::UINTVEC :
+               {
+               Vector<Int> shapeVec((*rec_it).second.arrayshape());
+               Vector<uInt> uintVec((*rec_it).second.getuIntVec());
+               IPosition tshape(shapeVec);
+               Array<uInt> intArr(tshape);
+               int i(0);
+               Array<uInt>::iterator intArrend = intArr.end();
+               for(Array<uInt>::iterator iter = intArr.begin();
+                                         iter != intArrend; ++iter)
+                   *iter = uintVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
                }
                break;
