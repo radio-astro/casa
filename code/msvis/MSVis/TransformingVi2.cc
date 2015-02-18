@@ -111,6 +111,9 @@ TransformingVi2::configureNewSubchunk (){
     Vector<Int> channels = getChannels (0, 0); // args are ignored
     Int nChannels = channels.nelements();
 
+    Vector<Int> corrs = getCorrelations ();
+    Int nCorrs = corrs.nelements();
+
     configureNewSubchunk (msId(), // always the first MS
                           ms().tableName(),
                           isNewMs(),
@@ -120,7 +123,7 @@ TransformingVi2::configureNewSubchunk (){
                           getSubchunkId (),
                           nRows(),
                           nChannels,
-                          nPolarizationIds(),
+                          nCorrs,
                           getCorrelations(),
                           getWeightScaling());
 }
