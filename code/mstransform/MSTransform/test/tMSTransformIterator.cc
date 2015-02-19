@@ -235,7 +235,7 @@ Record parseConfiguration(int argc, char **argv)
 				configuration.define ("timebin", "2s");
 				configuration.define ("chanaverage", True);
 				configuration.define ("chanbin", 2);
-				configuration.define ("datacolumn", string("DATA"));
+				configuration.define ("datacolumn", string("ALL"));
 			}
 			else
 			{

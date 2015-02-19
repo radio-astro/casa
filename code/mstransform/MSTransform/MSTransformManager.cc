@@ -303,8 +303,14 @@ void MSTransformManager::parseMsSpecParams(Record &configuration)
 
 	if (bufferMode_p)
 	{
-		// In buffer mode this parameter does not matter as the visCubes are filled on demand
-		datacolumn_p = "ALL";
+		// Data column matters for the time averaging options because they are not applied on demand
+		exists = configuration.fieldNumber ("datacolumn");
+		if (exists >= 0)
+		{
+			configuration.get (exists, datacolumn_p);
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__)
+					<< "Data column is " << datacolumn_p << LogIO::POST;
+		}
 
 		exists = configuration.fieldNumber ("outputms");
 		if (exists >= 0)
@@ -4072,6 +4078,12 @@ void MSTransformManager::checkDataColumnsToFill()
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS "<< LogIO::POST;
 				}
+				else
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
+				}
+
 			}
 			else
 			{
@@ -4079,6 +4091,11 @@ void MSTransformManager::checkDataColumnsToFill()
 				{
 					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
 										"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column "<< LogIO::POST;
+				}
+				else
+				{
+					logger_p << LogIO::NORMAL << LogOrigin("MSTransformManager", __FUNCTION__) <<
+										"Virtual MODEL_DATA column present in input MS will be available from MSTransformBuffer "<< LogIO::POST;
 				}
 			}
 
