@@ -157,6 +157,9 @@ public:
   virtual ~SkyCal() {}
 
   // stride
+  // In Mueller series, typesize is defined as "number of polarizations"
+  // while SkyCal definition is "number of elements in the DATA cell",
+  // which is npol * nchan in practice.
   uInt typesize() const { return npol_ * nchan_; }
   void setNumChannel(uInt n) { nchan_ = n; }
   void setNumPolarization(uInt n) { npol_ = n; }
@@ -192,24 +195,26 @@ public:
     throw(AipsError("Illegal use of SkyCal::setMatByOk"));
   }
 
-  // In-place multiply onto a VisVector: General version
+  // In-place multiply onto a data with flag information
   // apply implements position switch calibration: (ON - OFF)/OFF
+  //
+  // This processes the data corresponding to each DATA cell
+  // (npol * nchan) together in contrast to Mueller series, which
+  // processes one Stokes vector, i.e., process each channel
+  // individually.
   void apply(Matrix<DataType>& v, Matrix<Bool> &f)
   {
-    cout << "SkyCal::apply" << endl;
     if (f.shape() == v.shape()) {
       flag(f);
     }
     
     Bool deleteIt;
-    cout << "bedore apply: " << v(0,0) << endl;
     DataType *data = v.getStorage(deleteIt);
     for (size_t i = 0; i < npol_ * nchan_; ++i) {
       // (ON - OFF) / OFF
       data[i] = (data[i] - m_[i]) / m_[i];
     }
     v.putStorage(data, deleteIt);
-    cout << "after apply: " << v(0,0) << endl;
   }
 
   void apply(Matrix<DataType>& v, Matrix<Bool> &f, Vector<Bool>& vflag)
@@ -221,6 +226,8 @@ public:
   }
 
   // Apply only flags according to cal flags
+  //
+  // Similar to apply, flagging also processes each DATA cell together.
   void applyFlag(Vector<Bool>& vflag)
   {
     if (!ok_) throw(AipsError("Illegal use of SkyCal::applyFlag(vflag)."));
