@@ -1,6 +1,6 @@
 /*
 //#MSBin functionality on the command line
-//# Copyright (C) 2014
+//# Copyright (C) 2014-205
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -49,7 +49,7 @@ using namespace std;
 
 int main(int argc, char **argv) {
   Input inp;
-  inp.version("2014/12/02 by CM MLLN, HTST");
+  inp.version("2015/02/15 by CM MLLN, HTST");
   // Title of CM  i.e Code Monkey is
   //Master Lead Lion Ninja and Honcho Tiger Samurai Team 
   inp.create("vis", "ngc5921.ms", "MS to be binned");
@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
   inp.create("nchan","1", "number of output channel");
   inp.create("fstart", "1.420GHz", "frequency of first channel in LSRK");
   inp.create("fstep", "1KHz", "channel width");
+  inp.create("wproject", "False", "Do wprojection correction while binning");
   inp.create("memfrac", "0.5", "Fraction of ram to try to use");
-  inp.create("fdb", "False", "Force to go through disk and not use ram");
   inp.readArguments(argc, argv);
   String msname=inp.getString("vis");
   String outMS=inp.getString("outvis");
@@ -113,13 +113,13 @@ int main(int argc, char **argv) {
   cerr << "field  " << field << " spw " << spw << endl;
 
   Float memFrac=Float(inp.getDouble("memfrac"));
-  Bool forceDisk=inp.getBool("fdb");
+  Bool doW=inp.getBool("wproject");
   
   MSUVBin binner(phaseCenter, nx,
-		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac);
+		 ny, nchan, ncorr, cellx, celly, fstart, fstep, memFrac, doW);
   binner.selectData(msname, spw, field);
   binner.setOutputMS(outMS);
-  binner.fillOutputMS(forceDisk);
+  binner.fillOutputMS();
   
 
   return 0;

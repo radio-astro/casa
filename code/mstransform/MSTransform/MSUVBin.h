@@ -48,7 +48,7 @@ public:
 	MSUVBin();
 	//npol should be only 1, 2 (parallel hands)  or 4
 	MSUVBin(const MDirection& phaseCenter, const Int nx,
-		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5);
+		const Int ny, const Int nchan, const Int npol, Quantity cellx, Quantity celly, Quantity freqStart, Quantity freqStep, Float memFraction=0.5, Bool dow=False);
 	//Constructor to bin into an existing gridded ms
 	MSUVBin (MeasurementSet& ms);
 	//The following can be called multiple times to setup multiple input MS
@@ -61,7 +61,7 @@ public:
 	//void setInputMS(const Block<const MeasurementSet*> mssPtr);
 	void setOutputMS(const String& msname);
 	//forceDiskUsage is to avoid using in memory gridding even if there is
-	Bool fillOutputMS(const Bool forceDiskUsage=False);
+	Bool fillOutputMS();
 	virtual ~MSUVBin();
 	//Helper function for creating MDirection from a string
 	static Bool String2MDirection(const String& theString,
@@ -87,6 +87,11 @@ private:
 			Matrix<Float>& wght, Cube<Float>& wghtSpec,
 			Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
 			Vector<Int>& ant2, Vector<Double>& time, const Int startchan, const Int endchan);
+	void gridDataConv(const vi::VisBuffer2& vb, Cube<Complex>& grid,
+		       Matrix<Float>& /*wght*/, Cube<Float>& wghtSpec,
+		       Cube<Bool>& flag, Vector<Bool>& rowFlag, Matrix<Double>& uvw, Vector<Int>& ant1,
+		       Vector<Int>& ant2, Vector<Double>& timeCen, const Int startchan, const Int endchan, 
+		       const Cube<Complex>& convFunc, const Vector<Int>& convSupport, const Double wScale, const Int convSampling);
 	void inplaceGridData(const vi::VisBuffer2& vb);
 	void inplaceLargeBW(const vi::VisBuffer2& vb);
 	void inplaceSmallBW(const vi::VisBuffer2& vb);
@@ -110,6 +115,12 @@ private:
 	                    const Bool noRows=False);
 	void fillDDTables();
 	void setTileCache();
+	void makeSFConv(Cube<Complex>&convFunc, 
+			Vector<Int>& convSupport, Double& wScale, Int& convSampling, 
+			Int& convSize);
+	void makeWConv(vi::VisibilityIterator2& iter,Cube<Complex>& convFunc, 
+		       Vector<Int>& convSupport,
+			Double& wScale, Int& convSampling, Int& convSize );
 	CoordinateSystem csys_p;
 	Int nx_p, ny_p, nchan_p, npol_p;
 	Double freqStart_p, freqStep_p;
@@ -123,6 +134,7 @@ private:
 	Block<const MeasurementSet *> mss_p;
 	VisBufferUtil vbutil_p;
 	Float memFraction_p;
+	Bool doW_p;
 
 }; // end class MSUVBin
 } //# NAMESPACE CASA - END
