@@ -405,8 +405,8 @@ Record ImageStatsCalculator::statistics(
     if (_statistics.get() == NULL) {
         _statistics.reset(
 		    _verbose
-			? new ImageStatistics<Float> (_subImage, *_getLog(), False, _disk)
-			: new ImageStatistics<Float> (_subImage, False, _disk)
+			? new ImageStatistics<Float> (_subImage, *_getLog(), True, _disk)
+			: new ImageStatistics<Float> (_subImage, True, _disk)
 		);
 	}
 	else {
