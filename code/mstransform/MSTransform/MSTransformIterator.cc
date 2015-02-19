@@ -113,6 +113,7 @@ void MSTransformIterator::origin ()
 {
 	buffer_p->resetState();
 	getVii()->origin();
+	manager_p->setupBufferTransformations(manager_p->getVisBuffer());
 	return;
 }
 
