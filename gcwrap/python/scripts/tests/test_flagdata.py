@@ -8,6 +8,7 @@ from taskinit import *
 from __main__ import default
 import exceptions
 from parallel.parallel_task_helper import ParallelTaskHelper
+import flaghelper as fh
 #from IPython.kernel.core.display_formatter import PPrintDisplayFormatter
 
 #
@@ -2977,9 +2978,84 @@ class cleanup(test_base):
         '''flagdata: Cleanup'''
         pass
 
+
+class TestMergeManualTimerange(unittest.TestCase):
+    def setUp(self):
+        self.cmds = [
+            {'mode': 'summary1'},
+            {'mode': 'manual',
+             'timerange': '0~1'},
+            {'mode': 'manual',
+             'timerange': '2~3'},
+            {'mode': 'summary2'},
+            {'mode': 'manual',
+             'timerange': '4~5'},
+            {'mode': 'manual',
+             'timerange': '6~7'},
+            {'mode': 'summary3'}
+            ]
+    def test_empty(self):
+        self.assertEqual(fh._merge_timerange([]), [])
+
+    def test_merge(self):
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '4~5,6~7')
+        self.assertEqual(res[4]['mode'], 'summary3')
+
+        res = fh._merge_timerange(self.cmds[1:])
+        self.assertEqual(len(res), 4)
+        self.assertEqual(res[0]['mode'], 'manual')
+        self.assertEqual(res[0]['timerange'], '0~1,2~3')
+        self.assertEqual(res[1]['mode'], 'summary2')
+        self.assertEqual(res[2]['mode'], 'manual')
+        self.assertEqual(res[2]['timerange'], '4~5,6~7')
+        self.assertEqual(res[3]['mode'], 'summary3')
+
+        res = fh._merge_timerange(self.cmds[:-2])
+        self.assertEqual(len(res), 4)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '4~5')
+
+    def test_nohash_nomerge(self):
+        self.cmds[3]['nohash'] = dict()
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 5)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '0~1,2~3')
+        self.assertEqual(res[2]['mode'], 'summary2')
+        self.assertEqual(res[3]['mode'], 'manual')
+        self.assertEqual(res[3]['timerange'], '4~5,6~7')
+        self.assertEqual(res[4]['mode'], 'summary3')
+
+    def test_nohash_merge(self):
+        self.cmds[2]['nohash'] = dict()
+        res = fh._merge_timerange(self.cmds)
+        self.assertEqual(len(res), 6)
+        self.assertEqual(res[0]['mode'], 'summary1')
+        self.assertEqual(res[1]['mode'], 'manual')
+        self.assertEqual(res[1]['timerange'], '0~1')
+        self.assertEqual(res[2]['timerange'], '2~3')
+        self.assertEqual(res[3]['mode'], 'summary2')
+        self.assertEqual(res[4]['mode'], 'manual')
+        self.assertEqual(res[4]['timerange'], '4~5,6~7')
+        self.assertEqual(res[5]['mode'], 'summary3')
+
+
 def suite():
-    return [test_tfcrop,
+    return [TestMergeManualTimerange,
             test_rflag,
+            test_tfcrop,
             test_shadow,
             test_flagmanager,
             test_selections,

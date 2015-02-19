@@ -889,11 +889,10 @@ def _merge_timerange(commands):
     merged = dict()
     lunique = []
     for cmd in commands:
-        # only merge manual commands with timerange
-        if (cmd.get('mode') != 'manual') or ('timerange' not in cmd):
-            lunique.append(copy.deepcopy(cmd))
-            continue
         try:
+            # only merge manual commands with timerange
+            if (cmd.get('mode') != 'manual') or ('timerange' not in cmd):
+                raise ValueError
             # create sorted list of command keys excluding agentname which
             # changes for each manual flag
             compound_key = sorted(x for x in cmd.keys() if x not in ('timerange', 'agentname'))
@@ -906,10 +905,17 @@ def _merge_timerange(commands):
             except KeyError:
                 merged[compound] = copy.deepcopy(cmd)
         except:
-            # on error, e.g. non-hashable keys, no merging
+            # add merged keys to non-mergeable keys, also on errors like
+            # non-hashable keys
+            lunique.extend(merged.values())
+            # append non mergeable key
             lunique.append(copy.deepcopy(cmd))
+            # reset merge to preserve ordering of manual and other flags
+            # e.g. summary,manual,manual,manual,summary,manual
+            # to summary,merged-manual,summary,manual
+            merged = dict()
 
-    # add merged keys to non-mergable keys
+    # add remaining merged keys to non-mergeable keys
     lunique.extend(merged.values())
     return lunique
 
