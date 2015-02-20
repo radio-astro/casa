@@ -1645,25 +1645,36 @@ table::getcolkeyword(const std::string& columnname, const ::casac::variant& keyw
 		 ValueHolder theVal;
 		 switch(keyword.type()){
 			 case variant::STRING :
+                                 std::cout << "getcolkeyword case variant::STRING === 0" << keyword.toString() << std::endl;
+                                 std::cout << "getcolkeyword case variant::STRING === 1" << String(columnname)  << std::endl;
 		                 theVal =  itsTable->getKeyword(String(columnname), keyword.toString(), -1);
+                                 std::cout << "getcolkeyword case variant::STRING === 2" << theVal << std::endl;
 		                 rstat = fromValueHolder(theVal);
+                                 std::cout << "getcolkeyword case variant::STRING === 3" << rstat << std::endl;
 				 break;
 			 case variant::INT :
+                                 std::cout << "getcolkeyword case variant::INT === 1" << std::endl;
 		                 theVal =  itsTable->getKeyword(String(columnname), String(), keyword.toInt());
+                                 std::cout << "getcolkeyword case variant::INT === 2" << std::endl;
 		                 rstat = fromValueHolder(theVal);
+                                 std::cout << "getcolkeyword case variant::INT === 3" << std::endl;
 				 break;
 			 default :
+                                 std::cout << "getcolkeyword default === 1" << std::endl;
 		                 *itsLog << LogIO::WARN << "Keyword must be string or int" << LogIO::POST;
 				 break;
 		 }
 		 // rstat = fromValueHolder(theVal);
 	    } else {
+                                 std::cout << "getcolkeyword else === 1" << std::endl;
 	      *itsLog << LogIO::WARN << "Need to specify a column name" << LogIO::POST;
 	    }
 	 } else {
+                                 std::cout << "getcolkeyword else === 2" << std::endl;
 		 *itsLog << LogIO::WARN << "No table specified, please open first" << LogIO::POST;
 	 }
  } catch (AipsError x) {
+                                 std::cout << "getcolkeyword exception === 1" << std::endl;
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
  }

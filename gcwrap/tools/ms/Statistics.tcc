@@ -25,7 +25,7 @@
 
 #include <tools/ms/Statistics.h>
 
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>

@@ -73,7 +73,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisIterator.h>
 
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
 
 #include <tables/Tables/SetupNewTab.h>
