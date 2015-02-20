@@ -60,6 +60,7 @@ scripts/refimagerhelper.py
 scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
+scripts/sdbeamutil.py
 scripts/sdutil.py
 scripts/setjy_helper.py
 scripts/simutil.py
