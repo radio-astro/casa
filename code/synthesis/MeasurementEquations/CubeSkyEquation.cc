@@ -39,7 +39,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 
 #include <synthesis/MeasurementComponents/SkyModel.h>
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>

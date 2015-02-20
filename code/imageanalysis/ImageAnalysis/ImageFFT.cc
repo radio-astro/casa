@@ -42,9 +42,9 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeFFT.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/MaskedLatticeIterator.h>

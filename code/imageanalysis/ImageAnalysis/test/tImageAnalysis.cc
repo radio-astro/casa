@@ -29,7 +29,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <casa/namespace.h>
-#include <lattices/Lattices/LatticeFractile.h>
+#include <lattices/LatticeMath/LatticeFractile.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <casa/OS/EnvVar.h>
 

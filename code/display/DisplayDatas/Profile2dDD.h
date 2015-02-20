@@ -40,7 +40,7 @@
 #include <display/DisplayDatas/ActiveCaching2dDD.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
 #include <display/DisplayEvents/DisplayEH.h>
-#include <lattices/Lattices/LatticeStatsBase.h>
+#include <lattices/LatticeMath/LatticeStatsBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

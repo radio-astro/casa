@@ -34,7 +34,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCSlicer.h>
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 #include <measures/Measures/Stokes.h>

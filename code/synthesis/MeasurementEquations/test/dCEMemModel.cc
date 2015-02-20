@@ -29,7 +29,7 @@
 #include <casa/aips.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/IPosition.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCSlicer.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/SubImage.h>
 #include <lattices/Lattices/PagedArray.h>
@@ -42,7 +42,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <lattices/Lattices/TempLattice.h>
 #include <casa/Exceptions/Error.h>
 

@@ -33,10 +33,10 @@
 #include <lattices/Lattices/TiledShape.h>
 #include <scimath/Fitting/FitGaussian.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <lattices/Lattices/LCMask.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LRegions/LatticeRegion.h>
+#include <lattices/LRegions/LCMask.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Utilities/Assert.h>

@@ -76,10 +76,10 @@
 #include <imageanalysis/ImageAnalysis/SepImageConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeApply.h>
+#include <lattices/LatticeMath/LatticeApply.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeStatsBase.h>
-#include <lattices/Lattices/LCPagedMask.h>
+#include <lattices/LatticeMath/LatticeStatsBase.h>
+#include <lattices/LRegions/LCPagedMask.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <casa/System/PGPlotter.h>
 #include <tables/LogTables/NewFile.h>

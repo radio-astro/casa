@@ -28,7 +28,7 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/CFCache.h>
 #include <synthesis/TransformMachines/Utils.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <casa/System/ProgressMeter.h>
 #include <casa/Exceptions/Error.h>
 #include <fstream>

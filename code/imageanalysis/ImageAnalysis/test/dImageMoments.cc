@@ -174,8 +174,8 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/System/PGPlotter.h>
-#include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCSlicer.h>
+#include <lattices/LRegions/LCBox.h>
 #include <scimath/Mathematics/VectorKernel.h>
 
 #include <casa/iostream.h>

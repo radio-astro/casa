@@ -35,14 +35,14 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageRegrid.h>
 #include <casa/Containers/Record.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeStepper.h> 
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/System/Aipsrc.h>
 namespace casa{
   //

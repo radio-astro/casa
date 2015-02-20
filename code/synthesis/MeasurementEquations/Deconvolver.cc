@@ -63,18 +63,18 @@
 #include <measures/Measures/MEpoch.h>
 
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <lattices/Lattices/LatticeExpr.h> 
-#include <lattices/Lattices/LatticeFFT.h> 
-#include <lattices/Lattices/LatticeCleaner.h> 
-#include <lattices/Lattices/LatticeCleanProgress.h> 
-#include <lattices/Lattices/LatticeConvolver.h> 
+#include <lattices/LEL/LatticeExpr.h> 
+#include <lattices/LatticeMath/LatticeFFT.h> 
+#include <lattices/LatticeMath/LatticeCleaner.h> 
+#include <lattices/LatticeMath/LatticeCleanProgress.h> 
+#include <lattices/LatticeMath/LatticeConvolver.h> 
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeStepper.h> 
 #include <lattices/Lattices/LatticeNavigator.h> 
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LRegions/LCSlicer.h>
 
 #include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <images/Images/TempImage.h>

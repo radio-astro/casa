@@ -36,7 +36,7 @@
 
 #include <images/Images/ImageInterface.h>
 #include <lattices/Lattices/MaskedLattice.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LatticeConcat.h>
 

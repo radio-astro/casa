@@ -39,7 +39,7 @@
 #include <casa/Utilities/LinearSearch.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <lattices/Lattices/LatticeStatsBase.h>
+#include <lattices/LatticeMath/LatticeStatsBase.h>
 #include <casa/System/PGPlotter.h>
 #include <tables/LogTables/NewFile.h>
 

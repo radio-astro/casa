@@ -42,7 +42,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeApply.h>
+#include <lattices/LatticeMath/LatticeApply.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <lattices/Lattices/SubLattice.h>
 

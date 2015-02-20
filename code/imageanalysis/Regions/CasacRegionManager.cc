@@ -33,8 +33,8 @@
 
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LRegions/LCSlicer.h>
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/TableRecord.h>
 

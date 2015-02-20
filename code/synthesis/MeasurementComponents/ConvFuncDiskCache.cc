@@ -28,7 +28,7 @@
 #include <synthesis/MeasurementComponents/ConvFuncDiskCache.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/Exceptions/Error.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Directory.h>

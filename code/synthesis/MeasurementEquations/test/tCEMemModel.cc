@@ -40,7 +40,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <lattices/Lattices/TempLattice.h>
  
  

@@ -37,13 +37,13 @@
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCUnion.h>
 #include <casa/OS/File.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LCEllipsoid.h>
-#include <lattices/Lattices/LCUnion.h>
-#include <lattices/Lattices/LCExtension.h>
+#include <lattices/LRegions/LCEllipsoid.h>
+#include <lattices/LRegions/LCUnion.h>
+#include <lattices/LRegions/LCExtension.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>

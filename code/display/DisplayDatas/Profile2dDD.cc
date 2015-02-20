@@ -37,7 +37,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <display/DisplayDatas/LatticePADD.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayDatas/Profile2dDD.h>

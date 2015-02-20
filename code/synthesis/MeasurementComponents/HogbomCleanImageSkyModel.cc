@@ -36,8 +36,8 @@
 #include <casa/OS/File.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>

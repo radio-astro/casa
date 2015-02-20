@@ -30,8 +30,8 @@
 #define SYNTHESIS_WBCLEANIMAGESKYMODEL_H
 
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>
-#include <lattices/Lattices/LatticeCleanProgress.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LatticeMath/LatticeCleanProgress.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <synthesis/MeasurementEquations/MultiTermMatrixCleaner.h>
 #include <casa/OS/Timer.h>

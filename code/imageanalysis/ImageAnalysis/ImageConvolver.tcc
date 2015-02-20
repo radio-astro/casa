@@ -39,10 +39,10 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageUtilities.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <lattices/Lattices/LatticeUtilities.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <casa/iostream.h>
 
 #include <memory>

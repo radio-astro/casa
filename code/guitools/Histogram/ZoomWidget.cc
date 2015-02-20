@@ -25,7 +25,7 @@
 #include "ZoomWidget.qo.h"
 #include <images/Images/ImageInterface.h>
 #include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LatticeFractile.h>
+#include <lattices/LatticeMath/LatticeFractile.h>
 #include <QDebug>
 #include <QMessageBox>
 

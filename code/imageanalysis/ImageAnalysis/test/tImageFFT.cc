@@ -39,7 +39,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFFT.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/PagedImage.h>
-#include <lattices/Lattices/LCPagedMask.h>
+#include <lattices/LRegions/LCPagedMask.h>
 
 #include <casa/iostream.h>
 

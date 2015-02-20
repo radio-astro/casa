@@ -42,7 +42,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCSlicer.h>
 
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 

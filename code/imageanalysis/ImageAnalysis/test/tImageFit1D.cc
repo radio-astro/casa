@@ -38,7 +38,7 @@
 #include<lattices/Lattices/TiledShape.h>
 #include<lattices/Lattices/ArrayLattice.h>
 #include<lattices/Lattices/LatticeUtilities.h>
-#include<lattices/Lattices/LCSlicer.h>
+#include<lattices/LRegions/LCSlicer.h>
 #include<coordinates/Coordinates/CoordinateSystem.h>
 #include<coordinates/Coordinates/SpectralCoordinate.h>
 #include<components/SpectralComponents/SpectralList.h>

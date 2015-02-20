@@ -48,7 +48,7 @@
 #include <casa/Quanta/QC.h>
 #include <casa/System/PGPlotter.h>
 #include <casa/BasicSL/String.h>
-#include <lattices/Lattices/LatticeAddNoise.h>
+#include <lattices/LatticeMath/LatticeAddNoise.h>
 
 #include <casa/iostream.h>
 

@@ -50,8 +50,8 @@
 #include <images/Images/ImageInfo.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/SubImage.h>
-#include <lattices/Lattices/LatticeStatistics.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
+#include <lattices/LRegions/LCBox.h>
 #include <casa/Logging/LogIO.h>
 #include <scimath/Mathematics/AutoDiff.h> 
 #include <scimath/Mathematics/NumericTraits.h> 

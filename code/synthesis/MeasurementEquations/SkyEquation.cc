@@ -56,12 +56,12 @@
 #include <lattices/Lattices/Lattice.h>
 #include <measures/Measures/UVWMachine.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeFFT.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LCRegion.h>
+#include <lattices/LRegions/LCRegion.h>
 #include <casa/Containers/Block.h>
 
 #include <casa/Exceptions/Error.h>

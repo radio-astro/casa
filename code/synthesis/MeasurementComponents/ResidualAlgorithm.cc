@@ -43,7 +43,7 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 #include <lattices/Lattices/SubLattice.h>   
 #include <lattices/Lattices/TiledShape.h>  
 #include <casa/System/ProgressMeter.h>

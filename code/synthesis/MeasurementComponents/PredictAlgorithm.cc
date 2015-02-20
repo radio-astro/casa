@@ -46,7 +46,7 @@
 #include <casa/System/ProgressMeter.h>
 #include <synthesis/Parallel/Applicator.h>
 #include <unistd.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 #include <lattices/Lattices/SubLattice.h>   
 #include <lattices/Lattices/TiledShape.h>  
 

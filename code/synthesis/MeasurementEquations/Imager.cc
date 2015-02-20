@@ -71,7 +71,7 @@
 #include <images/Images/ImageExpr.h>
 #include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
-#include <lattices/Lattices/LatticeCleanProgress.h>
+#include <lattices/LatticeMath/LatticeCleanProgress.h>
 #include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
@@ -129,17 +129,17 @@
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <lattices/Lattices/LattRegionHolder.h>
+#include <lattices/LRegions/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
-#include <lattices/Lattices/LatticeExpr.h> 
-#include <lattices/Lattices/LatticeFFT.h>
-#include <lattices/Lattices/LCEllipsoid.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCIntersection.h>
-#include <lattices/Lattices/LCUnion.h>
-#include <lattices/Lattices/LCExtension.h>
+#include <lattices/LEL/LatticeExpr.h> 
+#include <lattices/LatticeMath/LatticeFFT.h>
+#include <lattices/LRegions/LCEllipsoid.h>
+#include <lattices/LRegions/LCRegion.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LRegions/LCIntersection.h>
+#include <lattices/LRegions/LCUnion.h>
+#include <lattices/LRegions/LCExtension.h>
 
 #include <images/Images/ImageRegrid.h>
 #include <images/Regions/ImageRegion.h>

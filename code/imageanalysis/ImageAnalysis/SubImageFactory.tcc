@@ -33,7 +33,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Regions/WCLELMask.h>
-#include <lattices/Lattices/LCMask.h>
+#include <lattices/LRegions/LCMask.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
 #include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>

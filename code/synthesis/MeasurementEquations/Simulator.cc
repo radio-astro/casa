@@ -80,7 +80,7 @@
 //#include <synthesis/MeasurementComponents/SimVisJones.h>
 #include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <lattices/Lattices/LatticeExpr.h> 
+#include <lattices/LEL/LatticeExpr.h> 
 
 #include <synthesis/MeasurementEquations/Simulator.h>
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>

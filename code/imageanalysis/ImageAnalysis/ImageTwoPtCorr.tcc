@@ -37,7 +37,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInfo.h>
-#include <lattices/Lattices/LatticeTwoPtCorr.h>
+#include <lattices/LatticeMath/LatticeTwoPtCorr.h>
 
 #include <casa/iostream.h>
 

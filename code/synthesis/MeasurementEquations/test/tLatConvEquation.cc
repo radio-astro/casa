@@ -34,7 +34,7 @@
 #include <casa/BasicMath/Random.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <synthesis/MeasurementEquations/LatticeModel.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <lattices/Lattices/PagedArray.h>
 #include <casa/OS/Time.h>
 #include <casa/BasicSL/String.h>

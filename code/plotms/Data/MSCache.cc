@@ -35,7 +35,7 @@
 #include <casa/Utilities/Sort.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
 #include <msvis/MSVis/VisSet.h>

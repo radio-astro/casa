@@ -31,7 +31,7 @@
 
 
 #include <casa/aips.h>
-#include <lattices/Lattices/LatticeProgress.h>
+#include <lattices/LatticeMath/LatticeProgress.h>
 #include <casa/System/ProgressMeter.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

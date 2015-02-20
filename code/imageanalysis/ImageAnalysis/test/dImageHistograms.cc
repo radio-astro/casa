@@ -106,8 +106,8 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <imageanalysis/ImageAnalysis/ImageHistograms.h>
-#include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCSlicer.h>
+#include <lattices/LRegions/LCBox.h>
 #include <casa/System/PGPlotter.h>
 #include <casa/OS/EnvVar.h>
 

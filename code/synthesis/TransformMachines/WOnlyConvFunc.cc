@@ -37,7 +37,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <casa/ostream.h>
 namespace casa{
   void WOnlyConvFunc::makeConvFunction(const ImageInterface<Complex>& image,

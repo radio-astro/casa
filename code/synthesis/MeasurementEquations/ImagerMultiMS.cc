@@ -52,7 +52,7 @@
 #include <tables/TaQL/TableParse.h>
 #include <tables/Tables/SetupNewTab.h>
 
-#include <lattices/Lattices/LatticeExpr.h> 
+#include <lattices/LEL/LatticeExpr.h> 
 
 #include <casa/OS/File.h>
 #include <casa/OS/HostInfo.h>
