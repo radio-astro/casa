@@ -93,6 +93,11 @@ class MPICommandClient:
             self.__command_request_queue_service_event_controller = threading.Event()       
             self.__command_request_queue_service_event_controller.clear()    
             
+            # Setup a command request input queue to append the jobs
+            # to be picked up by the command request queue service
+            self.__command_request_input_queue = []
+            self.__command_request_input_queue_lock = threading.Lock()
+            
             # Instantiate MPICommunicator reference
             self.__communicator = MPICommunicator()
             
@@ -232,9 +237,19 @@ class MPICommandClient:
             while self.__command_request_queue_service_on:
                 
                 # Wait until there are pending command responses
-                if len(self.__command_request_queue) == 0:
+                self.__command_request_input_queue_lock.acquire()
+                if len(self.__command_request_queue) == 0 and len(self.__command_request_input_queue) == 0:
+                    self.__command_request_input_queue_lock.release()
                     self.__command_request_queue_service_event_controller.wait()
-                
+                else:
+                    self.__command_request_input_queue_lock.release()
+                    
+                # Pick up jobs from input queue
+                self.__command_request_input_queue_lock.acquire()
+                while len(self.__command_request_input_queue) > 0:
+                    self.__command_request_queue.append(self.__command_request_input_queue.pop(0))
+                self.__command_request_input_queue_lock.release()
+
                 # Get list of available servers
                 available_servers_list = self.__monitor_client.get_server_rank_available()
                 if len(available_servers_list) >= 1:
@@ -473,8 +488,10 @@ class MPICommandClient:
             # Register command request
             self.__command_request_list[command_request_id]=command_request_complete
              
-            # Queue command request
-            self.__command_request_queue.append(command_request_complete)
+            # Append jobs to input queue
+            self.__command_request_input_queue_lock.acquire()
+            self.__command_request_input_queue.append(command_request_complete)
+            self.__command_request_input_queue_lock.release()
              
             # Increment command id counter
             self.__command_request_counter = self.__command_request_counter + 1    
@@ -729,22 +746,17 @@ class MPICommandClient:
                 command_response_list = []
                 for command_request_id in command_request_id_list:
                     if not self.__command_response_list.has_key(command_request_id):
-                        if verbose:
+                        server = self.__command_request_list[command_request_id]['server']
+                        timeout = self.__monitor_client.get_server_status_keyword(server,'timeout')
+                        if timeout:
+                            casalog.post("Command request with id# %s sent to server n# %s, but the server has timed out" 
+                                         % (str(command_request_id),str(server)),"SEVERE",casalog_call_origin)
+                            command_response = self.__format_command_response_timeout(command_request_id)
+                            command_response_list.append(command_response)
+                        elif verbose:
                             status = self.__command_request_list[command_request_id]['status']
-                            if status == 'holding queue':
-                                casalog.post("Command request with id# %s is still holding a queue" 
-                                             % str(command_request_id),"INFO",casalog_call_origin)
-                            else:
-                                server = self.__command_request_list[command_request_id]['server']
-                                timeout = self.__monitor_client.get_server_status_keyword(server,'timeout')
-                                if timeout:
-                                    casalog.post("Command request with id# %s sent to server n# %s, but the server has timed out" 
-                                             % (str(command_request_id),str(server)),"SEVERE",casalog_call_origin)
-                                    command_response = self.__format_command_response_timeout(command_request_id)
-                                    command_response_list.append(command_response)
-                                else:
-                                    casalog.post("Command request with id# %s assigned to server n# %s, response pending ..." 
-                                             % (str(command_request_id),str(server)),"INFO",casalog_call_origin)
+                            casalog.post("Command request with id# %s is in %s state assigned to server %s" 
+                                         % (str(command_request_id),status,str(server)),"INFO",casalog_call_origin)
                     else:
                         command_response = dict(self.__command_response_list[command_request_id])
                         command_response_list.append(command_response)

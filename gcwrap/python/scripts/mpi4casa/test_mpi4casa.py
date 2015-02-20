@@ -1,7 +1,9 @@
 import os
+import sys
 import time
 import signal
 import socket
+import traceback
 import unittest
 import testhelper
 from taskinit import mstool,tbtool,cbtool,casalog,casac
@@ -76,7 +78,7 @@ class test_MPICommandClient(unittest.TestCase):
     def setUp(self):
         
         self.client = MPICommandClient()
-        self.client.set_log_mode('unified')
+        self.client.set_log_mode('redirect')
         self.server_list = MPIEnvironment.mpi_server_rank_list()
         self.client.start_services()
                     
@@ -769,7 +771,7 @@ class test_MPICommandServer(unittest.TestCase):
         self.server_list = MPIEnvironment.mpi_server_rank_list()
         self.client.start_services()
         
-    @unittest.skip('Skip until CAS-7322 is fixed')
+        
     def test_server_not_responsive(self):
         
         # First find a sutiable server
@@ -782,6 +784,7 @@ class test_MPICommandServer(unittest.TestCase):
         
         # Overload server n# 0 with a pow operation
         command_request_id_list = self.client.push_command_request("pow(a,b)",False,[rank],{'a':10,'b':100000000000000000})
+        timeout_command_id = command_request_id_list
         
         # Wait until server is not responsive
         command_response_list = self.client.get_command_response(command_request_id_list,True,True)
@@ -797,7 +800,20 @@ class test_MPICommandServer(unittest.TestCase):
             # Try to assign another command to the non-responsive server
             command_request_id_list = self.client.push_command_request("a+b",False,[rank],{'a':1,'b':1})
             self.assertEqual(command_request_id_list, None, "It should not be possible to push command requests to a non-responsive server")
-        
+            
+        # Try to retrieve the command response in non-blocking mode with MPIInterface
+        rethrow = False
+        mpi_interface = MPIInterface()
+        mpi_interface_core = mpi_interface._cluster
+        try:
+            res = mpi_interface_core.check_job(timeout_command_id,verbose=True)
+        except:
+            rethrow = True
+            
+        self.assertEqual(rethrow,True,"Exception not retrown") 
+        self.assertEqual(str(sys.exc_info()[1]).find("Timeout")>=0, True, "Trace-back should contain Timeout")
+            
+            
     def test_server_timeout_recovery(self):
              
         # First get list of servers
@@ -974,7 +990,8 @@ class test_MPIInterface(unittest.TestCase):
             except:
                 rethrow = True
                 break
-        self.assertEqual(rethrow,True,"Exception not retrown")             
+        self.assertEqual(rethrow,True,"Exception not retrown")
+        self.assertEqual(str(sys.exc_info()[1]).find("ZeroDivisionError:")>=0, True, "Trace-back should contain ZeroDivisionError")      
         
         # Check queue status
         jobIds = self.CL.odo("time.sleep(5)",1)
@@ -1249,9 +1266,9 @@ class test_mpi4casa_uvcont(unittest.TestCase):
 
 def suite():
     return [test_MPICommandClient,
-            test_MPICommandServer,
             test_MPIInterface,
             test_mpi4casa_flagdata,
             test_mpi4casa_setjy,
             test_mpi4casa_applycal,
-            test_mpi4casa_uvcont]
+            test_mpi4casa_uvcont,
+            test_MPICommandServer]

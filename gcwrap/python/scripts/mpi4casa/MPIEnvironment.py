@@ -182,14 +182,25 @@ class MPIEnvironment:
         mpi_check_start_service_sleep_time = 0.1 # Aggressive, temporal and not concurrent with command execution (at the client)
         mpi_check_stop_service_sleep_time = 0.1 # Aggressive, temporal and not concurrent with command execution (at the client)
         mpi_monitor_status_service_heartbeat = 5 # Not aggressive, permanent and concurrent with command execution (at the client)
-        mpi_monitor_status_service_timeout = 36 # Corresponds to 3 consecutive heartbeats w/o response
         mpi_ping_status_request_handler_service_sleep_time = 3  # Not aggressive, concurrent with command execution (at the server)
         mpi_ping_status_response_handler_service_sleep_time = 3 # Not aggressive, concurrent with command execution (at the client)
-        mpi_ping_status_request_handler_service_timeout = 24 # Corresponds to 2 consecutive heartbeats w/o request
         mpi_command_request_handler_service_sleep_time = 0.1 # Aggressive, not concurrent with command execution (at the server)
         mpi_command_response_handler_service_sleep_time = 0.1 # Aggressive, triggered (at the client)
         mpi_command_request_queue_service_sleep_time = 0.1 # Aggressive, triggered (at the client)
         mpi_push_command_request_block_mode_sleep_time = 0.1 # Aggressive, used for getting response in blocking mode (at the client)
+        
+        mpi_monitor_status_service_timeout = 1 # 2*[bsend+(Iprobe+recv) + serialization/deserialization + latency + locks]
+        mpi_monitor_status_service_timeout += mpi_ping_status_request_handler_service_sleep_time # Sleep time at the server
+        mpi_monitor_status_service_timeout += mpi_world_size-1 # Receive sequentially response from all servers
+        mpi_monitor_status_service_timeout += mpi_ping_status_response_handler_service_sleep_time # Sleep time at the client
+        mpi_monitor_status_service_timeout += mpi_monitor_status_service_heartbeat # Own heartbeat sleep time
+        mpi_monitor_status_service_timeout *= 3 # 3 times what it should take
+        
+        mpi_ping_status_request_handler_service_timeout = 0.5 # 1*[bsend+(Iprobe+recv) + serialization/deserialization + latency + locks]
+        mpi_ping_status_request_handler_service_timeout += mpi_world_size-1 # Receive sequentially response from all servers
+        mpi_ping_status_request_handler_service_timeout += mpi_ping_status_response_handler_service_sleep_time # Sleep time at the client
+        mpi_ping_status_request_handler_service_timeout += mpi_monitor_status_service_heartbeat # Own heartbeat sleep time
+        mpi_ping_status_request_handler_service_timeout *= 3 # 3 times what it should take
     
     # Static methods ###################################################################################################       
         
