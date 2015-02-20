@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import sqrt, cos, sin
 from taskinit import casalog, gentools, qatool
 
 import scipy.special as spspec
@@ -52,6 +53,19 @@ class TheoreticalBeam:
         elif type(angle) in [float, int]: return angle
         else: raise ValueError, "Invalid angle: %s" % str(angle)
 
+    def __parse_width(self, val, cell_size_arcsec):
+        """
+        Convert value in unit of arcsec
+        if val is angle, returns a float value in unit of arcsec.
+        else the unit is assumed to be pixel and multiplied by cell_size_arcsec
+        """
+        my_qa = qatool()
+        if my_qa.isangle(val): return __to_arcsec(val)
+        elif my_qa.getunit(val) in ('', 'pixel'):
+            return my_qa.getvalue(val)*cell_size_arcsec
+        else: raise ValueError, "Invalid width %s" % str(val)
+
+    
     def set_antenna(self, diam, blockage="0.0m", taper=10):
         """
         set parameters to construct antenna beam
@@ -139,8 +153,8 @@ class TheoreticalBeam:
         sampling = self.get_box_kernel(axis,self.sampling_arcsec[0])
         # convolution
         gridded = scipy.signal.convolve(beam,kernel,mode='same')
+        gridded /= max(gridded)
         result = scipy.signal.convolve(gridded,sampling,mode='same')
-        # normalization
         result /= max(result)
         #fwhm_arcsec = findFWHM(axis,result)
         fwhm_arcsec, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
@@ -163,8 +177,8 @@ class TheoreticalBeam:
             elif self.kernel_type == "BOX" and len(self.cell_arcsec) > 1:
                 kernel = self.get_box_kernel(axis,self.cell_arcsec[1])
                 gridded = scipy.signal.convolve(beam,kernel,mode='same')
+                gridded /= max(gridded)
             result = scipy.signal.convolve(gridded,sampling,mode='same')
-            # normalization
             result /= max(result)
             #fwhm1 = findFWHM(axis,result)
             fwhm1, dummy = self.gaussfit(axis, result, minlevel=0.0,truncate=False)
@@ -198,6 +212,7 @@ class TheoreticalBeam:
     def get_antenna_beam(self):
         """
         Returns arrays of antenna beam response and it's horizontal axis
+        Picked from AnalysisUtils (revision 1.2204, 2015/02/18)
         """
         self.__assert_antenna()
         self.__assert_kernel()
@@ -237,10 +252,12 @@ class TheoreticalBeam:
         elif self.kernel_type == "GJINC":
             return self.get_gjinc_kernel(axis,self.kernel_param['truncate'],
                                          self.kernel_param['gwidth'],
-                                         self.kernel_param['jwidth'])
+                                         self.kernel_param['jwidth'],
+                                         self.cell_arcsec[0])
         elif self.kernel_type == "GAUSS":
             return self.get_gauss_kernel(axis,self.kernel_param['truncate'],
-                                         self.kernel_param['gwidth'])
+                                         self.kernel_param['gwidth'],
+                                         self.cell_arcsec[0])
         elif self.kernel_type == "BOX":
             return self.get_box_kernel(axis,self.kernel_param['width'])
         elif self.kernel_type == "PB":
@@ -355,9 +372,29 @@ class TheoreticalBeam:
             return result
     
     ### GAUSS ###
-    def get_gauss_kernel(self, axis, truncate, gwidth):
-        return self.gauss(axis,[gwidth, truncate])
-    
+    def get_gauss_kernel(self, axis, truncate, gwidth, cell_arcsec):
+        """
+        Returns a gaussian kernel array
+        axis : an array of xaxis values
+        truncate : truncation radius
+            NOTE definition is different from truncate in gauss()!
+        gwidth : kernel gwidth
+        cell_arcsec : image pixel size in unit of arcsec
+        """
+        if gwidth == -1:
+            gwidth = np.sqrt(np.log(2.0))
+        gwidth_arcsec = self.__parse_width(gwidth, cell_arcsec)
+        # get gauss for full axis
+        result = self.gauss(axis,[gwidth_arcsec])
+        # truncate kernel outside the truncation radius
+        if truncate == -1:
+            trunc_arcsec = gwidth*1.5
+        elif truncate is not None:
+            trunc_arcsec = self.__parse_width(gwidth, cell_arcsec)
+        idx = np.where(abs(axis)>trunc_arcsec)
+        result[idx] = 0.
+        return 
+
     def gauss(self, x, parameters):
         """
         Computes the value of the Gaussian function at the specified
@@ -379,8 +416,92 @@ class TheoreticalBeam:
         return result
 
     ### GJINC ###
-    def get_gjinc_kernel(self, axis, truncate, gwidth, jwidth):
-        raise NotImpelentedError
+    def get_gjinc_kernel(self, axis, truncate, gwidth, jwidth, cell_arcsec):
+        """
+        Returns a GJinc kernel array
+        axis : an array of xaxis values
+        truncate : truncation radius (NOT SUPPORTED YET)
+        gwidth jwidth : kernel gwidth
+        cell_arcsec : image pixel size in unit of arcsec
+        """
+        if gwidth == -1:
+            gwidth = 2.52*np.sqrt(np.log(2.0))
+        if jwidth == -1:
+            jwidth = 1.55
+        gwidth_arcsec = self.__parse_width(gwidth, cell_arcsec)
+        jwidth_arcsec = self.__parse_width(jwidth, cell_arcsec)
+        mygjinc = self.trunc(self.gjinc(axis, gwidth=gwidth_arcsec,
+                                        jwidth=jwidth_arcsec,
+                                        useCasaJinc=True, normalize=False))
+        return mygjinc
+
+    def gjinc(self, x, gwidth, jwidth, useCasaJinc=False, normalize=False):
+        """
+        Migrated from AnalysisUtils (revision 1.2204, 2015/02/18)
+        """
+        if (useCasaJinc):
+            result = self.grdjinc1(x,jwidth,normalize) * self.gjincGauss(x, gwidth)
+        else:
+            result = self.jinc(x,jwidth) * self.gjincGauss(x, gwidth)
+        return result
+
+    def grdjinc1(self, val, c, normalize=True):
+        """
+        Migrated from AnalysisUtils (revision 1.2204, 2015/02/18)
+        """
+        # Casa's function
+        #// Calculate J_1(x) using approximate formula
+        xs = np.pi * val / c
+        result = []
+        for x in xs:
+          x = abs(x)  # I added this to make it symmetric
+          ax = abs(x)
+          if (ax < 8.0 ):
+            y = x * x
+            ans1 = x * (72362614232.0 + y * (-7895059235.0 \
+                       + y * (242396853.1 + y * (-2972611.439 \
+                       + y * (15704.48260 + y * (-30.16036606))))))
+            ans2 = 144725228442.0 + y * (2300535178.0 \
+                       + y * (18583304.74 + y * (99447.43394 \
+                       + y * (376.9991397 + y * 1.0))))
+            ans = ans1 / ans2
+          else:
+            z = 8.0 / ax
+            y = z * z
+            xx = ax - 2.356194491
+            ans1 = 1.0 + y * (0.183105e-2 + y * (-0.3516396496e-4 \
+                      + y * (0.2457520174e-5 + y * (-0.240337019e-6))))
+            ans2 = 0.04687499995 + y * (-0.2002690873e-3 \
+                      + y * (0.8449199096e-5 + y * (-0.88228987e-6  \
+                      + y * (0.105787412e-6))))
+            ans = sqrt(0.636619772 / ax) * (cos(xx) * ans1 - z * sin(xx) * ans2)
+          if (x < 0.0):
+            ans = -ans
+          if (x == 0.0):
+            out = 0.5
+          else:
+            out = ans / x
+          if (normalize):
+            out = out / 0.5
+          result.append(out)
+        return(result)
+
+    def jinc(self, x, jwidth):
+        """
+        The peak of this function is 0.5.
+        Migrated from AnalysisUtils (revision 1.2204, 2015/02/18)
+        """
+        argument = np.pi*np.abs(x)/jwidth
+        np.seterr(invalid='ignore') # prevent warning for central point
+        result = scipy.special.j1(argument) / argument 
+        np.seterr(invalid='warn')
+        for i in range(len(x)):
+            if (abs(x[i]) < 1e-8):
+                result[i] = 0.5
+        return result
+
+    def gjincGauss(self, x, gwidth):
+        return (np.exp(-np.log(2)*(x/float(gwidth))**2))  
 
     ### Airly disk ###
     def buildAiryDisk(self, fwhm, xaxisLimitInUnitsOfFwhm, convolutionPixelSize,
