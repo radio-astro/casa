@@ -135,7 +135,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # context. This comes back as a string containing a ranked
             # list of antenna names. Choose the first one.
             refant = ms.reference_antenna
-            if refant is None:
+            # if no reference antenna was found in the context for this measurement
+            # (refant equals either None or an empty string), then raise an exception.
+            if not (refant and refant.strip()):
                 msg = ('No reference antenna specified and none found in '
                        'context for %s' % ms.basename)
                 LOG.error(msg)
