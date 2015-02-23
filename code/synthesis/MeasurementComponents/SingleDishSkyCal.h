@@ -192,25 +192,25 @@ public:
   virtual Bool normalizable() { return False; }
 
   // Hazard a guess at the parameters (solveCPar) given the data
-  virtual void guessPar(VisBuffer& vb) {};
+  virtual void guessPar(VisBuffer& vb);
 
   // Differentiate VB model w.r.t. Cal  parameters (no 2nd derivative yet)
-  virtual void differentiate(CalVisBuffer& cvb) {};
+  virtual void differentiate(CalVisBuffer& cvb);
   virtual void differentiate(VisBuffer& vb,        
         		     Cube<Complex>& V,     
         		     Array<Complex>& dV,
-        		     Matrix<Bool>& Vflg) {};
+        		     Matrix<Bool>& Vflg);
 
   // Differentiate VB model w.r.t. Source parameters
   virtual void diffSrc(VisBuffer& vb,        
-  		       Array<Complex>& dV) {};
+  		       Array<Complex>& dV);
 
   // Apply refant (implemented in SVJ)
   virtual void reReference() {};
 
   // Accumulate another VisCal onto this one
   virtual void accumulate(SolvableVisCal* incr,
-			  const Vector<Int>& fields) {};
+			  const Vector<Int>& fields);
 
   // Determine and apply flux density scaling
   virtual void fluxscale(const String& outfile,
@@ -226,7 +226,7 @@ public:
 			 const String& oListFile,
                          const Bool& incremental,
                          const Int& fitorder,
-                         const Bool& display) {};
+                         const Bool& display);
 
   // Use generic data gathering mechanism for solve
   virtual Bool useGenericGatherForSolve() { return False; };
@@ -234,7 +234,7 @@ public:
   // Report state:
   virtual void listCal(const Vector<Int> ufldids, const Vector<Int> uantids,
 		       const Matrix<Int> uchanids,  //const Int& spw, const Int& chan,
-		       const String& listfile="",const Int& pagerows=50) {};
+		       const String& listfile="",const Int& pagerows=50);
 
 
   // Local setSpecify
@@ -277,7 +277,7 @@ protected:
   virtual void syncDiffMat();
 
   // Normalize a (complex) solution array (generic)
-  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok) { return 0.0f; };
+  virtual Float calcPowerNorm(Array<Float>& amp, const Array<Bool>& ok);
 
   // Invalidate cal matrices generically 
   virtual void invalidateCalMat() {};

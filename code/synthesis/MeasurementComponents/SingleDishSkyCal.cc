@@ -242,7 +242,7 @@ inline casa::Vector<casa::Int> detectGap(casa::Vector<casa::Double> timeList)
 
 struct DefaultRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
+  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const /*num*/)
   {
     return static_cast<size_t>(sqrt(numData + 1) - 1);
   }
@@ -250,7 +250,7 @@ struct DefaultRasterEdgeDetector
 
 struct FixedNumberRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
+  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const num)
   {
     return min(numData, (size_t)num);
   }
@@ -258,7 +258,7 @@ struct FixedNumberRasterEdgeDetector
 
 struct FixedFractionRasterEdgeDetector
 {
-  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const num)
+  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const /*num*/)
   {
     return static_cast<size_t>(numData * fraction);
   }
@@ -383,6 +383,53 @@ SingleDishSkyCal::~SingleDishSkyCal()
 
   finalizeSky();
 }
+
+void SingleDishSkyCal::guessPar(VisBuffer& /*vb*/)
+{
+}
+
+void SingleDishSkyCal::differentiate( CalVisBuffer & /*cvb*/)
+{
+}
+
+void SingleDishSkyCal::differentiate(VisBuffer& /*vb*/, Cube<Complex>& /*V*/,     
+                                     Array<Complex>& /*dV*/, Matrix<Bool>& /*Vflg*/)
+{
+}
+
+void SingleDishSkyCal::accumulate(SolvableVisCal* /*incr*/,
+                                  const Vector<Int>& /*fields*/)
+{
+}
+
+void SingleDishSkyCal::diffSrc(VisBuffer& /*vb*/, Array<Complex>& /*dV*/)
+{
+}
+
+void SingleDishSkyCal::fluxscale(const String& /*outfile*/,
+                                 const Vector<Int>& /*refFieldIn*/,
+                                 const Vector<Int>& /*tranFieldIn*/,
+                                 const Vector<Int>& /*inRefSpwMap*/,
+                                 const Vector<String>& /*fldNames*/,
+                                 const Float& /*inGainThres*/,
+                                 const String& /*antSel*/,
+                                 const String& /*timerangeSel*/,
+                                 const String& /*scanSel*/,
+                                 fluxScaleStruct& /*oFluxScaleStruct*/,
+                                 const String& /*oListFile*/,
+                                 const Bool& /*incremental*/,
+                                 const Int& /*fitorder*/,
+                                 const Bool& /*display*/)
+{
+}
+
+void SingleDishSkyCal::listCal(const Vector<Int> /*ufldids*/, const Vector<Int> /*uantids*/,
+                               const Matrix<Int> /*uchanids*/,
+                               //const Int& /*spw*/, const Int& /*chan*/,
+                               const String& /*listfile*/, const Int& /*pagerows*/)
+{
+}
+
 
 void SingleDishSkyCal::setSpecify(const Record& specify)
 {
@@ -596,7 +643,7 @@ void SingleDishSkyCal::initSolvePar()
   interval_.resize(nElem());
 }
 
-void SingleDishSkyCal::syncCalMat(const Bool &doInv)
+void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
 {
   debuglog << "SingleDishSkyCal::syncCalMat" << debugpost;
   debuglog << "nAnt()=" << nAnt() << ", nElem()=" << nElem() << ", nBln()=" << nBln() << debugpost;
@@ -617,6 +664,7 @@ void SingleDishSkyCal::syncCalMat(const Bool &doInv)
 
   convertArray(currentSky(), currRPar());
   currentSkyOK() = currParOK();
+  debuglog << "currentTime() = " << setprecision(16) << currTime() << debugpost;
   debuglog << "currentSky() = " << currentSky().xzPlane(0) << debugpost;
   debuglog << "currParOK() = " << currParOK().xzPlane(0) << debugpost;
 
@@ -628,7 +676,12 @@ void SingleDishSkyCal::syncDiffMat()
   debuglog << "SingleDishSkyCal::syncDiffMat()" << debugpost;
 }
   
-void SingleDishSkyCal::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial)
+Float SingleDishSkyCal::calcPowerNorm(Array<Float>& /*amp*/, const Array<Bool>& /*ok*/)
+{
+  return 0.0f;
+}
+
+void SingleDishSkyCal::applyCal(VisBuffer& /*vb*/, Cube<Complex>& /*Vout*/, Bool /*trial*/)
 {
   throw AipsError("Single dish calibration doesn't support applyCal. Please use applyCal2");
 }
@@ -712,7 +765,7 @@ void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<F
   }
 }
 
-void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
+void SingleDishSkyCal::selfGatherAndSolve(VisSet& /*vs*/, VisEquation& /*ve*/)
 {
   debuglog << "SingleDishSkyCal::self.GatherAndSolve()" << debugpost;
 
@@ -765,7 +818,7 @@ SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()
   debuglog << "SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()" << debugpost;
 }
 
-void SingleDishPositionSwitchCal::specify(const Record& specify)
+void SingleDishPositionSwitchCal::specify(const Record& /*specify*/)
 {
   debuglog << "SingleDishPositionSwitchCal::specify()" << debugpost;
 
@@ -790,7 +843,7 @@ void SingleDishPositionSwitchCal::specify(const Record& specify)
   updateWeight(*ct_);
 }
 
-void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
+void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
 {
   debuglog << "SingleDishPositionSwitchCal::self.GatherAndSolve()" << debugpost;
 
@@ -972,7 +1025,7 @@ SingleDishOtfCal::~SingleDishOtfCal()
   debuglog << "SingleDishOtfCal::~SingleDishOtfCal()" << debugpost;
 }
 
-void SingleDishOtfCal::specify(const Record& specify)
+void SingleDishOtfCal::specify(const Record& /*specify*/)
 {
   debuglog << "SingleDishOtfCal::specify()" << debugpost;
 }
