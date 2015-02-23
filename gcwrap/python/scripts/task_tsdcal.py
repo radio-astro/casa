@@ -1,5 +1,7 @@
 import sys
 import os
+import numpy
+
 from taskinit import *
 from applycal import applycal
 import types
@@ -27,14 +29,30 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
         if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps', 'apply']): 
             raise Exception, 'Calmode must be either \'ps\' or \'tsys\' or \'apply\''
 
-        if ((type(calmode)==str) and (calmode=='apply') and (applytable =='')):
-            raise Exception, 'Applytable name must be specified.'
+        if ((type(calmode)==str) and (calmode.lower()=='apply')):
+            # single table
+            print type(applytable)
+            if isinstance(applytable, str):
+                _table_list = [applytable]
+
+            # multiple tables
+            if isinstance(applytable, list) or isinstance(applytable, numpy.ndarray):
+                _table_list = applytable
+                
+            for table in _table_list:
+                # empty string
+                if len(table) == 0:
+                    raise Exception, 'Applytable name must be specified.'
+                # unexisting table
+                if not os.path.exists(table):
+                    raise Exception, 'Table "%s" doesn\'t exist.'%(table)
+                
 
         if (not overwrite) and (os.path.exists(outfile)):
             raise RuntimeError, 'Output file \'%s\' exists.'%(outfile)
 
 
-        if ((type(calmode)==str) and (calmode=='apply') and (os.path.exists(applytable))):
+        if ((type(calmode)==str) and (calmode=='apply')):
             #applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')
             if (outfile != ''):
                 raise UserWarning, 'Outfile is not generated but is added to MS as a new table, namely corrected data'
@@ -42,8 +60,8 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
             if(type(spwmap)!=types.ListType and (type(spwmap)!=types.DictType)):
                 raise Exception, 'Spwmap type must be list or dictionary.'
 
-            if(len(spwmap)==0):
-                raise Exception, 'Spwmap must be specified.'
+            #if(len(spwmap)==0):
+            #    raise Exception, 'Spwmap must be specified.'
 			
             #if (type(spwmap)==types.ListType):
             #	applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')
@@ -53,10 +71,12 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
                 MS = infile
                 tb.open(MS+'/SPECTRAL_WINDOW')
                 total_spwID=tb.nrows()
+                tb.close()
                 spwmap_dict = spwmap
-                spwmap_list=[]
-                for num in range(total_spwID):
-                    spwmap_list.append(num)
+                #spwmap_list=[]
+                #for num in range(total_spwID):
+                #    spwmap_list.append(num)
+                spwmap_list = range(total_spwID)
 
                 for key, value in spwmap_dict.items():
                     for v in value:
@@ -66,11 +86,13 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
                 spwmap = spwmap_list
 
-            applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calonly')	
+            applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calflag')	
 
-        calmodemap = {'tsys': 'tsys','ps': 'sdsky_ps'}
+        else:
+            # non-apply modes (ps, tsys)
+            calmodemap = {'tsys': 'tsys','ps': 'sdsky_ps'}
 
-        if(calmode!='apply'):
+        #if(calmode!='apply'):
             if len(outfile) == 0:
                 raise RuntimeError, 'Output file name must be specified.'
             if calmode=='tsys':
