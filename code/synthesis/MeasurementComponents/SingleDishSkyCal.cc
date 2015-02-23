@@ -62,7 +62,7 @@ namespace {
 struct NullLogger {};
 
 template<class T>
-inline NullLogger &operator<<(NullLogger &logger, T value) {
+inline NullLogger &operator<<(NullLogger &logger, T /*value*/) {
   return logger;
 }
 
