@@ -49,6 +49,11 @@ Imports data into the interferometry pipeline
 	<description>Apply BDF flags on import</description>
 	<value>True</value>
     </param>
+
+    <param type="bool" name="lazy">
+	<description>Use the lazy filler import</description>
+	<value>False</value>
+    </param>
     
     <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
@@ -145,6 +150,9 @@ bdfflags -- Apply BDF flags on line
 
 dbservice -- Use online flux catalog on import
    default: True
+
+lazy -- Use the lazy filter import
+   default: False
 
 --- pipeline task execution modes
 
