@@ -322,7 +322,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			elif(rval == 65280):
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'SEVERE')
 				return taskrval
-			elif(rval == 34304):
+			elif(rval == 34304 or rval==256):
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
 				casalog.post("No useful input data.",'SEVERE')
 				return taskrval
