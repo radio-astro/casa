@@ -211,6 +211,11 @@ public:
 
     virtual void normalize ();
 
+    // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
+    virtual void phaseCenterShift(const Vector<Double>& phase);
+    // Rotate visibility phase for phase center offsets (arcsecs)
+    virtual void phaseCenterShift(Double dx, Double dy);
+
     // Fill weightMat according to sigma column
     virtual void resetWeightsUsingSigma ();//virtual void resetWeightMat();
 

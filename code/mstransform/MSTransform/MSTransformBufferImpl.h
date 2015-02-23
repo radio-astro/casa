@@ -103,6 +103,11 @@ public:
 
     const Vector<uInt> & rowIds () const;
 
+    // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
+    void phaseCenterShift(const Vector<Double>& phase);
+    // Rotate visibility phase for phase center offsets (arcsecs)
+    void phaseCenterShift(Double dx, Double dy);
+
 private:
 
 	MSTransformManager *manager_p;

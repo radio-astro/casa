@@ -289,6 +289,11 @@ public:
 
     virtual void normalize() = 0;
 
+    // Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
+    virtual void phaseCenterShift(const Vector<Double>& phase) = 0;
+    // Rotate visibility phase for phase center offsets (arcsecs)
+    virtual void phaseCenterShift(Double dx, Double dy) = 0;
+
     // Set the weight cube using the sigma cube.  Each weight will be
     // the reciprocal of the square of the corresponding element in the model
     // VisCube multiplied by the number of channels in the spectral window.

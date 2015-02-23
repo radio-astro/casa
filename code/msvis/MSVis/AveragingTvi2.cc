@@ -308,6 +308,7 @@ public:
     int nSpectralWindowsInBuffer () const;
     void setBufferToFill (VisBufferImpl2 *);
     void startChunk (ViImplementation2 *);
+    Bool isUsingUvwDistance () const;
 
 protected:
 
@@ -1709,6 +1710,14 @@ VbAvg::transferBaseline (MsRowAvg * rowAveraged)
     rowAveraged->setBaselinePresent(False);
 }
 
+
+Bool
+VbAvg::isUsingUvwDistance () const
+{
+    return usingUvwDistance_p;
+}
+
+
 //VbSet::VbSet (const AveragingParameters & averagingParameters)
 //: averagingInterval_p (averagingParameters.getAveragingInterval ()),
 //  averagingOptions_p (averagingParameters.getOptions()),
@@ -2057,7 +2066,12 @@ AveragingTvi2::produceSubchunk ()
         vbAvg_p->accumulate (vb, subchunk_p);
         Int nWindows = vbAvg_p->nSpectralWindowsInBuffer ();
 
-        if (vbToFill->appendSize() < nBaselines * nWindows){
+        if (! vbAvg_p->isUsingUvwDistance() && vbToFill->appendSize() > 0)
+        {
+            // Doing straight average and some data has been produced so output it to the user
+            break;
+        }
+        else if (vbToFill->appendSize() < nBaselines * nWindows){
             getVii()->next();
         }
         else{

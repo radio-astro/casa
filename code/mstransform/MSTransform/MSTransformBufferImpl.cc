@@ -276,7 +276,7 @@ const Vector<Int> & MSTransformBufferImpl::fieldId () const
 
 		fieldIdTransformed_p = manager_p->transformReindexableVector(	manager_p->getVisBuffer()->fieldId(),
 																		fieldId_p,
-																		True,
+																		!manager_p->timespan_p.contains("field"),
 																		manager_p->inputOutputFieldIndexMap_p);
 		fieldIdOk_p = True;
 	}
@@ -1375,6 +1375,96 @@ Int MSTransformBufferImpl::nAntennas () const
 
 	return nAntennas_p;
 }
+
+
+// -----------------------------------------------------------------------
+// Rotate visibility phase for given vector (dim = nrow of vb) of phases (meters)
+// phase*(-2*pi*f/c) gives phase for the channel of the given baseline in radian
+// sign convention will _correct_ data
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::phaseCenterShift(const Vector<Double>& phase)
+{
+	getShape();
+	if (phase.nelements() != nRows_p)
+	{
+		manager_p->logger_p << LogIO::EXCEPTION << LogOrigin("MSTransformBufferImpl", __FUNCTION__)
+				<< "Phase vector does not have the same number of elements as rows in the current buffer" << LogIO::POST;
+	}
+
+	// Use the frequencies corresponding to the SPW of the first row in the buffer
+	Vector<Double> freq(getFrequencies(0));
+
+	// Get vis cube references (they may be resident in the inner VB or in the MSTransformBuffer)
+	// The copy constructor uses reference semantics.
+	// It does not matter if the cubes are empty, the corresponding check comes afterwards
+	Cube<Complex> visCubeRef(visCube());
+	Cube<Complex> visCubeModelRef(visCubeModel());
+	Cube<Complex> visCubeCorrectedRef(visCubeCorrected());
+
+	Complex cph;
+	Double ph, udx;
+	for (Int row_idx = 0; row_idx < nRows_p; ++row_idx)
+	{
+		udx = phase(row_idx) * -2.0 * C::pi / C::c; // in radian/Hz
+
+		for (Int chan_idx = 0; chan_idx < nChannelsOk_p; ++chan_idx)
+		{
+			// Calculate the Complex factor for this row and channel
+			ph = udx * freq(chan_idx);
+
+			if (ph != 0.)
+			{
+				cph = Complex(cos(ph), sin(ph));
+
+				// Shift each correlation:
+				for (Int corr_idx = 0; corr_idx < nCorrelations_p; ++corr_idx)
+				{
+					if (visCubeOk_p)
+					{
+						visCubeRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+
+					if (visCubeModelOk_p)
+					{
+						visCubeModelRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+
+					if (visCubeCorrectedOk_p)
+					{
+						visCubeCorrectedRef(corr_idx, chan_idx, row_idx) *= cph;
+					}
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Rotate visibility phase for phase center offsets
+// -----------------------------------------------------------------------
+void MSTransformBufferImpl::phaseCenterShift(Double dx, Double dy)
+{
+
+	// Offsets in radians (input is arcsec)
+	dx *= (C::pi / 180.0 / 3600.0);
+	dy *= (C::pi / 180.0 / 3600.0);
+
+	// Extra path as fraction of U and V
+	Vector<Double> udx;
+	udx = uvw().row(0);
+	Vector<Double> vdy;
+	vdy = uvw().row(1);
+	udx *= dx; // in m
+	vdy *= dy;
+
+	// Combine axes
+	udx += vdy;
+
+	phaseCenterShift(udx);
+}
+
 
 } //# NAMESPACE CASA - END
 

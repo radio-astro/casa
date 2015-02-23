@@ -229,8 +229,6 @@ Record parseConfiguration(int argc, char **argv)
 			if (exists == 0)
 			{
 				configuration.define ("inputms", filename);
-				configuration.define ("spw", "0");
-				configuration.define ("scan", "30");
 				configuration.define ("timeaverage", True);
 				configuration.define ("timebin", "2s");
 				configuration.define ("chanaverage", True);
@@ -1085,6 +1083,9 @@ Bool test_compareTransformedFileWithTransformingBuffer(Record configuration, Str
 				cout << GREEN;
 				cout 	<< "=>sigmaSpectrum match" << endl;
 			}
+
+			// CAS-7315: Phase shifting
+			visBuffer->phaseCenterShift(0.1,0.1);
 
 			visIter->next();
 			visIterRef.next();

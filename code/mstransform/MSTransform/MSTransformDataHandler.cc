@@ -56,16 +56,6 @@ MSTransformDataHandler::MSTransformDataHandler(String& theMS, Table::TableOption
 		  fitoutspw_p("*"),
 		  realmodelcol_p(realmodelcol)
 {
-	// CAS-5348 (jagonzal): Check if model parameters are defined.
-	if ((realmodelcol_p) and (not ms_p.source().isColumn(MSSource::SOURCE_MODEL)))
-	{
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-		os << LogIO::WARN 	<< "Requested to make virtual MODEL_DATA column real but "
-							<< "SOURCE_MODEL column is not present in SOURCE sub-table"
-							<< LogIO::POST;
-		realmodelcol_p = False;
-	}
-
 	return;
 }
 
@@ -93,16 +83,6 @@ MSTransformDataHandler::MSTransformDataHandler(MeasurementSet& ms, Bool realmode
 		   fitoutspw_p("*"),
 		   realmodelcol_p(realmodelcol)
 {
-	// CAS-5348 (jagonzal): Check if model parameters are defined.
-	if ((realmodelcol_p) and (not ms_p.source().isColumn(MSSource::SOURCE_MODEL)))
-	{
-		LogIO os(LogOrigin("MSTransformDataHandler", __FUNCTION__));
-		os << LogIO::WARN 	<< "Requested to make virtual MODEL_DATA column real but "
-							<< "SOURCE_MODEL column is not present in SOURCE sub-table"
-							<< LogIO::POST;
-		realmodelcol_p = False;
-	}
-
 	return;
 }
 
@@ -249,12 +229,11 @@ const Vector<MS::PredefinedColumns>& MSTransformDataHandler::parseColumnNames(St
 			my_colNameVect[nFound - 1] = wanted[i];
 		}
 		// CAS-5348 (jagonzal): Model parameters check is done at construction time
-		else if (wanted[i] == MS::MODEL_DATA and realmodelcol)
+		else if (wanted[i] == MS::MODEL_DATA and realmodelcol and msref.source().isColumn(MSSource::SOURCE_MODEL))
 		{
 			++nFound;
 			my_colNameVect.resize(nFound, true);
 			my_colNameVect[nFound - 1] = wanted[i];
-			os << LogIO::NORMAL 	<< "Virtual MODEL_DATA column found will be written to output MS " << LogIO::POST;
 		}
 		else if (!doAny)
 		{

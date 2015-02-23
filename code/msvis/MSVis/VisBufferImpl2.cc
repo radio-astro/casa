@@ -866,6 +866,20 @@ VisBufferImpl2::normalize()
     }
 }
 
+// Rotate visibility phase for given vector (dim = nrow of vb) of phases (metres)
+void
+VisBufferImpl2::phaseCenterShift(const Vector<Double>& phase)
+{
+
+}
+
+// Rotate visibility phase for phase center offsets
+void
+VisBufferImpl2::phaseCenterShift(Double dx, Double dy)
+{
+
+}
+
 void
 VisBufferImpl2::normalizeRow (Int row, Int nCorrelations, const Cube<Bool> & flagged,
                               Cube<Complex> & visCube, Cube<Complex> & modelCube,

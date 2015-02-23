@@ -201,6 +201,9 @@ public:
     virtual Float getSigmaScaled (Int correlation, Int channel, Int row) const { return 0;}
     virtual CountedPtr<vi::WeightScaling> getWeightScaling () const { return 0; }
 
+    virtual void phaseCenterShift(const Vector<Double>& phase) {};
+    virtual void phaseCenterShift(Double dx, Double dy) {};
+
 
 protected:
 
