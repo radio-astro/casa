@@ -197,7 +197,7 @@ namespace LibAIR2 {
   {
     if (retrievals.size() == 0) 
     {
-      throw std::runtime_error("No retrievals have been enterred");
+      throw std::runtime_error("No retrievals have been entered.");
     }
 
     res.resize(4);

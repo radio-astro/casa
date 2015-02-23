@@ -1021,7 +1021,7 @@ int main(int argc,  char* argv[])
 	boost::tie(inp,fb)=filterFlaggedInp(inp,
 					    fb);
 
-	std::cerr<<"Calculating the coefficients now...";
+	std::cerr << "Calculating the coefficients now...";
 	boost::ptr_list<LibAIR2::ALMAResBase> rlist;
 	std::vector<int> problemAnts;
 
@@ -1032,11 +1032,11 @@ int main(int argc,  char* argv[])
 				       problemAnts);
 	}
 	catch(const std::runtime_error rE){
+	   rval = 1;
 	   std::cerr << std::endl << "WARNING: problem while calculating coefficients:"
 		     << std::endl << "         LibAIR2::doALMAAbsRet: " << rE.what() << std::endl;
 	   std::cout << std::endl << "WARNING: problem while calculating coefficients:"
 		     << std::endl << "         LibAIR2::doALMAAbsRet: " << rE.what() << std::endl;
-	   rval = -2;
 	}
 	
 	if(problemAnts.size()>0){
@@ -1101,8 +1101,15 @@ int main(int argc,  char* argv[])
      {
        LibAIR2::printNoSolution(std::cerr, nantimes);
      }
-     g.calc(*d,
-	    *coeffs);    
+     try{
+       g.calc(*d,
+	      *coeffs);    
+     }
+     catch(const std::runtime_error& x){
+       std::cout << "Problem while calculating gains: " << x.what() << std::endl;
+       std::cerr << "Problem while calculating gains: " << x.what() << std::endl;
+       return 1;
+     }
 
      if (vm.count("sourceflag"))
      {
@@ -1120,21 +1127,29 @@ int main(int argc,  char* argv[])
      
      
      std::vector<double> pathDisc;
-     computePathDisc(*d, 
-		     tmask,
-		     *coeffs,
-		     pathDisc);
-     
-     std::cout<<LibAIR2::AntITable(anames,
-				  wvrflag,
-				  nowvr,
-				  pathRMS,
-				  pathDisc,
-				  interpImpossibleAnts);
-     
-     printExpectedPerf(g, 
+     try{
+       computePathDisc(*d, 
+		       tmask,
 		       *coeffs,
-		       tmask);
+		       pathDisc);
+     
+       std::cout<<LibAIR2::AntITable(anames,
+				     wvrflag,
+				     nowvr,
+				     pathRMS,
+				     pathDisc,
+				     interpImpossibleAnts);
+       
+       printExpectedPerf(g, 
+			 *coeffs,
+			 tmask);
+       
+     }
+     catch(const std::runtime_error& x){
+       std::cout << "Problem while calculating path RMS discrepancy: " << x.what() << std::endl;
+       std::cerr << "Problem while calculating path RMS discrepancy: " << x.what() << std::endl;
+       return 1;
+     }
      
      if (vm.count("scale"))
      {
