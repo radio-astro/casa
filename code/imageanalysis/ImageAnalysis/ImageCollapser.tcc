@@ -34,7 +34,7 @@
 #include <images/Images/PagedImage.h>
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/TempImage.h>
-#include <lattices/Lattices/LatticeUtilities.h>
+#include <lattices/LatticeMath/LatticeMathUtil.h>
 
 #include <memory>
 
@@ -247,7 +247,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 				mask.set(True);
 			}
 			else {
-				LatticeUtilities::collapse(
+				LatticeMathUtil::collapse(
 					data, mask, _axes, *subImage, False,
 					True, True, lattStatType
 				);
@@ -260,7 +260,7 @@ template<class T> SPIIT ImageCollapser<T>::collapse() const {
 					data = sqrt(data);
 					if (_aggType == ImageCollapserData::SQRTSUM_NPIX) {
 						Array<T> npts = data.copy();
-						LatticeUtilities::collapse(
+						LatticeMathUtil::collapse(
 							npts, mask, _axes, *subImage, False,
 							True, True, LatticeStatsBase::NPTS
 						);

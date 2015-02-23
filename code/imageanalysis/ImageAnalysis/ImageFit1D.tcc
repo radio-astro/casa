@@ -35,7 +35,7 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LatticeUtilities.h>
+#include <lattices/LatticeMath/LatticeMathUtil.h>
 #include <components/SpectralComponents/SpectralEstimate.h>
 #include <components/SpectralComponents/SpectralElement.h>
 #include <casa/Utilities/Assert.h>
@@ -213,14 +213,14 @@ template <class T> Bool ImageFit1D<T>::setData (
 	Bool dropDeg = True;
 	Vector<T> y;
 	Vector<Bool> mask;
-	LatticeUtilities::collapse (y, mask, axes, subImage, dropDeg);
+	LatticeMathUtil::collapse (y, mask, axes, subImage, dropDeg);
 
 	// Weights
 
 	Vector<T> weights(y.nelements());
 	weights = 1.0;
 	if (itsWeightPtr.get()) {
-		LatticeUtilities::collapse (weights, axes, *itsWeightPtr, dropDeg);
+		LatticeMathUtil::collapse (weights, axes, *itsWeightPtr, dropDeg);
 	}
 
 	// Generate Abcissa
