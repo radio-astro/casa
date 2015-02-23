@@ -48,6 +48,11 @@
 	<description>Apply BDF flags on import</description>
 	<value>True</value>
     </param>
+
+    <param type="bool" name="lazy">
+	<description>Use the lazy import option</description>
+	<value>False</value>
+    </param>
     
     <param type="bool" name="dbservice">
 	<description>Use the online flux catalog</description>
@@ -142,6 +147,9 @@ overwrite -- Overwrite existing MSs on output.
 bdfflags -- Apply BDF flags on import
    default: True
    
+lazy -- Use the lazy import option
+   default: False
+
 dbservice -- Use online flux catalog on import
    default: True
 
