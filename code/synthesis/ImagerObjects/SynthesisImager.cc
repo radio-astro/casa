@@ -342,12 +342,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     mssFreqSel_p  = thisSelection.getChanFreqList(NULL,True);
 
     //// Set the data column on which to operate
+    // TT: added checks for the requested data column existace 
     //    cout << "Using col : " << selpars.datacolumn << endl;
     if( selpars.datacolumn.contains("data") || selpars.datacolumn.contains("obs") ) 
-      {datacol_p = FTMachine::OBSERVED; }
+      {    if( thisms.tableDesc().isColumn("DATA") ) { datacol_p = FTMachine::OBSERVED; }
+           else { os << LogIO::SEVERE <<"DATA column does not exist" << LogIO::EXCEPTION;}
+      }
     else if( selpars.datacolumn.contains("corr") )
-      {datacol_p = FTMachine::CORRECTED; }
-    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = FTMachine::CORRECTED; }
+      {    if( thisms.tableDesc().isColumn("CORRECTED_DATA") ) { datacol_p = FTMachine::CORRECTED; }
+           else { os << LogIO::SEVERE <<"CORRECTED_DATA column does not exist" << LogIO::EXCEPTION;}
+      }
+    else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
 
       }
     catch(AipsError &x)
