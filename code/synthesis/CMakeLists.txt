@@ -184,6 +184,8 @@ casa_add_library( synthesis
  MeasurementComponents/BPoly.cc
  MeasurementComponents/CalCorruptor.cc
  MeasurementComponents/Calibrater.cc
+ MeasurementComponents/CalibratingVi2.cc
+ MeasurementComponents/CalibratingVi2Factory.cc
  MeasurementComponents/CEMemImageSkyModel.cc
  MeasurementComponents/ClarkCleanAlgorithm.cc
  MeasurementComponents/ClarkCleanImageSkyModel.cc
@@ -426,6 +428,8 @@ install (FILES
 	MeasurementComponents/CSCleanImageSkyModel.h
 	MeasurementComponents/CalCorruptor.h
 	MeasurementComponents/Calibrater.h
+	MeasurementComponents/CalibratingVi2.h
+	MeasurementComponents/CalibratingVi2Factory.h
 	MeasurementComponents/ClarkCleanAlgorithm.h
 	MeasurementComponents/ClarkCleanImageSkyModel.h
 	MeasurementComponents/CleanImageSkyModel.h
@@ -673,6 +677,7 @@ casa_add_assay( synthesis MeasurementComponents/test/tKJones.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBMath2D.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tPBTable.cc )
+casa_add_assay( synthesis MeasurementComponents/test/tTrVI2.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tVPSkyJones.cc )
 casa_add_assay( synthesis MeasurementEquations/test/dCEMemModel.cc )
 casa_add_assay( synthesis MeasurementEquations/test/tCCList.cc )

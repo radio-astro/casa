@@ -24,9 +24,12 @@ casa_add_library( msvis
   MSVis/AveragingTvi2.cc
   MSVis/AveragingVi2Factory.cc
   MSVis/CalVisBuffer.cc
+  MSVis/CalibratingVi2FactoryI.cc
   MSVis/FinalTvi2.cc
   MSVis/GroupProcessor.cc
   MSVis/GroupWorker.cc
+  MSVis/IteratingParameters.cc
+  MSVis/LayeredVi2Factory.cc
   MSVis/MSAnalysis.cc
   MSVis/MSCalEnums.cc
   MSVis/MSContinuumSubtractor.cc
@@ -89,9 +92,12 @@ install (FILES
 	MSVis/AveragingTvi2.h
 	MSVis/AveragingVi2Factory.h
 	MSVis/CalVisBuffer.h
+	MSVis/CalibratingVi2FactoryI.h
 	MSVis/FinalTvi2.h
 	MSVis/GroupProcessor.h
 	MSVis/GroupWorker.h
+	MSVis/IteratingParameters.h
+	MSVis/LayeredVi2Factory.h
 	MSVis/MSAnalysis.h
 	MSVis/MSCalEnums.h
 	MSVis/MSContinuumSubtractor.h
