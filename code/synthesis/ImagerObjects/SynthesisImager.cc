@@ -63,6 +63,7 @@
 
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MeasurementEquations/VPManager.h>
+#include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
 
@@ -107,6 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
      facetsStore_p=-1;
      unFacettedImStore_p=NULL;
+     dataSel_p.resize();
 
   }
   
@@ -161,6 +163,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pars.usescratch=usescratch;
     pars.readonly=readonly;
     pars.incrmodel=incrModel;
+
 
     String err = pars.verify();
 
@@ -316,22 +319,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	  Quantity::read(freq, selpars.freqend);
     	  Double topfreq=freq.getValue("Hz");
     	  //////////OLD VI/VB
-    	  ImagerMultiMS im;
-    	  Vector<Vector<Int> >elspw, elstart, elnchan;
-    	  Vector<Int>fields=thisSelection.getFieldList( & mss4vi_p[mss4vi_p.nelements()-1]);
+    	  //ImagerMultiMS im;
+    	  Vector<Int> elspw, elstart, elnchan;
+    	  Vector<Int>fields=thisSelection.getFieldList( & mss4vi_p[msin]);
     	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
-    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
-    	  blockNChan_p[msin].resize(elspw[0].nelements());
-    	  blockStart_p[msin].resize(elspw[0].nelements());
-    	  blockStep_p[msin].resize(elspw[0].nelements());
-    	  blockSpw_p[msin].resize(elspw[0].nelements());
-    	  blockNChan_p[msin]=elnchan[0];
-    	  blockStart_p[msin]=elstart[0];
+    	  MSUtil::getSpwInFreqRange(elspw, elstart,elnchan,mss4vi_p[msin],lowfreq, topfreq,1.0, selpars.freqframe, fieldid);
+    	  //im.adviseChanSelex(lowfreq, topfreq, 1.0, selpars.freqframe, elspw, elstart, elnchan, selpars.msname, fieldid, False);
+    	  blockNChan_p[msin].resize(elspw.nelements());
+    	  blockStart_p[msin].resize(elspw.nelements());
+    	  blockStep_p[msin].resize(elspw.nelements());
+    	  blockSpw_p[msin].resize(elspw.nelements());
+    	  blockNChan_p[msin]=elnchan;
+    	  blockStart_p[msin]=elstart;
     	  blockStep_p[msin].set(1);
-    	  blockSpw_p[msin]=elspw[0];
+    	  blockSpw_p[msin]=elspw;
     	  //////////////////////
       }
-
+      os << "selected spw " << blockSpw_p[msin] << " start channels " << blockStart_p[msin] << " nchannels "<< blockNChan_p[msin] << LogIO::POST;
 
     }
     writeAccess_p=writeAccess_p && !selpars.readonly;
@@ -353,6 +357,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            else { os << LogIO::SEVERE <<"CORRECTED_DATA column does not exist" << LogIO::EXCEPTION;}
       }
     else { os << LogIO::WARN << "Invalid data column : " << datacol_p << ". Using corrected (or observed if corrected doesn't exist)" << LogIO::POST;  datacol_p = thisms.tableDesc().isColumn("CORRECTED_DATA") ? FTMachine::CORRECTED : FTMachine::OBSERVED; }
+
+    dataSel_p.resize(dataSel_p.nelements()+1);
+
+    dataSel_p[dataSel_p.nelements()-1]=selpars;
+
+
 
       }
     catch(AipsError &x)
@@ -426,6 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   impars.stokes=stokes;
   impars.phaseCenter=phaseCenter;
   impars.nchan=nchan;
+  impars.mode= nchan < 0 ? "mfs" : "cube";
   impars.freqStart=freqStart;
   impars.freqStep=freqStep;
   impars.restFreq=restFreq;
@@ -580,6 +591,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     return True;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  Vector<SynthesisParamsSelect> SynthesisImager::tuneSelectData(){
+	   if(itsMappers.nMappers() < 1)
+		   ThrowCc("defineimage has to be run before tuneSelectData");
+	   Vector<SynthesisParamsSelect> origDatSel(dataSel_p.nelements());
+	   origDatSel=dataSel_p;
+	   /*Record selpars;
+	   for(uInt k=0; k < origDatSel.nelements(); ++k){
+		   Record inSelRec=origDatSel[k].toRecord();
+		   selpars.defineRecord("ms"+String::toString(k), inSelRec);
+	   }
+	   */
+	   Int nchannel=itsMaxShape[3];
+	   CoordinateSystem cs=itsMaxCoordSys;
+	   cs.setSpectralConversion("LSRK");
+	   Vector<Double> pix(4);
+	   pix[0]=0; pix[1]=0; pix[2]=0; pix[3]=-0.5;
+	   Double freq1=cs.toWorld(pix)[3];
+	   pix[3]=Double(nchannel)-0.5;
+	   Double freq2=cs.toWorld(pix)[3];
+	   String units=cs.worldAxisUnits()[3];
+	   if(freq2 < freq1){
+		   Double tmp=freq1;
+		   freq1=freq2;
+		   freq2=tmp;
+	   }
+	   String freqbeg=String::toString(freq1)+units;
+	   String freqend=String::toString(freq2)+units;
+	   //Record outRec=SynthesisUtilMethods::cubeDataPartition(selpars, 1, freq1, freq2);
+	   //Record partRec=outRec.asRecord("0");
+	   ///resetting the block ms
+	   mss4vi_p.resize(0,True, False);
+	   //resetting data selection stored
+
+	   dataSel_p.resize();
+
+	   for(uInt k=0; k< origDatSel.nelements(); ++k){
+		   SynthesisParamsSelect outsel=origDatSel[k];
+		   outsel.freqbeg=freqbeg;
+		   outsel.freqend=freqend;
+		   outsel.freqframe=MFrequency::LSRK;
+		   selectData(outsel);
+	   }
+	   return dataSel_p;
+
+   }
+
 
    ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1018,6 +1079,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //cout << "In setPsfFromOneFacet : sumwt : " << unFacettedImStore_p->sumwt()->get() << endl;
 
   }
+
+
+  
   
   
   void SynthesisImager::appendToMapperList(String imagename,  

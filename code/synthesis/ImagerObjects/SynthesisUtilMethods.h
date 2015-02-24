@@ -131,27 +131,29 @@ class SynthesisParams
 public:
   SynthesisParams(){};
   virtual ~SynthesisParams(){};
-  virtual void fromRecord(Record &inrec)=0;
+  ///As there is no state to copy
+  virtual SynthesisParams& operator= (const SynthesisParams& /*other*/){ return *this;};
+  virtual void fromRecord(const Record &inrec)=0;
   virtual void setDefaults()=0;
-  virtual String verify()=0;
-  virtual Record toRecord()=0;
+  virtual String verify()const =0 ;
+  virtual Record toRecord() const =0;
 protected:
   // All return strings are error messages. Null if valid.
-  String readVal(Record &rec, String id, String& val);
-  String readVal(Record &rec, String id, Int& val);
-  String readVal(Record &rec, String id, Float& val);
-  String readVal(Record &rec, String id, Bool& val);
-  String readVal(Record &rec, String id, Vector<Int>& val);
-  String readVal(Record &rec, String id, Vector<Float>& val);
-  String readVal(Record &rec, String id, Vector<String>& val);
+  String readVal(const Record &rec, String id, String& val) const ;
+  String readVal(const Record &rec, String id, Int& val) const ;
+  String readVal(const Record &rec, String id, Float& val) const;
+  String readVal(const Record &rec, String id, Bool& val) const ;
+  String readVal(const Record &rec, String id, Vector<Int>& val) const;
+  String readVal(const Record &rec, String id, Vector<Float>& val) const ;
+  String readVal(const Record &rec, String id, Vector<String>& val) const ;
   String stringToQuantity(String instr, Quantity& qa) const;
-  String stringToMDirection(String instr, MDirection& md);
-  String readVal(Record &rec, String id, Quantity& val);
-  String readVal(Record &rec, String id, MDirection& val);
+  String stringToMDirection(String instr, MDirection& md) const ;
+  String readVal(const Record &rec, String id, Quantity& val) const;
+  String readVal(const Record &rec, String id, MDirection& val) const ;
   // Others..
-  String MDirectionToString(MDirection val);
-  String QuantityToString(Quantity val);
-  String recordQMToString(Record &rec);
+  String MDirectionToString(MDirection val) const;
+  String QuantityToString(Quantity val) const;
+  String recordQMToString(const Record &rec) const ;
 };
 
   class SynthesisParamsSelect : public SynthesisParams
@@ -159,12 +161,15 @@ protected:
 public:
 
   SynthesisParamsSelect();
+  SynthesisParamsSelect(const SynthesisParamsSelect& other);
   ~SynthesisParamsSelect();
 
-  void fromRecord(Record &inrec);
+  //copy semantics
+  virtual SynthesisParamsSelect& operator=(const SynthesisParamsSelect& other);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  String verify();
-  Record toRecord();
+  String verify() const;
+  Record toRecord() const;
 
   String msname, spw, freqbeg, freqend;
   MFrequency::Types freqframe;
@@ -184,10 +189,10 @@ public:
   SynthesisParamsImage();
   ~SynthesisParamsImage();
 
-  void fromRecord(Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  String verify();
-  Record toRecord();
+  String verify() const;
+  Record toRecord()const ;
 
   // Generate Coordinate System 
   CoordinateSystem buildCoordinateSystem(ROVisibilityIterator* rvi);
@@ -247,10 +252,10 @@ public:
   SynthesisParamsGrid();
   ~SynthesisParamsGrid();
 
-  void fromRecord(Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  String verify();
-  Record toRecord();
+  String verify() const;
+  Record toRecord() const;
 
   // FTMachine setup
   String ftmachine, convFunc;
@@ -287,10 +292,10 @@ public:
   SynthesisParamsDeconv();
   ~SynthesisParamsDeconv();
 
-  void fromRecord(Record &inrec);
+  void fromRecord(const Record &inrec);
   void setDefaults();
-  String verify();
-  Record toRecord();
+  String verify() const;
+  Record toRecord() const;
 
   String imageName, algorithm, startModel;
   Int deconvolverId; // maybe remove ? It's only to tag summary info.

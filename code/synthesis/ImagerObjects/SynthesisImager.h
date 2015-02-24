@@ -131,9 +131,17 @@ class SynthesisImager
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, 
 			   const String& ftmachine);
+
+  //Function to tune the data selection to intersect with image definition chosen
+  //This is to optimize the data selection so that unnecessary data is not parsed despite the user
+  // deciding to select so.
+  // defineimage has to be run first (and thus selectData prior to that) otherwise an exception is thrown
+  virtual Vector<SynthesisParamsSelect> tuneSelectData();
+
   //Defining componentlist to use while degriding
   //This should be called once...if multiple lists are used..they can be merged in one
   //if sdgrid=True then image plane degridding is done
+
   virtual void setComponentList(const ComponentList& cl, 
 				Bool sdgrid=False);
   Bool weight(const String& type="natural", 
@@ -290,6 +298,7 @@ protected:
   /////////////// All input parameters
 
   // Data Selection
+  Vector<SynthesisParamsSelect> dataSel_p;
   // Image Definition
   // Imaging/Gridding
 

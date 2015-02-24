@@ -431,7 +431,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Read String from Record
-  String SynthesisParams::readVal(Record &rec, String id, String& val)
+  String SynthesisParams::readVal(const Record &rec, String id, String& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -442,7 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Integer from Record
-  String SynthesisParams::readVal(Record &rec, String id, Int& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Int& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -453,7 +453,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Float from Record
-  String SynthesisParams::readVal(Record &rec, String id, Float& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Float& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -465,7 +465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Bool from Record
-  String SynthesisParams::readVal(Record &rec, String id, Bool& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Bool& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -476,7 +476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Vector<Int> from Record
-  String SynthesisParams::readVal(Record &rec, String id, Vector<Int>& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Vector<Int>& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -494,7 +494,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Vector<Float> from Record
-  String SynthesisParams::readVal(Record &rec, String id, Vector<Float>& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Vector<Float>& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -540,7 +540,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Vector<String> from Record
-  String SynthesisParams::readVal(Record &rec, String id, Vector<String>& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Vector<String>& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -571,7 +571,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Convert String to MDirection
   // UR : TODO :    If J2000 not specified, make it still work.
-  String SynthesisParams::stringToMDirection(String instr, MDirection& md)
+  String SynthesisParams::stringToMDirection(String instr, MDirection& md) const
   {
     try
       {
@@ -600,7 +600,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read Quantity from a Record string
-  String SynthesisParams::readVal(Record &rec, String id, Quantity& val)
+  String SynthesisParams::readVal(const Record &rec, String id, Quantity& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -612,7 +612,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Read MDirection from a Record string
-  String SynthesisParams::readVal(Record &rec, String id, MDirection& val)
+  String SynthesisParams::readVal(const Record &rec, String id, MDirection& val) const
   {
     if( rec.isDefined( id ) )
       {
@@ -624,7 +624,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Convert MDirection to String
-  String SynthesisParams::MDirectionToString(MDirection val)
+  String SynthesisParams::MDirectionToString(MDirection val) const
   {
     MVDirection mvpc( val.getAngle() );
     MVAngle ra = mvpc.get()(0);
@@ -634,7 +634,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Convert Quantity to String
-  String SynthesisParams::QuantityToString(Quantity val)
+  String SynthesisParams::QuantityToString(Quantity val) const
   {
     std::ostringstream ss;
     //use digits10 to ensure the conersions involve use full decimal digits guranteed to be 
@@ -647,7 +647,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
   // Convert Record contains Quantity or Measure quantities to String
-  String SynthesisParams::recordQMToString(Record &rec)
+  String SynthesisParams::recordQMToString(const Record &rec) const
   { 
      Double val;
      String unit;
@@ -676,8 +676,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   }
 
+  SynthesisParamsSelect::SynthesisParamsSelect(const SynthesisParamsSelect& other){
+	  operator=(other);
+  }
 
-  void SynthesisParamsSelect::fromRecord(Record &inrec)
+  SynthesisParamsSelect& SynthesisParamsSelect::operator=(const SynthesisParamsSelect& other){
+	  if(this!=&other) {
+		  msname=other.msname;
+		      spw=other.spw;
+		      freqbeg=other.freqbeg;
+		      freqend=other.freqend;
+		      freqframe=other.freqframe;
+		      field=other.field;
+		      antenna=other.antenna;
+		      timestr=other.timestr;
+		      scan=other.scan;
+		      obs=other.obs;
+		      state=other.state;
+		      uvdist=other.uvdist;
+		      taql=other.taql;
+		      usescratch=other.usescratch;
+		      readonly=other.readonly;
+		      incrmodel=other.incrmodel;
+		      datacolumn=other.datacolumn;
+
+	  }
+	  return *this;
+  }
+
+  void SynthesisParamsSelect::fromRecord(const Record &inrec)
   {
     setDefaults();
 
@@ -727,7 +754,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
   }
 
-  String SynthesisParamsSelect::verify()
+  String SynthesisParamsSelect::verify() const
   {
     String err;
     // Does the MS exist on disk.
@@ -768,7 +795,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     datacolumn="corrected";
   }
 
-  Record SynthesisParamsSelect::toRecord()
+  Record SynthesisParamsSelect::toRecord()const
   {
     Record selpar;
     selpar.define("msname",msname);
@@ -805,7 +832,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  void SynthesisParamsImage::fromRecord(Record &inrec)
+  void SynthesisParamsImage::fromRecord(const Record &inrec)
   {
     setDefaults();
     String err("");
@@ -1268,7 +1295,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else { return String("");}
   }
 
-  String SynthesisParamsImage::verify()
+  String SynthesisParamsImage::verify() const
   {
     String err;
 
@@ -1359,7 +1386,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  Record SynthesisParamsImage::toRecord()
+  Record SynthesisParamsImage::toRecord() const
   {
     Record impar;
     impar.define("imagename", imageName);
@@ -2269,7 +2296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  void SynthesisParamsGrid::fromRecord(Record &inrec)
+  void SynthesisParamsGrid::fromRecord(const Record &inrec)
   {
     setDefaults();
 
@@ -2324,7 +2351,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
   }
 
-  String SynthesisParamsGrid::verify()
+  String SynthesisParamsGrid::verify() const
   {
     String err;
 
@@ -2397,7 +2424,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
-  Record SynthesisParamsGrid::toRecord()
+  Record SynthesisParamsGrid::toRecord() const
   {
     Record gridpar;
 
@@ -2449,7 +2476,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-  void SynthesisParamsDeconv::fromRecord(Record &inrec)
+  void SynthesisParamsDeconv::fromRecord(const Record &inrec)
   {
     setDefaults();
 
@@ -2536,7 +2563,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
   }
 
-  String SynthesisParamsDeconv::verify()
+  String SynthesisParamsDeconv::verify() const
   {
     String err;
 
@@ -2570,7 +2597,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     interactive=False;
   }
 
-  Record SynthesisParamsDeconv::toRecord()
+  Record SynthesisParamsDeconv::toRecord() const
   {
     Record decpar;
 
