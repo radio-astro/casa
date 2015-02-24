@@ -369,10 +369,19 @@ void printExpectedPerf(const LibAIR2::ArrayGains &g,
   std::cout<<"* Greatest Estimated path fluctuation is (micron on a baseline): "
 	   <<grmsbl/1e-6
 	   <<std::endl;
-  std::cout<<"* Rough estimate path error due to coefficient error (micron on a baseline): "
-	   <<grmsbl* (err[1]/cr[1])/1e-6
-	   <<std::endl
-    	   <<std::endl;
+  if (cr[1]>0.){
+    std::cout<<"* Rough estimate path error due to coefficient error (micron on a baseline): "
+	     <<grmsbl* (err[1]/cr[1])/1e-6
+	     <<std::endl
+	     <<std::endl;
+  }
+  else if(err[1]==0.) {
+    std::cout<<"* Rough estimate path error due to coefficient error could not be calculated (is nominally zero)."<<std::endl;
+  }
+  else {
+    std::cout<<"* Rough estimate path error due to coefficient error could not be calculated."<<std::endl;
+    std::cerr<<"* Rough estimate path error due to coefficient error could not be calculated."<<std::endl;
+  }
 }
 
 /** Compute the time intervals over which the statistics should be

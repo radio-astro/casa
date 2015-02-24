@@ -277,13 +277,24 @@ namespace LibAIR2 {
 					  std::vector<double> &err) const
   {
     std::set<ret_t>::const_iterator i=retrievals.begin();
-    for(size_t j=0; j < retrievals.size()/2;++j)
+    size_t j;
+    for(j=0; j < retrievals.size()/2;++j)
     {
       ++i;
     };
+    while(j < retrievals.size()-1) // make sure we have not hit an invalid coefficent
+    {
+      if(i->coeffs[0]>0.)
+      {
+	break;
+      }
+      ++j;
+      ++i;
+    };
+
     res.resize(4);
     err.resize(4);
-    for(size_t j=0; j<4; ++j)
+    for(j=0; j<4; ++j)
     {
       res[j]=i->coeffs[j];
       err[j]=i->err[j];
@@ -298,7 +309,7 @@ namespace LibAIR2 {
     {
       for(size_t j=0; j<4; ++j)
       {
-	if ( std::isnan(i->coeffs[j]) || (std::isnan(i->err[j])) )
+	if ( std::isnan(i->coeffs[j]) || (std::isnan(i->err[j])) ||  std::isnan(i->c2[j]) )
 	{
 	  return true;
 	}
@@ -318,7 +329,7 @@ namespace LibAIR2 {
     {
       for(size_t j=0; j<4; ++j)
       {
-	if ( std::isnan(i->coeffs[j]) || (std::isnan(i->err[j])) )
+	if ( std::isnan(i->coeffs[j]) || (std::isnan(i->err[j])) ||  std::isnan(i->c2[j]) )
 	{
 	  rval = true;
 	  nantimes.push_back(i->time);

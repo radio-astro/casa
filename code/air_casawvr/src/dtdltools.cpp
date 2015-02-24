@@ -52,8 +52,15 @@ namespace LibAIR2 {
 	  res[j]+=(scratch[j]*w);
       }
     }
-    for(size_t j=0; j<scratch.size(); ++j)
-    res[j]/=Z;
+    if(Z==0.) 
+    {
+      std::cout << "Error: Cannot calculate dTdL Moment 1, evidence is zero." << std::endl;
+      std::cerr << "Error: Cannot calculate dTdL Moment 1, evidence is zero." << std::endl;
+    }
+    for(size_t j=0; j<scratch.size(); ++j) // perform the division in any case in order to also record NaNs
+    {
+      res[j]/=Z;
+    }
   }
 
   void dTdLMom2(const std::list<Minim::WPPoint> &l,
@@ -85,8 +92,15 @@ namespace LibAIR2 {
 	}
       }
     }
-    for(size_t j=0; j<scratch.size(); ++j)
-    res[j]/=Z;
+    if(Z==0.) 
+    {
+      std::cout << "Error: Cannot calculate dTdL Moment 2, evidence is zero." << std::endl;
+      std::cerr << "Error: Cannot calculate dTdL Moment 2, evidence is zero." << std::endl;
+    }
+    for(size_t j=0; j<scratch.size(); ++j) // perform the division in any case in order to also record NaNs
+    {
+      res[j]/=Z;
+    }
   }
 
   void dTdL2_ND(WVRAtmoQuantModel &m,

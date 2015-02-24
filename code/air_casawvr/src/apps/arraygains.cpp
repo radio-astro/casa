@@ -465,10 +465,16 @@ namespace LibAIR2 {
 
     for(size_t i=0; i<n; ++i)
     {
-      res[i]/=sum;
-      res2[i]/=sum;
+      if (sum>0.)
+      {
+	res[i]/=sum;
+	res2[i]/=sum;
+      }
+      else if (res[i]>0. || res2[i]>0.)
+      {
+	std::cerr << "Cannot perform thermal reweighting: sum of all weights is zero." << std::endl;
+      }
     }
-    
   }
 
   double thermal_error(const std::vector<double> &coeffs)
