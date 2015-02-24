@@ -31,14 +31,16 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
         if ((type(calmode)==str) and (calmode.lower()=='apply')):
             # single table
-            print type(applytable)
             if isinstance(applytable, str):
                 _table_list = [applytable]
 
             # multiple tables
             if isinstance(applytable, list) or isinstance(applytable, numpy.ndarray):
                 _table_list = applytable
-                
+
+            if len(_table_list) == 0:
+                raise Exception, 'Applytable name must be specified.'
+
             for table in _table_list:
                 # empty string
                 if len(table) == 0:

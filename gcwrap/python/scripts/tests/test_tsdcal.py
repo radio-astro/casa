@@ -112,7 +112,55 @@ class tsdcal_test(unittest.TestCase):
         """
 
 
-class tsdcal_test_skycal(unittest.TestCase):
+class tsdcal_test_base(unittest.TestCase):
+    """
+    Base class for tsdcal unit test.
+    The following attributes/functions are defined here.
+
+        datapath
+        decorators (invalid_argument_case, exception_case)
+    """
+    # Data path of input
+    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+    
+    # decorators
+    @staticmethod
+    def invalid_argument_case(func):
+        """
+        Decorator for the test case that is intended to fail
+        due to invalid argument.
+        """
+        import functools
+        @functools.wraps(func)
+        def wrapper(self):
+            result = func(self)
+            self.assertFalse(result, msg='The task must return False')
+        return wrapper
+
+    @staticmethod
+    def exception_case(exception_type, exception_pattern):
+        """
+        Decorator for the test case that is intended to throw
+        exception.
+
+            exception_type: type of exception
+            exception_pattern: regex for inspecting exception message 
+                               using re.search
+        """
+        def wrapper(func):
+            import functools
+            @functools.wraps(func)
+            def _wrapper(self):
+                with self.assertRaises(exception_type) as ctx:
+                    result = func(self)
+                    self.fail(msg='The task must throw exception')
+                the_exception = ctx.exception
+                message = the_exception.message
+                self.assertIsNotNone(re.search(exception_pattern, message), msg='error message \'%s\' is not expected.'%(message))
+            return _wrapper
+        return wrapper
+    
+class tsdcal_test_skycal(tsdcal_test_base):
     
     """
     Unit test for task tsdcal (sky calibration).
@@ -129,7 +177,7 @@ class tsdcal_test_skycal(unittest.TestCase):
     """
 
     # Data path of input
-    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+    #datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
 
     # Input 
     infile = 'uid___A002_X6218fb_X264.ms.sel'
@@ -155,40 +203,6 @@ class tsdcal_test_skycal(unittest.TestCase):
                 shutil.rmtree(infile)
         if os.path.exists(self.outfile):
             shutil.rmtree(self.outfile)
-
-    def invalid_argument_case(func):
-        """
-        Decorator for the test case that is intended to fail
-        due to invalid argument.
-        """
-        import functools
-        @functools.wraps(func)
-        def wrapper(self):
-            result = func(self)
-            self.assertFalse(result, msg='The task must return False')
-        return wrapper
-
-    def exception_case(exception_type, exception_pattern):
-        """
-        Decorator for the test case that is intended to throw
-        exception.
-
-            exception_type: type of exception
-            exception_pattern: regex for inspecting exception message 
-                               using re.search
-        """
-        def wrapper(func):
-            import functools
-            @functools.wraps(func)
-            def _wrapper(self):
-                with self.assertRaises(exception_type) as ctx:
-                    result = func(self)
-                    self.fail(msg='The task must throw exception')
-                the_exception = ctx.exception
-                message = the_exception.message
-                self.assertIsNotNone(re.search(exception_pattern, message), msg='error message \'%s\' is not expected.'%(message))
-            return _wrapper
-        return wrapper
 
     def normal_case(calmode='ps', **kwargs):
         """
@@ -291,7 +305,7 @@ class tsdcal_test_skycal(unittest.TestCase):
         return wrapper
             
     
-    @invalid_argument_case
+    @tsdcal_test_base.invalid_argument_case
     def test_skycal00(self):
         """
         test_skycal00 --- default parameters (raises an error)
@@ -299,7 +313,7 @@ class tsdcal_test_skycal(unittest.TestCase):
         result = tsdcal()
         return result
 
-    @invalid_argument_case
+    @tsdcal_test_base.invalid_argument_case
     def test_skycal01(self):
         """
         test_skycal01 --- invalid calibration type
@@ -307,7 +321,7 @@ class tsdcal_test_skycal(unittest.TestCase):
         result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
         return result
 
-    @exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
     def test_skycal02(self):
         """
         test_skycal02 --- invalid selection (invalid spw selection)
@@ -315,7 +329,7 @@ class tsdcal_test_skycal(unittest.TestCase):
         result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
         return result
 
-    @exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
+    @tsdcal_test_base.exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
     def test_skycal03(self):
         """
         test_skycal03 --- outfile exists (overwrite=False)
@@ -325,7 +339,7 @@ class tsdcal_test_skycal(unittest.TestCase):
         result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
         return result
 
-    @exception_case(RuntimeError, 'Output file name must be specified\.')
+    @tsdcal_test_base.exception_case(RuntimeError, 'Output file name must be specified\.')
     def test_skycal04(self):
         """
         test_skycal04 --- empty outfile 
@@ -359,7 +373,102 @@ class tsdcal_test_skycal(unittest.TestCase):
         result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
         return result
 
+class tsdcal_test_apply(unittest.TestCase):
+    
+    """
+    Unit test for task tsdcal (apply tables).
+
+    The list of tests:
+    test_apply_sky00 --- empty applytable
+    test_apply_sky01 --- empty applytable (list ver.)
+    test_apply_sky02 --- empty applytable list 
+    test_apply_sky03 --- unexisting applytable
+    test_apply_sky04 --- unexisting applytable (list ver.)
+    test_apply_sky05 --- invalid selection (empty selection result)
+    test_apply_sky06 --- invalid interp value
+    test_apply_sky07 --- apply whole data
+    test_apply_sky08 --- apply selected data
+    """
+
+    # Data path of input
+    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+
+    # Input 
+    infile = 'uid___A002_X6218fb_X264.ms.sel'
+    applytable = 'uid___A002_X6218fb_X264.ms.sel.sky'
+
+    def setUp(self):
+        for f in [self.infile, self.applytable]:
+            if os.path.exists(f):
+                shutil.rmtree(f)
+            shutil.copytree(self.datapath+f, f)
+
+        default(tsdcal)
+
+
+    def tearDown(self):
+        for f in [self.infile, self.applytable]:
+            if os.path.exists(f):
+                shutil.rmtree(f)
+
+    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    def test_apply_sky00(self):
+        """
+        test_apply_sky00 --- empty applytable
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', applytable='')
+        return result
+
+    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    def test_apply_sky01(self):
+        """
+        test_apply_sky01 --- empty applytable (list ver.)
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', applytable=[''])
+        return result
+
+    @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
+    def test_apply_sky02(self):
+        """
+        test_apply_sky02 --- empty applytable list
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
+        return result
+
+    @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    def test_apply_sky03(self):
+        """
+        test_apply_sky03 --- unexisting applytable
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
+        return result
+
+    @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
+    def test_apply_sky04(self):
+        """
+        test_apply_sky04 --- unexisting applytable (list ver.)
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
+        return result
+
+    @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    def test_apply_sky05(self):
+        """
+        test_apply_sky05 --- invalid selection (empty selection result)
+        """
+        result = tsdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
+        return result
+    
+    #@tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
+    #def test_apply_sky05(self):
+    #    """
+    #    test_apply_sky06 --- invalid interp value
+    #    """
+    #    result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='bicubic')
+    #    return result
+    
 def suite():
-    return [tsdcal_test, tsdcal_test_skycal]
+    return [tsdcal_test, tsdcal_test_skycal,
+            tsdcal_test_apply]
 
 
