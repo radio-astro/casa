@@ -25,7 +25,7 @@ class SDImportDataInputs(almaimportdata.ALMAImportDataInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
                  asis=None, process_caldevice=None,
          session=None, overwrite=None, bdfflags=None, save_flagonline=None,
-         dbservice=None, with_pointing_correction=None):
+         with_pointing_correction=None, lazy=None, dbservice=None):
         self._init_properties(vars())
 
     asis = basetask.property_with_default('asis', 'Antenna Station Receiver CalAtmosphere')
