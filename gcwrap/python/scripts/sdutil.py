@@ -1435,6 +1435,7 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     if spw=='': spw='*'
     if antenna=='': antenna='*&&&'
     (ms_loc, msmd_loc, tb_loc,me_loc) = gentools(['ms','msmd','tb','me'])
+    qa_loc = qatool()
     selected_idx = ms_loc.msseltoindex(vis=msname,spw=spw,baseline=antenna,
                                        field=field,scan=scan)#,time=timerange)
     tb_loc.open(msname+'/STATE')
@@ -1486,9 +1487,20 @@ def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
     if inframe==outref:
         ra_rad = [ dir['m0']['value'] for dir in direction_raw ]
         dec_rad = [ dir['m1']['value'] for dir in direction_raw ]
-        direction_rad = [ra_rad, dec_rad]
     else:
-        raise NotImplementedError, "frame conversion is not implemented yet"
+        msmd_loc.open(msname)
+        me_loc.doframe(msmd_loc.observatoryposition(ant0))
+        msmd_loc.close()
+        ra_rad = []
+        dec_rad = []
+        for idx in xrange(len(times)):
+            me_loc.doframe(me_loc.epoch('mjd',qa_loc.quantity(times[idx]/86400.,'d')))
+            dir_in = me_loc.direction(inframe, direction_raw[idx]['m0'],
+                                     direction_raw[idx]['m1'])
+            dir_conv = me_loc.measure(dir_in,outref)
+            ra_rad.append(dir_conv['m0']['value'])
+            dec_rad.append(dir_conv['m1']['value'])
+    direction_rad = [ra_rad, dec_rad]
     dx_rad, dy_rad, pa = rasterutil._get_sampling(direction_rad,row_gap)
     rad_to_asec = 180./np.pi*3600
     return dx_rad*rad_to_asec, dy_rad*rad_to_asec, pa
