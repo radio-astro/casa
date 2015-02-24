@@ -1427,3 +1427,70 @@ def get_spwchs(selection, infile):
     for key in d.keys():
         l.append(':'.join([key, nchanmap[key], ';'.join(d[key])]))
     return ','.join(l)
+
+
+def get_ms_sampling_arcsec(msname, spw='', antenna='', field='',
+                           intent='ON_SOURCE', scan='',#timerange='',
+                           outref=''):
+    if spw=='': spw='*'
+    if antenna=='': antenna='*&&&'
+    (ms_loc, msmd_loc, tb_loc,me_loc) = gentools(['ms','msmd','tb','me'])
+    selected_idx = ms_loc.msseltoindex(vis=msname,spw=spw,baseline=antenna,
+                                       field=field,scan=scan)#,time=timerange)
+    tb_loc.open(msname+'/STATE')
+    intents_all = tb_loc.getcol("OBS_MODE")
+    selected_intent = []
+    for (idx, obmode) in enumerate(intents_all):
+        if obmode.find(intent)>=0: selected_intent.append(idx)
+    tb_loc.close()
+    ddid0 = selected_idx['spwdd'][0]
+    spw0=selected_idx['spw'][0]
+    ant0 = selected_idx['antenna1'][0]
+    bl0 = '%d&&&' % ant0
+    if len(selected_idx['spw']) > 1 or len(selected_idx['antenna1']) > 1:
+        casalog.post("Using only spw=%d and antenna=%s in %s to get pointing sampling" % (spw0, bl0, msname), priority='warn')
+    tb_loc.open(msname)
+    taqlstr = 'DATA_DESC_ID==%d && ANTENNA1==%d && ANTENNA2==%d' % \
+              (ddid0,ant0,ant0)
+    if len(selected_idx['field'])>0:
+        taqlstr += (' && FIELD_ID IN %s' % str(selected_idx['field']))
+    if len(selected_idx['scan']) > 0:
+        taqlstr += (' && SCAN_NUMBER IN %s' % str(selected_idx['scan']))
+    if len(selected_intent) > 0:
+        taqlstr += (' && STATE_ID IN %s' % str(selected_intent))
+    seltb = tb_loc.query(query=taqlstr,sortlist='TIME',columns='TIME')
+    row_idx = seltb.rownumbers()
+    times = seltb.getcol("TIME")
+    tb_loc.close()
+    seltb.close()
+    #ms_loc.open(msname)
+    #ms_loc.msselect(items=dict(spw=str(spw0),baseline=bl0,field=field,
+    #                       scan=scan,time=timerange,scanintent=intent))
+    #ms_loc.selectinit(datadescid=ddid0)
+    ## get selected rowid and time stamps (unique in time)
+    #retval = ms_loc.ngetdata(['rows','time'])
+    #ms_loc.close()
+    #row_idx = retval['rows']
+    #times = retval['time']
+    # unit time stamp
+    times, idx = np.unique(times,return_index=True)
+    row_idx = row_idx[idx]
+    del idx
+    # sort by time
+    row_gap = rasterutil._detect_gap(times)
+    # get pointing direction of the time
+    msmd_loc.open(msname)
+    inframe = msmd_loc.pointingdirection(row_idx[0])['antenna1']['pointingdirection']['refer']
+    direction_raw = [ msmd_loc.pointingdirection(idx,True)['antenna1']['pointingdirection'] for idx in row_idx ]
+    msmd_loc.close()
+    if inframe==outref:
+        ra_rad = [ dir['m0']['value'] for dir in direction_raw ]
+        dec_rad = [ dir['m1']['value'] for dir in direction_raw ]
+        direction_rad = [ra_rad, dec_rad]
+    else:
+        raise NotImplementedError, "frame conversion is not implemented yet"
+    dx_rad, dy_rad, pa = rasterutil._get_sampling(direction_rad,row_gap)
+    rad_to_asec = 180./np.pi*3600
+    return dx_rad*rad_to_asec, dy_rad*rad_to_asec, pa
+    
+    

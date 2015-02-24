@@ -50,8 +50,8 @@ class TheoreticalBeam:
         my_qa = qatool()
         if my_qa.isangle(angle):
             return my_qa.getvalue(my_qa.convert(angle, "arcsec"))[0]
-        elif type(angle) in [float, int]: return angle
-        else: raise ValueError, "Invalid angle: %s" % str(angle)
+        elif my_qa.getunit(angle)=='': return float(angle)
+        else: raise ValueError, "Invalid angle: %s" % (str(angle))
 
     def __parse_width(self, val, cell_size_arcsec):
         """
@@ -60,7 +60,7 @@ class TheoreticalBeam:
         else the unit is assumed to be pixel and multiplied by cell_size_arcsec
         """
         my_qa = qatool()
-        if my_qa.isangle(val): return __to_arcsec(val)
+        if my_qa.isangle(val): return self.__to_arcsec(val)
         elif my_qa.getunit(val) in ('', 'pixel'):
             return my_qa.getvalue(val)*cell_size_arcsec
         else: raise ValueError, "Invalid width %s" % str(val)
@@ -388,9 +388,9 @@ class TheoreticalBeam:
         result = self.gauss(axis,[gwidth_arcsec])
         # truncate kernel outside the truncation radius
         if truncate == -1:
-            trunc_arcsec = gwidth*1.5
+            trunc_arcsec = gwidth_arcsec*1.5
         elif truncate is not None:
-            trunc_arcsec = self.__parse_width(gwidth, cell_arcsec)
+            trunc_arcsec = self.__parse_width(truncate, cell_arcsec)
         idx = np.where(abs(axis)>trunc_arcsec)
         result[idx] = 0.
         return 

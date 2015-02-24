@@ -343,3 +343,41 @@ def _detect_gap_raster(timestamp, alldir, row_gap=None, threshold_row=None, thre
             raster_gaplist.append(nrow)
 
     return raster_gaplist
+
+def _get_sampling(alldir,row_gap_idx):
+    """
+    Returns sampling sampling interval of raster scan.
+    Input
+      pointing direction array in unit of radian ([[ra0,ra1,...],[dec0,dec1,...]])
+      indices of raster row gap
+    Output
+        sampling interval along and orthogonal to scan direction (arcsec) with
+        the position angle (deg) of scan direction.
+    """
+    alldir = numpy.array(alldir)
+    dra = alldir[0,1:]-alldir[0,:-1]
+    ddec = alldir[1,1:]-alldir[1,:-1]
+    dpos2 = dra**2+ddec**2
+    alongScan = numpy.sqrt(numpy.median(dpos2))
+    dra = numpy.array([ numpy.sign(val)*max(abs(val),1.e-8) for val in dra ])
+    dtan = ddec/dra
+    pa_rad = numpy.arctan(numpy.median(dtan))
+    # orthogonal unit vector
+    uvec = [numpy.cos(pa_rad+numpy.pi*0.5), numpy.sin(pa_rad+numpy.pi*0.5)]
+    # direction vector at row gap
+    rowmed_ra = []
+    rowmed_dec = []
+    for gap_idx in range(len(row_gap_idx)-1):
+        #typical direction for each raster row
+        start_idx = row_gap_idx[gap_idx]
+        end_idx = row_gap_idx[gap_idx+1]
+        rowmed_ra.append(numpy.median(alldir[0,start_idx:end_idx]))
+        rowmed_dec.append(numpy.median(alldir[1,start_idx:end_idx]))
+    gap_vec = [[rowmed_ra[idx+1]-rowmed_ra[idx],
+                rowmed_dec[idx+1]-rowmed_dec[idx]]
+                for idx in range(len(rowmed_ra)-1) ]
+#    gap_vec = [[alldir[0,idx]-alldir[0,idx-1],
+#                alldir[1,idx]-alldir[1,idx-1]] for idx in row_gap_idx[1:-2] ]
+    orth_dist = [abs(numpy.dot(vec, uvec)) for vec in gap_vec]
+    betweenScan = numpy.median(orth_dist)
+    return alongScan, betweenScan, pa_rad*180./numpy.pi
