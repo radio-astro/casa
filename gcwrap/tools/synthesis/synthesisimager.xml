@@ -64,6 +64,16 @@ This is used to construct {\tt synthesisimager} tool.
 
 <!-- ===================================== -->
 
+   <method type="function" name="tuneselectdata">
+   <shortdescription>reselect the data to match image definition</shortdescription>
+
+<description>
+</description>
+<input>
+</input>
+<returns type="record"/>
+</method>
+
    <method type="function" name="defineimage">
    <shortdescription>Define image coordinate systems FTMs</shortdescription>
 
@@ -88,9 +98,9 @@ This is used to construct {\tt synthesisimager} tool.
 
 
 <!-- ===================================== -->
-<!-- 
-   <method type="function" name="selectdata">
-   <shortdescription>Select data from one MS</shortdescription>
+ 
+   <method type="function" name="setdata">
+   <shortdescription>Select data from one MS via conventional parameters (in lieu of selectdata)</shortdescription>
 
 <description>
 Select data from one MS. Call this function in succession if there are
@@ -183,11 +193,10 @@ multiple MSs.
 <returns type="bool"/>
 </method>
 
--->
 
-<!--
-   <method type="function" name="defineimage">
-   <shortdescription>Define the image coordinate systems and types</shortdescription>
+
+   <method type="function" name="setimage">
+   <shortdescription>Define the image coordinate systems and types via conventinal parameters in lieu of defineimage</shortdescription>
 
 <description>
 Define the image coordinate systems and shapes.
@@ -271,7 +280,7 @@ Define the image coordinate systems and shapes.
 
      <param type="string" name="ftmachine">
      <description>FT-Machine type</description>
-     <value type="string">GridFT</value>
+     <value type="string">gridft</value>
      </param>
 
      <param type="int" name="ntaylorterms">
@@ -402,7 +411,7 @@ Define the image coordinate systems and shapes.
 <returns type="bool"/>
 </method>
 
--->
+
 <!-- ===================================== -->
 
 

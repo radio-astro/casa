@@ -45,13 +45,13 @@ synthesisimager::~synthesisimager()
 }
 
 
-/*
+
 bool
-synthesisimager::selectdata(const std::string& msname, 
+synthesisimager::setdata(const std::string& msname,
 			    const std::string& spw,
-			    const std::string& freqbeg, // ? why here ?
-			    const std::string& freqend, // ? why here ?
-			    const std::string& freqframe, // ? why here ?
+			    const std::string& freqbeg, // ? why here ? to limit selection with image definition
+			    const std::string& freqend, // ? why here ?   ditto
+			    const std::string& freqframe, // ? why here ? ditto
 			    const std::string& field, 
 			    const std::string& antenna,
 			    const std::string& timestr,
@@ -62,8 +62,24 @@ synthesisimager::selectdata(const std::string& msname,
 			    const std::string& taql,
 			    const bool usescratch,
 			    const bool readonly,
-			    const bool incrmodel)
-*/
+			    const bool incrmodel) {
+	Bool rstat=False;
+	 try {
+		 if( ! itsImager ) itsImager = new SynthesisImager();
+		 MFrequency::Types freqtype;
+		 MFrequency::getType(freqtype, freqframe);
+		 itsImager->selectData(msname, spw, freqbeg, freqend, freqtype,field, antenna, timestr, scan, obs, state,
+				 uvdist, taql, usescratch, readonly, incrmodel );
+
+	 }
+	 catch  (AipsError x)
+	     {
+	       RETHROW(x);
+	     }
+
+	   return rstat;
+}
+
 bool 
 synthesisimager::selectdata(const casac::record& selpars)
 {
@@ -95,6 +111,41 @@ synthesisimager::selectdata(const casac::record& selpars)
   return rstat;
 }
 
+
+::casac::record * synthesisimager::tuneselectdata()
+{
+  ::casac::record* rstat=NULL;
+
+  try
+    {
+
+      if( ! itsImager ) ThrowCc("You have to run selectdata and defineimage before tuneselectdata")
+
+      casa::Record outRec;
+      Vector<SynthesisParamsSelect> leDataParams;
+
+
+      leDataParams=itsImager->tuneSelectData();
+      for (uInt k=0; k < leDataParams.nelements(); ++k){
+    	  outRec.defineRecord(casa::String("ms")+casa::String::toString(k), leDataParams[k].toRecord() );
+
+      }
+      rstat = fromRecord(outRec);
+
+      //      itsImager->selectData( pars.msname, pars.spw,
+      //		     pars.freqbeg, pars.freqend, pars.freqframe,
+      //		     pars.field, pars.antenna, pars.timestr, pars.scan,
+      //		     pars.obs, pars.state, pars.uvdist, pars.taql,
+      //		     pars.usescratch, pars.readonly, pars.incrmodel );
+
+    }
+  catch  (AipsError x)
+    {
+      RETHROW(x);
+    }
+
+  return rstat;
+}
 
 bool synthesisimager::defineimage(const casac::record& impars, const casac::record& gridpars)
 {
@@ -135,9 +186,9 @@ bool synthesisimager::defineimage(const casac::record& impars, const casac::reco
   return rstat;
 }
 
-/*
+
 bool
-synthesisimager::defineimage(const std::string& imagename,
+synthesisimager::setimage(const std::string& imagename,
 			     const int nx, 
 			     const int ny,			
 			     const ::casac::variant& cellx, 
@@ -267,7 +318,7 @@ synthesisimager::defineimage(const std::string& imagename,
       //----------------------------------------------------------------------------------------------------------------
 
 
-      itsImager->defineImage( imagename, nX, nY, cellX, cellY, stokes, phaseCenter,
+      rstat=itsImager->defineImage( imagename, nX, nY, cellX, cellY, stokes, phaseCenter,
 			      nchan, freqStart, freqStep, restFreq, facets, ftmachine, 
 			      ntaylorterms, refFreq, 
 			      imageprojection, cdistance, freqframetype, tracksource, trackDir, overwrite,
@@ -282,7 +333,7 @@ synthesisimager::defineimage(const std::string& imagename,
   return rstat;
 }
 
-*/
+
 
 bool synthesisimager::setweighting(const std::string& type,
 				   const std::string& rmode,
