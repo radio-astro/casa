@@ -72,20 +72,39 @@ void MSCache::loadIt(vector<PMS::Axis>& loadAxes,
 
 	{
 		// Check if scr cols present
-		Bool corcolOk(False);
+		Bool corcolOk(False), floatcolOk(False);
 		const ColumnDescSet cds=Table(filename_).tableDesc().columnDescSet();
 		corcolOk=cds.isDefined("CORRECTED_DATA");
-		if (!corcolOk) {
+		floatcolOk = cds.isDefined("FLOAT_DATA");
+		if (!corcolOk || !floatcolOk) {
 			for (uInt i=0;i<loadData.size();++i) {
 				switch (loadData[i]) {
 				case PMS::CORRECTED:
 				case PMS::CORRECTED_DIVIDE_MODEL:
 				case PMS::CORRMODEL: {
+				    if (!corcolOk) {
 					//Exception was removed - see CAS-5214
 					loadData[i] = PMS::DATA;
 					logWarn( "loadIt", "CORRECTED_DATA column not present; will use DATA instead.");
 					//throw(AipsError("CORRECTED_DATA not present, please use DATA"));
+				    }
 					break;
+				}
+				case PMS::FLOAT_DATA: {
+				    if (!floatcolOk) 
+					throw(AipsError("FLOAT_DATA not present, please use DATA"));
+				    for (uInt j=0; j<loadAxes.size(); ++j) {
+					switch (loadAxes[i]) {
+					case PMS::PHASE:
+					case PMS::REAL:
+					case PMS::IMAG: 
+						throw(AipsError("Chosen axis not valid for FLOAT_DATA, please use AMP or change Data Column"));
+					    break;
+					default:
+					    break;
+					}
+				    }
+				    break;
 				}
 				default:
 					break;
@@ -778,6 +797,10 @@ void MSCache::forceVBread(VisBuffer& vb,
 				vb.modelVisCube();
 				break;
 			}
+			case PMS::FLOAT_DATA: {
+				vb.floatDataCube();
+				break;
+			}
 			default:
 				break;
 			}
@@ -839,6 +862,9 @@ void MSCache::discernData(vector<PMS::Axis> loadAxes,
 				vba.setDoVC();
 				vba.setDoMVC();
 			}
+			case PMS::FLOAT_DATA:
+				vba.setDoFC();
+				break;
 			default:
 				break;
 			}
@@ -1091,6 +1117,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*amp_[vbnum] = amplitude( vb.correctedVisCube() / vb.modelVisCube());
 			break;
 		}
+		case PMS::FLOAT_DATA: {
+			*amp_[vbnum] = vb.floatDataCube();
+			break;
+		}
 		}
 		break;
 	}
@@ -1126,6 +1156,8 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*pha_[vbnum] = phase(vb.correctedVisCube() / vb.modelVisCube()) * 180 / C::pi;
 			break;
 		}
+		case PMS::FLOAT_DATA:  // should have caught this already
+			break;
 		}
 		break;
 	}
@@ -1160,6 +1192,8 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*real_[vbnum] = real(vb.correctedVisCube()) / real(vb.modelVisCube());
 			break;
 		}
+		case PMS::FLOAT_DATA:  // should have caught this already
+			break;
 		}
 		break;
 	}
@@ -1193,6 +1227,8 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 			*imag_[vbnum] = imag(vb.correctedVisCube()) / imag(vb.modelVisCube());
 			break;
 		}
+		case PMS::FLOAT_DATA:  // should have caught this already
+			break;
 		}
 		break;
 	}
@@ -1240,6 +1276,10 @@ void MSCache::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 		case PMS::CORRECTED_DIVIDE_MODEL:
 			*wtxamp_[vbnum] = amplitude(vb.correctedVisCube() / vb.modelVisCube());
 			break;
+		case PMS::FLOAT_DATA: {
+			*wtxamp_[vbnum] = vb.floatDataCube();
+			break;
+		}
 		}
 		uInt nchannels = vb.nChannel();
 		Cube<Float> wtA(*wtxamp_[vbnum]);

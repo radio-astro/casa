@@ -57,6 +57,7 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt, Bool /*chanDepWt*/)
     doVC_p(False),
     doMVC_p(False),
     doCVC_p(False),
+    doFC_p(False),
     doUVW_p(False),
     doWC_p(False),
     avBuf_p(),
@@ -73,7 +74,7 @@ PlotMSVBAverager::PlotMSVBAverager(Int nAnt, Bool /*chanDepWt*/)
   if (prtlev()>2) cout << "PMSVBA::PMSVBA()" << endl;
 
   // Ensure we do weightCube if any data is done
-  doWC_p=doVC_p||doMVC_p||doCVC_p;
+  doWC_p = doVC_p||doMVC_p||doCVC_p||doFC_p;
 
   // Nominal corrlation order
   indgen(jcor_p);
@@ -124,6 +125,9 @@ void PlotMSVBAverager::finalizeAverage()
 	      if (doCVC_p) 
 		avBuf_p.correctedVisCube()(icor,ichn,obln)=
 		  avBuf_p.correctedVisCube()(icor,ichn,ibln)/thiswt;
+	      if (doFC_p) 
+		avBuf_p.floatDataCube()(icor,ichn,obln)=
+		  avBuf_p.floatDataCube()(icor,ichn,ibln)/thiswt;
 	    } // !flagCube & wt>0
 	    else {
 	      // make sure obln is zero
@@ -131,6 +135,7 @@ void PlotMSVBAverager::finalizeAverage()
 		if (doVC_p)  avBuf_p.visCube()(icor,ichn,obln)=0.0;
 		if (doMVC_p) avBuf_p.modelVisCube()(icor,ichn,obln)=0.0;
 		if (doCVC_p) avBuf_p.correctedVisCube()(icor,ichn,obln)=0.0;
+		if (doFC_p)  avBuf_p.floatDataCube()(icor,ichn,obln)=0.0;
 	      }
 	    }
 	    // copy flags, weights to obln
@@ -174,6 +179,8 @@ void PlotMSVBAverager::finalizeAverage()
 	avBuf_p.modelVisCube().resize(nCorr_p,nChan_p,nBln,True);
       if (doCVC_p)
 	avBuf_p.correctedVisCube().resize(nCorr_p,nChan_p,nBln,True);
+      if (doFC_p)
+	avBuf_p.floatDataCube().resize(nCorr_p,nChan_p,nBln,True);
       if (doWC_p)
 	avBuf_p.weightCube().resize(nCorr_p,nChan_p,nBln,True);
 
@@ -335,6 +342,10 @@ void PlotMSVBAverager::initialize(VisBuffer& vb)
     avBuf_p.correctedVisCube().resize(nCorr_p,nChan_p, nBlnMax_p,False);
     avBuf_p.correctedVisCube().set(czero);
   }
+  if (doFC_p) {
+    avBuf_p.floatDataCube().resize(nCorr_p,nChan_p, nBlnMax_p,False);
+    avBuf_p.floatDataCube().set(0.0);
+  }
 
   if (doWC_p) {
     avBuf_p.weightCube().resize(nCorr_p,nChan_p,nBlnMax_p, False); 
@@ -457,6 +468,8 @@ void PlotMSVBAverager::simpAccumulate (VisBuffer& vb)
 	      avBuf_p.modelVisCube()(cor,chn,obln)=0.0;
 	    if (doCVC_p)
 	      avBuf_p.correctedVisCube()(cor,chn,obln)=0.0;
+	    if (doFC_p) 
+	      avBuf_p.floatDataCube()(cor,chn,obln)=0.0;
 	    if (doWC_p)
 	      avBuf_p.weightCube()(cor,chn,obln)=0.0;
 	  }
@@ -477,6 +490,9 @@ void PlotMSVBAverager::simpAccumulate (VisBuffer& vb)
 	  if (doCVC_p)
 	    avBuf_p.correctedVisCube()(cor,chn,obln)+=
 	      ((*wt)*vb.correctedVisCube()(cor,chn,ibln) );
+	  if (doFC_p) 
+	    avBuf_p.floatDataCube()(cor,chn,obln)+=
+	      ( (*wt)*vb.floatDataCube()(cor,chn,ibln) );
 	  if (doWC_p)
 	    avBuf_p.weightCube()(cor,chn,obln)+=(*wt);
 	} // acc
@@ -618,6 +634,8 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
 		avBuf_p.modelVisCube()(cor,chn,ia)=0.0;
 	      if (doCVC_p)
 		avBuf_p.correctedVisCube()(cor,chn,ia)=0.0;
+	      if (doFC_p) 
+		avBuf_p.floatDataCube()(cor,chn,ia)=0.0;
 	      if (doWC_p)
 		avBuf_p.weightCube()(cor,chn,ia)=0.0;
 	    }
@@ -638,6 +656,8 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
  	                 ( (*wt)*vb.modelVisCube()(cor,chn,ibln) );
 	  if (doCVC_p) avBuf_p.correctedVisCube()(cor,chn,obln_i)+=
 	                 ( (*wt)*vb.correctedVisCube()(cor,chn,ibln) );
+	  if (doFC_p)  avBuf_p.floatDataCube()(cor,chn,obln_i)+=
+                         ( (*wt)*vb.floatDataCube()(cor,chn,ibln) );
 	  if (doWC_p)  avBuf_p.weightCube()(cor,chn,obln_i)+=(*wt);
 	}
 	if (acc_j) {
@@ -649,6 +669,8 @@ void PlotMSVBAverager::antAccumulate (VisBuffer& vb)
    	                 ( (*wt)*conj(vb.modelVisCube()(cor,chn,ibln)) );
 	  if (doCVC_p) avBuf_p.correctedVisCube()(jcor,chn,obln_j)+=
 	                 ( (*wt)*conj(vb.correctedVisCube()(cor,chn,ibln)) );
+	  if (doFC_p)  avBuf_p.floatDataCube()(jcor,chn,obln_j)+=
+	                 ( (*wt)*(vb.floatDataCube()(cor,chn,ibln)) );
 	  if (doWC_p)  avBuf_p.weightCube()(jcor,chn,obln_j)+=(*wt);
 					    
 	}

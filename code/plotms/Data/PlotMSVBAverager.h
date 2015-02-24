@@ -96,6 +96,7 @@ public:
   inline void setDoVC()  {doVC_p= doWC_p=True;};
   inline void setDoMVC() {doMVC_p=doWC_p=True;};
   inline void setDoCVC() {doCVC_p=doWC_p=True;};
+  inline void setDoFC()  {doFC_p= doWC_p=True;};
   inline void setDoUVW() {doUVW_p=True;};
 
   // Accumulate a VisBuffer
@@ -165,7 +166,7 @@ private:
   Int aveScan_p;
 
   // Optional averaging triggers
-  Bool doVC_p,doMVC_p,doCVC_p,doUVW_p,doWC_p;
+  Bool doVC_p, doMVC_p, doCVC_p, doFC_p, doUVW_p, doWC_p;
 
   // Accumulation buffer
   CalVisBuffer avBuf_p;
