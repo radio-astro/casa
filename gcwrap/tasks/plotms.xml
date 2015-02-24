@@ -155,6 +155,7 @@ MS Parameters
         <value>data-model</value>
         <value>data/model</value>
         <value>corrected/model</value>
+        <value>float</value>
       </allowed>
     </param>    
     
@@ -262,6 +263,7 @@ MS Parameters
         <value>data-model</value>
         <value>data/model</value>
         <value>corrected/model</value>
+        <value>float</value>
       </allowed>
     </param>
     
@@ -1389,6 +1391,7 @@ Constraints
                                         'residual'  (aliases 'corrected-model')
                                         'corrected-model'
                                         'data-model'
+                                        'float'
     
     selectdata -- data selection parameters flag
                   default: True  (reveals data selection parameters
