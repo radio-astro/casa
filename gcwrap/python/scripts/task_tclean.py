@@ -171,7 +171,8 @@ def tclean(
     #####################################################
 
     # Put all parameters into dictionaries and check them. 
-    paramList = ImagerParameters(
+    paramList = ImagerParameters("0");
+    paramList.setParams(
         msname =vis,
         field=field,
         spw=spw,
@@ -278,8 +279,8 @@ def tclean(
 
     retrec={}
 
-    try: 
-    
+    # try: 
+    if (1):
         ## Init major cycle elements
         imager.initializeImagers()
         imager.initializeNormalizers()

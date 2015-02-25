@@ -356,21 +356,26 @@ class PyParallelContSynthesisImager(PySynthesisImager):
          self.PH = PyParallelImagerHelper()
          self.NN = self.PH.NN
          self.allselpars = self.PH.partitionContDataSelection(self.allselpars)
+         self.listOfNodes = self.PH.getNodeList();
 
 #############################################
 #############################################
     def initializeImagers(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             
             ## Initialize the tool for the current node
             self.PH.runcmd("toolsi = casac.synthesisimager()", node)
 
             ## Send in Selection parameters for all MSs in the list
-            for mss in sorted( (self.allselpars[str(node)]).keys() ):
-                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node)][mss])+")", node) )
+            #### MPIInterface related changes (the -1 in the expression below)
+            for mss in sorted( (self.allselpars[str(node-1)]).keys() ):
+                joblist.append( self.PH.runcmd("toolsi.selectdata( "+str(self.allselpars[str(node-1)][mss])+")", node) )
             ## For each image-field, define imaging parameters
             nimpars = copy.deepcopy(self.allimpars)
+            #print "nimpars = ",nimpars;
             ngridpars = copy.deepcopy(self.allgridpars)
             for fld in range(0,self.NF):
                 if self.NN>1:
@@ -401,7 +406,9 @@ class PyParallelContSynthesisImager(PySynthesisImager):
             if(self.NN>1):
 #                if not shutil.os.path.exists(normpars['workdir']):
 #                    shutil.os.system('mkdir '+normpars['workdir'])
-                for node in range(0,self.NN):
+                #### MPIInterface related changes
+                #for node in range(0,self.NN):
+                for node in self.listOfNodes:
                     onename = self.allimpars[str(immod)]['imagename']+'.n'+str(node)
                     partnames.append( self.PH.getpath(node) + '/' + onename  )
 ##                    partnames.append( normpars['workdir'] + '/' + onename  )
@@ -423,7 +430,9 @@ class PyParallelContSynthesisImager(PySynthesisImager):
     def makePSFCore(self):
         ### Make PSFs
         joblist=[]
-        for node in range(0,self.PH.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.PH.NN):
+        for node in self.listOfNodes:
              joblist.append( self.PH.runcmd("toolsi.makepsf()",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
@@ -433,14 +442,18 @@ class PyParallelContSynthesisImager(PySynthesisImager):
         casalog.post("-----------------------------  Running Parallel Major Cycle ----------------------------","INFO")
         ### Run major cycle
         joblist=[]
-        for node in range(0,self.PH.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.PH.NN):
+        for node in self.listOfNodes:
              joblist.append( self.PH.runcmd("toolsi.executemajorcycle(controls={'lastcycle':"+str(lastcycle)+"})",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
 #############################################
     def predictModelCore(self):
         joblist=[]
-        for node in range(0,self.PH.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.PH.NN):
+        for node in self.listOfNodes:
              joblist.append( self.PH.runcmd("toolsi.predictmodel()",node) )
         self.PH.checkJobs( joblist ) # this call blocks until all are done.
 
@@ -466,19 +479,24 @@ class PyParallelCubeSynthesisImager():
         
         self.PH = PyParallelImagerHelper()
         self.NN = self.PH.NN
+        self.listOfNodes = self.PH.getNodeList();
         ## Partition both data and image coords the same way.
         self.allselpars = self.PH.partitionCubeDataSelection(allselpars)
         self.allimpars = self.PH.partitionCubeDeconvolution(allimagepars)
 
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("from refimagerhelper import ImagerParameters, PySynthesisImager", node) )
         self.PH.checkJobs( joblist )
             
 
     def initializeImagers(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
 
             joblist.append( self.PH.runcmd("paramList = ImagerParameters()", node) )
             joblist.append( self.PH.runcmd("paramList.setSelPars("+str(self.allselpars[str(node)])+")", node) )
@@ -495,61 +513,81 @@ class PyParallelCubeSynthesisImager():
 
     def initializeDeconvolvers(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeDeconvolvers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeNormalizers(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeNormalizers()", node) )
         self.PH.checkJobs( joblist )
 
     def initializeIterationControl(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.initializeIterationControl()", node) )
         self.PH.checkJobs( joblist )
 
     def makePSF(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.makePSF()", node) )
         self.PH.checkJobs( joblist )
 
     def runMajorMinorLoops(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.runMajorMinorLoops()", node) )
         self.PH.checkJobs( joblist )
 
     def runMajorCycle(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.runMajorCycle()", node) )
         self.PH.checkJobs( joblist )
 
     def predictModel(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.predictmodel()", node) )
         self.PH.checkJobs( joblist )
 
     def restoreImages(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.restoreImages()", node) )
         self.PH.checkJobs( joblist )
 
     def getSummary(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.getSummary("+str(node)+")", node) )
         self.PH.checkJobs( joblist )
 
     def deleteTools(self):
         joblist=[]
-        for node in range(0,self.NN):
+        #### MPIInterface related changes
+        #for node in range(0,self.NN):
+        for node in self.listOfNodes:
             joblist.append( self.PH.runcmd("imager.deleteTools()", node) )
         self.PH.checkJobs( joblist )
 
@@ -564,8 +602,11 @@ class PyParallelDeconvolver(PySynthesisImager):
         PySynthesisImager.__init__(self,params)
 
         self.PH = PyParallelImagerHelper()
-        self.NN = self.PH.NN
         self.NF = len( allimpars.keys() )
+        self.listOfNodes = self.PH.getNodeList();
+        #### MPIInterface related changes
+        #self.NN = self.PH.NN
+        self.NN = len(self.listOfNodes);
         if self.NF != self.NN:
              print 'For now, cannot handle nfields != nnodes. Will implement round robin allocation later.'
              print 'Using only ', self.NN, ' fields and nodes'
@@ -574,7 +615,9 @@ class PyParallelDeconvolver(PySynthesisImager):
 #############################################
     def initializeDeconvolvers(self):
          joblist=[]
-         for immod in range(0,self.NF):
+         #### MPIInterface related changes
+         #for immod in range(0,self.NF):
+         for immod in self.listOfNodes:
               self.PH.runcmd("toolsd = casac.synthesisdeconvolver()", immod )
               joblist.append( self.PH.runcmd("toolsd.setupdeconvolution(decpars="+ str(self.alldecpars[str(immod)]) +")", immod ) )
          self.PH.checkJobs( joblist )
@@ -594,7 +637,9 @@ class PyParallelDeconvolver(PySynthesisImager):
         # Merge peak-res info from all fields to decide iteration parameters
         self.PH.runcmdcheck("initrec = toolsd.initminorcycle()")
 
-        for immod in range(0,self.NF):
+        #### MPIInterface related changes
+        #for immod in range(0,self.NF):
+        for immod in self.listOfNodes:
              retrec = self.PH.pullval("initrec", immod )
              self.IBtool.mergeinitrecord( retrec[immod] )
              print "Peak res of field ",immod, " on node ", immod , ": " ,retrec[immod]['peakresidual']
@@ -619,7 +664,9 @@ class PyParallelDeconvolver(PySynthesisImager):
 
         self.PH.runcmdcheck( "exrec = toolsd.executeminorcycle(iterbotrec)" )
 
-        for immod in range(0,self.NF):
+        #### MPIInterface related changes
+        #for immod in range(0,self.NF):
+        for immod in self.listOfNodes:
              retrec = self.PH.pullval("exrec", immod )
              self.IBtool.mergeexecrecord( retrec[immod] )
 
@@ -631,6 +678,9 @@ class PyParallelDeconvolver(PySynthesisImager):
 #############################################
 ###  Parallel Imager Helper.
 #############################################
+casalog.post('Using clustermanager from MPIInterface', 'WARN')
+from mpi4casa.MPIInterface import MPIInterface as mpi_clustermanager
+
 class PyParallelImagerHelper():
 
     def __init__(self):
@@ -638,10 +688,13 @@ class PyParallelImagerHelper():
         ############### Cluster Info
          self.CL=None
          self.sc=None
-
+         self.nodeList=None;
          # Initialize cluster, and partitioning.
         ############### Number of nodes to parallelize on
          self.NN = self.setupCluster()
+
+    def getNodeList(self):
+        return self.nodeList;
 
 #############################################
 ## Very rudimentary partitioning - only for tests. The actual code needs to go here.
@@ -684,11 +737,18 @@ class PyParallelImagerHelper():
 #            if(self.sc.get_status()==None):
 #                self.sc.init_cluster(self.clusterdef, 'cluster_project')
 
-        self.sc=clustermanager.getCluster()
+
+        # * Terminal: Client logs + Server logs
+        # * casapy-<timestamp>.log: Client logs
+        # * casapy-<timestamp>.log-server-<rank>-host-<hostname>-pid-<pid>: Server logs 
+        mpi_clustermanager.set_log_mode('redirect');
+
+        self.sc=mpi_clustermanager.getCluster()
                 
         self.CL=self.sc._cluster
+        self.nodeList = self.CL.get_engines();
         numproc=len(self.CL.get_engines())
-        numprocperhost=len(self.CL.get_engines())/len(self.CL.get_nodes()) if (len(self.CL.get_nodes()) >0 ) else 1
+        numprocperhost=len(self.nodeList)/len(self.nodeList) if (len(self.nodeList) >0 ) else 1
 
         owd=os.getcwd()
         self.CL.pgc('import os')
@@ -710,11 +770,13 @@ class PyParallelImagerHelper():
 #############################################
     # This is a blocking call that will wait until jobs are done.
     def checkJobs(self,joblist=[]):
-        numcpu = len(self.CL.get_engines())
+        #### MPIInterface related changes
+        numcpu = len(self.nodeList)
         
         if len(joblist)==0:
              joblist = range(numcpu)
-             for k in range(numcpu):
+             #for k in range(numcpu):
+             for k in self.nodeList:
                   joblist[k] = self.CL.odo('casalog.post("node '+str(k)+' has completed its job")', k)
 
         print 'Blocking for nodes to finish'
@@ -740,7 +802,9 @@ class PyParallelImagerHelper():
 #############################################
     def runcmdcheck(self, cmdstr):
          joblist=[]
-         for node in range(0,self.NN):
+         #### MPIInterface related changes
+         #for node in range(0,self.NN):
+         for node in self.nodeList:
               joblist.append( self.CL.odo( cmdstr, node ) )
          self.checkJobs( joblist )
 
@@ -772,7 +836,14 @@ class PyParallelImagerHelper():
 
 class ImagerParameters():
 
-    def __init__(self,
+    #### MPIInterface related changes
+    # These and related changes in this class are not required really
+    # (and not used now), but checking-in to make sure I (SB) check-in
+    # all the code that works for me and will clean this up later.
+    def __init__(self, key="0"):
+        self.defaultKey=key;
+
+    def setParams(self,
                  ## Data Selection
                  msname='',
                  field='',
@@ -870,7 +941,7 @@ class ImagerParameters():
         self.outlierfile = outlierfile
         ## Initialize the parameter lists with the 'main' or '0' field's parameters
         ######### Image definition
-        self.allimpars = { '0' :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
+        self.allimpars = { self.defaultKey :{'imagename':imagename, 'nchan':nchan, 'imsize':imsize, 
                                  'cell':cell, 'phasecenter':phasecenter, 'stokes': stokes,
                                  #'mode':mode, 'chanstart':chanstart, 'chanstep':chanstep,
                                  #'freqstart':freqstart, 'freqstep':freqstep,
@@ -881,7 +952,7 @@ class ImagerParameters():
                                  'projection':projection,
                                  'overwrite':overwrite, 'startmodel':startmodel,}    }
         ######### Gridding
-        self.allgridpars = { '0' :{'ftmachine':ftmachine, 
+        self.allgridpars = { self.defaultKey :{'ftmachine':ftmachine, 
                                    'aterm': aterm, 'psterm':psterm, 'mterm': mterm, 'wbawp': wbawp, 
                                    'cfcache': cfcache,'dopointing':dopointing, 'dopbcorr':dopbcorr, 
                                    'conjbeams':conjbeams, 'computepastep':computepastep,
@@ -891,12 +962,12 @@ class ImagerParameters():
         self.weightpars = {'type':weighting,'robust':robust, 'npixels':npixels,'uvtaper':uvtaper}
 
         ######### Normalizers ( this is where flat noise, flat sky rules will go... )
-        self.allnormpars = { '0' : {'mtype': mtype,
+        self.allnormpars = { self.defaultKey : {'mtype': mtype,
                                  'pblimit': pblimit,'ntaylorterms':ntaylorterms,'facets':facets,
                                  'normtype':normtype, 'workdir':workdir }     }
 
         ######### Deconvolution
-        self.alldecpars = { '0' : { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
+        self.alldecpars = { self.defaultKey: { 'id':0, 'deconvolver':deconvolver, 'ntaylorterms':ntaylorterms, 
                                     'scales':scales, 'restoringbeam':restoringbeam, 'mask':mask,
                                     'interactive':interactive, 'startmodel':startmodel} }
 
@@ -1093,6 +1164,9 @@ class ImagerParameters():
                     
             ### Check for name increments 
             #if self.reusename == False:
+
+            #### MPIInterface related changes
+#            if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
             if self.allimpars['0']['overwrite'] == False:   # Later, can change this to be field dependent too.
                 ## Get a list of image names for all fields (to sync name increment ids across fields)
                 inpnamelist={}
