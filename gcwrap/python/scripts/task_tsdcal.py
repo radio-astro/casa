@@ -5,6 +5,7 @@ import numpy
 from taskinit import *
 from applycal import applycal
 import types
+import sdutil
 
 (cb,) = gentools(['cb'])
 def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
@@ -19,7 +20,7 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
         if ((type(infile)==str) and (os.path.exists(infile))):
             # don't need scr col for this
-            cb.open(filename=infile,compress=False,addcorr=False,addmodel=False)
+            cb.open(filename=infile,compress=False,addcorr=True,addmodel=False)
             cb.selectvis(spw=spw, scan=scan, field=field)
             #cb.setsolve(type=calmodemap[calmode], table=outfile)
             #cb.solve()
@@ -29,7 +30,11 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
         if((type(calmode)==str) and calmode.lower() not in ['tsys', 'ps', 'apply']): 
             raise Exception, 'Calmode must be either \'ps\' or \'tsys\' or \'apply\''
 
-        if ((type(calmode)==str) and (calmode.lower()=='apply')):
+        if (not overwrite) and (os.path.exists(outfile)):
+            raise RuntimeError, 'Output file \'%s\' exists.'%(outfile)
+
+
+        if ((type(calmode)==str) and (calmode=='apply')):
             # single table
             if isinstance(applytable, str):
                 _table_list = [applytable]
@@ -50,11 +55,6 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
                     raise Exception, 'Table "%s" doesn\'t exist.'%(table)
                 
 
-        if (not overwrite) and (os.path.exists(outfile)):
-            raise RuntimeError, 'Output file \'%s\' exists.'%(outfile)
-
-
-        if ((type(calmode)==str) and (calmode=='apply')):
             #applycal(vis=infile, docallib=False, gaintable=applytable, applymode='calonly')
             if (outfile != ''):
                 raise UserWarning, 'Outfile is not generated but is added to MS as a new table, namely corrected data'
@@ -88,7 +88,17 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
                 spwmap = spwmap_list
 
-            applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calflag')	
+            for _table in _table_list:
+                caltype = inspect_caltype(_table)
+                if caltype == 'UNKNOWN':
+                    raise RuntimeError('Applytable \'%s\' is not a caltable format'%(_table))
+                elif caltype == 'B TSYS':
+                    cb.setapply(table=_table, spwmap=spwmap, interp=interp)
+                else:
+                    # no spw mapping is needed for sky calibration
+                    cb.setapply(table=_table, interp=interp)
+            cb.correct(applymode='calflag')
+            #applycal(vis=infile, spwmap=spwmap, docallib=False, gaintable=applytable, applymode='calflag')	
 
         else:
             # non-apply modes (ps, tsys)
@@ -115,3 +125,10 @@ def tsdcal(infile=None, calmode='tsys', fraction='10%', noff=-1,
 
     finally:
         cb.close()
+
+def inspect_caltype(table):
+    caltype = 'UNKNOWN'
+    with sdutil.tbmanager(table) as tb:
+        if 'VisCal' in tb.keywordnames():
+            caltype = tb.getkeyword('VisCal')
+    return caltype

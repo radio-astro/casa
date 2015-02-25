@@ -10,6 +10,7 @@ from taskinit import *
 import unittest
 #
 import listing
+import sdutil
 
 from tsdcal import tsdcal 
 
@@ -110,7 +111,7 @@ class tsdcal_test(unittest.TestCase):
         spwmap={1:[9],3:[11],5:[13],7:[15]}
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable='tsys_dic.cal', outfile='')
         """
-
+        
 
 class tsdcal_test_base(unittest.TestCase):
     """
@@ -122,6 +123,13 @@ class tsdcal_test_base(unittest.TestCase):
     """
     # Data path of input
     datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+
+    # Input
+    infile = 'uid___A002_X6218fb_X264.ms.sel'
+    applytable = infile + '.sky'
+    
+    # task execution result
+    result = None
     
     # decorators
     @staticmethod
@@ -133,8 +141,8 @@ class tsdcal_test_base(unittest.TestCase):
         import functools
         @functools.wraps(func)
         def wrapper(self):
-            result = func(self)
-            self.assertFalse(result, msg='The task must return False')
+            func(self)
+            self.assertFalse(self.result, msg='The task must return False')
         return wrapper
 
     @staticmethod
@@ -152,13 +160,14 @@ class tsdcal_test_base(unittest.TestCase):
             @functools.wraps(func)
             def _wrapper(self):
                 with self.assertRaises(exception_type) as ctx:
-                    result = func(self)
+                    func(self)
                     self.fail(msg='The task must throw exception')
                 the_exception = ctx.exception
                 message = the_exception.message
                 self.assertIsNotNone(re.search(exception_pattern, message), msg='error message \'%s\' is not expected.'%(message))
             return _wrapper
         return wrapper
+
     
 class tsdcal_test_skycal(tsdcal_test_base):
     
@@ -175,34 +184,22 @@ class tsdcal_test_skycal(tsdcal_test_base):
     test_skycal06 --- position switch calibration ('ps') with data selection
     test_skycal07 --- outfile exists (overwrite=True)
     """
-
-    # Data path of input
-    #datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
-
-    # Input 
-    infile = 'uid___A002_X6218fb_X264.ms.sel'
-    infiles = [infile]
-
-    # Output
     @property
     def outfile(self):
-        return self.infile + '.sky'
+        return self.applytable
 
-    def setUp(self):
-        for infile in self.infiles:
-            if os.path.exists(infile):
-                shutil.rmtree(infile)
-            shutil.copytree(self.datapath+infile, infile)
+    def setUp(self):  
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(tsdcal)
 
 
     def tearDown(self):
-        for infile in self.infiles:
-            if (os.path.exists(infile)):
-                shutil.rmtree(infile)
-        if os.path.exists(self.outfile):
-            shutil.rmtree(self.outfile)
+        for filename in [self.infile, self.outfile]:
+            if os.path.exists(filename):
+                shutil.rmtree(filename)
 
     def normal_case(calmode='ps', **kwargs):
         """
@@ -235,10 +232,10 @@ class tsdcal_test_skycal(tsdcal_test_base):
             import functools
             @functools.wraps(func)
             def _wrapper(self):
-                result = func(self)
+                func(self)
 
                 # sanity check
-                self.assertIsNone(result, msg='The task must complete without error')
+                self.assertIsNone(self.result, msg='The task must complete without error')
                 self.assertTrue(os.path.exists(self.outfile), msg='Output file is not properly created.')
 
                 # verifying nrow
@@ -250,7 +247,6 @@ class tsdcal_test_skycal(tsdcal_test_base):
                     myms = gentools(['ms'])[0]
                     myargs = kwargs.copy()
                     if not myargs.has_key('baseline'):
-                        import sdutil
                         with sdutil.tbmanager(self.infile) as tb:
                             antenna1 = numpy.unique(tb.getcol('ANTENNA1'))
                             myargs['baseline'] = '%s&&&'%(','.join(map(str,antenna1)))
@@ -260,15 +256,6 @@ class tsdcal_test_skycal(tsdcal_test_base):
                     antenna1_selection = a['antenna1']
                     spw_selection = a['spw']
                     expected_nrow = 3 * len(spw_selection) * len(antenna1_selection)
-                #self.assertTrue(isinstance(selection, dict), msg='Internal Error')
-                #for (k,v) in selection.items():
-                #    self.assertTrue(isinstance(k,int), msg='Internal Error')
-                #    self.assertTrue(isinstance(v,list), msg='Internal Error')
-                #    expected_nrow += 3 * len(v)
-                #    print k, v, expected_nrow
-                #if expected_nrow == 0:
-                #    expected_nrow = 12
-                import sdutil
                 with sdutil.tbmanager(self.outfile) as tb:
                     self.assertEqual(tb.nrows(), expected_nrow, msg='Number of rows mismatch (expected %s actual %s)'%(expected_nrow, tb.nrows()))
 
@@ -310,24 +297,21 @@ class tsdcal_test_skycal(tsdcal_test_base):
         """
         test_skycal00 --- default parameters (raises an error)
         """
-        result = tsdcal()
-        return result
+        self.result = tsdcal()
 
     @tsdcal_test_base.invalid_argument_case
     def test_skycal01(self):
         """
         test_skycal01 --- invalid calibration type
         """
-        result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='invalid_type', outfile=self.outfile)
 
     @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
     def test_skycal02(self):
         """
         test_skycal02 --- invalid selection (invalid spw selection)
         """
-        result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', spw='99', outfile=self.outfile)
 
     @tsdcal_test_base.exception_case(RuntimeError, '^Output file \'.+\' exists\.$')
     def test_skycal03(self):
@@ -336,32 +320,28 @@ class tsdcal_test_skycal(tsdcal_test_base):
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
-        result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=False)
 
     @tsdcal_test_base.exception_case(RuntimeError, 'Output file name must be specified\.')
     def test_skycal04(self):
         """
         test_skycal04 --- empty outfile 
         """
-        result = tsdcal(infile=self.infile, calmode='ps', outfile='', overwrite=False)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', outfile='', overwrite=False)
 
     @normal_case()
     def test_skycal05(self):
         """
         test_skycal05 --- position switch calibration ('ps')
         """
-        result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile)
 
     @normal_case(spw='9')
     def test_skycal06(self):
         """
         test_skycal06 --- position switch calibration ('ps') with data selection
         """
-        result = tsdcal(infile=self.infile, calmode='ps', spw='9', outfile=self.outfile)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', spw='9', outfile=self.outfile)
 
     @normal_case()
     def test_skycal07(self):
@@ -370,10 +350,56 @@ class tsdcal_test_skycal(tsdcal_test_base):
         """
         # copy input to output
         shutil.copytree(self.infile, self.outfile)
-        result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='ps', outfile=self.outfile, overwrite=True)
 
-class tsdcal_test_apply(unittest.TestCase):
+# interpolator utility for testing
+class Interpolator(object):
+    def __init__(self, table):
+        self.table = table
+        self.taql = ''
+        self.time = None
+        self.data = None
+
+    def select(self, antenna, spw):
+        self.taql = 'ANTENNA1 == %s && ANTENNA2 == %s && SPECTRAL_WINDOW_ID == %s'%(antenna, antenna, spw)
+        with sdutil.table_selector(self.table, self.taql) as tb:
+            self.time = tb.getcol('TIME')
+            self.data = tb.getcol('FPARAM')
+
+    def interpolate(self, t):
+        raise Exception('Not implemented')
+
+class LinearInterpolator(Interpolator):
+    def __init__(self, table):
+        super(LinearInterpolator, self).__init__(table)
+
+    def interpolate(self, t):
+        dt = self.time - t
+        index = abs(dt).argmin()
+        if dt[index] > 0.0:
+            index -= 1
+        if index < 0:
+            ref = self.data[:,:,0].copy()
+        elif index >= len(self.time) - 1:
+            ref = self.data[:,:,-1].copy()
+        else:
+            t0 = self.time[index]
+            t1 = self.time[index+1]
+            d0 = self.data[:,:,index]
+            d1 = self.data[:,:,index+1]
+            ref = ((t1 - t) * d0 + (t - t0) * d1) / (t1 - t0)
+        return ref
+
+class NearestInterpolator(Interpolator):
+    def __init__(self, table):
+        super(NearestInterpolator, self).__init__(table)
+
+    def interpolate(self, t):
+        dt = self.time - t
+        index = abs(dt).argmin()
+        return self.data[:,:,index].copy()
+            
+class tsdcal_test_apply(tsdcal_test_base):
     
     """
     Unit test for task tsdcal (apply tables).
@@ -386,17 +412,22 @@ class tsdcal_test_apply(unittest.TestCase):
     test_apply_sky04 --- unexisting applytable (list ver.)
     test_apply_sky05 --- invalid selection (empty selection result)
     test_apply_sky06 --- invalid interp value
-    test_apply_sky07 --- apply whole data
-    test_apply_sky08 --- apply selected data
+    test_apply_sky07 --- invalid applytable (not caltable)
+    test_apply_sky08 --- apply data (linear) 
+    test_apply_sky09 --- apply selected data
+    test_apply_sky10 --- apply data (nearest)
     """
 
-    # Data path of input
-    datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
+    @property
+    def nrow_per_chunk(self):
+        # number of rows per antenna per spw is 18
+        return 18
 
-    # Input 
-    infile = 'uid___A002_X6218fb_X264.ms.sel'
-    applytable = 'uid___A002_X6218fb_X264.ms.sel.sky'
-
+    @property
+    def eps(self):
+        # required accuracy is 2.0e-4
+        return 3.0e-4
+    
     def setUp(self):
         for f in [self.infile, self.applytable]:
             if os.path.exists(f):
@@ -411,62 +442,157 @@ class tsdcal_test_apply(unittest.TestCase):
             if os.path.exists(f):
                 shutil.rmtree(f)
 
+    def normal_case(interp='linear', **kwargs):
+        """
+        Decorator for the test case that is intended to verify
+        normal execution result.
+
+        interp --- interpolation option ('linear' or 'nearest')
+        selection --- data selection parameter as dictionary
+        """
+        def wrapper(func):
+            import functools
+            @functools.wraps(func)
+            def _wrapper(self):
+                func(self)
+
+                # sanity check
+                self.assertIsNone(self.result, msg='The task must complete without error')
+                # verify if CORRECTED_DATA exists
+                with sdutil.tbmanager(self.infile) as tb:
+                    self.assertTrue('CORRECTED_DATA' in tb.colnames(), msg='CORRECTED_DATA column must be created after task execution!')
+
+                # data selection 
+                myms = gentools(['ms'])[0]
+                myargs = kwargs.copy()
+                if not myargs.has_key('baseline'):
+                    with sdutil.tbmanager(self.infile) as tb:
+                        antenna1 = numpy.unique(tb.getcol('ANTENNA1'))
+                        myargs['baseline'] = '%s&&&'%(','.join(map(str,antenna1)))
+                a = myms.msseltoindex(self.infile, **myargs)
+                with sdutil.tbmanager(self.applytable) as tb:
+                    spwlist = numpy.unique(tb.getcol('SPECTRAL_WINDOW_ID'))
+                with sdutil.tbmanager(os.path.join(self.infile, 'DATA_DESCRIPTION')) as tb:
+                    spwidcol = tb.getcol('SPECTRAL_WINDOW_ID').tolist()
+                    spwddlist = map(spwidcol.index, spwlist)
+                if len(a['spw']) > 0:
+                    spwlist = list(set(spwlist) & set(a['spw']))
+                    spwddlist = map(spwidcol.index, spwlist)
+                
+                # result depends on interp
+                self.assertTrue(interp in ['linear', 'nearest'], msg='Internal Error')
+                if interp == 'linear':
+                    interpolator = LinearInterpolator(self.applytable)
+                else:
+                    interpolator = NearestInterpolator(self.applytable)
+                for antenna in a['antenna1']:
+                    for (spw,spwdd) in zip(spwlist,spwddlist):
+                        interpolator.select(antenna, spw)
+                        taql = 'ANTENNA1 == %s && ANTENNA2 == %s && DATA_DESC_ID == %s'%(antenna, antenna, spwdd)
+                        with sdutil.table_selector(self.infile, taql) as tb:
+                            self.assertEqual(tb.nrows(), self.nrow_per_chunk, msg='Number of rows mismatch in antenna %s spw %s'%(antenna, spw))
+                            for irow in xrange(tb.nrows()):
+                                t = tb.getcell('TIME', irow)
+                                data = tb.getcell('DATA', irow)
+                                corrected = tb.getcell('CORRECTED_DATA', irow)
+                                ref = interpolator.interpolate(t)
+                                expected = (data - ref) / ref
+                                self.assertEqual(corrected.shape, expected.shape, msg='Shape mismatch in antenna %s spw %s row %s (expeted %s actual %s)'%(antenna,spw,irow,list(expected.shape),list(corrected.shape)))
+                                npol, nchan = corrected.shape
+                                for ipol in xrange(npol):
+                                    for ichan in xrange(nchan):
+                                        _expected = expected[ipol,ichan]
+                                        _corrected = corrected[ipol,ichan]
+                                        if _expected == 0.0:
+                                            diff = abs(_corrected - _expected)
+                                        else:
+                                            diff = abs((_corrected - _expected) / _expected)
+                                        self.assertLess(diff, self.eps, msg='Calibrated result differ in antenna %s spw %s row %s pol %s chan %s (expected %s actual %s diff %s)'%(antenna,spw,irow,ipol,ichan,_expected,_corrected,diff))
+                                
+                    
+            return _wrapper
+        return wrapper
+
     @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky00(self):
         """
         test_apply_sky00 --- empty applytable
         """
-        result = tsdcal(infile=self.infile, calmode='apply', applytable='')
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable='')
 
     @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky01(self):
         """
         test_apply_sky01 --- empty applytable (list ver.)
         """
-        result = tsdcal(infile=self.infile, calmode='apply', applytable=[''])
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[''])
 
     @tsdcal_test_base.exception_case(Exception, 'Applytable name must be specified.')
     def test_apply_sky02(self):
         """
         test_apply_sky02 --- empty applytable list
         """
-        result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[])
 
     @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
     def test_apply_sky03(self):
         """
         test_apply_sky03 --- unexisting applytable
         """
-        result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable='notexist.sky')
 
     @tsdcal_test_base.exception_case(Exception, '^Table \".+\" doesn\'t exist\.$')
     def test_apply_sky04(self):
         """
         test_apply_sky04 --- unexisting applytable (list ver.)
         """
-        result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=['notexist.sky'])
 
     @tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
     def test_apply_sky05(self):
         """
         test_apply_sky05 --- invalid selection (empty selection result)
         """
-        result = tsdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
-        return result
+        self.result = tsdcal(infile=self.infile, calmode='apply', spw='99', applytable=[self.applytable])
     
-    #@tsdcal_test_base.exception_case(RuntimeError, 'No Spw ID\(s\) matched specifications')
-    #def test_apply_sky05(self):
-    #    """
-    #    test_apply_sky06 --- invalid interp value
-    #    """
-    #    result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='bicubic')
-    #    return result
+    #@tsdcal_test_base.exception_case(RuntimeError, '^Unknown interptype: \'.+\'!! Check inputs and try again\.$')
+    @tsdcal_test_base.exception_case(RuntimeError, 'Error in Calibrater::setapply.')
+    def test_apply_sky06(self):
+        """
+        test_apply_sky06 --- invalid interp value
+        """
+        # 'cubic' interpolation along time axis is not supported yet
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='cubic')
     
+    @tsdcal_test_base.exception_case(RuntimeError, '^Applytable \'.+\' is not a caltable format$')
+    def test_apply_sky07(self):
+        """
+        test_apply_sky07 --- invalid applytable (not caltable)
+        """
+        # 'cubic' interpolation along time axis is not supported yet
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.infile], interp='linear')
+
+    @normal_case()
+    def test_apply_sky08(self):
+        """
+        test_apply_sky08 --- apply data (linear)
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='linear')
+
+    @normal_case(spw='9')
+    def test_apply_sky09(self):
+        """
+        test_apply_sky09 --- apply selected data
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], spw='9', interp='linear')
+
+    @normal_case(interp='nearest')
+    def test_apply_sky10(self):
+        """
+        test_apply_sky10 --- apply data (nearest)
+        """
+        self.result = tsdcal(infile=self.infile, calmode='apply', applytable=[self.applytable], interp='nearest')
+        
 def suite():
     return [tsdcal_test, tsdcal_test_skycal,
             tsdcal_test_apply]
