@@ -32,7 +32,7 @@ class tsdcal_test(unittest.TestCase):
     datapath=os.environ.get('CASAPATH').split()[0]+ '/data/regression/unittest/tsdcal/'
 
     # Input 
-    infile1 = 'uid___A002_X6218fb_X264.ms'
+    infile1 = 'uid___A002_X6218fb_X264.ms.sel'
     infiles = [infile1]
 
     def setUp(self):
@@ -99,8 +99,11 @@ class tsdcal_test(unittest.TestCase):
         spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
         tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
         tb.open(infile)
-        subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
+        #subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
         #weight_dict = subt_dict.getcol('WEIGHT')
+        weight_dict=tb.getvarcol('WEIGHT')
+        print type(weight_dict)
+        #print weight_dict.shape
         #corrected_data_dict = subt_dict.getcol('CORRECTED_DATA')
         tb.close()
         #subt_dict.close()
