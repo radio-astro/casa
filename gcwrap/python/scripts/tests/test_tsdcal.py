@@ -91,18 +91,40 @@ class tsdcal_test(unittest.TestCase):
 
 
     def test01(self):
-        """Test01: Validateion when spwmap comprising list"""
-
+        """Test01: Validation when spwmap comprising list"""
         tid = "01"
         infile = self.infile1
         tsdcal(infile=infile, calmode='tsys', outfile='tsys.cal')
-        spwmap=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
-        #spwmap={1:[9],3:[11],5:[13],7:[15]}
-        tsdcal(infile=infile, calmode='apply', spwmap=spwmap, applytable='tsys.cal', outfile='')
+        spwmap_list=[0,1,2,3,4,5,6,7,8,1,10,3,12,5,14,7,16]
+        spwmap_dict={1:[9],3:[11],5:[13],7:[15]}
+        tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
+        tb.open(infile)
+        subt_dict=tb.query('', sortlist='ANTENNA1, TIME', columns='WEIGHT, CORRECTED_DATA')
+        #weight_dict = subt_dict.getcol('WEIGHT')
+        #corrected_data_dict = subt_dict.getcol('CORRECTED_DATA')
+        tb.close()
+        #subt_dict.close()
+
+        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap_dict, applytable='tsys.cal', outfile='')
+        #tb.open(infile)
+        #subt_list=tb.query('', sortlist='ANTENNA1, TIME, SPECTRAL_WINDOW_ID', columns='WEIGHT, CORRECTED_DATA')
+        #weight_list = subt_list.getcol('WEIGHT')
+        #corrected_data_list = subt_list.getcol('CORRECTED_DATA')
+        #tb.close()
+        #subt_list.close()
+
+        #tsdcal(infile=infile, calmode='apply', spwmap=spwmap_list, applytable='tsys.cal', outfile='')
+
+
+        #print 'dict:', spwmap
+        #print 'list:', spwmap
+        #if spwmap.all()==spwmap_dict.all():
+        #    Spwmap is able to cope with dictionary and list.
+        #print spwmap.all()==spwmap_dict.all()
 
 
     def test02(self):
-        """Test02: Validateion when spwmap comprising dictionary
+        """Test02: Validation when spwmap comprising dictionary
 
         tid ="02"
         infile=self.infile1
