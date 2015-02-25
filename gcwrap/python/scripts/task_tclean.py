@@ -320,10 +320,10 @@ def tclean(
         ## Close tools.
         imager.deleteTools()
 
-    except Exception as e:
-        #print 'Exception : ' + str(e)
-        casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
-        imager.deleteTools()
+    # except Exception as e:
+    #     #print 'Exception : ' + str(e)
+    #     casalog.post('Exception : ' + str(e), "SEVERE", "task_tclean")
+    #     imager.deleteTools()
 
     return retrec
 
