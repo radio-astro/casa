@@ -86,20 +86,23 @@ class TheoreticalBeam:
         pa: position angle (NOT USED)
         """
         self.pa = pa
-        self.sampling_arcsec = self.__to_arcsec_list(intervals)
+        self.sampling_arcsec = [ abs(a) for a in
+                                 self.__to_arcsec_list(intervals) ]
         self.is_sampling_set = True
 
     def set_image_param(self, cell, ref_freq, gridfunction,
-                        convsupport, truncate, gwidth, jwidth):
+                        convsupport, truncate, gwidth, jwidth,is_alma=False):
         """
         Set imaging parameters
         cell: image pixel size
         ref_freq: reference frequency of image to calculate beam size
         gridfunction, convsupport, truncate, gwidth, jwidth:
             parameters passed to imager
+        is_alma: valid only for PB kernel to use 10.7m
         """
         self.ref_freq = ref_freq
-        self.cell_arcsec = self.__to_arcsec_list(cell)
+        self.cell_arcsec = [ abs(a) for a in
+                             self.__to_arcsec_list(cell) ]
         if gridfunction.upper() == "SF":
             self.__set_sf_kernel(convsupport)
         elif gridfunction.upper() == "GJINC":
@@ -109,7 +112,7 @@ class TheoreticalBeam:
         elif gridfunction.upper() == "BOX":
             self.__set_box_kernel(self.cell_arcsec[0])
         elif gridfunction.upper() == "PB":
-            self.__set_pb_kernel()
+            self.__set_pb_kernel(is_alma)
         self.is_kernel_set = True
 
     def __set_sf_kernel(self,convsupport):
@@ -132,10 +135,10 @@ class TheoreticalBeam:
         self.kernel_type="BOX"
         self.kernel_param=dict(width=width)
 
-    def __set_pb_kernel(self):
+    def __set_pb_kernel(self,alma=False):
         """Set PB kernel parameter to the class"""
         self.kernel_type = "PB"
-        self.kernel_param={}
+        self.kernel_param=dict(alma=alma)
 
     def get_beamsize_image(self):
         """
@@ -261,7 +264,11 @@ class TheoreticalBeam:
         elif self.kernel_type == "BOX":
             return self.get_box_kernel(axis,self.kernel_param['width'])
         elif self.kernel_type == "PB":
-            epsilon = self.antenna_block_m/self.antenna_diam_m
+            diam = self.antenna_diam_m
+            if self.kernel_param['alma']:
+                diam = 10.7
+                casalog.post("Using effective antenna diameter %fm for %s kernel of ALMA antennas" % (diam,self.kernel_type))
+            epsilon = self.antenna_block_m/diam
             return (self.rootAiryIntensity(axis, epsilon))**2
         else:
             raise RuntimeError, "Invalid kernel: %s" % self.kernel_type
@@ -393,7 +400,7 @@ class TheoreticalBeam:
             trunc_arcsec = self.__parse_width(truncate, cell_arcsec)
         idx = np.where(abs(axis)>trunc_arcsec)
         result[idx] = 0.
-        return 
+        return result
 
     def gauss(self, x, parameters):
         """
