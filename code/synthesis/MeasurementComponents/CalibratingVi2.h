@@ -80,15 +80,27 @@ public:
   virtual void origin ();
   virtual void next ();
 
-  // Smart corrected data generator
+  // Smart corrected data/weights accessors
+  virtual void weight(Matrix<Float>& wt) const;
+  virtual void weightSpectrum(Cube<Float>& wtsp) const;
   virtual void visibilityCorrected(Cube<Complex>& vis) const;
 
+  // Reports True in case of *Corrected columns
+  //  (because this class provides it, even if it doesn't exist physically!)
+  virtual Bool existsColumn (VisBufferComponent2 id) const;
   
 private:
+
+  // Correct the current VB
+  void correctCurrentVB() const;
+
+
   //  VisEquationI *ve_p;   // TBD: MSTransform-side VisEquation interface
 
   Float corrFactor_p;  // Temporary correction factor to apply for testing
 
+  // signals whether or not correctCurrentVB has been called
+  mutable Bool visCorrOK_p;
 
 };
 
