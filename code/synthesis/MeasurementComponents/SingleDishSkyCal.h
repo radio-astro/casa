@@ -237,6 +237,9 @@ public:
 		       const String& listfile="",const Int& pagerows=50);
 
 
+  // Local setApply
+  virtual void setApply(const Record& apply);
+
   // Local setSpecify
   virtual void setSpecify(const Record& specify);
 

@@ -430,7 +430,27 @@ void SingleDishSkyCal::listCal(const Vector<Int> /*ufldids*/, const Vector<Int> 
 {
 }
 
-
+void SingleDishSkyCal::setApply(const Record& apply)
+{
+  // Override interp
+  // default frequency interpolation option is 'linearflag'
+  Record applyCopy(apply);
+  if (applyCopy.isDefined("interp")) {
+    String interp = applyCopy.asString("interp");
+    if (!interp.contains(',')) {
+      //fInterpType() = "linearflag";
+      String newInterp = interp + ",linearflag";
+      applyCopy.define("interp", newInterp);
+    }
+  }
+  else {
+    applyCopy.define("interp", "linear,linearflag");
+  }
+  
+  // call parent method
+  SolvableVisCal::setApply(applyCopy);
+}
+  
 void SingleDishSkyCal::setSpecify(const Record& specify)
 {
   debuglog << "SingleDishSkyCal::setSpecify()" << debugpost;
@@ -654,7 +674,6 @@ void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
   currentSkyOK().resize(currentSky().shape());
   currentSkyOK().unique();
   debuglog << "currentSkyOK.shape()=" << currentSkyOK().shape() << debugpost;
-  currentSkyOK() = False;
 
   // sky data from caltable
   debuglog << "currRPar().shape()=" << currRPar().shape() << debugpost;
@@ -666,7 +685,7 @@ void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
   currentSkyOK() = currParOK();
   debuglog << "currentTime() = " << setprecision(16) << currTime() << debugpost;
   debuglog << "currentSky() = " << currentSky().xzPlane(0) << debugpost;
-  debuglog << "currParOK() = " << currParOK().xzPlane(0) << debugpost;
+  debuglog << "currentSkyOK() = " << currentSkyOK().xzPlane(0) << debugpost;
 
   debuglog << "SingleDishSkyCal::syncCalMat DONE" << debugpost;
 }
@@ -728,6 +747,7 @@ void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<F
   Matrix<Bool> flagCubeSlice;
   
   for (Int row=0; row<nRow; row++,flagR++,a1++,a2++) {
+    debuglog << "spw: " << currSpw() << " antenna: " << *a1 << debugpost;
     assert(*a1 == *a2);
     
     // Solution channel registration

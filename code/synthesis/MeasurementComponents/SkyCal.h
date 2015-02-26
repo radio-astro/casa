@@ -251,7 +251,7 @@ public:
     Bool deleteIt;
     Bool *data = v.getStorage(deleteIt);
     for (size_t i = 0; i < typesize(); ++i) {
-      data[i] = (!ok_[i]); // data: False is valid, ok_: True is valid
+      data[i] |= (!ok_[i]); // data: False is valid, ok_: True is valid
     }
     v.putStorage(data, deleteIt);
   }
