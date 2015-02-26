@@ -132,7 +132,7 @@ public:
     {}
 
     // Create from a shared_ptr.
-    CountedPtr (const PointerRep& rep)
+    CountedPtr (const SHARED_PTR<t>& rep)
       : pointerRep_p (rep)
     {}
 
