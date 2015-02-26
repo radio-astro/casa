@@ -269,7 +269,7 @@ void SolvableVisCal::setApply(const Record& apply) {
   // Protect against non-specific interp
   if (tInterpType()=="")
     tInterpType()="linear";
-  if (fInterpType()=="" && this-freqDepPar()) // only if we are freq-dep
+  if (fInterpType()=="" && this->freqDepPar()) // only if we are freq-dep
     fInterpType()="linear";
 
   // Catch use of deprecated 'aipslin' interpolation
