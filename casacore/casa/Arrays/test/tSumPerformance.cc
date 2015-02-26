@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSumPerformance.cc 20872 2010-03-24 13:28:04Z gervandiepen $
+//# $Id: tSumPerformance.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Array.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/OS/Timer.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/OS/Timer.h>
 #include <numeric>
 #include <functional>
 
-using namespace casa;
+using namespace casacore;
 
 // Inlining this function makes it almost 3 times slower.
 template<typename Result, typename Iter>

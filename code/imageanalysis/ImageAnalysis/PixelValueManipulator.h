@@ -81,7 +81,6 @@ public:
 	// If the selected axis is the spectral axis and <src>unit</src> is a velocity unit,
 	// <src>restFreq</src> represents the rest frequency with respect to which the velocity scale should be
 	// calculated. If null, the rest frequency associated with the spectral coordinate is used.
-	// <src>restFreq</src> can alternatively be expressed as a wavelength.
 	// If the selected axis is the spectral axis, and <src>unit</src> is a frequency unit,
 	// <src>frame</src> represents the frame of reference with respect to which the frequency scale should be
 	// calculated. If empty, the reference frame associated with the spectral coordinate is used.
@@ -91,13 +90,13 @@ public:
 	Record getProfile(
 		uInt axis, const String& function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=NULL, const String& frame=""
+		const Quantity *const restFreq=0, const String& frame=""
 	) const;
 
 	Record getProfile(
 		uInt axis, ImageCollapserData::AggregateType function, const String& unit,
 		PixelValueManipulatorData::SpectralType specType=PixelValueManipulatorData::DEFAULT,
-		const Quantity *const restFreq=NULL, const String& frame=""
+		const Quantity *const restFreq=0, const String& frame=""
 	) const;
 
 	String getClass() const { const static String name = "PixelValueManipulator"; return name; }

@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIOCarray.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AipsIOCarray.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_AIPSIOCARRAY_H
 #define CASA_AIPSIOCARRAY_H
 
 //# Includes
-#include <casa/IO/AipsIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/AipsIO.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Templated functions to get/put a C-style array from/into AipsIO.
@@ -153,9 +154,9 @@ AIPSIO_FUNC_SPEC(String)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/IO/AipsIOCarray.tcc>
+#include <casacore/casa/IO/AipsIOCarray.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

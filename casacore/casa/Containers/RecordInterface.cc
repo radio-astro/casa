@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordInterface.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: RecordInterface.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Containers/RecordDesc.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Register.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RecordInterface::RecordInterface ()
 : checkFunction_p (0),
@@ -737,5 +737,5 @@ int RecordNotice::operator== (const Notice& that) const
 	&& (fieldNumber_p == ((const RecordNotice&)that).fieldNumber_p);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

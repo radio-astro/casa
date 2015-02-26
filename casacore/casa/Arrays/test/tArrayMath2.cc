@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMath2.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: tArrayMath2.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayPartMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayPartMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
 
+// If an argument is given, some performance tests will also be done.
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 typedef Array<Double> PartFunc (const Array<Double>&, const IPosition& axes);
 typedef Double FullFunc (const Array<Double>&);
 
@@ -58,6 +59,24 @@ Double myNomeanMedian (const Array<Double>& array)
 {
   return median (array, False, False, False);
 }
+Array<Double> myMeanPartialMadfms (const Array<Double>& array,
+                                   const IPosition& axes)
+{
+  return partialMadfms (array, axes, True, False);
+}
+Double myMeanMadfm (const Array<Double>& array)
+{
+  return madfm (array, False, True, False);
+}
+Array<Double> myNomeanPartialMadfms (const Array<Double>& array,
+				      const IPosition& axes)
+{
+  return partialMadfms (array, axes, False, False);
+}
+Double myNomeanMadfm (const Array<Double>& array)
+{
+  return madfm (array, False, False, False);
+}
 Array<Double> myPartialFractiles (const Array<Double>& array,
 				  const IPosition& axes)
 {
@@ -66,6 +85,24 @@ Array<Double> myPartialFractiles (const Array<Double>& array,
 Double myFractile (const Array<Double>& array)
 {
   return fractile (array, 0.3, False, False);
+}
+Array<Double> myPartialHexiles (const Array<Double>& array,
+                                const IPosition& axes)
+{
+  return partialInterHexileRanges (array, axes, False);
+}
+Double myHexile (const Array<Double>& array)
+{
+  return interHexileRange (array, False, False);
+}
+Array<Double> myPartialQuartiles (const Array<Double>& array,
+                                  const IPosition& axes)
+{
+  return partialInterQuartileRanges (array, axes, False);
+}
+Double myQuartile (const Array<Double>& array)
+{
+  return interQuartileRange (array, False, False);
 }
 
 
@@ -543,7 +580,7 @@ Bool doIt (PartFunc* partFunc, FullFunc* fullFunc, Bool doExtra)
   return !errFlag;
 }
 
-int main()
+int main (int argc, char* [])
 {
   Bool errFlag = False;
   try {
@@ -597,78 +634,101 @@ int main()
       cout << "  erronous" << endl;
       errFlag = True;
     }
+    cout << "Testing partialMadfms (takeEvenMean=True) ..." << endl;
+    if (! doIt (&myMeanPartialMadfms, &myMeanMadfm, True)) {
+      cout << "  erronous" << endl;
+      errFlag = True;
+    }
+    cout << "Testing partialMadfms (takeEvenMean=False)..." << endl;
+    if (! doIt (&myNomeanPartialMadfms, &myNomeanMadfm, True)) {
+      cout << "  erronous" << endl;
+      errFlag = True;
+    }
     cout << "Testing partialFractiles ..." << endl;
     if (! doIt (&myPartialFractiles, &myFractile, True)) {
       cout << "  erronous" << endl;
       errFlag = True;
     }
-    // Test performance.
-    for (Int cnt=0; cnt<2; cnt++) {
-      cout << ">>>" << endl;
-      IPosition shape;
-      if (cnt == 0) {
-	shape = IPosition(2,3000,3000);
-	cout << " Performance on [3000,3000]";
-      } else if (cnt == 1) {
-	shape = IPosition(2,300,30000);
-	cout << " Performance on [300,30000]";
-      } else {
-	shape = IPosition(2,30000,300);
-	cout << " Performance on [30000,300]";
-      }
-      cout << " for collapseaxis 1 and 0..." << endl;
-      Timer timer;
-      Array<Double> arr(shape);
-      indgen(arr);
-      for (Int j=0; j<2; j++) {
-	{
-	  timer.mark();
-	  Array<Double> res2 = partialSums (arr, IPosition(1,1-j));
-	  timer.show("partialSums   ");
-	  timer.mark();
-	  Vector<Double> res(shape(j));
-	  IPosition st(2,0);
-	  IPosition end(shape-1);
-	  for (Int i=0; i<shape(j); i++) {
-	    st(j) = i;
-	    end(j) = i;
-	    res(i) = sum(arr(st,end));
-	  }
-	  timer.show("Using sum     ");
-	  Array<Double> rs = abs(res-res2)/res2;
-	  Double mn,mx;
-	  IPosition mnpos, mxpos;
-	  minMax(mn, mx, mnpos, mxpos, rs);
-	  cout << "Maximum result diff = " << rs(mxpos) << " at " << mxpos
-	       << " (" << res(mxpos) << " and " << res2(mxpos) << ')' << endl;
-	  AlwaysAssertExit (allNear (res, res2, 1.e-7));
-	}
-	{
-	  timer.mark();
-	  Array<Double> res2 = partialMedians (arr, IPosition(1,1-j));
-	  timer.show("partialMedians");
-	  timer.mark();
-	  Vector<Double> res(shape(j));
-	  IPosition st(2,0);
-	  IPosition end(shape-1);
-	  for (Int i=0; i<shape(j); i++) {
-	    st(j) = i;
-	    end(j) = i;
-	    res(i) = median(arr(st,end), False, False);
-	  }
-	  timer.show("Using median  ");
-	  Array<Double> rs = abs(res-res2)/res2;
-	  Double mn,mx;
-	  IPosition mnpos, mxpos;
-	  minMax(mn, mx, mnpos, mxpos, rs);
-	  cout << "Maximum result diff = " << rs(mxpos) << " at " << mxpos
-	       << " (" << res(mxpos) << " and " << res2(mxpos) << ')' << endl;
-	  AlwaysAssertExit (allNear (res, res2, 1.e-6));
-	}
-      }
-      cout << "<<<" << endl;
+    cout << "Testing partialHexile ..." << endl;
+    if (! doIt (&myPartialHexiles, &myHexile, True)) {
+      cout << "  erronous" << endl;
+      errFlag = True;
     }
-  } catch (AipsError x) {
+    cout << "Testing partialQuartile ..." << endl;
+    if (! doIt (&myPartialQuartiles, &myQuartile, True)) {
+      cout << "  erronous" << endl;
+      errFlag = True;
+    }
+    if (argc > 1) {
+      // Test performance.
+      for (Int cnt=0; cnt<2; cnt++) {
+        cout << ">>>" << endl;
+        IPosition shape;
+        if (cnt == 0) {
+          shape = IPosition(2,3000,3000);
+          cout << " Performance on [3000,3000]";
+        } else if (cnt == 1) {
+          shape = IPosition(2,300,30000);
+          cout << " Performance on [300,30000]";
+        } else {
+          shape = IPosition(2,30000,300);
+          cout << " Performance on [30000,300]";
+        }
+        cout << " for collapseaxis 1 and 0..." << endl;
+        Timer timer;
+        Array<Double> arr(shape);
+        indgen(arr);
+        for (Int j=0; j<2; j++) {
+          {
+            timer.mark();
+            Array<Double> res2 = partialSums (arr, IPosition(1,1-j));
+            timer.show("partialSums   ");
+            timer.mark();
+            Vector<Double> res(shape(j));
+            IPosition st(2,0);
+            IPosition end(shape-1);
+            for (Int i=0; i<shape(j); i++) {
+              st(j) = i;
+              end(j) = i;
+              res(i) = sum(arr(st,end));
+            }
+            timer.show("Using sum     ");
+            Array<Double> rs = abs(res-res2)/res2;
+            Double mn,mx;
+            IPosition mnpos, mxpos;
+            minMax(mn, mx, mnpos, mxpos, rs);
+            cout << "Maximum result diff = " << rs(mxpos) << " at "
+                 << mxpos << " (" << res(mxpos) << " and "
+                 << res2(mxpos) << ')' << endl;
+            AlwaysAssertExit (allNear (res, res2, 1.e-7));
+          }
+          {
+            timer.mark();
+            Array<Double> res2 = partialMedians (arr, IPosition(1,1-j));
+            timer.show("partialMedians");
+            timer.mark();
+            Vector<Double> res(shape(j));
+            IPosition st(2,0);
+            IPosition end(shape-1);
+            for (Int i=0; i<shape(j); i++) {
+              st(j) = i;
+              end(j) = i;
+              res(i) = median(arr(st,end), False, False);
+            }
+            timer.show("Using median  ");
+            Array<Double> rs = abs(res-res2)/res2;
+            Double mn,mx;
+            IPosition mnpos, mxpos;
+            minMax(mn, mx, mnpos, mxpos, rs);
+            cout << "Maximum result diff = " << rs(mxpos) << " at " << mxpos
+                 << " (" << res(mxpos) << " and " << res2(mxpos) << ')' << endl;
+            AlwaysAssertExit (allNear (res, res2, 1.e-6));
+          }
+        }
+        cout << "<<<" << endl;
+      }
+    }
+  } catch (const AipsError& x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }

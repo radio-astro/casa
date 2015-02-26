@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.h 20891 2010-05-17 07:10:15Z gervandiepen $
+//# $Id: HostInfo.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_HOSTINFO_H
 #define CASA_HOSTINFO_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <cstring>
-#include <unistd.h>
+#include <cstddef>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class String;
 class HostMachineInfo;
@@ -118,17 +118,17 @@ public:
     // Get memory info (in KBytes).
     // Returns -1 if unable to determine memory info.
     // <group>
-    static ssize_t memoryTotal(bool use_aipsrc=false);
-    static ssize_t memoryUsed();
-    static ssize_t memoryFree();
+    static ptrdiff_t memoryTotal(bool use_aipsrc=false);
+    static ptrdiff_t memoryUsed();
+    static ptrdiff_t memoryFree();
     // </group>
 
     // Get swap space info (in KBytes).
     // Returns -1 if unable to determine swap info.
     // <group>
-    static ssize_t swapTotal();
-    static ssize_t swapUsed();
-    static ssize_t swapFree();
+    static ptrdiff_t swapTotal();
+    static ptrdiff_t swapUsed();
+    static ptrdiff_t swapFree();
     // </group>
 
 private:
@@ -151,6 +151,6 @@ inline Bool HostInfo::bigEndian()
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

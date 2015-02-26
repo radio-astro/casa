@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RotMatrix.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RotMatrix.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ROTMATRIX_H
 #define CASA_ROTMATRIX_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Euler;
@@ -142,6 +142,6 @@ class RotMatrix
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

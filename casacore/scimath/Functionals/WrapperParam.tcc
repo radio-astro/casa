@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WrapperParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: WrapperParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_WRAPPERPARAM_TCC
+#define SCIMATH_WRAPPERPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/WrapperParam.h>
+#include <casacore/scimath/Functionals/WrapperParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template<class T>
@@ -61,5 +64,7 @@ WrapperParam<T>::operator=(const WrapperParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

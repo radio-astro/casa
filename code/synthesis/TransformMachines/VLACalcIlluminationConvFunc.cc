@@ -36,8 +36,8 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <synthesis/TransformMachines/SynthesisError.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/PagedImage.h>
 #include <casa/Arrays/ArrayMath.h>

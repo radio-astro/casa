@@ -23,28 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasuresProxy.h 20821 2009-11-18 11:30:57Z Malte.Marquarding $
+//# $Id: MeasuresProxy.h 21541 2015-01-15 09:57:38Z gervandiepen $
 
 #ifndef MEASURES_MEASURESPROXY_H
 #define MEASURES_MEASURESPROXY_H
 
 //# Includes
 
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/Measure.h>
-#include <measures/Measures/MeasFrame.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/measures/Measures/Measure.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
 //# Forward declarations
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 class String;
 class MeasureHolder;
 class MeasComet;
-} //# NAMESPACE CASA - END
 
 class MeasuresProxy
 {
@@ -96,5 +94,7 @@ private:
   MeasComet *pcomet_p;
   
 };
+
+} //# NAMESPACE CASACORE - END
 
 #endif

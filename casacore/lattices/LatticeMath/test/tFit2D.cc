@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFit2D.cc 20632 2009-06-14 12:16:13Z gervandiepen $
+//# $Id: tFit2D.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <scimath/Fitting.h>
-#include <lattices/LatticeMath/Fit2D.h>
-#include <casa/System/PGPlotter.h>
-#include <scimath/Functionals/Gaussian2D.h>
-#include <casa/Inputs/Input.h>
-#include <casa/Logging.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/BasicMath/Random.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/scimath/Fitting.h>
+#include <casacore/lattices/LatticeMath/Fit2D.h>
+#include <casacore/casa/System/PGPlotter.h>
+#include <casacore/scimath/Functionals/Gaussian2D.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Logging.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 Gaussian2D<Double> addModel (Array<Float>& pixels, Double height, Double x, Double y, 
                                Double major,  Double minor, Double pa);
 
@@ -57,7 +57,7 @@ int main(int argc, const char *argv[])
 // Inputs
 // 
    Input inputs(1);
-   inputs.version ("$Revision: 20632 $");
+   inputs.version ("$Revision: 21509 $");
    inputs.create("nmodels", "1", "nmodels"); 
    inputs.create("noise", "0.0001", "Noise");
    inputs.create("major", "10.0", "major");

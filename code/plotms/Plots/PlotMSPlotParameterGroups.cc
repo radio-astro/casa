@@ -852,8 +852,8 @@ void PMS_PP_Canvas::fromRecord(const Record& record)
 	if (record.isDefined(REC_GRIDMAJLINES) && record.dataType(REC_GRIDMAJLINES) == TpRecord)
 	{
 		const Record& tmpRec = record.asRecord(REC_GRIDMAJLINES);
-		itsGridMajLines_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->line(*itsGridMajLines_[0]) : NULL);
-		PlotLinePtr tmp= itsGridMajLines_.size() > 0 ? factory()->line(*itsGridMajLines_[0]) : NULL;
+		itsGridMajLines_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->line(*itsGridMajLines_[0]) : PlotLinePtr( ));
+		PlotLinePtr tmp= itsGridMajLines_.size() > 0 ? factory()->line(*itsGridMajLines_[0]) : PlotLinePtr( );
 		for (unsigned int i= 0; i < itsGridMajLines_.size() && i < tmpRec.nfields(); i++)
 		{
 			if (tmpRec.dataType(i) == TpRecord)
@@ -870,8 +870,8 @@ void PMS_PP_Canvas::fromRecord(const Record& record)
 	if (record.isDefined(REC_GRIDMINLINES) && record.dataType(REC_GRIDMINLINES) == TpRecord)
 	{
 		const Record& tmpRec = record.asRecord(REC_GRIDMINLINES);
-		itsGridMinLines_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->line(*itsGridMinLines_[0]) : NULL);
-		PlotLinePtr tmp= itsGridMinLines_.size() > 0 ? factory()->line(*itsGridMinLines_[0]) : NULL;
+		itsGridMinLines_.resize(tmpRec.nfields(), tmpRec.nfields() > 0 ? factory()->line(*itsGridMinLines_[0]) : PlotLinePtr( ));
+		PlotLinePtr tmp= itsGridMinLines_.size() > 0 ? factory()->line(*itsGridMinLines_[0]) : PlotLinePtr( );
 		for (unsigned int i= 0; i < itsGridMinLines_.size() && i < tmpRec.nfields(); i++)
 		{
 			if (tmpRec.dataType(i) == TpRecord)
@@ -1102,7 +1102,7 @@ void PMS_PP_Display::fromRecord(const Record& record)
 	if (record.isDefined(REC_UNFLAGGEDS) && record.dataType(REC_UNFLAGGEDS) == TpRecord){
 		const Record& tmpRec = record.asRecord(REC_UNFLAGGEDS);
 		itsUnflaggedSymbols_.resize(tmpRec.nfields(),
-				tmpRec.nfields() > 0 ? PMS::DEFAULT_UNFLAGGED_SYMBOL(factory()) : NULL);
+				tmpRec.nfields() > 0 ? PMS::DEFAULT_UNFLAGGED_SYMBOL(factory()) : PlotSymbolPtr( ));
 		PlotSymbolPtr tmp = PMS::DEFAULT_UNFLAGGED_SYMBOL(factory());
 		for (unsigned int i= 0; i < itsUnflaggedSymbols_.size() && i < tmpRec.nfields(); i++){
 			if (tmpRec.dataType(i) == TpRecord){
@@ -1117,7 +1117,7 @@ void PMS_PP_Display::fromRecord(const Record& record)
 	if (record.isDefined(REC_FLAGGEDS) && record.dataType(REC_FLAGGEDS) == TpRecord){
 		const Record& tmpRec = record.asRecord(REC_FLAGGEDS);
 		itsFlaggedSymbols_.resize(tmpRec.nfields(),
-				tmpRec.nfields() > 0 ? PMS::DEFAULT_FLAGGED_SYMBOL(factory()) : NULL);
+				tmpRec.nfields() > 0 ? PMS::DEFAULT_FLAGGED_SYMBOL(factory()) : PlotSymbolPtr( ));
 		PlotSymbolPtr tmp= PMS::DEFAULT_FLAGGED_SYMBOL(factory());
 		for (unsigned int i= 0; i < itsFlaggedSymbols_.size() && i < tmpRec.nfields(); i++){
 			if (tmpRec.dataType(i) == TpRecord){

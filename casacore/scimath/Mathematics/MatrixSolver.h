@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixSolver.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MatrixSolver.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_MATRIXSOLVER_H
 #define SCIMATH_MATRIXSOLVER_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogMessage.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 typedef Float FType;  // floating type (Float, Double)
 
@@ -212,6 +212,6 @@ inline FType MatrixSolver::getNorm()
 {return RNorm;}
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

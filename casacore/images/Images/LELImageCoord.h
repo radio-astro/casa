@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LELImageCoord.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LELImageCoord.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef IMAGES_LELIMAGECOORD_H
 #define IMAGES_LELIMAGECOORD_H
 
 //# Includes
-#include <lattices/Lattices/LELLattCoord.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <images/Images/ImageInfo.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Utilities/CountedPtr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/LEL/LELLattCoord.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LatticeExprNode;
@@ -167,6 +168,6 @@ inline const TableRecord& LELImageCoord::miscInfo() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

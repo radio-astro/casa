@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayUtil2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayUtil2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# The include of Array.h before ArrayUtil.h is needed, otherwise
 //# gcc-4 complains (rightfully) about partialFuncHelper not being declared.
 //# Because include-chain is:
 //#  Array.h, Array.tcc, MaskedArray.h, MaskedArray.tcc, ArrayLogical.h,
 //#  ArrayLogical.tcc, ArrayUtil.h
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Regex.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Vector<String> stringToVector (const String& string, char delim)
 {
@@ -171,5 +171,5 @@ uInt reorderArrayHelper (IPosition& newShape, IPosition& incr,
   return contAxes;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

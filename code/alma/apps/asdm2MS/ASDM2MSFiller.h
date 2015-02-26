@@ -48,8 +48,8 @@
 #include <ms/MeasurementSets/MSSysCalColumns.h>
 #include <ms/MeasurementSets/MSWeatherColumns.h>
 
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
+#include <tables/DataMan/StandardStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRecord.h>

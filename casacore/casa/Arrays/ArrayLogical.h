@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayLogical.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: ArrayLogical.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYLOGICAL_H
 #define CASA_ARRAYLOGICAL_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/LogiArray.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/LogiArray.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class Vector;
@@ -447,9 +447,9 @@ public:
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/ArrayLogical.tcc>
+#include <casacore/casa/Arrays/ArrayLogical.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

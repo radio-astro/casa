@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskLogiArr.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskLogiArr.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MASKLOGIARR_H
 #define CASA_MASKLOGIARR_H
@@ -33,13 +33,13 @@
 #endif
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/MaskLogiArrFwd.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Arrays/MaskedArray.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/MaskLogiArrFwd.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Masked LogicalArrays.
@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <etymology>
 // MaskLogiArr is short for MaskedLogicalArray, which is too long by
-// AIPS++ file naming conventions.  This file contains typedefs
+// the old AIPS++ file naming conventions.  This file contains typedefs
 // for MaskedLogicalArrays.
 // </etymology>
 //
@@ -79,6 +79,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // </group>
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

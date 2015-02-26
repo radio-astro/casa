@@ -36,7 +36,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Block.h>
-#include <lattices/Lattices/LatticeCleaner.h>
+#include <lattices/LatticeMath/LatticeCleaner.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

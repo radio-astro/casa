@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MConvertBase.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MConvertBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MConvertBase.h>
-#include <casa/iostream.h>
+#include <casacore/measures/Measures/MConvertBase.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -46,5 +46,5 @@ ostream &operator<<(ostream &os, const MConvertBase &mc) {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

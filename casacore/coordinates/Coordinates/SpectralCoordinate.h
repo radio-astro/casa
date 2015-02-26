@@ -24,27 +24,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralCoordinate.h 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: SpectralCoordinate.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef COORDINATES_SPECTRALCOORDINATE_H
 #define COORDINATES_SPECTRALCOORDINATE_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <coordinates/Coordinates/Coordinate.h>
-#include <coordinates/Coordinates/ObsInfo.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MDoppler.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MEpoch.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
 
 #include <wcslib/wcs.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 class TabularCoordinate;
@@ -439,14 +440,14 @@ public:
     // conversion machines.  
     // <group>
     MFrequency::Types frequencySystem(Bool showConversion=False) const;
-    void  setFrequencySystem(MFrequency::Types type, Bool verbose=True);
+    void setFrequencySystem(MFrequency::Types type, Bool verbose=True);
 
     // Transform the SpectralCoordinate to a different native reference frame
     // keeping the conversion layer as is
     Bool transformFrequencySystem(MFrequency::Types type, 
-				  const MEpoch& epoch, const MPosition& position,
+				  const MEpoch& epoch,
+                                  const MPosition& position,
 				  const MDirection& direction);
-
     // </group>
 
     // Report the value of the requested attribute.
@@ -587,8 +588,8 @@ public:
 
 private:
 
-    PtrHolder<TabularCoordinate> _tabular;                     // Tabular coordinate OR
-    mutable ::wcsprm wcs_p;                              // wcs structure is used 
+    SPtrHolder<TabularCoordinate> _tabular;            // Tabular coordinate OR
+    mutable ::wcsprm wcs_p;                            // wcs structure is used 
     Double to_hz_p;                                    // Convert from current world units to Hz
     Double to_m_p;                                     // Convert from current wavelength units to m
 //
@@ -694,7 +695,7 @@ private:
 
 ostream &operator<<(ostream &os, const SpectralCoordinate& spcoord);
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 
 #endif

@@ -50,8 +50,8 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableColumn.h>
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/RecordGram.h>
+#include <tables/TaQL/ExprNode.h>
+#include <tables/TaQL/RecordGram.h>
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <flagging/Flagging/Flagger.h>

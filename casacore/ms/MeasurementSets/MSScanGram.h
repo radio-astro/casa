@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanGram.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSScanGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSCANGRAM_H
 #define MS_MSSCANGRAM_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSScanParse.h> // routines used by bison actions
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSScanParse.h> // routines used by bison actions
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -103,6 +104,6 @@ int msScanGramInput (char* buf, int max_size);
 
 // </group>
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

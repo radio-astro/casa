@@ -22,14 +22,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: HostInfoDarwin.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#ifndef COMPONENTS_GAUSSIANBEAM_H
-#define COMPONENTS_GAUSSIANBEAM_H
+#ifndef SCIMATH_GAUSSIANBEAM_H
+#define SCIMATH_GAUSSIANBEAM_H
 
-#include <casa/aips.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
-namespace casa {
+namespace casacore {
 
 // <summary>
 // Represents a Gaussian restoring beam associated with an image.
@@ -145,26 +146,24 @@ public:
 	Vector<Quantity> toVector(const Bool unwrap=True) const;
 
 	// convert stored Quantities to the specified units
-	void convert(
-		const String& majUnit, const String& minUnit,
-		const String& paUnit
-	);
+	void convert(const String& majUnit, const String& minUnit,
+                     const String& paUnit);
 
-private:
+protected:
 	Quantity _major, _minor, _pa;
 
 };
+
+
 
 ostream &operator<<(ostream &os, const GaussianBeam& beam);
 
 LogIO &operator<<(LogIO &os, const GaussianBeam& beam);
 
-Bool near(
-	const GaussianBeam& left, const GaussianBeam& other,
-	const Double relWidthTol, const Quantity& absPaTol
-);
+Bool near(const GaussianBeam& left, const GaussianBeam& other,
+          const Double relWidthTol, const Quantity& absPaTol);
 
-}
+} //# end namespace
 
 #endif
 

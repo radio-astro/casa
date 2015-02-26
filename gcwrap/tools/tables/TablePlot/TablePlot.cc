@@ -44,13 +44,13 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Slicer.h>
 
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/TableGram.h>
+#include <tables/TaQL/TableParse.h>
+#include <tables/TaQL/TableGram.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/RecordGram.h>
+#include <tables/TaQL/RecordGram.h>
 
 #include <tools/tables/TablePlot/TablePlot.h>
 

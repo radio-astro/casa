@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionTraits.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: FunctionTraits.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONTRAITS_H
 #define SCIMATH_FUNCTIONTRAITS_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <scimath/Mathematics/AutoDiffA.h>
-#include <scimath/Mathematics/AutoDiffX.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/scimath/Mathematics/AutoDiffA.h>
+#include <casacore/scimath/Mathematics/AutoDiffX.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 // <summary> Function data types for parameters and arguments
@@ -248,6 +248,6 @@ public:
 #undef FunctionTraits_PX
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

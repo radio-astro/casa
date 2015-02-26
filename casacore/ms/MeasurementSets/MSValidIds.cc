@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSValidIds.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSValidIds.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <ms/MeasurementSets/MSValidIds.h>
+#include <casacore/ms/MeasurementSets/MSValidIds.h>
 
-#include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSValidIds::MSValidIds()
     : romsCols_p(0), hasDoppler_p(False), hasSource_p(False)
@@ -182,5 +182,5 @@ void MSValidIds::clear()
     hasDoppler_p = hasSource_p = False;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

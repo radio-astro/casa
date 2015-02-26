@@ -25,15 +25,15 @@
 //#
 //# $Id: tStatAcc.cc 20329 2008-06-06 07:59:22Z gervandiepen $
 
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
-#include <casa/iostream.h>
-#include <casa/Arrays.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 #include <vector>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main() {
     try {

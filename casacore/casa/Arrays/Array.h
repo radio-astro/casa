@@ -23,26 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef CASA_ARRAY_H
 #define CASA_ARRAY_H
 
 //# Includes
-#include <casa/Arrays/ArrayBase.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Arrays/MaskLogiArrFwd.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/ostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/ArrayBase.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Arrays/MaskLogiArrFwd.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/ostream.h>
 #include <iterator>
 #if defined(WHATEVER_VECTOR_FORWARD_DEC)
 WHATEVER_VECTOR_FORWARD_DEC;
 #else
-#include <casa/stdvector.h>
+#include <casacore/casa/stdvector.h>
 #endif
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 //# Forward Declarations
 class AipsIO;
 class Slice;
@@ -152,9 +153,6 @@ template<class Domain, class Range> class Functional;
 // functions, and indexing will be range-checked. This should not be
 // defined for production runs.
 //
-// A tutorial for the ArrayClasses is available in the "AIPS++ Programming
-// Manual."
-//
 // <note role=tip>
 // Most of the data members and functions which are "protected" should
 // likely become "private".
@@ -194,9 +192,15 @@ public:
     // Frees up storage only if this array was the last reference to it.
     virtual ~Array();
 
+    // Make an empty array of the same template type.
+    virtual CountedPtr<ArrayBase> makeArray() const;
+
     // Assign the other array to this array.
     // If the shapes mismatch, this array is resized.
+    // <group>
     virtual void assign (const Array<T>& other);
+    virtual void assignBase (const ArrayBase& other, Bool checkType=True);
+    // </group>
 
     // Set every element of the array to "value." Also could use the
     // assignment operator which assigns an array from a scalar.
@@ -317,10 +321,12 @@ public:
     // details of the operation and its reverse (i.e. creating a 
     // <src>Vector</src> from a <src>vector</src>), and for details of
     // definition and instantiation.
+    // <group>
     template <class U>
     void tovector(vector<T, U> &out) const;
 
     vector<T> tovector() const;
+    // </group>
 
     // It is occasionally useful to have an array which access the same
     // storage appear to have a different shape. For example,
@@ -434,8 +440,8 @@ public:
     // </group>
 
     // Get a reference to a section of an array.
-    // This is the same as operator().
-    virtual ArrayBase* getSection (const Slicer&);
+    // This is the same as operator(), but can be used in a type-agnostic way.
+    virtual CountedPtr<ArrayBase> getSection (const Slicer&) const;
 
     // Get the subset given by the i-th value of the last axis. So for a cube
     // it returns the i-th xy plane. For a Matrix it returns the i-th row.
@@ -444,7 +450,7 @@ public:
     // <note>This function should not be used in tight loops as it is (much)
     // slower than iterating using begin() and end(), ArrayIter, or
     // ArrayAccessor.</note>
-    Array<T> operator[] (uInt i) const;
+    Array<T> operator[] (size_t i) const;
 
 
     // The array is masked by the input LogicalArray.
@@ -512,18 +518,26 @@ public:
     // Note that deleteIt is set in this function.
     // <group>
     T *getStorage(Bool &deleteIt);
-    const T *getStorage(Bool &deleteIt) const;
+    const T *getStorage(Bool &deleteIt) const
+    {
+      // The cast is OK because the return pointer will be cast to const
+      return const_cast<Array<T>*>(this)->getStorage(deleteIt);
+    }
+    virtual void *getVStorage(Bool &deleteIt);
+    virtual const void *getVStorage(Bool &deleteIt) const;
     // </group>
 
     // putStorage() is normally called after a call to getStorage() (cf).
     // The "storage" pointer is set to zero.
     void putStorage(T *&storage, Bool deleteAndCopy);
+    virtual void putVStorage(void *&storage, Bool deleteAndCopy);
 
     // If deleteIt is set, delete "storage". Normally freeStorage calls
     // will follow calls to getStorage. The reason the pointer is "const"
     // is because only const pointers are released from const arrays.
     // The "storage" pointer is set to zero.
     void freeStorage(const T *&storage, Bool deleteIt) const;
+    void freeVStorage(const void *&storage, Bool deleteIt) const;
 
     // Replace the data values with those in the pointer <src>storage</src>.
     // The results are undefined is storage does not point at nelements() or
@@ -542,7 +556,7 @@ public:
     friend class ArrayIterator<T>;
 
     // Create an ArrayIterator object of the correct type.
-    virtual ArrayPositionIterator* makeIterator (uInt byDim);
+    virtual CountedPtr<ArrayPositionIterator> makeIterator (uInt byDim) const;
 
     // Needed to be a friend for Matrix<T>::reference()
     friend class Matrix<T>;
@@ -776,6 +790,6 @@ protected:
 
 }//#End casa namespace
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/Array.tcc>
+#include <casacore/casa/Arrays/Array.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

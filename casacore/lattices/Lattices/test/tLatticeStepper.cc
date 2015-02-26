@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLatticeStepper.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tLatticeStepper.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <casa/aips.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
   try {

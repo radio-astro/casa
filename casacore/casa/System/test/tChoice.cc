@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tChoice.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tChoice.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/System/Choice.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/System/Choice.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
 #include <iostream>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
   Vector<String> choices(3);

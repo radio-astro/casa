@@ -23,21 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tString.cc 21340 2013-04-09 13:57:09Z gervandiepen $
+//# $Id: tString.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
 // Next one for atoi and atof
-#include <casa/stdlib.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/stdlib.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
-#include <math.h>
-
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Generally used variables
 String X = "Hello";
 String Y = "world";
@@ -369,48 +367,30 @@ void toDouble() {
     String x = "1.5";
     Double y = String::toDouble(x);
     AlwaysAssertExit(y == 1.5);
-    Bool success;
-    y = String::toDouble(success, x);
-    AlwaysAssertExit(success && y == 1.5);
     x = "frodo";
-    y = String::toDouble(x);
-    // should be 0, but account for finite machine precision
-    AlwaysAssertExit(y < fabs(1e-316));
-    y = String::toDouble(success, x);
-    AlwaysAssertExit(! success && y < fabs(1e-316));
-
-    // and 0
-    x = "0.0e0";
-    y = String::toDouble(x);
-    // should be 0, but account for finite machine precision
-    AlwaysAssertExit(y < fabs(y) < 1e-316);
-    y = String::toDouble(success, x);
-    AlwaysAssertExit(success && fabs(y) < 1e-316);
+    AlwaysAssertExit (String::toDouble(x) == 0);
+    bool ok = false;
+    try {
+      y = String::toDouble(x, True);
+    } catch (const AipsError&) {
+      ok = true;
+    }
+    AlwaysAssertExit(ok);
 }
 
 void toFloat() {
     String x = "1.5";
     Float y = String::toFloat(x);
     AlwaysAssertExit(y == 1.5);
-    Bool success;
-    y = String::toFloat(success, x);
-    AlwaysAssertExit(success && y == 1.5);
-
-    x = "frodo";
-    y = String::toFloat(x);
-    // should be 0, but account for finite machine precision
-    AlwaysAssertExit(fabs(y) < 1e-316);
-    y = String::toFloat(success, x);
-    AlwaysAssertExit(! success && fabs(y) < 1e-316);
-
-    // and 0
-    x = "0.0e0";
-    y = String::toFloat(x);
-    // should be 0, but account for finite machine precision
-    AlwaysAssertExit(y < fabs(y) < 1e-316);
-    y = String::toFloat(success, x);
-    AlwaysAssertExit(success && fabs(y) < 1e-316);
-
+    x = "1.5 aa";
+    AlwaysAssertExit(String::toFloat(x) == 1.5);
+    bool ok = false;
+    try {
+      y = String::toFloat(x, True);
+    } catch (const AipsError&) {
+      ok = true;
+    }
+    AlwaysAssertExit(ok);
 }
 
 void toInt() {
@@ -421,14 +401,14 @@ void toInt() {
     y = String::toInt(x);
     AlwaysAssertExit(y == -12);
     x = "6.9999";
-    y = String::toInt(x);
-    AlwaysAssertExit(y == 6);
-    x = "-8.9999";
-    y = String::toInt(x);
-    AlwaysAssertExit(y == -8);
-    x = "elrond";
-    y = String::toInt(x);
-    AlwaysAssertExit(y == 0);
+    AlwaysAssertExit (String::toInt(x) == 6);
+    bool ok = false;
+    try {
+      y = String::toInt(x, True);
+    } catch (const AipsError&) {
+      ok = true;
+    }
+    AlwaysAssertExit(ok);
 }
 
 void trim() {

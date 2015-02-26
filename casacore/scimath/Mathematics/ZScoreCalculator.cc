@@ -22,13 +22,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: HostInfoDarwin.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/ZScoreCalculator.h>
+#include <casacore/scimath/Mathematics/ZScoreCalculator.h>
 #include <stdlib.h>
 
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa {
+namespace casacore {
 
 std::map<uInt64, Double> ZScoreCalculator::_nptsToMaxZScore;
 

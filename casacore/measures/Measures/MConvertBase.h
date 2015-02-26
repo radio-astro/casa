@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MConvertBase.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MConvertBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MCONVERTBASE_H
 #define MEASURES_MCONVERTBASE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Unit;
@@ -190,6 +190,6 @@ ostream &operator<<( ostream &os, const MConvertBase &mc);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

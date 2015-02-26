@@ -7,8 +7,6 @@
 
 #include <casa/namespace.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 template <class T> class TempImage;
@@ -101,8 +99,8 @@ private:
 
 	// necessary to improve performance
 	void _doMedian(
-		TempImage<T>& outImage,
-		const SubImage<T>& image
+		SPCIIT image,
+		TempImage<T>& outImage
 	) const;
 
 	void _attachOutputMask(

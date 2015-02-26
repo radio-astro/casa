@@ -33,7 +33,7 @@
 #include <images/Images/ImageRegrid.h>
 #include <scimath/Mathematics/Geometry.h>
 
-#include <casa/Containers/ContainerIO.h>
+#include <casa/BasicSL/STLIO.h>
 #include <memory>
 #include <stdcasa/cboost_foreach.h>
 

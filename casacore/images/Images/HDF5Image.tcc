@@ -23,42 +23,45 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5Image.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef IMAGES_HDF5IMAGE_TCC
+#define IMAGES_HDF5IMAGE_TCC
 
 
-#include <images/Images/HDF5Image.h>
-#include <images/Regions/ImageRegion.h>
-#include <images/Regions/RegionHandlerHDF5.h>
-#include <images/Images/ImageInfo.h>
-#include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeExprNode.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <casa/HDF5/HDF5Record.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogMessage.h>
+#include <casacore/images/Images/HDF5Image.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/images/Regions/RegionHandlerHDF5.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/lattices/Lattices/ArrayLattice.h>
+#include <casacore/lattices/Lattices/LatticeNavigator.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/LEL/LatticeExprNode.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/casa/HDF5/HDF5Record.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogMessage.h>
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/File.h>
-#include <casa/OS/Path.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/UnitMap.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/UnitMap.h>
 
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> 
 HDF5Image<T>::HDF5Image (const TiledShape& shape, 
@@ -67,7 +70,7 @@ HDF5Image<T>::HDF5Image (const TiledShape& shape,
 : ImageInterface<T>(RegionHandlerHDF5(getFile, this)),
   regionPtr_p      (0)
 {
-  map_p = HDF5Lattice<T>(shape, fileName, "map");
+  map_p = HDF5Lattice<T>(shape, fileName, "map", "/");
   attach_logtable();
   AlwaysAssert(setCoordinateInfo(coordinateInfo), AipsError);
 }
@@ -78,7 +81,7 @@ HDF5Image<T>::HDF5Image (const String& fileName,
 : ImageInterface<T>(RegionHandlerHDF5(getFile, this)),
   regionPtr_p      (0)
 {
-  map_p = HDF5Lattice<T>(fileName, "map");
+  map_p = HDF5Lattice<T>(fileName, "map", "/");
   attach_logtable();
   restoreAll();
   applyMaskSpecifier (spec);
@@ -360,19 +363,19 @@ template <class T>
 void HDF5Image<T>::restoreAll()
 {
   // Restore the coordinates.
-  Record rec = HDF5Record::readRecord (*map_p.file(), "coordinfo");
+  Record rec = HDF5Record::readRecord (*map_p.group(), "coordinfo");
   CoordinateSystem* restoredCoords = CoordinateSystem::restore(rec, "coords");
   AlwaysAssert(restoredCoords != 0, AipsError);
-  this->setCoordsMember (*restoredCoords);
+  setCoordsMember (*restoredCoords);
   delete restoredCoords;
   // Restore the image info.
-  rec = HDF5Record::readRecord (*map_p.file(), "imageinfo");
+  rec = HDF5Record::readRecord (*map_p.group(), "imageinfo");
   restoreImageInfo (rec);
   // Restore the units.
-  rec = HDF5Record::readRecord (*map_p.file(), "unitinfo");
+  rec = HDF5Record::readRecord (*map_p.group(), "unitinfo");
   restoreUnits (rec);
   // Restore the miscinfo.
-  rec = HDF5Record::readRecord (*map_p.file(), "miscinfo");
+  rec = HDF5Record::readRecord (*map_p.group(), "miscinfo");
   restoreMiscInfo (rec);
   // Restore the mask/region info.
   dynamic_cast<RegionHandlerHDF5*>(this->getRegionHandler())->restore();
@@ -385,7 +388,7 @@ Bool HDF5Image<T>::setCoordinateInfo (const CoordinateSystem& coords)
   if (ok) {
     Record rec;
     AlwaysAssert (coordinates().save(rec, "coords"), AipsError);
-    HDF5Record::writeRecord (*map_p.file(), "coordinfo", rec);
+    HDF5Record::writeRecord (*map_p.group(), "coordinfo", rec);
   }
   return ok;
 }
@@ -393,27 +396,24 @@ Bool HDF5Image<T>::setCoordinateInfo (const CoordinateSystem& coords)
 template<class T> 
 void HDF5Image<T>::restoreMiscInfo (const RecordInterface& rec)
 {
-  if (rec.isDefined("miscinfo")  &&
-      rec.dataType("miscinfo") == TpRecord) {
-    this->setMiscInfoMember (rec.asRecord ("miscinfo"));
-  }
+  setMiscInfoMember (rec);
 }
 
 template<class T> 
 Bool HDF5Image<T>::setMiscInfo (const RecordInterface& newInfo)
 {
-  this->setMiscInfoMember (newInfo);
-  HDF5Record::writeRecord (*map_p.file(), "miscinfo", newInfo);
+  setMiscInfoMember (newInfo);
+  HDF5Record::writeRecord (*map_p.group(), "miscinfo", newInfo);
   return True;
 }
 
 template<class T> 
 Bool HDF5Image<T>::setUnits(const Unit& newUnits) 
 {
-  this->setUnitMember (newUnits);
+  setUnitMember (newUnits);
   Record rec;
   rec.define("units", newUnits.getName());
-  HDF5Record::writeRecord (*map_p.file(), "unitinfo", rec);
+  HDF5Record::writeRecord (*map_p.group(), "unitinfo", rec);
   return True;
 }
 
@@ -453,7 +453,7 @@ void HDF5Image<T>::restoreUnits (const RecordInterface& rec)
       retval = Unit(unitName);
     }
   }
-  this->setUnitMember (retval);
+  setUnitMember (retval);
 }
 
 
@@ -466,7 +466,7 @@ Bool HDF5Image<T>::setImageInfo (const ImageInfo& info)
     Record rec;
     String error;
     if (imageInfo().toRecord(error, rec)) {
-      HDF5Record::writeRecord (*map_p.file(), "imageinfo", rec);
+      HDF5Record::writeRecord (*map_p.group(), "imageinfo", rec);
     } else {
       LogIO os;
       os << LogIO::SEVERE << "Error saving ImageInfo in record because " 
@@ -480,17 +480,15 @@ Bool HDF5Image<T>::setImageInfo (const ImageInfo& info)
 template<class T>
 void HDF5Image<T>::restoreImageInfo (const RecordInterface& rec)
 {
-  if (rec.isDefined("imageinfo")) {
-    String error;
-    ImageInfo info;
-    Bool ok = info.fromRecord (error, rec.asRecord("imageinfo"));
-    if (!ok) {
-      LogIO os;
-      os << LogIO::WARN << "Failed to restore the ImageInfo because " 
-         << error << LogIO::POST;
-    } else {
-    	ImageInterface<T>::setImageInfo (info);
-    }
+  String error;
+  ImageInfo info;
+  Bool ok = info.fromRecord (error, rec);
+  if (!ok) {
+    LogIO os;
+    os << LogIO::WARN << "Failed to restore the ImageInfo because " 
+       << error << LogIO::POST;
+  } else {
+    setImageInfoMember (info);
   }
 }
 
@@ -501,7 +499,7 @@ void HDF5Image<T>::removeRegion (const String& name,
 {
   // Remove the default mask if it is the region to be removed.
   if (name == getDefaultMask()) {
-    this->setDefaultMask (String());
+    setDefaultMask (String());
   }
   ImageInterface<T>::removeRegion (name, type, throwIfUnknown);
 }
@@ -535,8 +533,18 @@ void HDF5Image<T>::flush()
   if (regionPtr_p != 0) {
     regionPtr_p->flush();
   }
+  itsAttrHandler.flush();
   // Save the mask/region info.
   dynamic_cast<RegionHandlerHDF5*>(this->getRegionHandler())->save();
 }
 
-} //# NAMESPACE CASA - END
+template<class T>
+ImageAttrHandler& HDF5Image<T>::attrHandler (Bool createHandler)
+{
+  return itsAttrHandler.attachHid (*map_p.group(), createHandler,
+                                   map_p.isWritable());
+}
+
+} //# NAMESPACE CASACORE - END
+
+#endif

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfits2.cc 19974 2007-02-28 05:26:06Z Malte.Marquarding $
+//# $Id: tfits2.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
 
-# include <fits/FITS/fits.h>
-# include <fits/FITS/hdu.h>
-# include <fits/FITS/fitsio.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/hdu.h>
+# include <casacore/fits/FITS/fitsio.h>
 
-# include <casa/iostream.h>
-# include <casa/stdlib.h>
+# include <casacore/casa/iostream.h>
+# include <casacore/casa/stdlib.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
 	cout << "Test to create a primary array and an image extension\n";

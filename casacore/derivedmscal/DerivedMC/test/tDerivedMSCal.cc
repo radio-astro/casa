@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDerivedMSCal.cc 20921 2010-07-05 11:33:16Z gervandiepen $
+//# $Id: tDerivedMSCal.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <derivedmscal/DerivedMC/DerivedMSCal.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <measures/Measures/MeasTable.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/OS/Timer.h>
+#include <casacore/derivedmscal/DerivedMC/DerivedMSCal.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/OS/Timer.h>
 #include <iostream>
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 void check (MSDerivedValues& mdv,
             uInt rownr,
-            ROScalarColumn<double>& ha,
-            ROScalarColumn<double>& last)
+            ScalarColumn<double>& ha,
+            ScalarColumn<double>& last)
 {
   double mha = mdv.hourAngle();
   double tha = ha(rownr);
@@ -60,10 +60,10 @@ void check (MSDerivedValues& mdv,
 
 void check (MSDerivedValues& mdv,
             uInt rownr,
-            ROScalarColumn<double>& ha,
-            ROScalarColumn<double>& last,
-            ROScalarColumn<double>& pa,
-            ROArrayColumn<double>& azel)
+            ScalarColumn<double>& ha,
+            ScalarColumn<double>& last,
+            ScalarColumn<double>& pa,
+            ArrayColumn<double>& azel)
 {
   check (mdv, rownr, ha, last);
   double mpa = mdv.parAngle();
@@ -75,8 +75,8 @@ void check (MSDerivedValues& mdv,
 }
 
 void check (uInt rownr,
-            ROArrayColumn<Double>& uvw,
-            ROArrayColumn<Double>& uvwJ2000)
+            ArrayColumn<Double>& uvw,
+            ArrayColumn<Double>& uvwJ2000)
 {
   if (uvw.isNull()) {
     AlwaysAssertExit (allEQ (uvwJ2000(rownr), 0.));
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
       Table tab(argv[1]);
       tab.deepCopy ("tDerivedMSCal_tmp.tab", Table::New);
       if (tab.keywordSet().isDefined("CAL_DESC")) {
-        msName = ROScalarColumn<String> (tab.keywordSet().asTable("CAL_DESC"),
+        msName = ScalarColumn<String> (tab.keywordSet().asTable("CAL_DESC"),
                                          "MS_NAME")(0);
       }
     }
@@ -129,27 +129,27 @@ int main(int argc, char* argv[])
     // Loop through all rows and check values.
     MeasurementSet ms (msName);
     Table tab("tDerivedMSCal_tmp.tab");
-    ROScalarColumn<double> ha(tab, "HA");
-    ROScalarColumn<double> ha1(tab, "HA1");
-    ROScalarColumn<double> ha2(tab, "HA2");
-    ROScalarColumn<double> pa1(tab, "PA1");
-    ROScalarColumn<double> pa2(tab, "PA2");
-    ROScalarColumn<double> last(tab, "LAST");
-    ROScalarColumn<double> last1(tab, "LAST1");
-    ROScalarColumn<double> last2(tab, "LAST2");
-    ROArrayColumn<double> azel1(tab, "AZEL1");
-    ROArrayColumn<double> azel2(tab, "AZEL2");
-    ROArrayColumn<double> uvwJ2000(tab, "UVW_J2000");
-    ROScalarMeasColumn<MEpoch> time(tab, "TIME");
-    ROScalarColumn<Int> fld(tab, "FIELD_ID");
-    ROScalarColumn<Int> ant1(tab, "ANTENNA1");
-    ROScalarColumn<Int> ant2;
+    ScalarColumn<double> ha(tab, "HA");
+    ScalarColumn<double> ha1(tab, "HA1");
+    ScalarColumn<double> ha2(tab, "HA2");
+    ScalarColumn<double> pa1(tab, "PA1");
+    ScalarColumn<double> pa2(tab, "PA2");
+    ScalarColumn<double> last(tab, "LAST");
+    ScalarColumn<double> last1(tab, "LAST1");
+    ScalarColumn<double> last2(tab, "LAST2");
+    ArrayColumn<double> azel1(tab, "AZEL1");
+    ArrayColumn<double> azel2(tab, "AZEL2");
+    ArrayColumn<double> uvwJ2000(tab, "UVW_J2000");
+    ScalarMeasColumn<MEpoch> time(tab, "TIME");
+    ScalarColumn<Int> fld(tab, "FIELD_ID");
+    ScalarColumn<Int> ant1(tab, "ANTENNA1");
+    ScalarColumn<Int> ant2;
     if (tab.tableDesc().isColumn("ANTENNA2")) {
       ant2.attach (tab, "ANTENNA2");
     } else {
       ant2.attach (tab, "ANTENNA1");
     }
-    ROArrayColumn<Double> uvw;
+    ArrayColumn<Double> uvw;
     if (tab.tableDesc().isColumn("UVW")) {
       uvw.attach (tab, "UVW");
     }
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
     MPosition arrayPos;
     Table obstab (ms.keywordSet().asTable("OBSERVATION"));
     if (obstab.nrow() > 0) {
-      String telescope = ROScalarColumn<String>(obstab, "TELESCOPE_NAME")(0);
+      String telescope = ScalarColumn<String>(obstab, "TELESCOPE_NAME")(0);
       fndObs = MeasTable::Observatory (arrayPos, telescope);
     }
     if (!fndObs) {

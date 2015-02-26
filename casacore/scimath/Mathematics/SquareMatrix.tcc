@@ -23,17 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SquareMatrix.tcc 19880 2007-02-15 04:10:07Z Malte.Marquarding $
+//# $Id: SquareMatrix.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_SQUAREMATRIX_TCC
+#define SCIMATH_SQUAREMATRIX_TCC
 
 //# Includes
-#include <scimath/Mathematics/SquareMatrix.h>
-#include <scimath/Mathematics/MatrixMathLA.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
+#include <casacore/scimath/Mathematics/MatrixMathLA.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T, Int n> 
 SquareMatrix<T,n>& 
@@ -461,5 +464,7 @@ T& SquareMatrix<T,n>::throwInvAccess() {
     return a_p[0][0];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

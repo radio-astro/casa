@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Regions.h 20691 2009-07-14 03:13:54Z Malte.Marquarding $
+//# $Id: Regions.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_REGIONS_H
 #define IMAGES_REGIONS_H
 
 
-#include <images/Regions/ImageRegion.h>
-#include <images/Regions/WCRegion.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/images/Regions/WCRegion.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 
@@ -62,6 +63,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,26 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSScanGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSScanGram; grammar for scan command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSScanGram.h>
-#include <ms/MeasurementSets/MSScanParse.h> // routines used by bison actions
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSScanGram.h>
+#include <casacore/ms/MeasurementSets/MSScanParse.h> // routines used by bison actions
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSScanGram.ycc"                  // flex output
-#include "MSScanGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSScanGram.ycc"                  // bison output
+#include "MSScanGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSScanGramwrap()
@@ -50,7 +53,7 @@ int MSScanGramwrap()
   return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
   static const char*           strpMSScanGram = 0;
@@ -194,4 +197,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //     return out;
   // }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

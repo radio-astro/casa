@@ -23,33 +23,34 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Functionals.h 20670 2009-07-10 01:43:43Z Malte.Marquarding $
+//# $Id: Functionals.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 
 #ifndef SCIMATH_FUNCTIONALS_H
 #define SCIMATH_FUNCTIONALS_H
 
 //# Base classes
-#include <casa/BasicMath/Functional.h>
-#include <scimath/Functionals/FunctionTraits.h>
-#include <scimath/Functionals/FunctionParam.h>
-#include <scimath/Functionals/Function.h>
-#include <scimath/Functionals/Function1D.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicMath/Functional.h>
+#include <casacore/scimath/Functionals/FunctionTraits.h>
+#include <casacore/scimath/Functionals/FunctionParam.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/scimath/Functionals/Function1D.h>
 
 //# Combination methods
-#include <scimath/Functionals/FunctionWrapper.h>
-#include <scimath/Functionals/CombiFunction.h>
-#include <scimath/Functionals/CompoundFunction.h>
+#include <casacore/scimath/Functionals/FunctionWrapper.h>
+#include <casacore/scimath/Functionals/CombiFunction.h>
+#include <casacore/scimath/Functionals/CompoundFunction.h>
 
 //# remainder will be removed
-#include <scimath/Functionals/SampledFunctional.h>
+#include <casacore/scimath/Functionals/SampledFunctional.h>
 
 //# 1-D Functions
-#include <scimath/Functionals/Interpolate1D.h>
-#include <scimath/Functionals/ArraySampledFunctional.h>
-#include <scimath/Functionals/ScalarSampledFunctional.h>
+#include <casacore/scimath/Functionals/Interpolate1D.h>
+#include <casacore/scimath/Functionals/ArraySampledFunctional.h>
+#include <casacore/scimath/Functionals/ScalarSampledFunctional.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -290,7 +291,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

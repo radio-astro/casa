@@ -30,7 +30,7 @@
 
 #include <casa/aips.h>
 #include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/LatticeTwoPtCorr.h>
+#include <lattices/LatticeMath/LatticeTwoPtCorr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

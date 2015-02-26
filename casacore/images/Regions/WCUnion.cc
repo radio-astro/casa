@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCUnion.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCUnion.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCUnion.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCUnion.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/images/Regions/WCUnion.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCUnion.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCUnion::WCUnion (const ImageRegion& region1,
                   const ImageRegion& region2)
@@ -122,5 +122,5 @@ WCUnion* WCUnion::fromRecord (const TableRecord& rec,
     return new WCUnion (True, regions);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

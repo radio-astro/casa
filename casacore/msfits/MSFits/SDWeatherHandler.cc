@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDWeatherHandler.cc 18702 2005-05-23 08:54:53Z gvandiep $
+//# $Id: SDWeatherHandler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <msfits/MSFits/SDWeatherHandler.h>
+#include <casacore/msfits/MSFits/SDWeatherHandler.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSWeatherColumns.h>
-#include <ms/MeasurementSets/MSWeather.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSWeatherColumns.h>
+#include <casacore/ms/MeasurementSets/MSWeather.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 SDWeatherHandler::SDWeatherHandler() 
     : msWeather_p(0), msWeatherCols_p(0), rownr_p(-1), humidityId_p(-1),
@@ -414,5 +414,5 @@ void SDWeatherHandler::initRow(Vector<Bool> &handledCols, const Record &row)
     rownr_p = -1;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPrecTimer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tPrecTimer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #include <cmath>
 #include <iostream>
-#include <casa/OS/PrecTimer.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/OS/PrecTimer.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
 
-using namespace casa;
+using namespace casacore;
 
 int main()
 {

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArray.cc 21179 2012-03-07 10:28:37Z gervandiepen $
+//# $Id: tArray.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# If AIPS_DEBUG is not set, the Assert's won't be called.
 #if !defined(AIPS_DEBUG)
@@ -35,29 +35,29 @@
 #define AIPS_ARRAY_INDEX_CHECK
 #endif
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/BasicMath/Functional.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/BasicMath/Functional.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //# Define a simple functional class doing the square.
 class FuncSqr: public Functional<Float,Float>
 {
@@ -293,7 +293,7 @@ void oldArrayTest()
 	Vector<Int> vi2(5), vi3;
 	vi2 = 0;
 	vi2(3) = -3;
-	vi3 = casa::min(vi1, vi2);
+	vi3 = casacore::min(vi1, vi2);
 	AlwaysAssertExit(vi3(0) == 0 && vi3(1) == 0 && vi3(2) == 0 && vi3(3) == -3 &&
 		vi3(4) == 0);
 	vi2(3) = 9;
@@ -492,6 +492,13 @@ void oldArrayTest()
 	AlwaysAssertExit (median(x4) == 50.);
 	AlwaysAssertExit (median(x4, True) == 50.);
 	AlwaysAssertExit (median(x4, True, False, False) == 50.);
+
+        cout << endl<<madfm(x1)<<endl;
+	AlwaysAssertExit (madfm(x1) == 1.);
+	AlwaysAssertExit (madfm(x1, True) == 1.);
+	AlwaysAssertExit (madfm(x1, True, False, False) == 1.);
+	AlwaysAssertExit (madfm(x1(Slice(0,2,2))) == 1.);
+	AlwaysAssertExit (madfm(x4) == 25.);
 	// Make sure x4 is not sorted itself.
 	AlwaysAssertExit (allEQ (x4, x5));
 
@@ -507,6 +514,11 @@ void oldArrayTest()
 	AlwaysAssertExit (fractile(x4, 0.5) == 50.);
 	AlwaysAssertExit (fractile(x4, 0.05) == 5.);
 	AlwaysAssertExit (fractile(x4, 0.951) == 95.);
+
+        AlwaysAssertExit (interQuartileRange(x1) == 2.);
+        AlwaysAssertExit (interFractileRange(x1, 0.25) == 2.);
+        AlwaysAssertExit (interHexileRange(x4) ==
+                          fractile(x4, 5./6.) - fractile(x4, 1./6.));
 	// Make sure x4 is not sorted itself.
 	AlwaysAssertExit (allEQ (x4, x5));
 	cout << "OK\n";
@@ -758,7 +770,7 @@ void checkRCDVec (const Vector<Int>& v1, const Vector<Int>& v2)
   AlwaysAssertExit (allEQ(v1,v2));
   Array<Int>::const_iterator iter1 = v1.begin();
   Array<Int>::const_iterator iter2 = v2.begin();
-  for (uint i=0; i<v1.size(); ++i, ++iter1, ++iter2) {
+  for (uInt i=0; i<v1.size(); ++i, ++iter1, ++iter2) {
     AlwaysAssertExit (v1[i] == v2[i]);
     AlwaysAssertExit (iter1 != v1.end());
     AlwaysAssertExit (iter2 != v2.end());
@@ -1039,55 +1051,58 @@ int main()
         	}
         }
         {
-        	cout << "*** Test std::vector constructor" << endl;
-        	std::vector<Double> v(5);
-        	v[0] = 2.2;
-        	v[1] = 3.3;
-        	v[2] = 4.4;
-        	v[3] = 5.5;
-        	v[4] = 6.6;
-        	Vector<Double> myvec(v);
-        	AlwaysAssertExit(v.size() == myvec.size());
-        	for (uInt i=0; i<5; i++) {
-            	AlwaysAssertExit(v[i] == myvec[i]);
-        	}
-
-        	std::vector<int> v2(2);
-        	v2[0] = 5;
-        	v2[1] = -2;
-        	Vector<Int> myvec2(v2);
-        	AlwaysAssertExit(v2.size() == myvec2.size());
-        	for (uInt i=0; i<2; i++) {
-        		AlwaysAssertExit(v2[i] == myvec2[i]);
-        	}
-
-        	Vector<Double> myvec3(v2);
-        	AlwaysAssertExit(v2.size() == myvec3.size());
-        	for (uInt i=0; i<2; i++) {
-        		AlwaysAssertExit(v2[i] == myvec3[i]);
-        	}
-
+          cout << "*** Test std::vector constructor" << endl;
+          // Make sure compiler does not find ambiguous constructor.
+          Vector<size_t> vs1(3, 2);
+          AlwaysAssertExit (allEQ(vs1, size_t(2)));
+          Vector<uInt> vs2(3, 2);
+          AlwaysAssertExit (allEQ(vs2, uInt(2)));
+          // Construct from iterator.
+          std::vector<size_t> v(5);
+          v[0] = 2;
+          v[1] = 3;
+          v[2] = 4;
+          v[3] = 5;
+          v[4] = 6;
+          Vector<size_t> myvec(v.begin(), v.size(), 0);
+          AlwaysAssertExit(v.size() == myvec.size());
+          for (uInt i=0; i<5; i++) {
+            AlwaysAssertExit(v[i] == myvec[i]);
+          }
+          // Construct from std::vector.
+          std::vector<int> v2(2);
+          v2[0] = 5;
+          v2[1] = -2;
+          Vector<Int> myvec2(v2);
+          AlwaysAssertExit(v2.size() == myvec2.size());
+          for (uInt i=0; i<2; i++) {
+            AlwaysAssertExit(v2[i] == myvec2[i]);
+          }
+          // Construct and convert type.
+          Vector<Double> myvec3(v2.begin(), v2.size(), 0);
+          AlwaysAssertExit(v2.size() == myvec3.size());
+          for (uInt i=0; i<2; i++) {
+            AlwaysAssertExit(v2[i] == myvec3[i]);
+          }
         }
         {
-        	cout << "*** Test Matrix::identity()" << endl;
-        	for (uInt i=0; i<20; i++) {
-        		Matrix<Double> x = Matrix<Double>::identity(i);
-        		AlwaysAssertExit(x.ncolumn() == i);
-        		AlwaysAssertExit(x.nrow() == i);
-        		for (uInt j=0; j<i; j++) {
-        			for (uInt k=0; k<i; k++) {
-        				if (j == k) {
-        					AlwaysAssertExit(x(j, k) == 1);
-        				}
-        				else {
-        					AlwaysAssertExit(x(j, k) == 0);
-        				}
-        			}
-        		}
-        	}
+          cout << "*** Test Matrix::identity()" << endl;
+          for (uInt i=0; i<20; i++) {
+            Matrix<Double> x = Matrix<Double>::identity(i);
+            AlwaysAssertExit(x.ncolumn() == i);
+            AlwaysAssertExit(x.nrow() == i);
+            for (uInt j=0; j<i; j++) {
+              for (uInt k=0; k<i; k++) {
+                if (j == k) {
+                  AlwaysAssertExit(x(j, k) == 1);
+                } else {
+                  AlwaysAssertExit(x(j, k) == 0);
+                }
+              }
+            }
+          }
         }
-    }
-    catch (const AipsError& x) {
+    } catch (const AipsError& x) {
 	cout << "\nCaught an exception: " << x.getMesg() << endl;
 	return 1;
     } 

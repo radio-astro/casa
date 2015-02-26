@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SimButterworthBandpass.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: SimButterworthBandpass.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_SIMBUTTERWORTHBANDPASS_H
 #define SCIMATH_SIMBUTTERWORTHBANDPASS_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <scimath/Functionals/Function1D.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/scimath/Functionals/Function1D.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class T> class Vector;
@@ -264,9 +264,9 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Functionals/SimButterworthBandpass.tcc>
+#include <casacore/scimath/Functionals/SimButterworthBandpass.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

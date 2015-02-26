@@ -23,13 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TabVecMath.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TabVecMath.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <tables/Tables/TabVecMath.h>
+#ifndef TABLES_TABVECMATH_TCC
+#define TABLES_TABVECMATH_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/tables/Tables/TabVecMath.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# All functions are inlined, so there is no actual code.
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

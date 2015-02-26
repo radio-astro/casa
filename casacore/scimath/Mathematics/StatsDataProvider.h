@@ -22,15 +22,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATSDATAPROVIDER_H
 #define SCIMATH_STATSDATAPROVIDER_H
 
-#include <scimath/Mathematics/StatisticsTypes.h>
+#include <casacore/scimath/Mathematics/StatisticsTypes.h>
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa {
+namespace casacore {
 
 // Abstract base class which defines interface for providing "datasets" to the statistics framework
 // when nontrivial means of doing so are not sufficient.
@@ -111,7 +112,7 @@ protected:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatsDataProvider.tcc>
+#include <casacore/scimath/Mathematics/StatsDataProvider.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

@@ -38,7 +38,7 @@
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Mathematics/AutoDiff.h>
 #include <casa/BasicMath/Math.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>

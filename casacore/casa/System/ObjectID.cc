@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectID.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ObjectID.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/System/ObjectID.h>
-#include <casa/OS/HostInfo.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/System/ObjectID.h>
+#include <casacore/casa/OS/HostInfo.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/sstream.h>
-#include <casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ObjectID::ObjectID(Bool makeNull)
   : sequence_number_p(0), process_id_p(0), creation_time_p(0), hostname_p("")
@@ -111,7 +111,7 @@ void ObjectID::toString(String &out) const
     ostringstream os;
     os << "sequence=" << sequence() << " host=" << hostName() <<
 	" pid=" << pid() << " time=" << creationTime();
-    out = os;
+    out = os.str();
 }
 
 static Bool toInt(Int &val, String &error, const String &in)
@@ -218,5 +218,5 @@ ostream &operator<<(ostream &os, const ObjectID &id)
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledShape.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TiledShape.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TiledShape::TiledShape()
 : itsTileDefined (True)
@@ -282,5 +282,5 @@ IPosition TiledShape::defaultTileShape (uInt nrPixelsPerTile,
     return bestShape;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

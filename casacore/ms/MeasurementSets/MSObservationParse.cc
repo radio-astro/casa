@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSObservationParse.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSObservationParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSObservationParse.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSObservationParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
 #include <limits>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSObservationParse* MSObservationParse::thisMSObsParser = 0x0; // Global pointer to the parser object
   TableExprNode MSObservationParse::columnAsTEN_p;
@@ -214,4 +214,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

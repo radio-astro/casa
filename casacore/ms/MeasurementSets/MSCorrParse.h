@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCorrParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSCorrParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSUVDISTPARSE_H
 #define MS_MSUVDISTPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -92,18 +93,18 @@ public:
   // Associate the ms and the shorthand.
   MSCorrParse (const MeasurementSet* ms);
   
-  //  ~MSCorrParse() {if (node_p) delete node_p;node_p=0x0;};
+  //  ~MSCorrParse() {if (node_p) delete node_p;node_p=0x0;}
   // MS selection
   const TableExprNode * selectCorrType(const String& corrType);
   
   // Get table expression node object.
   static const TableExprNode* node();
-  static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
+  static void cleanup() {if (node_p) delete node_p;node_p=0x0;}
   
 private:
     static TableExprNode *node_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

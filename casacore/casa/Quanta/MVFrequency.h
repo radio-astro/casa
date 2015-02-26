@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVFrequency.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MVFrequency.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MVFREQUENCY_H
 #define CASA_MVFREQUENCY_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/QC.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MeasValue.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/QC.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/MeasValue.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -185,6 +185,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

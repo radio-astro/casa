@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSTimeParse.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTimeParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSTimeParse.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <casa/Quanta/MVTime.h>
-#include <measures/Measures.h>
-#include <measures/Measures/MEpoch.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/ExprDerNode.h>
-#include <tables/Tables/RecordGram.h>
+#include <casacore/ms/MeasurementSets/MSTimeParse.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/measures/Measures.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/TaQL/ExprDerNode.h>
+#include <casacore/tables/TaQL/RecordGram.h>
 #include <limits>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   MSTimeParse*     MSTimeParse::thisMSTParser = 0x0; // Global pointer to the parser object
   TableExprNode*   MSTimeParse::node_p      = 0x0;
@@ -119,40 +119,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //ROMSMainColumns mainColumns_l(*ms_p);
     //    MSMainColInterface mainColumns_l(*ms_p);
 
-    if (!defaultTimeComputed)
-      {
-	uInt i=0,nrow=(mainColumn_p->flag()).nrow();
-	if (!otherTens_p->isNull())
-	  {
-	    Bool selected=False;
-	    for(i=0;i<nrow;i++)
-	      {
-		// Use the otherTens_p to get to the first logical row
-		if (honourRowFlags_p)
-		  {
-		    //if (!mainColumns_l.flagRow()(i))
-		    if (!mainColumn_p->flagRow(i))
-		      otherTens_p->get(i,selected); 
-		  }
-		else
-		  otherTens_p->get(i,selected);
-		  
-		if (selected) {firstLogicalRow=i;break;}
-	      }
-	  }
-	else if (honourRowFlags_p)
-	  {
-	    //
-	    // Find the first row which is not flagged.
-	    //
-	    for (i=0;i<nrow;i++) 
+    if (!defaultTimeComputed) {
+      uInt i=0,nrow=(mainColumn_p->flag()).nrow();
+      if (!otherTens_p->isNull()) {
+        Bool selected=False;
+        for(i=0;i<nrow;i++) {
+          // Use the otherTens_p to get to the first logical row
+          if (honourRowFlags_p) {
+            //if (!mainColumns_l.flagRow()(i))
+            if (!mainColumn_p->flagRow(i)) {
+              otherTens_p->get(i,selected); 
+            } else {
+              otherTens_p->get(i,selected);
+            }
+            if (selected) {firstLogicalRow=i;break;}
+          }
+        }
+      } else if (honourRowFlags_p) {
+      //
+      // Find the first row which is not flagged.
+      //
+        for (i=0;i<nrow;i++) {
 	      //if (!mainColumns_l.flagRow()(i)) 
-	      if (!mainColumn_p->flagRow(i)) 
-		{firstLogicalRow=i;break;}
-	  }
-	if ( firstLogicalRow >= nrow)
-	  throw(MSSelectionTimeError("MSTimeParse: No logical \"row zero\" found for time selection"));
+          if (!mainColumn_p->flagRow(i)) {
+            firstLogicalRow=i;break;
+          }
+        }
       }
+      if ( firstLogicalRow >= nrow) {
+        throw(MSSelectionTimeError("MSTimeParse: No logical \"row zero\" found for time selection"));
+      }
+    }
     //
     // Extract the values from the first valid timestamp in the MS to
     // be used for defaults
@@ -162,14 +159,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     ROScalarQuantColumn<Double> exposure;
     exposure.reference(mainColumn_p->exposureQuant());
-    if (ms_p == NULL) // This instance is not attached to an MS (which
-		      // means, for now, it must be attached to a
-		      // CalTable)
+    if (ms_p == NULL) {
+      // This instance is not attached to an MS (which
+      // means, for now, it must be attached to a CalTable)
       defaultExposure=0.1; // For now, arbitrarily set it a small value
 			   // for CalTables
-    else
+    } else {
       defaultExposure=exposure(firstLogicalRow,"s").getValue();
-      
+    }
     firstRowTime = mainColumn_p->timeQuant()(firstLogicalRow);
 
     //    cout << firstRowTime.string(MVTime::DMY,7) << endl;
@@ -192,11 +189,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   const TableExprNode *MSTimeParse::addCondition(TableExprNode& condition)
   {
-    if(node_p->isNull())
+    if(node_p->isNull()) {
       *node_p = condition;
-    else
+    } else {
       *node_p = *node_p || condition;
-    
+    }
     return node_p;
   }
   //
@@ -253,23 +250,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   const TableExprNode *MSTimeParse::selectTimeRange(const MEpoch& lowboundTime,
 						    const MEpoch& upboundTime,
 						    bool edgeInclusive,
-						    Float edgeWidth)
+                                                    Float edgeWidth)
   {
     Double upperBound = toTAIInSec(upboundTime);
     Double lowerBound = toTAIInSec(lowboundTime);
-    Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure/2.0 : edgeWidth;
 
-    if (lowerBound > upperBound)
+    if (lowerBound > upperBound) {
       throw(MSSelectionTimeError("lower bound > upper bound"));
-
+    }
     TableExprNode condition;
-    if (!edgeInclusive)
+    if (!edgeInclusive) {
       condition = (columnAsTEN_p >= lowerBound &&
 		   (columnAsTEN_p <= upperBound));
-    else
+    } else {
+      Float edgeWidth_l = (edgeWidth < 0.0) ? defaultExposure/2.0 : edgeWidth;
       condition = (((columnAsTEN_p > lowerBound) || (abs(columnAsTEN_p - lowerBound) < edgeWidth_l)) &&
 		   ((columnAsTEN_p < upperBound) || (abs(columnAsTEN_p - upperBound) < edgeWidth_l)));
-
+    }
     accumulateTimeList(lowerBound, upperBound);
 
     return addCondition(condition);
@@ -436,4 +433,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     timeList(0,n0) = t0;//-4.68193e+09;
     timeList(1,n0) = t1;//-4.68193e+09;
   }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

@@ -71,7 +71,7 @@
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledCellStMan.h>
+#include <tables/DataMan/TiledCellStMan.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/Utilities/Sort.h>

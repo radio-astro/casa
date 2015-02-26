@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PagedImage2.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: PagedImage2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/PagedImage.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 DataType imagePixelType(const String &fileName)
 {
@@ -49,4 +49,4 @@ DataType imagePixelType(const String &fileName)
     return retval;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

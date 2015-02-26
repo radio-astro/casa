@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMath.cc 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: tMath.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
   try {
     {

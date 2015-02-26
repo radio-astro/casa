@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Record.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: HDF5Record.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_HDF5RECORD_H
 #define CASA_HDF5RECORD_H
 
 //# Includes
-#include <casa/HDF5/HDF5Object.h>
-#include <casa/HDF5/HDF5DataType.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/HDF5/HDF5Object.h>
+#include <casacore/casa/HDF5/HDF5DataType.h>
+#include <casacore/casa/Containers/Record.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // A class to write/read a record into HDF5.
@@ -59,8 +60,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // <ul>
   //  <li> When writing the record, it first deletes all attributes of the group
   //   to be sure that the group's attributes only contain the record.
-  //  <li> An AIPS++ Record is a recursive structure, so it is written as nested
-  //   groups. The name of a subgroup is the name of the subrecord.
+  //  <li> A Casacore Record is a recursive structure, so it is written as
+  //   nested groups. The name of a subgroup is the name of the subrecord.
   // <li> HDF5 cannot deal with empty arrays. Therefore they are written as
   //   a special compound type holding the rank and type of the empty array.
   // <li> HDF5 cannot hold empty fixed length strings. This is solved by
@@ -69,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // </synopsis> 
 
   // <motivation>
-  // Record is a very important class in AIPS++ images, so it has to be
+  // Record is a very important class in Casacore images, so it has to be
   // possible to read and write them from/to HDF5.
   // </motivation>
 
@@ -94,8 +95,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static void remove (const HDF5Object& parentHid,
 			const String& recordName);
 
-    // Read back a (nested) record.
+    // Read the (possibly nested) record values from the given group hid.
     static Record doReadRecord (hid_t parentHid);
+
+    // Write the (possibly nested) record values into the given group hid.
+    static void doWriteRecord (const HDF5Object& groupHid,
+			       const RecordInterface& rec);
 
   private:
     // Read a scalar value and add it to the record.
@@ -144,10 +149,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Read fixed length values from an attribute (scalar and array).
     static void read (hid_t attrId, void* value,
 		      const HDF5DataType& dtype);
-
-    // Write a (nested) record.
-    static void doWriteRecord (const HDF5Object& groupHid,
-			       const RecordInterface& rec);
 
     // Write a fixed length scalar value as attribute.
     static void writeScalar (hid_t parentHid, const String& name,

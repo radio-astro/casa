@@ -50,11 +50,11 @@
 #include <msvis/MSVis/VisModelDataI.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/IncrStManAccessor.h>
-#include <tables/Tables/StandardStManAccessor.h>
+#include <tables/DataMan/IncrStManAccessor.h>
+#include <tables/DataMan/StandardStManAccessor.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 
 #include <cassert>
 #include <algorithm>

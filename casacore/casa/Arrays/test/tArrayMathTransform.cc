@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMathTransform.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tArrayMathTransform.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/iostream.h>
 
-using namespace casa;
+using namespace casacore;
 
 void doIt()
 {
@@ -44,7 +44,7 @@ void doIt()
   Array<int> res(shape);
   indgen (arr1, -100);
   indgen (arr2);
-  for (uint i=0; i<arr1.nelements(); ++i) {
+  for (uInt i=0; i<arr1.nelements(); ++i) {
     exp1.data()[i] = arr1.data()[i] + arr2.data()[i];
     exp2.data()[i] = arr1.data()[i] + 20;
     expa.data()[i] = std::abs(arr1.data()[i]);

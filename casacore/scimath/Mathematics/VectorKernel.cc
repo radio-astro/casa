@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VectorKernel.cc 19880 2007-02-15 04:10:07Z Malte.Marquarding $
+//# $Id: VectorKernel.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 //   
 
-#include <scimath/Mathematics/VectorKernel.h>
+#include <casacore/scimath/Mathematics/VectorKernel.h>
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Exceptions/Error.h>
-#include <scimath/Functionals/Gaussian1D.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/BasicSL/String.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/scimath/Functionals/Gaussian1D.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Regex.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Vector<Double> VectorKernel::make(KernelTypes kernelType, Double width, 
                                   uInt shape, Bool useShapeExactly, Bool peakIsUnity)
@@ -172,24 +172,21 @@ Vector<Int> VectorKernel::toKernelTypes (const Vector<String>& kernels)
  
 
 
-VectorKernel::KernelTypes VectorKernel::toKernelType(
-	const String& kernel
-) {
-	String kernel2 = upcase(kernel);
-	String kernel3(kernel2.at(0,1));
+VectorKernel::KernelTypes VectorKernel::toKernelType (const String& kernel)
+{
+   String kernel2 = upcase(kernel);
+   String kernel3(kernel2.at(0,1));
 
-	if (kernel3==String("B")) {
-		return VectorKernel::BOXCAR;
-	}
-	else if (kernel3==String("G")) {
-		return VectorKernel::GAUSSIAN;
-	}
-	else if (kernel3==String("H")) {
-		return VectorKernel::HANNING;
-	}
-	else {
-		ThrowCc("Illegal kernel type" + kernel);
-	}
+   if (kernel3==String("B")) {
+      return VectorKernel::BOXCAR;
+   } else if (kernel3==String("G")) {
+      return VectorKernel::GAUSSIAN;
+   } else if (kernel3==String("H")) {
+      return VectorKernel::HANNING;
+   } else {
+     ThrowIf (True, "Illegal kernel type " + kernel);
+   }
+   return VectorKernel::BOXCAR;    //# to satisfy compiler
 }
 
 String VectorKernel::fromKernelType (KernelTypes kernelType)
@@ -207,5 +204,5 @@ String VectorKernel::fromKernelType (KernelTypes kernelType)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

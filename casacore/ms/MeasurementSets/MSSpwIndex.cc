@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwIndex.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSSpwIndex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <measures/Measures/MDoppler.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Regex.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/measures/Measures/MDoppler.h>
+#include <casacore/ms/MeasurementSets/MSSpwIndex.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //
   //------------------------------------------------------------------
@@ -100,8 +100,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       Vector<Int>& nchan){
     Int nspw=msSpwSubTable_p.nrow();
     Bool found=False;
-    Bool begIn=False;
-    Bool aftIn=False;
+    ///Bool begIn=False;
+    ///Bool aftIn=False;
     spw.resize();
     start.resize();
     nchan.resize();
@@ -109,25 +109,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (Int k=0; k < nspw; ++k){
       Bool locfound=False;
       Bool dum;
-      Int chanpositive=1;
+      ///Int chanpositive=1;
       Vector<Double> chanfreq=msSpwSubTable_p.chanFreq()(k);
-      if (chanfreq.nelements() >1){
-	chanpositive=((chanfreq[1]-chanfreq[0]) > 0.0) ? 1: -1;
-      }
+      ///if (chanfreq.nelements() >1){
+      ///chanpositive=((chanfreq[1]-chanfreq[0]) > 0.0) ? 1: -1;
+      ///}
       Sort sort( chanfreq.getStorage(dum),sizeof(Double) );
       sort.sortKey((uInt)0,TpDouble);
       Int nch=chanfreq.nelements();
       Vector<uInt> sortIndx;
       sort.sort(sortIndx, nch);
       Vector<Double>chanwidth=msSpwSubTable_p.chanWidth()(k);
-      begIn=False;
-      aftIn=False;
+      ///begIn=False;
+      ///aftIn=False;
       if(f0 > chanfreq(sortIndx[0]) &&  f0 < chanfreq(sortIndx[nch-1])){
-	begIn=True;
+	///begIn=True;
 	locfound=True;
       }
       if(f1 > chanfreq(sortIndx[0]) &&  f1 < chanfreq(sortIndx[nch-1])){
-	aftIn=True;
+	///aftIn=True;
 	locfound=True;
       }
       if(locfound){
@@ -221,6 +221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int n=0;n<nSpwRows;n++)
       {
 	Float totalBandWidth, refFreq;
+	
 	Double maxChanWidth;
 	{
 	  Vector<Double> shouldNotBeRequired;
@@ -240,18 +241,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	refFreq = (chanFreqList(nChan-1)+chanFreqList(0))/2.0;;
 
 	//cout << chanFreqList[0] << " " << chanFreqList[nChan-1] << " " << f0 << " " << f1 << " " << f3 << " " << maxChanWidth << endl;
-	  
+
 	switch (mode)
 	  {
 	  case EXACT:
 	    {
-	      // cout << refFreq << " " << f0 << " " << f1 << " " << maxChanWidth << " " << fabs(refFreq-f0) << endl;
 	      if (fabs(refFreq - f0) < maxChanWidth) Found = True;
 	      break;
 	    }
 	  case APPROX:
 	    {
-	      // cout << refFreq << " " << f0 << " " << f1 << " " << totalBandWidth << " " << fabs(refFreq-f0) << endl;
 	      if ((fabs(refFreq-f0) <= totalBandWidth) 
 		  //		  && (!msSpwSubTable_p.flagRow()(n))
 		  )
@@ -264,18 +263,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		{
 		  if ((refFreq >= f0) && 
 		      (refFreq <= f1)
-		  //     //		  && (!msSpwSubTable_p.flagRow()(n))
+		      //		  && (!msSpwSubTable_p.flagRow()(n))
 		      )
 		    Found = True;
 		  break;
 		}
 	      else
 		{
-		  for(Float freq=f0;freq <=f1; freq+=localStep)
-		    {
-		      // cout << refFreq << " " << f0 << " " << f1 << " " << f3 << " " << maxChanWidth << " " << fabs(freq-refFreq) << endl;
-		      if (fabs(freq - refFreq) < maxChanWidth) {Found = True;break;}
-		    }
+		  for(Float freq=f0;freq <=f1; freq+=localStep) {
+		    if (fabs(freq - refFreq) < maxChanWidth) {Found = True;break;}
+                  }
 		  break;
 		}
 	    }
@@ -570,19 +567,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // if (localFoundSpwList.size() == 0)
     //   log_l << "No match found for SPW and CHAN combination" << LogIO::WARN << LogIO::POST;
     // else 
-    if (someMatchFailed)
-      if (localFoundSpwList.size() != 0)
+    if (someMatchFailed) {
+      if (localFoundSpwList.size() != 0) {
 	// log_l << "Found match for SPW(s) "  
 	//       << Vector<Int>(localFoundSpwList) 
 	//       << " for some sub-expression." 
 	//       << LogIO::WARN << LogIO::POST;
 	;
-      else
-	{
-	  ostringstream m;
-	  log_l << "Found no matching SPW(s) " << spw << LogIO::WARN << LogIO::POST;
-	  //	  log_l << m.str() << LogIO::WARN << LogIO::POST;
-	}
+      } else {
+        ostringstream m;
+        log_l << "Found no matching SPW(s) " << spw << LogIO::WARN << LogIO::POST;
+        //	  log_l << m.str() << LogIO::WARN << LogIO::POST;
+      }
+    }
     
     
     return localFreqList;
@@ -672,9 +669,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		Float start=freqList(j),stop=freqList(j+1),step=freqList(j+2);
 		
-		// cout << "Freq SPW List  = " << start << " " << stop << " " << step << " " 
-		//      << localFreqList << endl;
 		localFreqList = matchFrequencyRange(start, stop, False, step);
+		//		  cout << "Freq SPW List  = " << start << " " << stop << " " << step << " " 
+		//		       << localFreqList;
 	      }
 	  }
       }
@@ -688,5 +685,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   //-------------------------------------------------------------------------
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

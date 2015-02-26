@@ -32,7 +32,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/Convolver.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <msvis/MSVis/VisBuffer.h>

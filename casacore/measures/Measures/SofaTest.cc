@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SofaTest.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: SofaTest.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Include files
-#include <measures/Measures/SofaTest.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/iostream.h>
+#include <casacore/measures/Measures/SofaTest.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/iostream.h>
 #include <limits.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 // Constructors 
@@ -148,5 +148,5 @@ void SofaTest::copy(const SofaTest &other) {
   for (uInt i=0; i<hwidth_p; i++) histo_p[i] = other.histo_p[i];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

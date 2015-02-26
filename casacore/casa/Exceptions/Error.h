@@ -1,4 +1,4 @@
-//# Error.h: Base class for all AIPS++ errors
+//# Error.h: Base class for all Casacore errors
 //# Copyright (C) 1993,1994,1995,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,26 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Error.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: Error.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_ERROR_H
 #define CASA_ERROR_H
 
 
-
-#include <sys/types.h>
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/Mutex.h>
 #include <exception>
+#include <sys/types.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
-// Throw an exception with a string composed of various arguments.
+// Throw the given exception with a string composed of various arguments.
 // E.g.
 // <srcblock>
-//    CASATHROW (AipsError, "integer=" << myint << ", float=" << myfloat)
+//    CASATHROW (AipsError, "integer=" << myint << ", float=" << myfloat);
 // </srcblock>
 #define CASATHROW(exc, arg) do {     \
     std::ostringstream casa_log_oss; \
@@ -50,17 +49,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     throw exc(casa_log_oss.str());   \
   } while (0)
 
-
 // The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
 // NDEBUG is not defined (release build) then a throw is used to report the error.
 
 #ifdef NDEBUG
 #define AssertCc(c) {assert (c); }
 #else
-#define AssertCc(c) { if (! (c)) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
+#define AssertCc(c) { if (! (c)) {casacore::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 #endif
 
-#define AssertAlways(c) { if (! (c)) {casa::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
+#define AssertAlways(c) { if (! (c)) {casacore::AipsError::throwIf (True, "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }}
 
 #define WarnCc(m)\
 {\
@@ -88,13 +86,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #    define ThrowCc(m) throw AipsError ((m), __FILE__, __LINE__)
 #endif
 
-#define ThrowIf(c,m) {if (c) {casa::AipsError::throwIf (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+// Throw an AipsError exception if the condition is true.
+#define ThrowIf(c,m) {if (c) {casacore::AipsError::throwIf (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
-#define ThrowIfError(c,m) {if (c) {casa::AipsError::throwIfError (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+// Throw an AipsError exception if the system error code is not 0.
+// It adds the message for that error code to the exception text.
+#define ThrowIfError(c,m) {if (c) {casacore::AipsError::throwIfError (True, (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
-#define Rethrow(e,m) {throw casa::AipsError::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
+// Repackage and rethrow an AipsError exception.
+#define Rethrow(e,m) {throw casacore::AipsError::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
 
-// <summary>Base class for all AIPS++ library errors</summary>
+
+// <summary>Base class for all Casacore library errors</summary>
 // <use visibility=export>
 //
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -105,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <synopsis>
-//  This is the base class for all of the AIPS++ error classes. Because
+//  This is the base class for all of the Casacore error classes. Because
 //  all of the errors have a common base class, any error can be caught
 //  with a single catch statement.
 //
@@ -145,7 +148,7 @@ public:
     { return(message.c_str()); }
   const String &getMesg() const
     { return(message); }
-  String getStackTrace () const;
+  String getStackTrace() const;
   AipsError::Category getCategory( ) const
     { return(category); }
 
@@ -169,35 +172,38 @@ public:
   //
   ~AipsError() throw();
 
-  static String generateStackTrace ();
-
+  // Get or clear the stacktrace info.
+  // <group>
   static void getLastInfo (String & message, String & stackTrace);
   static String getLastMessage ();
   static String getLastStackTrace ();
   static void clearLastInfo ();
-  static String noMessage ();
-  static String noStackTrace ();
+  // </group>
 
-  static AipsError repackageAipsError (AipsError & error, const String & message, const String & file,
-                              Int line, const String & func);
+  // Repackage an exception.
+  static AipsError repackageAipsError (AipsError& error, 
+                                       const String& message,
+                                       const char* file,
+                                       Int line,
+                                       const char* func);
 
-  static void throwIf (Bool condition, const String & message, const String & file,
-                       Int line, const String & func = String());
-  static void throwIfError (Int errorCode, const String & prefix, const String & file,
-                            Int line, const String & func = String());
+  // Throw if the condition is true.
+  static void throwIf (Bool condition, const String& message,
+                       const char* file, Int line,
+                       const char* func = "");
 
+  // Throw if the system error code is not 0.
+  static void throwIfError (Int errorCode, const String& prefix,
+                            const char* file, Int line,
+                            const char* func = "");
 
 protected:
-
+  // Add the stack trace to the message (if USE_STACKTRACE is set).
   void addStackTrace ();
 
   String message;
   Category category;
   String stackTrace;
-
-  static String lastMessage;    // error message from last exception
-  static String lastStackTrace; // stack trace from last exception
-  static Mutex  lastErrorMutex; // protects the lastMessage and lastStackTrace statics
 };
 
 
@@ -433,8 +439,8 @@ public:
   // and the errno.
   SystemCallError(const String &funcName, int error, Category c=GENERAL);
 
-  SystemCallError (int error, const String &msg, const String &filename, uInt lineNumber,
-                   Category c = GENERAL);
+  SystemCallError (int error, const String &msg, const String &filename,
+                   uInt lineNumber, Category c=GENERAL);
 
   // Destructor which does nothing.
   ~SystemCallError() throw();
@@ -489,7 +495,7 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifdef AIPS_NEEDS_RETHROW
 #ifndef CASACORE_NEEDS_RETHROW
@@ -504,6 +510,6 @@ public:
 #endif
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Exceptions/Error.tcc>
+#include <casacore/casa/Exceptions/Error.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

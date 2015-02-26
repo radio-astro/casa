@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: OrdMapIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: OrdMapIO.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_ORDMAPIO_H
 #define CASA_ORDMAPIO_H
@@ -50,14 +50,15 @@
 // <group name="OrderedMap IO">
 // </group>
 
-#include <casa/Containers/MapIO.h>
-#include <casa/Containers/OrderedMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/casa/Containers/OrderedMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
-} //# NAMESPACE CASA - END
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/OrdMapIO.tcc>
+#include <casacore/casa/Containers/OrdMapIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

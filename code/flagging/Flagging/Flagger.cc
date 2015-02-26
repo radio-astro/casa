@@ -48,13 +48,13 @@
 #include <stdarg.h>
 
 #include <tables/Tables/Table.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/SetupNewTab.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 

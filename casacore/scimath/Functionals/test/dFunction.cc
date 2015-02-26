@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dFunction.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: dFunction.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 //
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <scimath/Mathematics/AutoDiffMath.h>
-#include <scimath/Mathematics/AutoDiffIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/scimath/Mathematics/AutoDiffIO.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <scimath/Functionals/Gaussian1D.h>
-#include <casa/Inputs/Input.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/scimath/Functionals/Gaussian1D.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // 3 flavours of calculating a Gaussian
 // The inputs are the parameters and the x value
 
@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
   // Inputs
   cout << ">>>" << endl;
   Input inputs(1);
-  inputs.version("$Id: dFunction.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $");
+  inputs.version("$Id: dFunction.cc 21510 2014-11-21 12:27:56Z gervandiepen $");
   inputs.create("n", "100000", "n"); 
   inputs.readArguments(argc, argv);
   Int N = inputs.getInt("n"); 
@@ -239,7 +239,7 @@ int main(int argc, const char* argv[])
   tim.mark();
   for (Int i=0; i<N; i++) {
     Double res = mv(va, par, x);
-    if (False) res=1;
+    res *= 1.0;
   }
   cout << "mv: ";
   tim.show();

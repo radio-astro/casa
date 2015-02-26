@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSDerivedValues.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: tMSDerivedValues.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
   try {

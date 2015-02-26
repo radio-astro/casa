@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSTable.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSTABLE_H
 #define MS_MSTABLE_H
 
-#include <casa/aips.h>
-#include <casa/Utilities/DataType.h>
-#include <tables/Tables/Table.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/ColumnDesc.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations, more could be if they weren't part of the
 //# static classes 
@@ -265,7 +265,7 @@ protected:
     // The required TableDesc
     //# following fails in static initialization (segm. fault).
     //    static TableDesc requiredTD_p;
-    static SimpleCountedConstPtr<TableDesc> requiredTD_p;
+    static CountedPtr<TableDesc> requiredTD_p;
  
     // Define an entry in the column maps
     static void colMapDef(ColEnum col,
@@ -288,9 +288,9 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
-// #ifndef CASACORE_NO_AUTO_TEMPLATES
-// #include <ms/MeasurementSets/MSTable.tcc>
-// #endif //# CASACORE_NO_AUTO_TEMPLATES
+//# #ifndef CASACORE_NO_AUTO_TEMPLATES
+//# #include <casacore/ms/MeasurementSets/MSTable.tcc>
+//# #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

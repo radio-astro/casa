@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ByteSinkSource.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ByteSinkSource.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_BYTESINKSOURCE_H
 #define CASA_BYTESINKSOURCE_H
 
-#include <casa/aips.h>
-#include <casa/IO/ByteSink.h>
-#include <casa/IO/ByteSource.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/ByteSink.h>
+#include <casacore/casa/IO/ByteSource.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class TypeIO;
 
@@ -55,7 +55,7 @@ class TypeIO;
 
 // <synopsis> 
 // ByteSinkSource provides read/write access to a typed byte stream in the
-// AIPS++ IO framework. It is derived from the classes <src>ByteSink</src>
+// Casacore IO framework. It is derived from the classes <src>ByteSink</src>
 // and <src>ByteSource</src>, so it combines their functionality.
 // <p>
 // The object is constructed using a typed byte stream. This stream
@@ -113,6 +113,6 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

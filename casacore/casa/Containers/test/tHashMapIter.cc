@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHashMapIter.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tHashMapIter.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Containers/HashMapIter.h>
-#include <casa/Containers/HashMapIO.h>
-#include <casa/BasicSL/String.h>
-#include <casa/fstream.h>
-#include <casa/iostream.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/Containers/HashMapIter.h>
+#include <casacore/casa/Containers/HashMapIO.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/stdlib.h>
 #include <cstring>              //# for strdup
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //# for GNU compile in trial:
 //#
 //#	 gmake tHashMapIter 'EXTRA_PGMRLIBS=-llapack -lblas -L/opt/SUNWspro/SC3.0.1/lib -lF77 -lsunmath'

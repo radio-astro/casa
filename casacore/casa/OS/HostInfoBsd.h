@@ -1,11 +1,32 @@
+//# Copyright (C) 2009
+//# Associated Universities, Inc. Washington DC, USA.
+//#
+//# This library is free software; you can redistribute it and/or modify it
+//# under the terms of the GNU Library General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or (at your
+//# option) any later version.
+//#
+//# This library is distributed in the hope that it will be useful, but WITHOUT
+//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+//# License for more details.
+//#
+//# You should have received a copy of the GNU Library General Public License
+//# along with this library; if not, write to the Free Software Foundation,
+//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+//#
+//# Correspondence concerning AIPS++ should be addressed as follows:
+//#        Internet email: aips2-request@nrao.edu.
+//#        Postal address: AIPS++ Project Office
+//#                        National Radio Astronomy Observatory
+//#                        520 Edgemont Road
+//#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: HostInfoBsd.h 21561 2015-02-16 06:57:35Z gervandiepen $
 /*
 ** Author Tony Maher
 **
 ** Based on HostInfoDarwin.h (just the scaffolding code).
-**
-** $Id: HostInfoBsd.h 20766 2009-10-06 00:52:29Z Malte.Marquarding $
-**
-**  Copyright (c) 2009, Associated Universities Inc.
 */
 
 #ifndef CASA_HOSTINFOBSD_H
@@ -25,7 +46,7 @@
 #include <unistd.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // HostInfo for BSD (FreeBSD) machines.
@@ -60,13 +81,13 @@ friend class HostInfo;
     int valid;
     int cpus;
 
-    ssize_t memory_total;
-    ssize_t memory_used;
-    ssize_t memory_free;
+    ptrdiff_t memory_total;
+    ptrdiff_t memory_used;
+    ptrdiff_t memory_free;
 
-    ssize_t swap_total;
-    ssize_t swap_used;
-    ssize_t swap_free;
+    ptrdiff_t swap_total;
+    ptrdiff_t swap_used;
+    ptrdiff_t swap_free;
 };
 
 // </group>
@@ -116,7 +137,7 @@ void HostMachineInfo::update_info( ) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 # endif
 #endif

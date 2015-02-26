@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnsIndex.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: ColumnsIndex.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_COLUMNSINDEX_H
 #define TABLES_COLUMNSINDEX_H
 
 
 //# Includes
-#include <tables/Tables/Table.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/Record.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -436,6 +437,6 @@ inline Record& ColumnsIndex::accessUpperKey()
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

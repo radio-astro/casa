@@ -34,6 +34,7 @@
 //#---------------------------------------------------------------------------
 
 // AIPS++ includes.
+#include <complex>
 #include <casa/aips.h>
 #include <casa/math.h>
 #include <casa/Arrays/ArrayMath.h>

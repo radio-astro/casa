@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.h 20493 2009-01-16 10:51:43Z gervandiepen $
+//# $Id: fits.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 # if !defined(AIPS_FITS)
 # define AIPS_FITS
 
 //# Note that aips.h has to come first for the correct definition of off_t.
-# include <casa/aips.h>
+# include <casacore/casa/aips.h>
 # include <stdlib.h>
 # include <ctype.h>
-# include <casa/iostream.h>
-# include <casa/BasicSL/Complex.h>
-# include <casa/BasicSL/IComplex.h>
-# include <fits/FITS/FITSError.h>
+# include <casacore/casa/iostream.h>
+# include <casacore/casa/BasicSL/Complex.h>
+# include <casacore/casa/BasicSL/IComplex.h>
+# include <casacore/fits/FITS/FITSError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# All FITS code seems to assume longs are 4 bytes. To take care of machines 
 //# for which this isn't true use FitsLong instead of Long in the FITS code
@@ -47,9 +47,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 # else
     typedef Long FitsLong;
 # endif 
-// recovered by GYL
+//# recovered by GYL
 
-class ReservedFitsKeywordCollection; // Forward declarations
+//# Forward declarations
+class ReservedFitsKeywordCollection;
 class FitsNameResult;
 class FitsValueResult;
 class FitsKeyword;
@@ -1041,6 +1042,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 # endif

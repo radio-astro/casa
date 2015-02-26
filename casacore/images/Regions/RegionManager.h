@@ -23,17 +23,20 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
+//#
+//# $Id: RegionManager.h 21563 2015-02-16 07:05:15Z gervandiepen $
 
 #ifndef IMAGES_REGIONMANAGER_H
 #define IMAGES_REGIONMANAGER_H
 
-#include <casa/Quanta/Quantum.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <lattices/Lattices/RegionType.h>
-#include <tables/Tables/Table.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/lattices/LRegions/RegionType.h>
+#include <casacore/tables/Tables/Table.h>
 
 
-namespace casa {
+namespace casacore {
 
 /**
  * image component class 
@@ -77,7 +80,7 @@ namespace casa {
 	          const Bool frac, const String& comment="");
       //LCBox box
       static Record* box(const Vector<Double>& blc, const Vector<Double>& trc, 
-		  const Vector<Int>& shape, const String& comment="");
+                         const Vector<Int>& shape, const String& comment="");
       Record* wbox(const Vector<Quantity>& blc, 
 			const Vector<Quantity>& trc, 
 			const Vector<Int>& pixelaxes, 

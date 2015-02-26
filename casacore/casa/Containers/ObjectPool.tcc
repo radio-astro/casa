@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectPool.tcc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: ObjectPool.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_OBJECTPOOL_TCC
+#define CASA_OBJECTPOOL_TCC
 
 //# Includes
-#include <casa/Containers/ObjectPool.h>
+#include <casacore/casa/Containers/ObjectPool.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T, class Key>
@@ -102,5 +105,7 @@ void ObjectPool<T, Key>::clear() {
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

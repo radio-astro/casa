@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Unit.cc 21093 2011-06-08 07:57:20Z gervandiepen $
+//# $Id: Unit.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/OS/malloc.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/OS/malloc.h>
 #include <stdlib.h>
 #include <string.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Unit::Unit() 
 : uName(), uVal() {}
@@ -107,6 +107,7 @@ void Unit::setName(const String &in) {
 //#  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 //#  The following functions are designed to replace (in two passes)
 //#  the following regular expression operations...
+//#  (written by Darrell Schiebel)
 //#  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 //#  static Regex f1("\\*\\*"); static String sf1("");
 //#  static Regex f2("\\^"); static String sf2("");
@@ -231,5 +232,5 @@ void Unit::check()
   free(b2);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SPolynomialParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: SPolynomialParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_SPOLYNOMIALPARAM_TCC
+#define SCIMATH_SPOLYNOMIALPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/SPolynomialParam.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/scimath/Functionals/SPolynomialParam.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 SPolynomialParam<T>::SPolynomialParam() :
@@ -73,5 +76,7 @@ void SPolynomialParam<T>::setCoefficients(const Vector<T> &coefficients) {
   for (uInt i=3; i<nparameters(); ++i) param_p[i] = coefficients[i-3];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,17 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HistAcc.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: HistAcc.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_HISTACC_TCC
+#define SCIMATH_HISTACC_TCC
 
 
-#include <scimath/Mathematics/HistAcc.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Arrays.h>
-// #include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/scimath/Mathematics/HistAcc.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Arrays.h>
+// #include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Constructor: Fully automatic bin definition
 
@@ -546,5 +549,7 @@ void HistAcc<T>::printHistogram (ostream& os, const String& caption)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

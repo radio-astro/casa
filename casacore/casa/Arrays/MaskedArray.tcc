@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedArray.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: MaskedArray.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#ifndef CASA_ARRAY_MASKEDARRAY_TCC
-#define CASA_ARRAY_MASKEDARRAY_TCC
+#ifndef CASA_MASKEDARRAY_TCC
+#define CASA_MASKEDARRAY_TCC
 
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 MaskedArray<T>::MaskedArray ()
@@ -918,6 +918,7 @@ template<class T, class U>
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
 
 #endif

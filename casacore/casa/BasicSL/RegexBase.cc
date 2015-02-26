@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RegexBase.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RegexBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/BasicSL/RegexBase.h>
+#include <casacore/casa/BasicSL/RegexBase.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Destructor
 RegexBase::~RegexBase() {}
@@ -63,5 +63,5 @@ String::size_type RegexBase::match(const Char *s,
   return String::npos;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

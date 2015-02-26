@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeStepper.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LatticeStepper.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef LATTICES_LATTICESTEPPER_H
 #define LATTICES_LATTICESTEPPER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <lattices/Lattices/LatticeIndexer.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/LatticeNavigator.h>
+#include <casacore/lattices/Lattices/LatticeIndexer.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Traverse a Lattice by cursor shape
@@ -476,6 +476,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

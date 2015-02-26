@@ -37,20 +37,14 @@
 
 #include <casa/aips.h>
 
-#include <tr1/memory>
-
 #define _LOCATEA "ImageMetaDataRW" << __func__ << " "
 #define _ORIGINA LogOrigin("ImageMetaDataRW", __func__)
 
 namespace casa {
 
-ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Float> > image
-) : ImageMetaDataBase(), _floatImage(image), _complexImage() {}
+ImageMetaDataRW::ImageMetaDataRW( SPIIF image ) : ImageMetaDataBase(), _floatImage(image), _complexImage() {}
 
-ImageMetaDataRW::ImageMetaDataRW(
-	std::tr1::shared_ptr<ImageInterface<Complex> > image
-) : ImageMetaDataBase(), _floatImage(), _complexImage(image) {}
+ImageMetaDataRW::ImageMetaDataRW( SPIIC image ) : ImageMetaDataBase(), _floatImage(), _complexImage(image) {}
 
 Record ImageMetaDataRW::toRecord(Bool verbose) const {
 	if (_header.empty()) {
@@ -855,7 +849,9 @@ void ImageMetaDataRW::_setCoordinateValue(
 		Bool stringIsDouble = False;
 		Double x = 0;
 		if (t == TpString) {
-			x = String::toDouble(stringIsDouble, value.asString());
+		  x = String::toDouble(value.asString(),stringIsDouble);
+		        // THIS IS AN ERROR, stringIsDouble IS NOT PASSED
+		        // BY REFERENCE; IT IS NEVER MODIFIED...
 			ThrowIf (
 				! stringIsDouble,
 				value.asString()

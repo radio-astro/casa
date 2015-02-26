@@ -23,45 +23,45 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSelection.cc 20934 2010-08-17 09:16:24Z gervandiepen $ 
+//# $Id: MSSelection.cc 21548 2015-01-28 09:59:40Z gervandiepen $ 
 //----------------------------------------------------------------------------
 
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSAntennaGram.h>
-#include <ms/MeasurementSets/MSCorrGram.h>
-#include <ms/MeasurementSets/MSFieldGram.h>
-#include <ms/MeasurementSets/MSSpwGram.h>
-#include <ms/MeasurementSets/MSScanGram.h>
-#include <ms/MeasurementSets/MSArrayGram.h>
-#include <ms/MeasurementSets/MSTimeGram.h>
-#include <ms/MeasurementSets/MSUvDistGram.h>
-#include <ms/MeasurementSets/MSPolnGram.h>
-#include <ms/MeasurementSets/MSStateGram.h>
-#include <ms/MeasurementSets/MSObservationGram.h>
-#include <ms/MeasurementSets/MSRange.h>
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/RecordGram.h>
+#include <casacore/ms/MeasurementSets/MSSelection.h>
+#include <casacore/ms/MeasurementSets/MSAntennaGram.h>
+#include <casacore/ms/MeasurementSets/MSCorrGram.h>
+#include <casacore/ms/MeasurementSets/MSFieldGram.h>
+#include <casacore/ms/MeasurementSets/MSSpwGram.h>
+#include <casacore/ms/MeasurementSets/MSScanGram.h>
+#include <casacore/ms/MeasurementSets/MSArrayGram.h>
+#include <casacore/ms/MeasurementSets/MSTimeGram.h>
+#include <casacore/ms/MeasurementSets/MSUvDistGram.h>
+#include <casacore/ms/MeasurementSets/MSPolnGram.h>
+#include <casacore/ms/MeasurementSets/MSStateGram.h>
+#include <casacore/ms/MeasurementSets/MSObservationGram.h>
+#include <casacore/ms/MeasurementSets/MSRange.h>
+#include <casacore/tables/TaQL/TableParse.h>
+#include <casacore/tables/TaQL/RecordGram.h>
 
-#include <ms/MeasurementSets/MSMainColumns.h>
-#include <measures/Measures/MeasureHolder.h>
-#include <measures/Measures/MEpoch.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/iostream.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <ms/MeasurementSets/MSSelectableMainColumn.h>
-#include <ms/MeasurementSets/MSAntennaParse.h>
-#include <ms/MeasurementSets/MSStateParse.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/GenSort.h>
-#include <ms/MeasurementSets/MSColumns.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/measures/Measures/MeasureHolder.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+#include <casacore/ms/MeasurementSets/MSSelectableMainColumn.h>
+#include <casacore/ms/MeasurementSets/MSAntennaParse.h>
+#include <casacore/ms/MeasurementSets/MSStateParse.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //----------------------------------------------------------------------------
   
@@ -729,7 +729,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	MSSelectionAntennaParseError msAntException(String(""));
 	MSAntennaParse::thisMSAErrorHandler->handleError(msAntException);
       }
-
+ 
     if (MSStateParse::thisMSSErrorHandler->nMessages() > 0)
       {
 	MSSelectionStateParseError msStateException(String(""));
@@ -1110,7 +1110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	
 	for(uInt targetRow=0; targetRow<nrows; targetRow++)
 	  {
-	    if ((chanIDList(targetRow,ncols-1) == 0))
+	    if (chanIDList(targetRow,ncols-1) == 0)
 	      chanIDList(targetRow,ncols-1)=defaultStep;
 	    // if (chanIDList(targetRow,ncols-2) == chanIDList(targetRow,ncols-3)) // Stop == Step
 	    //   chanIDList(targetRow,ncols-1)=0;
@@ -1293,19 +1293,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   Bool MSSelection::definedAndSet(const Record& inpRec, const String& fieldName)
   {
-    // Check if a record field is defined and not AIPS++ unset
+    // Check if a record field is defined and not unset
     // Input:
     //    inpRec          const Record&     Input Record
     //    fieldName       const String&     Field name
     // Ouput:
     //    definedAndSet   Bool              True if field defined and
-    //                                      not AIPS++ unset
+    //                                      not unset
     //
     Bool retval = False;
     // Check if record field is defined
     if (inpRec.isDefined(fieldName)) {
       retval = True;
-      // Now check if AIPS++ unset
+      // Now check if unset
       //    if (inpRec.dataType(fieldName) == TpRecord) {
       //      retval = !Unset::isUnset(inpRec.subRecord(fieldName));
       //    };
@@ -1316,5 +1316,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -49,11 +49,11 @@
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -71,7 +71,7 @@
 #include <images/Images/ImageExpr.h>
 #include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
-#include <lattices/Lattices/LatticeCleanProgress.h>
+#include <lattices/LatticeMath/LatticeCleanProgress.h>
 #include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
@@ -129,17 +129,17 @@
 #include <synthesis/DataSampling/ImageDataSampling.h>
 #include <synthesis/DataSampling/PixonProcessor.h>
 
-#include <lattices/Lattices/LattRegionHolder.h>
+#include <lattices/LRegions/LattRegionHolder.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeIterator.h> 
-#include <lattices/Lattices/LatticeExpr.h> 
-#include <lattices/Lattices/LatticeFFT.h>
-#include <lattices/Lattices/LCEllipsoid.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCIntersection.h>
-#include <lattices/Lattices/LCUnion.h>
-#include <lattices/Lattices/LCExtension.h>
+#include <lattices/LEL/LatticeExpr.h> 
+#include <lattices/LatticeMath/LatticeFFT.h>
+#include <lattices/LRegions/LCEllipsoid.h>
+#include <lattices/LRegions/LCRegion.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LRegions/LCIntersection.h>
+#include <lattices/LRegions/LCUnion.h>
+#include <lattices/LRegions/LCExtension.h>
 
 #include <images/Images/ImageRegrid.h>
 #include <images/Regions/ImageRegion.h>
@@ -2167,7 +2167,6 @@ Bool Imager::boxmask(const String& mask, const Vector<Int>& blc,
 
   ImageRegion* recordRegion=0;
   if(imageRegRec !=0){
-    ImageRegion::tweakedRegionRecord(imageRegRec);
     TableRecord rec1;
     rec1.assign(*imageRegRec);
     recordRegion=ImageRegion::fromRecord(rec1,"");    
@@ -2774,7 +2773,7 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
      MeasurementSet* mssel_p2;
 
      // Apply the TAQL selection string, to remake the selected MS
-     String parseString="select from $1 where (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " > " + strUVmin + " &&  (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + strInvLambda + " < " + strUVmax ;
+     String parseString="select from $1 where (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + (string) strInvLambda + " > " + strUVmin.str( ) + " &&  (SQUARE(UVW[1]) + SQUARE(UVW[2]))*" + (string) strInvLambda + " < " + strUVmax.str( );
 
      mssel_p2=new MeasurementSet(tableCommand(parseString,*mssel_p));
      AlwaysAssert(mssel_p2, AipsError);
@@ -5389,7 +5388,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
 
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
-                                 tempCLs, ms_p->tableName()+"_setjy_");
+                                 tempCLs, "_setjy_");
   }
   if(!foundSrc){
     if(standard == String("SOURCE")){
@@ -5660,7 +5659,6 @@ void Imager::sjy_makeComponentList(LogIO& os, Vector<String>& tempCLs,
       siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
       siModel.setIndex(0.0);
     }
-  
     // TODO: call tabular form method for full pol specification....
     //
     // No worries about varying fluxes or sizes here, so any time will do.

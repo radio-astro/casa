@@ -24,20 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasConvert.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasConvert.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASCONVERT_H
 #define MEASURES_MEASCONVERT_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <measures/Measures/MConvertBase.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/Measure.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
-
-/// #include <measures/Measures/MeasRef.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/measures/Measures/MConvertBase.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/measures/Measures/Measure.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MCBase;
@@ -281,9 +279,9 @@ private:
 //# Global functions
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <measures/Measures/MeasConvert.tcc>
+#include <casacore/measures/Measures/MeasConvert.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

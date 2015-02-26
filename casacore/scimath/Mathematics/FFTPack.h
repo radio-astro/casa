@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: FFTPack.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FFTPack.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_FFTPACK_H
 #define SCIMATH_FFTPACK_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
   //# The SGI compiler with -LANG:std has some trouble including both Complexfwd.h
   //# and Complex.h so we bypass the problem by include Complex.h only.
 #if defined(AIPS_USE_NEW_SGI)
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/Complex.h>
 #else
-#include <casa/BasicSL/Complexfwd.h>
+#include <casacore/casa/BasicSL/Complexfwd.h>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>C++ interface to the Fortran FFTPACK library</summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -90,7 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 // <note role=warning> 
-// These functions assume that it is possible to convert between AIPS++ numeric
+// These functions assume that it is possible to convert between Casacore numeric
 // types and those used by Fortran. That it is possible to convert between
 // Float & float, Double & double and Int & int.
 // </note>
@@ -913,6 +913,6 @@ static void cosqb(Int n, Double* x, Double* wsave);
 // </group>
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

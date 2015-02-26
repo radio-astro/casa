@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tMSColumns.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
 //# Includes
 
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <casa/Exceptions/Error.h>
-#include <tables/Tables.h>
-#include <casa/iostream.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/tables/Tables.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
   try {
     {    

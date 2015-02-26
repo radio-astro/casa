@@ -23,49 +23,49 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 21168 2012-01-04 08:11:03Z gervandiepen $
+//# $Id: TableProxy.cc 21530 2014-12-22 13:24:50Z gervandiepen $
 
 
-#include <tables/Tables/TableProxy.h>
-#include <tables/Tables/ReadAsciiTable.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScaRecordColDesc.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableCache.h>
-#include <tables/Tables/TableCopy.h>
-#include <tables/Tables/PlainTable.h>
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableAttr.h>
-#include <tables/Tables/DataManAccessor.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/TableError.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
-#include <casa/stdio.h>                  // needed for sprintf
+#include <casacore/tables/Tables/TableProxy.h>
+#include <casacore/tables/Tables/ReadAsciiTable.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScaRecordColDesc.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableCache.h>
+#include <casacore/tables/Tables/TableCopy.h>
+#include <casacore/tables/Tables/PlainTable.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/TaQL/TableParse.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableAttr.h>
+#include <casacore/tables/DataMan/DataManAccessor.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/stdio.h>                  // needed for sprintf
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 TableProxy::TableProxy()
@@ -448,7 +448,7 @@ Bool TableProxy::getColInfo (const String& colName, Bool useBrackets,
       } else {
         // Show non-fixed shape of first row if no brackets are used.
         if (!colDesc.isFixedShape()  &&  table_p.nrow() > 0) {
-          colShape = ROTableColumn(table_p, colName).shape(0);
+          colShape = TableColumn(table_p, colName).shape(0);
         }
       }
       for (uInt i=0; i<colShape.size(); ++i) {
@@ -735,6 +735,17 @@ TableProxy TableProxy::selectRows (const Vector<Int>& rownrs,
   return ntable;
 }
 
+void TableProxy::stillSameShape (Int& same, IPosition& shape,
+                                 const IPosition& newShape)
+{
+  if (same == 0) {
+    same = 1;           // not first time anymore
+    shape = newShape;
+  } else if (! newShape.isEqual(shape)) {
+    same = 2;           // varying shape
+  }
+}
+
 void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
 {
   if (expr.isScalar()) {
@@ -769,6 +780,9 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
       rec.define ("values", vi);
       break;
     }
+    ///    case TpInt64:
+    ///      rec.define ("values", expr.getColumnInt (rownrs));
+    ///      break;
     case TpFloat:
       rec.define ("values", expr.getColumnFloat (rownrs));
       break;
@@ -788,6 +802,9 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
       throw AipsError("Unknown calc expression scalar type");
     }
   } else {
+    // Array result. Check if shape is always the same.
+    Int sameShape = 0;
+    IPosition resShape;
     Record res;
     switch (expr.dataType()) {
     case TpBool:
@@ -795,6 +812,15 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
 	Array<Bool> arr;
 	expr.get (i, arr);
 	res.define (String::toString(i), arr);
+        stillSameShape (sameShape, resShape, arr.shape());
+      }
+      break;
+    case TpInt64:
+      for (uInt i=0; i<expr.nrow(); i++) {
+	Array<Int64> arr;
+	expr.get (i, arr);
+	res.define (String::toString(i), arr);
+        stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpDouble:
@@ -802,6 +828,7 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
 	Array<Double> arr;
 	expr.get (i, arr);
 	res.define (String::toString(i), arr);
+        stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpDComplex:
@@ -809,6 +836,7 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
 	Array<DComplex> arr;
 	expr.get (i, arr);
 	res.define (String::toString(i), arr);
+        stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpString:
@@ -816,12 +844,37 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
 	Array<String> arr;
 	expr.get (i, arr);
 	res.define (String::toString(i), arr);
+        stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     default:
       throw AipsError("Unknown calc expression array type");
     }
-    rec.defineRecord ("values", res);
+    if (sameShape == 2) {
+      // Varying shape, so define as Records.
+      rec.defineRecord ("values", res);
+      // All the same shape, so define as a single array.
+    } else {
+      switch (expr.dataType()) {
+      case TpBool:
+        rec.define ("values", record2Array<Bool>(res));
+        break;
+      case TpInt64:
+        rec.define ("values", record2Array<Int64>(res));
+        break;
+      case TpDouble:
+        rec.define ("values", record2Array<Double>(res));
+        break;
+      case TpDComplex:
+        rec.define ("values", record2Array<DComplex>(res));
+        break;
+      case TpString:
+        rec.define ("values", record2Array<String>(res));
+        break;
+      default:
+        throw AipsError("Unknown calc expression array type");
+      }
+    }
   }
 }
 
@@ -958,7 +1011,7 @@ Vector<String> TableProxy::columnNames()
 void TableProxy::setMaximumCacheSize (const String& columnName,
 				      Int nbytes)
 {
-  ROTableColumn col (table_p, columnName);
+  TableColumn col (table_p, columnName);
   col.setMaximumCacheSize (nbytes);
 }
 
@@ -1001,12 +1054,15 @@ String TableProxy::columnArrayType (const String& columnName)
 ValueHolder TableProxy::getCell (const String& columnName,
 				 Int row)
 {
-  // Synchronize table to get up-to-date #rows.
-  // Check that the row number is within the table bounds.
-  syncTable (table_p);
-  Int nrow = checkRowColumn (table_p, columnName, row, 1, 1,
-			     "TableProxy::getCell");
+  Int64 nrow = getRowsCheck (columnName, row, 1, 1, "getCell");
   return getValueFromTable (columnName, row, nrow, 1, True);
+}
+
+void TableProxy::getCellVH (const String& columnName,
+                            Int row, const ValueHolder& vh)
+{
+  Int64 nrow = getRowsCheck (columnName, row, 1, 1, "getCellVH");
+  getValueFromTable (columnName, row, nrow, 1, True, vh);
 }
 
 ValueHolder TableProxy::getCellSlice (const String& columnName,
@@ -1018,29 +1074,39 @@ ValueHolder TableProxy::getCellSlice (const String& columnName,
   return getCellSliceIP (columnName, row, blc, trc, inc);
 }
 
-ValueHolder TableProxy::getCellSliceIP (const String& columnName,
-					Int row,
-					const IPosition& blc,
-					const IPosition& trc,
-					const IPosition& inc)
+void TableProxy::getCellSliceVH (const String& columnName,
+                                 Int row,
+                                 const Vector<Int>& blc,
+                                 const Vector<Int>& trc,
+                                 const Vector<Int>& inc,
+                                 const ValueHolder& vh)
 {
-  IPosition cblc, ctrc;
-  cblc = blc;
-  ctrc = trc;
-  setDefaultForSlicer (cblc);
-  setDefaultForSlicer (ctrc);
+  return getCellSliceVHIP (columnName, row, blc, trc, inc, vh);
+}
+
+ValueHolder TableProxy::getCellSliceIP (const String& columnName,
+                                        Int row,
+                                        const IPosition& blc,
+                                        const IPosition& trc,
+                                        const IPosition& inc)
+{
   Slicer slicer;
-  if (inc.nelements() > 0) {
-    slicer = Slicer (cblc, ctrc, inc, Slicer::endIsLast);
-  }else{
-    slicer = Slicer (cblc, ctrc, Slicer::endIsLast);
-  }
-  // Synchronize table to get up-to-date #rows.
-  // Check that the row number is within the table bounds.
-  syncTable (table_p);
-  Int nrow = checkRowColumn (table_p, columnName, row, 1, 1,
-			     "TableProxy::getCellSlice");
+  Int64 nrow = getRowsSliceCheck (slicer, columnName, row, 1, 1,
+                                  blc, trc, inc, "getCellSlice");
   return getValueSliceFromTable (columnName, slicer, row, nrow, 1, True);
+}
+
+void TableProxy::getCellSliceVHIP (const String& columnName,
+                                   Int row,
+                                   const IPosition& blc,
+                                   const IPosition& trc,
+                                   const IPosition& inc,
+                                   const ValueHolder& vh)
+{
+  Slicer slicer;
+  Int64 nrow = getRowsSliceCheck (slicer, columnName, row, 1, 1,
+                                  blc, trc, inc, "getCellSliceVH");
+  getValueSliceFromTable (columnName, slicer, row, nrow, 1, True, vh);
 }
 
 ValueHolder TableProxy::getColumn (const String& columnName,
@@ -1048,12 +1114,18 @@ ValueHolder TableProxy::getColumn (const String& columnName,
 				   Int nrow,
 				   Int incr)
 {
-  // Synchronize table to get up-to-date #rows.
-  // Check that the row number is within the table bounds.
-  syncTable (table_p);
-  nrow = checkRowColumn (table_p, columnName, row, nrow, incr,
-			 "TableProxy::getColumn");
-  return getValueFromTable (columnName, row, nrow, incr, False);
+  Int64 nrows = getRowsCheck (columnName, row, nrow, incr, "getColumn");
+  return getValueFromTable (columnName, row, nrows, incr, False);
+}
+
+void TableProxy::getColumnVH (const String& columnName,
+                              Int row,
+                              Int nrow,
+                              Int incr,
+                              const ValueHolder& vh)
+{
+  Int64 nrows = getRowsCheck (columnName, row, nrow, incr, "getColumnVH");
+  return getValueFromTable (columnName, row, nrows, incr, False, vh);
 }
 
 Record TableProxy::getVarColumn (const String& columnName,
@@ -1061,15 +1133,11 @@ Record TableProxy::getVarColumn (const String& columnName,
 				 Int nrow,
 				 Int incr)
 {
-  // Synchronize table to get up-to-date #rows.
-  // Check that the row number is within the table bounds.
-  syncTable (table_p);
-  nrow = checkRowColumn (table_p, columnName, row, nrow, incr,
-			 "TableProxy::getVarColumn");
-  ROTableColumn tabcol (table_p, columnName);
+  Int64 nrows = getRowsCheck (columnName, row, nrow, incr, "getVarColumn");
+  TableColumn tabcol (table_p, columnName);
   Record rec;
   char namebuf[16];
-  for (Int i=0; i<nrow; i++) {
+  for (Int64 i=0; i<nrows; i++) {
     // Add the result to the record with field name formed from 1-based rownr.
     sprintf (namebuf, "r%i", row+1);
     if (tabcol.isDefined(row)) {
@@ -1102,23 +1170,37 @@ ValueHolder TableProxy::getColumnSliceIP (const String& columnName,
 					  Int nrow,
 					  Int incr)
 {
-  IPosition cblc, ctrc;
-  cblc = blc;
-  ctrc = trc;
-  setDefaultForSlicer (cblc);
-  setDefaultForSlicer (ctrc);
   Slicer slicer;
-  if (inc.nelements() > 0) {
-    slicer = Slicer (cblc, ctrc, inc, Slicer::endIsLast);
-  }else{
-    slicer = Slicer (cblc, ctrc, Slicer::endIsLast);
-  }
-  // Synchronize table to get up-to-date #rows.
-  // Check that the row number is within the table bounds.
-  syncTable (table_p);
-  nrow = checkRowColumn (table_p, columnName, row, nrow, incr,
-			 "TableProxy::getColumnSlice");
-  return getValueSliceFromTable (columnName, slicer, row, nrow, incr, False);
+  Int64 nrows = getRowsSliceCheck (slicer, columnName, row, nrow, incr,
+                                   blc, trc, inc, "getColumnSlice");
+  return getValueSliceFromTable (columnName, slicer, row, nrows, incr, False);
+}
+
+void TableProxy::getColumnSliceVH (const String& columnName,
+                                   Int row,
+                                   Int nrow,
+                                   Int incr,
+                                   const Vector<Int>& blc,
+                                   const Vector<Int>& trc,
+                                   const Vector<Int>& inc,
+                                   const ValueHolder& vh)
+{
+  getColumnSliceVHIP (columnName, blc, trc, inc, row, nrow, incr, vh);
+}
+
+void TableProxy::getColumnSliceVHIP (const String& columnName,
+                                     const IPosition& blc,
+                                     const IPosition& trc,
+                                     const IPosition& inc,
+                                     Int row,
+                                     Int nrow,
+                                     Int incr,
+                                     const ValueHolder& vh)
+{
+  Slicer slicer;
+  Int64 nrows = getRowsSliceCheck (slicer, columnName, row, nrow, incr,
+                                   blc, trc, inc, "getColumnSliceVH");
+  getValueSliceFromTable (columnName, slicer, row, nrows, incr, False, vh);
 }
 
 void TableProxy::putColumn (const String& columnName,
@@ -1274,7 +1356,7 @@ Vector<String> TableProxy::getColumnShapeString (const String& columnName,
     nrow = maxnrow;
   }
   Vector<String> result;
-  ROTableColumn col (table_p, columnName);
+  TableColumn col (table_p, columnName);
   IPosition shape = col.shapeColumn();
   if (shape.nelements() > 0) {
     //# This is a fixed shape, so return immediately.
@@ -1299,7 +1381,7 @@ Vector<String> TableProxy::getColumnShapeString (const String& columnName,
 Bool TableProxy::cellContentsDefined (const String& columnName,
 				      Int rownr)
 {
-  ROTableColumn tabColumn (table_p, columnName);
+  TableColumn tabColumn (table_p, columnName);
   return tabColumn.isDefined (rownr);
 }
 
@@ -1311,7 +1393,7 @@ ValueHolder TableProxy::getKeyword (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.keywordSet());
   }else{
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.keywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1329,7 +1411,7 @@ Record TableProxy::getKeywordSet (const String& columnName)
   if (columnName.empty()) {
     keySet = &(table_p.keywordSet());
   }else{
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.keywordSet());
   }
   return getKeyValues (*keySet);
@@ -1345,7 +1427,7 @@ void TableProxy::putKeyword (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   } else {
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1365,7 +1447,7 @@ void TableProxy::putKeywordSet (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   } else {
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   putKeyValues (*keySet, valueSet);
@@ -1379,7 +1461,7 @@ void TableProxy::removeKeyword (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   }else{
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1400,7 +1482,7 @@ Vector<String> TableProxy::getFieldNames (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.keywordSet());
   }else{
-    ROTableColumn tabColumn (table_p, columnName);
+    TableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.keywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1895,21 +1977,52 @@ Record TableProxy::recordHCDesc (const TableDesc& tableDesc)
   return rec;
 }
 
+Int64 TableProxy::getRowsCheck (const String& columnName,
+                                Int64 row, Int64 nrow, Int64 incr,
+                                const String& caller)
+{
+  // Synchronize table to get up-to-date #rows.
+  // Check that the row number is within the table bounds.
+  syncTable (table_p);
+  return checkRowColumn (table_p, columnName, row, nrow, incr, caller);
+}
+
+Int64 TableProxy::getRowsSliceCheck (Slicer& slicer,
+                                     const String& columnName,
+                                     Int64 row, Int64 nrow, Int64 incr,
+                                     const IPosition& blc,
+                                     const IPosition& trc,
+                                     const IPosition& inc,
+                                     const String& caller)
+{
+  IPosition cblc, ctrc;
+  cblc = blc;
+  ctrc = trc;
+  setDefaultForSlicer (cblc);
+  setDefaultForSlicer (ctrc);
+  if (inc.nelements() > 0) {
+    slicer = Slicer (cblc, ctrc, inc, Slicer::endIsLast);
+  }else{
+    slicer = Slicer (cblc, ctrc, Slicer::endIsLast);
+  }
+  return getRowsCheck (columnName, row, nrow, incr, caller);
+}
+
 Int TableProxy::checkRowColumn (Table& table,
 				const String& colName,
-				Int rownr, Int nrow, Int incr,
-				const Char* caller)
+				Int64 rownr, Int64 nrow, Int64 incr,
+				const String& caller)
 {
   // Check that the row number is within the table bounds.
   // However, accept a row number equal to nrow when no rows are needed.
   Int tabnrow = table.nrow();
   if (rownr < 0  ||  rownr > tabnrow  ||  (rownr==tabnrow && nrow>0)) {
-    throw TableError (String(caller) + ": no such row");
+    throw TableError ("TableProxy::" + caller + ": no such row");
   } else if (incr <= 0) {
     throw TableError (String(caller) + ": rowincr<=0");
   } else {
     if (!colName.empty()  &&  !table.tableDesc().isColumn(colName)) {
-      throw TableError (String(caller) + ": column " + String(colName) +
+      throw TableError ("TableProxy::" + caller + ": column " + colName +
                         " does not exist");
     }
   }
@@ -1937,7 +2050,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
     switch (dtype) {
     case TpBool: 
       {
-	ROScalarColumn<Bool> ac(table_p,colName);
+	ScalarColumn<Bool> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -1947,7 +2060,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUChar:
       {
-	ROScalarColumn<uChar> ac(table_p,colName); 
+	ScalarColumn<uChar> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -1957,7 +2070,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpShort:
       {
-	ROScalarColumn<Short> ac(table_p,colName); 
+	ScalarColumn<Short> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -1967,7 +2080,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUShort:
       {
-	ROScalarColumn<uShort> ac(table_p,colName); 
+	ScalarColumn<uShort> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -1977,7 +2090,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpInt:
       {
-	ROScalarColumn<Int> ac(table_p,colName); 
+	ScalarColumn<Int> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{ 
@@ -1987,7 +2100,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUInt:
       {
-	ROScalarColumn<uInt> ac(table_p,colName); 
+	ScalarColumn<uInt> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -1997,7 +2110,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpFloat:
       {
-	ROScalarColumn<Float> ac(table_p,colName); 
+	ScalarColumn<Float> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2007,7 +2120,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpDouble:
       {
-	ROScalarColumn<Double> ac(table_p,colName); 
+	ScalarColumn<Double> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2017,7 +2130,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpComplex:
       {
-	ROScalarColumn<Complex> ac(table_p,colName); 
+	ScalarColumn<Complex> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2027,7 +2140,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpDComplex:
       {
-	ROScalarColumn<DComplex> ac(table_p,colName); 
+	ScalarColumn<DComplex> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2037,7 +2150,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpString:
       {
-	ROScalarColumn<String> ac(table_p,colName); 
+	ScalarColumn<String> ac(table_p,colName); 
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2047,7 +2160,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpRecord:
       {
-	ROScalarColumn<TableRecord> ac(table_p,colName); 
+	ScalarColumn<TableRecord> ac(table_p,colName); 
 	if (isCell) {
 	  // Transform a TableRecord into a Record.
 	  return ValueHolder (getKeyValues(ac(rownr)));
@@ -2064,7 +2177,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
     switch (dtype) {
     case TpBool:
       {
-	ROArrayColumn<Bool> ac(table_p,colName);
+	ArrayColumn<Bool> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2074,7 +2187,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUChar:
       {
-	ROArrayColumn<uChar> ac(table_p,colName);
+	ArrayColumn<uChar> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2084,7 +2197,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpShort:
       {
-	ROArrayColumn<Short> ac(table_p,colName);
+	ArrayColumn<Short> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2094,7 +2207,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUShort:
       {
-	ROArrayColumn<uShort> ac(table_p,colName);
+	ArrayColumn<uShort> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2104,7 +2217,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpInt:
       {
-	ROArrayColumn<Int> ac(table_p,colName);
+	ArrayColumn<Int> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2114,7 +2227,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpUInt:
       {
-	ROArrayColumn<uInt> ac(table_p,colName);
+	ArrayColumn<uInt> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2124,7 +2237,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpFloat:
       {
-	ROArrayColumn<Float> ac(table_p,colName);
+	ArrayColumn<Float> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2134,7 +2247,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpDouble:
       {
-	ROArrayColumn<Double> ac(table_p,colName);
+	ArrayColumn<Double> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2144,7 +2257,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpComplex:
       {
-	ROArrayColumn<Complex> ac(table_p,colName);
+	ArrayColumn<Complex> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2154,7 +2267,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpDComplex:
       {
-	ROArrayColumn<DComplex> ac(table_p,colName);
+	ArrayColumn<DComplex> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2164,7 +2277,7 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
       break;
     case TpString:
       {
-	ROArrayColumn<String> ac(table_p,colName);
+	ArrayColumn<String> ac(table_p,colName);
 	if (isCell) {
 	  return ValueHolder (ac(rownr));
 	}else{
@@ -2179,13 +2292,160 @@ ValueHolder TableProxy::getValueFromTable (const String& colName,
   throw TableError ("TableProxy::getCell/Column: Unknown array type");
 }
 
+void TableProxy::getValueFromTable (const String& colName,
+                                    Int rownr, Int nrow,
+                                    Int incr,
+                                    Bool isCell,
+                                    const ValueHolder& vh)
+{
+  const ColumnDesc& cdesc = table_p.tableDesc().columnDesc(colName);
+  Bool isScalar = cdesc.isScalar();
+  DataType dtype = cdesc.dataType();
+  if (isScalar && isCell) {
+    throw TableError("A scalar value cannot be read into a python variable");
+  }
+  switch (vh.dataType()) {
+  case TpArrayBool:
+    {
+      Array<Bool> arr(vh.asArrayBool());
+      if (dtype != TpBool) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayBool();
+      } else if (isScalar) {
+        // Read directly into the array (thus into Python ndarray object).
+        ScalarColumn<Bool> ac(table_p, colName);
+        Vector<Bool> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<Bool> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  case TpArrayInt:
+    {
+      Array<Int> arr(vh.asArrayInt());
+      if (dtype != TpInt) {
+        // Data has to be converted, so cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayInt();
+      } else if (isScalar) {
+        ScalarColumn<Int> ac(table_p, colName);
+        Vector<Int> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<Int> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  case TpArrayFloat:
+    {
+      Array<Float> arr(vh.asArrayFloat());
+      if (dtype != TpFloat) {
+        // Data has to be converted, so cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayFloat();
+      } else if (isScalar) {
+        ScalarColumn<Float> ac(table_p, colName);
+        Vector<Float> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<Float> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  case TpArrayDouble:
+    {
+      Array<Double> arr(vh.asArrayDouble());
+      if (dtype != TpDouble) {
+        // Data has to be converted, so cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayDouble();
+      } else if (isScalar) {
+        ScalarColumn<Double> ac(table_p, colName);
+        Vector<Double> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<Double> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  case TpArrayComplex:
+    {
+      Array<Complex> arr(vh.asArrayComplex());
+      if (dtype != TpComplex) {
+        // Data has to be converted, so cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayComplex();
+      } else if (isScalar) {
+        ScalarColumn<Complex> ac(table_p, colName);
+        Vector<Complex> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<Complex> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  case TpArrayDComplex:
+    {
+      Array<DComplex> arr(vh.asArrayDComplex());
+      if (dtype != TpDComplex) {
+        // Data has to be converted, so cannot be read directly into the array.
+        arr = getValueFromTable (colName, rownr, nrow, incr, isCell).
+          asArrayDComplex();
+      } else if (isScalar) {
+        ScalarColumn<DComplex> ac(table_p, colName);
+        Vector<DComplex> vec(arr);
+        ac.getColumnRange(Slice(rownr, nrow, incr), vec);
+      } else {
+        ArrayColumn<DComplex> ac(table_p, colName);
+        if (isCell) {
+          ac.get (rownr, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), arr);
+        }
+      }
+    }
+    break;
+  default:
+    throw TableError ("TableProxy::getCell/Column: Unknown data type " +
+                      ValType::getTypeStr(vh.dataType()));
+  }
+}
+
 ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
 						const Slicer& slicer,
 						Int rownr, Int nrow, Int incr,
 						Bool isCell)
 {
   // Check that the column is an array.
-  if (! table_p.tableDesc().columnDesc(colName).isArray()) {
+  const ColumnDesc& cdesc = table_p.tableDesc().columnDesc(colName);
+  if (! cdesc.isArray()) {
     throw TableError ("TableProxy::getColumnSlice: column " +
 		      String(colName) + " is not an array column");
   }
@@ -2193,10 +2453,10 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
   if (nrow == 0) {
     return ValueHolder();
   }
-  switch(table_p.tableDesc().columnDesc(colName).dataType()) {
+  switch(cdesc.dataType()) {
   case TpBool:
     {
-      ROArrayColumn<Bool> ac(table_p,colName);
+      ArrayColumn<Bool> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2207,7 +2467,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpUChar:
     {
-      ROArrayColumn<uChar> ac(table_p,colName);
+      ArrayColumn<uChar> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2218,7 +2478,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpShort:
     {
-      ROArrayColumn<Short> ac(table_p,colName);
+      ArrayColumn<Short> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2229,7 +2489,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpUShort:
     {
-      ROArrayColumn<uShort> ac(table_p,colName);
+      ArrayColumn<uShort> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2240,7 +2500,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpInt:
     {
-      ROArrayColumn<Int> ac(table_p,colName);
+      ArrayColumn<Int> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2251,7 +2511,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpUInt:
     {
-      ROArrayColumn<uInt> ac(table_p,colName);
+      ArrayColumn<uInt> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2262,7 +2522,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpFloat:
     {
-      ROArrayColumn<Float> ac(table_p,colName);
+      ArrayColumn<Float> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2273,7 +2533,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpDouble:
     {
-      ROArrayColumn<Double> ac(table_p,colName);
+      ArrayColumn<Double> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2284,7 +2544,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpComplex:
     {
-      ROArrayColumn<Complex> ac(table_p,colName);
+      ArrayColumn<Complex> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2295,7 +2555,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpDComplex:
     {
-      ROArrayColumn<DComplex> ac(table_p,colName);
+      ArrayColumn<DComplex> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2306,7 +2566,7 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   case TpString:
     {
-      ROArrayColumn<String> ac(table_p,colName);
+      ArrayColumn<String> ac(table_p,colName);
       if (isCell) {
 	return ValueHolder (ac.getSlice(rownr, slicer));
       }else{
@@ -2319,6 +2579,128 @@ ValueHolder TableProxy::getValueSliceFromTable (const String& colName,
     break;
   }
   throw TableError ("TableProxy::getColumnSlice: Unknown array type");
+}
+
+void TableProxy::getValueSliceFromTable (const String& colName,
+                                         const Slicer& slicer,
+                                         Int rownr, Int nrow, Int incr,
+                                         Bool isCell,
+                                         const ValueHolder& vh)
+{
+  // Check that the column is an array.
+  const ColumnDesc& cdesc = table_p.tableDesc().columnDesc(colName);
+  if (! cdesc.isArray()) {
+    throw TableError ("TableProxy::getColumnSlice: column " +
+		      String(colName) + " is not an array column");
+  }
+  DataType dtype = cdesc.dataType();
+  switch (vh.dataType()) {
+  case TpArrayBool:
+    {
+      Array<Bool> arr(vh.asArrayBool());
+      if (dtype != TpBool) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayBool();
+      } else {
+        ArrayColumn<Bool> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  case TpArrayInt:
+    {
+      Array<Int> arr(vh.asArrayInt());
+      if (dtype != TpInt) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayInt();
+      } else {
+        ArrayColumn<Int> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  case TpArrayFloat:
+    {
+      Array<Float> arr(vh.asArrayFloat());
+      if (dtype != TpFloat) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayFloat();
+      } else {
+        ArrayColumn<Float> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  case TpArrayDouble:
+    {
+      Array<Double> arr(vh.asArrayDouble());
+      if (dtype != TpDouble) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayDouble();
+      } else {
+        ArrayColumn<Double> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  case TpArrayComplex:
+    {
+      Array<Complex> arr(vh.asArrayComplex());
+      if (dtype != TpComplex) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayComplex();
+      } else {
+        ArrayColumn<Complex> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  case TpArrayDComplex:
+    {
+      Array<DComplex> arr(vh.asArrayDComplex());
+      if (dtype != TpDComplex) {
+        // Data has to be converted; cannot be read directly into the array.
+        arr = getValueSliceFromTable (colName, slicer, rownr, nrow,
+                                      incr, isCell).asArrayDComplex();
+      } else {
+        ArrayColumn<DComplex> ac(table_p, colName);
+        if (isCell) {
+          ac.getSlice (rownr, slicer, arr);
+        } else {
+          ac.getColumnRange (Slice(rownr, nrow, incr), slicer, arr);
+        }
+      }
+    }
+    break;
+  default:
+    throw TableError ("TableProxy::getCell/Column: Unknown data type " +
+                      ValType::getTypeStr(vh.dataType()));
+  }
 }
 
 
@@ -3063,4 +3445,4 @@ IPosition TableProxy::fillAxes (const IPosition& ipos, Bool cOrder)
   return s;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

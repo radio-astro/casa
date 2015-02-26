@@ -24,17 +24,14 @@ MSFits/SDSysCalHandler.cc
 MSFits/SDWeatherHandler.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_msfits PROPERTIES SOVERSION ${casa_soversion} )
-endif()
 target_link_libraries (casa_msfits casa_ms casa_fits)
 
 add_subdirectory (apps)
 
 install (
 TARGETS casa_msfits
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 

@@ -23,23 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.h 21025 2011-03-03 15:09:00Z gervandiepen $
+//# $Id: TableProxy.h 21541 2015-01-15 09:57:38Z gervandiepen $
 
 #ifndef TABLES_TABLEPROXY_H
 #define TABLES_TABLEPROXY_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/Table.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
 #include <vector>
 
-#include <casa/namespace.h>
 
 //# Forward Declarations
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   class ValueHolder;
   class RecordFieldId;
   class Table;
@@ -56,17 +55,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <use visibility=export>
 
-// <reviewed reviewer="Paul Shannon" date="1995/09/15" tests="tgtable.g" demos="">
+// <reviewed reviewer="Paul Shannon" date="1995/09/15" tests="ttable.py" demos="">
 // </reviewed>
 
 // <prerequisite>
 //# Classes you should understand before using this one.
 //   <li> class Table
-//   <li> class GlishTableHolder
-//   <li> class GlishTableIteratorHolder
-//   <li> class GlishTableRowHolder
-//   <li> program gtable
-//   <li> script gtable.g
+//   <li> python script table.py
 // </prerequisite>
 
 // <etymology>
@@ -322,6 +317,11 @@ public:
 			 Int row,
 			 Int nrow,
 			 Int incr);
+  void getColumnVH (const String& columnName,
+                    Int row,
+                    Int nrow,
+                    Int incr,
+                    const ValueHolder& vh);
   Record getVarColumn (const String& columnName,
 		       Int row,
 		       Int nrow,
@@ -345,6 +345,22 @@ public:
 				Int row,
 				Int nrow,
 				Int incr);
+  void getColumnSliceVH (const String& columnName,
+                         Int row,
+                         Int nrow,
+                         Int incr,
+                         const Vector<Int>& blc,
+                         const Vector<Int>& trc,
+                         const Vector<Int>& inc,
+                         const ValueHolder& vh);
+  void getColumnSliceVHIP (const String& columnName,
+                           const IPosition& blc,
+                           const IPosition& trc,
+                           const IPosition& inc,
+                           Int row,
+                           Int nrow,
+                           Int incr,
+                           const ValueHolder& vh);
   // </group>
 
   // Put some or all values into a column in the table.
@@ -392,6 +408,8 @@ public:
   // Get a value from a column in the table.
   ValueHolder getCell (const String& columnName,
 		       Int row);
+  void getCellVH (const String& columnName,
+                  Int row, const ValueHolder& vh);
 
   // Get a value slice from a column in the table.
   // If the inc vector is empty, it defaults to all 1.
@@ -406,6 +424,18 @@ public:
 			      const IPosition& blc,
 			      const IPosition& trc,
 			      const IPosition& inc);
+  void getCellSliceVH (const String& columnName,
+                       Int row,
+                       const Vector<Int>& blc,
+                       const Vector<Int>& trc,
+                       const Vector<Int>& inc,
+                       const ValueHolder& vh);
+  void getCellSliceVHIP (const String& columnName,
+                         Int row,
+                         const IPosition& blc,
+                         const IPosition& trc,
+                         const IPosition& inc,
+                         const ValueHolder& vh);
   // </group>
 
   // Put a value into a column in the table.
@@ -611,18 +641,38 @@ private:
     {os << '"' << v << '"';}
   // </group>
 
+  // Sync table to get correct nr of rows and check the row number.
+  // It returns the nr of table rows.
+  Int64 getRowsCheck (const String& columnName,
+                      Int64 row, Int64 nrow, Int64 incr,
+                      const String& caller);
+
+  // Sync table to get correct nr of rows and check the row number.
+  // Fill the slicer with the possibly expanded blc,trc,inc.
+  // It returns the nr of table rows.
+  Int64 getRowsSliceCheck (Slicer& slicer,
+                           const String& columnName,
+                           Int64 row, Int64 nrow, Int64 incr,
+                           const IPosition& blc,
+                           const IPosition& trc,
+                           const IPosition& inc,
+                           const String& caller);
+
   // Check if the column name and row numbers are valid.
   // Return the recalculated nrow so that it does not exceed #rows.
   Int checkRowColumn (Table& table,
 		      const String& colName,
-		      Int rownr, Int nrow, Int incr,
-		      const Char* caller);
+		      Int64 rownr, Int64 nrow, Int64 incr,
+		      const String& caller);
 
   // Get values from the column.
   // Nrow<0 means till the end of the column.
   ValueHolder getValueFromTable (const String& colName, 
 				 Int rownr, Int nrow, Int incr,
 				 Bool isCell);
+  void getValueFromTable (const String& colName,
+                          Int rownr, Int nrow, Int incr,
+                          Bool isCell, const ValueHolder& vh);
 
   // Get value slices from the column.
   // Nrow<0 means till the end of the column.
@@ -630,6 +680,10 @@ private:
 				     const Slicer& slicer,
 				     Int rownr, Int nrow, Int incr,
 				     Bool isCell);
+  void getValueSliceFromTable(const String& colName, 
+                              const Slicer& slicer,
+                              Int rownr, Int nrow, Int incr,
+                              Bool isCell, const ValueHolder& vh);
 
   // Put values into the column.
   // Nrow<0 means till the end of the column.
@@ -715,6 +769,31 @@ private:
   // Optionally reverse the axes.
   static IPosition fillAxes (const IPosition&, Bool cOrder);
 
+  // Check if the new shape is still the same.
+  // <br> same:   0=first time;   1=still the same;   2=different
+  static void stillSameShape (Int& same, IPosition& shape,
+                              const IPosition& newShape);
+
+  // Copy the array contents of the record fields to a single array.
+  // This can only be done if the shape is constant.
+  template<typename T>
+  static Array<T> record2Array (const Record& rec)
+  {
+    if (rec.empty()) {
+      return Array<T>();
+    }
+    Array<T> tmp;
+    rec.get (0, tmp);
+    IPosition shp(tmp.shape());
+    shp.append (IPosition(1, rec.size()));
+    Array<T> arr(shp);
+    ArrayIterator<T> iter(arr, tmp.ndim());
+    for (uInt i=0; i<rec.size(); ++i, iter.next()) {
+      rec.get (i, iter.array());
+    }
+    return arr;
+  }
+
 
   //# The data members.
   Table  table_p;
@@ -722,6 +801,6 @@ private:
   Record calcResult_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

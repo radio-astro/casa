@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CombiParam.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: CombiParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_COMBIPARAM_TCC
+#define SCIMATH_COMBIPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/CombiParam.h>
+#include <casacore/scimath/Functionals/CombiParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T>
 CombiParam<T>::CombiParam() : 
@@ -83,5 +86,7 @@ uInt CombiParam<T>::addFunction(const Function<T> &newFunction) {
   return i;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

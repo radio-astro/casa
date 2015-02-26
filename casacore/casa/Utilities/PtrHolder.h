@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PtrHolder.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PtrHolder.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_PTRHOLDER_H
 #define CASA_PTRHOLDER_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Hold and delete pointers not deleted by object destructors
@@ -116,22 +116,18 @@ public:
     // <group>
     T *ptr() { return ptr_p; }
     const T *ptr() const { return ptr_p; }
-
-    T* operator ->() { return ptr_p; }
-
-    const T* operator ->() const { return ptr_p; }
-
     // </group>
 
     // Attempt to automatically release a pointer when required. If the
     // compiler can't figure it out, you can use the <src>ptr()</src>
     // member function directly.
-    // <group>
     operator T *() { return ptr_p; }
-    operator const T *() const { return ptr_p; }
+    operator T *() const { return ptr_p; }
     // </group>
 
-
+    // Make it possible to use -> on the pointer object.
+    T* operator->() const
+      { return ptr_p; }
 
     // See if the pointer points to a C-array.
     Bool isCArray() const {return isCarray_p;}
@@ -190,7 +186,7 @@ private:
 // </example>
 
 // <motivation>
-// <src>std::autoptr</src> is harder to use and its future is unclear.
+// <src>std::auto_ptr</src> is harder to use and its future is unclear.
 // <br>
 // <src>PtrHolder</src> is not fully inlined and has C-array overhead.
 // Furthermore the automatic conversion to a T* is dangerous, because the
@@ -235,12 +231,8 @@ public:
   // </group>
 
   // Make it possible to use -> on the pointer object.
-  // <group>
-  T* operator->()
+  T* operator->() const
     { return itsPtr; }
-  const T* operator->() const
-    { return itsPtr; }
-  // </group>
 
   // Get the pointer for use.
   // <group>
@@ -263,9 +255,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/PtrHolder.tcc>
+#include <casacore/casa/Utilities/PtrHolder.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

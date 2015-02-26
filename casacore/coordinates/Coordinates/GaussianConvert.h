@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GaussianConvert.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: GaussianConvert.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef COORDINATES_GAUSSIANCONVERT_H
 #define COORDINATES_GAUSSIANCONVERT_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Quantum;
 
@@ -65,7 +66,7 @@ template<class T> class Quantum;
 // </example>
 
 // <todo asof="1998/12/11">
-//  <li> Position angle signs require more thinking in aips++
+//  <li> Position angle signs require more thinking in Casacore
 // </todo>
 
 class GaussianConvert
@@ -151,6 +152,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

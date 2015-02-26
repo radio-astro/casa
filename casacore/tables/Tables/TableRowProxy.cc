@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRowProxy.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableRowProxy.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <tables/Tables/TableRowProxy.h>
-#include <tables/Tables/TableProxy.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Containers/Record.h>
-#include <tables/Tables/TableError.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/tables/Tables/TableRowProxy.h>
+#include <casacore/tables/Tables/TableProxy.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Arrays/Vector.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableRowProxy::TableRowProxy()
 : isWritable_p (False)
@@ -102,4 +102,4 @@ void TableRowProxy::put (uInt rownr, const Record& record,
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

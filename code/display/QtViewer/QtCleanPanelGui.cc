@@ -35,8 +35,8 @@
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LRegions/LCBox.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>

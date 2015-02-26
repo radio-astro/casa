@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegularFile.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RegularFile.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_REGULARFILE_H
 #define CASA_REGULARFILE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/OS/Path.h>
-#include <casa/OS/File.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/BasicSL/String.h>
 	
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Manipulate and get information about regular files
@@ -199,6 +199,6 @@ inline void RegularFile::move (const String& target, Bool overwrite)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -28,10 +28,10 @@
 #include <synthesis/MeasurementEquations/IPLatConvEquation.h>
 #include <synthesis/MeasurementEquations/LinearModel.h>
 #include <synthesis/MeasurementEquations/LatticeModel.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Array.h>

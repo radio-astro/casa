@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableCopy.cc 20668 2009-07-10 01:14:57Z Malte.Marquarding $
+//# $Id: tTableCopy.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables.h>
+#include <casacore/tables/Tables.h>
 #include <stdexcept>
 #include <iostream>
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 // Remove the dirname from the table name in an error message.

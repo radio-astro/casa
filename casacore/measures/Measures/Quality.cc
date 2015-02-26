@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quality.cc 21292 2012-11-28 14:58:19Z gervandiepen $
+//# $Id: Quality.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/aips.h>
-#include <measures/Measures/Quality.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/Quality.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Quality::QualityTypes Quality::type(Int qualityNumber)
 {
@@ -73,5 +73,5 @@ Vector<String> Quality::allNames(Bool includeUndefined) {
 	}
 	return names;
 }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

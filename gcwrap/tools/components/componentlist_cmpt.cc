@@ -43,7 +43,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/TabularSpectrum.h>
 #include <casa/Exceptions/Error.h>
-#include <casa/Containers/ContainerIO.h>
+#include <casa/BasicSL/STLIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Containers/Record.h>

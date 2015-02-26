@@ -29,7 +29,7 @@
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Images/PagedImage.h>
-#include <lattices/Lattices/LCLELMask.h>
+#include <lattices/LRegions/LCLELMask.h>
 
 #include <casa/namespace.h>
 

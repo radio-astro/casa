@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCExtension.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: WCExtension.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCExtension.h>
-#include <images/Regions/WCBox.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCExtension.h>
-#include <lattices/Lattices/LCStretch.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/WCExtension.h>
+#include <casacore/images/Regions/WCBox.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCExtension.h>
+#include <casacore/lattices/LRegions/LCStretch.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCExtension::WCExtension (const ImageRegion& region,
 			  const WCBox& extendBox)
@@ -247,5 +247,5 @@ WCExtension* WCExtension::fromRecord (const TableRecord& rec,
     return new WCExtension (True, regions);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

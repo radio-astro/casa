@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRow.cc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableRow.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROTableRow::ROTableRow()
 : itsRecord (0)
@@ -72,16 +72,12 @@ ROTableRow::ROTableRow (const ROTableRow& that)
 
 void ROTableRow::init()
 {
-    itsLastRow = new Int;
-    *itsLastRow = -1;
-    itsReread  = new Bool;
-    *itsReread = True;
+    itsLastRow = -1;
+    itsReread = True;
 }
 
 ROTableRow::~ROTableRow()
 {
-    delete itsLastRow;
-    delete itsReread;
     deleteObjects();
 }
 
@@ -95,10 +91,10 @@ void ROTableRow::copy (const ROTableRow& that)
 {
     if (this != &that) {
 	deleteObjects();
-	itsTable    = that.itsTable;
-	itsNrused   = that.itsNrused;
-        *itsLastRow = *that.itsLastRow;
-        *itsReread  = *that.itsReread;
+	itsTable   = that.itsTable;
+	itsNrused  = that.itsNrused;
+        itsLastRow = that.itsLastRow;
+        itsReread  = that.itsReread;
 	if (that.itsRecord != 0) {
 	    makeObjects (that.itsRecord->description());
 	}
@@ -427,7 +423,7 @@ void ROTableRow::makeObjects (const RecordDesc& description)
 const TableRecord& ROTableRow::get (uInt rownr, Bool alwaysRead) const
 {
     // Only read when needed.
-    if (Int(rownr) == *itsLastRow  &&  !itsReread  &&  !alwaysRead) {
+    if (Int64(rownr) == itsLastRow  &&  !itsReread  &&  !alwaysRead) {
 	return *itsRecord;
     }
     const RecordDesc& desc = itsRecord->description();
@@ -606,8 +602,8 @@ const TableRecord& ROTableRow::get (uInt rownr, Bool alwaysRead) const
 	    throw (TableError ("TableRow: unknown data type"));
 	}
     }
-    *itsLastRow = rownr;
-    *itsReread  = False;
+    itsLastRow = rownr;
+    itsReread  = False;
     return *itsRecord;
 }
 
@@ -615,8 +611,8 @@ const TableRecord& ROTableRow::get (uInt rownr, Bool alwaysRead) const
 // internal record. Be sure to reread when the same row is asked for.
 void ROTableRow::setReread (uInt rownr)
 {
-    if (Int(rownr) == *itsLastRow) {
-	*itsReread = True;
+    if (Int64(rownr) == itsLastRow) {
+	itsReread = True;
     }
 }
 
@@ -932,4 +928,4 @@ Bool TableRow::namesConform (const TableRecord& that) const
     return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

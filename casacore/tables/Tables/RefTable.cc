@@ -23,25 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 21451 2014-06-10 07:48:08Z gervandiepen $
+//# $Id: RefTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/RefTable.h>
-#include <tables/Tables/RefColumn.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableLock.h>
-#include <casa/Containers/SimOrdMapIO.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/OS/Path.h>
-#include <casa/BasicMath/Math.h>
-#include <tables/Tables/TableError.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/tables/Tables/RefTable.h>
+#include <casacore/tables/Tables/RefColumn.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/TableTrace.h>
+#include <casacore/casa/Containers/SimOrdMapIO.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RefTable::RefTable (AipsIO& ios, const String& name, uInt nrrow, int opt,
 		    const TableLock& lockOptions, const TSMOption& tsmOption)
@@ -58,6 +59,7 @@ RefTable::RefTable (AipsIO& ios, const String& name, uInt nrrow, int opt,
     noWrite_p = True;
     getRef (ios, opt, lockOptions, tsmOption);
     noWrite_p = False;
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 'o');
 }
 
 
@@ -77,6 +79,7 @@ RefTable::RefTable (BaseTable* btp, Bool order, uInt nrall)
     //# Get root table (will be parent if btp is an reference table).
     //# Link to root table (ie. increase its reference count).
     baseTabPtr_p->link();
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 's');
 }
 
 RefTable::RefTable (BaseTable* btp, const Vector<uInt>& rownrs)
@@ -104,6 +107,7 @@ RefTable::RefTable (BaseTable* btp, const Vector<uInt>& rownrs)
     //# Link to the root table.
     rowOrd_p = btp->adjustRownrs (nrrow_p, rowStorage_p, True);
     baseTabPtr_p->link();
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 's');
 }
 
 RefTable::RefTable (BaseTable* btp, const Vector<Bool>& mask)
@@ -129,6 +133,7 @@ RefTable::RefTable (BaseTable* btp, const Vector<Bool>& mask)
     //# Link to the root table.
     rowOrd_p = btp->adjustRownrs (nrrow_p, rowStorage_p, True);
     baseTabPtr_p->link();
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 's');
 }
 
 RefTable::RefTable (BaseTable* btp, const Vector<String>& columnNames)
@@ -155,6 +160,7 @@ RefTable::RefTable (BaseTable* btp, const Vector<String>& columnNames)
     rows_p = getStorage (rowStorage_p);
     //# Link to the root table.
     baseTabPtr_p->link();
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 'p');
 }
 
 
@@ -166,6 +172,7 @@ RefTable::~RefTable()
 	    writeRefTable (True);
 	}
     }
+    TableTrace::traceRefTable (baseTabPtr_p->tableName(), 'c');
     //# Delete all RefColumn objects.
     for (uInt i=0; i<colMap_p.ndefined(); i++) {
 	delete colMap_p.getVal(i);
@@ -280,6 +287,7 @@ void RefTable::writeRefTable (Bool)
     //# Write name and type of root and write object data.
     //# Do this only when something has changed.
     if (changed_p) {
+        TableTrace::traceRefTable (baseTabPtr_p->tableName(), 'w');
 	AipsIO ios;
 	writeStart (ios, True);
 	ios << "RefTable";
@@ -297,7 +305,7 @@ void RefTable::writeRefTable (Bool)
 	ios << baseTabPtr_p->nrow();
 	ios << rowOrd_p;
         ios << nrrow_p;
-        // (CAS-7020) Do not write more than 2**20 rownrs at once.
+        // Do not write more than 2**20 rownrs at once (CAS-7020).
         uInt done = 0;
         while (done < nrrow_p) {
           uInt todo = std::min(nrrow_p-done, 1048576u);
@@ -334,7 +342,7 @@ void RefTable::getRef (AipsIO& ios, int opt, const TableLock& lockOptions,
     //# Resize the block of rownrs and read them in.
     rowStorage_p.resize (nrrow);
     rows_p = getStorage (rowStorage_p);
-    // (CAS-7020) Do not read more than 2**20 rows at once.
+    // Do not read more than 2**20 rows at once (CAS-7020).
     uInt done = 0;
     while (done < nrrow) {
       uInt todo = std::min(nrrow_p-done, 1048576u);
@@ -985,4 +993,4 @@ void RefTable::refNot (uInt nr, const uInt* inx, uInt nrtot)
     changed_p = True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

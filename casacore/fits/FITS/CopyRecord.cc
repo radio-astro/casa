@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CopyRecord.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: CopyRecord.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/CopyRecord.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Containers/RecordDesc.h>
-#include <tables/Tables.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/fits/FITS/CopyRecord.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/tables/Tables.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 CopyRecordToTable::CopyRecordToTable(Table &outputTable,
                                      const RecordInterface &inputBuffer,
@@ -967,5 +967,5 @@ void CopyRecordToRecord::copy()
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

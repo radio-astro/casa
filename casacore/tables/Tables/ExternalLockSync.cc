@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExternalLockSync.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ExternalLockSync.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <tables/Tables/ExternalLockSync.h>
+#include <casacore/tables/Tables/ExternalLockSync.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ExternalLockSync::ExternalLockSync (const TableLock& lockOptions)
 : itsLock  (lockOptions, releaseCallBack, this),
@@ -63,5 +63,5 @@ MemoryIO* ExternalLockSync::releaseCallBack (void* lockSyncObject, Bool always)
     return (*(ExternalLockSync*)lockSyncObject).doReleaseCallBack (always);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

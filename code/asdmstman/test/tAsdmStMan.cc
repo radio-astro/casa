@@ -31,8 +31,8 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/DataManAccessor.h>
+#include <tables/DataMan/StandardStMan.h>
+#include <tables/DataMan/DataManAccessor.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ScalarColumn.h>

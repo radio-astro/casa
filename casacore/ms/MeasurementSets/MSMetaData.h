@@ -23,17 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: MSMetaData.h 21562 2015-02-16 07:03:44Z gervandiepen $
 
 #ifndef MS_MSMETADATA_H
 #define MS_MSMETADATA_H
 
-#include <casa/Quanta/QVector.h>
-#include <measures/Measures/MPosition.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/QVector.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <map>
 
-#include <tr1/memory>
-
-namespace casa {
+namespace casacore {
 
 template <class T> class ArrayColumn;
 

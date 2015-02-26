@@ -32,13 +32,13 @@
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/Lattice.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <display/DisplayDatas/LatticePADD.h>
-#include <lattices/Lattices/LatticeHistograms.h>
+#include <lattices/LatticeMath/LatticeHistograms.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageInterface.h>

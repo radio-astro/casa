@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: tImageStatistics.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
 
-#include <images/Images/ImageStatistics.h>
-#include <images/Images/FITSImage.h>
-#include <casa/namespace.h>
+#include <casacore/images/Images/ImageStatistics.h>
+#include <casacore/images/Images/FITSImage.h>
+#include <casacore/casa/namespace.h>
 
 void writeTestString(const String& test) {
     cout << "\n" << "*** " << test << " ***" << endl;

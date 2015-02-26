@@ -37,9 +37,9 @@
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledStManAccessor.h>
-#include <tables/Tables/StandardStManAccessor.h>
-#include <tables/Tables/IncrStManAccessor.h>
+#include <tables/DataMan/TiledStManAccessor.h>
+#include <tables/DataMan/StandardStManAccessor.h>
+#include <tables/DataMan/IncrStManAccessor.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/MVTime.h>

@@ -23,16 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AutoDiffIO.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: AutoDiffIO.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_AUTODIFFIO_TCC
+#define SCIMATH_AUTODIFFIO_TCC
 
 //# Includes
-#include <scimath/Mathematics/AutoDiffIO.h>
-#include <scimath/Mathematics/AutoDiff.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/iostream.h>
+#include <casacore/scimath/Mathematics/AutoDiffIO.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ostream &operator<<(ostream &os, const AutoDiff<T> &ad) {
@@ -42,5 +45,7 @@ ostream &operator<<(ostream &os, const AutoDiff<T> &ad) {
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

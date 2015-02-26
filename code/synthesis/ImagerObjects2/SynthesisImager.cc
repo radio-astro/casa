@@ -45,7 +45,7 @@
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Path.h>
 
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 
 #include <measures/Measures/MeasTable.h>
 

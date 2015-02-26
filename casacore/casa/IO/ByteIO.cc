@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ByteIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ByteIO.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/IO/ByteIO.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/IO/ByteIO.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ByteIO::~ByteIO()
 {}
@@ -42,5 +42,20 @@ void ByteIO::reopenRW()
     }
 }
 
-} //# NAMESPACE CASA - END
+void ByteIO::flush()
+{}
+
+void ByteIO::fsync()
+{}
+
+void ByteIO::resync()
+{}
+
+String ByteIO::fileName() const
+{
+  return String();
+}
+
+
+} //# NAMESPACE CASACORE - END
 

@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSDopplerUtil.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSDopplerUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSDOPPLERUTIL_H
 #define MS_MSDOPPLERUTIL_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A utility class for MS Doppler tracking information
@@ -100,7 +100,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

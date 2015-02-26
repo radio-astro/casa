@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedLattice.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MaskedLattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_MASKEDLATTICE_H
 #define LATTICES_MASKEDLATTICE_H
 
 
 //# Includes
-#include <lattices/Lattices/Lattice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/Lattice.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LatticeRegion;
@@ -322,9 +323,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/MaskedLattice.tcc>
+#include <casacore/lattices/Lattices/MaskedLattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

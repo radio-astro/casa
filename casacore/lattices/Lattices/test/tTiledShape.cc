@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTiledShape.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tTiledShape.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for TiledShape class.
 // </summary>

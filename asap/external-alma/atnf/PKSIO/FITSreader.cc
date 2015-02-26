@@ -37,8 +37,8 @@
 //#---------------------------------------------------------------------------
 
 #include <atnf/PKSIO/FITSreader.h>
-
 #include <algorithm>
+#include <cstdlib>
 
 using namespace std;
 

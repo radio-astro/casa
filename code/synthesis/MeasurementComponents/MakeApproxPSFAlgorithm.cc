@@ -31,10 +31,10 @@
 #include <casa/Arrays/Array.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/PagedArray.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <casa/OS/File.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>

@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SDFieldHandler.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: SDFieldHandler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <msfits/MSFits/SDFieldHandler.h>
+#include <casacore/msfits/MSFits/SDFieldHandler.h>
 
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/BasicMath/Math.h>
-#include <tables/Tables/ColumnsIndex.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 SDFieldHandler::SDFieldHandler() 
     : msField_p(0), msFieldCols_p(0), rownr_p(-1), index_p(0)
@@ -113,8 +113,7 @@ void SDFieldHandler::fill(const Record &, const String &name, Int directionRefTy
     // don't bother unless there is something there
     if (msField_p) {
 	Bool found = False;
-	Bool checkDir, checkPhase, checkRef;
-	checkDir = True;
+	Bool checkPhase, checkRef;
 	checkPhase = checkRef = False;
 	Matrix<Double> dirPoly = directionPoly;
 	Matrix<Double> phasePoly = directionPoly;
@@ -375,5 +374,5 @@ void SDFieldHandler::initRow(Vector<Bool> &handledCols, const Record &row)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

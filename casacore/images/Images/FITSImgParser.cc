@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImgParser.cc  mkuemmel $
+//# $Id: FITSImgParser.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/FITSImgParser.h>
-#include <fits/FITS/hdu.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <casa/OS/File.h>
-#include <casa/Utilities/ValType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/FITSImgParser.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/Utilities/ValType.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //const char *FITSImgParser::storeKwords_p[] = {"HDUTYPE", "SCIDATA", "ERRDATA", "QUALDATA",
 //			"ERRTYPE", "QUALTYPE", "QUALMASK"};
@@ -150,9 +150,8 @@ String FITSImgParser::get_extlist_string(const String &delimiter, const String &
 
 	// add the individual extensions
 	for (uInt index=0; index < numhdu_p; index++){
-	  if (extensions_p[index].has_data()){
-	    bigString += fitsmarker + extensions_p[index].get_extexpr() + delimiter;
-	  }
+		if (extensions_p[index].has_data())
+			bigString += fitsmarker + extensions_p[index].get_extexpr() + delimiter;
 	}
 
 	// return the String
@@ -857,14 +856,10 @@ Bool FITSExtInfo::operator==(const FITSExtInfo &extinfo)
 
 String FITSExtInfo::get_extexpr(void)
 {
-	String extexpr=name_p + "[";
-
-	ostringstream oss;
-	oss << extindex_p;
-	extexpr += String(oss);
+        String extexpr=name_p + "[" + String::toString(extindex_p);
 
 	if (extname_p.length() > 0){
-		extexpr += ":" + extname_p;
+		extexpr += ':' + extname_p;
 
 		if (extversion_p > -1){
 		ostringstream os;
@@ -899,5 +894,5 @@ void FITSExtInfo::add_kwlist(FitsKeywordList &kwlist){
 	}
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

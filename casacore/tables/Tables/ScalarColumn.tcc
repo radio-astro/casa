@@ -23,20 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarColumn.tcc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: ScalarColumn.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/BaseColumn.h>
-#include <tables/Tables/RefRows.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Utilities/ValTypeId.h>
-#include <casa/BasicSL/String.h>
-#include <tables/Tables/TableError.h>
+#ifndef TABLES_SCALARCOLUMN_TCC
+#define TABLES_SCALARCOLUMN_TCC
+
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/BaseColumn.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Utilities/ValTypeId.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ScalarColumn<T>::ScalarColumn()
@@ -297,4 +300,6 @@ void ScalarColumn<T>::putColumn (const ScalarColumn<T>& that)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
+#endif

@@ -23,24 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayColumn.tcc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: ArrayColumn.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/ArrayColumnFunc.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/RefRows.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayIter.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/ValTypeId.h>
-#include <tables/Tables/TableError.h>
+#ifndef TABLES_ARRAYCOLUMN_TCC
+#define TABLES_ARRAYCOLUMN_TCC
 
-#include <cassert>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/ArrayColumnFunc.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayIter.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/ValTypeId.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ArrayColumn<T>::ArrayColumn()
@@ -95,6 +97,13 @@ template<class T>
 TableColumn* ArrayColumn<T>::clone() const
 {
     return new ArrayColumn<T> (*this);
+}
+
+template<class T>
+ArrayColumn<T>& ArrayColumn<T>::operator= (const ArrayColumn<T>& that)
+{
+  reference (that);
+  return (*this);
 }
 
 template<class T>
@@ -309,12 +318,12 @@ ArrayColumn<T>::getColumnCells (const RefRows & rows,
     // Thus we have two different ways of walking through the selected rows.
 
     Bool useSlicing = rows.isSliced();
-    int row;
-    int increment;
+    int row=0;
+    int increment=1;
 
     if (useSlicing){
 
-        assert (rowNumbers.nelements() == 3);
+        AlwaysAssert (rowNumbers.nelements() == 3, AipsError);
 
         increment = rowNumbers [2];
         row = rowNumbers [0] - increment; // allows preincrement before first use
@@ -607,9 +616,33 @@ void ArrayColumn<T>::getColumnCells (const RefRows& rownrs,
     arrshp.append (IPosition(1,nrrow));
     // Check array conformance and resize if needed and possible.
     checkShape (arrshp, arr, resize, "ArrayColumn::getColumnCells");
-    baseColPtr_p->getColumnSliceCells (rownrs, Slicer(arrblc, arrtrc, arrinc,
-						      Slicer::endIsLast),
-				       &arr);
+    if (!arr.empty()) {
+      //# Ask if we can access the column slice (if that is not known yet).
+      if (reaskAccessColumnSlice_p) {
+	canAccessColumnSlice_p = baseColPtr_p->canAccessColumnSlice
+	                                       (reaskAccessColumnSlice_p);
+      }
+      //# Access the column slice if possible.
+      //# Otherwise fill the entire array by looping through all cells.
+      Slicer defSlicer (arrblc, arrtrc, arrinc, Slicer::endIsLast);
+      if (canAccessColumnSlice_p) {
+        baseColPtr_p->getColumnSliceCells (rownrs, defSlicer, &arr);
+      } else {
+        ArrayIterator<T> iter(arr, arr.ndim()-1);
+        RefRowsSliceIter rowsIter(rownrs);
+        while (! rowsIter.pastEnd()) {
+          uInt rownr = rowsIter.sliceStart();
+          uInt end   = rowsIter.sliceEnd();
+          uInt incr  = rowsIter.sliceIncr();
+          while (rownr <= end) {
+            getSlice (rownr, defSlicer, iter.array());
+            iter.next();
+            rownr += incr;
+          }
+          rowsIter++;
+        }
+      }
+    }
 }
 
 
@@ -743,13 +776,13 @@ void ArrayColumn<T>::putColumnCells (const RefRows & rows,
     // row numbers.  When sliced, rowNumbers is a triple: (start, nRows, increment).
     // Thus we have two different ways of walking through the selected rows.
 
-    int row;
-    int increment;
+    int row=0;
+    int increment=1;
     Bool useSlices = rows.isSliced();
 
     if (useSlices){
 
-        assert (rowNumbers.nelements() == 3);
+        AlwaysAssert (rowNumbers.nelements() == 3, AipsError);
 
         increment = rowNumbers [2];
         row = rowNumbers [0] - increment; // allows increment before use inside loop
@@ -1048,4 +1081,6 @@ void ArrayColumn<T>::putColumn (const ArrayColumn<T>& that)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
+#endif

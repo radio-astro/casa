@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableKeywords.cc 21168 2012-01-04 08:11:03Z gervandiepen $
+//# $Id: tTableKeywords.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Directory.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/iostream.h>
 #include <unistd.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // This program tests some aspects of the table keywords, mainly
 // if writing them and reading them back works fine.
 // It was originally written by Mark Wieringa to track down a problem.
@@ -134,7 +134,7 @@ void readFromOtherDir()
     AlwaysAssertExit (tab.keywordSet().isDefined ("SubTab2"));
     Table subtab3 = tab.keywordSet().asTable ("SubTab2");
     AlwaysAssertExit (subtab3.nrow() == 3);
-    ROScalarColumn<Int> col(tab, "RowNr");
+    ScalarColumn<Int> col(tab, "RowNr");
     Table subtab2 = col.keywordSet().asTable ("SubTab3");
     AlwaysAssertExit (subtab2.nrow() == 2);
     Table subtab4 = subtab3.keywordSet().asTable ("SubTab4");

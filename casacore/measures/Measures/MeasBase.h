@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasBase.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MeasBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASBASE_H
 #define MEASURES_MEASBASE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/Measure.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/Measure.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class Vector;
@@ -171,9 +171,9 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <measures/Measures/MeasBase.tcc>
+#include <casacore/measures/Measures/MeasBase.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

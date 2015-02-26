@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionalProxy.cc 20824 2009-11-20 04:55:09Z Malte.Marquarding $
+//# $Id: FunctionalProxy.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
 //# Includes
-#include <scimath/Functionals/FunctionalProxy.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/scimath/Functionals/FunctionalProxy.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Constructors
 FunctionalProxy::FunctionalProxy(const Record& rec, Int type) : type_(type)
 {

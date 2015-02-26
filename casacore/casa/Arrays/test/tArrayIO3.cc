@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayIO3.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tArrayIO3.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/sstream.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/sstream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // This test program tests the ArrayIO istream extract functions.
 // It reads from stdin (the test version from tArraIO3.in) and prints
 // the result.

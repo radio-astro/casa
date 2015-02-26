@@ -50,10 +50,10 @@
 
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/LatticeCache.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <msvis/MSVis/VisBuffer2.h>
 #include <msvis/MSVis/VisibilityIterator2.h>

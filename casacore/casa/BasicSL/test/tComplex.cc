@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tComplex.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: tComplex.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/IComplex.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/IComplex.h>
 
-#include <casa/Utilities/Assert.h>
-#include <casa/stdio.h>
-#include <casa/iostream.h>
-#include <casa/fstream.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/stdio.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/fstream.h>
 #include <unistd.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
 
   Complex f1(23.9,1.8), f2(9.2,8.2), f3(2.7,1.8), fo(237.561,0.9312), fi;

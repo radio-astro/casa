@@ -37,7 +37,7 @@
 #include <casa/Arrays/Cube.h>
 #include <casa/Containers/OrderedMap.h>
 #include <casa/Containers/MapIO.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual const ROArrayColumn<Bool>& flag() {return ctCols_p->flag();}
 
-    virtual const Bool flagRow(const Int& i) {return allTrue(ctCols_p->flag()(i));}
+    virtual Bool flagRow(const Int& i) {return allTrue(ctCols_p->flag()(i));}
     
     // For now, return timeEPQuant() even for exposureQuant.
     virtual const ROScalarQuantColumn<Double>& exposureQuant() {return ctCols_p->timeEPQuant();};

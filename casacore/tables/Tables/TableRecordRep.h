@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TableRecordRep.h 20969 2010-09-27 12:45:04Z gervandiepen $
+//# $Id: TableRecordRep.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef TABLES_TABLERECORDREP_H
 #define TABLES_TABLERECORDREP_H
 
-#include <casa/aips.h>
-#include <casa/Containers/RecordRep.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordRep.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableRecord;
@@ -288,6 +288,6 @@ inline void TableRecordRep::renameField (const String& newName, Int whichField)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

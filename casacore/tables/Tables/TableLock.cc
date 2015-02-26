@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLock.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLock.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/TableLock.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableLock::TableLock (LockOption option)
 : itsOption            (option),
@@ -80,16 +80,21 @@ TableLock& TableLock::operator= (const TableLock& that)
 
 void TableLock::init()
 {
+#ifdef AIPS_TABLE_NOLOCKING
+  itsOption = NoLocking;
+#else
   if (itsOption == DefaultLocking) {
     itsOption           = AutoLocking;
-    //// defaultlocking does not work in all cases it seems;
-    ////  commented below till fixed
     itsIsDefaultLocking = True;
   } else if (itsOption == AutoNoReadLocking) {
     itsOption      = AutoLocking;
     itsReadLocking = False;
   } else if (itsOption == UserNoReadLocking) {
     itsOption      = UserLocking;
+    itsReadLocking = False;
+  }
+#endif
+  if (itsOption == NoLocking) {
     itsReadLocking = False;
   }
 }
@@ -116,5 +121,14 @@ void TableLock::merge (const TableLock& that)
   }
 }
 
-} //# NAMESPACE CASA - END
+Bool TableLock::lockingDisabled()
+{
+#ifdef AIPS_TABLE_NOLOCKING
+  return True;
+#else
+  return False;
+#endif
+}
+
+} //# NAMESPACE CASACORE - END
 

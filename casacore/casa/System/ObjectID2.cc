@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectID2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ObjectID2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/System/ObjectID.h>
-#include <casa/Containers/Block.h>
-#include <casa/stdio.h>                  // needed for sprintf
+#include <casacore/casa/System/ObjectID.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/stdio.h>                  // needed for sprintf
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt hashFunc(const ObjectID &key)
 {
@@ -84,5 +84,5 @@ String ObjectID::extractIDs (Block<ObjectID>& objectIDs,
     return result;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

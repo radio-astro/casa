@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tByteSink.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tByteSink.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/iostream.h>
-#include <casa/IO/ByteSink.h>
-#include <casa/IO/ByteSource.h>
-#include <casa/IO/RegularFileIO.h>
-#include <casa/IO/CanonicalIO.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/Path.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/IO/ByteSink.h>
+#include <casacore/casa/IO/ByteSource.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/IO/CanonicalIO.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/Path.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 const Int nrOfTests = 1;
 
 int main ()

@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slice.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Slice.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   IPosition Slice::checkSlices (Vector<Vector<Slice> >& slices, Slicer& first,
                                 const IPosition& shape)
@@ -74,4 +74,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return result;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

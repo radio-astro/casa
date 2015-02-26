@@ -36,7 +36,7 @@
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Functionals/CompoundFunction.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
-#include <lattices/Lattices/LatticeStatsBase.h>
+#include <lattices/LatticeMath/LatticeStatsBase.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Logging/LogIO.h> 
 #include <casa/Utilities/Assert.h>

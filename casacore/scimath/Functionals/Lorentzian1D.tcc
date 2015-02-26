@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lorentzian1D.tcc 19879 2010-02-15 12:52:50Z Wataru.Kawasaki $
+//# $Id: Lorentzian1D.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_LORENTZIAN1D_TCC
+#define SCIMATH_LORENTZIAN1D_TCC
 
 //# Includes
-#include <scimath/Functionals/Lorentzian1D.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Lorentzian1D.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -42,5 +45,7 @@ T Lorentzian1D<T>::eval(typename Function1D<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

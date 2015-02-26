@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseColumn.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: BaseColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_BASECOLUMN_H
 #define TABLES_BASECOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <casa/Utilities/Compare.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/casa/Utilities/Compare.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/BasicSL/Complex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class BaseColumnDesc;
@@ -251,7 +251,7 @@ public:
 
     // Get the value from the row and convert it to the required type.
     // This can only be used for scalar columns with a standard data type.
-    // Note that an unsigned integer caanot be converted to a signed integer
+    // Note that an unsigned integer cannot be converted to a signed integer
     // with the same length. So only Int64 can handle all integer values.
     // <group>
     void getScalar (uInt rownr, Bool& value) const;
@@ -343,6 +343,6 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

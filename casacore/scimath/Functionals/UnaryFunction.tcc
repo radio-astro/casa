@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnaryFunction.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: UnaryFunction.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/UnaryFunction.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
+#ifndef SCIMATH_UNARYFUNCTION_TCC
+#define SCIMATH_UNARYFUNCTION_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/UnaryFunction.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -44,5 +47,7 @@ T UnaryFunction<T>::eval(typename Function<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

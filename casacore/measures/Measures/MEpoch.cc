@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MEpoch.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MEpoch.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Register.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 MEpoch::MEpoch() : 
@@ -176,6 +176,7 @@ void MEpoch::checkTypes() const {
 }
 
 void MEpoch::checkMyTypes() {
+  // Multiple threads could execute this, but that is harmless.
   static Bool first(True);
   if (first) {
     first = False;
@@ -267,5 +268,5 @@ Measure *MEpoch::clone() const {
   return (new MEpoch(*this));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

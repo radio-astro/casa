@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelectionKeywords.h 20838 2009-12-01 10:10:55Z gervandiepen $
+//# $Id: MSSelectionKeywords.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTIONKEYWORDS_H
 #define MS_MSSELECTIONKEYWORDS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class K, class V> class SimpleOrderedMap;
 template <class T> class Block;
@@ -253,6 +253,6 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

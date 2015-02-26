@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDataType.cc 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: tDataType.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Utilities/DataType.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/sstream.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void simpleTests()
 {
     // First check the << operator

@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CompiledParam.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: CompiledParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_COMPILEDPARAM_TCC
+#define SCIMATH_COMPILEDPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/CompiledParam.h>
-#include <scimath/Functionals/FuncExpression.h>
+#include <casacore/scimath/Functionals/CompiledParam.h>
+#include <casacore/scimath/Functionals/FuncExpression.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T>
 CompiledParam<T>::CompiledParam() : 
@@ -85,5 +88,7 @@ Bool CompiledParam<T>::setFunction(const String &newFunction) {
   return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

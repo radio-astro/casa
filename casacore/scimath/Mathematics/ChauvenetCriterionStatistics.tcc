@@ -22,14 +22,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/ChauvenetCriterionStatistics.h>
+#ifndef SCIMATH_CHAUVENETCRITERIONSTATISTICS_TCC
+#define SCIMATH_CHAUVENETCRITERIONSTATISTICS_TCC
 
-#include <scimath/Mathematics/StatisticsIncrementer.h>
-#include <scimath/Mathematics/StatisticsUtilities.h>
-#include <scimath/Mathematics/ZScoreCalculator.h>
+#include <casacore/scimath/Mathematics/ChauvenetCriterionStatistics.h>
 
-namespace casa {
+#include <casacore/scimath/Mathematics/StatisticsIncrementer.h>
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/ZScoreCalculator.h>
+
+namespace casacore {
 
 template <class AccumType, class InputIterator, class MaskIterator>
 ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::ChauvenetCriterionStatistics(
@@ -105,3 +109,5 @@ void ChauvenetCriterionStatistics<AccumType, InputIterator, MaskIterator>::_setR
 }
 
 }
+
+#endif

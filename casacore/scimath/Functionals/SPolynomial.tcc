@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SPolynomial.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: SPolynomial.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_SPOLYNOMIAL_TCC
+#define SCIMATH_SPOLYNOMIAL_TCC
 
 //# Includes
-#include <scimath/Functionals/SPolynomial.h>
+#include <casacore/scimath/Functionals/SPolynomial.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -46,5 +49,7 @@ T SPolynomial<T>::eval(typename Function<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

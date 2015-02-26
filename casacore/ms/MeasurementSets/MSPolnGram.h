@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolnGram.h 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSPolnGram.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSPOLNGRAM_H
 #define MS_MSPOLNGRAM_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSDataDescIndex.h>
-#include <ms/MeasurementSets/MSPolIndex.h>
-#include <casa/Containers/OrderedMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSDataDescIndex.h>
+#include <casacore/ms/MeasurementSets/MSPolIndex.h>
+#include <casacore/casa/Containers/OrderedMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Forward Declarations
   class MeasurementSet;
@@ -83,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // Give the table expression node.
   const TableExprNode *msPolnGramParseNode();
-  const void msPolnGramParseDeleteNode();
+  void msPolnGramParseDeleteNode();
   
   // Give the current position in the string.
   // This can be used when parse errors occur.
@@ -91,6 +92,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // </group>
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

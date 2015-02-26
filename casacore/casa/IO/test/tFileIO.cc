@@ -23,19 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFileIO.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tFileIO.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/IO/RegularFileIO.h>
-#include <casa/IO/FiledesIO.h>
-#include <casa/IO/LargeRegularFileIO.h>
-#include <casa/IO/LargeFiledesIO.h>
-#include <casa/OS/Timer.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/IO/FiledesIO.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main (int argc, const char* argv[])
 {
     int nr = 100;
@@ -77,8 +75,8 @@ int main (int argc, const char* argv[])
 	    file1.write (leng, buf);
 	}
 	timer.show ("RegularFileIO write");
-	int fd = FiledesIO::create ("tFileIO_tmp.dat1");
-	FiledesIO file2 (fd, "");
+	int fd2 = FiledesIO::create ("tFileIO_tmp.dat1");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -87,8 +85,9 @@ int main (int argc, const char* argv[])
 	    file2.write (leng, buf);
 	}
 	timer.show ("FiledesIO     write");
-	fsync(fd);
+	fsync(fd2);
 	timer.show ("FiledesIO     +sync");
+        FiledesIO::close (fd2);
     }
     {
 	RegularFileIO file1(RegularFile("tFileIO_tmp.dat1"),
@@ -102,7 +101,8 @@ int main (int argc, const char* argv[])
 	    if (buf[0] != 0) cout << "mismatch" << endl;
 	}
 	timer.show ("RegularFileIO read ");
-	FiledesIO file2 (FiledesIO::open ("tFileIO_tmp.dat1"), "");
+	int fd2 = FiledesIO::open ("tFileIO_tmp.dat1");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -112,9 +112,10 @@ int main (int argc, const char* argv[])
 	    if (buf[0] != 0) cout << "mismatch" << endl;
 	}
 	timer.show ("FiledesIO     read ");
+        FiledesIO::close (fd2);
     }
     {
-	LargeRegularFileIO file1(RegularFile("tFileIO_tmp.dat2"),
+	RegularFileIO file1(RegularFile("tFileIO_tmp.dat2"),
 				 ByteIO::New, size);
 	Timer timer;
 	for (i=0; i<nr; i++) {
@@ -124,8 +125,8 @@ int main (int argc, const char* argv[])
 	    file1.write (leng, buf);
 	}
 	timer.show ("LargeRegularFileIO write");
-	int fd = LargeFiledesIO::create ("tFileIO_tmp.dat2");
-	LargeFiledesIO file2 (fd, "");
+	int fd2 = FiledesIO::create ("tFileIO_tmp.dat2");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -134,11 +135,12 @@ int main (int argc, const char* argv[])
 	    file2.write (leng, buf);
 	}
 	timer.show ("LargeFiledesIO     write");
-	fsync(fd);
+	fsync(fd2);
 	timer.show ("LargeFiledesIO     +sync");
+        FiledesIO::close (fd2);
     }
     {
-	LargeRegularFileIO file1(RegularFile("tFileIO_tmp.dat2"),
+	RegularFileIO file1(RegularFile("tFileIO_tmp.dat2"),
 				 ByteIO::Old, size);
 	Timer timer;
 	for (i=0; i<nr; i++) {
@@ -148,7 +150,8 @@ int main (int argc, const char* argv[])
 	    file1.read (leng, buf);
 	}
 	timer.show ("LargeRegularFileIO read ");
-	LargeFiledesIO file2 (LargeFiledesIO::open ("tFileIO_tmp.dat2"), "");
+	int fd2 = FiledesIO::open ("tFileIO_tmp.dat2");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -157,6 +160,7 @@ int main (int argc, const char* argv[])
 	    file2.read (leng, buf);
 	}
 	timer.show ("LargeFiledesIO     read ");
+	FiledesIO::close (fd2);
     }
 
     {
@@ -170,7 +174,8 @@ int main (int argc, const char* argv[])
 	    file1.read (leng, buf);
 	}
 	timer.show ("RegularFileIO large ");
-	FiledesIO file2 (FiledesIO::open ("tFileIO_tmp.dat2"), "");
+	int fd2 = FiledesIO::open ("tFileIO_tmp.dat2");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -179,10 +184,11 @@ int main (int argc, const char* argv[])
 	    file2.read (leng, buf);
 	}
 	timer.show ("FiledesIO     large");
+        FiledesIO::close (fd2);
     }
     {
-	LargeRegularFileIO file1(RegularFile("tFileIO_tmp.dat1"),
-				 ByteIO::Old, size);
+	RegularFileIO file1(RegularFile("tFileIO_tmp.dat1"),
+                            ByteIO::Old, size);
 	Timer timer;
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -191,7 +197,8 @@ int main (int argc, const char* argv[])
 	    file1.read (leng, buf);
 	}
 	timer.show ("LargeRegularFileIO small");
-	LargeFiledesIO file2 (LargeFiledesIO::open ("tFileIO_tmp.dat1"), "");
+	int fd2 = FiledesIO::open ("tFileIO_tmp.dat1");
+	FiledesIO file2 (fd2, "");
 	timer.mark();
 	for (i=0; i<nr; i++) {
 	    if (seek  &&  i%3 == 0) {
@@ -200,6 +207,7 @@ int main (int argc, const char* argv[])
 	    file2.read (leng, buf);
 	}
 	timer.show ("LargeFiledesIO     small");
+        FiledesIO::close (fd2);
     }
 
     delete [] buf;

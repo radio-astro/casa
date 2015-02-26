@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableRow.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTableRow.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
 
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ScaRecordColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ScaRecordColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for the class (RO)TableRow
 // </summary>
@@ -120,13 +120,13 @@ void a (Bool)
     row.putMatchingFields (9, rec);
     AlwaysAssertExit (row.rowNumber() == -1);
 
-    ROScalarColumn<Int> colab (tab, "ab");
-    ROScalarColumn<uInt> colad (tab, "ad");
-    ROScalarColumn<DComplex> colag (tab, "ag");
-    ROScalarColumn<TableRecord> colrec (tab, "rec");
-    ROArrayColumn<float> colarr1 (tab, "arr1");
-    ROArrayColumn<String> colarr2 (tab, "arr2");
-    ROArrayColumn<float> colarr3 (tab, "arr3");
+    ScalarColumn<Int> colab (tab, "ab");
+    ScalarColumn<uInt> colad (tab, "ad");
+    ScalarColumn<DComplex> colag (tab, "ag");
+    ScalarColumn<TableRecord> colrec (tab, "rec");
+    ArrayColumn<float> colarr1 (tab, "arr1");
+    ArrayColumn<String> colarr2 (tab, "arr2");
+    ArrayColumn<float> colarr3 (tab, "arr3");
     Int abval;
     uInt adval;
     DComplex agval;
@@ -303,9 +303,9 @@ void c (Int nrow)
     // Now time how long it takes to read it back as columns and
     // as rows.
     timer.mark();
-    ROScalarColumn<Int> colab (tab, "ab");
-    ROScalarColumn<uInt> colad (tab, "ad");
-    ROScalarColumn<DComplex> colag (tab, "ag");
+    ScalarColumn<Int> colab (tab, "ab");
+    ScalarColumn<uInt> colad (tab, "ad");
+    ScalarColumn<DComplex> colag (tab, "ag");
     Int abval;
     uInt adval;
     DComplex agval;
@@ -317,7 +317,7 @@ void c (Int nrow)
     timer.show ("scalar column");
     
     timer.mark();
-    ROArrayColumn<float> colarr1 (tab, "arr1");
+    ArrayColumn<float> colarr1 (tab, "arr1");
     Cube<float> arrval(IPosition(3,2,3,4));
     for (i=0; i<nrow; i++) {
 	colarr1.get (i, arrval, True);

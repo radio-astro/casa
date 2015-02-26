@@ -24,15 +24,15 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: $
+    $Id: MSStateGram.yy 21521 2014-12-10 08:06:42Z gervandiepen $
 */
 
 %{
 #include <errno.h>
-  using namespace casa;
+  using namespace casacore;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
   const TableExprNode* node;
@@ -78,7 +78,7 @@
 %nonassoc EQ EQASS GT GE LT LE NE COMMA DASH AMPERSAND
 
 %{
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
   int MSStateGramlex (YYSTYPE*);
   void checkStateError(Vector<Int>& list, ostringstream& msg, Bool force=False, char* = NULL)
   {

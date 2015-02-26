@@ -23,16 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcBool.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: AipsrcBool.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/System/AipsrcValue.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Data
 AipsrcValue<Bool> AipsrcValue<Bool>::myp_p;
@@ -46,10 +45,10 @@ AipsrcValue<Bool>::AipsrcValue() :
 AipsrcValue<Bool>::~AipsrcValue() {}
 
 Bool AipsrcValue<Bool>::find(Bool &value, const String &keyword) {
-  const Regex tTrue("^([tT]|[yY]|[1-9])");
   String res;
   Bool x = Aipsrc::find(res, keyword, 0);
-  if (x) value = (res.contains(tTrue));
+  if (x) value = (res.size() > 0  &&  (res[0]=='t' || res[0]=='T' || res[0]=='y' ||
+				       res[0]=='Y' || (res[0]>='1' && res[0]<='9')));
   return x;
 }
 
@@ -91,5 +90,5 @@ void AipsrcValue<Bool>::save(uInt keyword) {
   Aipsrc::save((myp_p.ntlst)[keyword-1], String(oss));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

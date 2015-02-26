@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarSampledFunctional.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ScalarSampledFunctional.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/ScalarSampledFunctional.h>
-#include <casa/Containers/Block.h>
+#ifndef SCIMATH_SCALARSAMPLEDFUNCTIONAL_TCC
+#define SCIMATH_SCALARSAMPLEDFUNCTIONAL_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/ScalarSampledFunctional.h>
+#include <casacore/casa/Containers/Block.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> ScalarSampledFunctional<T>::
 ScalarSampledFunctional(){
@@ -91,5 +94,7 @@ template<class T> ScalarSampledFunctional<T>::
 ~ScalarSampledFunctional(){
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

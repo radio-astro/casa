@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPointingColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSPointingColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSPointingColumns.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSPointing.h>
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSPointingColumns.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSPointing.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSPointingColumns::
 ROMSPointingColumns(const MSPointing& msPointing):
@@ -420,5 +420,5 @@ void MSPointingColumns::setEncoderDirectionRef(MDirection::Types ref)
 // compile-command: "gmake MSPointingColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -38,10 +38,10 @@
 #include <casa/BasicSL/Constants.h>
 #include <casa/Utilities/Assert.h>
 #include <lattices/Lattices/Lattice.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/Gaussian2D.h>
 #include <casa/Arrays/ArrayIO.h>

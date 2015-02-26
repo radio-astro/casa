@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Lattice.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Lattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_LATTICE_H
 #define LATTICES_LATTICE_H
 
 
 //# Includes
-#include <lattices/Lattices/LatticeBase.h>
-#include <casa/Arrays/Slicer.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/LatticeBase.h>
+#include <casacore/casa/Arrays/Slicer.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class IPosition;
@@ -429,7 +430,7 @@ void Lattice<Bool>::handleMathTo (Lattice<Bool>&, int) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 //# There is a problem in including Lattice.tcc, because it needs
 //# LatticeIterator.h which in its turn includes Lattice.h again.
@@ -438,6 +439,6 @@ void Lattice<Bool>::handleMathTo (Lattice<Bool>&, int) const
 //# Therefore LatticeIterator.h is included here, while LatticeIterator.h
 //# includes Lattice.tcc.
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

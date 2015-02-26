@@ -30,7 +30,7 @@
 #include <asdmstman/AsdmStMan.h>
 #include <asdmstman/AsdmColumn.h>
 #include <tables/Tables/Table.h>
-#include <tables/Tables/DataManError.h>
+#include <tables/DataMan/DataManError.h>
 #include <casa/Containers/Record.h>
 #include <casa/Containers/BlockIO.h>
 #include <casa/IO/AipsIO.h>

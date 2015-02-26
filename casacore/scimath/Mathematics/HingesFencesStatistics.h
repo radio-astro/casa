@@ -22,19 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_HINGESFENCESSTATISTICS_H
 #define SCIMATH_HINGESFENCESSTATISTICS_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <scimath/Mathematics/ConstrainedRangeStatistics.h>
+#include <casacore/scimath/Mathematics/ConstrainedRangeStatistics.h>
 
 #include <set>
 #include <vector>
 #include <utility>
 
-namespace casa {
+namespace casacore {
 
 // Class to calculate statistics using the so-called hinges and fences algorithm. In this
 // algorithm, the data on which the statistics are computed from is limited to the range
@@ -500,7 +501,7 @@ private:
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/HingesFencesStatistics.tcc>
+#include <casacore/scimath/Mathematics/HingesFencesStatistics.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

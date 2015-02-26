@@ -25,19 +25,24 @@
 //#
 //# $Id: Polynomial.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
 
-//# Includes
-#include <scimath/Functionals/PowerLogarithmicPolynomial.h>
+#ifndef SCIMATH_POWERLOGARITHMICPOLYNOMIAL_TCC
+#define SCIMATH_POWERLOGARITHMICPOLYNOMIAL_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+//# Includes
+#include <casacore/scimath/Functionals/PowerLogarithmicPolynomial.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
 //# Operators
 template<class T>
 T PowerLogarithmicPolynomial<T>::eval(typename Function1D<T>::FunctionArg x) const {
-	if (x <= 0) {
-		throw AipsError("PowerLogarithmicPolynomial<T>::eval(): x must be greater than zero");
-	}
+  // Test below outcommented, because pointer can never be <0.
+  // Test on x[0]<=0 gives compile error if T is AutoDiffA<Double>.
+  ///if (x <= 0) {
+  ///		throw AipsError("PowerLogarithmicPolynomial<T>::eval(): x must be greater than zero");
+  ///	}
 	T lnx = log(x[0]);
 	Int j = nparameters();
 	T accum = param_p[--j];
@@ -48,5 +53,7 @@ T PowerLogarithmicPolynomial<T>::eval(typename Function1D<T>::FunctionArg x) con
 	return param_p[0]*pow(x[0], accum);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

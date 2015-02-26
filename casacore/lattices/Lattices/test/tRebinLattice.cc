@@ -23,27 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRebinLattice.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: tRebinLattice.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
 //# Includes
 
-#include <casa/Inputs/Input.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Containers/Block.h>
-#include <lattices/Lattices/MaskedLattice.h> 
-#include <lattices/Lattices/RebinLattice.h> 
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/TempLattice.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <lattices/Lattices/LatticeUtilities.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h> 
+#include <casacore/lattices/Lattices/RebinLattice.h> 
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/TempLattice.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/lattices/Lattices/LatticeUtilities.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doit1 (const IPosition& shape, const IPosition& factors);
 void doit2 ();
 void doit3 ();
@@ -58,7 +58,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20622 $");
+   inputs.version ("$Revision: 21509 $");
 
 // Get inputs
 

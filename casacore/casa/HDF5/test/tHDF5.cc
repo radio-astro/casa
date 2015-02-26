@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5.cc 20766 2009-10-06 00:52:29Z Malte.Marquarding $
+//# $Id: tHDF5.cc 21451 2014-06-10 07:48:08Z gervandiepen $
 
 #include <iostream>
 
@@ -75,7 +75,7 @@ void createFile()
   check (H5Pset_fapl_sec2(access_plist), "Failed to set access mode");
   // Create the file.
   fileId = H5Fcreate ("tHDF5_tmp.dat", H5F_ACC_TRUNC,
-                      create_plist, access_plist);
+		      create_plist, access_plist);
   check (fileId, "Failed to create the file");
   H5Pclose (create_plist);
   H5Pclose (access_plist);
@@ -125,8 +125,8 @@ void createDataSet (int nx, int ny, int nz, int ntx, int nty, int ntz)
   chunkShp[2] = ntx;
   H5Pset_chunk (plId, rank, chunkShp);
   // Create the data set.
-  setId = H5Dcreate (fileId, "dataset", typeIdFile,
-                     dsId, NULL, plId, NULL);
+  setId = H5Dcreate2 (fileId, "dataset", typeIdFile,
+		      dsId, 0, plId, 0);
   check (setId, "Failed to create dataset");
 }
 
@@ -136,7 +136,7 @@ void openDataSet()
   typeIdFile = H5Tcopy (H5T_NATIVE_FLOAT);
   typeIdMem  = H5Tcopy (typeIdFile);
   // Open the dataset.
-  setId = H5Dopen (fileId, "dataset", NULL);
+  setId = H5Dopen2 (fileId, "dataset", 0);
   check (setId, "Failed to open dataset");
   // Get the data space (for the shape).
   dsId = H5Dget_space(setId);
@@ -189,7 +189,7 @@ void setCacheSize (int nchunks, int nbytes)
   check (H5Pset_chunk_cache (daplId, nhash, nbytes, 0.),
          "Failed to set chunk cache");
   // Reopen the dataset with cache size in daplId.
-  setId = H5Dopen (fileId, "dataset", daplId);
+  setId = H5Dopen2 (fileId, "dataset", daplId);
   check (setId, "Failed to reopen file");
 }
 

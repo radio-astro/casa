@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSDataDescIndex.h 18475 2005-03-17 20:10:58Z dguo $
+//# $Id: MSDataDescIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSDATADESCINDEX_H
 #define MS_MSDATADESCINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSDataDescription.h>
-#include <ms/MeasurementSets/MSDataDescColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSDataDescription.h>
+#include <casacore/ms/MeasurementSets/MSDataDescColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -86,7 +86,7 @@ public:
   MSDataDescIndex(const MSDataDescription& dataDescription);
 
   // Null destructor
-  virtual ~MSDataDescIndex() {};
+  virtual ~MSDataDescIndex() {}
 
   // Look up DATA_DESC_ID's for a given spectral window id
   Vector<Int> matchSpwId(const Int& spwId);
@@ -112,7 +112,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

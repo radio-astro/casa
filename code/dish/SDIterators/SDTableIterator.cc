@@ -56,7 +56,7 @@
 #include <tables/Tables.h>
 #include <tables/Tables/RefRows.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <casa/OS/File.h>
 #include <casa/OS/Path.h>
 #include <casa/Quanta/QuantumHolder.h>

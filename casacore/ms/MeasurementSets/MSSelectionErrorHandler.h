@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSSelectionErrorHandler.h 21548 2015-01-28 09:59:40Z gervandiepen $
 
 #ifndef MS_MSSELECTIONERRORHANDLER_H
 #define MS_MSSELECTIONERRORHANDLER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 #include <vector>
 using namespace std;
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# This header file defines the error handler class for the
   //# MSSelection module
@@ -73,8 +73,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void reset();
     virtual void handleError(MSSelectionError&);
 
-    vector<String> getMessages() {return messageList;};
-    Int nMessages() {return messageList.size();}
+    const vector<String>& getMessages() const
+      { return messageList; }
+    Int nMessages() const
+      { return messageList.size(); }
 
   protected:
     vector<String> tokenList, messageList;
@@ -90,8 +92,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSSelectionLogError: public MSSelectionErrorHandler
   {
   public:
-    MSSelectionLogError():MSSelectionErrorHandler() {};
-    virtual ~MSSelectionLogError() {};
+    MSSelectionLogError():MSSelectionErrorHandler() {}
+    virtual ~MSSelectionLogError() {}
     virtual void handleError(MSSelectionError& mssErrorType)
     {
       if (messageList.size() > 0)
@@ -103,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     }
   };
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 
 #endif

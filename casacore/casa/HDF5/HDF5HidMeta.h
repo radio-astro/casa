@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5HidMeta.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: HDF5HidMeta.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_HDF5HIDMETA_H
 #define CASA_HDF5HIDMETA_H
 
 //# Includes
-#include <casa/HDF5/HDF5Object.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/HDF5/HDF5Object.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // A class representing an HDF5 property hid.

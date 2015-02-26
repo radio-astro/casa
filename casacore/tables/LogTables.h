@@ -23,16 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogTables.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogTables.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 
 #if !defined (AIPS_MODULE_LOGTABLES_H)
 #define AIPS_MODULE_LOGTABLES_H
 
+#include <casacore/casa/aips.h>
+
 // <module>
 //
 // <summary>
-// Logging in AIPS++ tables
+// Logging in Casacore tables
 // </summary>
 
 // <prerequisite>

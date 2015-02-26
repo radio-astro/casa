@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSHistory.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: MSHistory.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSHISTORY_H
 #define MS_MSHISTORY_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSTable.h>
-#include <ms/MeasurementSets/MSHistoryEnums.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSTable.h>
+#include <casacore/ms/MeasurementSets/MSHistoryEnums.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // A Table intended to hold a MeasurementSet OBSERVATIONLOG table.
@@ -133,7 +133,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

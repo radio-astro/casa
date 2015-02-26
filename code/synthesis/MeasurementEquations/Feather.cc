@@ -40,7 +40,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/Logging/LogSink.h>
 #include <scimath/Mathematics/MathFunc.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Slice.h>
@@ -50,8 +50,8 @@
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageUtilities.h>
 #include <synthesis/TransformMachines/PBMath.h>
-#include <lattices/Lattices/LatticeExpr.h> 
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LEL/LatticeExpr.h> 
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>

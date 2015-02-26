@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSKeywordUtil.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tFITSKeywordUtil.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
-#include <fits/FITS/FITSKeywordUtil.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
-#include <fits/FITS/fits.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     try {

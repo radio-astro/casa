@@ -23,15 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AutoDiff.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: AutoDiff.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_AUTODIFF_TCC
+#define SCIMATH_AUTODIFF_TCC
 
 //# Includes
-#include <scimath/Mathematics/AutoDiff.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Mathematics/AutoDiff.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Statics
 template <class T>
@@ -258,5 +261,7 @@ template <class T> void AutoDiff<T>::derivatives(Vector<T> &res) const {
   res = rep_p->grad_p;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -28,7 +28,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/System/Aipsrc.h>
 #include <measures/Measures/MDirection.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ScalarColumn.h>
 
 // Handy for passing anonymous arrays to functions.

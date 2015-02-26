@@ -23,13 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: OddPolynomialParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: OddPolynomialParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_ODDPOLYNOMIALPARAM_TCC
+#define SCIMATH_ODDPOLYNOMIALPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/OddPolynomialParam.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/scimath/Functionals/OddPolynomialParam.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 OddPolynomialParam<T>::OddPolynomialParam() :
@@ -63,5 +66,7 @@ void OddPolynomialParam<T>::setCoefficients(const Vector<T> &coefficients) {
   param_p.setParameters(coefficients);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

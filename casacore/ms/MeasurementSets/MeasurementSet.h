@@ -24,35 +24,35 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasurementSet.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MeasurementSet.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MEASUREMENTSET_H
 #define MS_MEASUREMENTSET_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSTable.h>
-#include <ms/MeasurementSets/MSMainEnums.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSDataDescription.h>
-#include <ms/MeasurementSets/MSDoppler.h>
-#include <ms/MeasurementSets/MSFeed.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFlagCmd.h>
-#include <ms/MeasurementSets/MSFreqOffset.h>
-#include <ms/MeasurementSets/MSHistory.h>
-#include <ms/MeasurementSets/MSObservation.h>
-#include <ms/MeasurementSets/MSPointing.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSProcessor.h>
-#include <ms/MeasurementSets/MSSource.h>
-#include <ms/MeasurementSets/MSSpectralWindow.h>
-#include <ms/MeasurementSets/MSState.h>
-#include <ms/MeasurementSets/MSSysCal.h>
-#include <ms/MeasurementSets/MSWeather.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSTable.h>
+#include <casacore/ms/MeasurementSets/MSMainEnums.h>
+#include <casacore/ms/MeasurementSets/MSAntenna.h>
+#include <casacore/ms/MeasurementSets/MSDataDescription.h>
+#include <casacore/ms/MeasurementSets/MSDoppler.h>
+#include <casacore/ms/MeasurementSets/MSFeed.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/ms/MeasurementSets/MSFlagCmd.h>
+#include <casacore/ms/MeasurementSets/MSFreqOffset.h>
+#include <casacore/ms/MeasurementSets/MSHistory.h>
+#include <casacore/ms/MeasurementSets/MSObservation.h>
+#include <casacore/ms/MeasurementSets/MSPointing.h>
+#include <casacore/ms/MeasurementSets/MSPolarization.h>
+#include <casacore/ms/MeasurementSets/MSProcessor.h>
+#include <casacore/ms/MeasurementSets/MSSource.h>
+#include <casacore/ms/MeasurementSets/MSSpectralWindow.h>
+#include <casacore/ms/MeasurementSets/MSState.h>
+#include <casacore/ms/MeasurementSets/MSSysCal.h>
+#include <casacore/ms/MeasurementSets/MSWeather.h>
 #include <set>
 
  
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MrsEligibility { // Memory Resident Subtable (Mrs) Eligibility (no pun intended)
 
@@ -128,7 +128,7 @@ typedef MeasurementSet MS;
 //
 // <etymology>
 // The MeasurementSet is where all data are ultimately to be found
-// in AIPS++.  Since, this is a collection of 
+// in Casacore.  Since, this is a collection of 
 // measurements (either actual or simulated), the term MeasurementSet
 // seems appropriate.
 // </etymology>
@@ -481,6 +481,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

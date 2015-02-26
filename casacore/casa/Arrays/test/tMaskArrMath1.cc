@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMaskArrMath1.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tMaskArrMath1.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# If AIPS_DEBUG is not set, the Assert's won't be called.
 #if !defined(AIPS_DEBUG)
@@ -35,28 +35,28 @@
 #define AIPS_ARRAY_INDEX_CHECK
 #endif
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/MaskArrMath.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {

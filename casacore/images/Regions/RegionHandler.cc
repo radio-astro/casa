@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandler.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RegionHandler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <images/Regions/RegionHandler.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LatticeBase.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/sstream.h>
+#include <casacore/images/Regions/RegionHandler.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/Lattices/LatticeBase.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/sstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RegionHandler::~RegionHandler()
 {}
@@ -141,5 +141,5 @@ String RegionHandler::makeUniqueRegionName (const String& rootName,
   return String();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

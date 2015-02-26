@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSDataDescColumns.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSDataDescColumns.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSDATADESCCOLUMNS_H
 #define MS_MSDATADESCCOLUMNS_H
 
-#include <casa/aips.h>
-#include <tables/Tables/ScalarColumn.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MSDataDescription;
 // <summary>
@@ -227,6 +227,6 @@ private:
   ScalarColumn<Int> lagId_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

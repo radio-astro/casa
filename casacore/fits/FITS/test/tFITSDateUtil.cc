@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSDateUtil.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tFITSDateUtil.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
-#include <fits/FITS/FITSDateUtil.h>
+#include <casacore/fits/FITS/FITSDateUtil.h>
 
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     try {

@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCLELMask.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: WCLELMask.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCLELMask.h>
-#include <images/Images/ImageExprParse.h>
-#include <images/Images/ImageExpr.h>
-#include <lattices/Lattices/LCLELMask.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LELLattCoordBase.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/WCLELMask.h>
+#include <casacore/images/Images/ImageExprParse.h>
+#include <casacore/images/Images/ImageExpr.h>
+#include <casacore/lattices/LRegions/LCLELMask.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/lattices/LEL/LELLattCoordBase.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCLELMask::WCLELMask()
 : itsImageExpr (0),
@@ -281,5 +281,5 @@ String WCLELMask::type() const
    return className();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

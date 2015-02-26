@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tWCUnion.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: tWCUnion.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCUnion.h>
-#include <images/Regions/WCBox.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/images/Regions/WCUnion.h>
+#include <casacore/images/Regions/WCBox.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt()
 {
     // Create a dummy box to make the special units known to UnitMap.

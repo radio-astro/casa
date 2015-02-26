@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSScanGram.ll 20630 2009-06-12 04:14:37Z gervandiepen $
+    $Id: MSScanGram.ll 21507 2014-11-21 12:17:24Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -38,7 +38,7 @@
 #undef YY_DECL
 #define YY_DECL int MSScanGramlex (YYSTYPE* lvalp)
 static string                qstr;
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
 %}
 
 WHITE     [ \t\n]*

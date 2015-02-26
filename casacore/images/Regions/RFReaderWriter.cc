@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RFReaderWriter.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
-#include <images/Regions/RFReaderWriter.h>
-#include <images/Regions/AipsIOReaderWriter.h>
-    //#include <images/Regions/DS9ReaderWriter.h>
+//# $Id: RFReaderWriter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+#include <casacore/images/Regions/RFReaderWriter.h>
+#include <casacore/images/Regions/AipsIOReaderWriter.h>
+    //#include <casacore/images/Regions/DS9ReaderWriter.h>
 
-namespace casa {
+namespace casacore {
 
 // RFERROR DEFINITIONS //
 

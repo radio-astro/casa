@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: Time.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: Time.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_TIME_H
 #define CASA_TIME_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <Summary> date and time enquiry functions, with some operations.
 // </summary>
@@ -157,13 +157,13 @@ class Time {
      // or reset
    double age ();
 
+   // Return the seconds, minutes or hour part of the time.
+   // <group>
    uInt seconds ();
-
    double dseconds ();
-
    uInt minutes ();
-
    uInt hours ();
+   // </group>
 
    uInt dayOfMonth ();
    uInt month ();
@@ -204,7 +204,7 @@ class Time {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 //# roel's original comments -- these may be useful in creating demo

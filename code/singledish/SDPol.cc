@@ -46,7 +46,7 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ColumnDesc.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/DataManError.h>
+#include <tables/DataMan/DataManError.h>
 
 
 using namespace casa;

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Euler.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Euler.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_EULER_H
 #define CASA_EULER_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -203,7 +203,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

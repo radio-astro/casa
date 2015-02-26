@@ -24,28 +24,28 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LinearCoordinate.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: LinearCoordinate.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/LinearXform.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearXform.h>
 
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Record.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Quanta/Unit.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Quanta/Unit.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 LinearCoordinate::LinearCoordinate(uInt naxis)
@@ -513,21 +513,21 @@ Bool LinearCoordinate::near(const Coordinate& other,
    }
    for (i=0; i<crval1.nelements(); i++) {
       if (!exclude(i)) {
-         if (!casa::near(crval1[i],crval2[i],tol)) {
+         if (!casacore::near(crval1[i],crval2[i],tol)) {
             oss << "The LinearCoordinates have differing reference values for axis "
                 << i << ", " << crval1[i] << " vs. " << crval2[i];
             set_error(String(oss));
             return False;
          }
-         if (!casa::near(cdelt1[i],cdelt2[i],tol)) {
+         if (!casacore::near(cdelt1[i],cdelt2[i],tol)) {
             oss << "The LinearCoordinates have differing increments for axis "
-                << i;
+                << i << ", " << cdelt1[i] << " vs. " << cdelt2[i];
             set_error(String(oss));
             return False;
          }
-         if (!casa::near(crpix1[i],crpix2[i],tol)) {
+         if (!casacore::near(crpix1[i],crpix2[i],tol)) {
             oss << "The LinearCoordinates have differing reference values for axis "
-                << i;
+                << i << ", " << crpix1[i] << " vs. " << crpix2[i];
             set_error(String(oss));
             return False;
          }
@@ -557,7 +557,7 @@ Bool LinearCoordinate::near(const Coordinate& other,
         if (!exclude(j)) {
             for (uInt i=0; i<row1.nelements(); i++) {
                 if (!exclude(i)) {
-                    if (!casa::near(row1(i),row2(i),tol)) {
+                    if (!casacore::near(row1(i),row2(i),tol)) {
                        set_error(String("The LinearCoordinates have different PC matrices"));
                        return False;
                     }
@@ -600,26 +600,22 @@ LinearCoordinate *LinearCoordinate::restore(const RecordInterface &container,
 // We should probably do more type-checking as well as checking
 // for existence of the fields.
 
-    Vector<Double> crval;
-    subrec.get("crval", crval);
+    Vector<Double> crval(subrec.toArrayDouble("crval"));
 //
     if (!subrec.isDefined("crpix")) {
 	return 0;
     }
-    Vector<Double> crpix;
-    subrec.get("crpix", crpix);
+    Vector<Double> crpix(subrec.toArrayDouble("crpix"));
 //
     if (!subrec.isDefined("cdelt")) {
 	return 0;
     }
-    Vector<Double> cdelt;
-    subrec.get("cdelt", cdelt);
+    Vector<Double> cdelt(subrec.toArrayDouble("cdelt"));
 //
     if (!subrec.isDefined("pc")) {
 	return 0;
     }
-    Matrix<Double> pc;
-    subrec.get("pc", pc);
+    Matrix<Double> pc(subrec.toArrayDouble("pc"));
 //
     if (!subrec.isDefined("axes")) {
 	return 0;
@@ -782,5 +778,5 @@ void LinearCoordinate::copy(const LinearCoordinate &other)
    set_wcs(wcs_p);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

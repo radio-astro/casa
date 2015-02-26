@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TapeIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TapeIO.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_TAPEIO_H
 #define CASA_TAPEIO_H
 
-#include <casa/aips.h>
-#include <casa/IO/ByteIO.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/ByteIO.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class Path;
 
@@ -79,7 +79,7 @@ class Path;
 // </example>
 
 // <motivation> 
-// Make it possible to use the AIPS++ IO functionality on any file.
+// Make it possible to use the Casacore IO functionality on any file.
 // In this way any device can be hooked to the IO framework.
 // </motivation>
 
@@ -117,7 +117,7 @@ public:
   void attach(const Path& device, Bool writable = False);
 
   // Write the specified number of bytes.
-  virtual void write(uInt size, const void* buf);
+  virtual void write(Int64 size, const void* buf);
 
   // Read <src>size</src> bytes from the tape. Returns the number of bytes
   // actually read or a negative number if an error occured. Will throw an
@@ -126,7 +126,7 @@ public:
   // throw an exception if the tape is not readable or the system call returns
   // an undocumented value. Returns zero if the tape is at the end of the
   // current file (and size is non-zero and throwException is False).
-  virtual Int read(uInt size, void* buf, Bool throwException=True);    
+  virtual Int64 read(Int64 size, void* buf, Bool throwException=True);    
 
   // Rewind the tape device to the beginning.
   virtual void rewind();
@@ -216,6 +216,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

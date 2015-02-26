@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.cc 21014 2011-01-06 08:57:49Z gervandiepen $
+//# $Id: NullTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/NullTable.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableError.h>
-#include <casa/Containers/Record.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/tables/Tables/NullTable.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Arrays/Vector.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 NullTable::NullTable()
 : BaseTable ("Null table object", Table::Old, 0)
@@ -288,5 +288,5 @@ void NullTable::throwError (const String& name) const
   throw TableError ("NullTable::" + name + " - Table object is empty");
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

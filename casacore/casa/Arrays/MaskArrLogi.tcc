@@ -23,17 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrLogi.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrLogi.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
+#ifndef CASA_MASKARRLOGI_TCC
+#define CASA_MASKARRLOGI_TCC
 
-#ifndef CASA_ARRAY_MASKARRLOGI_TCC
-#define CASA_ARRAY_MASKARRLOGI_TCC
+#include <casacore/casa/Arrays/MaskArrLogi.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
 
-#include <casa/Arrays/MaskArrLogi.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Arrays/ArrayLogical.h>
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #define MARRLOGI_B_ALLFUNC_MA(ALLFUNC,OP,STRALLFUNC) \
 template<class T> \
@@ -1478,6 +1477,7 @@ MaskedLogicalArray operator || (const T &val,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
 
 #endif

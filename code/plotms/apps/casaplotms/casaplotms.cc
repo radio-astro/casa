@@ -285,7 +285,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     
     if(usePixels) {
         PlotSymbolPtr sym = PMS_PP_RETCALL(plotparams, PMS_PP_Display,
-                unflaggedSymbol, NULL);
+                unflaggedSymbol, CountedPtr<PlotSymbol>( ));
         sym->setSymbol(PlotSymbol::PIXEL);
         PMS_PP_CALL(plotparams, PMS_PP_Display, setUnflaggedSymbol, sym)
     }

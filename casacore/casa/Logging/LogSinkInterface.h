@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogSinkInterface.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogSinkInterface.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGSINKINTERFACE_H
 #define CASA_LOGSINKINTERFACE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Logging/LogFilterInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogFilterInterface.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //Accepts LogMessages and posts them to some destination
@@ -163,6 +163,6 @@ protected:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

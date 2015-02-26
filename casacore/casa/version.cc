@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: version.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/version.h>
+#include <casacore/casa/version.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Get the casacore version.
   const std::string getVersion()
@@ -39,8 +39,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // Get the version of casacore on CASA's vendor branch
   const std::string getVersionCASA()
   {
-      static std::string version(CASACORE_VERSION);
-      return version;
+    return CASACORE_VERSION;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

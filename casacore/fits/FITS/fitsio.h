@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fitsio.h 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: fitsio.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef FITS_FITSIO_H
 #define FITS_FITSIO_H
 
-# include <fits/FITS/fits.h>
-# include <fits/FITS/blockio.h>
-# include <fits/FITS/hdu.h>
-//# include <casa/stdvector.h>
-# include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+# include <casacore/fits/FITS/fits.h>
+# include <casacore/fits/FITS/blockio.h>
+# include <casacore/fits/FITS/hdu.h>
+//# include <casacore/casa/stdvector.h>
+# include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //<summary> sequential FITS I/O </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
@@ -328,6 +329,6 @@ class FitsTape9Output : public BlockOutput {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 # endif

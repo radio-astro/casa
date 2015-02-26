@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tUDFMSCal.cc 21292 2012-11-28 14:58:19Z gervandiepen $
+//# $Id: tUDFMSCal.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <derivedmscal/DerivedMC/Register.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableParse.h>
+#include <casacore/derivedmscal/DerivedMC/Register.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/TaQL/TableParse.h>
 #include <iostream>
 #include <sstream>
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 void createTable()
@@ -70,8 +70,8 @@ void testUDF()
 {
   Table tab = tableCommand("select from tUDFMSCal_tmp.tab "
                            "where mscal.baseline('RT[2-4]')").table();
-  Vector<Int> a1 (ROScalarColumn<Int>(tab, "ANTENNA1").getColumn());
-  Vector<Int> a2 (ROScalarColumn<Int>(tab, "ANTENNA2").getColumn());
+  Vector<Int> a1 (ScalarColumn<Int>(tab, "ANTENNA1").getColumn());
+  Vector<Int> a2 (ScalarColumn<Int>(tab, "ANTENNA2").getColumn());
   for (uInt i=0; i<tab.nrow(); ++i) {
     cout << a1[i] << ' '<< a2[i] << endl;
   }

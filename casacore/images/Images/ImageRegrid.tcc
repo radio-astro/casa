@@ -24,29 +24,30 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageRegrid.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ImageRegrid.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/ImageRegrid.h>
+#ifndef IMAGES_IMAGEREGRID_TCC
+#define IMAGES_IMAGEREGRID_TCC
 
-#include <casa/Arrays/ArrayAccessor.h>
-#include <casa/Exceptions/Error.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <images/Images/SubImage.h>
-#include <images/Images/TempImage.h>
-#include <lattices/Lattices/LatticeUtilities.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCFrequency.h>
-#include <scimath/Mathematics/InterpolateArray1D.h>
-#include <casa/System/ProgressMeter.h>
+#include <casacore/images/Images/ImageRegrid.h>
 
-#include <casa/sstream.h>
-#include <casa/fstream.h>
+#include <casacore/casa/Arrays/ArrayAccessor.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Images/TempImage.h>
+#include <casacore/lattices/Lattices/LatticeUtilities.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MCFrequency.h>
+#include <casacore/scimath/Mathematics/InterpolateArray1D.h>
+#include <casacore/casa/System/ProgressMeter.h>
 
-#include <casa/OS/Timer.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/fstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ImageRegrid<T>::ImageRegrid()
@@ -2266,5 +2267,7 @@ void ImageRegrid<T>::set2DCoordinateGrid (const Cube<Double> &grid,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

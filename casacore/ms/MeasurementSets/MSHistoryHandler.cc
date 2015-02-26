@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSHistoryHandler.cc 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSHistoryHandler.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSHistoryHandler.h>
-#include <casa/Logging/LogIO.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCEpoch.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <casa/ostream.h>
+#include <casacore/ms/MeasurementSets/MSHistoryHandler.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/casa/ostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSHistoryHandler::MSHistoryHandler(MeasurementSet& ms, String app){
   histTable_p = ms.history();
@@ -202,5 +202,5 @@ void MSHistoryHandler::cliCommand(LogSinkInterface& sink){
  histTable_p.flush();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

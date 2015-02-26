@@ -24,12 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: MarshButterworthBandpass.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: MarshButterworthBandpass.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/MarshButterworthBandpass.h>
-#include <casa/Arrays/Array.h>
+#ifndef SCIMATH_MARSHBUTTERWORTHBANDPASS_TCC
+#define SCIMATH_MARSHBUTTERWORTHBANDPASS_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/MarshButterworthBandpass.h>
+#include <casacore/casa/Arrays/Array.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 const String MarshButterworthBandpass<T>::FUNCTYPE("butterworthbp");
@@ -90,5 +93,7 @@ MarshButterworthBandpass<T>::MarshButterworthBandpass(const Record& gr)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,44 +23,30 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSlicer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tSlicer.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/iostream.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/namespace.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/iostream.h>
+
+#include <casacore/casa/namespace.h>
 // <summary> Test the Slicer class </summary>
 
 //# Forward Declarations
 
 void a();
 
-int main() {
-	try {
-		a();
-		{
-			// setStart() and setEnd()
-			IPosition start = IPosition(2,3,5);
-			IPosition end = IPosition(2,4,11);
-			Slicer s(start, end, Slicer::endIsLast);
-			AlwaysAssert(s.start() == start, AipsError);
-			AlwaysAssert(s.end() == end, AipsError);
-			start = IPosition(2, 2, 1);
-			s.setStart(start);
-			AlwaysAssert(s.start() == start, AipsError);
-			end = IPosition(2, 5, 12);
-			s.setEnd(end);
-			AlwaysAssert(s.end() == end, AipsError);
-		}
-    }
-	catch (const AipsError& x) {
-		cout << "Caught an exception: " << x.getMesg() << endl;
-		return 1;
+int main()
+{
+    try {
+	a();
+    } catch (AipsError x) {
+	cout << "Caught an exception: " << x.getMesg() << endl;
+	return 1;
     } 
     return 0;                           // exit with success status
 }

@@ -24,15 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogFilterTaql.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogFilterTaql.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_LOGFILTERTAQL_H
 #define TABLES_LOGFILTERTAQL_H
 
 //# Includes
-#include <casa/Logging/LogFilterInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogFilterInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LogFilterExpr;
@@ -113,6 +114,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

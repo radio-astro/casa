@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIOCarray.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: AipsIOCarray.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/IO/AipsIOCarray.h>
-#include <casa/Exceptions/Error.h>
+#ifndef CASA_AIPSIOCARRAY_TCC
+#define CASA_AIPSIOCARRAY_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/IO/AipsIOCarray.h>
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Put a C-array of n elements.
 template<class T>
@@ -59,5 +62,7 @@ void getnewAipsIO (AipsIO& ios, uInt& n, T** data)
     getAipsIO (ios, n, *data);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

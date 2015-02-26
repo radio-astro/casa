@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketMapped.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketMapped.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_BUCKETMAPPED_H
 #define CASA_BUCKETMAPPED_H
 
 //# Includes
-#include <casa/IO/BucketBase.h>
-#include <casa/IO/MMapfdIO.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/BucketBase.h>
+#include <casacore/casa/IO/MMapfdIO.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // Use file mapping for buckets in a part of a file
@@ -119,6 +120,6 @@ private:
   };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,25 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnsIndexArray.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnsIndexArray.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <tables/Tables/ColumnsIndexArray.h>
-#include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableLocker.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/Utilities/Sort.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/Tables/ColumnsIndexArray.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableLocker.h>
+#include <casacore/tables/Tables/ColumnDesc.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/tables/Tables/TableError.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ColumnsIndexArray::ColumnsIndexArray (const Table& table,
 				      const String& columnName)
@@ -52,7 +52,7 @@ ColumnsIndexArray::ColumnsIndexArray (const Table& table,
   itsNrrow = itsTable.nrow();
   // Add column to the RecordDesc.
   RecordDesc description;
-  addColumnToDesc (description, ROTableColumn (itsTable, columnName));
+  addColumnToDesc (description, TableColumn (itsTable, columnName));
   makeObjects (description);
   readData();
 }
@@ -133,7 +133,7 @@ void ColumnsIndexArray::deleteObjects()
 }
 
 void ColumnsIndexArray::addColumnToDesc (RecordDesc& description,
-					 const ROTableColumn& column)
+					 const TableColumn& column)
 {
   const ColumnDesc& columnDesc = column.columnDesc();
   DataType dataType = columnDesc.dataType();
@@ -484,7 +484,7 @@ void ColumnsIndexArray::setChanged (const String& columnName)
 
 void ColumnsIndexArray::getArray (Vector<uChar>& result, const String& name)
 {
-  ROArrayColumn<uChar> arrCol (itsTable, name);
+  ArrayColumn<uChar> arrCol (itsTable, name);
   uInt nrrow = arrCol.nrow();
   if (nrrow > 0) {
     Block<uInt> nrel(nrrow, uInt(0));
@@ -516,7 +516,7 @@ void ColumnsIndexArray::getArray (Vector<uChar>& result, const String& name)
 
 void ColumnsIndexArray::getArray (Vector<Short>& result, const String& name)
 {
-  ROArrayColumn<Short> arrCol (itsTable, name);
+  ArrayColumn<Short> arrCol (itsTable, name);
   uInt nrrow = arrCol.nrow();
   if (nrrow > 0) {
     Block<uInt> nrel(nrrow, uInt(0));
@@ -548,7 +548,7 @@ void ColumnsIndexArray::getArray (Vector<Short>& result, const String& name)
 
 void ColumnsIndexArray::getArray (Vector<Int>& result, const String& name)
 {
-  ROArrayColumn<Int> arrCol (itsTable, name);
+  ArrayColumn<Int> arrCol (itsTable, name);
   uInt nrrow = arrCol.nrow();
   if (nrrow > 0) {
     Block<uInt> nrel(nrrow, uInt(0));
@@ -580,7 +580,7 @@ void ColumnsIndexArray::getArray (Vector<Int>& result, const String& name)
 
 void ColumnsIndexArray::getArray (Vector<uInt>& result, const String& name)
 {
-  ROArrayColumn<uInt> arrCol (itsTable, name);
+  ArrayColumn<uInt> arrCol (itsTable, name);
   uInt nrrow = arrCol.nrow();
   if (nrrow > 0) {
     Block<uInt> nrel(nrrow, uInt(0));
@@ -612,7 +612,7 @@ void ColumnsIndexArray::getArray (Vector<uInt>& result, const String& name)
 
 void ColumnsIndexArray::getArray (Vector<String>& result, const String& name)
 {
-  ROArrayColumn<String> arrCol (itsTable, name);
+  ArrayColumn<String> arrCol (itsTable, name);
   uInt nrrow = arrCol.nrow();
   if (nrrow > 0) {
     Block<uInt> nrel(nrrow, uInt(0));
@@ -654,5 +654,5 @@ void ColumnsIndexArray::fillRownrs (uInt npts, const Block<uInt>& nrel)
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

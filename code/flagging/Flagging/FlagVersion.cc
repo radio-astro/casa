@@ -37,8 +37,8 @@
 
 #include <casa/Exceptions.h>
 
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/TableGram.h>
+#include <tables/TaQL/TableParse.h>
+#include <tables/TaQL/TableGram.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableIter.h>
@@ -51,8 +51,8 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/DataManError.h>
+#include <tables/DataMan/TiledShapeStMan.h>
+#include <tables/DataMan/DataManError.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/MatrixMath.h>

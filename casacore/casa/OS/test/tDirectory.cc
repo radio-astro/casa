@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDirectory.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tDirectory.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 
-#include <casa/OS/Directory.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Exceptions.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/iostream.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/SymLink.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/iostream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for class Directory.
 // </summary>

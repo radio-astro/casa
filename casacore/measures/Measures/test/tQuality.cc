@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tQuality.cc 21292 2012-11-28 14:58:19Z gervandiepen $
+//# $Id: tQuality.cc 21508 2014-11-21 12:19:45Z gervandiepen $
 
 //# Includes
 
-#include <casa/aips.h>
-#include <measures/Measures/Quality.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/Quality.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 void roundtrip(Int &int_in, Int &int_out);
 Int check_str_type(String &qualstr);

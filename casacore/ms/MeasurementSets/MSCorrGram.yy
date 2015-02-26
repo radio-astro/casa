@@ -24,14 +24,14 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSCorrGram.yy 19948 2007-02-27 11:53:51Z Malte.Marquarding $
+    $Id: MSCorrGram.yy 21521 2014-12-10 08:06:42Z gervandiepen $
 */
 
 %{
-using namespace casa;
+using namespace casacore;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
   const TableExprNode* node;

@@ -41,8 +41,8 @@
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <casa/Utilities/Assert.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Quanta.h>

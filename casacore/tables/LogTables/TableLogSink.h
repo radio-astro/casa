@@ -1,4 +1,4 @@
-//# TableLogSink.h: Save log messages in an AIPS++ Table
+//# TableLogSink.h: Save log messages in a Casacore Table
 //# Copyright (C) 1996,1997,1998,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,29 +24,29 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TableLogSink.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLogSink.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLELOGSINK_H
 #define TABLES_TABLELOGSINK_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/LogFilter.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableDesc;
 class SetupNewTable;
 
 // <summary>
-// Save log messages in an AIPS++ Table
+// Save log messages in a Casacore Table
 // </summary>
 
 // <use visibility=export>
@@ -60,7 +60,7 @@ class SetupNewTable;
 // </prerequisite>
 //
 // <etymology>
-// Log to an AIPS++ Table.
+// Log to a Casacore Table.
 // </etymology>
 //
 // <synopsis>
@@ -70,7 +70,7 @@ class SetupNewTable;
 // particular, the member functions which define the structure of the table
 // and define the column names might be of interest.
 //
-// This class posts messages which pass the filter to an AIPS++
+// This class posts messages which pass the filter to a Casacore
 // <linkto class=Table>Table</linkto>. It puts every field of the
 // <linkto class=LogMessage>LogMessage</linkto> into its own column.
 // </synopsis>
@@ -143,15 +143,15 @@ public:
   // <group>
   const Table& table() const;
   Table& table();
-  const ROScalarColumn<Double>& roTime() const;
+  const ScalarColumn<Double>& roTime() const;
   ScalarColumn<Double>& time();
-  const ROScalarColumn<String>& roPriority() const;
+  const ScalarColumn<String>& roPriority() const;
   ScalarColumn<String>& priority();
-  const ROScalarColumn<String>& roMessage() const;
+  const ScalarColumn<String>& roMessage() const;
   ScalarColumn<String>& message();
-  const ROScalarColumn<String>& roLocation() const;
+  const ScalarColumn<String>& roLocation() const;
   ScalarColumn<String>& location();
-  const ROScalarColumn<String>& roObjectID() const;
+  const ScalarColumn<String>& roObjectID() const;
   ScalarColumn<String>& objectID();
   // </group>
   
@@ -222,14 +222,6 @@ private:
 
 
   Table log_table_p;
-  // Message
-  ROScalarColumn<Double>  roTime_p;
-  ROScalarColumn<String>  roPriority_p;
-  ROScalarColumn<String>  roMessage_p;
-  // Origin
-  ROScalarColumn<String>  roLocation_p;
-  // ObjectID
-  ROScalarColumn<String>  roId_p;
   ScalarColumn<Double>  time_p;
   ScalarColumn<String>  priority_p;
   ScalarColumn<String>  message_p;
@@ -243,26 +235,26 @@ private:
 inline const Table& TableLogSink::table() const {return log_table_p;}
 inline Table& TableLogSink::table() {return log_table_p;}
 
-inline const ROScalarColumn<Double>& TableLogSink::roTime() const
-  {return roTime_p;}
+inline const ScalarColumn<Double>& TableLogSink::roTime() const
+  {return time_p;}
 inline ScalarColumn<Double>& TableLogSink::time()
-  {DebugAssert(!time_p.isNull(),AipsError); return time_p;}
-inline const ROScalarColumn<String>& TableLogSink::roPriority() const 
-   {return roPriority_p;}
+  {return time_p;}
+inline const ScalarColumn<String>& TableLogSink::roPriority() const 
+  {return priority_p;}
 inline ScalarColumn<String>& TableLogSink::priority()
-  {DebugAssert(!priority_p.isNull(),AipsError); return priority_p;}
-inline const ROScalarColumn<String>& TableLogSink::roLocation() const 
-  {return roLocation_p;}
+  {return priority_p;}
+inline const ScalarColumn<String>& TableLogSink::roLocation() const 
+  {return location_p;}
 inline ScalarColumn<String>& TableLogSink::location()
-  {DebugAssert(!location_p.isNull(),AipsError); return location_p;}
-inline const ROScalarColumn<String>& TableLogSink::roObjectID() const 
-  {return roId_p;}
+  {return location_p;}
+inline const ScalarColumn<String>& TableLogSink::roObjectID() const 
+  {return id_p;}
 inline ScalarColumn<String>& TableLogSink::objectID()
-  {DebugAssert(!id_p.isNull(),AipsError); return id_p;}
-inline const ROScalarColumn<String>& TableLogSink::roMessage() const
-  {return roMessage_p;}
+  {return id_p;}
+inline const ScalarColumn<String>& TableLogSink::roMessage() const
+  {return message_p;}
 inline ScalarColumn<String>& TableLogSink::message()
-  {DebugAssert(!message_p.isNull(),AipsError); return message_p;}
+  {return message_p;}
 
 inline LogSink TableLogSink::makeSink (const String& fileName)
   { return makeSink (LogFilter(), fileName); }
@@ -272,6 +264,6 @@ inline LogSink TableLogSink::makeSink (LogMessage::Priority filter,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

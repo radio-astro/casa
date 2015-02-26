@@ -23,11 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArraySampledFunctional.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ArraySampledFunctional.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/ArraySampledFunctional.h>
+#ifndef SCIMATH_ARRAYSAMPLEDFUNCTIONAL_TCC
+#define SCIMATH_ARRAYSAMPLEDFUNCTIONAL_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/ArraySampledFunctional.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> ArraySampledFunctional<T>::
 ArraySampledFunctional()
@@ -108,5 +111,7 @@ template<class T> ArraySampledFunctional<T>::
 // compile-command: "gmake OPTLIB=1 ArraySampledFunctional"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

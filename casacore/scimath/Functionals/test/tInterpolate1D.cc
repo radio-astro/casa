@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tInterpolate1D.cc 19880 2007-02-15 04:10:07Z Malte.Marquarding $
+//# $Id: tInterpolate1D.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Containers/Block.h>
-#include <scimath/Functionals/ArraySampledFunctional.h>
-#include <scimath/Functionals/Interpolate1D.h>
-#include <scimath/Functionals/ScalarSampledFunctional.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/scimath/Functionals/ArraySampledFunctional.h>
+#include <casacore/scimath/Functionals/Interpolate1D.h>
+#include <casacore/scimath/Functionals/ScalarSampledFunctional.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // Main program to test the Interpolate1D class
 

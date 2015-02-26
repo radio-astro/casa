@@ -22,15 +22,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: HostInfoDarwin.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/GaussianBeam.h>
+#include <casacore/scimath/Mathematics/GaussianBeam.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Quanta/QC.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Quanta/QLogical.h>
 
-#include <casa/Containers/Record.h>
-#include <casa/Quanta/QC.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Quanta/QLogical.h>
-
-namespace casa {
+namespace casacore {
 
 const GaussianBeam GaussianBeam::NULL_BEAM = GaussianBeam();
 
@@ -267,6 +267,7 @@ Vector<Quantity> GaussianBeam::toVector(const Bool unwrap) const {
 	return beam;
 }
 
+
 void GaussianBeam::convert(
 	const String& majUnit, const String& minUnit, const String& paUnit
 ) {
@@ -284,9 +285,9 @@ Bool near(
 			"GaussianBeam::near(): absPATol does not have angular units"
 		);
 	}
-	return casa::near(left.getMajor(), other.getMajor(), relWidthTol)
-		&& casa::near(left.getMinor(), other.getMinor(), relWidthTol)
-		&& casa::nearAbs(left.getPA(True), other.getPA(True), absPATol);
+	return casacore::near(left.getMajor(), other.getMajor(), relWidthTol)
+		&& casacore::near(left.getMinor(), other.getMinor(), relWidthTol)
+		&& casacore::nearAbs(left.getPA(True), other.getPA(True), absPATol);
 }
 
 }

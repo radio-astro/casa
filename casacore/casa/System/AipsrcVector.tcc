@@ -23,18 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcVector.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AipsrcVector.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_AIPSRCVECTOR_TCC
+#define CASA_AIPSRCVECTOR_TCC
 
 //# Includes
 
-#include <casa/System/AipsrcVector.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/AipsrcVector.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Data
 template <class T>
@@ -103,7 +106,7 @@ Bool AipsrcVector<T>::find(Vector<T> &value,
 
 template <class T>
 Bool AipsrcVector<T>::find(Vector<T> &value, const String &keyword, 
-			   const Unit &defun, const Unit &resun,
+			   const Unit&, const Unit&,
 			   const Vector<T> &deflt) {
   return (find(value, keyword) ? True : (value = deflt, False));
 }
@@ -149,5 +152,7 @@ void AipsrcVector<T>::save(uInt keyword) {
   Aipsrc::save((myp_p.ntlst)[keyword-1], String(oss));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -34,7 +34,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/OS/File.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>

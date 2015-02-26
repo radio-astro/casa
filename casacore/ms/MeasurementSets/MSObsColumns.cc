@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSObsColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSObsColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSObsColumns.h>
-#include <ms/MeasurementSets/MSObservation.h>
+#include <casacore/ms/MeasurementSets/MSObsColumns.h>
+#include <casacore/ms/MeasurementSets/MSObservation.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSObservationColumns::
 ROMSObservationColumns(const MSObservation& msObservation):
@@ -197,5 +197,5 @@ void MSObservationColumns::attach(MSObservation& msObservation)
 // compile-command: "gmake MSObsColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

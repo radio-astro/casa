@@ -24,15 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CASATask.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: CASATask.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef _CASA_TASK_H
 #define _CASA_TASK_H
 
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordField.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>Task interface</summary>
 
@@ -91,6 +92,6 @@ class CASATask
       Record pset;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

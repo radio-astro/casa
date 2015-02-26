@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ValType.cc 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: ValType.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/ValType.h>
-#include <casa/OS/CanonicalConversion.h>
-#include <casa/OS/LECanonicalConversion.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/ValType.h>
+#include <casacore/casa/OS/CanonicalConversion.h>
+#include <casacore/casa/OS/LECanonicalConversion.h>
+#include <casacore/casa/BasicSL/Constants.h>
 #include <limits.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# This is the implementation of the ValType class.
 //# Most functions are inlined in the header file.
@@ -503,8 +503,8 @@ CountedPtr<BaseCompare> ValType::getCmpObj (DataType dt)
     default:
 	break;
     }
-    return 0;
+    return CountedPtr<BaseCompare>();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

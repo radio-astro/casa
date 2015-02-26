@@ -1,4 +1,4 @@
-//# Template.cc: Canonicalise, format etc. aips++ template definitions
+//# Template.cc: Canonicalise, format etc. Casacore template definitions
 //# Copyright (C) 2001-2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,22 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Template.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Template.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_TEMPLATE_TCC
+#define CASA_TEMPLATE_TCC
 
 //# Includes
-#include <casa/Utilities/Template.h>
+#include <casacore/casa/Utilities/Template.h>
 
-#include <casa/ostream.h>
-#include <casa/fstream.h>
-#include <casa/typeinfo.h>
-#include <casa/stdlib.h>
-#include <casa/sstream.h>
+#include <casacore/casa/ostream.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/typeinfo.h>
+#include <casacore/casa/stdlib.h>
+#include <casacore/casa/sstream.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Sort.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Sort.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Static constants
   // Patterns to analyse an input line
@@ -873,5 +876,7 @@ void Template::setOutput(const String &txt) {
   output_p[count_p++] = txt;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExternalLockSync.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ExternalLockSync.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_EXTERNALLOCKSYNC_H
 #define TABLES_EXTERNALLOCKSYNC_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableLockData.h>
-#include <tables/Tables/TableSyncData.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableLockData.h>
+#include <casacore/tables/Tables/TableSyncData.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Class to hold table lock data.
@@ -143,6 +143,6 @@ inline uInt ExternalLockSync::nrow() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

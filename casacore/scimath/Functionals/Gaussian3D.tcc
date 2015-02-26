@@ -23,19 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Gaussian3D.tcc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Gaussian3D.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_GAUSSIAN3D_TCC
+#define SCIMATH_GAUSSIAN3D_TCC
 
 
-#include <scimath/Functionals/Gaussian3D.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Gaussian3D.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> 
 Gaussian3D<T>::Gaussian3D()   
@@ -113,5 +116,7 @@ T Gaussian3D<T>::sq(T v) const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

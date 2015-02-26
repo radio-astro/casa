@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.h 21254 2012-07-18 06:20:53Z gervandiepen $
+//# $Id: ConcatTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_CONCATTABLE_H
 #define TABLES_CONCATTABLE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseTable.h>
-#include <tables/Tables/ConcatRows.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/Table.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/SimOrdMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/tables/Tables/ConcatRows.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# Forward Declarations
   class TSMOption;
@@ -360,6 +360,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVTime.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MVTime.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Quanta/MVTime.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVEpoch.h>
-#include <casa/Utilities/MUString.h>
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
-#include <casa/OS/Time.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/MVEpoch.h>
+#include <casacore/casa/Utilities/MUString.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // MVTime class
 //# Static members
@@ -262,7 +262,7 @@ MVTime::Format MVTime::getFormat() {
 }
 
 MVTime::formatTypes MVTime::giveMe(const String &in) {
-  const Int N_name = 13;
+  const Int N_name = 30;
   static const String tab[N_name] = {
     "ANGLE",
     "TIME",
@@ -277,6 +277,23 @@ MVTime::formatTypes MVTime::giveMe(const String &in) {
     "DIG2",
     "FITS",
     "LOCAL",
+    "USE_SPACE",
+    "ALPHA",
+    "BOOST",
+    "NO_H",
+    "NO_HM",
+    "ANGLE_CLEAN",
+    "ANGLE_NO_D",
+    "ANGLE_NO_DM",
+    "ANGLE_CLEAN_NO_D",
+    "ANGLE_CLEAN_NO_DM",
+    "TIME_CLEAN",
+    "TIME_NO_H",
+    "TIME_NO_HM",
+    "TIME_CLEAN_NO_H",
+    "TIME_CLEAN_NO_HM",
+    "YMD_ONLY",
+    "MOD_MASK"
   };
   static MVTime::formatTypes nam[N_name] = {
     MVTime::ANGLE,
@@ -292,6 +309,23 @@ MVTime::formatTypes MVTime::giveMe(const String &in) {
     MVTime::DIG2,
     MVTime::FITS,
     MVTime::LOCAL,
+    MVTime::USE_SPACE,
+    MVTime::ALPHA,
+    MVTime::BOOST,
+    MVTime::NO_H,
+    MVTime::NO_HM,
+    MVTime::ANGLE_CLEAN,
+    MVTime::ANGLE_NO_D,
+    MVTime::ANGLE_NO_DM,
+    MVTime::ANGLE_CLEAN_NO_D,
+    MVTime::ANGLE_CLEAN_NO_DM,
+    MVTime::TIME_CLEAN,
+    MVTime::TIME_NO_H,
+    MVTime::TIME_NO_HM,
+    MVTime::TIME_CLEAN_NO_H,
+    MVTime::TIME_CLEAN_NO_HM,
+    MVTime::YMD_ONLY,
+    MVTime::MOD_MASK
   };
   Int t = MUString::minimaxNC(in, N_name, tab);
   return (t<N_name ? nam[t] : (MVTime::formatTypes) 0);
@@ -349,7 +383,11 @@ void MVTime::print(ostream &oss,
       if (i1 == MVTime::YMD || i1 == MVTime::DMY ||
 	  i1 == MVTime::MJD ||
 	  (intyp & MVTime::NO_TIME) != MVTime::NO_TIME) {
-	oss << '-';
+        if (intyp & MVTime::USE_SPACE) {
+          oss << ' ';
+        } else {
+          oss << '-';
+        }
       }
     }
     if (i1 == MVTime::YMD || i1 == MVTime::DMY || i1 == MVTime::FITS) {
@@ -372,6 +410,8 @@ void MVTime::print(ostream &oss,
     if ((intyp & MVTime::NO_TIME) != MVTime::NO_TIME) {
 	if (i1 == MVTime::FITS) {
 	  oss << "T";
+        } else if (intyp & MVTime::USE_SPACE) {
+          oss << ' ';
 	} else {
 	  oss << "/";
 	}
@@ -391,9 +431,6 @@ void MVTime::print(ostream &oss,
     }
 }
 
-Bool MVTime::read(Quantity &res, MUString &in) {
-  return read(res, in, True);
-}
 
 Bool MVTime::read(Quantity &res, MUString &in, Bool chk) {
   static const String mon[12] = {
@@ -478,7 +515,7 @@ Bool MVTime::read(Quantity &res, MUString &in, Bool chk) {
   } else {
     in.pop(); return False;
   }
-  if (in.tSkipChar('/') || in.tSkipChar('-')) {
+  if (in.tSkipChar('/') || in.tSkipChar('-') || in.tSkipChar(' ')) {
     if (MVAngle::read(res, in, chk)) {
       res = Quantity(res.get("deg").getValue()/360., "d");
     } else {
@@ -494,7 +531,11 @@ Bool MVTime::read(Quantity &res, MUString &in, Bool chk) {
 	  r += Double(in.getuInt())/60.0;
 	}
 	res -= Quantity(s*r/24.0,"d");	// Time zone
-      } else if (in.tSkipChar('Z')) {	// FITS UTC (old format)
+      } else if (! in.tSkipChar('Z')) {	// FITS UTC (old format)
+        if (chk) {
+          in.skipBlank();
+          if (!in.eos()) return False;	     // incorrect
+        }
       }
     } else {
       in.pop(); return False;
@@ -507,10 +548,6 @@ Bool MVTime::read(Quantity &res, MUString &in, Bool chk) {
   }
   res *= s;			// Sign
   in.unpush(); return True;
-}
-
-Bool MVTime::read(Quantity &res, const String &in) {
-  return read(res, in, True);
 }
 
 Bool MVTime::read(Quantity &res, const String &in, Bool chk) {
@@ -561,5 +598,5 @@ ostream &operator<<(ostream &os, const MVTime::Format &form) {
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

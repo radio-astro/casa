@@ -24,17 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Choice.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Choice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_CHOICE_H
 #define CASA_CHOICE_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 #include <iostream>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class T> class Vector;
@@ -102,6 +103,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

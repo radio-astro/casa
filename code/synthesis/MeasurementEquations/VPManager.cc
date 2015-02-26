@@ -35,7 +35,7 @@
 #include <tables/Tables/ScaRecordColDesc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableDesc.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <casa/Quanta/Quantum.h>

@@ -24,27 +24,27 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageInfo.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageInfo.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/ImageInfo.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/QuantumHolder.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Containers/Record.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
-#include <tables/LogTables/LoggerHolder.h>
-#include <casa/sstream.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-
-
-#include <casa/iostream.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/iostream.h>
+
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ImageInfo::ImageInfo()
 : _beams(ImageBeamSet()),
@@ -80,13 +80,12 @@ ImageInfo::ImageTypes ImageInfo::defaultImageType() {
 }
 
 String ImageInfo::defaultObjectName() {
-   static const String tmp;
-   return tmp;
+   return String();
 }
 
 GaussianBeam ImageInfo::defaultRestoringBeam() {
-	static const GaussianBeam x;
-	return x;
+   static const GaussianBeam x;
+   return x;
 }
 
 GaussianBeam ImageInfo::restoringBeam(
@@ -870,5 +869,5 @@ Double ImageInfo::getBeamAreaInPixels(
 	return beam.getArea(pixelArea.getUnit())/pixelArea.getValue();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

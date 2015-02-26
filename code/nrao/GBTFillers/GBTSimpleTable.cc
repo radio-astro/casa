@@ -43,7 +43,7 @@
 #include <tables/Tables/ArrColDesc.h>
 #include <casa/Arrays/IPosition.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 
 GBTSimpleTable::GBTSimpleTable(const String &tableName, 
 			       const String &indexColumn) 

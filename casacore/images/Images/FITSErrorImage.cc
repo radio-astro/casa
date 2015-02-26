@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSErrorImage.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: FITSErrorImage.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Images/FITSErrorImage.h>
-#include <images/Images/FITSImage.h>
-#include <lattices/Lattices/FITSMask.h>
+#include <casacore/images/Images/FITSErrorImage.h>
+#include <casacore/images/Images/FITSImage.h>
+#include <casacore/lattices/LRegions/FITSMask.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FITSErrorImage::FITSErrorImage (const String& name, uInt whichRep, uInt whichHDU, FITSErrorImage::ErrorType errtype)
 : FITSImage(name, whichRep, whichHDU),
@@ -195,5 +195,5 @@ void FITSErrorImage::setupMask()
 		throw (AipsError ("FITSErrorImage::setupMask - "
 				"error type UNKNOWN is not accepted!"));
 	}
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFieldIndex.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSFieldIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFIELDINDEX_H
 #define MS_MSFIELDINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -87,7 +87,7 @@ public:
   MSFieldIndex(const MSField &field);
 
   // Null destructor
-  virtual ~MSFieldIndex() {};
+  virtual ~MSFieldIndex() {}
 
   // Look up a single name in FIELD.NAME or FIELD.CODE
   Vector<Int> matchFieldNameOrCode(const String& name);
@@ -131,7 +131,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

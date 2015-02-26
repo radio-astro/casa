@@ -1,4 +1,4 @@
-//# aipsdef.h: Global initialization for special aips++ macros
+//# aipsdef.h: Global initialization for special Casacore macros
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aipsdef.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: aipsdef.h 21560 2015-02-11 14:00:31Z gervandiepen $
 
 #ifndef CASA_AIPSDEF_H
 #define CASA_AIPSDEF_H
 
-#include <casa/aipstype.h>
+#include <casacore/casa/aipstype.h>   //# needed for Bool
 
-//# Define the aips++ global macros
+//# Define the Casacore global macros
 
 //# Defined the "aips_name2" macro which is used to join two tokens.
 
@@ -40,7 +40,7 @@
 #define aips_name2(a,b) a/**/b
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // If AIPS_DEBUG is not defined, then the symbol expands to (0) which in an
 // if should be removed by the dead code eliminator of any optimizer; thus
@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern Bool aips_debug_on;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #if !defined(AIPS_DEBUG)
 #define aips_debug (0)
@@ -93,7 +93,7 @@ namespace std {};
 #else
 #define WHATEVER_SUN_TYPEDEF(X)
 #define WHATEVER_TYPENAME typename
-#if defined(AIPS_CRAY_PGI)
+#if defined(AIPS_CRAY_PGI) || defined(AIPS_GCC4)
 #define WHATEVER_SUN_EXCEPTSPEC(X) throw(X)
 #else
 #define WHATEVER_SUN_EXCEPTSPEC(X)

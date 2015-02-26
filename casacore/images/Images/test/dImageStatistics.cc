@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dImageStatistics.cc 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: dImageStatistics.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 // 
 //
 // dImageStatistics iterates through an image accumulating and displaying statistics
@@ -31,7 +31,7 @@
 //    are displayed as a function of location of the display axes
 //    (the axes not specified by keyword axes) with line plots.
 //
-//   in       The name on the input aips++ image.  Currently must be of 
+//   in       The name on the input Casacore image.  Currently must be of 
 //            type <Float> and can be of any dimension.
 //
 //            There is no default.
@@ -96,27 +96,27 @@
 //
 //
 //
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Inputs/Input.h>
-#include <casa/Logging.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Inputs/Input.h>
+#include <casacore/casa/Logging.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
   
-#include <images/Images/ImageStatistics.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/SubImage.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LatticeStatsBase.h>
-#include <lattices/Lattices/LCSlicer.h>
-#include <lattices/Lattices/LCBox.h>
-#include <casa/System/PGPlotter.h>
+#include <casacore/images/Images/ImageStatistics.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LatticeMath/LatticeStatsBase.h>
+#include <casacore/lattices/LRegions/LCSlicer.h>
+#include <casacore/lattices/LRegions/LCBox.h>
+#include <casacore/casa/System/PGPlotter.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 enum defaults {AXES, REGION, STATS, RANGE, PLOTTING, NDEFAULTS=5};
 
 
@@ -125,7 +125,7 @@ int main (int argc, const char* argv[])
 try {
 
    Input inputs(1);
-   inputs.version ("$Revision: 20567 $");
+   inputs.version ("$Revision: 21549 $");
 
 
 // Get inputs

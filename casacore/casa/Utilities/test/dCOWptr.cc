@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dCOWptr.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: dCOWptr.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/COWPtr.h>
-#include <casa/iostream.h> 
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/COWPtr.h>
+#include <casacore/casa/iostream.h> 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
   // create an array of dimension 1, length 4

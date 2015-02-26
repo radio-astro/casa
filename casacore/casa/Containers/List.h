@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: List.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: List.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_LIST_H
 #define CASA_LIST_H
 
 
 //# Includes
-#include <casa/Utilities/Register.h>
-#include <casa/Utilities/Notice.h>
-#include <casa/Containers/Link.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Containers/IterError.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/Utilities/Notice.h>
+#include <casacore/casa/Containers/Link.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/IterError.h>
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
 // The function which throws an exception for advancing the internal
 // cursor past the end of a list
@@ -146,8 +147,8 @@ private:
 // <anchor name=simple_example>
 // <example>
 //     <srcblock>
-// #include <casa/Containers/List.h>
-// #include <casa/Containers/ListIO.h>
+// #include <casacore/casa/Containers/List.h>
+// #include <casacore/casa/Containers/ListIO.h>
 // 
 // main() {
 //                                              // List, conceptual
@@ -539,8 +540,8 @@ protected:
 // <anchor name=complete_example>
 // <example>
 // <srcblock>
-// #include <casa/Containers/List.h>
-// #include <casa/Containers/ListIO.h>
+// #include <casacore/casa/Containers/List.h>
+// #include <casacore/casa/Containers/ListIO.h>
 //
 // main() {
 //                                             // The conceptual cursors are:
@@ -633,7 +634,7 @@ public:
     // to create an initially invalid empty ListIter.  The instantiated
     // class will accept assignment and thus become valid later.
     //
-    ListIter() : ConstListIter<t>() {}
+    ListIter() : ConstListIter<t>(), own(False){}
 
 
     //
@@ -750,6 +751,6 @@ enum {ConstListIterVersion = 1};
 
 } //#End casa namespace
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/List.tcc>
+#include <casacore/casa/Containers/List.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFlagger.h 20838 2009-12-01 10:10:55Z gervandiepen $
+//# $Id: MSFlagger.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFLAGGER_H
 #define MS_MSFLAGGER_H
 
-#include <casa/aips.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> class Array;
 class MSSelector;
@@ -220,7 +220,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

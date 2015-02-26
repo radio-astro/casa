@@ -23,19 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExtendImage.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: ExtendImage.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/ExtendImage.h>
-#include <lattices/Lattices/ExtendLattice.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#ifndef IMAGES_EXTENDIMAGE_TCC
+#define IMAGES_EXTENDIMAGE_TCC
+
+#include <casacore/images/Images/ExtendImage.h>
+#include <casacore/lattices/Lattices/ExtendLattice.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ExtendImage<T>::ExtendImage()
@@ -57,8 +60,8 @@ ExtendImage<T>::ExtendImage (const ImageInterface<T>& image,
 		     "new csys or shape incompatible with old ones");
   }
   itsExtLatPtr = new ExtendLattice<T> (image, newShape, newAxes, stretchAxes);
-  this->setCoordsMember (newCsys);
-  this->setImageInfo (itsImagePtr->imageInfo());
+  setCoordsMember (newCsys);
+  this->setImageInfoMember (itsImagePtr->imageInfo());
   this->setMiscInfoMember (itsImagePtr->miscInfo());
   this->setUnitMember (itsImagePtr->units());
   logger().addParent (itsImagePtr->logger());
@@ -177,6 +180,12 @@ String ExtendImage<T>::name (Bool stripPath) const
 }
   
 template<class T>
+ImageAttrHandler& ExtendImage<T>::attrHandler (Bool createHandler)
+{
+  return itsImagePtr->attrHandler (createHandler);
+}
+
+template<class T>
 Bool ExtendImage<T>::doGetSlice (Array<T>& buffer,
 			      const Slicer& section)
 {
@@ -258,5 +267,7 @@ void ExtendImage<T>::reopen()
   itsImagePtr->reopen();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

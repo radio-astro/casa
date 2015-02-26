@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IComplex.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: IComplex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/BasicSL/IComplex.h>
-#include <casa/iostream.h>
+#include <casacore/casa/BasicSL/IComplex.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ostream& operator<< (ostream& os, const IComplex& val)
 {
@@ -37,5 +37,5 @@ ostream& operator<< (ostream& os, const IComplex& val)
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -291,7 +291,8 @@ void PKSFiller::fill( )
       srcname = pksrec.srcName;
       srctype =  Int(SrcType::PSOFF);
     } else {
-      srcname = pksrec.srcName.before(rx2);
+      SubString sub = pksrec.srcName.before(rx2);
+      srcname = string(sub.chars( ),sub.length( ));
       srctype =  Int(SrcType::PSON);
     }
     if ( pksrec.srcType != Int(SrcType::NOTYPE)) {

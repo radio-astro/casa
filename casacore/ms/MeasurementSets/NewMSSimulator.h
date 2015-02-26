@@ -23,27 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.h 20752 2009-10-01 07:14:04Z gervandiepen $
+//# $Id: NewMSSimulator.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_NEWMSSIMULATOR_H
 #define MS_NEWMSSIMULATOR_H
 
 
 //# Includes
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MDirection.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MDirection.h>
 
-#include <tables/Tables/TiledDataStManAccessor.h>
+#include <casacore/tables/DataMan/TiledDataStManAccessor.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -107,7 +108,7 @@ public:
   
   // Set maximum amount of data (bytes) to be written into any one
   // scratch column hypercube
-  void setMaxData(const Double maxData=2e9) {maxData_p=maxData;};
+  void setMaxData(const Double maxData=2e9) {maxData_p=maxData;}
   
   // set the antenna and array data. These are written immediately to the
   // existing MS. The same model is used for the other init infor.
@@ -182,15 +183,17 @@ public:
 	       const String& spWindowName,
 	       const Quantity& qStartTime, 
 	       const Quantity& qStopTime,
-	       const Bool add_observation,
-	       const Bool state_sig,
-	       const Bool state_ref,
-	       const double& state_cal,
-	       const double& state_load,
-	       const unsigned int state_sub_scan,
-	       const String& state_obs_mode,
-	       const String& observername,
-	       const String& projectname);
+               const Bool add_observation=True,
+//# from int ASDM2MSFiller::addUniqueState(
+//# defaults for ALMA as known on 20100831
+               const Bool state_sig=True,
+               const Bool state_ref=True,
+               const double& state_cal=0.,
+               const double& state_load=0.,
+               const unsigned int state_sub_scan=1,
+               const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+               const String& observername="CASA simulator",
+               const String& projectname="CASA simulation");
 
 
   void observe(const Vector<String>& sourceNames,
@@ -198,15 +201,17 @@ public:
 	       const Vector<Quantity>& qStartTimes, 
 	       const Vector<Quantity>& qStopTimes,
 	       const Vector<MDirection>& directions,
-	       const Bool add_observation,
-	       const Bool state_sig,
-	       const Bool state_ref,
-	       const double& state_cal,
-	       const double& state_load,
-	       const unsigned int state_sub_scan,
-	       const String& state_obs_mode,
-	       const String& observername,
-	       const String& projectname);
+               const Bool add_observation=True,
+//# from int ASDM2MSFiller::addUniqueState(
+//# defaults for ALMA as known on 20100831
+               const Bool state_sig=True,
+               const Bool state_ref=True,
+               const double& state_cal=0.,
+               const double& state_load=0.,
+               const unsigned int state_sub_scan=1,
+               const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
+               const String& observername="CASA simulator",
+               const String& projectname="CASA simulation");
 
   MeasurementSet * getMs () const;
 
@@ -214,7 +219,7 @@ public:
 private:
 
   // Prevent use of default constructor
-  NewMSSimulator() {};
+  NewMSSimulator() {}
 
 //# Data Members
   Double fractionBlockageLimit_p;
@@ -278,7 +283,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

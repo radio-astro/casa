@@ -23,19 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ChebyshevParam.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ChebyshevParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_CHEBYSHEVPARAM_TCC
+#define SCIMATH_CHEBYSHEVPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/ChebyshevParam.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Utilities/MUString.h>
+#include <casacore/scimath/Functionals/ChebyshevParam.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Utilities/MUString.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T>
@@ -397,5 +400,7 @@ void ChebyshevParamModeImpl<AutoDiffA<T> >::getMode(RecordInterface& out) const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

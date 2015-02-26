@@ -33,8 +33,8 @@
 
 #include <casa/Exceptions.h>
 
-#include <tables/Tables/TableParse.h>
-#include <tables/Tables/TableGram.h>
+#include <tables/TaQL/TableParse.h>
+#include <tables/TaQL/TableGram.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableIter.h>
@@ -45,20 +45,20 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/IO/LargeRegularFileIO.h>
 
-#include <tables/Tables/ExprMathNode.h>
-#include <tables/Tables/ExprMathNodeArray.h>
-#include <tables/Tables/ExprDerNode.h>
-#include <tables/Tables/ExprDerNodeArray.h>
-#include <tables/Tables/ExprFuncNode.h>
-#include <tables/Tables/ExprFuncNodeArray.h>
-#include <tables/Tables/ExprLogicNode.h>
-#include <tables/Tables/ExprLogicNodeArray.h>
-#include <tables/Tables/ExprNodeArray.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <tables/Tables/ExprNodeRep.h>
-#include <tables/Tables/ExprNodeRecord.h>
-#include <tables/Tables/ExprRange.h>
-#include <tables/Tables/RecordGram.h>
+#include <tables/TaQL/ExprMathNode.h>
+#include <tables/TaQL/ExprMathNodeArray.h>
+#include <tables/TaQL/ExprDerNode.h>
+#include <tables/TaQL/ExprDerNodeArray.h>
+#include <tables/TaQL/ExprFuncNode.h>
+#include <tables/TaQL/ExprFuncNodeArray.h>
+#include <tables/TaQL/ExprLogicNode.h>
+#include <tables/TaQL/ExprLogicNodeArray.h>
+#include <tables/TaQL/ExprNodeArray.h>
+#include <tables/TaQL/ExprNodeSet.h>
+#include <tables/TaQL/ExprNodeRep.h>
+#include <tables/TaQL/ExprNodeRecord.h>
+#include <tables/TaQL/ExprRange.h>
+#include <tables/TaQL/RecordGram.h>
 
 #include <casa/Utilities/DataType.h>
 #include <casa/Quanta/MVTime.h>

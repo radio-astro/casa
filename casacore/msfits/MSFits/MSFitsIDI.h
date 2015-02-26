@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFitsIDI.h 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: MSFitsIDI.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFITSIDI_H
 #define MS_MSFITSIDI_H
 
-#include <casa/aips.h>
-#include <fits/FITS/fits.h>
-#include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <casa/OS/Path.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // MSFitsIDI: Convert FITS-IDI data to MS format
@@ -119,7 +119,7 @@ class MSFitsIDI
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
    

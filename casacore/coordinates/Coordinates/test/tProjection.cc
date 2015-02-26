@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tProjection.cc 20491 2009-01-16 08:33:56Z gervandiepen $
+//# $Id: tProjection.cc 21511 2014-11-21 12:30:59Z gervandiepen $
  
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <coordinates/Coordinates/Projection.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/coordinates/Coordinates/Projection.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/iostream.h>
-#include <casa/namespace.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {

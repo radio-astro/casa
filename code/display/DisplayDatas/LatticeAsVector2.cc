@@ -28,7 +28,7 @@
 #include <casa/aips.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Logging/LogIO.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeLocker.h>
 #include <lattices/Lattices/MaskedLattice.h>
 

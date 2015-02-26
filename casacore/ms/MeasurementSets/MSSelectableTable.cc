@@ -24,14 +24,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSSelectableTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/ostream.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/ostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSInterface::MSInterface(const Table& table)
     :MSSelectableTable(table), msMainCols_p(NULL)
@@ -41,5 +41,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //   :MSSelectableTable(ms) 
   // {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

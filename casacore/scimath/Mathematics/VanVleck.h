@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VanVleck.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: VanVleck.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_VANVLECK_H
 #define SCIMATH_VANVLECK_H
 
 //#! Includes go here
-#include <casa/aips.h>
-#include <casa/Arrays/Matrix.h>
-#include <scimath/Functionals/Interpolate1D.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/scimath/Functionals/Interpolate1D.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/OS/Mutex.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -235,6 +235,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

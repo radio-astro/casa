@@ -32,7 +32,7 @@
 #include <casa/Containers/Record.h>
 #include <display/DisplayDatas/LatticePADMMarker.h>
 #include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Quanta/Unit.h>

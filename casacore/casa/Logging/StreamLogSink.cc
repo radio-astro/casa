@@ -24,13 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StreamLogSink.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: StreamLogSink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Logging/StreamLogSink.h>
-#include <casa/Logging/LogFilter.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Logging/StreamLogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 String StreamLogSink::localId( ) {
     return String("StreamLogSink");
@@ -107,5 +107,5 @@ void StreamLogSink::flush(Bool)
     if(stream_p) stream_p->flush();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

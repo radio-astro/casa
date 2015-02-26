@@ -23,25 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSCalEngine.cc 21138 2011-11-21 07:26:44Z gervandiepen $
+//# $Id: MSCalEngine.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <derivedmscal/DerivedMC/MSCalEngine.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/DataManError.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MCPosition.h>
-#include <measures/Measures/MCEpoch.h>
-#include <measures/Measures/MCBaseline.h>
-#include <measures/Measures/Muvw.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ArrayMeasColumn.h>
-#include <casa/Containers/Record.h>
-#include <casa/OS/Path.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/derivedmscal/DerivedMC/MSCalEngine.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/DataMan/DataManError.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MCPosition.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/measures/Measures/MCBaseline.h>
+#include <casacore/measures/Measures/Muvw.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ArrayMeasColumn.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa {
+namespace casacore {
 
 MSCalEngine::MSCalEngine()
   : itsLastCalInx   (-1),
@@ -292,7 +292,7 @@ void MSCalEngine::init()
   Bool fndObs = False;
   if (! obsTab.isNull()) {
     if (obsTab.nrow() > 0) {
-      String telescope = ROScalarColumn<String>(obsTab, "TELESCOPE_NAME")(0);
+      String telescope = ScalarColumn<String>(obsTab, "TELESCOPE_NAME")(0);
       fndObs = MeasTable::Observatory (itsArrayPos, telescope);
     }
   }
@@ -334,8 +334,8 @@ void MSCalEngine::fillAntPos (Int calDescId, Int calInx)
   } else {
     tab = getSubTable (calDescId, "ANTENNA");
   }
-  ROScalarMeasColumn<MPosition> posCol(tab, "POSITION");
-  ROScalarColumn<String>      mountCol(tab, "MOUNT");
+  ScalarMeasColumn<MPosition> posCol(tab, "POSITION");
+  ScalarColumn<String>      mountCol(tab, "MOUNT");
   vector<MPosition>& antPos = itsAntPos[calInx];
   vector<Int>& mounts = itsMount[calInx];
   vector<MBaseline>& antMB = itsAntMB[calInx];
@@ -381,7 +381,7 @@ void MSCalEngine::fillFieldDir (Int calDescId, Int calInx)
     } else {
       tab = getSubTable (calDescId, "FIELD");
     }
-    ROArrayMeasColumn<MDirection> dirCol(tab, itsDirColName);
+    ArrayMeasColumn<MDirection> dirCol(tab, itsDirColName);
     vector<MDirection>& fieldDir = itsFieldDir[calInx];
     fieldDir.reserve (tab.nrow());
     for (uInt i=fieldDir.size(); i<tab.nrow(); ++i) {
@@ -398,7 +398,7 @@ void MSCalEngine::fillCalDesc()
   // occur multiple times (for different spwid).
   // Each MS has its own subtables (ANTENNA, FIELD, etc.).
   Table tab (itsTable.keywordSet().asTable("CAL_DESC"));
-  ROScalarColumn<String> nameCol(tab, "MS_NAME");
+  ScalarColumn<String> nameCol(tab, "MS_NAME");
   // Handle CAL_DESC_IDs not seen so far.
   itsCalIdMap.reserve (tab.nrow());
   for (uInt i=itsCalIdMap.size(); i<tab.nrow(); ++i) {
@@ -429,7 +429,7 @@ Table MSCalEngine::getSubTable (Int calDescId, const String& subTabName,
   // If defined, open a subtable in the MS referred to by the name in the
   // MS_NAME column of the CAL_DESC subtable.
   Table calDescTab (itsTable.keywordSet().asTable("CAL_DESC"));
-  ROScalarColumn<String> nameCol(calDescTab, "MS_NAME");
+  ScalarColumn<String> nameCol(calDescTab, "MS_NAME");
   // If the path is relative, use the CalTable's directory.
   String msName = nameCol(calDescId);
   if (msName.empty()) {

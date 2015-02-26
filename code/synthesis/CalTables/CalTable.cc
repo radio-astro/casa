@@ -29,7 +29,7 @@
 #include <synthesis/CalTables/CalTable.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>

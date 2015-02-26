@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasType.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TableMeasType.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/TableMeasures/TableMeasType.h>
-#include <measures/Measures/Measure.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/measures/TableMeasures/TableMeasType.h>
+#include <casacore/measures/Measures/Measure.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableMeasType::TableMeasType()
 : itsNtypes(0),
@@ -117,5 +117,5 @@ void TableMeasType::toRecord (RecordInterface& rec)
   itsMeasHolder.toType (error, rec);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

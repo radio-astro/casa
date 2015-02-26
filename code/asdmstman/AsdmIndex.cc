@@ -29,7 +29,7 @@
 
 //# Includes
 #include <asdmstman/AsdmIndex.h>
-#include <tables/Tables/DataManError.h>
+#include <tables/DataMan/DataManError.h>
 #include <casa/IO/AipsIO.h>
 
 namespace casa {

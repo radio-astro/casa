@@ -24,21 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelector.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MSSelector.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTOR_H
 #define MS_MSSELECTOR_H
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/Slicer.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/StokesConverter.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <ms/MeasurementSets/MSSelectionKeywords.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/StokesConverter.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MeasurementSets/MSSelectionKeywords.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> class ArrayColumn;
 class Record;
@@ -218,7 +218,7 @@ public:
   // (Re)Set the iterator to the first iteration, call this after iterInit.
   Bool iterOrigin();
 
-  /// End the iteration (before reaching the last iteration)
+  // End the iteration (before reaching the last iteration)
   // and set the selection back to the state before iteration started.
   Bool iterEnd();
 
@@ -326,7 +326,7 @@ inline Table MSSelector::selectedTable() const {return selms_p;}
 inline Bool MSSelector::selected() const {return initSel_p;}
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

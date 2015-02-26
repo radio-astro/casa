@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Copy2.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Copy2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/Copy.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   void objthrowmv1(const void *to, const void *from, const size_t n) {
     if (n > 0 && (!from || !to)) 
@@ -122,4 +122,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
  
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

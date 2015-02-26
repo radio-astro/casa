@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskSpecifier.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MaskSpecifier.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <images/Images/MaskSpecifier.h>
+#include <casacore/images/Images/MaskSpecifier.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# All functions are inlined.
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

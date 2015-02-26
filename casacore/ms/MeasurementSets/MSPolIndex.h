@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSPolIndex.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSPolIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSPOLINDEX_H
 #define MS_MSPOLINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSPolarization.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -87,7 +87,7 @@ public:
   MSPolarizationIndex(const MSPolarization& polarizationTable);
 
   // Null destructor
-  virtual ~MSPolarizationIndex() {};
+  virtual ~MSPolarizationIndex() {}
 
   // Look up POLARIZATION_ID's for a given set of polarization correlation
   // types and receptor cross-products
@@ -111,7 +111,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

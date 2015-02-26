@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSHistoryColumns.h 20855 2010-01-28 13:35:00Z gervandiepen $
+//# $Id: MSHistoryColumns.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSHISTORYCOLUMNS_H
 #define MS_MSHISTORYCOLUMNS_H
 
-#include <casa/aips.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCEpoch.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MSHistory;
 // <summary>
@@ -263,6 +263,6 @@ private:
   ScalarQuantColumn<Double> timeQuant_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,10 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Directory.cc 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: Directory.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // we NEED to include aips(env).h before using any AIPS_xyz defines
-#include <casa/OS/Directory.h>
+#include <casacore/casa/OS/Directory.h>
 
 #if defined(AIPS_SOLARIS) || defined(AIPS_OSF)
 #  if defined(AIPS_OSF)
@@ -52,27 +52,27 @@
 #  endif
 #endif
 
-#include <casa/OS/DirectoryIterator.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
+#include <casacore/casa/OS/DirectoryIterator.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/SymLink.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/stdexcept.h>
+#include <casacore/casa/stdexcept.h>
 #include <unistd.h>                 // needed for rmdir, unlink
 #include <sys/stat.h>               // needed for mkdir
 #include <errno.h>                  // needed for errno
-#include <casa/string.h>            // needed for strerror
+#include <casacore/casa/string.h>            // needed for strerror
 
 // Shouldn't be needed, but is needed to get rename under linux. The
 // man page claims it's in unistd.h.
-#include <casa/stdio.h>
+#include <casacore/casa/stdio.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Directory::Directory()
 : File()                         // sets to working directory
@@ -157,7 +157,12 @@ Bool Directory::isEmpty() const
 {
     DirectoryIterator iter(*this);
     while (! iter.pastEnd()) {
+      String nm (iter.name());
+      if (nm.size() < 5  ||  nm.before(4) != ".nfs") {
+        ///        cout <<"iter at "<<iter.name()<<endl;
 	return False;
+      }
+      iter++;
     }
     return True;
 }
@@ -296,7 +301,7 @@ void Directory::copy (const Path& target, Bool overwrite,
     String command("cp -r '");
     command += itsFile.path().expandedName() + "' '" +
                targetName.expandedName() + "'";
-    system (command.chars());
+    AlwaysAssert (system(command.chars()) == 0, AipsError);
     // Give write permission to user if needed.
     if (setUserWritePermission) {
 #if defined(__hpux__) || defined(AIPS_IRIX)
@@ -305,7 +310,7 @@ void Directory::copy (const Path& target, Bool overwrite,
 	command = "chmod -Rf u+w '";
 #endif
 	command += targetName.expandedName() + "'";
-	system (command.chars());
+	AlwaysAssert (system(command.chars()) == 0, AipsError);
     }
 #endif
 }
@@ -508,5 +513,5 @@ Bool Directory::isNFSMounted() const
 
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

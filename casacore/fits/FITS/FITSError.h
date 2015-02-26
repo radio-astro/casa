@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSError.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: FITSError.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef FITS_FITSERROR_H
 #define FITS_FITSERROR_H
 
 //#! Includes go here
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // default FITS error handling function, typdef, and enumeration
@@ -77,7 +77,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 // Originally, FITS error message were simply sent to an ostream.  In
-// order to have these error messages go to the AIPS++ logger by default,
+// order to have these error messages go to the Casacore logger by default,
 // this class was added.  This was made a separate class because both
 // BlockIo and FITS need to use this class.  The anticipated replacements 
 // for the current FITS classes use a somewhat similar scheme.
@@ -113,7 +113,7 @@ typedef void (*FITSErrorHandler) (const char* errMessage,
 
  
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

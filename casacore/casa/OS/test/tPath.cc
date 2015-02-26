@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPath.cc 21030 2011-03-16 13:44:34Z gervandiepen $
+//# $Id: tPath.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 
-#include <casa/OS/Path.h>
-#include <casa/OS/EnvVar.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions.h>
-#include <casa/iostream.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/iostream.h>
 #include <unistd.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for class Path.
 // </summary>

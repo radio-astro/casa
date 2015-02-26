@@ -23,70 +23,70 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NewMSSimulator.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: NewMSSimulator.cc 21545 2015-01-22 19:36:35Z gervandiepen $
 
 //# Includes
-#include <ms/MeasurementSets/NewMSSimulator.h>
-#include <ms/MeasurementSets/MSDerivedValues.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Containers/Record.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
-#include <tables/Tables/TiledDataStManAccessor.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Random.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Slice.h>
-#include <measures/Measures/Stokes.h>
-#include <measures/Measures/MeasFrame.h>
-#include <casa/Quanta/MVuvw.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/MVTime.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MBaseline.h>
-#include <measures/Measures/MCBaseline.h>
-#include <measures/Measures/Muvw.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCPosition.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MeasData.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/iostream.h>
-#include <casa/fstream.h>
-#include <casa/sstream.h>
-#include <ms/MeasurementSets/MSTileLayout.h>
-#include <scimath/Mathematics/RigidVector.h>
-#include <scimath/Mathematics/SquareMatrix.h>
+#include <casacore/ms/MeasurementSets/NewMSSimulator.h>
+#include <casacore/ms/MeasurementSets/MSDerivedValues.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/DataMan/StandardStMan.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/tables/DataMan/TiledShapeStMan.h>
+#include <casacore/tables/DataMan/TiledDataStMan.h>
+#include <casacore/tables/DataMan/TiledStManAccessor.h>
+#include <casacore/tables/DataMan/TiledDataStManAccessor.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/casa/Quanta/MVuvw.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MBaseline.h>
+#include <casacore/measures/Measures/MCBaseline.h>
+#include <casacore/measures/Measures/Muvw.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MCPosition.h>
+#include <casacore/measures/Measures/MPosition.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MeasData.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/ms/MeasurementSets/MSTileLayout.h>
+#include <casacore/scimath/Mathematics/RigidVector.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
 
 // temporary to get access to beam_offsets
-#include <ms/MeasurementSets/MSIter.h>
+#include <casacore/ms/MeasurementSets/MSIter.h>
 //
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 const uInt nCat = 6; // Number of Flag categories
 
@@ -1038,8 +1038,7 @@ bool NewMSSimulator::getFeedMode(String& mode)
     Vector<String> feedPol(2);
     feedc.polarizationType().get(0,feedPol,True);
     // we only support setting perfect feeds in Simulator.
-    Int nF(0);
-    feedPol.shape(nF);
+    Int nF = feedPol.shape()[0];
     if (nF<2) 
       mode=feedPol[0];
     else
@@ -1090,17 +1089,15 @@ void NewMSSimulator::observe(const String& sourceName,
 			     const String& spWindowName,
 			     const Quantity& qStartTime, 
 			     const Quantity& qStopTime,
-			     const Bool add_observation=True,
-// from int ASDM2MSFiller::addUniqueState(
-// defaults for ALMA as known on 20100831
-			     const Bool state_sig=True,
-			     const Bool state_ref=True,
-			     const double& state_cal=0.,
-			     const double& state_load=0.,
-			     const unsigned int state_sub_scan=1,
-			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
-			     const String& observername="CASA simulator",
-			     const String& projectname="CASA simulation")
+			     const Bool add_observation,
+			     const Bool state_sig,
+			     const Bool state_ref,
+			     const double& state_cal,
+			     const double& state_load,
+			     const unsigned int state_sub_scan,
+			     const String& state_obs_mode,
+			     const String& observername,
+			     const String& projectname)
 {
   Vector<String> sourceNames(1,sourceName);  
   Vector<Quantity> qStartTimes(1,qStartTime);
@@ -1119,17 +1116,15 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 			     const Vector<Quantity>& qStartTimes, 
 			     const Vector<Quantity>& qStopTimes,
 			     const Vector<MDirection>& directions,
-			     const Bool add_observation=True,
-// from int ASDM2MSFiller::addUniqueState(
-// defaults for ALMA as known on 20100831
-			     const Bool state_sig=True,
-			     const Bool state_ref=True,
-			     const double& state_cal=0.,
-			     const double& state_load=0.,
-			     const unsigned int state_sub_scan=1,
-			     const String& state_obs_mode="OBSERVE_TARGET.ON_SOURCE",
-			     const String& observername="CASA simulator",
-			     const String& projectname="CASA simulation")
+			     const Bool add_observation,
+			     const Bool state_sig,
+			     const Bool state_ref,
+			     const double& state_cal,
+			     const double& state_load,
+			     const unsigned int state_sub_scan,
+			     const String& state_obs_mode,
+			     const String& observername,
+			     const String& projectname)
 {  
 
   // It is assumed that if there are multiple pointings, that they 
@@ -1185,11 +1180,10 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   }
   MSPolarizationColumns& polc=msc.polarization();
   baseSpWID=existingSpWID;
-  Double startFreq, freqInc;
+  Double startFreq;
   Vector<Double> resolution;
   spwc.refFrequency().get(baseSpWID,startFreq);
   spwc.resolution().get(baseSpWID,resolution);
-  freqInc=resolution(0);
   Int nChan=resolution.nelements();
   Matrix<Int> corrProduct;
   polc.corrProduct().get(baseSpWID,corrProduct);
@@ -1266,7 +1260,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 
   Double Tstart, Tend, Tint;
   // number of pointings:
-  uInt nPts=qStartTimes.shape()(0);
+  Int nPts=qStartTimes.shape()(0);
   AlwaysAssert(nPts==qStopTimes.shape()(0),AipsError);
   AlwaysAssert(nPts==sourceNames.shape()(0),AipsError);
 
@@ -1403,7 +1397,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
   //Int nIntegrations=max(1, Int(0.5+(Tend-Tstart)/Tint));
   Int nIntegrations=0; 
   Double Tstarti, Tendi;
-  for(uInt i=0;i<nPts;i++) {
+  for(Int i=0;i<nPts;i++) {
     Tstarti = qStartTimes(i).getValue("s");  
     // don't need to add RefTime and offset since we're just using the diff in this loop:   
     Tendi = qStopTimes(i).getValue("s"); 
@@ -1473,7 +1467,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
     // antenna frame for all antennas
     RigidVector<Double, 2> beamOffset=beam_offsets(0,0,feed);
 
-    for(uInt pointing=0; pointing<nPts; pointing++) {
+    for(Int pointing=0; pointing<nPts; pointing++) {
 
       Tstart = qStartTimes(pointing).getValue("s") + 
 	taiRefTime.get("s").getValue("s") + t_offset_p;
@@ -1901,5 +1895,5 @@ Bool NewMSSimulator::calcAntUVW(MEpoch& epoch, MDirection& refdir,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -22,19 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
 #ifndef SCIMATH_STATISTICSUTILITIES_H
 #define SCIMATH_STATISTICSUTILITIES_H
 
-#include <casa/Exceptions/Error.h>
-#include <scimath/Mathematics/StatisticsTypes.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/scimath/Mathematics/StatisticsTypes.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/aips.h>
 
 #include <iostream>
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa {
+namespace casacore {
 
 // Various statistics related methods for the statistics framework.
 
@@ -201,12 +202,12 @@ private:
 // are used solely to permit compilation. In general, these versions should
 // never actually be called
 template<>
-inline Int StatisticsUtilities<casa::Complex>::getInt(const casa::Complex&) {
+inline Int StatisticsUtilities<casacore::Complex>::getInt(const casacore::Complex&) {
 	ThrowCc("This version for complex data types should never be called");
 }
 
 template<>
-inline Int StatisticsUtilities<casa::DComplex>::getInt(const casa::DComplex&) {
+inline Int StatisticsUtilities<casacore::DComplex>::getInt(const casacore::DComplex&) {
 	ThrowCc("Logic Error: This version for complex data types should never be called");
 }
 
@@ -231,7 +232,7 @@ ostream &operator<<(ostream &os, const StatisticsUtilities<Complex>::BinDesc &de
 }
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <scimath/Mathematics/StatisticsUtilities.tcc>
+#include <casacore/scimath/Mathematics/StatisticsUtilities.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

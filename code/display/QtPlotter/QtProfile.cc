@@ -29,7 +29,7 @@
 #include <measures/Measures.h>
 #include <coordinates/Coordinates.h>
 #include <casa/Exceptions/Error.h>
-#include <lattices/Lattices/RegionType.h>
+#include <lattices/LRegions/RegionType.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>

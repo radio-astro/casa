@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedColumn.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: DerivedColumn.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_DERIVEDCOLUMN_H
 #define DERIVEDMSCAL_DERIVEDCOLUMN_H
 
 
 //# Includes
-#include <derivedmscal/DerivedMC/MSCalEngine.h>
-#include <tables/Tables/VirtScaCol.h>
-#include <tables/Tables/VirtArrCol.h>
+#include <casacore/casa/aips.h>
+#include <casacore/derivedmscal/DerivedMC/MSCalEngine.h>
+#include <casacore/tables/DataMan/VirtScaCol.h>
+#include <casacore/tables/DataMan/VirtArrCol.h>
 
-namespace casa {
+namespace casacore {
 
 
   // <summary>Hourangle derived from TIME, etc.</summary>

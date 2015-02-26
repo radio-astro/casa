@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tQueue.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tQueue.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 #if !defined(AIPS_DEBUG)
 #define AIPS_DEBUG
 #endif
 
-#include <casa/Containers/Queue.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Containers/Queue.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     Queue<Int> qi;                // Queue::Queue()

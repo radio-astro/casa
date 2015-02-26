@@ -35,9 +35,8 @@
 **                        William LeFebvre  <lefebvre@dis.anl.gov>
 **                        Rainer Orth       <ro@techfak.uni-bielefeld.de>
 **
-** $Id: HostInfoDarwin.h 21022 2011-03-01 10:07:47Z gervandiepen $
-**
 */
+//# $Id: HostInfoDarwin.h 21561 2015-02-16 06:57:35Z gervandiepen $
 
 #ifndef CASA_HOSTINFODARWIN_H
 #define CASA_HOSTINFODARWIN_H
@@ -51,7 +50,7 @@
 
 #include <mach/mach.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // HostInfo for Darwin machines.
@@ -92,20 +91,20 @@ friend class HostInfo;
     int valid;
     int cpus;
 
-    ssize_t memory_total;
-    ssize_t memory_used;
-    ssize_t memory_free;
+    ptrdiff_t memory_total;
+    ptrdiff_t memory_used;
+    ptrdiff_t memory_free;
 
-    ssize_t swap_total;
-    ssize_t swap_used;
-    ssize_t swap_free;
+    ptrdiff_t swap_total;
+    ptrdiff_t swap_used;
+    ptrdiff_t swap_free;
 };
 
 // </group>
 
 
 HostMachineInfo::HostMachineInfo( ) : valid(1) {
-    register int pagesize;
+    int pagesize;
 
     kern_return_t ret;
     struct host_basic_info basic_info;
@@ -191,7 +190,7 @@ void HostMachineInfo::update_info( ) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 # endif
 #endif

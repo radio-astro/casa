@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Fallible2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Fallible2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# This is Fallible2.cc not Fallible.cc because it's a non-templated function
 //# and template instantiators normally do not like them in the same .cc file
 //# with templated functions.
 
-#include <casa/Utilities/Fallible.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Fallible.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 void AccessInvalidFallibleObject()
 {
@@ -40,5 +40,5 @@ void AccessInvalidFallibleObject()
 		    " from where"));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

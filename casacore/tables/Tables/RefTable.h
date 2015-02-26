@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.h 21025 2011-03-03 15:09:00Z gervandiepen $
+//# $Id: RefTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_REFTABLE_H
 #define TABLES_REFTABLE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseTable.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/SimOrdMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseTable.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TSMOption;
@@ -391,6 +391,6 @@ inline uInt RefTable::rootRownr (uInt rnr) const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

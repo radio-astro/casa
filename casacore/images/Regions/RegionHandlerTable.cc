@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerTable.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RegionHandlerTable.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/RegionHandlerTable.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCPagedMask.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/RegionHandlerTable.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCPagedMask.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RegionHandlerTable::RegionHandlerTable (GetCallback* callback,
 					void* objectPtr)
@@ -349,5 +349,5 @@ ImageRegion RegionHandlerTable::makeMask (const LatticeBase& lattice,
   return ImageRegion(mask);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCombinatorics.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: tCombinatorics.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
 //# Includes
 
-#include <scimath/Mathematics/Combinatorics.h>
+#include <casacore/scimath/Mathematics/Combinatorics.h>
 
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main() {
     try {

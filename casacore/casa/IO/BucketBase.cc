@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketBase.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/IO/BucketBase.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/IO/BucketBase.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
   BucketBase::BucketBase (BucketFile* file, Int64 startOffset,
@@ -95,4 +95,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

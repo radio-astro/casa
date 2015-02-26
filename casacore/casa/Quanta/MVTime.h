@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVTime.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: MVTime.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MVTIME_H
 #define CASA_MVTIME_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -136,6 +136,8 @@ class Time;
 //	precede the time with 'dd-Mon-yyyy/'.<br>
 //	The <src>MVTime::FITS</src> format implies TIME, and will
 //	precede the time with 'ccyy-mm-ddT'.
+//      The <src>BOOST</src> format implies DMY and USE_SPACE (space instead
+//      of slash between date and time).
 //	<br>
 //	The output format can be modified with modifiers (specify as
 //	MVTime::TIME | MVTime::MOD (or + MVTime::MOD)). 
@@ -145,7 +147,9 @@ class Time;
 //	(i.e. <src>(A|B, prec)</src>), or an explicit cast:
 //	<src>((MVTime::formatTypes)(A|B))</src>, or make use of
 //	the provided <src>TIME[_CLEAN][_NO_H[M]]</src> and
-//	<src>ANGLE[_CLEAN][_NO_D[M]]</src>.</note>
+//	<src>ANGLE[_CLEAN][_NO_D[M]]</src>.
+//      </note>
+//
 //	The modifiers can be:
 //	<ul>
 //	 <li> <src>MVTime::CLEAN</src> to suppress leading or trailing
@@ -156,7 +160,7 @@ class Time;
 //	 <li> <src>MVTime::NO_HM</src> (or <src>NO_DM</src>), to
 //		suppress the degrees and minutes.
 //       <li> <src>MVTime::DAY</src> will precede the output with
-//		'Day-' (e.g. Wed-)
+//		'Day-' (e.g. Wed-). Space delimiter is used for USE_SPACE.
 //	 <li> <src>MVTime::NO_TIME</src> will suppress printing of time.
 //	</ul>
 //	Output in formats like <src>20'</src> can be done via the standard
@@ -169,6 +173,8 @@ class Time;
 //	  <li> MVTime::[ANGLE|TIME][_CLEAN]_NO_[D|H][M] in format with
 //		leading zero fields left empty.
 //	  <li> MVTime::CLEAN modifier for suppressing superfluous periods
+//        <li> MVTime::USE_SPACE to use a space instead of a slash
+//             as delimiter between date and time.
 //	  <li> MVTime::NO_[D|H][M] modifier to suppress first field(s)
 //	  <li> MVTime::DIG2 modifier to get +dd.mm.ss.ttt in angle or
 //		time format(i.e. in range -90 - +90 or -12 - +12)
@@ -207,7 +213,9 @@ class Time;
 // The following input formats (note no blanks allowed) are supported
 // (+stands for an optional + or -; v for an unsigned integer; dv for a
 // floating number. [] indicate optional values. Separating codes are
-// case insensitive), numbers(like yyyy) can be of any length:
+// case insensitive), numbers(like yyyy) can be of any length.
+// The separator between date and time part can be a slash (as shown below),
+// a hyphen, or one or more spaces.
 // <ul>
 //   <li> today		    -- (UT) time now
 //   <li> today/[time]	    -- time on today (0:0:0 if omitted)
@@ -235,11 +243,11 @@ class Time;
 // <linkto class=MVAngle>MVAngle</linkto>
 // Examples of valid strings:
 // <srcblock>
-//	ToDay		note case independence
-//	1996/11/20	20 November 1996 0h UT
-//	1996/11/20/5:20 20 November 1996 at 5h20m
-//	20Nov96-5h20m	same (again no case dependence)
-//	1996-11-20T5:20 same (FITS format, case dependent)
+//	ToDay		   note case independence
+//	1996/11/20	   20 November 1996 0h UT
+//	1996/11/20/5:20    20 November 1996 at 5h20m
+//	20Nov96-5h20m	   same (again no case dependence)
+//	1996-11-20T5:20    same (FITS format, case dependent)
 // </srcblock>
 // </synopsis>
 //
@@ -275,6 +283,9 @@ class MVTime {
 	DIG2			= 1024,
 	FITS			= TIME+2048,
 	LOCAL			= 4096,
+        USE_SPACE               = 8192,
+        ALPHA                   = 16384,
+        BOOST                   = DMY + USE_SPACE,
 	NO_H 			= NO_D,
 	NO_HM 			= NO_DM,
 	ANGLE_CLEAN 		= ANGLE + CLEAN,
@@ -288,7 +299,8 @@ class MVTime {
 	TIME_CLEAN_NO_H		= TIME + CLEAN + NO_H,
 	TIME_CLEAN_NO_HM	= TIME + CLEAN + NO_HM,
 	YMD_ONLY		= YMD + NO_TIME,
-	MOD_MASK		= CLEAN + NO_DM + DAY + NO_TIME + DIG2 + LOCAL
+	MOD_MASK		= CLEAN + NO_DM + DAY + NO_TIME + DIG2 +
+                                  LOCAL + USE_SPACE + ALPHA
     };
 
 //# Local structure
@@ -351,10 +363,8 @@ class MVTime {
   // Make res time Quantity from string. The String version will accept
   // a time/angle Quantity as well. The chk checks for eos
   // <group>
-  static Bool read(Quantity &res, const String &in);
-  static Bool read(Quantity &res, MUString &in);
-  static Bool read(Quantity &res, const String &in, Bool chk);
-  static Bool read(Quantity &res, MUString &in, Bool chk);
+  static Bool read(Quantity &res, const String &in, Bool chk=True);
+  static Bool read(Quantity &res, MUString &in, Bool chk=True);
   // </group>
 // Get value of date/time (MJD) in given units
 // <group>
@@ -448,6 +458,6 @@ inline Bool operator==(const MVTime &lh, const MVTime &rh)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

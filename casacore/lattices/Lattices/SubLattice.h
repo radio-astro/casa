@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SubLattice.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: SubLattice.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef LATTICES_SUBLATTICE_H
 #define LATTICES_SUBLATTICE_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <lattices/Lattices/MaskedLattice.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <casa/Arrays/AxesSpecifier.h>
-#include <casa/Arrays/AxesMapping.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/casa/Arrays/AxesSpecifier.h>
+#include <casacore/casa/Arrays/AxesMapping.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -110,6 +110,8 @@ public:
   // while for the non-const version one has to specify if the SubLattice
   // should be writable (if the original lattice is non-writable, the
   // SubLattice is always set to non-writable).
+  // <note>In the 2nd case the lattice could have been declared const,
+  // but is not to indicate it can be changed. </note>
   // <group>
   SubLattice (const MaskedLattice<T>& lattice, AxesSpecifier=AxesSpecifier());
 
@@ -125,6 +127,8 @@ public:
   // <linkto class=Slicer>Slicer</linkto> object (with an optional stride).
   // <br>An exception is thrown if the lattice shape used in the region
   // differs from the shape of the lattice.
+  // <note>In the 2nd and 4th case the lattice could have been declared const,
+  // but is not to indicate it can be changed. </note>
   // <group>
   SubLattice (const Lattice<T>& lattice, const LatticeRegion& region,
 	      AxesSpecifier=AxesSpecifier());
@@ -141,6 +145,8 @@ public:
   // Create a SubLattice from the given (Masked)Lattice and slicer.
   // The slicer can be strided.
   // <br>An exception is thrown if the slicer exceeds the lattice shape.
+  // <note>In the 2nd and 4th case the lattice could have been declared const,
+  // but is not to indicate it can be changed. </note>
   // <group>
   SubLattice (const Lattice<T>& lattice, const Slicer& slicer,
 	      AxesSpecifier=AxesSpecifier());
@@ -278,8 +284,15 @@ public:
 
   // Convert the specified position in the sublattice to the corresponding
   // position in the parent lattice.
-  inline IPosition positionInParent(const IPosition& subLatticePosition) const;
-
+  inline IPosition positionInParent(const IPosition& subLatticePosition) const
+  {
+    if (itsAxesMap.isRemoved()) {
+      return itsRegion.convert (itsAxesMap.posToOld(subLatticePosition));
+    } else {
+      return itsRegion.convert (subLatticePosition);
+    }
+  }
+    
   // Set the region object using a slicer.
   // Allows the region to be changed while keeping
   // the same lattice, so that new SubLattice objects do not have to be
@@ -295,11 +308,11 @@ protected:
   // It also fills in the parent pointer when the SubLattice is taken
   // from a MaskedLattice.
   // The default region is the entire lattice.
+  // <group>
   void setRegion (const LatticeRegion& region);
   void setRegion();
   // </group>
 
-  // <group>
   // Set the various pointer needed to construct the object.
   // One of the pointers should be zero.
   // It takes over the pointer and deletes the object in the destructor.
@@ -335,9 +348,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/SubLattice.tcc>
+#include <casacore/lattices/Lattices/SubLattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

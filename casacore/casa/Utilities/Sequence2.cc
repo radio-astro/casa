@@ -23,11 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Sequence2.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Sequence2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/Sequence.h>
+#include <casacore/casa/Utilities/Sequence.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt uIntSequence::num = 0;
 Mutex uIntSequence::theirMutex;
@@ -38,5 +38,5 @@ uInt uIntSequence::SgetNext()
   return ++num;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

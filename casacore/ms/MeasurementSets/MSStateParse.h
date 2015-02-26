@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id:$
+//# $Id: MSStateParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSTATEPARSE_H
 #define MS_MSSTATEPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -107,6 +108,6 @@ private:
   static  Vector<Int> idList;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

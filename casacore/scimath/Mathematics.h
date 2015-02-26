@@ -23,21 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Mathematics.h 20670 2009-07-10 01:43:43Z Malte.Marquarding $
+//# $Id: Mathematics.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_MATHEMATICS_H
 #define SCIMATH_MATHEMATICS_H
 
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/Constants.h>
-#include <scimath/Mathematics/Convolver.h>
-#include <scimath/Mathematics/FFTPack.h>
-#include <scimath/Mathematics/FFTServer.h>
-#include <casa/BasicMath/Math.h>
-#include <scimath/Mathematics/NumericTraits.h>
-#include <casa/BasicMath/Random.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/scimath/Mathematics/Convolver.h>
+#include <casacore/scimath/Mathematics/FFTPack.h>
+#include <casacore/scimath/Mathematics/FFTServer.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/scimath/Mathematics/NumericTraits.h>
+#include <casacore/casa/BasicMath/Random.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 
@@ -53,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology> 
 // Mathematicians may argue that everything is mathematics, and hence all of
-// AIPS++ should be in this module. However this module will only contain
+// Casacore should be in this module. However this module will only contain
 // core mathematical operations that are independent of astronomical
 // applications. 
 // </etymology>
@@ -99,6 +100,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

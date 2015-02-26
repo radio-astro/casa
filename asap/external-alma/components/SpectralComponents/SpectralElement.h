@@ -29,11 +29,10 @@
 #ifndef COMPONENTS_SPECTRALELEMENT_H
 #define COMPONENTS_SPECTRALELEMENT_H
 
+#include <memory>
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/RecordInterface.h>
-///#include <casa/Utilities/CountedPtr.h>
-#include <tr1/memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -173,9 +172,9 @@ protected:
 
 	void _setType(const Types type);
 
-	void _setFunction(const std::tr1::shared_ptr<Function<Double, Double> >& f);
+	void _setFunction(const SHARED_PTR<Function<Double, Double> >& f);
 
-	virtual std::tr1::shared_ptr<Function<Double, Double> > _getFunction() const {
+	virtual SHARED_PTR<Function<Double, Double> > _getFunction() const {
 		return _function;
 	}
 
@@ -193,7 +192,7 @@ private:
 	// Solved is the default.
 	Vector<Bool> _fixed;
 
-	std::tr1::shared_ptr<Function<Double, Double> > _function;
+	SHARED_PTR<Function<Double, Double> > _function;
 
 };
 

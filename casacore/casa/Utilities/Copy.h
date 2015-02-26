@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Copy.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Copy.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_COPY_H
 #define CASA_COPY_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/Complex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Complex.h>
 #include <algorithm>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // Copy objects from one C-style array to another.
@@ -175,19 +175,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   // </group> 
   
-  //# To support a container of const void*.
-  //# I think that nowadays handled ok
-  ///  inline void objmove(const void** to, const void*const *from, size_t n)
-  ///    { memmove(to, from, n*sizeof(void*)); }
-  ///  inline void objmove(const char** to, const char*const *from, size_t n)
-  ///    { memmove(to, from, n*sizeof(char*)); }
-  
-  //# To support a container of void*.
-  ///  inline void objmove(void** to, void*const *from, size_t n)
-  ///    { memmove(to, from, n*sizeof(void*)); }
-  ///  inline void objmove(char** to, char*const *from, size_t n)
-  ///    { memmove(to, from, n*sizeof(char*)); }
-  
   // The non-general function to copy <src>n</src> objects from one place
   // to another. Strides may be specified, i.e. you may copy from every
   // <src>fromStride</src>-th position into every <src>toStride</src>-th
@@ -210,19 +197,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     objthrowcp2(to,from,n,toStride,fromStride); while (n--) {
       *to = *from; to += toStride; from += fromStride; } }
   // </group> 
-  
-  //# To support a container of const void*.
-  //# Not necessary I think wnb
-  ///  inline void objcopy(const void** to, const void*const *from, size_t n)
-  ///    { memcpy(to, from, n*sizeof(void*)); }
-  ///  inline void objcopy(const char** to, const char*const *from, size_t n)
-  ///    { memcpy(to, from, n*sizeof(char*)); }
-  
-  //# To support a container of void*.
-  ///  inline void objcopy(void** to, void*const *from, size_t n)
-  ///    { memcpy(to, from, n*sizeof(void*)); }
-  ///  inline void objcopy(char** to, char*const *from, size_t n)
-  ///    { memcpy(to, from, n*sizeof(char*)); }
   
   // Fill <src>n</src> elements of an array of objects with the given
   // value, optionally with a stride. Note that the fillValue is passed
@@ -248,9 +222,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   // </group>
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/Copy.tcc>
+#include <casacore/casa/Utilities/Copy.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

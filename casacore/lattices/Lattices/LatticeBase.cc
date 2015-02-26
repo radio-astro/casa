@@ -23,18 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeBase.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: LatticeBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <lattices/Lattices/LatticeBase.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/lattices/Lattices/LatticeBase.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 LatticeBase::~LatticeBase()
 {}
+
+String LatticeBase::imageType() const
+{
+  return "Lattice";
+}
 
 Bool LatticeBase::isPersistent() const
 {
@@ -54,6 +59,11 @@ Bool LatticeBase::canReferenceArray() const
 Bool LatticeBase::isWritable() const
 {
   return True;
+}
+
+void LatticeBase::save (const String&) const
+{
+  throw AipsError(imageType() + "::save is not implemented");
 }
 
 Bool LatticeBase::lock (FileLocker::LockType, uInt)
@@ -148,5 +158,5 @@ void LatticeBase::throwBoolMath() const
   throw AipsError ("Operator +=, etc. cannot be used for a Boolean lattice");
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

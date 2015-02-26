@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayColumnSlices.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tArrayColumnSlices.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Slice.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Slice.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-using namespace casa;
+using namespace casacore;
 
 // Create the table.
 void createTab()
@@ -61,7 +61,7 @@ void createTab()
 void readCellSlices()
 {
   Table tab("tArrayColumnSlices_tmp.data");
-  ROArrayColumn<float> arr1(tab, "arr1");
+  ArrayColumn<float> arr1(tab, "arr1");
   {
     // No axes, thus all entire axes.
     Vector<Vector<Slice> > slices;
@@ -114,7 +114,7 @@ void readCellSlices()
 void readColumnSlices()
 {
   Table tab("tArrayColumnSlices_tmp.data");
-  ROArrayColumn<float> arr1(tab, "arr1");
+  ArrayColumn<float> arr1(tab, "arr1");
   {
     // No axes, thus all entire axes.
     Vector<Vector<Slice> > slices;

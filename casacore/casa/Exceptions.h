@@ -23,15 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Exceptions.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Exceptions.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_EXCEPTIONS_H
 #define CASA_EXCEPTIONS_H
 
 
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -43,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 //
 // <synopsis>
-// This module provides the exception handling mechanism used in AIPS++.
+// This module provides the exception handling mechanism used in Casacore.
 // It allows the user to define new exception types and to <src>throw</src>,
 // <src>catch</src>, and <src>rethrow</src> these exceptions. The interface
 // to this exception handling mechanism is very similary to the ANSI standard
@@ -60,7 +62,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <em>This example shows how a more specific exception can be caught as
 // a more general exception:</em>
 // <srcblock>
-//     #include <casa/Exceptions.h>
+//     #include <casacore/casa/Exceptions.h>
 //     #include <iostream>
 //     main() {
 //         try {
@@ -74,6 +76,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

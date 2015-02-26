@@ -23,13 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Interpolate2D2.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
- 
-#include <scimath/Mathematics/Interpolate2D.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
+//# $Id: Interpolate2D2.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#ifndef SCIMATH_INTERPOLATE2D2_TCC
+#define SCIMATH_INTERPOLATE2D2_TCC
+ 
+#include <casacore/scimath/Mathematics/Interpolate2D.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/Constants.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <typename T>
 Bool Interpolate2D::interpNearest(T &result, 
@@ -115,10 +119,6 @@ Bool Interpolate2D::interpLinear2(T &resultI, T &resultJ,
   // Make sure we don't access i+1 or j+1 because the 
   // big positive plus 1 may become 0 and then we will spuriously
   // pass the shape test
-
-  // FIXME Really? This was purposefully coded to implicitly rely on uInt underflow
-  // rather than writing conditionals based on explicit value checking to make the
-  // code easier to understand and maintain?
 
   uInt i = Int(where[0]);               // Assuming Int does (1.2 -> 1)
   uInt j = Int(where[1]);
@@ -251,5 +251,66 @@ Bool Interpolate2D::interpCubic(T &result,
    return True;
 }
 
-} //# NAMESPACE CASA - END
+template <typename T>
+Bool Interpolate2D::interpLanczos(T &result, 
+        const Vector<Double> &where, 
+        const Matrix<T> &data,
+        const Matrix<Bool>* &maskPtr) const {
+    //
+    // Lanczos 2D interpolation
+    //
 
+    // Hardcoded kernel size
+    const Double a = 3;
+
+    const IPosition& shape = data.shape();
+    const Double x = where[0];
+    const Double y = where[1];
+    const T floorx = floor(x);
+    const T floory = floor(y);
+
+    // Handle mask
+    if (anyBadMaskPixels(maskPtr, x-a+1, x+a, y-a+1, y+a)) return False;
+
+    // Where we can't sum over the full support of the kernel due to proximity
+    // to the edge, set the pixel value to zero. This is just one way of
+    // dealing with edge effects, another could be to revert to linear
+    // interpolation.
+    if (floorx < a || floorx >= shape[0] - a || floory < a || floory >= shape[1] - a) {
+        result = 0;
+        return True;
+    }
+
+    // Interpolate
+    result = 0;
+    for (T i = floorx - a + 1; i <= floorx + a; ++i) {
+        for (T j = floory - a + 1; j <= floory + a; ++j) {
+            result += data(i, j) * L(x - i, a) * L(y - j, a);
+        }
+    }
+
+    return True;
+}
+
+// Lanczos interpolation: helper function
+template <typename T>
+T Interpolate2D::sinc(const T x) const {
+    if (x == 0) {
+        return 1;
+    }
+    return sin(C::pi * x) / (C::pi * x);
+}
+
+// Lanczos interpolation: helper function
+template <typename T>
+T Interpolate2D::L(const T x, const Int a) const {
+    if (-a < x && x < a) {
+        return sinc(x) * sinc (x/a);
+    }
+    return 0;
+}
+
+} //# NAMESPACE CASACORE - END
+
+
+#endif

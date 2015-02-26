@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCComplement.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCComplement.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCComplement.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCComplement.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/images/Regions/WCComplement.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCComplement.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCComplement::WCComplement (const ImageRegion& region)
 : WCCompound (&region)
@@ -106,5 +106,5 @@ WCComplement* WCComplement::fromRecord (const TableRecord& rec,
     return new WCComplement (True, regions);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

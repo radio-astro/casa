@@ -23,10 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HashMapIter.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
-#include <casa/Containers/HashMapIter.h>
+//# $Id: HashMapIter.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#ifndef CASA_HASHMAPITER_TCC
+#define CASA_HASHMAPITER_TCC
+#include <casacore/casa/Containers/HashMapIter.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class key, class val> void ConstHashMapIter<key,val>::toStart() {
     if (!isValid())
@@ -178,5 +181,7 @@ HashMapIter<key,val> &HashMapIter<key,val>::operator=(const HashMapIter<key,val>
 
 template<class key, class val> HashMapIter<key,val>::~HashMapIter() {}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

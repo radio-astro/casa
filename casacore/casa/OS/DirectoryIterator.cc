@@ -23,26 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DirectoryIterator.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DirectoryIterator.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/OS/DirectoryIterator.h>
-#include <casa/OS/Path.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/OS/DirectoryIterator.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 #include <errno.h>                // needed for errno
-#include <casa/string.h>               // needed for strerror
+#include <casacore/casa/string.h>               // needed for strerror
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 DirectoryIterator::DirectoryIterator()
 : itsDirectoryDescriptor (0),
   itsDirectoryEntry      (0),
   itsEnd                 (False),
   itsDirectory           (),
-  itsExpression          (".*"),
-  itsNameList            (0)
+  itsExpression          (".*")
 {
     init();
 }
@@ -52,8 +51,7 @@ DirectoryIterator::DirectoryIterator (const Directory& dir)
   itsDirectoryEntry      (0),
   itsEnd                 (False),
   itsDirectory           (dir),
-  itsExpression          (".*"),
-  itsNameList            (0)
+  itsExpression          (".*")
 {
     init();
 }
@@ -64,8 +62,7 @@ DirectoryIterator::DirectoryIterator (const Directory& dir,
   itsDirectoryEntry      (0),
   itsEnd                 (False),
   itsDirectory           (dir),
-  itsExpression          (regExpression),
-  itsNameList            (0)
+  itsExpression          (regExpression)
 {
     init();
 }
@@ -75,8 +72,7 @@ DirectoryIterator::DirectoryIterator (const DirectoryIterator& that)
   itsDirectoryEntry      (0),
   itsEnd                 (False),
   itsDirectory           (that.itsDirectory),
-  itsExpression          (that.itsExpression),
-  itsNameList            (0)
+  itsExpression          (that.itsExpression)
 {
     init();
 }
@@ -115,6 +111,7 @@ void DirectoryIterator::init()
 {
     // Alas readdir is not supported on the compute nodes of the Cray XT3.
 #if defined(AIPS_CRAY_PGI)
+    itsNameList = 0;
     itsNrNames = scandir(itsDirectory.path().expandedName().chars(),
 			 &itsNameList, 0, alphasort);
     if (itsNrNames < 0) {
@@ -204,5 +201,5 @@ Bool DirectoryIterator::pastEnd() const
     return  (itsEnd == True);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

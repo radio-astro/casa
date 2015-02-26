@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NumericTraits.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: NumericTraits.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/NumericTraits.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/scimath/Mathematics/NumericTraits.h>
+#include <casacore/casa/BasicSL/Constants.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 const Double & NumericTraits<Float>::epsilon = C::flt_epsilon;
 const Double & NumericTraits<Double>::epsilon = C::dbl_epsilon;
@@ -45,5 +45,5 @@ const Double & NumericTraits<Double>::maximum = C::dbl_max;
 const Double & NumericTraits<Complex>::maximum = C::flt_max;
 const Double & NumericTraits<DComplex>::maximum = C::dbl_max;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

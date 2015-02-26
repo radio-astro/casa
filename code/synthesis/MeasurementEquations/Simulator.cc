@@ -37,11 +37,11 @@
 #include <casa/Containers/Record.h>
 #include <casa/Containers/RecordInterface.h>
 
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>
@@ -80,7 +80,7 @@
 //#include <synthesis/MeasurementComponents/SimVisJones.h>
 #include <synthesis/TransformMachines/VPSkyJones.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
-#include <lattices/Lattices/LatticeExpr.h> 
+#include <lattices/LEL/LatticeExpr.h> 
 
 #include <synthesis/MeasurementEquations/Simulator.h>
 #include <synthesis/MeasurementComponents/CleanImageSkyModel.h>

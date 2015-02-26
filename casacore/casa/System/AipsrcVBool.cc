@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcVBool.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: AipsrcVBool.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/System/AipsrcVector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/AipsrcVector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Data
 AipsrcVector<Bool> AipsrcVector<Bool>::myp_p;
@@ -110,5 +110,5 @@ void AipsrcVector<Bool>::save(uInt keyword) {
   Aipsrc::save((myp_p.ntlst)[keyword-1], String(oss));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

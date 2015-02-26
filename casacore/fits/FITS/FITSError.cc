@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSError.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: FITSError.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <fits/FITS/FITSError.h>
+#include <casacore/fits/FITS/FITSError.h>
 
-#include <casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 void FITSError::defaultHandler(const char *errMessage, 
 				      ErrorLevel severity)
@@ -48,5 +48,5 @@ void FITSError::defaultHandler(const char *errMessage,
     os << LogIO::POST;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

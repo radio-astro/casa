@@ -33,8 +33,8 @@
 #include <images/Images/SubImage.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LRegions/LCBox.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 //#include <synthesis/MeasurementEquations/PSkyEquation.h>
 #include <casa/Exceptions/Error.h>

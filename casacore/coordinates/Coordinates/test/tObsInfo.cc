@@ -24,22 +24,22 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tObsInfo.cc 20730 2009-09-24 11:17:08Z gervandiepen $
+//# $Id: tObsInfo.cc 21511 2014-11-21 12:30:59Z gervandiepen $
 
-#include <coordinates/Coordinates/ObsInfo.h>
+#include <casacore/coordinates/Coordinates/ObsInfo.h>
 
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MCPosition.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordField.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MCPosition.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
 // Default constructor

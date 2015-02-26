@@ -22,14 +22,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/FitToHalfStatistics.h>
+#ifndef SCIMATH_FITTOHALFSTATISTICS_TCC
+#define SCIMATH_FITTOHALFSTATISTICS_TCC
 
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#include <casacore/scimath/Mathematics/FitToHalfStatistics.h>
+
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
 #include <iomanip>
 
-namespace casa {
+namespace casacore {
 
 template <class AccumType, class InputIterator, class MaskIterator>
 const AccumType FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::TWO = AccumType(2);
@@ -470,7 +474,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 	AccumType mymin, AccumType mymax, Int64 minpos, Int64 maxpos, uInt dataStride,
 	const Int64& currentDataset
 ) {
-	StatsDataProvider<AccumType, InputIterator, MaskIterator> *dataProvider
+	CountedPtr<StatsDataProvider<AccumType, InputIterator, MaskIterator> > dataProvider
 		= this->_getDataProvider();
 	if (maxpos >= 0) {
 		_realMax = new AccumType(mymax);
@@ -479,7 +483,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 			_getStatsData().maxpos.second = maxpos * dataStride;
 			_getStatsData().minpos.first = -1;
 			_getStatsData().minpos.second = -1;
-			if (dataProvider) {
+			if (! dataProvider.null()) {
 				dataProvider->updateMaxPos(_getStatsData().maxpos);
 			}
 			_getStatsData().max = new AccumType(mymax);
@@ -493,7 +497,7 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_updateMaxMin(
 			_getStatsData().minpos.second = minpos * dataStride;
 			_getStatsData().maxpos.first = -1;
 			_getStatsData().maxpos.second = -1;
-			if (dataProvider) {
+			if (! dataProvider.null()) {
 				dataProvider->updateMinPos(_getStatsData().minpos);
 			}
 			_getStatsData().min = new AccumType(mymin);
@@ -615,3 +619,5 @@ void FitToHalfStatistics<AccumType, InputIterator, MaskIterator>::_weightedStats
 
 }
 
+
+#endif

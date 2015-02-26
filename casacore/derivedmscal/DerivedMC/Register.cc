@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Register.cc 21294 2012-11-30 15:59:25Z gervandiepen $
+//# $Id: Register.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <derivedmscal/DerivedMC/Register.h>
-#include <derivedmscal/DerivedMC/DerivedMSCal.h>
-#include <derivedmscal/DerivedMC/UDFMSCal.h>
+#include <casacore/derivedmscal/DerivedMC/Register.h>
+#include <casacore/derivedmscal/DerivedMC/DerivedMSCal.h>
+#include <casacore/derivedmscal/DerivedMC/UDFMSCal.h>
 
-#include <casa/iostream.h>
-using namespace casa;
+#include <casacore/casa/iostream.h>
+using namespace casacore;
 
 void register_derivedmscal()
 {
@@ -62,28 +62,4 @@ void register_derivedmscal()
   UDFBase::registerUDF ("derivedmscal.SCAN",    UDFMSCal::makeScan);
   UDFBase::registerUDF ("derivedmscal.STATE",   UDFMSCal::makeState);
   UDFBase::registerUDF ("derivedmscal.OBS",     UDFMSCal::makeObs);
-  UDFBase::registerUDF ("mscal.HA",      UDFMSCal::makeHA);
-  UDFBase::registerUDF ("mscal.HA1",     UDFMSCal::makeHA1);
-  UDFBase::registerUDF ("mscal.HA2",     UDFMSCal::makeHA2);
-  UDFBase::registerUDF ("mscal.HADEC",   UDFMSCal::makeHADEC);
-  UDFBase::registerUDF ("mscal.HADEC1",  UDFMSCal::makeHADEC1);
-  UDFBase::registerUDF ("mscal.HADEC2",  UDFMSCal::makeHADEC2);
-  UDFBase::registerUDF ("mscal.PA1",     UDFMSCal::makePA1);
-  UDFBase::registerUDF ("mscal.PA2",     UDFMSCal::makePA2);
-  UDFBase::registerUDF ("mscal.LAST",    UDFMSCal::makeLAST);
-  UDFBase::registerUDF ("mscal.LAST1",   UDFMSCal::makeLAST1);
-  UDFBase::registerUDF ("mscal.LAST2",   UDFMSCal::makeLAST2);
-  UDFBase::registerUDF ("mscal.AZEL1",   UDFMSCal::makeAZEL1);
-  UDFBase::registerUDF ("mscal.AZEL2",   UDFMSCal::makeAZEL2);
-  UDFBase::registerUDF ("mscal.UVW",     UDFMSCal::makeUVW);
-  UDFBase::registerUDF ("mscal.STOKES",  UDFMSCal::makeStokes);
-  UDFBase::registerUDF ("mscal.BASELINE",UDFMSCal::makeBaseline);
-  UDFBase::registerUDF ("mscal.TIME",    UDFMSCal::makeTime);
-  UDFBase::registerUDF ("mscal.UVDIST",  UDFMSCal::makeUVDist);
-  UDFBase::registerUDF ("mscal.SPW",     UDFMSCal::makeSpw);
-  UDFBase::registerUDF ("mscal.FIELD",   UDFMSCal::makeField);
-  UDFBase::registerUDF ("mscal.ARRAY",   UDFMSCal::makeArray);
-  UDFBase::registerUDF ("mscal.SCAN",    UDFMSCal::makeScan);
-  UDFBase::registerUDF ("mscal.STATE",   UDFMSCal::makeState);
-  UDFBase::registerUDF ("mscal.OBS",     UDFMSCal::makeObs);
 }

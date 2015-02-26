@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CombiFunction.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: CombiFunction.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_COMBIFUNCTION_TCC
+#define SCIMATH_COMBIFUNCTION_TCC
 
 //# Includes
-#include <scimath/Functionals/CombiFunction.h>
+#include <casacore/scimath/Functionals/CombiFunction.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -44,5 +47,7 @@ T CombiFunction<T>::eval(typename Function<T>::FunctionArg x) const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

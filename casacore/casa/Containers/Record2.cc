@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Record2.cc 20906 2010-06-10 08:59:51Z gervandiepen $
+//# $Id: Record2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Containers/Record.h>
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ValueHolder Record::asValueHolder (const RecordFieldId& id) const
 {
@@ -99,6 +99,7 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
   case TpShort:
     define (id, value.asShort());
     break;
+  case TpUShort:
   case TpInt:
     define (id, value.asInt());
     break;
@@ -132,6 +133,7 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
   case TpArrayShort:
     define (id, value.asArrayShort());
     break;
+  case TpArrayUShort:
   case TpArrayInt:
     define (id, value.asArrayInt());
     break;
@@ -169,5 +171,5 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

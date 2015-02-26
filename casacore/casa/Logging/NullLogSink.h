@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NullLogSink.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: NullLogSink.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_NULLLOGSINK_H
 #define CASA_NULLLOGSINK_H
 
-#include <casa/aips.h>
-#include <casa/Logging/LogSinkInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogSinkInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Throw away all messages.
@@ -94,7 +94,7 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

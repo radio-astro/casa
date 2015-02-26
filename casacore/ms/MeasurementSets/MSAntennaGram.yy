@@ -24,14 +24,14 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: MSAntennaGram.yy 20934 2010-08-17 09:16:24Z gervandiepen $
+    $Id: MSAntennaGram.yy 21521 2014-12-10 08:06:42Z gervandiepen $
 */
 
 %{
-  using namespace casa;
+  using namespace casacore;
 %}
 
-%pure_parser                /* make parser re-entrant */
+%pure-parser                /* make parser re-entrant */
 
 %union {
   const TableExprNode* node;
@@ -90,8 +90,8 @@
 // %destructor {delete ($$);} blength blengthlist
 
 %{
-#include <casa/Logging/LogIO.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
 
   int MSAntennaGramlex (YYSTYPE*);
   Bool MSAntennaGramNegate=False;

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogiVector.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogiVector.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGIVECTOR_H
 #define CASA_LOGIVECTOR_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/LogiArray.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/LogiArray.h>
+#include <casacore/casa/Arrays/Vector.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Logical valued Vectors.
@@ -81,6 +81,6 @@ typedef Vector<LogicalArrayElem> LogicalVector;
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

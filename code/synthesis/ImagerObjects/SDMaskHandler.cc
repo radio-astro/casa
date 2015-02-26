@@ -40,13 +40,13 @@
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <casa/OS/File.h>
-#include <lattices/Lattices/LatticeExpr.h>
+#include <lattices/LEL/LatticeExpr.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LCEllipsoid.h>
-#include <lattices/Lattices/LCUnion.h>
-#include <lattices/Lattices/LCExtension.h>
+#include <lattices/LRegions/LCEllipsoid.h>
+#include <lattices/LRegions/LCUnion.h>
+#include <lattices/LRegions/LCExtension.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
@@ -430,9 +430,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //void SDMaskHandler::recordRegionToImageRegion(Record& imageRegRec, ImageRegion*& imageRegion ) 
   {
     if(imageRegRec !=0){
-    //if(imageRegRec.nfields() !=0){
-      ImageRegion::tweakedRegionRecord(imageRegRec);
-      //ImageRegion::tweakedRegionRecord(&imageRegRec);
       TableRecord rec1;
       rec1.assign(*imageRegRec);
       imageRegion=ImageRegion::fromRecord(rec1,"");

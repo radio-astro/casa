@@ -23,18 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SubLattice.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: SubLattice.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LatticeIterInterface.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#ifndef LATTICES_SUBLATTICE_TCC
+#define LATTICES_SUBLATTICE_TCC
+
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/LatticeIterInterface.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 SubLattice<T>::SubLattice()
@@ -499,7 +502,6 @@ IPosition SubLattice<T>::doNiceCursorShape (uInt maxPixels) const
   }
   return itsAxesMap.shapeToNew (cursorShape);
 }
-
 template<class T>
 T SubLattice<T>::getAt (const IPosition& where) const
 {
@@ -525,16 +527,6 @@ void SubLattice<T>::putAt (const T& value, const IPosition& where)
 						                 (where)));
   }
   */
-}
-
-template<class T>
-IPosition SubLattice<T>::positionInParent(const IPosition& subLatticePosition) const {
-	if (itsAxesMap.isRemoved()) {
-		return itsRegion.convert (itsAxesMap.posToOld(subLatticePosition));
-	}
-	else {
-		return itsRegion.convert (subLatticePosition);
-	}
 }
 
 template<class T>
@@ -649,5 +641,7 @@ LatticeIterInterface<T>* SubLattice<T>::makeIter (const LatticeNavigator& nav,
 ///  return iterPtr;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

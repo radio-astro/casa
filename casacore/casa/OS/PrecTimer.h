@@ -23,12 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PrecTimer.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: PrecTimer.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_PRECTIMER_H
 #define CASA_PRECTIMER_H
 
 
+#include <casacore/casa/aips.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -37,7 +38,7 @@
 #endif
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Forward Declaration.
 class String;
@@ -350,7 +351,7 @@ class String;
 #endif
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 
 #endif

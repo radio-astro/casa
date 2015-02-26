@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCConcatenation.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: WCConcatenation.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCConcatenation.h>
-#include <images/Regions/WCBox.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCConcatenation.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/WCConcatenation.h>
+#include <casacore/images/Regions/WCBox.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCConcatenation.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCConcatenation::WCConcatenation (const PtrBlock<const ImageRegion*>& regions,
 				  const WCBox& extendBox)
@@ -188,5 +188,5 @@ WCConcatenation* WCConcatenation::fromRecord (const TableRecord& rec,
     return new WCConcatenation (True, regions, *(const WCBox*)boxptr);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

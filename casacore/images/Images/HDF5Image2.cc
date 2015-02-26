@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Image2.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: HDF5Image2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Images/HDF5Image.h>
-#include <casa/HDF5/HDF5File.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Images/HDF5Image.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   DataType hdf5imagePixelType (const String& fileName)
   {
@@ -37,7 +37,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (HDF5File::isHDF5(fileName)) {
       try {
 	HDF5File file(fileName);
-	retval = HDF5DataSet::getDataType (file.getHid(), "map");
+	HDF5Group gid(file, "/", true);
+	retval = HDF5DataSet::getDataType (gid.getHid(), "map");
       } catch (AipsError& x) {
 	// Nothing
       } 
@@ -47,12 +48,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool isHDF5Image (const String& fileName)
   {
-    // It is an image if it is an HDF5 file with group coordinfo.
+    // It is an image if it is an HDF5 file with group /coordinfo.
     Bool retval = False;
     if (HDF5File::isHDF5(fileName)) {
       try {
 	HDF5File file(fileName);
-	HDF5Group gid(file, "coordinfo", true);
+	HDF5Group gid1(file, "/", true);
+	HDF5Group gid2(gid1, "coordinfo", true);
 	retval = True;
       } catch (AipsError& x) {
 	// Nothing
@@ -61,4 +63,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return retval;
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

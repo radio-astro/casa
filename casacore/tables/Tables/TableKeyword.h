@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableKeyword.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableKeyword.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEKEYWORD_H
 #define TABLES_TABLEKEYWORD_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TableAttr.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TableAttr.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Table;
@@ -172,7 +172,9 @@ public:
 
     // Get the table.
     // It will be opened when necessary.
-    Table table(const TableLock * optionalLockOptions = 0) const;
+    // If given, the lockOptions will be used instead of the ones in
+    // the table attributes.
+    Table table (const TableLock* lockOptions = 0) const;
 
     // Get the table attributes.
     const TableAttr& tableAttributes() const
@@ -223,6 +225,6 @@ inline Bool TableKeyword::isFixed() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

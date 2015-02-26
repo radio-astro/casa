@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCOWPtr.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tCOWPtr.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-#include <casa/Utilities/COWPtr.h>
+#include <casacore/casa/Utilities/COWPtr.h>
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 static Bool testFunc(Array<Float> *ptr, const Array<Float> &array, 
 		     Bool deleteIt, Bool constant) 
 {

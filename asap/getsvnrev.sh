@@ -3,8 +3,8 @@
 # Store info about which svn branch, what revision and at what date/time
 # we executed make.
 
-# if we don't see the .svn directory, just return
-if test ! -d .svn; then
+svn info > /dev/null 2>&1
+if [ $? -ne 0 ]; then
    exit 0;
 fi
 

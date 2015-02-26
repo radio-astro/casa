@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasJPL.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MeasJPL.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASJPL_H
 #define MEASURES_MEASJPL_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRow.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRow.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -92,10 +92,10 @@ class MVEpoch;
 //
 // <example>
 // <srcblock>
-//	#include <casa/aips.h>
-//	#include <casa/Quanta/MVEpoch.h>
-//     	#include <measures/Measures/MeasJPL.h>
-//	#include <casa/Arrays/Vector.h>
+//	#include <casacore/casa/aips.h>
+//	#include <casacore/casa/Quanta/MVEpoch.h>
+//     	#include <casacore/measures/Measures/MeasJPL.h>
+//	#include <casacore/casa/Arrays/Vector.h>
 //    	const MVEpoch dat = 51116; // a date (1998/10/30) in TDB
 //	Vector<Double> val(6), valE(6);		// results
 //	// Get position and velocity of Venus (barycentric)
@@ -177,6 +177,7 @@ public:
     RADS,
     // # of codes
     N_Codes };
+
   
   //# General Member Functions
   // Get the values from a DE table, interpolated for date(in MJD(TDB)).
@@ -211,9 +212,10 @@ private:
   //# General member functions
   // Initialise tables
   static Bool initMeas(MeasJPL::Files which);
-  // Fill Table lines
-  static Bool fillMeas(Double &intv, MeasJPL::Files which,
-		       const MVEpoch &utf);
+  static Bool doInitMeas(MeasJPL::Files which);
+  // Get a pointer to the data for the given date. It reads the data if needed.
+  static const Double* fillMeas(Double &intv, MeasJPL::Files which,
+                                const MVEpoch &utf);
   // Interpolate Chebyshev polymomial to res
   static void interMeas(Double res[], MeasJPL::Files  which, Double intv, 
 			Double ivf, Int ncf, Int ncm, Int na, 
@@ -221,45 +223,30 @@ private:
 
   //# Data members
   // Measured data readable
-  static volatile Bool measFlag[N_Files];
+  static volatile Bool needInit[N_Files];
   // Tables present
   static Table t[N_Files];
-  // Row descriptions
-  static ROTableRow row[N_Files];
-  // Field pointers
-  static RORecordFieldPtr<Double> rfp[N_Files][MeasJPL::N_Types];
+  // Data column descriptor
+  static ArrayColumn<Double> acc[N_Files];
   // First (-1) MJD in list
   static Int mjd0[N_Files];
   // Last MJD in list
   static Int mjdl[N_Files];
-  // Increment in rows
+  // Interval in days (i.e., date step between subsequent rows)
   static Int dmjd[N_Files];
-  // Message given
-  static Bool msgDone;
   // File names
   static const String tp[N_Files];
   // Index in record
   static Int idx[N_Files][3][13];
-  // Data column descriptor
-  static ArrayColumn<Double> acc[N_Files];
-  // Data in current row
-  static Vector<Double> dval[N_Files];
-  // Current row
-  static Int ldat[N_Files];
-  // Chebyshev coefficients
-  // <group>
-  static Double chc[18];
-  static Double chcv[18];
-  // </group>
-  // Some helper data
+  // Dates of the data read in buffer.
+  static vector<Int> curDate[N_Files];
+  // Data read in.
+  static vector<Vector<Double> > dval[N_Files];
+  // Some helper data read from the table keywords
   // <group>
   static Double aufac[N_Files];
   static Double emrat[N_Files];
   static Double cn[N_Files][N_Codes];
-  static Int np;
-  static Int nv;
-  static Double twot;
-  static Double vfac;
   // </group>
   // Mutex for thread-safety.
   static Mutex theirMutex;
@@ -268,6 +255,6 @@ private:
 //# Inline Implementations
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -1,4 +1,4 @@
-//# FITSTable.h: Simplified interface to FITS tables with AIPS++ Look and Feel.
+//# FITSTable.h: Simplified interface to FITS tables with Casacore Look and Feel.
 //# Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSTable.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: FITSTable.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/FITSTable.h>
+#include <casacore/fits/FITS/FITSTable.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <fits/FITS/fits.h>
-#include <fits/FITS/hdu.h>
-#include <casa/OS/Path.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/casa/OS/Path.h>
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
 
-#include <casa/Utilities/ValType.h>
+#include <casacore/casa/Utilities/ValType.h>
 
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Array.h>
 
-#include <casa/stdlib.h>
-#include <casa/sstream.h>
+#include <casacore/casa/stdlib.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Just returns the scalar type.
 static DataType fitsDataType(FITS::ValueType fitsType)
@@ -181,7 +181,6 @@ RecordDesc FITSTabular::descriptionFromHDU(
     // this is needed here
     Record subStringInfo = subStringShapeFromHDU(hdu);
 
-    Regex trailing(" *$"); // trailing blanks
     IPosition shape;
     for (uInt i=0; i < ncol; i++) {
 	DataType type = fitsDataType(hdu.field(i).fieldtype());
@@ -190,7 +189,7 @@ RecordDesc FITSTabular::descriptionFromHDU(
 	    shape(j) = hdu.field(i).dim(j);
 	}
 	String colname(hdu.ttype(i));
-	colname = colname.before(trailing);
+        colname.rtrim(' ');
 	// watch for VADESC columns
 	if (hdu.field(i).fieldtype() == FITS::VADESC) {
 	    // variable array descriptor
@@ -243,20 +242,21 @@ Record FITSTabular::subStringShapeFromHDU(BinaryTableExtension &hdu)
     Regex trailing(" *$"); // trailing blanks
     for (uInt i=0; i < ncol; i++) {
 	String colname(hdu.ttype(i));
-	colname = colname.before(trailing);
+        colname.rtrim(' ');
 	String tform(hdu.tform(i));
-	tform = tform.before(trailing);
+        tform.rtrim(' ');
 	// Look for the sub-string convention, described in appendix C of
 	// Cotton, Tody, and Pence.  Its in the TFIELD for this column.
 	// This probably could (should?) happen in FitsField<char>.
 	// But I understand this better so do it here.
 	if (tform.matches(Regex("^.*A:SSTR[0-9]+(/[0-9]+)?$"))) {
 	    Record info;
-	    String sstr = tform.after("SSTR");
-	    if (sstr.contains("/")) {
-		// two integers separate by a the backslash
-		Int maxChars = atol(sstr.before('/').chars());
-		Int delim = atol(sstr.after('/').chars());
+	    String sstr = tform.after(tform.find("SSTR")+3);
+            String::size_type slinx = sstr.find('/');
+            if (slinx != String::npos) {
+		// two integers separate by a the slash
+                Int maxChars = atol(sstr.before(slinx).chars());
+		Int delim = atol(sstr.after(slinx).chars());
 		info.define("NCHAR", maxChars);
 		info.define("NELEM", -1);
 		info.define("DELIM", String(Char(delim)));
@@ -282,12 +282,11 @@ Record FITSTabular::unitsFromHDU(BinaryTableExtension &hdu)
     Record units;
     uInt ncol = hdu.ncols();
 
-    Regex trailing(" *$"); // trailing blanks
     for (uInt i=0; i < ncol; i++) {
 	String colname(hdu.ttype(i));
-	colname = colname.before(trailing);
+	colname.rtrim(' ');
 	String unitval(hdu.tunit(i));
-	unitval = unitval.before(trailing);
+	unitval.rtrim(' ');
 	if (!unitval.empty()) units.define(colname, unitval);
     }
     return units;
@@ -298,12 +297,11 @@ Record FITSTabular::displayFormatsFromHDU(BinaryTableExtension &hdu)
     Record disps;
     uInt ncol = hdu.ncols();
 
-    Regex trailing(" *$"); // trailing blanks
     for (uInt i=0; i < ncol; i++) {
 	String colname(hdu.ttype(i));
-	colname = colname.before(trailing);
+	colname.rtrim(' ');
 	String dispval(hdu.tdisp(i));
-	dispval = dispval.before(trailing);
+	dispval.rtrim(' ');
 	if (!dispval.empty()) disps.define(colname, dispval);
     }
     return disps;
@@ -314,7 +312,6 @@ Record FITSTabular::nullsFromHDU(BinaryTableExtension &hdu)
     Record nulls;
     uInt ncol = hdu.ncols();
 
-    Regex trailing(" *$"); // trailing blanks
     // strangely, the first arg to hdu.kw is a reference
     // to a FITS::ReservedName (not even a const reference)
     // So, since I can't put FITS::TNULL there, I need to
@@ -332,7 +329,7 @@ Record FITSTabular::nullsFromHDU(BinaryTableExtension &hdu)
 	     hdu.field(i).fieldtype() == FITS::LONG) &&
 	    hdu.tscal(i) == 1.0 && hdu.tzero(i) == 0.0) {
 	    String colname(hdu.ttype(i));
-	    colname = colname.before(trailing);
+	    colname.rtrim(' ');
 	    nulls.define(colname, (hdu.kw(tnull,i))->asInt());
 	}
     }
@@ -688,8 +685,8 @@ Bool FITSTable::reopen(const String &fileName)
 	} 
 	if (description_p.name(i).matches(Regex("^TDIM[0-9]+$")) && 
 	    description_p.type(i) == TpString) {
-	    String tdim = description_p.name(i);
-	    tdim = tdim.after("TDIM");
+            String tdim = description_p.name(i);
+            tdim = tdim.after(3);
 	    Int which = atol(tdim.chars())-1;
 	    if (which >= 0 && which < Int(tdims_p.nelements())) {
 		anyReshaped = True;
@@ -950,14 +947,15 @@ void FITSTable::fill_row()
 		}
 		String tdim((char *)fitsRef.data(), length);
 		// remove the surrounding parenthesis
-		tdim = tdim.after("(");
-		tdim = tdim.before(")");
+		tdim = tdim.after(tdim.find('('));
+		tdim = tdim.before(tdim.find(')'));
 		// count up the number of commas
-		Int ncommas = tdim.freq(",");
+		Int ncommas = tdim.freq(',');
 		shape.resize(ncommas+1, False);
 		for (Int j=0;j<ncommas;j++) {
-		    String field = tdim.before(",");
-		    tdim = tdim.after(",");
+                    String::size_type inx = tdim.find(',');
+                    String field = tdim.before(inx);
+		    tdim = tdim.after(inx);
 		    shape(j) = atol(field.chars());
 		}
 		// the final field is left
@@ -1072,8 +1070,9 @@ void FITSTable::fill_row()
 		    result.resize(nels);
 		    (*rowRef).resize(result.shape());
 		    for (Int z=0;z<(nels-1);z++) {
-			result(z) = rawValue.before(delim);
-			rawValue = rawValue.after(delim);
+                        String::size_type inx = rawValue.find(delim);
+			result(z) = rawValue.before(inx);
+			rawValue = rawValue.after(inx+delim.size()-1);
 		    }
 		    // the last one remains
 		    result(nels-1) = rawValue;
@@ -1928,5 +1927,5 @@ void FITSTable::reopenAtFirstHDU(const String &name) {
     io_p->skip_hdu();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

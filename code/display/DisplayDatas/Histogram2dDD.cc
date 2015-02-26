@@ -26,8 +26,8 @@
 //# $Id$
 
 #include <casa/Arrays/ArrayMath.h>
-#include <lattices/Lattices/LatticeHistograms.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeHistograms.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <images/Images/ImageInterface.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>

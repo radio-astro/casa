@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Param.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Param.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // Param.C: implementation of a parameter (key,value,help,type,range,....)
 //          users typically do not use this class, it is merely
 //          a helper class for Input.
 
-#include <casa/Inputs/Param.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Inputs/Param.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Param::Param()			// default constructor; doesn't do anything
 {}
@@ -306,5 +306,5 @@ AipsIO & operator>> (AipsIO &os, Param& p) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

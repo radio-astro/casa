@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dGaussianND.cc 19880 2007-02-15 04:10:07Z Malte.Marquarding $
+//# $Id: dGaussianND.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <scimath/Functionals/GaussianND.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/iostream.h>
+#include <casacore/scimath/Functionals/GaussianND.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main(){
   cout << "The example from the Header File" << endl;
   uInt ndim = 2;

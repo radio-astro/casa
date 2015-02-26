@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Polynomial.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: Polynomial.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_POLYNOMIAL_TCC
+#define SCIMATH_POLYNOMIAL_TCC
 
 //# Includes
-#include <scimath/Functionals/Polynomial.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -55,5 +58,7 @@ Polynomial<T> Polynomial<T>::derivative() const {
 
 //# Member functions
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

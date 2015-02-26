@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CurvedLattice2D.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: CurvedLattice2D.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef LATTICES_CURVEDLATTICE2D_H
 #define LATTICES_CURVEDLATTICE2D_H
 
 
 //# Includes
-#include <lattices/Lattices/MaskedLattice.h>
-#include <lattices/Lattices/PixelCurve1D.h>
-#include <lattices/Lattices/CLInterpolator2D.h>
-#include <casa/Arrays/AxesMapping.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h>
+#include <casacore/lattices/Lattices/PixelCurve1D.h>
+#include <casacore/lattices/LatticeMath/CLInterpolator2D.h>
+#include <casacore/casa/Arrays/AxesMapping.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -205,9 +206,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/CurvedLattice2D.tcc>
+#include <casacore/lattices/Lattices/CurvedLattice2D.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSDateUtil.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FITSDateUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef FITS_FITSDATEUTIL_H
 #define FITS_FITSDATEUTIL_H
 
-#include <casa/aips.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class String;
 class MVTime;
@@ -66,7 +66,7 @@ class MVTime;
 // The strings that make up the value of FITS dates have a 
 // precise format.  This class encompasses knowlege of the formats
 // used and hopefully simplifies their creation and conversion
-// to and from aips++ MVTimes.
+// to and from Casacore MVTimes.
 // </motivation>
 //
 
@@ -122,6 +122,6 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

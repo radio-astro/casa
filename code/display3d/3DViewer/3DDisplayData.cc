@@ -48,7 +48,7 @@
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ImageExprParse.h>
 #include <scimath/Mathematics/Interpolate2D.h>
-#include <lattices/Lattices/LattStatsSpecialize.h>
+#include <lattices/LatticeMath/LattStatsSpecialize.h>
 
 #include <display3d/3DViewer/3DController.qo.h>
 #include <display3d/3DViewer/3DDisplayData.qo.h>

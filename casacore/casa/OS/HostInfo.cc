@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HostInfo.cc 20891 2010-05-17 07:10:15Z gervandiepen $
+//# $Id: HostInfo.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicSL/String.h>
-#include <casa/OS/HostInfo.h>
-#include <casa/System/Aipsrc.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/OS/HostInfo.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 #include <unistd.h>
 #include <sys/utsname.h>
@@ -50,7 +50,7 @@ extern "C" { int gettimeofday(struct timeval *tp, void*); };
 extern "C" { int getclock(int clock_type, struct timespec* tp); };
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 String HostInfo::hostName()
 {
@@ -135,7 +135,7 @@ Int HostInfo::numCPUs(bool use_aipsrc)				\
     return info->valid ? info->cpus : 0;			\
 }								\
 								\
-ssize_t HostInfo::memoryTotal(bool use_aipsrc) 			\
+ptrdiff_t HostInfo::memoryTotal(bool use_aipsrc) 		\
 {								\
     static const String memory("system.resources.memory");	\
     static const String fraction("system.resources.memfrac");	\
@@ -147,7 +147,7 @@ ssize_t HostInfo::memoryTotal(bool use_aipsrc) 			\
 	if ( Aipsrc::find(value, memory) ) {			\
 	    int result;						\
 	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
-		return (ssize_t) result * 1024;			\
+		return (ptrdiff_t) result * 1024;		\
 	} else if ( Aipsrc::find(value,	fraction) ) {		\
 	    int result;						\
 	    if ( sscanf( value.c_str( ), "%d", &result ) == 1 )	\
@@ -163,39 +163,39 @@ ssize_t HostInfo::memoryTotal(bool use_aipsrc) 			\
 	return info->memory_total;				\
     else {							\
 	double f = ((double) frac / 100.0);			\
-	return (ssize_t) ((double ) info->memory_total * f);	\
+	return (ptrdiff_t) ((double ) info->memory_total * f);	\
     }								\
 }								\
 								\
-ssize_t HostInfo::memoryUsed( )					\
+ptrdiff_t HostInfo::memoryUsed( )				\
 {								\
     if ( ! info ) info = new HostMachineInfo( );		\
     info->update_info( );					\
     return info->valid ? info->memory_used : -1;		\
 }								\
 								\
-ssize_t HostInfo::memoryFree( )					\
+ptrdiff_t HostInfo::memoryFree( )				\
 {								\
     if ( ! info ) info = new HostMachineInfo( );		\
     info->update_info( );					\
     return info->valid ? info->memory_free : -1;		\
 }								\
 								\
-ssize_t HostInfo::swapTotal( )					\
+ptrdiff_t HostInfo::swapTotal( )				\
 {								\
     if ( ! info ) info = new HostMachineInfo( );		\
     info->update_info( );					\
     return info->valid ? info->swap_total : -1;			\
 }								\
 								\
-ssize_t HostInfo::swapUsed( )					\
+ptrdiff_t HostInfo::swapUsed( )					\
 {								\
     if ( ! info ) info = new HostMachineInfo( );		\
     info->update_info( );					\
     return info->valid ? info->swap_used : -1;			\
 }								\
 								\
-ssize_t HostInfo::swapFree( )					\
+ptrdiff_t HostInfo::swapFree( )					\
 {								\
     if ( ! info ) info = new HostMachineInfo( );		\
     info->update_info( );					\
@@ -203,73 +203,73 @@ ssize_t HostInfo::swapFree( )					\
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #define HOSTINFO_DO_IMPLEMENT
 #if defined(AIPS_LINUX)
-#include <casa/OS/HostInfoLinux.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoLinux.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(AIPS_SOLARIS)
-#include <casa/OS/HostInfoSolaris.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoSolaris.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(AIPS_IRIX)
-#include <casa/OS/HostInfoIrix.h>
+#include <casacore/casa/OS/HostInfoIrix.h>
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(AIPS_OSF)
-#include <casa/OS/HostInfoOsf1.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoOsf1.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(AIPS_HPUX)
-#include <casa/OS/HostInfoHpux.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoHpux.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(__APPLE__)
-#include <casa/OS/HostInfoDarwin.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoDarwin.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #elif defined(AIPS_BSD)
-#include <casa/OS/HostInfoBsd.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/OS/HostInfoBsd.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HOSTINFO_IMPLEMENT_MEMBERS
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #else
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Int HostInfo::numCPUs( ) { return 0; }
-ssize_t HostInfo::memoryTotal( ) { return -1; }
-ssize_t HostInfo::memoryUsed( )  { return -1; }
-ssize_t HostInfo::memoryFree( )  { return -1; }
-ssize_t HostInfo::swapTotal( )   { return -1; }
-ssize_t HostInfo::swapUsed( )    { return -1; }
-ssize_t HostInfo::swapFree( )    { return -1; }
+ptrdiff_t HostInfo::memoryTotal( ) { return -1; }
+ptrdiff_t HostInfo::memoryUsed( )  { return -1; }
+ptrdiff_t HostInfo::memoryFree( )  { return -1; }
+ptrdiff_t HostInfo::swapTotal( )   { return -1; }
+ptrdiff_t HostInfo::swapUsed( )    { return -1; }
+ptrdiff_t HostInfo::swapFree( )    { return -1; }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 HostMachineInfo *HostInfo::info = 0;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

@@ -23,15 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSummary.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSSummary.h 21521 2014-12-10 08:06:42Z gervandiepen $
 //#
 #ifndef MS_MSSUMMARY_H
 #define MS_MSSUMMARY_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <ms/MeasurementSets/MSColumns.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <memory>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MeasurementSet;
 class LogIO;
@@ -110,9 +113,10 @@ public:
    Bool setMS (const MeasurementSet& ms);
 
 // List all header information.
-   void list (LogIO& os, Bool verbose=False) const;
+   void list (LogIO& os, Bool verbose=False, Bool oneBased=True) const;
 //Return some useful info in a record too along with os
-   void list (LogIO& os, Record& outRec,  Bool verbose=False, Bool fillRecord=True) const;
+   void list (LogIO& os, Record& outRec,  Bool verbose=False,
+              Bool fillRecord=True, Bool oneBased=True) const;
 
 // List a title for the Summary.
    void listTitle (LogIO& os) const;
@@ -123,21 +127,23 @@ public:
 
 // List what was observed (Field and Main tables)
    void listWhat (LogIO& os, Bool verbose=False) const;
-   void listWhat (LogIO& os, Record& outRec,  Bool verbose=False, Bool fillRecord=True) const;
+   void listWhat (LogIO& os, Record& outRec,  Bool verbose=False,
+                  Bool fillRecord=True) const;
 // List how data were obtained (SpectralWindow, Feed, and Antenna tables)
-   void listHow (LogIO& os, Bool verbose=False) const;
+   void listHow (LogIO& os, Bool verbose=False, Bool oneBased=True) const;
 
 // List main table
    void listMain (LogIO& os, Bool verbose=False) const;
 //Return some useful info in a record too along with os
-   void listMain (LogIO& os, Record& outRec, Bool verbose=False, Bool fillRecord=True) const;
+   void listMain (LogIO& os, Record& outRec, Bool verbose=False,
+                  Bool fillRecord=True) const;
    // Return a Record with information derived from the main table
    void getScanSummary (Record& outRec) const;
 
 // List subtables
 // <group>
    void listAntenna (LogIO& os, Bool verbose=False) const;
-   void listFeed (LogIO& os, Bool verbose=False) const;
+   void listFeed (LogIO& os, Bool verbose=False, Bool oneBased=True) const;
    void listField (LogIO& os, Bool verbose=False) const;
    void listField (LogIO& os, Record& outRec, Bool verbose=False,
 		   Bool fillRecord=True) const;
@@ -147,7 +153,8 @@ public:
    void listSource (LogIO& os, Bool verbose=False) const;
    void listSpectralWindow (LogIO& os, Bool verbose=False) const;
    void getSpectralWindowInfo(Record& outRec) const;
-   void listSpectralAndPolInfo (LogIO& os, Bool verbose=False) const;
+   void listSpectralAndPolInfo (LogIO& os, Bool verbose=False,
+                                Bool oneBased=True) const;
    void listSysCal (LogIO& os, Bool verbose=False) const;
    void listWeather (LogIO& os, Bool verbose=False) const;
 // </group>
@@ -159,10 +166,11 @@ public:
 
    // set the cache size, in MB, for the MSMetaData object.
    void setMetaDataCacheSizeInMB(Float cacheSize) { _cacheSizeMB = cacheSize; }
+
 private:
 // Pointer to MS
    const MeasurementSet* pMS;
-   PtrHolder<MSMetaData> _msmd;
+   SPtrHolder<MSMetaData> _msmd;
 
 // Formatting strings
    const String dashlin1, dashlin2;
@@ -179,11 +187,9 @@ private:
    Bool _listUnflaggedRowCount;
 
    Float _cacheSizeMB;
-
-
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMMapIO.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: tMMapIO.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/IO/MMapIO.h>
-#include <casa/IO/RegularFileIO.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/IO/MMapIO.h>
+#include <casacore/casa/IO/RegularFileIO.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 #include <unistd.h>
 
-using namespace casa;
+using namespace casacore;
 
 
 void check (const String& fileName, int bufSize, const char* buf)
@@ -52,6 +52,8 @@ void check (const String& fileName, int bufSize, const char* buf)
   for (int i=0; i<rem; i++) {
     AlwaysAssertExit (buf1[i] == *buf++);
   }
+
+  delete [] buf1;
 }
 
 void doRegular()

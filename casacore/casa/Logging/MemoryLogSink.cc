@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryLogSink.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MemoryLogSink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Logging/MemoryLogSink.h>
-#include <casa/Logging/LogFilter.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Logging/MemoryLogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 String MemoryLogSink::localId( ) {
     return String("MemoryLogSink");
@@ -175,5 +175,5 @@ void MemoryLogSink::resize (uInt nrnew)
   objectID_p.resize (nrnew);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

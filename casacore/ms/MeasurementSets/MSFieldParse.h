@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: MSFieldParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSFIELDPARSE_H
 #define MS_MSFIELDPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSField.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSParse.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSField.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -89,14 +90,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MSFieldParse ();
     MSFieldParse (const MeasurementSet* ms);
     MSFieldParse (const MSField& fieldSubTable, const TableExprNode& columnAsTEN);
-    ~MSFieldParse() {columnAsTEN_p=TableExprNode();};
+    ~MSFieldParse() {columnAsTEN_p=TableExprNode();}
 
     const TableExprNode *selectFieldIds(const Vector<Int>& fieldIds);
     
     // Get table expression node object.
     static const TableExprNode* node();
     static MSFieldParse* thisMSFParser;
-    static Vector<Int> selectedIDs() {return idList;};
+    static Vector<Int> selectedIDs() {return idList;}
     static void reset();
     static void cleanup() 
     {if (node_p) delete node_p;node_p=0x0;}
@@ -109,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static TableExprNode columnAsTEN_p;
   };
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 
@@ -119,10 +120,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // #define MS_MSFIELDPARSE_H
 
 // //# Includes
-// #include <ms/MeasurementSets/MSParse.h>
-// #include <ms/MeasurementSets/MSSelectionError.h>
-// #include <ms/MeasurementSets/MSSelectableTable.h>
-// namespace casa { //# NAMESPACE CASA - BEGIN
+// #include <casacore/ms/MeasurementSets/MSParse.h>
+// #include <casacore/ms/MeasurementSets/MSSelectionError.h>
+// #include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+// namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
 //   //# Forward Declarations
   
@@ -180,11 +181,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   public:
 //     // Default constructor
 //     MSFieldParse ();
-//     //  ~MSFieldParse() {idList.resize(0);};
+//     //  ~MSFieldParse() {idList.resize(0);}
 //     // Associate the ms and the shorthand.
 //     MSFieldParse (const MeasurementSet* ms);
 //     MSFieldParse (MSSelectableTable* msLike);
-//     //~MSFieldParse() {if (node_p) delete node_p;node_p=0x0;};
+//     //~MSFieldParse() {if (node_p) delete node_p;node_p=0x0;}
     
 //     const TableExprNode *selectFieldIds(const Vector<Int>& fieldIds);
 //     //    const TableExprNode *selectFieldOrSource(const String& fieldName);
@@ -192,8 +193,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //     // Get table expression node object.
 //     static const TableExprNode* node();
 //     static MSFieldParse* thisMSFParser;
-//     static Vector<Int> selectedIDs() {return idList;};
-//     static void reset();//{idList.resize(0);};
+//     static Vector<Int> selectedIDs() {return idList;}
+//     static void reset();//{idList.resize(0);}
 //     static void cleanup() {if (node_p) delete node_p;node_p=0x0;}
 //   private:
 //     static TableExprNode* node_p;
@@ -202,7 +203,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
 //   };
   
-// } //# NAMESPACE CASA - END
+// } //# NAMESPACE CASACORE - END
 
 // #endif
 //---------------------OLD CODE END (Feb. 2012)-------------------

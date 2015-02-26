@@ -24,20 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageUtilities.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ImageUtilities.h 21521 2014-12-10 08:06:42Z gervandiepen $
 #ifndef IMAGES_IMAGEUTILITIES_H
 #define IMAGES_IMAGEUTILITIES_H
 
 
-#include <casa/aips.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <images/Images/MaskSpecifier.h>
-#include <measures/Measures/Stokes.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/Containers/SimOrdMap.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/GaussianBeam.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class ImageInterface;
@@ -45,16 +43,13 @@ template <class T> class Vector;
 template <class T> class Quantum;
 template <class T> class MaskedArray;
 template <class T> class PtrHolder;
-class LatticeBase;
 class CoordinateSystem;
 class Coordinate;
-class GaussianBeam;
-class ImageInfo;
 class String;
 class IPosition;
 class LogIO;
-class Unit;
 class AxesSpecifier;
+class ImageAttrHandler;
 
 //
 // <summary>
@@ -92,55 +87,56 @@ class AxesSpecifier;
 class ImageUtilities
 {
 public:
-	// Open disk image (can be any registered image).  Exception
-	// if fileName empty or file does not exist or file is not
-	// of legal image type.   For aips++ images, the default mask is
-	// applied.
-	//  <group>
-	template <typename T> static void openImage(
-		PtrHolder<ImageInterface<T> >& image,
-		const String& fileName
-	);
+  // Open disk image (can be any registered image).  Exception
+  // if fileName empty or file does not exist or file is not
+  // of legal image type.   For Casacore images, the default mask is
+  // applied.
+  //  <group>
+  template<class T>
+  static void openImage (PtrHolder<ImageInterface<T> >& image,
+                         const String& fileName);
 
-	template <typename T> static void openImage(
-		ImageInterface<T>*& image,
-		const String& fileName
-	);
+  template<class T>
+  static void openImage (ImageInterface<T>*& image,
+                         const String& fileName);
 
-	template <typename T>
-	static std::tr1::shared_ptr<ImageInterface<T> > openImage(
-		const String& fileName
-	);
+  template<class T>
+#if defined(AIPS_CXX11)
+  static std::shared_ptr<ImageInterface<T> > openImage (const String& fileName);
+#else
+  static std::tr1::shared_ptr<ImageInterface<T> > openImage (const String& fileName);
+#endif
 //  </group>
 
 // Copy MiscInfo, ImageInfo, brightness unit and logger (history) from in to out
    template <typename T, typename U>
-   static void copyMiscellaneous (
-		  ImageInterface<T>& out,
-		  const ImageInterface<U>& in,
-		  const Bool copyImageInfo = True
-   );
+   static void copyMiscellaneous (ImageInterface<T>& out,
+                                  const ImageInterface<U>& in,
+                                  Bool copyImageInfo = True);
 
 // Copy a mask from one image to another
-    template <typename T, typename U> static void copyMask (
-    	ImageInterface<T>& out,
-    	const ImageInterface<U>& in,
-    	const String& maskOut, const String& maskIn,
-    	AxesSpecifier axesSpecifier
-    );
+   template <typename T, typename U>
+   static void copyMask (ImageInterface<T>& out,
+                         const ImageInterface<U>& in,
+                         const String& maskOut, const String& maskIn,
+                         AxesSpecifier axesSpecifier);
+
+  // Copy the attributes from one image to another.
+  static void copyAttributes (ImageAttrHandler& out,
+                              ImageAttrHandler& in);
 
 // Add one degenerate axis for each of the specified coordinate types.
 // If the outfile string is given the new image is a PagedImage.
 // If the outfile string is empty, the new image is a TempImage.
-// If silent==True, existing axes are silently ignored.
-   template <typename T> static void addDegenerateAxes (
+   template <typename T>
+   static void addDegenerateAxes (
 		   LogIO& os,
 		   PtrHolder<ImageInterface<T> >& outImage,
 		   const ImageInterface<T>& inImage,
 		   const String& outFile, Bool direction,
 		   Bool spectral, const String& stokes,
 		   Bool linear, Bool tabular, Bool overwrite,
-		   Bool silent=False
+                   Bool silent=False
    );
 
 // Function to bin up (average data) one axis of an N-D MaskedArray. The interface
@@ -185,9 +181,6 @@ public:
 // are returned as given.
    static String shortAxisName (const String& axisName);
 
-
-
-
    // write the specified image and add the specified pixels to it.
    // Currently no checks are done to ensure the pixel array size and
    // mapShape are compatible; the caller is responsible for this check.
@@ -208,17 +201,13 @@ public:
 	   String& xUnit, String& doppler,
 	   const uInt axis, const CoordinateSystem& csys
    );
-
-private:
-
-
 };
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageUtilities2.tcc>
+#include <casacore/images/Images/ImageUtilities2.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

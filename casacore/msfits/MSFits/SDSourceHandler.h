@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDSourceHandler.h 19226 2006-01-26 22:13:44Z bgarwood $
+//# $Id: SDSourceHandler.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_SDSOURCEHANDLER_H
 #define MS_SDSOURCEHANDLER_H
 
-#include <casa/Containers/RecordField.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class ColumnsIndex;
@@ -126,7 +127,7 @@ private:
 
     // fields possibly mined from the SDFITS row
     // floating point fields that we can't be certain of their type
-    Int restfreq_p, rvsys_p, vframe_p;
+    Int restfreq_p, vframe_p;
     // String fields
     RORecordFieldPtr<String> transiti_p, molecule_p, object_p, obsmode_p;
 
@@ -152,7 +153,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

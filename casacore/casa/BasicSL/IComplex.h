@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IComplex.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: IComplex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_ICOMPLEX_H
@@ -31,10 +31,10 @@
 
 //# Includes
 
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Integer complex numbers.
@@ -74,6 +74,6 @@ ostream &operator<< (ostream &os, const IComplex&);
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

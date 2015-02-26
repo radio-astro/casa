@@ -61,8 +61,7 @@ struct LFLineListOperations {
    // be adjacent or have a non-void intersection, they are joined into
    // the new line
    static void addNewSearchResult(const std::list<std::pair<int, int> >
-                  &newlines, std::list<std::pair<int, int> > &lines_list)
-                           throw(casa::AipsError);
+                  &newlines, std::list<std::pair<int, int> > &lines_list);
 
    // extend all line ranges to the point where a value stored in the
    // specified vector changes (e.g. value-mean change its sign)
@@ -72,8 +71,7 @@ struct LFLineListOperations {
    static void searchForWings(std::list<std::pair<int, int> > &newlines,
                        const casa::Vector<casa::Int> &signs,
 		       const casa::Vector<casa::Bool> &mask,
-		       const std::pair<int,int> &edge)
-			   throw(casa::AipsError);
+		       const std::pair<int,int> &edge);
 protected:
 
    // An auxiliary object function to test whether two lines have a non-void
@@ -85,7 +83,7 @@ protected:
        explicit IntersectsWith(const std::pair<int,int> &in_line1);
 	// return true if line2 intersects with line1 with at least one
 	// common channel, and false otherwise
-	bool operator()(const std::pair<int,int> &line2) const throw();
+	bool operator()(const std::pair<int,int> &line2) const;
    };
 
    // An auxiliary object function to build a union of several lines
@@ -97,9 +95,9 @@ protected:
         explicit BuildUnion(const std::pair<int,int> &line1);
         // update temp_line with a union of temp_line and new_line
 	// provided there is no gap between the lines
-	void operator()(const std::pair<int,int> &new_line) throw();
+	void operator()(const std::pair<int,int> &new_line);
 	// return the result (temp_line)
-	const std::pair<int,int>& result() const throw();
+	const std::pair<int,int>& result() const;
    };
 
    // An auxiliary object function to test whether a specified line
@@ -112,7 +110,7 @@ protected:
 
 	// return true if line2 should be placed later than line1
 	// in the ordered list (so, it is at greater channel numbers)
-	bool operator()(const std::pair<int,int> &line2) const throw();
+	bool operator()(const std::pair<int,int> &line2) const;
    };
 
 
@@ -128,8 +126,8 @@ protected:
 //
 
 struct STLineFinder : protected LFLineListOperations {
-   STLineFinder() throw();
-   virtual ~STLineFinder() throw(casa::AipsError);
+   STLineFinder();
+   virtual ~STLineFinder();
 
    // set the parameters controlling algorithm
    // in_threshold a single channel threshold default is sqrt(3), which
@@ -159,12 +157,12 @@ struct STLineFinder : protected LFLineListOperations {
 		   const casa::Int &in_avg_limit=8,
                    const casa::Float &in_box_size=0.2,
                    const casa::Float &in_noise_box=-1.,
-                   const casa::Bool &in_median = casa::False) throw();
+                   const casa::Bool &in_median = casa::False);
 
    void setDetailedOptions( const casa::Int &order=9 ) ;
 
    // set the scan to work with (in_scan parameter)
-   void setScan(const ScantableWrapper &in_scan) throw(casa::AipsError);
+   void setScan(const ScantableWrapper &in_scan);
 
    // set spectrum data to work with. this is a method to allow linefinder work 
    // without setting scantable for the purpose of using linefinder inside some 
@@ -181,21 +179,21 @@ struct STLineFinder : protected LFLineListOperations {
    // Number of lines found is returned
    int findLines(const std::vector<bool> &in_mask,
 		 const std::vector<int> &in_edge = std::vector<int>(),
-		 const casa::uInt &whichRow = 0) throw(casa::AipsError);
+		 const casa::uInt &whichRow = 0);
 
    // get the mask to mask out all lines that have been found (default)
    // if invert=true, only channels belong to lines will be unmasked
    // Note: all channels originally masked by the input mask (in_mask
    //       in setScan) or dropped out by the edge parameter (in_edge
    //       in setScan) are still excluded regardless on the invert option
-   std::vector<bool> getMask(bool invert=false) const throw(casa::AipsError);
+   std::vector<bool> getMask(bool invert=false) const;
 
    // get range for all lines found. The same units as used in the scan
    // will be returned (e.g. velocity instead of channels).
-   std::vector<double>   getLineRanges() const throw(casa::AipsError);
+   std::vector<double>   getLineRanges() const;
    // The same as getLineRanges, but channels are always used to specify
    // the range
-   std::vector<int> getLineRangesInChannels() const throw(casa::AipsError);
+   std::vector<int> getLineRangesInChannels() const;
 protected:
    // auxiliary function to average adjacent channels and update the mask
    // if at least one channel involved in summation is masked, all
@@ -204,14 +202,13 @@ protected:
    // array specified, rather than the field of this class
    // boxsize - a number of adjacent channels to average
    void averageAdjacentChannels(casa::Vector<casa::Bool> &mask2update,
-                               const casa::Int &boxsize)
-                               throw(casa::AipsError);
+                               const casa::Int &boxsize);
 
    // auxiliary function to fit and subtract a polynomial from the current
    // spectrum. It uses the Fitter class. This action is required before
    // reducing the spectral resolution if the baseline shape is bad
    void subtractBaseline(const casa::Vector<casa::Bool> &temp_mask,
-                         const casa::Int &order) throw(casa::AipsError);
+                         const casa::Int &order);
 
    // an auxiliary function to remove all lines from the list, except the
    // strongest one (by absolute value). If the lines removed are real,
@@ -228,8 +225,7 @@ protected:
    // max_box_nchan - channels in the running box for baseline filtering
    void keepStrongestOnly(const casa::Vector<casa::Bool> &temp_mask,
 			  std::list<std::pair<int, int> > &lines2update,
-			  int max_box_nchan)
-                                      throw (casa::AipsError);
+			  int max_box_nchan);
 private:
    casa::CountedPtr<Scantable> scan; // the scan to work with
    casa::Vector<casa::Bool> mask;          // associated mask

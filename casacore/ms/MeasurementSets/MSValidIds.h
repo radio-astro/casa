@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSValidIds.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSValidIds.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSVALIDIDS_H
 #define MS_MSVALIDIDS_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class ROMSColumns;
@@ -135,6 +135,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatRows.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ConcatRows.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_CONCATROWS_H
 #define TABLES_CONCATROWS_H
 
 //# Includes
-#include <tables/Tables/RefRows.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Containers/Block.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // Class holding the row numbers in a ConcatTable
@@ -232,6 +233,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

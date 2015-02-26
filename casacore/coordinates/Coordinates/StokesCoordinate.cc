@@ -24,23 +24,23 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: StokesCoordinate.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: StokesCoordinate.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
 
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 StokesCoordinate::StokesCoordinate(const Vector<Int> &whichStokes)
@@ -187,14 +187,13 @@ Vector<Int> StokesCoordinate::stokes() const
 }
 
 Vector<String> StokesCoordinate::stokesStrings() const {
-	uInt n = values_p.size();
-	Vector<String> ret(n);
-	for (uInt i=0; i<n; i++) {
-		ret[i] = Stokes::name(Stokes::type(values_p[i]));
-	}
-	return ret;
+    uInt n = values_p.size();
+    Vector<String> ret(n);
+    for (uInt i=0; i<n; i++) {
+        ret[i] = Stokes::name(Stokes::type(values_p[i]));
+    }
+    return ret;
 }
-
 
 void StokesCoordinate::setStokes (const Vector<Int> &whichStokes)
 {
@@ -463,26 +462,22 @@ StokesCoordinate *StokesCoordinate::restore(const RecordInterface &container,
 // they become useful again
 
 /*
-    Vector<Double> crval;
-    subrec.get("crval", crval);
+    Vector<Double> crval(subrec.toArrayDouble("crval"));
 
     if (!subrec.isDefined("crpix")) {
         return 0;
     }
-    Vector<Double> crpix;
-    subrec.get("crpix", crpix);
+    Vector<Double> crpix(subrec.toArrayDouble("crpix"));
     
     if (!subrec.isDefined("cdelt")) {
         return 0;
     }
-    Vector<Double> cdelt;
-    subrec.get("cdelt", cdelt);
+    Vector<Double> cdelt(subrec.toArrayDouble("cdelt"));
 
     if (!subrec.isDefined("pc")) {
         return 0;
     }
-    Matrix<Double> pc;
-    subrec.get("pc", pc);
+    Matrix<Double> pc(subrec.toArrayDouble("pc"));
 */
 
     StokesCoordinate* retval = new StokesCoordinate(istokes);
@@ -599,7 +594,7 @@ Bool StokesCoordinate::toPixel(Double& pixel,  const Double world) const
     Bool found = False;
     Int index;
     for (index=0; index<nValues_p; index++) {
-	found = casa::near(world, Double(values_p[index]));
+	found = casacore::near(world, Double(values_p[index]));
 	if (found) break;
     }
     if (!found) {
@@ -632,5 +627,5 @@ void StokesCoordinate::setDefaultWorldMixRanges ()
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

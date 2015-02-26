@@ -25,24 +25,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id$
+//# $Id: MSSelectableTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSSELECTABLETABLE_H
 #define MS_MSSELECTABLETABLE_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Containers/OrderedMap.h>
-#include <casa/Containers/MapIO.h>
-#include <tables/Tables/ExprNode.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSMainEnums.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectableMainColumn.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSMainEnums.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectableMainColumn.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 //
@@ -100,13 +100,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     enum MSSDataType {BASELINE_BASED=0, PURE_ANTENNA_BASED, REF_ANTENNA_BASED};
 
-    MSSelectableTable()                       {};
-    MSSelectableTable(const Table& table)     {table_p = &table;};
-    virtual ~MSSelectableTable()              {};
+    MSSelectableTable()                       {}
+    MSSelectableTable(const Table& table)     {table_p = &table;}
+    virtual ~MSSelectableTable()              {}
 
-    virtual void setTable(const Table& table) {table_p = &table;};
-    const Table* table()                      {return table_p;};
-    TableExprNode col(const String& colName)  {return table()->col(colName);};
+    virtual void setTable(const Table& table) {table_p = &table;}
+    const Table* table()                      {return table_p;}
+    TableExprNode col(const String& colName)  {return table()->col(colName);}
 
     virtual Bool isMS()                       = 0;
     virtual MSSDataType dataType()            = 0;
@@ -198,24 +198,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSInterface: public MSSelectableTable
   {
   public:
-    MSInterface():msMainCols_p(NULL)                   {};
+    MSInterface():msMainCols_p(NULL)                   {}
     MSInterface(const Table& table);
-    virtual ~MSInterface()                             {if (msMainCols_p) delete msMainCols_p;};
-    virtual const MSAntenna& antenna()                 {return asMS()->antenna();};
-    virtual const MSField& field()                     {return asMS()->field();};
-    virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();};
-    virtual const MSDataDescription& dataDescription() {return asMS()->dataDescription();};
-    virtual const MSObservation& observation()         {return asMS()->observation();};
-    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);};
-    virtual Bool isMS()                                {return True;};
+    virtual ~MSInterface()                             {if (msMainCols_p) delete msMainCols_p;}
+    virtual const MSAntenna& antenna()                 {return asMS()->antenna();}
+    virtual const MSField& field()                     {return asMS()->field();}
+    virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();}
+    virtual const MSDataDescription& dataDescription() {return asMS()->dataDescription();}
+    virtual const MSObservation& observation()         {return asMS()->observation();}
+    virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) {return MS::columnName(nameEnum);}
+    virtual Bool isMS()                                {return True;}
     virtual MSSDataType dataType()                     {return MSSelectableTable::BASELINE_BASED;}
 
-    virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
+    virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());}
     virtual MSSelectableMainColumn* mainColumns()
-    {msMainCols_p = new MSMainColInterface(*table_p); return msMainCols_p;};
+    {msMainCols_p = new MSMainColInterface(*table_p); return msMainCols_p;}
   private:
     MSMainColInterface *msMainCols_p;
   };
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

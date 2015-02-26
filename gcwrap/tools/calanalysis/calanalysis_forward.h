@@ -6,6 +6,7 @@ using namespace std;
 #include <casa/BasicSL/String.h>
 #include <stdcasa/StdCasa/CasacSupport.h>
 #include <stdcasa/variant.h>
+using namespace casa;
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>

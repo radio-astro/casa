@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVEarthMagnetic.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MVEarthMagnetic.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Quanta/MVEarthMagnetic.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Register.h>
-#include <casa/Quanta/RotMatrix.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/QMath.h>
-#include <casa/Quanta/QLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Quanta/MVEarthMagnetic.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/QMath.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // MVEarthMagnetic class
 
@@ -473,5 +473,5 @@ Double operator*(const MVEarthMagnetic &left, const MVPosition &right) {
   return (tmp * left);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

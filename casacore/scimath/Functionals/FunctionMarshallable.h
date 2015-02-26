@@ -24,16 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionMarshallable.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FunctionMarshallable.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONMARSHALLABLE_H
 #define SCIMATH_FUNCTIONMARSHALLABLE_H
 
-#include <scimath/Functionals/Function.h>
-#include <scimath/Functionals/FunctionFactoryErrors.h>
-#include <scimath/Functionals/SerialHelper.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/scimath/Functionals/FunctionFactoryErrors.h>
+#include <casacore/scimath/Functionals/SerialHelper.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // a class for serializing/reconstituting Function objects to/from Records
@@ -121,7 +122,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

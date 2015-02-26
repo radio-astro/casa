@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NullLogSink.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: NullLogSink.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Logging/NullLogSink.h>
-#include <casa/Logging/LogFilter.h>
+#include <casacore/casa/Logging/NullLogSink.h>
+#include <casacore/casa/Logging/LogFilter.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 String NullLogSink::localId( ) {
     return String("NullLogSink");
@@ -82,5 +82,5 @@ Bool NullLogSink::postLocally(const LogMessage &message)
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

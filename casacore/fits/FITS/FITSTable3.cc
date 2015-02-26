@@ -1,4 +1,4 @@
-//# FITSTable.h: Simplified interface to FITS tables with AIPS++ Look and Feel.
+//# FITSTable.h: Simplified interface to FITS tables with Casacore Look and Feel.
 //# Copyright (C) 1995,1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,27 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSTable3.cc 19974 2007-02-28 05:26:06Z Malte.Marquarding $
+//# $Id: FITSTable3.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/FITSTable.h>
-#include <fits/FITS/FITSFieldCopier.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <fits/FITS/fits.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/hdu.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <casa/OS/Path.h>
+#include <casacore/fits/FITS/FITSTable.h>
+#include <casacore/fits/FITS/FITSFieldCopier.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/casa/OS/Path.h>
 
-#include <casa/Logging/LogIO.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Arrays/Array.h>
 
-#include <casa/sstream.h>
-#include <casa/iomanip.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iomanip.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 FITSGroupWriter::FITSGroupWriter(const String &fileName,
 				 const RecordDesc &description,
@@ -291,5 +291,5 @@ void FITSGroupWriter::check_error(const char *extra_info)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

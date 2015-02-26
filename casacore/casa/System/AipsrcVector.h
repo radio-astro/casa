@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcVector.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: AipsrcVector.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_AIPSRCVECTOR_H
 #define CASA_AIPSRCVECTOR_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Block.h>
-#include <casa/System/Aipsrc.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template<class T> class Vector;
@@ -226,9 +226,9 @@ private:
 #undef AipsrcVector_Bool
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/System/AipsrcVector.tcc>
+#include <casacore/casa/System/AipsrcVector.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

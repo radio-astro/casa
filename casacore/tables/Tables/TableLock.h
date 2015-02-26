@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableLock.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableLock.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLELOCK_H
 #define TABLES_TABLELOCK_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/IO/LockFile.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/LockFile.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // Class to hold table lock options.
@@ -104,10 +104,13 @@ public:
 	// It is similar to UserLocking, but no locks are needed for
 	// reading.
 	UserNoReadLocking,
+        // Do not do any locking at all. This should be used with care
+        // because concurrent access might result in table corruption.
+        NoLocking,
 	// This is the default locking option.
 	// It means that AutoLocking will be used if the table is not
 	// opened yet. Otherwise the locking options of the PlainTable
-	// objec already in use will be used.
+	// object already in use will be used.
 	DefaultLocking
     };
 
@@ -153,6 +156,9 @@ public:
     // Get the maximum wait period in AutoLocking mode.
     uInt maxWait() const;
 
+    // Is table locking disabled (because AIPS_TABLE_NOLOCKING was set)?
+    static Bool lockingDisabled();
+
 
 private:
     LockOption  itsOption;
@@ -197,6 +203,6 @@ inline uInt TableLock::maxWait() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

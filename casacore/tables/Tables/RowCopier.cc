@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RowCopier.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: RowCopier.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/RowCopier.h>
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/TableError.h>
-#include <tables/Tables/Table.h>
+#include <casacore/tables/Tables/RowCopier.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/tables/Tables/Table.h>
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // this class is used internally by RowCopier and is what really does the work.
 
@@ -57,7 +57,7 @@ private:
     Table out;
 
     // Blocks of pointers to the TableColumns that will be involved in copying
-    PtrBlock<ROTableColumn *> inTabCol;
+    PtrBlock<TableColumn *> inTabCol;
     PtrBlock<TableColumn *> outTabCol;
 
 };
@@ -99,7 +99,7 @@ void ColumnHolder::attach(const String &outCol, const String &inCol)
 
 	  inTabCol.resize(inTabCol.nelements() + 1);
   	  outTabCol.resize(outTabCol.nelements() + 1);
-	  inTabCol[inTabCol.nelements() - 1] = new ROTableColumn(in,inCol);
+	  inTabCol[inTabCol.nelements() - 1] = new TableColumn(in,inCol);
 	  outTabCol[outTabCol.nelements() - 1] = new TableColumn(out,outCol);
     } else {
 	throw(TableError("RowCopier: " + inCol + " and " +
@@ -122,7 +122,6 @@ Bool ColumnHolder::copy(uInt toRow, uInt fromRow)
 }
 
 RowCopier::RowCopier(Table &out, const Table &in)
-: columns_p(0)
 {
     if (! out.isWritable()) {
 	throw(TableError("RowCopier: output table must be writable"));
@@ -132,7 +131,7 @@ RowCopier::RowCopier(Table &out, const Table &in)
     for (uInt i=0; i < out.tableDesc().ncolumn(); i++) {
 	TableColumn outCol(out, i);
 	if (in.tableDesc().isColumn(outCol.columnDesc().name())) {
-	    ROTableColumn inCol(in, outCol.columnDesc().name());
+	    TableColumn inCol(in, outCol.columnDesc().name());
 	    columns_p->attach(outCol.columnDesc().name(),
 			      inCol.columnDesc().name());
 	}
@@ -142,7 +141,6 @@ RowCopier::RowCopier(Table &out, const Table &in)
 RowCopier::RowCopier(Table &out, const Table &in,
 		     const Vector<String>& outNames,
 		     const Vector<String>& inNames)
-: columns_p(0)
 {
     if (! out.isWritable()) {
 	throw(TableError("RowCopier: output table must be writable"));
@@ -164,12 +162,7 @@ Bool RowCopier::copy(uInt toRow, uInt fromRow)
 }
 
 RowCopier::~RowCopier()
-{
-    if (columns_p) {
-	delete columns_p;
-	columns_p = 0;
-    }
-}
+{}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

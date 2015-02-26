@@ -1,5 +1,5 @@
 //# HostInfo_linux.h: Linux specific memory, swap, and CPU code.
-//# $Id: HostInfoLinux.h 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: HostInfoLinux.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
  /*
  **  This is a greatly MODIFIED version of a "top" machine dependent file.
@@ -78,7 +78,7 @@
 
 #define bytetok(x)	(((x) + 512) >> 10)
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class HostMachineInfo {
 friend class HostInfo;
@@ -89,13 +89,13 @@ friend class HostInfo;
     int valid;
     int cpus;
 
-    ssize_t memory_total;
-    ssize_t memory_used;
-    ssize_t memory_free;
+    ptrdiff_t memory_total;
+    ptrdiff_t memory_used;
+    ptrdiff_t memory_free;
 
-    ssize_t swap_total;
-    ssize_t swap_used;
-    ssize_t swap_free;
+    ptrdiff_t swap_total;
+    ptrdiff_t swap_used;
+    ptrdiff_t swap_free;
 };
 
 // </group>
@@ -208,7 +208,7 @@ void HostMachineInfo::update_info( )
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 # endif
 

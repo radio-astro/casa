@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Memory.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Memory.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MEMORY_H
 #define CASA_MEMORY_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 //# The following is used to get size_t.
-#include <casa/stdlib.h>
+#include <casacore/casa/stdlib.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>Memory related information and utilities.</summary>
 
@@ -80,8 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <src>releaseMemory()</src> might be a no-op on many systems, and that
 // calling it might be expensive so it should not be called in tight-loops.
 //
-// Note that this class does not use any AIPS++ facilities and does not cause
-// any AIPS++ code to be linked in to your executable.
+// Note that this class does not use any Casacore facilities and does not cause
+// any Casacore code to be linked in to your executable.
 // </synopsis>
 //
 // <example>
@@ -137,7 +137,7 @@ public:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

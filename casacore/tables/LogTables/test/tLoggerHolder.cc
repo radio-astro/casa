@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tLoggerHolder.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tLoggerHolder.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/LogTables/LoggerHolder.h>
-#include <tables/Tables/Table.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void doIt (Bool tempClose)
 {
   LoggerHolder sublogger (False);

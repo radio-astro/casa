@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MathFunc2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MathFunc2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicSL/Constants.h>
-#include <scimath/Mathematics/MathFunc.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/scimath/Mathematics/MathFunc.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //
 // Define static members of MathFunc<T> for g++
@@ -390,5 +390,5 @@ float sphfn(Int ialf, Int im, float eta)
   return psihold;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

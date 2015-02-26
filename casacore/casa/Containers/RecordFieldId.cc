@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordFieldId.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordFieldId.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Everything is inlined
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

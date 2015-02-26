@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VelocityMachine.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: VelocityMachine.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_VELOCITYMACHINE_H
 #define MEASURES_VELOCITYMACHINE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/Quantum.h>
-#include <measures/Measures/MCFrequency.h>
-#include <measures/Measures/MCDoppler.h>
-#include <measures/Measures/MeasConvert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/measures/Measures/MCFrequency.h>
+#include <casacore/measures/Measures/MCDoppler.h>
+#include <casacore/measures/Measures/MeasConvert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasFrame;
@@ -316,6 +316,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

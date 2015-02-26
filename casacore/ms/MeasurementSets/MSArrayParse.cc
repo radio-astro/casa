@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSArrayParse.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSArrayParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSArrayParse.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSMainColumns.h>
+#include <casacore/ms/MeasurementSets/MSArrayParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSMainColumns.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSArrayParse* MSArrayParse::thisMSAParser = 0x0; // Global pointer to the parser object
   // TableExprNode* MSArrayParse::node_p = 0x0;
@@ -189,4 +189,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

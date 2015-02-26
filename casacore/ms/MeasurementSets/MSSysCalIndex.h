@@ -24,16 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSysCalIndex.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSSysCalIndex.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSYSCALINDEX_H
 #define MS_MSSYSCALINDEX_H
 
-#include <ms/MeasurementSets/MSTableIndex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSTableIndex.h>
 
-#include <casa/Containers/RecordField.h>
+#include <casacore/casa/Containers/RecordField.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 class MSSysCal;
@@ -102,7 +103,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

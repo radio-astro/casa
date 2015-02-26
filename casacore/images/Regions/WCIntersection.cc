@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCIntersection.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCIntersection.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCIntersection.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCIntersection.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/images/Regions/WCIntersection.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCIntersection.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCIntersection::WCIntersection (const ImageRegion& region1,
 				const ImageRegion& region2)
@@ -123,5 +123,5 @@ WCIntersection* WCIntersection::fromRecord (const TableRecord& rec,
     return new WCIntersection (True, regions);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

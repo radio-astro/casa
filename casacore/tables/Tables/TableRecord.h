@@ -24,20 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TableRecord.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableRecord.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef TABLES_TABLERECORD_H
 #define TABLES_TABLERECORD_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/RecordInterface.h>
-#include <tables/Tables/TableRecordRep.h>
-#include <casa/Containers/RecordDesc.h>
-#include <casa/Utilities/COWPtr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/tables/Tables/TableRecordRep.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/casa/Utilities/COWPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class T> class Array;
@@ -241,8 +241,6 @@ public:
     // </note>
     TableRecord& operator= (const TableRecord& other);
     
-    Bool operator== (const TableRecord & other); // always throws; needed for template compatibility
-
     // Release resources associated with this object.
     ~TableRecord();
 
@@ -340,6 +338,10 @@ public:
     // </group>
 
     // Get the table from the given field.
+    // By default the read/write option and lock options are inherited
+    // from the parent table.
+    // If openWritable=True, the table is still opened as readonly if the file
+    // permissions do not permit write access.
     // <group>
     Table asTable (const RecordFieldId&) const;
     Table asTable (const RecordFieldId&, const TableLock& lockOptions) const;
@@ -420,9 +422,17 @@ public:
     // Tables are not reopened if they are not writable.
     void reopenRW();
 
-    // Set the attributes of subtables to te ones in the other record.
+    // Recursively set the attributes of subtables to the ones in the other
+    // record for matching subtable field names. Otherwise set it to defaultAttr.
+    // The name attribute is not changed.
     // It is primarily a helper function for PlainTable::syncTable
     // and ColumnSet::syncColumns.
+    // <br>However, it can also be used to achieve that all subtables of a
+    // read/write table are opened as readonly. E.g.:
+    // <srcblock>
+    //   TableAttr newAttr(String(), False, mainTable.lockOptions());
+    //   mainTable.keywordSet().setTableAttr (TableRecord(), newAttr);
+    // </srcblock>
     void setTableAttr (const TableRecord& other, const TableAttr& defaultAttr);
 
     // Make a unique record representation
@@ -531,26 +541,8 @@ inline Bool TableRecord::areTablesMultiUsed() const
     return ref().areTablesMultiUsed();
 }
 
-inline Bool
-TableRecord::operator== (const TableRecord & /*other*/)
-{
-    // Kluge to allow this class to interoperate with the templated ScalarColumnData<T>.
-    // In some situations, ScalarColumnData's T can specify the use of a sential value to
-    // indicate the value is undefined.  This requires that T provide operator==.  However,
-    // this prevent the TableRecord from being used without going to the large effort to
-    // properly define the operator.  So, the class is defined and implemented which allows
-    // use in the template but if it were ever to be called it will throw the exception
-    // and at that time a real == operator will need to be defined (if that's feasible).
-    // See also JIRA CAS-4827.  (jjacobs 2013-1-29)
-
-    throw AipsError ("TableRecord::operator== not implemented; declared for template compatibility",
-                     __FILE__, __LINE__);
-
-    return False;
-}// always throws; needed for template compatibility
 
 
-
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

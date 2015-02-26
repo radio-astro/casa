@@ -24,15 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelUtil2.tcc 19996 2007-03-01 00:34:53Z gervandiepen $
+//# $Id: MSSelUtil2.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSelUtil2.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#ifndef MS_MSSELUTIL2_TCC
+#define MS_MSSELUTIL2_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/ms/MeasurementSets/MSSelUtil2.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // reorder from 3d to 4d (adding ifr axis)
 template <class T>
@@ -154,5 +157,7 @@ void MSSelUtil2<T>::timeAverage(Array<Bool>& dataFlag, Array<T>& data,
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

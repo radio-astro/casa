@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCPolygon.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCEllipsoid.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCEllipsoid.h>
+#include <casacore/images/Regions/WCEllipsoid.h>
 
-#include <casa/Quanta/QuantumHolder.h>
-#include <lattices/Lattices/LCEllipsoid.h>
+#include <casacore/casa/Quanta/QuantumHolder.h>
+#include <casacore/lattices/LRegions/LCEllipsoid.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 WCEllipsoid::WCEllipsoid() {}
@@ -314,7 +314,7 @@ WCEllipsoid* WCEllipsoid::fromRecord (
 
 	// Get pixel axes and convert to zero rel.
 
-	Vector<Int> tmp = Vector<Int>(rec.asArrayInt ("pixelAxes"));
+	Vector<Int> tmp = Vector<Int>(rec.toArrayInt ("pixelAxes"));
 	IPosition pixelAxes(tmp);
 	if (oneRel) {
 		pixelAxes -= 1;
@@ -521,7 +521,6 @@ LCRegion* WCEllipsoid::doToLCRegion(
 	switch(_specType) {
 	case SPHERE:
 		return new LCEllipsoid(outCenter, outRadius[0], outShape);
-		break;
 	case ELLIPSE_2D:
 		// I'm pretty sure theta does not need to be mucked with
 		// if the order of the axes changes.
@@ -529,14 +528,10 @@ LCRegion* WCEllipsoid::doToLCRegion(
 			outCenter[0], outCenter[1], outRadius[0], outRadius[1],
 			_theta.getValue("rad"), outShape
 		);
-		break;
 	default:
-		return new LCEllipsoid(
-			outCenter, outRadius, outShape
-		);
+                break;
 	}
-
-	throw AipsError ("This should never be reached");
+        return new LCEllipsoid(outCenter, outRadius, outShape);
 }
 
 
@@ -617,5 +612,5 @@ void WCEllipsoid::_checkUnits() const {
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

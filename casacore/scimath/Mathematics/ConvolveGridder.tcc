@@ -16,7 +16,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -24,15 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ConvolveGridder.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: ConvolveGridder.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Mathematics/ConvolveGridder.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/iostream.h>
+#ifndef SCIMATH_CONVOLVEGRIDDER_TCC
+#define SCIMATH_CONVOLVEGRIDDER_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Mathematics/ConvolveGridder.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/iostream.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
@@ -443,5 +446,7 @@ Int& ConvolveGridder<Domain, Range>::cSampling() {
   return sampling;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

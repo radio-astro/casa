@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSScanParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSScanParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSCANPARSE_H
 #define MS_MSSCANPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -93,12 +94,12 @@ public:
   // Associate the ms and the shorthand.
   MSScanParse (const MeasurementSet* ms);
   MSScanParse (const MeasurementSet* ms, const TableExprNode& colAsTEN);
-  ~MSScanParse() {columnAsTEN_p=TableExprNode();};
+  ~MSScanParse() {columnAsTEN_p=TableExprNode();}
 
   const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
   const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
   const TableExprNode *selectScanIds(const Vector<Int>& scanids);
-  inline const TableExprNode *selectScanIds() {return selectScanIds(parsedIDList_p);};
+  inline const TableExprNode *selectScanIds() {return selectScanIds(parsedIDList_p);}
   const TableExprNode *selectScanIdsGT(const Vector<Int>& scanids);
   const TableExprNode *selectScanIdsLT(const Vector<Int>& scanids);
   const TableExprNode *selectScanIdsGTEQ(const Vector<Int>& scanids);
@@ -108,11 +109,11 @@ public:
     // Get table expression node object.
   const TableExprNode node();
 
-  Vector<Int> selectedIDs() {return idList;};
-  void reset(){idList.resize(0);parsedIDList_p.resize(0);};
-  void cleanup() {};
+  Vector<Int> selectedIDs() {return idList;}
+  void reset(){idList.resize(0);parsedIDList_p.resize(0);}
+  void cleanup() {}
 
-  void setMaxScan(const Int& n) {maxScans_p=n;};
+  void setMaxScan(const Int& n) {maxScans_p=n;}
 
   static MSScanParse* thisMSSParser;
 
@@ -126,6 +127,6 @@ private:
   static TableExprNode columnAsTEN_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

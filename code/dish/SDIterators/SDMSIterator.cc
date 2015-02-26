@@ -55,7 +55,7 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <tables/Tables/TableAttr.h>
 #include <tables/Tables/ColumnsIndex.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableVector.h>
 #include <casa/Utilities/Assert.h>

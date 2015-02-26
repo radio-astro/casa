@@ -23,11 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Sequence.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Sequence.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/Utilities/Sequence.h>
+#ifndef CASA_SEQUENCE_TCC
+#define CASA_SEQUENCE_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/Utilities/Sequence.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 /*
    // Inlined this in Sequence.h so this is now
@@ -38,5 +41,7 @@ template<class T> Sequence<T>::~Sequence()
 }
 */
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColDescSet.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: ColDescSet.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/ColDescSet.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/DataManager.h>
-#include <casa/Containers/SimOrdMapIO.h>
-#include <tables/Tables/TableError.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/DataMan/DataManager.h>
+#include <casacore/casa/Containers/SimOrdMapIO.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 ColumnDescSet::ColumnDescSet()
@@ -287,5 +287,5 @@ void ColumnDescSet::show (ostream& os) const
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -1,6 +1,6 @@
 set (tests
 tBlock
-tContainerIO
+tBlockTrace
 tHashMap
 tHashMapIO
 tHashMapIter

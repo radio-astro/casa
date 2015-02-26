@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PixelCurve1D.cc 20856 2010-01-28 13:35:48Z gervandiepen $
+//# $Id: PixelCurve1D.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <lattices/Lattices/PixelCurve1D.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/lattices/Lattices/PixelCurve1D.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 PixelCurve1D::PixelCurve1D (double x1, double y1, double x2, double y2,
 			    uInt npoints)
@@ -188,5 +188,5 @@ void PixelCurve1D::getPixelCoord (Vector<float>& x, Vector<float>& y,
   }
 }  
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

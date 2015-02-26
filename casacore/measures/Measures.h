@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Measures.h 20675 2009-07-10 05:54:49Z Malte.Marquarding $
+//# $Id: Measures.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MEASURES_MEASURES_H
 #define MEASURES_MEASURES_H
 
 //# Includes
-#include <casa/Quanta.h>
-#include <measures/Measures/Measure.h>
-#include <measures/Measures/MeasBase.h>
-#include <casa/Quanta/MeasValue.h>
-#include <measures/Measures/MeasRef.h>
-#include <measures/Measures/MeasConvert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta.h>
+#include <casacore/measures/Measures/Measure.h>
+#include <casacore/measures/Measures/MeasBase.h>
+#include <casacore/casa/Quanta/MeasValue.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/measures/Measures/MeasConvert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 // 
@@ -70,8 +71,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // appropiate include files should be added. E.g. to be able to handle
 // Directions, the following includes could be given:
 // <srcblock>
-//	#include <measures/Measures.h>
-//	#include <measures/Measures/MDirection.h>
+//	#include <casacore/measures/Measures.h>
+//	#include <casacore/measures/Measures/MDirection.h>
 // </srcblock>
 // An inclusion of the appropiate measure file, will also take care of the
 // connected measure value (in this case <src>MVDirection</src>). However,
@@ -190,7 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> <linkto class=MVTime>MVTime</linkto> (same for time-like values)
 // </ul>
 // <em>References</em> are measure specific. Each specific reference class is
-// called <em>Measure</em>::Ref (e.g. <src>MEpoch::Ref</src>). It specifies
+// called <em>Measure</em>\::Ref (e.g. <src>MEpoch::Ref</src>). It specifies
 // the full reference frame of the specific measure, i.e. its type, an optional
 // frame of measures (a MeasFrame, consisting of say a time and position), and
 // an optional offset.
@@ -310,7 +311,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Conversion of a measure of a certain kind from one reference to another
 // is done with the aid of special, measure specific,
 // <linkto class=MeasConvert>MeasConvert</linkto> classes. Each conversion
-// class is called <em>Measure</em>::Convert (e.g. MDirection::Convert).
+// class is called <em>Measure</em>\::Convert (e.g. MDirection::Convert).
 // A conversion generates from an input reference (or an input measure) and
 // an output reference a conversion functional, that can be used to convert
 // specific values.<br>
@@ -540,7 +541,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // well.<br>
 // Before implementing, however, I think it would be worthwhile to look at
 // the whole area of error handling. The easiest way would be to introduce
-// for each of the defined aips++ standard values a corresponding E class
+// for each of the defined Casacore standard values a corresponding E class
 // (EDouble, EInt, EComplex, EuInt etc), and have all mathematical and
 // logical operators that are defined for the standard classes be defined
 // for the E-classes as well. It would then be easy to introduce errors
@@ -806,6 +807,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# class Measures {};
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

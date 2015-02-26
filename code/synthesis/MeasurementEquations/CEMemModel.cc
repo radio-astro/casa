@@ -29,8 +29,8 @@
 #include <synthesis/MeasurementEquations/CEMemProgress.h>
 #include <synthesis/MeasurementEquations/LatConvEquation.h>
 #include <casa/Arrays/IPosition.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/TiledLineStepper.h>
 #include <lattices/Lattices/TempLattice.h>
 #include <lattices/Lattices/LatticeIterator.h>

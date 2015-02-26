@@ -23,19 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Gaussian2DParam.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: Gaussian2DParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_GAUSSIAN2DPARAM_TCC
+#define SCIMATH_GAUSSIAN2DPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/Gaussian2DParam.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/scimath/Functionals/Gaussian2DParam.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Statics
 ///template<class T>
@@ -256,5 +259,7 @@ void Gaussian2DParam<T>::setPA(const T &pa) {
   thePA  = param_p[PANGLE];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

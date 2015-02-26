@@ -35,8 +35,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Slicer.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/LCRegion.h>
+#include <lattices/LRegions/LCBox.h>
+#include <lattices/LRegions/LCRegion.h>
 #include <casa/BasicMath/Math.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/Quantum.h>

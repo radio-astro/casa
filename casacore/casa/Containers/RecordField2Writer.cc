@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordField2Writer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RecordField2Writer.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Containers/RecordFieldWriter.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordFieldWriter.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RecordFieldWriter::~RecordFieldWriter()
 {
@@ -60,5 +60,5 @@ MultiRecordFieldWriter::~MultiRecordFieldWriter()
     writers_p.resize(0);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

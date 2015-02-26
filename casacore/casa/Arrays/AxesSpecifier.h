@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AxesSpecifier.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AxesSpecifier.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_AXESSPECIFIER_H
 #define CASA_AXESSPECIFIER_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/AxesMapping.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/AxesMapping.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class=SubLattice>SubLattice</linkto> class to know how
 // to map the axes form the original lattice to the sublattice.
 // <note role=caution>
-// Reordering axes is not supported (yet) by the other AIPS++ classes
+// Reordering axes is not supported (yet) by the other Casacore classes
 // like Lattices and Images.
 // </note>
 // </synopsis>
@@ -162,6 +162,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

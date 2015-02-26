@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UVWMachine.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: UVWMachine.h 21521 2014-12-10 08:06:42Z gervandiepen $
 #ifndef MEASURES_UVWMACHINE_H
 #define MEASURES_UVWMACHINE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures.h>
-#include <measures/Measures/MCDirection.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Quanta/RotMatrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasFrame;
@@ -285,7 +285,7 @@ class UVWMachine {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

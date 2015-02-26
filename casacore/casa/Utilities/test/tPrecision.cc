@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRegex.cc 20436 2008-11-20 07:15:24Z gervandiepen $
+//# $Id: tPrecision.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/iomanip.h>
-#include <casa/Utilities/Precision.h>
+#include <casacore/casa/iomanip.h>
+#include <casacore/casa/Utilities/Precision.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 void testit(
 		const Vector<Double>& x, const Vector<Double>& y,
@@ -49,6 +49,7 @@ void testit(
 
 	cout << "*** "<< testStream.str() << " ***" << endl;
 	uInt precision = precisionForValueErrorPairs(x, y);
+        cout << "prec="<<precision<<endl;
 	cout << fixed << setprecision(precision) << "x = " << x[0] << " +/- " << x[1] << endl;
 	if (y.size() == 2) {
 		cout << fixed << setprecision(precision) << "y = " << y[0] << " +/- " << y[1] << endl;

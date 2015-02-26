@@ -38,6 +38,8 @@
 
 #include <measures/Measures/Stokes.h>
 
+#include <lattices/LRegions/LCSlicer.h>
+
 namespace casa {
 
 ImageInputProcessor::ImageInputProcessor()

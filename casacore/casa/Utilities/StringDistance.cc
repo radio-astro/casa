@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StringDistance.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: StringDistance.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/StringDistance.h>
+#include <casacore/casa/Utilities/StringDistance.h>
 
 using namespace std;
 
-namespace casa {
+namespace casacore {
 
 StringDistance::StringDistance()
   : itsMaxDistance     (0),

@@ -32,7 +32,7 @@
 
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
@@ -62,7 +62,7 @@ namespace {
 struct NullLogger {};
 
 template<class T>
-inline NullLogger &operator<<(NullLogger &logger, T /*value*/) {
+inline NullLogger &operator<<(NullLogger &logger, T value) {
   return logger;
 }
 
@@ -95,7 +95,7 @@ inline casa::Vector<casa::uInt> getOffStateIdList(casa::String const &msName) {
 }
 
 template<class T>
-inline std::string toString(casa::Vector<T> const &v) {
+inline std::string tostring(casa::Vector<T> const &v) {
   std::ostringstream oss;
   oss << "[";
   std::string delimiter = "";
@@ -109,8 +109,8 @@ inline std::string toString(casa::Vector<T> const &v) {
   
 inline casa::String configureTaqlString(casa::String const &msName, casa::Vector<casa::uInt> stateIdList) {
   std::ostringstream oss;
-  oss << "SELECT FROM " << msName << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
-      << toString(stateIdList)
+  oss << "SELECT FROM " << (std::string) msName << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
+      << tostring(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return casa::String(oss);
 }
@@ -118,7 +118,7 @@ inline casa::String configureTaqlString(casa::String const &msName, casa::Vector
 inline void fillNChanParList(casa::MeasurementSet const &ms, casa::Vector<casa::Int> &nChanParList) {
   casa::MSSpectralWindow const &msspw = ms.spectralWindow();
   casa::ROScalarColumn<casa::Int> nchanCol(msspw, "NUM_CHAN");
-  debuglog << "nchanCol=" << toString(nchanCol.getColumn()) << debugpost;
+  debuglog << "nchanCol=" << tostring(nchanCol.getColumn()) << debugpost;
   nChanParList = nchanCol.getColumn()(casa::Slice(0,nChanParList.nelements()));
   debuglog << "nChanParList=" << nChanParList << debugpost;
 }
@@ -236,13 +236,13 @@ inline casa::Vector<casa::Int> detectGap(casa::Vector<casa::Double> timeList)
   }
   debuglog << "Detected " << gapIndexCount << " gaps." << debugpost;
   casa::Vector<casa::Int> ret(casa::IPosition(1, gapIndexCount), gapIndexList.data(), casa::COPY);
-  debuglog << "gapList=" << toString(ret) << debugpost;
+  debuglog << "gapList=" << tostring(ret) << debugpost;
   return ret;
 }
 
 struct DefaultRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const /*num*/)
+  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
   {
     return static_cast<size_t>(sqrt(numData + 1) - 1);
   }
@@ -250,7 +250,7 @@ struct DefaultRasterEdgeDetector
 
 struct FixedNumberRasterEdgeDetector
 {
-  static size_t N(size_t numData, casa::Float const /*fraction*/, casa::Int const num)
+  static size_t N(size_t numData, casa::Float const fraction, casa::Int const num)
   {
     return min(numData, (size_t)num);
   }
@@ -258,7 +258,7 @@ struct FixedNumberRasterEdgeDetector
 
 struct FixedFractionRasterEdgeDetector
 {
-  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const /*num*/)
+  static casa::Int N(size_t numData, casa::Float const fraction, casa::Int const num)
   {
     return static_cast<size_t>(numData * fraction);
   }
@@ -384,52 +384,6 @@ SingleDishSkyCal::~SingleDishSkyCal()
   finalizeSky();
 }
 
-void SingleDishSkyCal::guessPar(VisBuffer& /*vb*/)
-{
-}
-
-void SingleDishSkyCal::differentiate( CalVisBuffer & /*cvb*/)
-{
-}
-
-void SingleDishSkyCal::differentiate(VisBuffer& /*vb*/, Cube<Complex>& /*V*/,     
-                                     Array<Complex>& /*dV*/, Matrix<Bool>& /*Vflg*/)
-{
-}
-
-void SingleDishSkyCal::accumulate(SolvableVisCal* /*incr*/,
-                                  const Vector<Int>& /*fields*/)
-{
-}
-
-void SingleDishSkyCal::diffSrc(VisBuffer& /*vb*/, Array<Complex>& /*dV*/)
-{
-}
-
-void SingleDishSkyCal::fluxscale(const String& /*outfile*/,
-                                 const Vector<Int>& /*refFieldIn*/,
-                                 const Vector<Int>& /*tranFieldIn*/,
-                                 const Vector<Int>& /*inRefSpwMap*/,
-                                 const Vector<String>& /*fldNames*/,
-                                 const Float& /*inGainThres*/,
-                                 const String& /*antSel*/,
-                                 const String& /*timerangeSel*/,
-                                 const String& /*scanSel*/,
-                                 fluxScaleStruct& /*oFluxScaleStruct*/,
-                                 const String& /*oListFile*/,
-                                 const Bool& /*incremental*/,
-                                 const Int& /*fitorder*/,
-                                 const Bool& /*display*/)
-{
-}
-
-void SingleDishSkyCal::listCal(const Vector<Int> /*ufldids*/, const Vector<Int> /*uantids*/,
-                               const Matrix<Int> /*uchanids*/,
-                               //const Int& /*spw*/, const Int& /*chan*/,
-                               const String& /*listfile*/, const Int& /*pagerows*/)
-{
-}
-
 void SingleDishSkyCal::setApply(const Record& apply)
 {
   // Override interp
@@ -461,7 +415,7 @@ void SingleDishSkyCal::setSpecify(const Record& specify)
 
   MeasurementSet ms(msName());
   fillNChanParList(ms, nChanParList());
-  debuglog << "nChanParList=" << toString(nChanParList()) << debugpost;
+  debuglog << "nChanParList=" << tostring(nChanParList()) << debugpost;
 
   // Collect Cal table parameters
   if (specify.isDefined("caltable")) {
@@ -663,7 +617,7 @@ void SingleDishSkyCal::initSolvePar()
   interval_.resize(nElem());
 }
 
-void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
+void SingleDishSkyCal::syncCalMat(const Bool &doInv)
 {
   debuglog << "SingleDishSkyCal::syncCalMat" << debugpost;
   debuglog << "nAnt()=" << nAnt() << ", nElem()=" << nElem() << ", nBln()=" << nBln() << debugpost;
@@ -683,7 +637,6 @@ void SingleDishSkyCal::syncCalMat(const Bool &/*doInv*/)
 
   convertArray(currentSky(), currRPar());
   currentSkyOK() = currParOK();
-  debuglog << "currentTime() = " << setprecision(16) << currTime() << debugpost;
   debuglog << "currentSky() = " << currentSky().xzPlane(0) << debugpost;
   debuglog << "currentSkyOK() = " << currentSkyOK().xzPlane(0) << debugpost;
 
@@ -695,12 +648,7 @@ void SingleDishSkyCal::syncDiffMat()
   debuglog << "SingleDishSkyCal::syncDiffMat()" << debugpost;
 }
   
-Float SingleDishSkyCal::calcPowerNorm(Array<Float>& /*amp*/, const Array<Bool>& /*ok*/)
-{
-  return 0.0f;
-}
-
-void SingleDishSkyCal::applyCal(VisBuffer& /*vb*/, Cube<Complex>& /*Vout*/, Bool /*trial*/)
+void SingleDishSkyCal::applyCal(VisBuffer& vb, Cube<Complex>& Vout,Bool trial)
 {
   throw AipsError("Single dish calibration doesn't support applyCal. Please use applyCal2");
 }
@@ -785,7 +733,7 @@ void SingleDishSkyCal::applyCal2(vi::VisBuffer2 &vb, Cube<Complex> &Vout, Cube<F
   }
 }
 
-void SingleDishSkyCal::selfGatherAndSolve(VisSet& /*vs*/, VisEquation& /*ve*/)
+void SingleDishSkyCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
 {
   debuglog << "SingleDishSkyCal::self.GatherAndSolve()" << debugpost;
 
@@ -838,7 +786,7 @@ SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()
   debuglog << "SingleDishPositionSwitchCal::~SingleDishPositionSwitchCal()" << debugpost;
 }
 
-void SingleDishPositionSwitchCal::specify(const Record& /*specify*/)
+void SingleDishPositionSwitchCal::specify(const Record& specify)
 {
   debuglog << "SingleDishPositionSwitchCal::specify()" << debugpost;
 
@@ -863,7 +811,7 @@ void SingleDishPositionSwitchCal::specify(const Record& /*specify*/)
   updateWeight(*ct_);
 }
 
-void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& /*ve*/)
+void SingleDishPositionSwitchCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve)
 {
   debuglog << "SingleDishPositionSwitchCal::self.GatherAndSolve()" << debugpost;
 
@@ -906,8 +854,8 @@ String SingleDishPositionSwitchCal::configureSelection()
 {
   Vector<uInt> stateIdList = getOffStateIdList(msName());
   std::ostringstream oss;
-  oss << "SELECT FROM $1 WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
-      << toString(stateIdList)
+  oss << "SELECT FROM " << (std::string) msName() << " WHERE ANTENNA1 == ANTENNA2 && STATE_ID IN "
+      << tostring(stateIdList)
       << " ORDER BY FIELD_ID, ANTENNA1, FEED1, DATA_DESC_ID, TIME";
   return String(oss.str());  
 }
@@ -1045,7 +993,7 @@ SingleDishOtfCal::~SingleDishOtfCal()
   debuglog << "SingleDishOtfCal::~SingleDishOtfCal()" << debugpost;
 }
 
-void SingleDishOtfCal::specify(const Record& /*specify*/)
+void SingleDishOtfCal::specify(const Record& specify)
 {
   debuglog << "SingleDishOtfCal::specify()" << debugpost;
 }

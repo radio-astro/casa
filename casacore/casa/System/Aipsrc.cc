@@ -23,26 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aipsrc.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Aipsrc.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/System/Aipsrc.h>
-#include <casa/Exceptions.h>
-#include <casa/OS/EnvVar.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/Time.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/MUString.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/iostream.h>
-#include <casa/fstream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/Aipsrc.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/OS/EnvVar.h>
+#include <casacore/casa/OS/RegularFile.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/MUString.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/fstream.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // This is the function that does most of the work. It is pretty slow for
 // large maps, but no real problem.
@@ -477,16 +477,16 @@ uInt Aipsrc::genParse(Block<String> &keywordPattern,
 	String keyword;
 	String value;
 	const Regex comm("^[ 	]*#");	// Comment line
-	const Regex defin(":[ 	]*");	// Line with value
-	const Regex lspace("^[ 	]*");	// Leading spaces
 	while (fileAipsrc.getline(buf, 8192)) {
 	  buffer = buf;
 	  if (buffer.empty() || buffer.contains(comm))	// Ignore comments
 	    continue;
-	  buffer = buffer.after(lspace);
-	  if (buffer.contains(defin)) {		// value defined
-	    keyword = buffer.before(defin);
-	    value = buffer.after(defin);
+          String::size_type inx = buffer.find(':');
+          if (inx != String::npos) {
+	    keyword = buffer.before(inx);
+	    value = buffer.after(inx);
+            keyword.trim();
+            value.trim();
 	    if (keyword.length() < 1)
 	      continue;
 	    while (nkw >= keywordPattern.nelements()) {
@@ -642,5 +642,5 @@ Bool Aipsrc::genGet(String &val, Vector<String> &namlst, Vector<String> &vallst,
   Block<uInt> Aipsrc::codlst(0);
   Block<String> Aipsrc::ncodlst(0);
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

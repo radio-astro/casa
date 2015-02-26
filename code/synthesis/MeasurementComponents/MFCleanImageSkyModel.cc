@@ -34,13 +34,13 @@
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
 #include <casa/OS/File.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <lattices/Lattices/LatticeExprNode.h>
+#include <lattices/LEL/LatticeExpr.h>
+#include <lattices/LEL/LatticeExprNode.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/RegionType.h>
+#include <lattices/LRegions/RegionType.h>
 #include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LCBox.h>
+#include <lattices/LRegions/LCBox.h>
 
 #include <synthesis/MeasurementEquations/SkyEquation.h>
 #include <casa/Exceptions/Error.h>

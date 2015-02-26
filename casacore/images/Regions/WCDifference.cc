@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCDifference.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCDifference.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
-#include <images/Regions/WCDifference.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCDifference.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/images/Regions/WCDifference.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCDifference.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 WCDifference::WCDifference (const ImageRegion& region1,
 			    const ImageRegion& region2)
@@ -108,5 +108,5 @@ WCDifference* WCDifference::fromRecord (const TableRecord& rec,
     return new WCDifference (True, regions);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

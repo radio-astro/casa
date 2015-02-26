@@ -22,12 +22,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: Array.h 21545 2015-01-22 19:36:35Z gervandiepen $
 
-#include <scimath/Mathematics/StatisticsUtilities.h>
+#ifndef SCIMATH_STATISTICSUTILITIES_TCC
+#define SCIMATH_STATISTICSUTILITIES_TCC
+
+#include <casacore/scimath/Mathematics/StatisticsUtilities.h>
 
 #include <iostream>
 
-namespace casa {
+namespace casacore {
 
 template <class AccumType>
 const AccumType StatisticsUtilities<AccumType>::TWO = AccumType(2);
@@ -247,3 +251,5 @@ Bool StatisticsUtilities<AccumType>::includeDatum(
 
 }
 
+
+#endif

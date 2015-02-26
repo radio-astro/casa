@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tUnit.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tUnit.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/UnitMap.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/UnitName.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/UnitMap.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/UnitName.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main () {
     try {
 	cout << "Test units class (Unit)..." << endl;

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tStatAcc.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tStatAcc.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 
-#include <casa/iostream.h>
-#include <casa/Arrays.h>
-#include <scimath/Mathematics/StatAcc.h>
-// #include <casa/Utilities/Assert.h>
-// #include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/scimath/Mathematics/StatAcc.h>
+// #include <casacore/casa/Utilities/Assert.h>
+// #include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {

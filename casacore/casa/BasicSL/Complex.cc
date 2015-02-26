@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Complex.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: Complex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/BasicSL/Constants.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Math functions
 /// Should be in stl
@@ -222,49 +222,4 @@ Complex erfc(const Complex &in) {
   return ::erfc(in.real());
 }
 
-} //# NAMESPACE CASA - END
-
-// Instantiate some templates if needed.
-#if !defined(AIPS_AUTO_STL)
-
-#if defined(AIPS_SUN_NATIVE)
-template std::complex<float> std::log10(const std::complex<float>&);
-template std::complex<double> std::log10(const std::complex<double>&);
-template std::complex<float> std::conj(const std::complex<float>&);
-template std::complex<double> std::conj(const std::complex<double>&);
-#endif
-
-#if defined(AIPS_GCC3)
-namespace std {
-template float norm<float>(const complex<float>&);
-template double norm<double>(const complex<double>&);
-template float arg<float>(const complex<float>&);
-template double arg<double>(const complex<double>&);
-template float abs<float>(const complex<float>&);
-template double abs<double>(const complex<double>&);
-template complex<float> polar<float>(const float&, const float&);
-template complex<double> polar<double>(const double&, const double&);
-template complex<float> sqrt<float>(const complex<float>&);
-template complex<double> sqrt<double>(const complex<double>&);
-template complex<float> conj<float>(const complex<float>&);
-template complex<double> conj<double>(const complex<double>&);
-template complex<float> pow<float>(const complex<float>&, const float&);
-template complex<double> pow<double>(const complex<double>&, const double&);
-template complex<float> pow<float>(const complex<float>&, const complex<float>&);
-template complex<double> pow<double>(const complex<double>&, const complex<double>&);
-template complex<float> log<float>(const complex<float>&);
-template complex<double> log<double>(const complex<double>&);
-template complex<float> exp<float>(const complex<float>&);
-template complex<double> exp<double>(const complex<double>&);
-template complex<float> cos<float>(const complex<float>&);
-template complex<double> cos<double>(const complex<double>&);
-template complex<float> cosh<float>(const complex<float>&);
-template complex<double> cosh<double>(const complex<double>&);
-template complex<float> sin<float>(const complex<float>&);
-template complex<double> sin<double>(const complex<double>&);
-template complex<float> sinh<float>(const complex<float>&);
-template complex<double> sinh<double>(const complex<double>&);
-}
-#endif
-
-#endif
+} //# NAMESPACE CASACORE - END

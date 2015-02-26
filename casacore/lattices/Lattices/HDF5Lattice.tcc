@@ -23,25 +23,28 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5Lattice.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <lattices/Lattices/HDF5Lattice.h>
-#include <lattices/Lattices/HDF5LattIter.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeNavigator.h>
-#include <tables/Tables/TSMCube.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/HDF5/HDF5Error.h>
-#include <casa/OS/File.h>
-#include <casa/OS/Path.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#ifndef LATTICES_HDF5LATTICE_TCC
+#define LATTICES_HDF5LATTICE_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/lattices/Lattices/HDF5Lattice.h>
+#include <casacore/lattices/Lattices/HDF5LattIter.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/LatticeNavigator.h>
+#include <casacore/tables/DataMan/TSMCube.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/OS/Path.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   template<typename T>
   HDF5Lattice<T>::HDF5Lattice()
@@ -283,14 +286,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void HDF5Lattice<T>::openArray (const String& arrayName,
 				  const String& groupName)
   {
-    // Determine the parent Hid (file or group).
-    const HDF5Object* parent = &(*itsFile);
-    if (!groupName.empty()) {
+    if (groupName.empty()) {
+      // Use root group.
+      itsGroup = new HDF5Group(*itsFile, "/", true);
+    } else {
       itsGroup = new HDF5Group(*itsFile, groupName, true);
-      parent = &(*itsGroup);
     }
     // Open the data set.
-    itsDataSet = new HDF5DataSet (*parent, arrayName, (const T*)0);
+    itsDataSet = new HDF5DataSet (*itsGroup, arrayName, (const T*)0);
   }
 
   template <typename T>
@@ -300,15 +303,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     // Make sure the table is writable.
     checkWritable();
-    // Determine the parent Hid (file or group).
-    const HDF5Object* parent = &(*itsFile);
-    if (!groupName.empty()) {
+    if (groupName.empty()) {
+      // Use root group.
+      itsGroup = new HDF5Group(*itsFile, "/", true);
+    } else {
       // Create group if not existing yet.
       itsGroup = new HDF5Group(*itsFile, groupName);
-      parent = &(*itsGroup);
     }
     // Create the data set.
-    itsDataSet = new HDF5DataSet (*parent, arrayName, shape.shape(),
+    itsDataSet = new HDF5DataSet (*itsGroup, arrayName, shape.shape(),
 				  shape.tileShape(), (const T*)0);
   }
 
@@ -318,4 +321,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsFile->flush();
   }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
+#endif

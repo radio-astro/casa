@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLCPolygon.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tWCEllipsoid.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/WCEllipsoid.h>
+#include <casacore/images/Regions/WCEllipsoid.h>
 
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <lattices/Lattices/LCEllipsoid.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/lattices/LRegions/LCEllipsoid.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 /*
 void show(const LCEllipsoid& ellipse) {

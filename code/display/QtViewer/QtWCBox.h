@@ -33,7 +33,7 @@
 #include <casa/aips.h>
 #include <display/Display/DisplayCoordinateSystem.h>
 #include <images/Regions/WCRegion.h>
-#include <lattices/Lattices/RegionType.h>
+#include <lattices/LRegions/RegionType.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Quanta/Quantum.h>
 

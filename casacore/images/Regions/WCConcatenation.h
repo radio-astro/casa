@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCConcatenation.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCConcatenation.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_WCCONCATENATION_H
 #define IMAGES_WCCONCATENATION_H
 
 //# Includes
-#include <images/Regions/WCCompound.h>
-#include <images/Regions/WCBox.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/WCCompound.h>
+#include <casacore/images/Regions/WCBox.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Combine multiple ImageRegion's into a new dimension.
@@ -165,6 +166,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

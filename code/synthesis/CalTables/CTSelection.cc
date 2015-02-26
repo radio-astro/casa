@@ -37,7 +37,7 @@
 #include <ms/MeasurementSets/MSTimeGram.h>
 #include <ms/MeasurementSets/MSPolnGram.h>
 //#include <casa/Containers/Record.h>
-#include <tables/Tables/RecordGram.h>
+#include <tables/TaQL/RecordGram.h>
 #include <ms/MeasurementSets/MSAntennaParse.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

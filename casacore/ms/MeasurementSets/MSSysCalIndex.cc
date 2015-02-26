@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSysCalIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSSysCalIndex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSSysCalIndex.h>
+#include <casacore/ms/MeasurementSets/MSSysCalIndex.h>
 
-#include <casa/Arrays/ArrayUtil.h>
-#include <ms/MeasurementSets/MSSysCal.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/ms/MeasurementSets/MSSysCal.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSSysCalIndex::MSSysCalIndex() 
     : MSTableIndex()
@@ -70,5 +70,5 @@ void MSSysCalIndex::attachIds()
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

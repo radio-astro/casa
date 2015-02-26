@@ -34,7 +34,7 @@
 #include <casa/Arrays/Vector.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MRadialVelocity.h>
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <casa/Arrays/Matrix.h>

@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SolarPos.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SolarPos.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_SOLARPOS_H
 #define MEASURES_SOLARPOS_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/MVPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/MVPosition.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> Solar position class and calculations </summary>
 
@@ -194,6 +194,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

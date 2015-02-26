@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayUtil.tcc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: ArrayUtil.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#ifndef CASA_ARRAY_ARRAYUTIL_TCC
-#define CASA_ARRAY_ARRAYUTIL_TCC
+#ifndef CASA_ARRAYUTIL_TCC
+#define CASA_ARRAYUTIL_TCC
 
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Utilities/Copy.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Utilities/Copy.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 Array<T> concatenateArray (const Array<T>& left, const Array<T>& right)
@@ -201,6 +201,6 @@ Array<T> reverseArray (const Array<T>& array, const IPosition& reversedAxes,
   return result;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,16 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasRef.tcc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: MeasRef.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
+
+#ifndef MEASURES_MEASREF_TCC
+#define MEASURES_MEASREF_TCC
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/MeasRef.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -260,5 +263,7 @@ void MeasRef<Ms>::print(ostream &os) const {
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

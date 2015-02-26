@@ -44,8 +44,8 @@
 #include <lattices/Lattices/LatticeStepper.h>
 #include <casa/Arrays/IPosition.h>
 #include <lattices/Lattices/TiledShape.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCRegion.h>
+#include <lattices/LRegions/LCSlicer.h>
 #include <casa/Arrays/Slicer.h>
 
 #include <components/ComponentModels/ComponentType.h>

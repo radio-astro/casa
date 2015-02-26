@@ -34,7 +34,7 @@
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-#include <casa/Containers/ContainerIO.h>
+#include <casa/BasicSL/STLIO.h>
 #include <ms_cmpt.h>
 #include <msmetadata_cmpt.h>
 #include <tools/ms/Statistics.h>
@@ -63,7 +63,7 @@
 #include <casa/OS/DOos.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/TableCopy.h>
 #include <casa/System/ObjectID.h>
@@ -73,7 +73,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisIterator.h>
 
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/SubLattice.h>
 
 #include <tables/Tables/SetupNewTab.h>

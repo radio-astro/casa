@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition2.cc 21048 2011-04-11 07:51:52Z gervandiepen $
+//# $Id: IPosition2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# This source file is not needed if you aren't interested in converting
 //# to and from Array<Int>, i.e. if you don't want IPosition's to depend
 //# on arrays.
 
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 IPosition::IPosition (const Array<Int> &other)
   : size_p (0),
@@ -148,4 +148,4 @@ AipsIO& operator>> (AipsIO& aio, IPosition& ip)
   return aio;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

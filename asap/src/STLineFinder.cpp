@@ -88,26 +88,26 @@ public:
    RunningBox(const casa::Vector<casa::Float>  &in_spectrum,
                  const casa::Vector<casa::Bool>   &in_mask,
                  const std::pair<int,int>         &in_edge,
-                 int in_max_box_nchan) throw(AipsError);
+                 int in_max_box_nchan);
 
    // access to the statistics
-   const casa::Float& getLinMean() const throw(AipsError);
-   const casa::Float& getLinVariance() const throw(AipsError);
-   casa::Float aboveMean() const throw(AipsError);
-   int getChannel() const throw();
+   const casa::Float& getLinMean() const;
+   const casa::Float& getLinVariance() const;
+   casa::Float aboveMean() const;
+   int getChannel() const;
 
    // actual number of channels in the box (max_box_nchan, if no channels
    // are masked)
-   int getNumberOfBoxPoints() const throw();
+   int getNumberOfBoxPoints() const;
 
    // next channel
-   void next() throw(AipsError);
+   void next();
 
    // checking whether there are still elements
-   casa::Bool haveMore() const throw();
+   casa::Bool haveMore() const;
 
    // go to start
-   void rewind() throw(AipsError);
+   void rewind();
 
 protected:
    // supplementary function to control running mean/median calculations.
@@ -115,11 +115,11 @@ protected:
    // removes (ch-maxboxnchan+1)'th channel from there
    // Channels, for which the mask is false or index is beyond the
    // allowed range, are ignored
-   void advanceRunningBox(int ch) throw(casa::AipsError);
+   void advanceRunningBox(int ch);
 
    // calculate derivative statistics. This function is const, because
    // it updates the cache only
-   void updateDerivativeStatistics() const throw(AipsError);
+   void updateDerivativeStatistics() const;
 };
 
 //
@@ -165,17 +165,17 @@ public:
                     int in_min_nchan = 3,
                     casa::Float in_threshold = 5,
                     bool use_median = false,
-                    int noise_sample_size = -1) throw();
-   virtual ~LFAboveThreshold() throw();
+                    int noise_sample_size = -1);
+   virtual ~LFAboveThreshold();
 
    // replace the detection criterion
-   void setCriterion(int in_min_nchan, casa::Float in_threshold) throw();
+   void setCriterion(int in_min_nchan, casa::Float in_threshold);
 
    // return the array with signs of the value-current mean
    // An element is +1 if value>mean, -1 if less, 0 if equal.
    // This array is updated each time the findLines method is called and
    // is used to search the line wings
-   const casa::Vector<Int>& getSigns() const throw();
+   const casa::Vector<Int>& getSigns() const;
 
    // find spectral lines and add them into list
    // if statholder is not NULL, the accumulate function of it will be
@@ -185,24 +185,22 @@ public:
    void findLines(const casa::Vector<casa::Float> &spectrum,
                   const casa::Vector<casa::Bool> &mask,
                   const std::pair<int,int> &edge,
-                  int max_box_nchan) throw(casa::AipsError);
+                  int max_box_nchan);
 
 protected:
 
    // process a channel: update curline and is_detected before and
    // add a new line to the list, if necessary using processCurLine()
    // detect=true indicates that the current channel satisfies the criterion
-   void processChannel(Bool detect, const casa::Vector<casa::Bool> &mask)
-                                                  throw(casa::AipsError);
+   void processChannel(Bool detect, const casa::Vector<casa::Bool> &mask);
 
    // process the interval of channels stored in curline
    // if it satisfies the criterion, add this interval as a new line
-   void processCurLine(const casa::Vector<casa::Bool> &mask)
-                                                 throw(casa::AipsError);
+   void processCurLine(const casa::Vector<casa::Bool> &mask);
 
    // get the sign of runningBox->aboveMean(). The RunningBox pointer
    // should be defined
-   casa::Int getAboveMeanSign() const throw();
+   casa::Int getAboveMeanSign() const;
 };
 
 //
@@ -462,14 +460,14 @@ void LFNoiseEstimator::buildSortedCache() const
 RunningBox::RunningBox(const casa::Vector<casa::Float>  &in_spectrum,
                        const casa::Vector<casa::Bool>   &in_mask,
                        const std::pair<int,int>         &in_edge,
-                       int in_max_box_nchan) throw(AipsError) :
+                       int in_max_box_nchan) :
         spectrum(in_spectrum), mask(in_mask), edge(in_edge),
         max_box_nchan(in_max_box_nchan)
 {
   rewind();
 }
 
-void RunningBox::rewind() throw(AipsError) {
+void RunningBox::rewind() {
   // fill statistics for initial box
   box_chan_cntr=0; // no channels are currently in the box
   sumf=0.;           // initialize statistics
@@ -490,35 +488,35 @@ void RunningBox::rewind() throw(AipsError) {
 }
 
 // access to the statistics
-const casa::Float& RunningBox::getLinMean() const throw(AipsError)
+const casa::Float& RunningBox::getLinMean() const
 {
   DebugAssert(cur_channel<edge.second, AipsError);
   if (need2recalculate) updateDerivativeStatistics();
   return linmean;
 }
 
-const casa::Float& RunningBox::getLinVariance() const throw(AipsError)
+const casa::Float& RunningBox::getLinVariance() const
 {
   DebugAssert(cur_channel<edge.second, AipsError);
   if (need2recalculate) updateDerivativeStatistics();
   return linvariance;
 }
 
-casa::Float RunningBox::aboveMean() const throw(AipsError)
+casa::Float RunningBox::aboveMean() const
 {
   DebugAssert(cur_channel<edge.second, AipsError);
   if (need2recalculate) updateDerivativeStatistics();
   return spectrum[cur_channel]-linmean;
 }
 
-int RunningBox::getChannel() const throw()
+int RunningBox::getChannel() const
 {
   return cur_channel;
 }
 
 // actual number of channels in the box (max_box_nchan, if no channels
 // are masked)
-int RunningBox::getNumberOfBoxPoints() const throw()
+int RunningBox::getNumberOfBoxPoints() const
 {
   return box_chan_cntr;
 }
@@ -528,7 +526,7 @@ int RunningBox::getNumberOfBoxPoints() const throw()
 // removes (ch-max_box_nchan+1)'th channel from there
 // Channels, for which the mask is false or index is beyond the
 // allowed range, are ignored
-void RunningBox::advanceRunningBox(int ch) throw(AipsError)
+void RunningBox::advanceRunningBox(int ch)
 {
   if (ch>=edge.first && ch<edge.second)
       if (mask[ch]) { // ch is a valid channel
@@ -554,7 +552,7 @@ void RunningBox::advanceRunningBox(int ch) throw(AipsError)
 }
 
 // next channel
-void RunningBox::next() throw(AipsError)
+void RunningBox::next()
 {
    AlwaysAssert(cur_channel<edge.second,AipsError);
    ++cur_channel;
@@ -563,14 +561,14 @@ void RunningBox::next() throw(AipsError)
 }
 
 // checking whether there are still elements
-casa::Bool RunningBox::haveMore() const throw()
+casa::Bool RunningBox::haveMore() const
 {
    return cur_channel<edge.second;
 }
 
 // calculate derivative statistics. This function is const, because
 // it updates the cache only
-void RunningBox::updateDerivativeStatistics() const throw(AipsError)
+void RunningBox::updateDerivativeStatistics() const
 {
   AlwaysAssert(box_chan_cntr, AipsError);
 
@@ -615,19 +613,18 @@ LFAboveThreshold::LFAboveThreshold(std::list<pair<int,int> > &in_lines,
                                    int in_min_nchan,
                                    casa::Float in_threshold,
                                    bool use_median,
-                                   int noise_sample_size) throw() :
+                                   int noise_sample_size) :
              min_nchan(in_min_nchan), threshold(in_threshold),
              lines(in_lines), running_box(NULL), itsUseMedian(use_median),
              itsNoiseSampleSize(noise_sample_size) {}
 
-LFAboveThreshold::~LFAboveThreshold() throw()
+LFAboveThreshold::~LFAboveThreshold()
 {
   if (running_box!=NULL) delete running_box;
 }
 
 // replace the detection criterion
 void LFAboveThreshold::setCriterion(int in_min_nchan, casa::Float in_threshold)
-                                 throw()
 {
   min_nchan=in_min_nchan;
   threshold=in_threshold;
@@ -635,7 +632,7 @@ void LFAboveThreshold::setCriterion(int in_min_nchan, casa::Float in_threshold)
 
 // get the sign of runningBox->aboveMean(). The RunningBox pointer
 // should be defined
-casa::Int LFAboveThreshold::getAboveMeanSign() const throw()
+casa::Int LFAboveThreshold::getAboveMeanSign() const
 {
   const Float buf=running_box->aboveMean();
   if (buf>0) return 1;
@@ -647,7 +644,7 @@ casa::Int LFAboveThreshold::getAboveMeanSign() const throw()
 // process a channel: update cur_line and is_detected before and
 // add a new line to the list, if necessary
 void LFAboveThreshold::processChannel(Bool detect,
-                 const casa::Vector<casa::Bool> &mask) throw(casa::AipsError)
+                 const casa::Vector<casa::Bool> &mask)
 {
   try {
        if (is_detected_before) {
@@ -679,7 +676,6 @@ void LFAboveThreshold::processChannel(Bool detect,
 // process the interval of channels stored in cur_line
 // if it satisfies the criterion, add this interval as a new line
 void LFAboveThreshold::processCurLine(const casa::Vector<casa::Bool> &mask)
-                                   throw(casa::AipsError)
 {
   try {
        if (is_detected_before) {
@@ -713,7 +709,7 @@ void LFAboveThreshold::processCurLine(const casa::Vector<casa::Bool> &mask)
 // An element is +1 if value>mean, -1 if less, 0 if equal.
 // This array is updated each time the findLines method is called and
 // is used to search the line wings
-const casa::Vector<Int>& LFAboveThreshold::getSigns() const throw()
+const casa::Vector<Int>& LFAboveThreshold::getSigns() const
 {
   return signs;
 }
@@ -723,7 +719,6 @@ void LFAboveThreshold::findLines(const casa::Vector<casa::Float> &spectrum,
                               const casa::Vector<casa::Bool> &mask,
                               const std::pair<int,int> &edge,
                               int max_box_nchan)
-                        throw(casa::AipsError)
 {
   const int minboxnchan=4;
   try {
@@ -810,8 +805,7 @@ LFLineListOperations::IntersectsWith::IntersectsWith(const std::pair<int,int> &i
 // return true if line2 intersects with line1 with at least one
 // common channel, and false otherwise
 // line2 - range of the second line: start channel and stop+1
-bool LFLineListOperations::IntersectsWith::operator()(const std::pair<int,int> &line2)
-                          const throw()
+bool LFLineListOperations::IntersectsWith::operator()(const std::pair<int,int> &line2) const
 {
   if (line2.second<line1.first) return false; // line2 is at lower channels
   if (line2.first>line1.second) return false; // line2 is at upper channels
@@ -834,14 +828,13 @@ LFLineListOperations::BuildUnion::BuildUnion(const std::pair<int,int> &line1) :
 // update temp_line with a union of temp_line and new_line
 // provided there is no gap between the lines
 void LFLineListOperations::BuildUnion::operator()(const std::pair<int,int> &new_line)
-                                   throw()
 {
   if (new_line.first<temp_line.first) temp_line.first=new_line.first;
   if (new_line.second>temp_line.second) temp_line.second=new_line.second;
 }
 
 // return the result (temp_line)
-const std::pair<int,int>& LFLineListOperations::BuildUnion::result() const throw()
+const std::pair<int,int>& LFLineListOperations::BuildUnion::result() const
 {
   return temp_line;
 }
@@ -863,7 +856,7 @@ LFLineListOperations::LaterThan::LaterThan(const std::pair<int,int> &in_line1) :
 // return true if line2 should be placed later than line1
 // in the ordered list (so, it is at greater channel numbers)
 bool LFLineListOperations::LaterThan::operator()(const std::pair<int,int> &line2)
-                          const throw()
+                          const
 {
   if (line2.second<line1.first) return false; // line2 is at lower channels
   if (line2.first>line1.second) return true; // line2 is at upper channels
@@ -883,7 +876,7 @@ bool LFLineListOperations::LaterThan::operator()(const std::pair<int,int> &line2
 //
 //
 
-STLineFinder::STLineFinder() throw() : edge(0,0), err("spurious")
+STLineFinder::STLineFinder() : edge(0,0), err("spurious")
 {
   useScantable = true;
   setOptions();
@@ -917,7 +910,7 @@ void STLineFinder::setOptions(const casa::Float &in_threshold,
                               const casa::Int &in_avg_limit,
                               const casa::Float &in_box_size,
                               const casa::Float &in_noise_box,
-                              const casa::Bool &in_median) throw()
+                              const casa::Bool &in_median)
 {
   threshold=in_threshold;
   min_nchan=in_min_nchan;
@@ -927,10 +920,10 @@ void STLineFinder::setOptions(const casa::Float &in_threshold,
   itsUseMedian = in_median;
 }
 
-STLineFinder::~STLineFinder() throw(AipsError) {}
+STLineFinder::~STLineFinder() {}
 
 // set scan to work with (in_scan parameter)
-void STLineFinder::setScan(const ScantableWrapper &in_scan) throw(AipsError)
+void STLineFinder::setScan(const ScantableWrapper &in_scan) 
 {
   scan=in_scan.getCP();
   AlwaysAssert(!scan.null(),AipsError);
@@ -956,7 +949,7 @@ void STLineFinder::setData(const std::vector<float> &in_spectrum)
 //   can be achieved using a spectrum mask only
 int STLineFinder::findLines(const std::vector<bool> &in_mask,
 			    const std::vector<int> &in_edge,
-			    const casa::uInt &whichRow) throw(casa::AipsError)
+			    const casa::uInt &whichRow)
 {
   if (useScantable && scan.null())
       throw AipsError("STLineFinder::findLines - a scan should be set first,"
@@ -1104,7 +1097,7 @@ int STLineFinder::findLines(const std::vector<bool> &in_mask,
 // spectrum. It uses the Fitter class. This action is required before
 // reducing the spectral resolution if the baseline shape is bad
 void STLineFinder::subtractBaseline(const casa::Vector<casa::Bool> &temp_mask,
-                      const casa::Int &order) throw(casa::AipsError)
+                      const casa::Int &order)
 {
   AlwaysAssert(spectrum.nelements(),AipsError);
   // use the fact that temp_mask excludes channels rejected at the edge
@@ -1130,7 +1123,6 @@ void STLineFinder::subtractBaseline(const casa::Vector<casa::Bool> &temp_mask,
 // boxsize - a number of adjacent channels to average
 void STLineFinder::averageAdjacentChannels(casa::Vector<casa::Bool> &mask2update,
                                    const casa::Int &boxsize)
-                            throw(casa::AipsError)
 {
   DebugAssert(mask2update.nelements()==spectrum.nelements(), AipsError);
   DebugAssert(boxsize!=0,AipsError);
@@ -1162,7 +1154,7 @@ void STLineFinder::averageAdjacentChannels(casa::Vector<casa::Bool> &mask2update
 //       in setScan) or dropped out by the edge parameter (in_edge
 //       in setScan) are still excluded regardless on the invert option
 std::vector<bool> STLineFinder::getMask(bool invert)
-                                        const throw(casa::AipsError)
+                                        const
 {
   try {
     if (useScantable) {
@@ -1204,8 +1196,7 @@ std::vector<bool> STLineFinder::getMask(bool invert)
 
 // get range for all lines found. The same units as used in the scan
 // will be returned (e.g. velocity instead of channels).
-std::vector<double> STLineFinder::getLineRanges()
-                             const throw(casa::AipsError)
+std::vector<double> STLineFinder::getLineRanges() const
 {
   std::vector<double> vel;
   if (useScantable) {
@@ -1229,8 +1220,7 @@ std::vector<double> STLineFinder::getLineRanges()
 
 // The same as getLineRanges, but channels are always used to specify
 // the range
-std::vector<int> STLineFinder::getLineRangesInChannels()
-                                   const throw(casa::AipsError)
+std::vector<int> STLineFinder::getLineRangesInChannels() const
 {
   try {
     if (useScantable) {
@@ -1279,7 +1269,6 @@ std::vector<int> STLineFinder::getLineRangesInChannels()
 void STLineFinder::keepStrongestOnly(const casa::Vector<casa::Bool> &temp_mask,
                   std::list<std::pair<int, int> > &lines2update,
                   int max_box_nchan)
-                                   throw (casa::AipsError)
 {
   try {
       if (!lines2update.size()) return; // ignore an empty list
@@ -1338,7 +1327,6 @@ void STLineFinder::keepStrongestOnly(const casa::Vector<casa::Bool> &temp_mask,
 // be adjacent, they are joined into the new one
 void LFLineListOperations::addNewSearchResult(const std::list<pair<int, int> > &newlines,
                          std::list<std::pair<int, int> > &lines_list)
-                        throw(AipsError)
 {
   try {
       for (std::list<pair<int,int> >::const_iterator cli=newlines.begin();
@@ -1385,7 +1373,7 @@ void LFLineListOperations::addNewSearchResult(const std::list<pair<int, int> > &
 void LFLineListOperations::searchForWings(std::list<std::pair<int, int> > &newlines,
            const casa::Vector<casa::Int> &signs,
            const casa::Vector<casa::Bool> &mask,
-           const std::pair<int,int> &edge) throw(casa::AipsError)
+           const std::pair<int,int> &edge)
 {
   try {
       for (std::list<pair<int,int> >::iterator li=newlines.begin();

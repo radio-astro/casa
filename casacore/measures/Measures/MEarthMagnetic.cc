@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MEarthMagnetic.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MEarthMagnetic.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MEarthMagnetic.h>
-#include <casa/Exceptions.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Register.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Quanta/RotMatrix.h>
-#include <casa/Quanta/Euler.h>
-#include <casa/Quanta/MVPosition.h>
-#include <casa/Quanta/MVDirection.h>
-#include <casa/Quanta/QMath.h>
+#include <casacore/measures/Measures/MEarthMagnetic.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
+#include <casacore/casa/Quanta/Euler.h>
+#include <casacore/casa/Quanta/MVPosition.h>
+#include <casacore/casa/Quanta/MVDirection.h>
+#include <casacore/casa/Quanta/QMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 MEarthMagnetic::MEarthMagnetic() :
@@ -238,6 +238,7 @@ void MEarthMagnetic::checkTypes() const {
 }
 
 void MEarthMagnetic::checkMyTypes() {
+  // Multiple threads could execute this, but that is harmless.
   static Bool first(True);
   if (first) {
     first = False;
@@ -320,5 +321,5 @@ Measure *MEarthMagnetic::clone() const {
     return (new MEarthMagnetic(*this));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

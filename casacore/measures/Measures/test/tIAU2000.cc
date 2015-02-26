@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tIAU2000.cc 19918 2007-02-23 03:29:05Z Malte.Marquarding $
+//# $Id: tIAU2000.cc 21508 2014-11-21 12:19:45Z gervandiepen $
 
-#include <casa/aips.h>
-#include <measures/Measures/SofaTest.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/Constants.h>
-#include <measures/Measures/MCDirection.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MeasConvert.h>
-#include <measures/Measures/MeasData.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MeasRef.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/Nutation.h>
-#include <measures/Measures/Precession.h>
-#include <casa/OS/Time.h>
-#include <casa/Quanta/RotMatrix.h>
-#include <casa/System/AipsrcValue.h>
-#include <casa/BasicSL/String.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/SofaTest.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/measures/Measures/MCDirection.h>
+#include <casacore/measures/Measures/MDirection.h>
+#include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MeasData.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/Nutation.h>
+#include <casacore/measures/Measures/Precession.h>
+#include <casacore/casa/OS/Time.h>
+#include <casacore/casa/Quanta/RotMatrix.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // Print separation line of given (default 75) length
 void SEPAR(const uInt l=75) {
   cout << String(l, '-') << endl;
@@ -115,32 +115,32 @@ int main() {
     RotMatrix pbrm = fillRM(pbrp);
     RotMatrix nbparm = fillRM(parpb);
     cout << "SOFA precession 2000A and bias:\n" << nbparm << endl;
-    cout << "AIPS++ precession and bias:\n" <<
+    cout << "Casacore precession and bias:\n" <<
       MeasTable::frameBias00()*carm << endl;
-    cout << "SOFA precession   (no bias):\n" << parm << endl;
-    cout << "AIPS++ precession (no bias):\n" << carm << endl;
+    cout << "SOFA precession     (no bias):\n" << parm << endl;
+    cout << "Casacore precession (no bias):\n" << carm << endl;
     Double depspr, dpsipr;
     IAUR(pr00)(MJD0, tMJD, dpsipr, depspr);
-    cout << "SOFA precession corrections:   " << dpsipr << ", " <<
+    cout << "SOFA precession corrections:     " << dpsipr << ", " <<
       depspr << endl;
-    cout << "aips++ precession corrections: " <<
+    cout << "Casacore precession corrections: " <<
       MeasTable::precRate00(0)*(tMJD-MeasData::MJD2000)/MeasData::JDCEN <<
       ", " <<
       MeasTable::precRate00(1)*(tMJD-MeasData::MJD2000)/MeasData::JDCEN <<
       endl;
     RotMatrix pparb = fillRM(parb);
     cout << "\nSOFA 2000A bias matrix:\n" << pparb << endl;
-    cout << "aips++ 2000A bias matrix:\n" << MeasTable::frameBias00() << endl;
+    cout << "Casacore 2000A bias matrix:\n" << MeasTable::frameBias00() << endl;
     cout.precision(9);
     cout.setf(ios::fixed);
-    cout << "Difference (arcsec) SOFA 2000A - aips++ nobias:  " <<
+    cout << "Difference (arcsec) SOFA 2000A - Casacore nobias:  " <<
       checkRot(parm, carm) << endl;
-    cout << "Difference (arcsec) SOFA 2000A - aips++   bias:  " <<
+    cout << "Difference (arcsec) SOFA 2000A - Casacore   bias:  " <<
       checkRot(nbparm, MeasTable::frameBias00()*carm) << endl;
     Double fbrm[3][3], prrm[3][3], fbprrm[3][3];
     IAUR(bp00)(MJD0, tMJD, &fbrm[0][0], &prrm[0][0], &fbprrm[0][0]);
     RotMatrix prm = fillRM(prrm);
-    cout << "Difference (arcsec) SOFA 2000A - aips++ nobias:  " <<
+    cout << "Difference (arcsec) SOFA 2000A - Casacore nobias:  " <<
       checkRot(prm, carm) << endl;
     cout << "(The above must all 3 be .002 uas)" << endl;
     SEPAR();
@@ -154,19 +154,19 @@ int main() {
     SEPAR();
     cout.precision(9);
     cout.setf(ios::fixed);
-    cout << "Difference (arcsec) SOFA 2000A - SOFA 2000B:     " <<
+    cout << "Difference (arcsec) SOFA 2000A - SOFA 2000B:         " <<
       checkRot(narm, nbrm) << endl;
-    cout << "Difference (arcsec) aips++ 2000A - aips++ 2000B: " <<
+    cout << "Difference (arcsec) Casacore 2000A - Casacore 2000B: " <<
       checkRot(cnarm, cnbrm) << endl;
     cout << "(The above two differences are 0.512mas (note next note))" <<
       endl;
-    cout << "Difference (arcsec) SOFA 2000A - aips++ 2000A:   " <<
+    cout << "Difference (arcsec) SOFA 2000A - Casacore 2000A:   " <<
       checkRot(narm, cnarm) << endl;
-    cout << "Difference (arcsec) SOFA 2000B - aips++ 2000B:   " <<
+    cout << "Difference (arcsec) SOFA 2000B - Casacore 2000B:   " <<
       checkRot(nbrm, cnbrm) << endl;
     cout << "(This should be 0.422 uas, due to different definition of\n"
       "\tthe fundamental arguments)" << endl;
-    cout << "Equation of equinoxes (IAU2000A)(SOFA, aips++, diff): " <<
+    cout << "Equation of equinoxes (IAU2000A)(SOFA, Casacore, diff): " <<
       endl;
     cout << "    " << IAUR(ee00a)(MJD0, tMJD) << ", " <<
       n00a.eqox(tMJD) << ", " <<
@@ -265,13 +265,13 @@ int main() {
 	utb-MeasData::MJD2000 << endl; 
       cout << "TT: " << (tta-2451545.0)+ttb << ", " <<
 	ttb-MeasData::MJD2000 << endl; 
-      cout << "s'   (Sofa, aips++, diff): " <<
+      cout << "s'   (Sofa, Casacore, diff): " <<
 	sp << ", " << MeasTable::sprime00(ttb) << ", " <<
 	sp - MeasTable::sprime00(ttb) << endl;
-      cout << "ERA  (Sofa, aips++, diff): " <<
+      cout << "ERA  (Sofa, Casacore, diff): " <<
 	era << ", " << MeasTable::ERA00(utb) << ", " <<
 	era - MeasTable::ERA00(utb) << endl;
-      cout << "GMST (Sofa, aips++, diff): " <<
+      cout << "GMST (Sofa, Casacore, diff): " <<
 	gmst << ", " <<
 	fmod((ttb+6713.)*C::_2pi + MeasTable::GMST00(utb, ttb),
 	     C::_2pi) << ", " << gmst -
@@ -282,7 +282,7 @@ int main() {
 	ttb+MeasTable::GMST00(utb, ttb)/C::_2pi + 6713. <<", " <<
 	utb+MeasTable::GMST0(utb)/MeasData::SECinDAY -
 	ttb-MeasTable::GMST00(utb, ttb)/C::_2pi << endl;
-      cout << "EqEqCT00 (Sofa, aips++, diff): " <<
+      cout << "EqEqCT00 (Sofa, Casacore, diff): " <<
 	eect << ", " << nuta.eqoxCT(ttb) << ", " <<
 	eect-nuta.eqoxCT(ttb) << endl;
       SEPAR();

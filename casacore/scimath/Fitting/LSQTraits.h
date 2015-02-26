@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQTraits.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: LSQTraits.h 21521 2014-12-10 08:06:42Z gervandiepen $
 #ifndef SCIMATH_LSQTRAITS_H
 #define SCIMATH_LSQTRAITS_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <complex>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <motivation>
 // To ease the interface to Fitting (and probably other) classes, by producing
-// a framework that can be used with aips++ containers.
+// a framework that can be used with Casacore containers.
 // </motivation>
 
 // <todo asof="2004/04/01">
@@ -162,6 +162,6 @@ template <> class LSQTraits_CF<std::complex<Float> > {
 #undef LSQTraits_CF
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

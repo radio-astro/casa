@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegionHandlerMemory.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: RegionHandlerMemory.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 
-#include <images/Regions/RegionHandlerMemory.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCMask.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/images/Regions/RegionHandlerMemory.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCMask.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RegionHandlerMemory::RegionHandlerMemory()
 {
@@ -304,5 +304,5 @@ ImageRegion RegionHandlerMemory::makeMask (const LatticeBase& lattice,
   return ImageRegion(mask);
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

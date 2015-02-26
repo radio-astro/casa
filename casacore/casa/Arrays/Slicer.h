@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Slicer.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Slicer.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_SLICER_H
 #define CASA_SLICER_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Slice;
@@ -46,7 +46,7 @@ class Slice;
 // <reviewed reviewer="Paul Shannon" date="1994/07/07" tests="tSlicer">
 //  The review and modification of this class were undertaken, in part,
 //  with the aim of making this class header an example -- this is what
-//  the aips++ project thinks a class header should look like.
+//  the Casacore project thinks a class header should look like.
 // </reviewed>
 
 // <prerequisite>
@@ -463,7 +463,7 @@ inline Bool Slicer::isFixed() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

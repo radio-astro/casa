@@ -23,24 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quantum.tcc 20993 2010-11-08 13:36:32Z gervandiepen $
+//# $Id: Quantum.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_QUANTUM_TCC
+#define CASA_QUANTUM_TCC
 
 //# Includes
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/QuantumType.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/MUString.h>
-#include <casa/Utilities/Register.h>
-#include <casa/sstream.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/QuantumType.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/MUString.h>
+#include <casacore/casa/Utilities/Register.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class Qtype>
 Quantum<Qtype>::Quantum() :
@@ -221,44 +224,15 @@ Qtype & Quantum<Qtype>::getValue() {
 }
 
 template <class Qtype>
-Qtype Quantum<Qtype>::getValue(const Unit &other, Bool requireConform) const {
-    UnitVal myType = qUnit.getValue();
-    UnitVal otherType = other.getValue();
-	Double myFac = myType.getFac();
-	Double otherFac = otherType.getFac();
-	Double d1 = otherFac/myFac;
-    if (myType == otherType) {
-    	return (Qtype)(qVal/d1);
-    }
-    if (
-    	myType == UnitVal::ANGLE
-    	&& otherType == UnitVal::TIME
-    ) {
-    	d1 *= C::circle/C::day;
-    }
-    else if (
-    	myType == UnitVal::TIME
-    	&& otherType == UnitVal::ANGLE
-    ) {
-    	d1 *= C::day/C::circle;
-    }
-    else if(
-    	myType == 1/UnitVal::TIME
-    	&& otherType == UnitVal::LENGTH
-    ) {
-    	return (Qtype)(C::c/qVal/myFac/otherFac);
-    }
-    else if(
-    	myType == UnitVal::LENGTH
-    	&& otherType == 1/UnitVal::TIME
-    ) {
-    	return (Qtype)(C::c/qVal/myFac/otherFac);
-    }
-    else if (requireConform) {
-    	ThrowCc(
-    		"From/to units not consistent. Cannot convert "
-    		+ qUnit.getName() + " to " + other.getName()
-    	);
+Qtype Quantum<Qtype>::getValue(const Unit &other) const {
+    Double d1 = other.getValue().getFac() /
+	qUnit.getValue().getFac();	// SUN native overloading problems
+    if (qUnit.getValue() == UnitVal::ANGLE) {
+      if (other.getValue() == UnitVal::TIME)
+	d1 *= C::circle/C::day;
+    } else if (qUnit.getValue() == UnitVal::TIME) {
+      if (other.getValue() == UnitVal::ANGLE)
+	d1 *= C::day/C::circle;
     }
     return (Qtype)(qVal/d1);
 }
@@ -384,5 +358,7 @@ uInt Quantum<Qtype>::myType() {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

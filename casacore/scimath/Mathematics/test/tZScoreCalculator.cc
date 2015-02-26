@@ -25,11 +25,11 @@
 //#
 //# $Id: tStatAcc.cc 20329 2008-06-06 07:59:22Z gervandiepen $
 
-#include <scimath/Mathematics/ZScoreCalculator.h>
+#include <casacore/scimath/Mathematics/ZScoreCalculator.h>
 
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main() {
     try {

@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tImageExprParse_addDir.cc 20484 2009-01-08 11:03:49Z gervandiepen $
+//# $Id: tImageExprParse_addDir.cc 21512 2014-11-21 12:31:42Z gervandiepen $
 
-#include <images/Images/ImageExprParse.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
-#include <casa/namespace.h>
+#include <casacore/images/Images/ImageExprParse.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tStokes.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: tStokes.cc 21508 2014-11-21 12:19:45Z gervandiepen $
 
 //# Includes
 
-#include <casa/aips.h>
-#include <measures/Measures/Stokes.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main() {
 
 	try {

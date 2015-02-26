@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 
-//# $Id: Primes.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: Primes.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_PRIMES_H
 #define SCIMATH_PRIMES_H
 
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> Creates a reference table of prime numbers, and some functions </summary>
 //
@@ -69,8 +69,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-// #include <scimath/Mathematics/Primes.h>
-// #include <casa/Utilities/Assert.h>
+// #include <casacore/scimath/Mathematics/Primes.h>
+// #include <casacore/casa/Utilities/Assert.h>
 // #include <iostream>
 //
 // // Refer also to tPrimes.cc
@@ -175,6 +175,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

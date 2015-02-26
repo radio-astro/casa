@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RebinLattice.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: RebinLattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_REBINLATTICE_H
 #define LATTICES_REBINLATTICE_H
 
 
 //# Includes
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Slicer.h>
-#include <lattices/Lattices/MaskedLattice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -191,9 +192,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/RebinLattice.tcc>
+#include <casacore/lattices/Lattices/RebinLattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFreqOffIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFreqOffIndex.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFreqOffIndex.h>
+#include <casacore/ms/MeasurementSets/MSFreqOffIndex.h>
 
-#include <casa/Arrays/ArrayUtil.h>
-#include <ms/MeasurementSets/MSFreqOffset.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/ms/MeasurementSets/MSFreqOffset.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 MSFreqOffIndex::MSFreqOffIndex() 
     : MSTableIndex()
@@ -71,5 +71,5 @@ void MSFreqOffIndex::attachIds()
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

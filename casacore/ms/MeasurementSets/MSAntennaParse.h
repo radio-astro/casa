@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSAntennaParse.h 20934 2010-08-17 09:16:24Z gervandiepen $
+//# $Id: MSAntennaParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSANTENNAPARSE_H
 #define MS_MSANTENNAPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <casacore/casa/Arrays/Matrix.h>
 #include <bitset>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Forward Declarations
   
@@ -101,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MSAntennaParse (const MSAntenna& antSubTable, 
 		    const TableExprNode& ant1AsTEN, const TableExprNode& ant2AsTEN);
 
-    ~MSAntennaParse() {column1AsTEN_p=TableExprNode();column2AsTEN_p=TableExprNode();};
+    ~MSAntennaParse() {column1AsTEN_p=TableExprNode();column2AsTEN_p=TableExprNode();}
 
     // Add the given antennae selection.
     const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds, 
@@ -146,8 +147,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static double getUnitFactor (const char* unit);
     
     void setComplexity(const ComplexityLevels& level=RESET) 
-    {if (level==RESET) complexity.reset(); else complexity.set(level,True);};
-    std::bitset<HIGHESTLEVEL> getComplexity() {return complexity;};
+    {if (level==RESET) complexity.reset(); else complexity.set(level,True);}
+    std::bitset<HIGHESTLEVEL> getComplexity() {return complexity;}
     MSAntenna& subTable() {return msSubTable_p;}
   private:
     const TableExprNode* setTEN(TableExprNode& condition, 
@@ -177,6 +178,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static TableExprNode column1AsTEN_p,column2AsTEN_p;
   };
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

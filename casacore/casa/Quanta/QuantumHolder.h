@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QuantumHolder.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QuantumHolder.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_QUANTUMHOLDER_H
 #define CASA_QUANTUMHOLDER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/Utilities/RecordTransformable.h>
-#include <casa/BasicSL/Complexfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/casa/Utilities/RecordTransformable.h>
+#include <casacore/casa/BasicSL/Complexfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class QBase;
@@ -244,6 +244,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecTemp.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TVecTemp.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TVECTEMP_H
 #define TABLES_TVECTEMP_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/TVec.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/TVec.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template<class T> class Vector;
@@ -139,9 +139,9 @@ inline T& TabVecTemp<T>::operator() (uInt index)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <tables/Tables/TVecTemp.tcc>
+#include <casacore/tables/Tables/TVecTemp.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

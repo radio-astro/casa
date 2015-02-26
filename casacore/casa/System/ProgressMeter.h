@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ProgressMeter.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ProgressMeter.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_PROGRESSMETER_H
 #define CASA_PROGRESSMETER_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <time.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -163,7 +163,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

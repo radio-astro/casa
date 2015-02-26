@@ -29,7 +29,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <display/DisplayDatas/PassiveTableDD.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

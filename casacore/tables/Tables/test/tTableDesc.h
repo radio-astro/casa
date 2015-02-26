@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableDesc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTableDesc.h 21506 2014-11-21 12:10:15Z gervandiepen $
 
 
 #ifndef TABLES_TTABLEDESC_H
 #define TABLES_TTABLEDESC_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Example for a non-standard column in a table description
 // </summary>

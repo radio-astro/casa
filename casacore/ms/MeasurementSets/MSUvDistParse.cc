@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSUvDistParse.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSUvDistParse.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSUvDistParse.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <tables/Tables/RecordGram.h>
+#include <casacore/ms/MeasurementSets/MSUvDistParse.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/RecordGram.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   MSUvDistParse* MSUvDistParse::thisMSUParser = 0x0; // Global pointer to the parser object
   TableExprNode* MSUvDistParse::node_p = 0x0;
@@ -113,7 +113,7 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
       // This version of TEN based query is about 60X faster than the
       // slower code below
       //
-      Int nSpwRows, nDDIDRows;
+      Int nDDIDRows;
       //      TableExprNode uvwDist = sqrt(sumSquare(ms()->col(MS::columnName(MS::UVW))));
 
       //
@@ -139,7 +139,6 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
       // where the ref. freq. info. is picked up.
       //
       Vector<Int> mapDDID2SpwID;
-      nSpwRows = msSpwCol.nrow();
       nDDIDRows = msDataDescSubTable.nrow();
       mapDDID2SpwID.resize(nDDIDRows);
 
@@ -202,8 +201,8 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
 	    nRowSel++;
 	    rowsel.resize(nRowSel, True);
 	    rowsel(nRowSel-1) = row;
-	  };
-	};
+	  }
+	}
 	if(nRowSel == 0)
 	  rowsel.resize(nRowSel, True);
       }
@@ -216,8 +215,8 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
 	    nRowSel++;
 	    rowsel.resize(nRowSel, True);
 	    rowsel(nRowSel-1) = row;
-	  };
-	};
+	  }
+	}
 	if(nRowSel == 0)
 	  rowsel.resize(nRowSel, True);
       }
@@ -251,4 +250,4 @@ void MSUvDistParse::accumulateUVList(const Double r0, const Double r1,
   meterUnits_p(n0)=True;
   if (wavelengthUnit) meterUnits_p(n0)=False;
 }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

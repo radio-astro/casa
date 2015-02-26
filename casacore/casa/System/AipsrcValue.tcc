@@ -23,16 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcValue.tcc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: AipsrcValue.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_AIPSRCVALUE_TCC
+#define CASA_AIPSRCVALUE_TCC
 
 //# Includes
 
-#include <casa/System/AipsrcValue.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/sstream.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Data
 template <class T>
@@ -137,5 +140,7 @@ void AipsrcValue<T>::save(uInt keyword) {
   Aipsrc::save((myp_p.ntlst)[keyword-1], String(oss));
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

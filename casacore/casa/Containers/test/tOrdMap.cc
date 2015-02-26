@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tOrdMap.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tOrdMap.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Containers/OrderedMap.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/OrdPairIO.h>
-#include <casa/Containers/MapIO.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/OrdPairIO.h>
+#include <casacore/casa/Containers/MapIO.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 //template<class key,class value> void print(const OrderedMap<key,value> &);
 
 int main() {

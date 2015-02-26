@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSPolnGram.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: MSPolnGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSPolnGram.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSPolarization.h>
-#include <ms/MeasurementSets/MSPolColumns.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSPolnGram.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionTools.h>
+#include <casacore/ms/MeasurementSets/MSPolarization.h>
+#include <casacore/ms/MeasurementSets/MSPolColumns.h>
 
-#include <tables/Tables/TableParse.h> 
-#include <tables/Tables/TableError.h>
-#include <ms/MeasurementSets/MSSpwGram.h>
-#include <ms/MeasurementSets/MSPolnParse.h>
-#include <measures/Measures/Stokes.h>
-#include <casa/Containers/MapIO.h>
+#include <casacore/tables/TaQL/TableParse.h> 
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/ms/MeasurementSets/MSSpwGram.h>
+#include <casacore/ms/MeasurementSets/MSPolnParse.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/casa/Containers/MapIO.h>
 
 // Define the yywrap function for flex.
 int MSPolnGramwrap()
@@ -47,7 +47,7 @@ int MSPolnGramwrap()
   return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
   /* static const char*           strpMSPolnGram = 0; */
@@ -104,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //------------------------------------------------------------------------------
   //  
-  const void msPolnGramParseDeleteNode()
+  void msPolnGramParseDeleteNode()
   {
     //    MSPolnParse::cleanup();
   }
@@ -127,4 +127,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // 				     String(MSPolnGramtext) + "'"));
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

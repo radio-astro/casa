@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCopy.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: tCopy.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
 
-#include <casa/Utilities/Copy.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/Copy.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
 // A random class to copy
-#include <casa/Containers/Block.h>
+#include <casacore/casa/Containers/Block.h>
 
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // This program tests all functions in Copy.h (objset, objcopy and objmove).
 // Especially objmove is tested in all kinds of circumstances
 // (overlapping, non-overlapping, strides).

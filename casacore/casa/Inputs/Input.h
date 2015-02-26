@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Input.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Input.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_INPUT_H
 #define CASA_INPUT_H
 
 
-#include <casa/aips.h>
-#include <casa/Inputs/Param.h>
-#include <casa/Containers/List.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Inputs/Param.h>
+#include <casacore/casa/Containers/List.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Vector;
 
@@ -52,7 +52,7 @@ template<class T> class Vector;
 //
 // <etymology>
 // The Input class name is a reflection of it's role as the early command 
-// line user interface for AIPS++ applications.  This class provides "inputs"
+// line user interface for Casacore applications. This class provides "inputs"
 // in the form "key=value" or "-key value."
 // </etymology>
 //
@@ -146,7 +146,7 @@ template<class T> class Vector;
 //
 // <example>
 // <srcblock>
-// #include <casa/Inputs/Input.h>
+// #include <casacore/casa/Inputs/Input.h>
 // int main(int argc, const char* argv[]) 
 // {
 //  // instantiate an Input.  The integer argument of 1 to the ctor builds 
@@ -198,17 +198,17 @@ template<class T> class Vector;
 // </example>
 //
 // <motivation>
-// In the earliest days of the AIPS++ project, the desire to start coding 
+// In the earliest days of the old AIPS++ project, the desire to start coding 
 // right away led to the need for a user interface.  The preexistant C language
 // method of argc/argv was enclosed in an object for easier use.  This also
 // provided a means to output a pane file.  Pane files are used by the 
 // Cantata desktop within the Khoros system to build quick graphic user 
-// interfaces.  The AIPS++ code has moved on to greater heights and left the
+// interfaces.  The Casacore code has moved on to greater heights and left the
 // Input class mostly unchanged.
 // </motivation>
 //
 // <todo asof="Thu 1995/04/06 21:26:43 GMT">
-//   <li> major cleanup needed - this is the oldest code in AIPS++.
+//   <li> major cleanup needed - this is the oldest code in Casacore.
 //   <li> replace List<Param> with keywords
 // </todo>
 
@@ -357,7 +357,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

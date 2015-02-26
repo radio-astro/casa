@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFlagCmdColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSFlagCmdColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSFlagCmdColumns.h>
-#include <ms/MeasurementSets/MSFlagCmd.h>
+#include <casacore/ms/MeasurementSets/MSFlagCmdColumns.h>
+#include <casacore/ms/MeasurementSets/MSFlagCmd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSFlagCmdColumns::ROMSFlagCmdColumns(const MSFlagCmd& msFlagCmd):
   applied_p(msFlagCmd, MSFlagCmd::columnName(MSFlagCmd::APPLIED)),
@@ -137,5 +137,5 @@ void MSFlagCmdColumns::attach(MSFlagCmd& msFlagCmd)
 // compile-command: "gmake MSFlagCmdColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

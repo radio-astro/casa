@@ -24,19 +24,20 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSTableIndex.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSTableIndex.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSTABLEINDEX_H
 #define MS_MSTABLEINDEX_H
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/RecordField.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ColumnsIndex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ColumnsIndex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class Record;
@@ -174,7 +175,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

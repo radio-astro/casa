@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: MSFitsOutput.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFITSOUTPUT_H
 #define MS_MSFITSOUTPUT_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -50,24 +50,25 @@ template<class T> class Vector;
 class MSFitsOutput
 {
 public:
-  /** Convert a MeasurementSet to random group UVFITS.
-      @param fitsfile      Output filename
-      @param ms            input
-      @param column        specifies which "data" column to write
-                           ("observed", "calibrated", "model")
-      @param startchan     1st channel
-      @param nchan         # of channels
-      @param stepchan      # of channels to stride by
-      @param writeSysCal   whether to write the system calibration table
-      @param asMultiSource If true a multi-source UVFits file is written.
-      @param combineSpw    If true it attempts to write the spectral windows as
-                           IFs.  This is necessary for many aips tasks, and difmap.
-      @param writeStation  If true uses pad instead of antenna names.
-      @param sensitivity   
-      @param padWithFlags  If true and combineSpw==true, fill spws with flags
-                           as needed to fit the IF structure.  Does not yet
-                           support spws with different shapes.
-  */
+  // Convert a MeasurementSet to random group UVFITS.
+  //  @param fitsfile      Output filename
+  //  @param ms            input
+  //  @param column        specifies which "data" column to write
+  //                       ("observed", "calibrated", "model")
+  //  @param startchan     1st channel
+  //  @param nchan         # of channels
+  //  @param stepchan      # of channels to stride by
+  //  @param writeSysCal   whether to write the system calibration table
+  //  @param asMultiSource If true a multi-source UVFits file is written.
+  //  @param combineSpw    If true it attempts to write the spectral windows as
+  //                       IFs.  This is necessary for many aips tasks, and
+  //                       for difmap.
+  //  @param writeStation  If true uses pad instead of antenna names.
+  //  @param sensitivity   
+  //  @param padWithFlags  If true and combineSpw==true, fill spws with flags
+  //                       as needed to fit the IF structure.  Does not yet
+  //                       support spws with different shapes.
+  //  @param avgchan       average every N channels
   static Bool writeFitsFile(const String& fitsfile, const MeasurementSet& ms,
 			    const String& column, Int startchan=0, 
 			    Int nchan=1, Int stepchan=1, 
@@ -96,6 +97,7 @@ private:
   //    @param combineSpw     If true, export the spectral window(s) as IF(s).
   //    @param padWithFlags   If true && combineSpw==true, pad the spws with
   //                          flags as necessary to fit the IF structure.
+  //    @param avgchan        average every N channels
   static FitsOutput *writeMain(Int& refPixelFreq, Double& refFreq,
 			       Double& chanbw,
 			       const String& outFITSFile,
@@ -200,6 +202,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

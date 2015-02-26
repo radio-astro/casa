@@ -24,27 +24,52 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageProxy.h 20966 2010-09-27 09:43:20Z gervandiepen $
+//# $Id: ImageProxy.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_IMAGEPROXY_H
 #define IMAGES_IMAGEPROXY_H
 
 //# Includes
-#include <images/Images/MaskSpecifier.h>
-#include <lattices/Lattices/LatticeBase.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Containers/ValueHolder.h>
-#include <casa/Containers/Record.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/MaskSpecifier.h>
+#include <casacore/lattices/Lattices/LatticeBase.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Containers/ValueHolder.h>
+#include <casacore/casa/Containers/Record.h>
 
-namespace casa {
+namespace casacore {
 
   //# Forward Declarations.
   template<typename T> class ImageInterface;
   class LatticeExprNode;
   class CoordinateSystem;
+  class ImageAttrHandler;
 
   // <synopsis>
+  // ImageProxy is a proxy to an image having data type Float, Double,
+  // Complex, or DComplex. Its primary purpose is to be bind the images
+  // module to Python through pyrap.images. However, it can also be used
+  // directly in C++.
+  //
+  // An ImageProxy object can be constructed for an image stored on disk in
+  // Casacore, FITS, HDF5, or Miriad format. It can also be constructed given
+  // a shape or an N-dim array with values.
+  // Furthermore it can be constructed from a LEL expression (see class ImageExpr)
+  // or a vector of images to be concatenated (see class ImageConcat).
+  //
+  // Many functions exist to operate on an ImageProxy object. For example:
+  // <ul>
+  //  <li> get meta info (shape, data type, coordinates, etc.)
+  //  <li> save in Casacore, HDF5, or FITS format.
+  //  <li> regrid.
+  //  <li> get statistics.
+  //  <li> form a subimage (which is done in a virtual way).
+  // </ul>
+  // Functions regrid and statistics can only be used for Float images.
+  // They throw an exception for images with other data types.
+  // Note that using a LEL expression it is possible to (virtually) convert an
+  // image with another type to a Float image.
   // </synopsis>
 
   class ImageProxy
@@ -100,6 +125,9 @@ namespace casa {
                 const IPosition& tileShape = IPosition(),
                 Int dummy=0);
 
+    // Construct from an existing image object.
+    ImageProxy (const CountedPtr<LatticeBase>&);
+
     // Copy constructor (reference semantics).
     ImageProxy (const ImageProxy&);
 
@@ -111,11 +139,14 @@ namespace casa {
     // Open an image in the file/table with the given name.
     // The specified mask will be applied (default is default mask).
     // A null pointer is returned for an unknown image type.
-    // Non-AIPS++ image types must have been registered to be known.
+    // Non-Casacore image types must have been registered to be known.
     // If not successful, try to open it as an image expression.
     static LatticeBase* openImageOrExpr (const String& str,
                                          const MaskSpecifier&,
                                          const Block<LatticeExprNode>& nodes);
+
+    // Close the image by setting all pointers to 0.
+    void close();
 
     // Turn the ImageProxy into a LatticeExprNode.
     LatticeExprNode makeNode() const;
@@ -137,6 +168,9 @@ namespace casa {
 
     // Get the data type of the image.
     String dataType() const;
+
+    // Get the image type (PagedImage, HDF5Image, etc.)
+    String imageType() const;
 
     // Get a chunk of data.
     ValueHolder getData (const IPosition& blc,
@@ -171,11 +205,54 @@ namespace casa {
     // Release the lock acquired by lock().
     void unlock();
 
+    // Get the names of the attribute groups.
+    Vector<String> attrGroupNames() const;
+
+    // Create a new attribute group.
+    void createAttrGroup (const String& groupName);
+
+    // Get the names of all attributes in a group.
+    Vector<String> attrNames (const String& groupName) const;
+
+    // Get the number of rows in an attribute group.
+    uInt attrNrows (const String& groupName) const;
+
+    // Get the value of an attribute in a group row.
+    ValueHolder getAttr (const String& groupName,
+                         const String& attrName,
+                         uInt rownr) const;
+
+    // Get all attributes in a group row.
+    Record getAttrRow (const String& groupName,
+                       uInt rownr) const;
+
+    // Get the unit(s) of an attribute in a group.
+    Vector<String> getAttrUnit(const String& groupName,
+                               const String& attrName) const;
+
+    // Get the measinfo of an attribute in a group.
+    Vector<String> getAttrMeas(const String& groupName,
+                               const String& attrName) const;
+
+    // Put the value, unit, and measinfo of an attribute in a group row.
+    // The attribute or row is added if new.
+    void putAttr (const String& groupName, const String& attrName, uInt rownr,
+                  const ValueHolder& value,
+                  const Vector<String>& units,
+                  const Vector<String>& measInfo);
+
     // Form a new (virtual) image being a subset of the image.
+    // It uses preserveAxesOrder=False.
     ImageProxy subImage (const IPosition& blc,
                          const IPosition& trc, 
                          const IPosition& inc,
                          Bool dropDegenerate=True);
+    // Same with a new function name for backward compatibility with old pyrap.
+    ImageProxy subImage2 (const IPosition& blc,
+                          const IPosition& trc, 
+                          const IPosition& inc,
+                          Bool dropDegenerate,
+                          Bool preserveAxesOrder);
 
     // Get the brightness unit.
     String unit() const;
@@ -183,14 +260,17 @@ namespace casa {
     // Get the coordinate system.
     Record coordSys() const;
 
-    // Convert a pixel coordinate to world coordinates.
+    // Convert a pixel coordinate to world coordinate.
     // if <src>reverseAxes=True</src> the input and output vector will be
     // reversed (as needed for pyrap).
     Vector<Double> toWorld (const Vector<Double>& pixel,
                             Bool reverseAxes);
 
-    //#// Convert world coordinates to pixel coordinates.
-    //#Vector<Double> topixel (Record& value);
+    // Convert a world coordinate to pixel coordinate.
+    // if <src>reverseAxes=True</src> the input and output vector will be
+    // reversed (as needed for pyrap).
+    Vector<Double> toPixel (const Vector<Double>& world,
+                            Bool reverseAxes);
 
     // Get the image info.
     Record imageInfo() const;
@@ -216,8 +296,8 @@ namespace casa {
                  const IPosition& newTileShape=IPosition()) const;
 
     // Return the statistics for the given axes.
-    // E.g. fn axes 0,1 is given in a 3-dim image, the statistics are calculated
-    // for each plane along the 3rd axis.
+    // E.g., if axes 0,1 is given in a 3-dim image, the statistics are
+    // calculated for each plane along the 3rd axis.
     // MinMaxValues can be given to include or exclude (4th argument) pixels
     // with values in the given range. If only one value is given, min=-abs(val)
     // and max=abs(val).
@@ -291,6 +371,9 @@ namespace casa {
     // Form an ImageProxy object from an existing image object.
     explicit ImageProxy (LatticeBase*);
 
+    // Throw an exception if the object is null.
+    void checkNull() const;
+
     // Open the image (which can also be an expression.
     // Throw an exception if not succeeded.
     void openImage (const String& name, const String& mask,
@@ -314,6 +397,10 @@ namespace casa {
     // </group>
 
     // Setup the pointers for the various image data types.
+    void setup();
+
+    // Setup the pointers for the various image data types.
+    // It takes over the lattice pointer.
     void setup (LatticeBase* lattice);
 
     // Centre all axes except the Stokes one.
@@ -378,8 +465,9 @@ namespace casa {
     ImageInterface<Complex>*  itsImageComplex;
     ImageInterface<DComplex>* itsImageDComplex;
     const CoordinateSystem*   itsCoordSys;
+    ImageAttrHandler*         itsAttrHandler;
   };
 
-} // end namespace casa
+} // end namespace casacore
 
 #endif

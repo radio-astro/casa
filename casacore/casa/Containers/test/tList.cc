@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tList.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tList.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Containers/List.h>
-#include <casa/Containers/ListIO.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Containers/List.h>
+#include <casacore/casa/Containers/ListIO.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 static void show(const ConstListIter<int> &);
 static void dump(const ConstListIter<int> *);
 int main() {
@@ -417,7 +417,8 @@ int main() {
   oth.addRight(6);
   show(oth);
 
-  ListIter<int> last_a(new List<int>(oth.container()));
+  List<int> oth1(oth.container());
+  ListIter<int> last_a(&oth1);
   show( last_a );
 		  
 

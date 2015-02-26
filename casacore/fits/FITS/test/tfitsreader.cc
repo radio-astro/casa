@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfitsreader.cc $
+//# $Id: tfitsreader.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 
-# include <fits/FITS/FITSReader.h>
+# include <casacore/fits/FITS/FITSReader.h>
 
-# include <casa/namespace.h>
+# include <casacore/casa/namespace.h>
 
 int main(int argc, const char* argv[])
 {

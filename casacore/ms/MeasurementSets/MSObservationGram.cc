@@ -23,26 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSObservationGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSObservationGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSObservationGram; grammar for scan command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSObservationGram.h>
-#include <ms/MeasurementSets/MSObservationParse.h> // routines used by bison actions
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSObservationGram.h>
+#include <casacore/ms/MeasurementSets/MSObservationParse.h> // routines used by bison actions
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSObservationGram.ycc"                  // flex output
-#include "MSObservationGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSObservationGram.ycc"                  // bison output
+#include "MSObservationGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSObservationGramwrap()
@@ -50,7 +53,7 @@ int MSObservationGramwrap()
     return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Declare a file global pointer to a char* for the input string.
 static const char*           strpMSObservationGram = 0;
@@ -205,4 +208,4 @@ static Int                   posMSObservationGram = 0;
   //     return out;
   // }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

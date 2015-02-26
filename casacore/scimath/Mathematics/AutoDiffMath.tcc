@@ -23,14 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AutoDiffMath.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: AutoDiffMath.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_AUTODIFFMATH_TCC
+#define SCIMATH_AUTODIFFMATH_TCC
 
 //# Includes
-#include <scimath/Mathematics/AutoDiffMath.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicSL/Constants.h>
+#include <casacore/scimath/Mathematics/AutoDiffMath.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/BasicSL/Constants.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // Unary arithmetic operators.
 template<class T> AutoDiff<T> operator+(const AutoDiff<T> &other) { 
@@ -583,5 +586,7 @@ AutoDiff<T> max(const AutoDiff<T> &left,
   return tmp.ref();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

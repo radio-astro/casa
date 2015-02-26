@@ -37,7 +37,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <measures/Measures/Stokes.h>
-#include <tables/Tables/BaseMappedArrayEngine.h>
+#include <tables/DataMan/BaseMappedArrayEngine.h>
 
 
 namespace asap {

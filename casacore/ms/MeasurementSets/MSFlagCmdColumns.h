@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFlagCmdColumns.h 19944 2007-02-27 11:14:34Z Malte.Marquarding $
+//# $Id: MSFlagCmdColumns.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSFLAGCMDCOLUMNS_H
 #define MS_MSFLAGCMDCOLUMNS_H
 
-#include <casa/aips.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCEpoch.h>
-#include <measures/TableMeasures/ScalarMeasColumn.h>
-#include <measures/TableMeasures/ScalarQuantColumn.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MCEpoch.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
+#include <casacore/measures/TableMeasures/ScalarQuantColumn.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class MSFlagCmd;
 
@@ -257,6 +257,6 @@ private:
   ScalarQuantColumn<Double> timeQuant_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

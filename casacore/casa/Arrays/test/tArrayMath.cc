@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMath.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: tArrayMath.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 
 #define TestBinary(OPER,NAME,T,U)                \
@@ -96,7 +96,7 @@ void NAME()\
   T* ap = a.data();\
   T* ep = e.data();\
   for (uInt i=0; i<a.size(); ++i) {\
-    ap[i] = static_cast<T> ((i+1)/120.);\
+    ap[i] = static_cast<T> ((i+1)/120.);      \
     ep[i] = OPER ap[i];\
   }\
   AlwaysAssertExit (allEQ(OPER a, e));\
@@ -184,7 +184,7 @@ void testMeanFloat()
   AlwaysAssertExit (near(rms(sa), rms(sb)));
 }
 
-#define TestFunc1(FUNC, NAME, T)\
+#define TestFunc1(FUNC, NAME, T, TOL)               \
 void NAME()\
 {\
   Array<T> a(IPosition(3,4,5,6));\
@@ -195,11 +195,11 @@ void NAME()\
     ap[i] = (i+1)/120.;\
     ep[i] = FUNC(ap[i]);\
   }\
-  AlwaysAssertExit (allNear(FUNC(a), e, 1e-13));\
+  AlwaysAssertExit (allNear(FUNC(a), e, TOL));\
   IPosition start(3,0,1,2);\
   IPosition end(3,2,3,4);\
   Array<T> sa(a(start,end));\
-  AlwaysAssertExit (allNear(FUNC(sa), e(start,end), 1e-13));\
+  AlwaysAssertExit (allNear(FUNC(sa), e(start,end), TOL));\
 }
 
 #define TestFunc2(FUNC,NAME,T)                        \
@@ -343,14 +343,6 @@ void testMinMax1()
   indgen (a);
   a.data()[11] = -3;
   a.data()[66] = 1000;
-
-  Vector<Double> x = indgen(10, 4.0, 3.0);
-  for (uInt i=0; i<10; i++) {;
-  	  AlwaysAssertExit(x[i] == 4 + 3*i);
-  }
-
-
-
   Int minval, maxval;
   IPosition minpos, maxpos;
   // Unmasked minmax.
@@ -452,35 +444,35 @@ TestReduce(sum, +=, testSumInt, Int)
 TestReduce(product, *=, testProductInt, Int)
 TestMinMax(min, testMinInt, Int)
 TestMinMax(max, testMaxInt, Int)
-TestFunc1(sin, testSinDouble, Double)
-TestFunc1(sinh, testSinhDouble, Double)
-TestFunc1(cos, testCosFloat, Float)
-TestFunc1(cosh, testCoshFloat, Float)
-TestFunc1(square, testSqrDouble, Double)
-TestFunc1(cube, testCubeDouble, Double)
-TestFunc1(sqrt, testSqrtDouble, Double)
-TestFunc1(exp, testExpDouble, Double)
-TestFunc1(log, testLogDouble, Double)
-TestFunc1(log10, testLog10Double, Double)
-TestFunc1(sin, testSinComplex, Complex)
-TestFunc1(sinh, testSinhComplex, Complex)
-TestFunc1(cos, testCosDComplex, DComplex)
-TestFunc1(cosh, testCoshDComplex, DComplex)
-TestFunc1(square, testSqrComplex, Complex)
-TestFunc1(cube, testCubeComplex, Complex)
-TestFunc1(sqrt, testSqrtComplex, Complex)
-TestFunc1(exp, testExpComplex, Complex)
-TestFunc1(log, testLogComplex, Complex)
-TestFunc1(log10, testLog10Complex, Complex)
-TestFunc1(tan, testTanDouble, Double)
-TestFunc1(tanh, testTanhDouble, Double)
-TestFunc1(asin, testAsinDouble, Double)
-TestFunc1(acos, testAcosDouble, Double)
-TestFunc1(atan, testAtanDouble, Double)
-TestFunc1(ceil, testCeilDouble, Double)
-TestFunc1(fabs, testFabsDouble, Double)
-TestFunc1(abs, testAbsDouble, Double)
-TestFunc1(floor, testFloorDouble, Double)
+TestFunc1(sin, testSinDouble, Double, 1e-13)
+TestFunc1(sinh, testSinhDouble, Double, 1e-13)
+TestFunc1(cos, testCosFloat, Float, 1e-6)
+TestFunc1(cosh, testCoshFloat, Float, 1e-6)
+TestFunc1(square, testSqrDouble, Double, 1e-13)
+TestFunc1(cube, testCubeDouble, Double, 1e-13)
+TestFunc1(sqrt, testSqrtDouble, Double, 1e-13)
+TestFunc1(exp, testExpDouble, Double, 1e-13)
+TestFunc1(log, testLogDouble, Double, 1e-13)
+TestFunc1(log10, testLog10Double, Double, 1e-13)
+TestFunc1(sin, testSinComplex, Complex, 1e-6)
+TestFunc1(sinh, testSinhComplex, Complex, 1e-6)
+TestFunc1(cos, testCosDComplex, DComplex, 1e-13)
+TestFunc1(cosh, testCoshDComplex, DComplex, 1e-13)
+TestFunc1(square, testSqrComplex, Complex, 1e-6)
+TestFunc1(cube, testCubeComplex, Complex, 1e-6)
+TestFunc1(sqrt, testSqrtComplex, Complex, 1e-6)
+TestFunc1(exp, testExpComplex, Complex, 1e-6)
+TestFunc1(log, testLogComplex, Complex, 1e-6)
+TestFunc1(log10, testLog10Complex, Complex, 1e-6)
+TestFunc1(tan, testTanDouble, Double, 1e-13)
+TestFunc1(tanh, testTanhDouble, Double, 1e-13)
+TestFunc1(asin, testAsinDouble, Double, 1e-13)
+TestFunc1(acos, testAcosDouble, Double, 1e-13)
+TestFunc1(atan, testAtanDouble, Double, 1e-13)
+TestFunc1(ceil, testCeilDouble, Double, 1e-13)
+TestFunc1(fabs, testFabsDouble, Double, 1e-13)
+TestFunc1(abs, testAbsDouble, Double, 1e-13)
+TestFunc1(floor, testFloorDouble, Double, 1e-13)
 TestFunc2(atan2, testAtan2Double, Double)
 TestFunc2(pow, testPowDouble, Double)
 TestFunc2(fmod, testFmodDouble, Double)
@@ -496,40 +488,6 @@ TestComplex(phase, arg, testDComplexPhase, DComplex, Double)
 TestComplex(real, real, testDComplexReal, DComplex, Double)
 TestComplex(imag, imag, testDComplexImag, DComplex, Double)
 TestComplex(conj, conj, testDComplexConj, DComplex, DComplex)
-
-void testStdVectorPlus() {
-	vector<Int> a(3);
-	vector<Int> b(3);
-	a[0] = 0; a[1] = 1; a[2] = 2;
-	b[0] = 5; b[1] = 6; b[2] = 7;
-	vector<Int> c = a + b;
-	AlwaysAssertExit(
-		c.size() == 3 && c[0] == 5
-		&& c[1] == 7 && c[2] == 9
-	);
-	vector<int> d(2);
-	Bool caught = False;
-	try {
-		vector<int> e = a + d;
-		// exception should be thrown, shouldn't get here.
-		AlwaysAssertExit(False);
-	}
-	catch (const ArrayConformanceError& exc) {
-		caught = True;
-	}
-	AlwaysAssertExit(caught);
-
-}
-
-void testStdVectorDivide() {
-	vector<Int> a(3);
-	a[0] = 0; a[1] = 2; a[2] = 4;
-	vector<Int> b = a/2;
-	AlwaysAssertExit(
-		b.size() == 3 && b[0] == 0
-		&& b[1] == 1 && b[2] == 2
-	);
-}
 
 int main()
 {
@@ -605,10 +563,7 @@ int main()
     testMakeComplex<Float,Complex>();
     testMakeComplex<Double,DComplex>();
     testMinMax1();
-
-    testStdVectorPlus();
-    testStdVectorDivide();
-  } catch (const AipsError& x) {
+  } catch (AipsError x) {
     cout << "Unexpected exception: " << x.getMesg() << endl;
     return 1;
   }

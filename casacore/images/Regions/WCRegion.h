@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCRegion.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCRegion.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_WCREGION_H
 #define IMAGES_WCREGION_H
 
 //# Includes
-#include <casa/Containers/Record.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LCRegion;
@@ -263,6 +264,6 @@ inline const Record& WCRegion::getAxesDesc() const
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

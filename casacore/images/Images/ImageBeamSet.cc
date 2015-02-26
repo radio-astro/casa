@@ -22,19 +22,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: ImageBeamSet.cc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/ImageBeamSet.h>
+#include <casacore/images/Images/ImageBeamSet.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/Record.h>
-#include <casa/Quanta/QLogical.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Quanta/QLogical.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
 
 #include <iomanip>
 
-namespace casa {
+namespace casacore {
 
 const String ImageBeamSet::_DEFAULT_AREA_UNIT = "arcsec2";
 
@@ -336,7 +337,6 @@ GaussianBeam ImageBeamSet::getMedianAreaBeam() const {
 			: _beams(0, indices[indices.size()/2]);
 		return medbeam;
 	}
-
 }
 
 const GaussianBeam ImageBeamSet::getSmallestMinorAxisBeam() const {
@@ -681,7 +681,7 @@ void ImageBeamSet::summarize(
 }
 
 void ImageBeamSet::_chanInfoToStream(
-	ostream& os, const SpectralCoordinate *const &spCoord,
+	ostream& os, const SpectralCoordinate *spCoord,
 	const uInt chan, const uInt chanWidth, const uInt freqPrec,
 	const uInt velWidth, const uInt velPrec
 ) {

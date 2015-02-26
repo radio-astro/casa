@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ExtendSpecifier.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ExtendSpecifier.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/ExtendSpecifier.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/ExtendSpecifier.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ExtendSpecifier::ExtendSpecifier()
 {}
@@ -181,5 +181,5 @@ IPosition ExtendSpecifier::convertNew (const IPosition& shape) const
   return newShape;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

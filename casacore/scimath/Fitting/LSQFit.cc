@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQFit.cc 21049 2011-04-13 07:52:48Z gervandiepen $
+//# $Id: LSQFit.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <scimath/Fitting/LSQFit.h>
+#include <casacore/scimath/Fitting/LSQFit.h>
 #include <algorithm>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Static values
 LSQFit::Real      LSQFit::REAL      = LSQFit::Real();
@@ -818,5 +818,5 @@ void LSQFit::getWorkCOV() {
   if (!wcov_p) wcov_p = new Double[n_p*n_p];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

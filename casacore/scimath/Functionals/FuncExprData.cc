@@ -24,14 +24,14 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FuncExprData.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: FuncExprData.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <scimath/Functionals/FuncExprData.h>
-#include <casa/iostream.h>
-#include <casa/iomanip.h>
+#include <casacore/scimath/Functionals/FuncExprData.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/iomanip.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 FuncExprData::FuncExprData() :
@@ -173,5 +173,5 @@ ostream &operator<<(ostream &os, const FuncExprData &ed) {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

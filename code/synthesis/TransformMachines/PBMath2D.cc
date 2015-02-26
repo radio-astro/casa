@@ -41,7 +41,7 @@
 
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/LCSlicer.h>
+#include <lattices/LRegions/LCSlicer.h>
 #include <casa/Arrays/IPosition.h>
 
 #include <measures/Measures.h>

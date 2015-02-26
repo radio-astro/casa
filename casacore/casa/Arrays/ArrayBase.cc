@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayBase.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: ArrayBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/ArrayBase.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/ArrayBase.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ArrayBase::ArrayBase()
 : nels_p       (0),
@@ -593,15 +593,43 @@ void ArrayBase::checkCubeShape()
   }
 }
 
-ArrayPositionIterator* ArrayBase::makeIterator (uInt)
+CountedPtr<ArrayBase> ArrayBase::makeArray() const
+{
+  throw ArrayError ("ArrayBase::makeArray cannot be used");
+}
+void ArrayBase::resize(const IPosition&, Bool)
+{
+  throw ArrayError ("ArrayBase::resize cannot be used");
+}
+CountedPtr<ArrayPositionIterator> ArrayBase::makeIterator (uInt) const
 {
   throw ArrayError ("ArrayBase::makeIterator cannot be used");
 }
-ArrayBase* ArrayBase::getSection (const Slicer&)
+CountedPtr<ArrayBase> ArrayBase::getSection (const Slicer&) const
 {
   throw ArrayError ("ArrayBase::getSection cannot be used");
 }
+void ArrayBase::assignBase (const ArrayBase&, Bool)
+{
+  throw ArrayError ("ArrayBase::assign cannot be used");
+}
+void* ArrayBase::getVStorage (Bool&)
+{
+  throw ArrayError ("ArrayBase::getVStorage cannot be used");
+}
+const void* ArrayBase::getVStorage (Bool&) const
+{
+  throw ArrayError ("ArrayBase::getVStorage cannot be used");
+}
+  void ArrayBase::putVStorage(void*&, Bool)
+{
+  throw ArrayError ("ArrayBase::putVStorage cannot be used");
+}
+void ArrayBase::freeVStorage(const void*&, Bool) const
+{
+  throw ArrayError ("ArrayBase::freeVStorage cannot be used");
+}
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

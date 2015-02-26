@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskSpecifier.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MaskSpecifier.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef IMAGES_MASKSPECIFIER_H
 #define IMAGES_MASKSPECIFIER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Class to specify which mask to use in an image.
@@ -101,6 +101,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

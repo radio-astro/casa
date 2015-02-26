@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatColumn.h 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: ConcatColumn.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_CONCATCOLUMN_H
 #define TABLES_CONCATCOLUMN_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseColumn.h>
-#include <tables/Tables/ColumnCache.h>
-#include <tables/Tables/TableRecord.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseColumn.h>
+#include <casacore/tables/Tables/ColumnCache.h>
+#include <casacore/tables/Tables/TableRecord.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# Forward Declarations
   class ConcatTable;
@@ -291,6 +291,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TableRecord         keywordSet_p;
   };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

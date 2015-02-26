@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MRBase.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MRBase.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions/Error.h>
-#include <casa/BasicSL/String.h>
-#include <measures/Measures/MRBase.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/measures/Measures/MRBase.h>
+#include <casacore/casa/iostream.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -49,5 +49,5 @@ ostream &operator<<(ostream &os, const MRBase &meas) {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

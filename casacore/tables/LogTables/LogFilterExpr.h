@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LogFilterExpr.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogFilterExpr.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef TABLES_LOGFILTEREXPR_H
 #define TABLES_LOGFILTEREXPR_H
 
 
 //# Includes
-#include <tables/Tables/TableExprData.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/TaQL/TableExprData.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableExprNode;
@@ -83,6 +84,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

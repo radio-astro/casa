@@ -24,25 +24,25 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSHistoryUtil.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: FITSHistoryUtil.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/FITSHistoryUtil.h>
+#include <casacore/fits/FITS/FITSHistoryUtil.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <fits/FITS/fits.h>
-#include <fits/FITS/FITSDateUtil.h>
-#include <tables/LogTables/LoggerHolder.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/Logging/LogSink.h>
-#include <measures/Measures/MEpoch.h>
-#include <casa/Quanta/MVTime.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/fits/FITS/FITSDateUtil.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/casa/Quanta/MVTime.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt FITSHistoryUtil::getHistoryGroup(Vector<String> &strings, 
 				      String &groupType,
@@ -299,7 +299,7 @@ uInt FITSHistoryUtil::toHISTORY(vector<String>& history, Bool& aipsppFormat,
           id = iter->objectID();
           timeInSec = iter->time();
 // In  each call  to toHistory, we process a group of contiguous records
-// all in the fsame format (aips++ 2 [lines per logical line] or standard fits)
+// all in the fsame format (Casacore 2 [lines per logical line] or standard fits)
 
           thisLineFormat = (timeInSec>0.0 && priority!="");
           if (line == firstLine) {
@@ -340,5 +340,5 @@ uInt FITSHistoryUtil::toHISTORY(vector<String>& history, Bool& aipsppFormat,
     return firstLine;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

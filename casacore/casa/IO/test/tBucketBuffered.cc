@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketBuffered.cc 21011 2010-12-16 12:37:49Z gervandiepen $
+//# $Id: tBucketBuffered.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
-#include <casa/IO/BucketBuffered.h>
-#include <casa/IO/BucketFile.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/Timer.h>
-#include <casa/iostream.h>
+#include <casacore/casa/IO/BucketBuffered.h>
+#include <casacore/casa/IO/BucketFile.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/iostream.h>
 #include <cstring>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Test program for the BucketBuffered class
 // </summary>

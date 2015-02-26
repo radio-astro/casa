@@ -23,32 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwGram.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSSpwGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSSpwGram; grammar for field command lines
 
 // This file includes the output files of bison and flex for parsing
-// command lines operating on lattices.  This is a preliminary
-// version; eventually it has to be incorporated in the AIPS++ command
-// language.
+// command lines operating on spectral window selection.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-//#include <ms/MeasurementSets/MSSpwColumns.h>
-#include <ms/MeasurementSets/MSSpwGram.h>
-#include <ms/MeasurementSets/MSSpwParse.h>
-#include <ms/MeasurementSets/MSSpwIndex.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+//#include <casacore/ms/MeasurementSets/MSSpwColumns.h>
+#include <casacore/ms/MeasurementSets/MSSpwGram.h>
+#include <casacore/ms/MeasurementSets/MSSpwParse.h>
+#include <casacore/ms/MeasurementSets/MSSpwIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSSpwGram.ycc"                  // flex output
-#include "MSSpwGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSSpwGram.ycc"                  // bison output
+#include "MSSpwGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSSpwGramwrap()
@@ -56,7 +57,7 @@ int MSSpwGramwrap()
   return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
   static const char*           strpMSSpwGram = 0;
@@ -211,4 +212,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    String(MSSpwGramtext) + "'"));
   }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

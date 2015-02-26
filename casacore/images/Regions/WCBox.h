@@ -22,7 +22,7 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# $Id: WCBox.h 20567 2009-04-09 23:12:39Z gervandiepen $
+//# $Id: WCBox.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 
 
@@ -30,14 +30,14 @@
 #define IMAGES_WCBOX_H
 
 //# Includes
-#include <casa/aips.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <images/Regions/WCRegion.h>
-#include <lattices/Lattices/RegionType.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Quanta/Quantum.h>
+#include <casacore/casa/aips.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/images/Regions/WCRegion.h>
+#include <casacore/lattices/LRegions/RegionType.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Quanta/Quantum.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LCRegion;
@@ -390,6 +390,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

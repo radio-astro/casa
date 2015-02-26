@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDynBuffer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tDynBuffer.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
 
-#include <casa/Utilities/DynBuffer.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Utilities/DynBuffer.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // This program tests the DynBuffer class.
 // It allocates buffers, stores data in it and reads it back.
 // The results are written to stdout. A script executes this test program.

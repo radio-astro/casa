@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrLogi.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrLogi.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MASKARRLOGI_H
 #define CASA_MASKARRLOGI_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/MaskedArray.h>
-#include <casa/Arrays/MaskLogiArr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/MaskedArray.h>
+#include <casacore/casa/Arrays/MaskLogiArr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Logical operations for MaskedArrays, and between MaskedArrays and Arrays.
@@ -48,8 +48,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// MaskArrLogi is short for MaskedArrayLogical, which is too long by
-// AIPS++ file naming conventions.  This file contains global functions
+// MaskArrLogi is short for MaskedArrayLogical, which is too long by the
+// old AIPS++ file naming conventions.  This file contains global functions
 // which perform element by element logical operations on masked arrays.
 // </etymology>
 //
@@ -468,9 +468,9 @@ template<class T> Bool anyOR (const T &val, const MaskedArray<T> &array);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/MaskArrLogi.tcc>
+#include <casacore/casa/Arrays/MaskArrLogi.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

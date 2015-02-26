@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMathPerf.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: tArrayMathPerf.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/OS/Timer.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 #include <iostream>
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 

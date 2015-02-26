@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConcatTable3.cc 21253 2012-07-17 09:29:15Z gervandiepen $
+//# $Id: tConcatTable3.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/ExprNode.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Containers/Block.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 // <summary>
 // Test program for the ConcatTable class
@@ -79,8 +79,8 @@ void checkTable (Int stval, uInt nrow)
     AlwaysAssertExit (tab.keywordSet().asTable("keysub").nrow() == nsubrow);
   }
   */
-  ROScalarColumn<Int> aint(tab, "aint");
-  ROScalarColumn<Float> afloat(tab,  "afloat");
+  ScalarColumn<Int> aint(tab, "aint");
+  ScalarColumn<Float> afloat(tab,  "afloat");
   for (uInt i=0; i<tab.nrow(); i++) {
     AlwaysAssertExit (aint(i) == stval);
     AlwaysAssertExit (afloat(i) == stval+1.);

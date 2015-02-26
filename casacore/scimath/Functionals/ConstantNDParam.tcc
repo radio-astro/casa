@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HyperPlaneParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: ConstantNDParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_CONSTANTNDPARAM_TCC
+#define SCIMATH_CONSTANTNDPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/ConstantNDParam.h>
+#include <casacore/scimath/Functionals/ConstantNDParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ConstantNDParam<T>::ConstantNDParam(uInt m) :
@@ -51,5 +54,7 @@ ConstantNDParam<T>::operator=(const ConstantNDParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

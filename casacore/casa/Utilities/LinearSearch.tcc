@@ -24,14 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LinearSearch.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LinearSearch.tcc 21561 2015-02-16 06:57:35Z gervandiepen $
+
+#ifndef CASA_LINEARSEARCH_TCC
+#define CASA_LINEARSEARCH_TCC
 
 
 //# Includes
-#include <casa/Utilities/LinearSearch.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class Container, class ElType>
 Int linearSearch (Bool& found, const Container& container, 
@@ -93,5 +96,7 @@ Int linearSearchBrackets1 (const Container& container, const ElType& value,
     return -1;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnitDim.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: UnitDim.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/BasicSL/String.h>
-#include <casa/Quanta/UnitDim.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Quanta/UnitDim.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 void UnitDim::init() {
     for (Int i=0; i<UNITDIM_DLNUMBER; i++) {
@@ -161,5 +161,5 @@ ostream& operator<< (ostream &os, const UnitDim &du) {
     return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

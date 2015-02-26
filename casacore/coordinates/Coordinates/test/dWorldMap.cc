@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dWorldMap.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: dWorldMap.cc 21511 2014-11-21 12:30:59Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/Arrays.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Exceptions/Error.h>
-#include <coordinates/Coordinates.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/coordinates/Coordinates.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void list (Bool ok, Bool ok2, Vector<Int>& wmap, Vector<Int>& wtranspose,
            Vector<Int>& pmap, Vector<Int>& ptranspose,
            CoordinateSystem& cSys1,

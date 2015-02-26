@@ -41,7 +41,7 @@
 #include <display/DisplayDatas/LatticePADD.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/Lattice.h>
-#include <lattices/Lattices/LatticeStatistics.h>
+#include <lattices/LatticeMath/LatticeStatistics.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <lattices/Lattices/LatticeLocker.h>
 #include <lattices/Lattices/SubLattice.h>

@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SofaTest.h 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: SofaTest.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_SOFATEST_H
 #define MEASURES_SOFATEST_H
 
 //# Include files
-#include <casa/aips.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>  Wrapping of IAU SOFA Fortran routines and test class</summary>
 // <use visibility=export>
@@ -62,13 +62,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // dpsi.put(dpsival);
 // // Show the result
 // cout.precision(4);
-// cout << "aips++ dpsi(mas):" << endl;
+// cout << "Casacore dpsi(mas):" << endl;
 // dpsi.show(cout);
 // dpsi.showHisto(cout);
 // </srcblock>
 // The result will look like:
 // <srcblock>
-// aips++ dpsi (mas):
+// Casacore dpsi (mas):
 // 5001 points were accumulated
 // with max = 1.529e-09, and min = -1.61e-09
 // and an average of 5.066e-12 and a standard deviation of 2.42e-10
@@ -123,7 +123,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// To enable in-line testing of the aips++ Measures conversion routines.
+// To enable in-line testing of the Casacore Measures conversion routines.
 // </motivation>
 //
 // <todo asof="2003/08/31">
@@ -291,6 +291,6 @@ IAUR(cr)(Double *r, Double *c);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBoxedArrayMath.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: tBoxedArrayMath.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/MaskArrMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayPartMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Arrays/MaskArrIO.h>
+#include <casacore/casa/Arrays/MaskArrMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayPartMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Arrays/MaskArrIO.h>
 
-#include <casa/Utilities/GenSort.h>
-#include <casa/OS/Timer.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/OS/Timer.h>
 #include <iostream>
 
 
-using namespace casa;
+using namespace casacore;
 using namespace std;
 
 void doIt (Bool /*doTiming*/)

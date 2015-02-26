@@ -23,20 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedArray.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MaskedArray.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MASKEDARRAY_H
 #define CASA_MASKEDARRAY_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Utilities/CountedPtr.h>
-#include <casa/Arrays/LogiArrayFwd.h>
-#include <casa/Arrays/MaskLogiArrFwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Arrays/LogiArrayFwd.h>
+#include <casacore/casa/Arrays/MaskLogiArrFwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 //# <note role=warning>
@@ -732,9 +732,9 @@ template<class T, class U>
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/MaskedArray.tcc>
+#include <casacore/casa/Arrays/MaskedArray.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

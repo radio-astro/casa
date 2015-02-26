@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPartMath.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: ArrayPartMath.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_ARRAYPARTMATH_H
 #define CASA_ARRAYPARTMATH_H
 
-#include <casa/Arrays/ArrayMath.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 //    Mathematical and logical operations for Array parts.
@@ -148,10 +149,26 @@ template<class T> Array<T> partialMedians (const Array<T>& array,
 					   const IPosition& collapseAxes,
 					   Bool takeEvenMean=False,
 					   Bool inPlace=False);
+template<class T> Array<T> partialMadfms (const Array<T>& array,
+                                          const IPosition& collapseAxes,
+                                          Bool takeEvenMean=False,
+                                          Bool inPlace=False);
 template<class T> Array<T> partialFractiles (const Array<T>& array,
-					     const IPosition& collapseAxes,
-					     Float fraction,
-					     Bool inPlace=False);
+                                             const IPosition& collapseAxes,
+                                             Float fraction,
+                                             Bool inPlace=False);
+template<class T> Array<T> partialInterFractileRanges (const Array<T>& array,
+                                                       const IPosition& collapseAxes,
+                                                       Float fraction,
+                                                       Bool inPlace=False);
+template<class T> Array<T> partialInterHexileRanges (const Array<T>& array,
+                                                     const IPosition& collapseAxes,
+                                                     Bool inPlace=False)
+  { return partialInterFractileRanges (array, collapseAxes, 1./6., inPlace); }
+template<class T> Array<T> partialInterQuartileRanges (const Array<T>& array,
+                                                      const IPosition& collapseAxes,
+                                                      Bool inPlace=False)
+  { return partialInterFractileRanges (array, collapseAxes, 0.25, inPlace); }
 // </group>
 
 
@@ -205,6 +222,19 @@ private:
   Bool     itsInPlace;
   mutable Block<T> itsTmp;
 };
+template<typename T> class MadfmFunc {
+public:
+  explicit MadfmFunc(Bool sorted = False, Bool takeEvenMean = True,
+                     Bool inPlace = False)
+    : itsSorted(sorted), itsTakeEvenMean(takeEvenMean), itsInPlace(inPlace) {}
+  T operator()(const Array<T>& arr) const
+    { return madfm(arr, itsTmp, itsSorted, itsTakeEvenMean, itsInPlace); }
+private:
+    Bool     itsSorted;
+    Bool     itsTakeEvenMean;
+    Bool     itsInPlace;
+    mutable Block<Float> itsTmp;
+};
 template<typename T> class FractileFunc {
 public:
   explicit FractileFunc (Float fraction,
@@ -217,6 +247,32 @@ private:
   Bool     itsSorted;
   Bool     itsInPlace;
   mutable Block<T> itsTmp;
+};
+template<typename T> class InterFractileRangeFunc {
+public:
+  explicit InterFractileRangeFunc(Float fraction,
+                                  Bool sorted = False, Bool inPlace = False)
+    : itsFraction(fraction), itsSorted(sorted), itsInPlace(inPlace) {}
+  T operator()(const Array<T>& arr) const
+    { return interFractileRange(arr, itsTmp, itsFraction,
+                                itsSorted, itsInPlace); }
+private:
+  float    itsFraction;
+  Bool     itsSorted;
+  Bool     itsInPlace;
+  mutable Block<Float> itsTmp;
+};
+template<typename T> class InterHexileRangeFunc: public InterFractileRangeFunc<T> {
+public:
+  explicit InterHexileRangeFunc(Bool sorted = False, Bool inPlace = False)
+    : InterFractileRangeFunc<T> (1./6., sorted, inPlace)
+    {}
+};
+template<typename T> class InterQuartileRangeFunc: public InterFractileRangeFunc<T> {
+public:
+  explicit InterQuartileRangeFunc(Bool sorted = False, Bool inPlace = False)
+    : InterFractileRangeFunc<T> (0.25, sorted, inPlace)
+    {}
 };
 
 // Apply the given ArrayMath reduction function objects
@@ -275,9 +331,9 @@ Array<T> slidingArrayMath (const Array<T>& array,
 
 // </group>
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Arrays/ArrayPartMath.tcc>
+#include <casacore/casa/Arrays/ArrayPartMath.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

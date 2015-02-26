@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WrapperBase.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: WrapperBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef SCIMATH_WRAPPERBASE_H
 #define SCIMATH_WRAPPERBASE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <scimath/Functionals/Function.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Function.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 
@@ -102,6 +102,6 @@ template<class T> class WrapperBase {
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

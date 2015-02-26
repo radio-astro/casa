@@ -23,26 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImage.h 20495 2009-01-19 00:50:41Z Malte.Marquarding $
+//# $Id: FITSImage.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_FITSIMAGE_H
 #define IMAGES_FITSIMAGE_H
 
 
 //# Includes
-#include <images/Images/ImageInterface.h>
-#include <images/Images/MaskSpecifier.h>
-#include <tables/Tables/TiledFileAccess.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <fits/FITS/fits.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/DataType.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/MaskSpecifier.h>
+#include <casacore/tables/DataMan/TiledFileAccess.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/DataType.h>
 
 #ifndef WCSLIB_GETWCSTAB
  #define WCSLIB_GETWCSTAB
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class Array;
@@ -253,7 +254,6 @@ public:
   virtual void showCacheStatistics (ostream& os) const;
 
 protected:
-
   // Set the masking of values 0.0
   void setMaskZero(Bool filterZero);
 
@@ -267,6 +267,7 @@ private:
   Float          scale_p;
   Float          offset_p;
   Short          shortMagic_p;
+  uChar          uCharMagic_p;
   Int            longMagic_p;
   Bool           hasBlanks_p;
   DataType       dataType_p;
@@ -276,7 +277,6 @@ private:
   uInt           whichRep_p;
   uInt           whichHDU_p;
   Bool           _hasBeamsTable;
-
 
 // Reopen the image if needed.
    void reopenIfNeeded() const
@@ -294,7 +294,8 @@ private:
                             Unit& brightnessUnit, RecordInterface& miscInfo, 
                             Int& recsize, Int& recno,
                             FITS::ValueType& dataType,
-                            Float& scale, Float& offset, Short& shortMagic, 
+                            Float& scale, Float& offset, 
+			    uChar& uCharMagic, Short& shortMagic, 
                             Int& longMagic, Bool& hasBlanks, const String& name,
                             uInt whichRep, uInt whichHDU);
 
@@ -302,7 +303,7 @@ private:
    template <typename T>
    void crackHeader (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
                      Unit& brightnessUnit, RecordInterface& miscInfo,
-                     Float& scale, Float& offset, Short& magicShort,
+                     Float& scale, Float& offset, uChar& magicUChar, Short& magicShort,
                      Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile,
                      uInt whichRep);
 
@@ -310,7 +311,8 @@ private:
    template <typename T>
    void crackExtHeader (CoordinateSystem& cSys, IPosition& shape, ImageInfo& imageInfo,
                         Unit& brightnessUnit, RecordInterface& miscInfo,
-                        Float& scale, Float& offset, Short& magicShort,
+                        Float& scale, Float& offset, uChar& uCharMagic,
+			Short& magicShort,
                         Int& magicLong, Bool& hasBlanks, LogIO& os, FitsInput& infile,
                         uInt whichRep);
 		     
@@ -318,10 +320,10 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/FITS2Image.tcc>
+#include <casacore/images/Images/FITS2Image.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

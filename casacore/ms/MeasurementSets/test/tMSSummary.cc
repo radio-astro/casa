@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSSummary.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: tMSSummary.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Logging/LogIO.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSummary.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSSummary.h>
 
 int main(int argc, const char* argv[])
 {
   using namespace std;
-  using namespace casa;
+  using namespace casacore;
 
   if (argc != 2) {
   	cout << "Usage: "<< argv[0] << " MS_filename" << endl;

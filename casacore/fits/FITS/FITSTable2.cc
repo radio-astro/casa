@@ -1,4 +1,4 @@
-//# FITSTable.h: Simplified interface to FITS tables with AIPS++ Look and Feel.
+//# FITSTable.h: Simplified interface to FITS tables with Casacore Look and Feel.
 //# Copyright (C) 1995,1996,1997,1998,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,25 +23,25 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSTable2.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FITSTable2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <fits/FITS/FITSTable.h>
-#include <fits/FITS/FITSFieldCopier.h>
-#include <casa/Containers/RecordField.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
-#include <fits/FITS/fits.h>
-#include <fits/FITS/fitsio.h>
-#include <fits/FITS/hdu.h>
-#include <casa/OS/Path.h>
+#include <casacore/fits/FITS/FITSTable.h>
+#include <casacore/fits/FITS/FITSFieldCopier.h>
+#include <casacore/casa/Containers/RecordField.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/fits/FITS/fitsio.h>
+#include <casacore/fits/FITS/hdu.h>
+#include <casacore/casa/OS/Path.h>
 
-#include <casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/Array.h>
 
-#include <casa/sstream.h>
+#include <casacore/casa/sstream.h>
 
-#include <casa/stdio.h>
+#include <casacore/casa/stdio.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 uInt sizeofStringField(const RecordDesc &description, const Record &sizes,
 		       uInt whichField)
@@ -635,5 +635,5 @@ FitsOutput *FITSTableWriter::makeWriter(const String &fileName)
     return file;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

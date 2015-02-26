@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DerivedMC.h 20942 2010-08-26 11:35:06Z gervandiepen $
+//# $Id: DerivedMC.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_DERIVEDMC_H
 #define DERIVEDMSCAL_DERIVEDMC_H
 
-#include <derivedmscal/DerivedMC/DerivedMSCal.h>
+#include <casacore/casa/aips.h>
+#include <casacore/derivedmscal/DerivedMC/DerivedMSCal.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <module>
 //
@@ -103,6 +104,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </module>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Random.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: Random.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicMath/Random.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/BasicMath/Random.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 RNG::~RNG() {
 }
@@ -1031,5 +1031,5 @@ void Weibull::setState() {
 // compile-command: "gmake XLIBLIST=0 Random"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

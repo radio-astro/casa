@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSArrayParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSArrayParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSARRAYPARSE_H
 #define MS_MSARRAYPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -93,12 +94,12 @@ public:
   // Associate the ms and the shorthand.
   MSArrayParse (const MeasurementSet* ms);
 
-  //  ~MSArrayParse() {if (node_p) delete node_p;node_p=0x0;};
+  //  ~MSArrayParse() {if (node_p) delete node_p;node_p=0x0;}
 
   const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
   const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
   const TableExprNode *selectArrayIds(const Vector<Int>& arrayids);
-  inline const TableExprNode *selectArrayIds() {return selectArrayIds(parsedIDList_p);};
+  inline const TableExprNode *selectArrayIds() {return selectArrayIds(parsedIDList_p);}
   const TableExprNode *selectArrayIdsGT(const Vector<Int>& arrayids);
   const TableExprNode *selectArrayIdsLT(const Vector<Int>& arrayids);
   const TableExprNode *selectArrayIdsGTEQ(const Vector<Int>& arrayids);
@@ -108,11 +109,11 @@ public:
     // Get table expression node object.
   const TableExprNode node();
 
-  Vector<Int> selectedIDs() {return idList;};
-  void reset(){idList.resize(0);parsedIDList_p.resize(0);};
-  void cleanup() {};
+  Vector<Int> selectedIDs() {return idList;}
+  void reset(){idList.resize(0);parsedIDList_p.resize(0);}
+  void cleanup() {}
 
-  void setMaxArray(const Int& n) {maxArrays_p=n;};
+  void setMaxArray(const Int& n) {maxArrays_p=n;}
 
   static MSArrayParse* thisMSAParser;
 
@@ -125,6 +126,6 @@ private:
   Int maxArrays_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

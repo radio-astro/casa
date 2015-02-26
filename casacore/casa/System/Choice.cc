@@ -24,13 +24,13 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Choice.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Choice.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/System/Choice.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/System/Choice.h>
+#include <casacore/casa/Arrays/Vector.h>
 #include <iostream>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Default is no choice function, thus return first choice.
 Choice::ChoiceFunc* Choice::theirChoiceFunc = 0;
@@ -84,5 +84,5 @@ String Choice::ostreamChoice (std::ostream& os,
   return "";
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

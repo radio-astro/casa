@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SDMainHandler.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: SDMainHandler.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_SDMAINHANDLER_H
 #define MS_SDMAINHANDLER_H
 
-#include <casa/aips.h>
-#include <casa/Utilities/DataType.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/DataType.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MeasurementSet;
@@ -138,7 +138,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

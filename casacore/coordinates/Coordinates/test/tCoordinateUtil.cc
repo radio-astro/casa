@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tCoordinateUtil.cc 20211 2008-01-18 03:29:02Z Malte.Marquarding $
+//# $Id: tCoordinateUtil.cc 21511 2014-11-21 12:30:59Z gervandiepen $
 
-#include <casa/Arrays/MaskArrLogi.h>
-#include <coordinates/Coordinates.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/MaskArrLogi.h>
+#include <casacore/coordinates/Coordinates.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void test0();
 void test1();
 void test2();

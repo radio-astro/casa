@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasureHolder.h 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasureHolder.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MEASUREHOLDER_H
 #define MEASURES_MEASUREHOLDER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/Utilities/RecordTransformable.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/casa/Utilities/RecordTransformable.h>
+#include <casacore/casa/Containers/Block.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class Measure;
@@ -211,18 +211,10 @@ public:
   // that are content with just letting the exception proceed up the call stack
   // so they do not have to check a return status. This is, among other things, what
   // exceptions are for after all.
-  // TODO. I'd rather return the RecordInterface, but since RecordInterface is abstract,
-  // that means returning a pointer that is created internally. That really should be
-  // done using a smart pointer, but other than our own PtrHolder (which I'd really rather
-  // not use), auto_ptr is really the only thing that can be used at this point. auto_ptr
-  // has its own issues and is frowned on by other casacore partners, so I don't want to
-  // litter casacore code with that. unique_ptr is a much better solution, but as of now
-  // that is still not available. When it becomes available this issue can be revisited.
   virtual void toRecord(RecordInterface& outRecord) const;
 
 
   // Create a default Measure or a record with only a type from a Measure
-
   // <group>
   Bool toType(String &error, RecordInterface &out) const;
   Bool fromType(String &error, const RecordInterface &in);
@@ -261,6 +253,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

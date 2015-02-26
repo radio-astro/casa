@@ -141,7 +141,7 @@ Vector<Int> CalMap::ctids(const Vector<Int>& msids) const {
   }
   Vector<Int> reqids;
   reqids=vcalmap_(calmask).getCompressedArray();
-  Int nsort=genSort(reqids,(Sort::QuickSort | Sort::NoDuplicates));
+  Int nsort=genSort(reqids,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
   reqids.resize(nsort,True);
   return reqids;
 }
@@ -219,7 +219,7 @@ void FieldCalMap::setNearestFieldMap(const ROMSFieldColumns& msfc, const ROCTCol
   // Discern _available_ fields in the CT
   Vector<Int> ctFlds;
   ctc.fieldId().getColumn(ctFlds);
-  Int nAvFlds=genSort(ctFlds,(Sort::QuickSort | Sort::NoDuplicates));
+  Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
   ctFlds.resize(nAvFlds,True);
 
   // If only one CT field, just use it
@@ -240,7 +240,7 @@ void FieldCalMap::setNearestFieldMap(const ROMSFieldColumns& msfc, const ROCTCol
       }
       // Sort separations
       Vector<uInt> ord;
-      Int nsep=genSort(ord,sep,(Sort::QuickSort | Sort::Ascending));
+      Int nsep=genSort(ord,sep,Sort::Ascending,Sort::QuickSort);
       
       //cout << iMSFld << ":" << endl;
       //cout << "    ord=" << ord << endl;
@@ -1053,7 +1053,7 @@ Vector<Int> CLPatchPanel::getCLuniqueIds(NewCalTable& ct, String vcol) {
     throw(AipsError("Unsupported column in CLPatchPanel::getCLuniqueIds"));
       
   // Reduce to a unique list
-  uInt nuniq=genSort(colv,(Sort::QuickSort | Sort::NoDuplicates));
+  uInt nuniq=genSort(colv,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
   colv.resize(nuniq,True);
   
   return colv;
@@ -1076,7 +1076,7 @@ Vector<Int> CLPatchPanel::getMSuniqueIds(MeasurementSet& ms, String which) {
     throw(AipsError("Unsupported column in CLPatchPanel::getCLuniqueIds"));
       
   // Reduce to a unique list
-  uInt nuniq=genSort(colv,(Sort::QuickSort | Sort::NoDuplicates));
+  uInt nuniq=genSort(colv,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
   colv.resize(nuniq,True);
   
   // In case of spw, translate from ddid

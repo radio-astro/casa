@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PixelCurve1D.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: PixelCurve1D.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_PIXELCURVE1D_H
 #define LATTICES_PIXELCURVE1D_H
 
 
 //# Includes
-#include <scimath/Functionals/Function1D.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Functionals/Function1D.h>
+#include <casacore/casa/Arrays/Vector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -144,6 +145,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

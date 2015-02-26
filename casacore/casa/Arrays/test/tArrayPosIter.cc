@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayPosIter.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tArrayPosIter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/aips.h>
-#include <casa/Arrays/ArrayPosIter.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/ArrayPosIter.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-using namespace casa;
+using namespace casacore;
 
 int main()
 {

@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MRBase.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MRBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MRBASE_H
 #define MEASURES_MRBASE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MeasFrame.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MeasFrame.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -181,6 +181,6 @@ ostream &operator<<(ostream &os, const MRBase &meas);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

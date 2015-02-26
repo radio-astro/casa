@@ -32,7 +32,7 @@
 #include <casa/aips.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <lattices/Lattices/LineCollapser.h>
+#include <lattices/LatticeMath/LineCollapser.h>
 #include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Mathematics/NumericTraits.h>
 #include <casa/System/PGPlotter.h>

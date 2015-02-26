@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Primes.cc 21100 2011-06-28 12:49:00Z gervandiepen $
+//# $Id: Primes.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
 
-#include <casa/BasicMath/Primes.h>
-#include <casa/BasicMath/Math.h>			// For sqrt only
+#include <casacore/casa/BasicMath/Primes.h>
+#include <casacore/casa/BasicMath/Math.h>			// For sqrt only
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //The minimum size for the cacheTable
 const uInt MINSIZE = 31; 
@@ -175,5 +175,5 @@ void Primes::initializeCache()
     cacheTable[29] = 1073741827;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

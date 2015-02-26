@@ -23,24 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasMath.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: MeasMath.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MeasMath.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/System/AipsrcValue.h>
-#include <measures/Measures/Aberration.h>
-#include <measures/Measures/MeasData.h>
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/MRBase.h>
-#include <measures/Measures/Nutation.h>
-#include <measures/Measures/Precession.h>
-#include <measures/Measures/SolarPos.h>
+#include <casacore/measures/Measures/MeasMath.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/System/AipsrcValue.h>
+#include <casacore/measures/Measures/Aberration.h>
+#include <casacore/measures/Measures/MeasData.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/MRBase.h>
+#include <casacore/measures/Measures/Nutation.h>
+#include <casacore/measures/Measures/Precession.h>
+#include <casacore/measures/Measures/SolarPos.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Static data
+// Note: this static is not mutexed, because it does not harm if accidently
+// two threads fill it at the same time.
 uInt MeasMath::b1950_reg_p = 0;
 
 //# Constructors
@@ -606,7 +608,7 @@ void MeasMath::applyPolarMotion(MVPosition &in) {
   getInfo(TDB);
   getInfo(LASTR);
   in(1) = -in(1);
-  EULER1 = MeasTable::polarMotion(info_p[TDB]);
+  Euler EULER1 = MeasTable::polarMotion(info_p[TDB]);
   EULER1(2) = info_p[LASTR];
   in = RotMatrix(EULER1) * in;
 }
@@ -614,7 +616,7 @@ void MeasMath::applyPolarMotion(MVPosition &in) {
 void MeasMath::deapplyPolarMotion(MVPosition &in) {
   getInfo(TDB);
   getInfo(LASTR);
-  EULER1 = MeasTable::polarMotion(info_p[TDB]);
+  Euler EULER1 = MeasTable::polarMotion(info_p[TDB]);
   EULER1(2) = info_p[LASTR];
   in *= RotMatrix(EULER1);
   in(1) = -in(1);
@@ -774,5 +776,5 @@ void MeasMath::getB1950(MVPosition &out) {
   out = infomvd_p[B1950DIR-N_FrameDInfo];
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

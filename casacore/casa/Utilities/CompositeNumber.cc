@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CompositeNumber.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: CompositeNumber.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/CompositeNumber.h>
-#include <casa/Utilities/GenSort.h>
-#include <casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/CompositeNumber.h>
+#include <casacore/casa/Utilities/GenSort.h>
+#include <casacore/casa/BasicMath/Math.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 CompositeNumber::CompositeNumber(const uInt maxval) {
 
@@ -174,5 +174,5 @@ Bool CompositeNumber::isComposite(const uInt testValue) {
 } 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

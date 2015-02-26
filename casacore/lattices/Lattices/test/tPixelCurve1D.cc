@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPixelCurve1D.cc 20322 2008-06-04 06:47:33Z gervandiepen $
+//# $Id: tPixelCurve1D.cc 21509 2014-11-21 12:25:09Z gervandiepen $
 
 
-#include <lattices/Lattices/PixelCurve1D.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Utilities/Assert.h>
-#include <scimath/Functionals/Sinusoid1D.h>
-#include <scimath/Functionals/Polynomial.h>
-#include <casa/iomanip.h>
+#include <casacore/lattices/Lattices/PixelCurve1D.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/scimath/Functionals/Sinusoid1D.h>
+#include <casacore/scimath/Functionals/Polynomial.h>
+#include <casacore/casa/iomanip.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 int main()
 {

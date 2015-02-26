@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Precession.cc 21024 2011-03-01 11:46:18Z gervandiepen $
+//# $Id: Precession.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <measures/Measures/MeasTable.h>
-#include <measures/Measures/Precession.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/System/AipsrcValue.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/measures/Measures/Precession.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/System/AipsrcValue.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constants
 const Double Precession::INTV = 0.1;
@@ -197,5 +197,5 @@ void Precession::calcPrec(Double t) {
   }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

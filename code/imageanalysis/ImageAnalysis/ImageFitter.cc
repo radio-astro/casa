@@ -25,7 +25,7 @@
 
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
-#include <casa/Containers/ContainerIO.h>
+#include <casa/BasicSL/STLIO.h>
 #include <casa/Utilities/Precision.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/Flux.h>
@@ -35,7 +35,7 @@
 #include <components/ComponentModels/SkyComponentFactory.h>
 #include <components/ComponentModels/SpectralModel.h>
 
-#include <lattices/Lattices/LCPixelSet.h>
+#include <lattices/LRegions/LCPixelSet.h>
 
 #include <imageanalysis/Annotations/AnnEllipse.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>

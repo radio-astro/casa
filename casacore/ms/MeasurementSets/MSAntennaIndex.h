@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSAntennaIndex.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSAntennaIndex.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSANTENNAINDEX_H
 #define MS_MSANTENNAINDEX_H
 
 //# includes
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSAntenna.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSAntenna.h>
+#include <casacore/ms/MeasurementSets/MSAntennaColumns.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# forward declarations
 
@@ -86,7 +86,7 @@ public:
   MSAntennaIndex(const MSAntenna &antenna);
 
   // Null destructor
-  virtual ~MSAntennaIndex() {};
+  virtual ~MSAntennaIndex() {}
 
   // Look up ANTENNA_ID's for a given a regular expression or pattern
   Vector<Int> matchAntennaRegexOrPattern(const String& pattern, const Bool regex=False);
@@ -116,7 +116,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
     

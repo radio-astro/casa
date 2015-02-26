@@ -51,10 +51,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    Double m=sampling(1)*Double(iy);
 	    Double msq=m*m;
+#ifdef HAS_OMP
 //#pragma omp parallel default(none) firstprivate(msq,iy) shared(screen, sampling, twoPiW,convSize) num_threads(Nth)
 #pragma omp parallel firstprivate(msq,iy) shared(twoPiW,convSize) num_threads(Nth)
+#endif
     {
+#ifdef HAS_OMP
 #pragma omp for
+#endif
 	    for (Int ix=-inner/2;ix<inner/2;ix++) 
 	      {
 		Double l=sampling(0)*Double(ix);

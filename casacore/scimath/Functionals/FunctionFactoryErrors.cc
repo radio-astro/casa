@@ -24,10 +24,10 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionFactoryErrors.cc 18093 2004-11-30 17:51:10Z ddebonis $
-#include <scimath/Functionals/FunctionFactoryErrors.h>
+//# $Id: FunctionFactoryErrors.cc 21521 2014-12-10 08:06:42Z gervandiepen $
+#include <casacore/scimath/Functionals/FunctionFactoryErrors.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 const String InvalidSerializationError::preamble("Invalid function description in record: ");
 
@@ -36,5 +36,5 @@ UnrecognizedFunctionError::~UnrecognizedFunctionError( ) throw() { }
 InvalidSerializationError::~InvalidSerializationError() throw() { }
 FieldNotFoundError::~FieldNotFoundError() throw() { }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -1,4 +1,4 @@
-//# ValueHolderRep.h: A holder object for the standard AIPS++ data
+//# ValueHolderRep.h: A holder object for the standard CASACORE data
 //# Copyright (C) 2005
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ValueHolderRep.h 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: ValueHolderRep.h 21557 2015-02-09 07:42:55Z gervandiepen $
 
 
 #ifndef CASA_VALUEHOLDERREP_H
 #define CASA_VALUEHOLDERREP_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Utilities/DataType.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Utilities/DataType.h>
 #include <iosfwd>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -101,17 +101,11 @@ public:
   // Destructor.
   ~ValueHolderRep();
 
-  void link()
-    { itsCount++; }
-
-  static void unlink (ValueHolderRep* rep)
-    { if (rep != 0 && --rep->itsCount == 0) delete rep; }
-
   // Get the data type (as defined in DataType.h).
   DataType dataType() const;
     
   // Get the value.
-  // It throws an exception if the data type is incorrect.
+  // If possible, it converts the data as needed.
   // <group>
   Bool                  asBool    () const;
   uChar                 asuChar   () const;
@@ -150,6 +144,15 @@ public:
   // Arrays are written as normal arrays using ArrayIO.h. 
   std::ostream& write (std::ostream& os) const;
 
+  // Compare two ValueHolder objects.
+  // They must have the same data type.
+  bool operator< (const ValueHolderRep& right) const;
+  /*
+  bool operator== (const ValueHolderRep& right) const;
+  bool near (const ValueHolderRep& right, tolerance=1e-5) const;
+  bool nearAbs (const ValueHolderRep& right, double tolerance=1e-5) const;
+  */
+
 private:
   // Forbid copy ctor and assignment.
   //# There is no fundamental reason to forbid them, but it saves
@@ -160,14 +163,10 @@ private:
   // </group>
 
 
-  Int      itsCount;
   uInt     itsNdim;
   DataType itsType;
   union {
     Bool   itsBool;
-    uChar  itsUChar;
-    Short  itsShort;
-    Int    itsInt;
     Int64  itsInt64;
     Float  itsFloat;
     Double itsDouble;
@@ -182,6 +181,6 @@ inline DataType ValueHolderRep::dataType() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

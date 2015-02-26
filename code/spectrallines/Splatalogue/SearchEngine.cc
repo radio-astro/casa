@@ -34,7 +34,7 @@
 #include <casa/OS/File.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <fcntl.h>
 #include <memory>
 

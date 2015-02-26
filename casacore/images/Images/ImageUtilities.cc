@@ -23,44 +23,41 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageUtilities.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: ImageUtilities.cc 21549 2015-01-28 10:01:12Z gervandiepen $
 //
 
-#include <images/Images/ImageUtilities.h>
-#include <images/Images/ImageOpener.h>
+#include <casacore/images/Images/ImageUtilities.h>
+#include <casacore/images/Images/ImageOpener.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <scimath/Mathematics/GaussianBeam.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/PagedImage.h>
-#include <images/Regions/RegionHandler.h>
-#include <images/Regions/ImageRegion.h>
-#include <images/Images/SubImage.h>
-#include <images/Images/TempImage.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <casa/Logging/LogIO.h>
-#include <measures/Measures/Stokes.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Quanta/Unit.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/OS/File.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/LinearSearch.h>
-#include <casa/Utilities/PtrHolder.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/DirectionCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Regions/RegionHandler.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/images/Images/SubImage.h>
+#include <casacore/images/Images/TempImage.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/Unit.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/OS/File.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/LinearSearch.h>
+#include <casacore/casa/Utilities/PtrHolder.h>
+#include <casacore/casa/iostream.h>
 
-// debug
-// #include <components/ComponentModels/Flux.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 Bool ImageUtilities::pixToWorld (
@@ -202,8 +199,6 @@ GaussianBeam ImageUtilities::makeFakeBeam(
 }
 
 
-// Private
-
 void ImageUtilities::writeImage(
 		const TiledShape& mapShape,
 		const CoordinateSystem& coordinateInfo,
@@ -255,5 +250,26 @@ void ImageUtilities::getUnitAndDoppler(
     }
 }
 
+void ImageUtilities::copyAttributes (ImageAttrHandler& out,
+                                     ImageAttrHandler& in)
+{
+  Vector<String> groupNames = in.groupNames();
+  for (uInt i=0; i<groupNames.size(); ++i) {
+    ImageAttrGroup& inGroup  = in.openGroup (groupNames[i]);
+    ImageAttrGroup& outGroup = out.createGroup (groupNames[i]);
+    Vector<String> attrNames = inGroup.attrNames();
+    for (uInt rownr=0; rownr<inGroup.nrows(); ++rownr) {
+      for (uInt j=0; j<attrNames.size(); ++j) {
+        outGroup.putData (attrNames[j], rownr,
+                          inGroup.getData (attrNames[j], rownr),
+                          inGroup.getUnit (attrNames[j]),
+                          inGroup.getMeasInfo (attrNames[j]));
+      }
+    }
+    in.closeGroup (groupNames[i]);
+    out.closeGroup (groupNames[i]);
+  }
+}
+ 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

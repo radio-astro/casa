@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSSpwParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSSpwParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSSPWPARSE_H
 #define MS_MSSPWPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/casa/Arrays/Matrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -130,6 +131,6 @@ private:
   static TableExprNode columnAsTEN_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

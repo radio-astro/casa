@@ -25,7 +25,7 @@
 
 #include "RangeControlsWidget.qo.h"
 #include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/LatticeFractile.h>
+#include <lattices/LatticeMath/LatticeFractile.h>
 #include <QDoubleValidator>
 #include <QMessageBox>
 #include <QKeyEvent>

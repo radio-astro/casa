@@ -28,17 +28,11 @@
 #ifndef SCIMATH_GEOMETRY_H
 #define SCIMATH_GEOMETRY_H
 
-#include <casa/aips.h>
-#include <casa/namespace.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <utility>
 
-#include <casa/Quanta/Quantum.h>
-
-
-namespace std {
-	template <class T1, class T2> class pair;
-}
-
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Geometry related methods.
@@ -84,7 +78,7 @@ public:
 	);
 
 };
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

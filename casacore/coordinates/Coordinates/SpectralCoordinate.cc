@@ -24,42 +24,41 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SpectralCoordinate.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: SpectralCoordinate.cc 21557 2015-02-09 07:42:55Z gervandiepen $
 
 
 
-#include <coordinates/Coordinates/SpectralCoordinate.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <coordinates/Coordinates/LinearXform.h>
-#include <coordinates/Coordinates/LinearCoordinate.h>
+#include <casacore/coordinates/Coordinates/SpectralCoordinate.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/coordinates/Coordinates/LinearXform.h>
+#include <casacore/coordinates/Coordinates/LinearCoordinate.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Containers/Record.h>
-#include <fits/FITS/FITSSpectralUtil.h>
-#include <fits/FITS/FITSKeywordUtil.h>
-#include <scimath/Functionals/ScalarSampledFunctional.h>
-#include <casa/BasicMath/Math.h>
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MeasureHolder.h>
-#include <measures/Measures/VelocityMachine.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Logging/LogOrigin.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/fits/FITS/FITSSpectralUtil.h>
+#include <casacore/fits/FITS/FITSKeywordUtil.h>
+#include <casacore/scimath/Functionals/ScalarSampledFunctional.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MeasureHolder.h>
+#include <casacore/measures/Measures/VelocityMachine.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogOrigin.h>
 
-#include <casa/sstream.h>
-#include <casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 SpectralCoordinate::SpectralCoordinate()
 : Coordinate(),
-  _tabular(),
   type_p(MFrequency::TOPO), 
   conversionType_p(type_p),
   restfreqs_p(0),
@@ -92,7 +91,6 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
 		                                 Double refVal, Double inc,
 		                                 Double refPix, Double restFrequency)
 : Coordinate(),
-  _tabular(),
   type_p(type), 
   conversionType_p(type_p),
   restfreqs_p(0),
@@ -132,7 +130,6 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
                                        Double refPix, 
                                        const Quantum<Double>& restFrequency)
 : Coordinate(),
-  _tabular(),
   type_p(type),
   conversionType_p(type_p),
   restfreqs_p(0),
@@ -179,7 +176,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
 SpectralCoordinate::SpectralCoordinate(
 	MFrequency::Types type,  const Vector<Double> &freqs,
 	Double restFrequency)
-	: Coordinate(), _tabular(), type_p(type),
+	: Coordinate(), type_p(type),
 	  conversionType_p(type_p), restfreqs_p(0),
 	  restfreqIdx_p(0), pConversionMachineTo_p(0),
 	  pConversionMachineFrom_p(0), pVelocityMachine_p(0),
@@ -207,7 +204,7 @@ SpectralCoordinate::SpectralCoordinate(
 	const Quantum<Vector<Double> >& freqs,
 	const Quantum<Double>& restFrequency
 )
-	: Coordinate(), _tabular(), type_p(type),
+	: Coordinate(), type_p(type),
 	  conversionType_p(type_p), restfreqs_p(0),
 	  restfreqIdx_p(0), pConversionMachineTo_p(0),
 	  pConversionMachineFrom_p(0),
@@ -246,7 +243,7 @@ SpectralCoordinate::SpectralCoordinate(
 	const String& velUnit,
 	Double restFrequency
 )
-	: Coordinate(), _tabular(),
+	: Coordinate(),
 	  type_p(freqType), conversionType_p(type_p),
 	  restfreqs_p(0), restfreqIdx_p(0),
 	  pConversionMachineTo_p(0), pConversionMachineFrom_p(0),
@@ -274,6 +271,9 @@ SpectralCoordinate::SpectralCoordinate(
 		nativeType_p = SpectralCoordinate::VRAD;
 	}
 
+        // Now remake Velocity Machine to be consistent with state
+
+	deleteVelocityMachine();
 	makeVelocityMachine (
 		velUnit_p, velType_p, unit_p,
 		type_p, restfreqs_p(restfreqIdx_p)
@@ -288,7 +288,7 @@ SpectralCoordinate::SpectralCoordinate(
 	const String&waveUnit, Double restFrequency,
 	Bool inAir
 )
-	: Coordinate(), _tabular(), type_p(freqType),
+	: Coordinate(), type_p(freqType),
 	  conversionType_p(type_p), restfreqs_p(0),
 	  restfreqIdx_p(0), pConversionMachineTo_p(0),
 	  pConversionMachineFrom_p(0),
@@ -320,9 +320,9 @@ SpectralCoordinate::SpectralCoordinate(
 
 	_setTabulatedFrequencies(frequencies);
 
-	// Now remake Velocity Machine to be consistent with state
+        // Now remake Velocity Machine to be consistent with state
 
-	delete pVelocityMachine_p;
+	deleteVelocityMachine();
 	makeVelocityMachine (
 		velUnit_p, velType_p, unit_p,
         type_p, restfreqs_p(restfreqIdx_p)
@@ -334,7 +334,6 @@ SpectralCoordinate::SpectralCoordinate(
 
 SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& wcs, Bool oneRel)
 : Coordinate(),
-  _tabular(),
   type_p(type), 
   conversionType_p(type_p),
   restfreqs_p(0),
@@ -392,7 +391,6 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
 
 SpectralCoordinate::SpectralCoordinate(const SpectralCoordinate &other)
 : Coordinate(other),
-  _tabular(),
   pConversionMachineTo_p(0),
   pConversionMachineFrom_p(0),
   pVelocityMachine_p(0)
@@ -1226,7 +1224,7 @@ Bool SpectralCoordinate::near(const Coordinate& other,
 
 // Rest freq
 
-   if (!casa::near(restFrequency(), sCoord.restFrequency(), tol)) {
+   if (!casacore::near(restFrequency(), sCoord.restFrequency(), tol)) {
       set_error("The SpectralCoordinates have differing active rest frequencies");
       return False;
    }
@@ -1241,7 +1239,7 @@ Bool SpectralCoordinate::near(const Coordinate& other,
    }
 //
    for (uInt i=0; i<restfreqs_p.nelements(); i++) {
-      if (!casa::near(restfreqs_p(i),rfs(i),tol)) {
+      if (!casacore::near(restfreqs_p(i),rfs(i),tol)) {
          set_error("The SpectralCoordinates have differing lists of rest frequencies");
          return False;
       }
@@ -1290,7 +1288,7 @@ Bool SpectralCoordinate::near(const Coordinate& other,
       const Vector<Double>& thisVal = referenceValue();   
       const Vector<Double>& thatVal = sCoord.referenceValue();
       if (!exclude) {
-         if (!casa::near(thisVal[0],thatVal[0])) {
+         if (!casacore::near(thisVal[0],thatVal[0])) {
             set_error(String("The SpectralCoordinates have differing reference values"));
             return False;
          }
@@ -1461,7 +1459,6 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion1 (const RecordInterface& 
 
 // Create new SpectralCoordinate  (will be in Hz regarldess of unit)
 
-    Bool ok(True);
     SpectralCoordinate* pSpectral = 0;
     Unit qUnit(unit);
     Quantum<Double> qRestFreq(restfreq, qUnit);
@@ -1472,15 +1469,15 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion1 (const RecordInterface& 
 
 // Set units first !
 
-       ok = pSpectral->setWorldAxisUnits(pTabular->worldAxisUnits());
-       ok = pSpectral->setReferencePixel(pTabular->referencePixel());
-       ok = pSpectral->setReferenceValue(pTabular->referenceValue());
+       pSpectral->setWorldAxisUnits(pTabular->worldAxisUnits());
+       pSpectral->setReferencePixel(pTabular->referencePixel());
+       pSpectral->setReferenceValue(pTabular->referenceValue());
     } else {
        Quantum<Double> qcrval(pTabular->referenceValue()(0), qUnit);       
        Quantum<Double> qcdelt(pTabular->increment()(0), qUnit);
        Double crpix(pTabular->referencePixel()(0));
        pSpectral = new SpectralCoordinate (freqSys, qcrval, qcdelt, crpix, qRestFreq);
-       ok = pSpectral->setWorldAxisUnits(pTabular->worldAxisUnits());
+       pSpectral->setWorldAxisUnits(pTabular->worldAxisUnits());
     }
     AlwaysAssert(pSpectral, AipsError);
 
@@ -1572,7 +1569,6 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
     Unit qUnit(unit);
     Quantum<Double> qRestFreq(restfreq, qUnit);
 //
-    Bool ok(True);
     SpectralCoordinate* pSpectral = 0;
     if (subrec.isDefined("tabular")) {
 
@@ -1588,9 +1584,9 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
        pSpectral = new SpectralCoordinate (freqSys, qWorlds, qRestFreq);
        AlwaysAssert(pSpectral, AipsError);
 //
-       ok = pSpectral->setReferencePixel(pTabular->referencePixel());
-       ok = pSpectral->setReferenceValue(pTabular->referenceValue());   // Hz
-       ok = pSpectral->setLinearTransform(pTabular->linearTransform());  
+       pSpectral->setReferencePixel(pTabular->referencePixel());
+       pSpectral->setReferenceValue(pTabular->referenceValue());   // Hz
+       pSpectral->setLinearTransform(pTabular->linearTransform());  
        delete pTabular;
        pTabular = 0;
     } else if (subrec.isDefined("wcs")) {
@@ -1609,7 +1605,7 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
 //
        Matrix<Double> xform(1,1);
        xform = pc;
-       ok = pSpectral->setLinearTransform(xform);
+       pSpectral->setLinearTransform(xform);
     } else {
        return 0;
     }
@@ -1708,8 +1704,7 @@ void SpectralCoordinate::restoreRestFrequencies (SpectralCoordinate*& pSpectral,
 // Multiple rest frequencies were added after initial deployment
 
     if (subrec.isDefined("restfreqs")) {                   // optional
-       Vector<Double> restFreqs;
-       subrec.get("restfreqs", restFreqs);
+      Vector<Double> restFreqs(subrec.toArrayDouble("restfreqs"));
 
 // Old images might have a negative restfreq. Don't propagate that
 
@@ -1813,12 +1808,11 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 		 header.shape("cdelt")(0) > Int(whichAxis), AipsError);
 
     Vector<String> ctype, cunit;
-    Vector<Double> crval, cdelt, crpix;
 
     header.get("ctype", ctype);
-    header.get("crval", crval);
-    header.get("crpix", crpix);
-    header.get("cdelt", cdelt);
+    Vector<Double> crval(header.toArrayDouble("crval"));
+    Vector<Double> crpix(header.toArrayDouble("crpix"));
+    Vector<Double> cdelt(header.toArrayDouble("cdelt"));
 
     if (header.isDefined("cunit")) {
 	AlwaysAssert(header.dataType("cunit") == TpArrayString &&
@@ -1868,8 +1862,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 	 header.dataType("naxis") == TpArrayInt &&
 	 header.shape("naxis").nelements() == 1 &&
 	 header.shape("naxis")(0) > Int(whichAxis)){
-	Vector<Int> naxis;
-	header.get("naxis",naxis);
+ 	Vector<Int> naxis(header.toArrayInt("naxis"));
 	nEl = naxis(whichAxis);
       }
       pixel.resize(nEl);
@@ -2302,7 +2295,7 @@ String SpectralCoordinate::formatRestFrequencies () const
          oss << " [";
          uInt j = 0;
          for (uInt i=0; i<n; i++) {
-            if (!casa::near(rfs(i), rf)) {
+            if (!casacore::near(rfs(i), rf)) {
                if (j > 0) oss << ", ";
                oss << rfs(i);
                j++;
@@ -2460,11 +2453,11 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other) {
 // is allocated at any given time.
 
     if (other._tabular.ptr()) {
-       _tabular.set(new TabularCoordinate(*(other._tabular)));
+       _tabular.reset(new TabularCoordinate(*(other._tabular)));
     }
     else {
     	if (_tabular.ptr()) {
-    		_tabular.set(0);
+    		_tabular.reset(0);
     	}
        int err = wcscopy (1, &(other.wcs_p), &wcs_p);
        if (err != 0) {
@@ -2501,7 +2494,7 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other) {
 void SpectralCoordinate::_setTabulatedFrequencies(const Vector<Double>& freqs) {
 	Vector<Double> channels(freqs.nelements());
 	indgen(channels);
-	_tabular.set(new TabularCoordinate(channels, freqs, "Hz", "Frequency"));
+	_tabular.reset(new TabularCoordinate(channels, freqs, "Hz", "Frequency"));
 }
 
 ostream& SpectralCoordinate::print(ostream& os) const {
@@ -2535,5 +2528,5 @@ ostream &operator<<(ostream &os, const SpectralCoordinate& spcoord) {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

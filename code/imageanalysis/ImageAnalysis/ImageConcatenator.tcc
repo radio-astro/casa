@@ -28,7 +28,7 @@
 
 #include <images/Images/ImageConcat.h>
 
-#include <casa/Containers/ContainerIO.h>
+#include <casa/BasicSL/STLIO.h>
 
 namespace casa {
 

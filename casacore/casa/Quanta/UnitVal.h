@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnitVal.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: UnitVal.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_UNITVAL_H
 #define CASA_UNITVAL_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Quanta/UnitDim.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Quanta/UnitDim.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class String;
@@ -326,7 +326,7 @@ static class UnitVal_static_initializer {
 } unitval_static_initializer;
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

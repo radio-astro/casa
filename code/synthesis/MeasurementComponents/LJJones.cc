@@ -35,7 +35,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/QuantumHolder.h>
 
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/String.h>

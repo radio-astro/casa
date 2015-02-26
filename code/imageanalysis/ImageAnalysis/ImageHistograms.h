@@ -31,7 +31,7 @@
 
 //# Includes
 #include <casa/aips.h>
-#include <lattices/Lattices/LatticeHistograms.h>
+#include <lattices/LatticeMath/LatticeHistograms.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/BasicSL/String.h>
 

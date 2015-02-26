@@ -23,14 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: tStdLogical.cc 21561 2015-02-16 06:57:35Z gervandiepen $
 
-#include <casa/BasicMath/StdLogical.h>
+#include <casacore/casa/BasicMath/StdLogical.h>
 
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 #include <set>
 
-using namespace casa;
+using namespace casacore;
 
 int main()
 {

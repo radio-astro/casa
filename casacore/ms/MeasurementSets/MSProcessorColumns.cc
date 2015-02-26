@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSProcessorColumns.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MSProcessorColumns.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <ms/MeasurementSets/MSProcessorColumns.h>
-#include <ms/MeasurementSets/MSProcessor.h>
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/ColDescSet.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/ms/MeasurementSets/MSProcessorColumns.h>
+#include <casacore/ms/MeasurementSets/MSProcessor.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/ColDescSet.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ROMSProcessorColumns::
 ROMSProcessorColumns(const MSProcessor& msProcessor):
@@ -132,5 +132,5 @@ void MSProcessorColumns::attachOptionalCols(MSProcessor& msProcessor)
 // compile-command: "gmake MSProcessorColumns"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

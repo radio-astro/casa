@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tReadAsciiTable2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tReadAsciiTable2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/ReadAsciiTable.h>
+#include <casacore/tables/Tables/ReadAsciiTable.h>
 #include <iostream>
 
-using namespace casa;
+using namespace casacore;
 
 int main()
 {

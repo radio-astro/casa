@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataType.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: DataType.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Utilities/DataType.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/iostream.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ostream &operator<<(ostream &os, DataType type)
 {
@@ -138,5 +138,5 @@ DataType asArray(DataType type)
     return tmp;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

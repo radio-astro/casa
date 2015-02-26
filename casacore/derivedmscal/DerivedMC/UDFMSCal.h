@@ -23,18 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFMSCal.h 21294 2012-11-30 15:59:25Z gervandiepen $
+//# $Id: UDFMSCal.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_UDFMSCAL_H
 #define DERIVEDMSCAL_UDFMSCAL_H
 
 //# Includes
-#include <derivedmscal/DerivedMC/MSCalEngine.h>
-#include <ms/MeasurementSets/StokesConverter.h>
-#include <tables/Tables/UDFBase.h>
-#include <tables/Tables/ExprNode.h>
+#include <casacore/casa/aips.h>
+#include <casacore/derivedmscal/DerivedMC/MSCalEngine.h>
+#include <casacore/ms/MeasurementSets/StokesConverter.h>
+#include <casacore/tables/TaQL/UDFBase.h>
+#include <casacore/tables/TaQL/ExprNode.h>
 
-namespace casa {
+namespace casacore {
 
 // <summary>
 // TaQL UDFs to calculate derived MS values.

@@ -48,7 +48,7 @@ using namespace casa;
 using namespace casa::asyncio;
 using namespace boost;
 
-#include <tables/Tables/ForwardCol.h>
+#include <tables/DataMan/ForwardCol.h>
 
 #include <casa/namespace.h>
 

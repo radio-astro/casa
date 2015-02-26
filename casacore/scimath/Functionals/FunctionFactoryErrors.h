@@ -24,14 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FunctionFactoryErrors.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FunctionFactoryErrors.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONFACTORYERRORS_H
 #define SCIMATH_FUNCTIONFACTORYERRORS_H
 
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class FunctionFactoryError : public AipsError {
 public:
@@ -86,6 +87,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

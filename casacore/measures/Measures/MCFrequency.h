@@ -24,21 +24,21 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCFrequency.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MCFrequency.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MEASURES_MCFREQUENCY_H
 #define MEASURES_MCFREQUENCY_H
 
 //# Includes
-#include <casa/aips.h>
-#include <measures/Measures/MeasBase.h>
-#include <measures/Measures/MeasRef.h>
-#include <measures/Measures/MCBase.h>
-#include <measures/Measures/MConvertBase.h>
-#include <measures/Measures/MFrequency.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/measures/Measures/MeasBase.h>
+#include <casacore/measures/Measures/MeasRef.h>
+#include <casacore/measures/Measures/MCBase.h>
+#include <casacore/measures/Measures/MConvertBase.h>
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class MCFrequency;
@@ -74,9 +74,9 @@ class String;
 // <example>
 // Get the Doppler shift for an oberved HI frequency of 1380 MHz
 // <srcblock>
-//	#include <measures/Measures.h>
-//	#include <measures/Measures/MDoppler.h>
-//	#include <measures/Measures/MFrequency.h>
+//	#include <casacore/measures/Measures.h>
+//	#include <casacore/measures/Measures/MDoppler.h>
+//	#include <casacore/measures/Measures/MFrequency.h>
 //	cout << "Redshift for 1380 MHz: " <<
 //		MDoppler::Convert( MFrequency( Quantity(1380., "MHz"),
 //					       MFrequency::TOPO).toDoppler(QC::HI),
@@ -195,6 +195,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

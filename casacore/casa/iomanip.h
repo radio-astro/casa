@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: iomanip.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: iomanip.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_IOMANIP_H
 #define CASA_IOMANIP_H
@@ -33,10 +33,10 @@
 //# them (e.g. <cstring>)
 
 //# Make sure any special macros are set
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <iomanip>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 using std::setw;
 using std::setfill;
@@ -45,6 +45,6 @@ using std::setbase;
 using std::resetiosflags;
 using std::setiosflags;
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

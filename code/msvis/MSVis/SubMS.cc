@@ -33,7 +33,7 @@
 #include <asdmstman/AsdmStMan.h>
 #include <ms/MeasurementSets/MSSelection.h>
 //#include <ms/MeasurementSets/MSTimeGram.h>
-//#include <tables/Tables/ExprNode.h>
+//#include <tables/TaQL/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -72,11 +72,11 @@
 #include <msvis/MSVis/VisChunkAverager.h>
 #include <msvis/MSVis/VisIterator.h>
 //#include <msvis/MSVis/VisibilityIterator.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
 #include <tables/Tables/TableDesc.h>
@@ -85,10 +85,10 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableRow.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledColumnStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
+#include <tables/DataMan/TiledDataStMan.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 #include <ms/MeasurementSets/MSTileLayout.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 #include <scimath/Mathematics/FFTServer.h>

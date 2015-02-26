@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RigidVector.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: RigidVector.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Mathematics/RigidVector.h>
-#include <scimath/Mathematics/SquareMatrix.h>
+#ifndef SCIMATH_RIGIDVECTOR_TCC
+#define SCIMATH_RIGIDVECTOR_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Mathematics/RigidVector.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T, Int n>
 RigidVector<T,n>& 
@@ -104,5 +107,7 @@ RigidVector<T,n> sqrt(const RigidVector<T,n>& v) {
 // }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

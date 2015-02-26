@@ -31,7 +31,7 @@
 #include <casa/OS/DOos.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
-#include <tables/Tables/TableParse.h>
+#include <tables/TaQL/TableParse.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>

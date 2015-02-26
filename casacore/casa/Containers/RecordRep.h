@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RecordRep.h 20969 2010-09-27 12:45:04Z gervandiepen $
+//# $Id: RecordRep.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_RECORDREP_H
 #define CASA_RECORDREP_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/RecordDesc.h>
-#include <casa/Containers/RecordInterface.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/RecordDesc.h>
+#include <casacore/casa/Containers/RecordInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class AipsIO;
@@ -327,6 +327,6 @@ inline void RecordRep::renameField (const String& newName, Int whichField)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

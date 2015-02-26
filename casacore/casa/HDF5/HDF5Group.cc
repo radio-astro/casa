@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Group.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: HDF5Group.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/HDF5/HDF5Group.h>
-#include <casa/HDF5/HDF5Error.h>
+#include <casacore/casa/HDF5/HDF5Group.h>
+#include <casacore/casa/HDF5/HDF5Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 #ifdef HAVE_HDF5
 
@@ -39,15 +39,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     String type = "create";
     if (mustNotExist) {
-      setHid (H5Gcreate(parentHid, name.c_str(), H5P_DEFAULT,
-			H5P_DEFAULT, H5P_DEFAULT));
+      setHid (H5Gcreate2(parentHid, name.c_str(), H5P_DEFAULT,
+			 H5P_DEFAULT, H5P_DEFAULT));
     } else {
       type = "open";
-      setHid (H5Gopen(parentHid, name.c_str(), H5P_DEFAULT));
+      setHid (H5Gopen2(parentHid, name.c_str(), H5P_DEFAULT));
       if (!isValid()  &&  !mustExist) {
 	type = "open or create";
-	setHid (H5Gcreate(parentHid, name.c_str(), H5P_DEFAULT,
-			  H5P_DEFAULT, H5P_DEFAULT));
+	setHid (H5Gcreate2(parentHid, name.c_str(), H5P_DEFAULT,
+			   H5P_DEFAULT, H5P_DEFAULT));
       }
     }
     if (! isValid()) {
@@ -70,6 +70,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+  // The callback function for function linkNames.
+  herr_t doAddLinkName (hid_t, const char* name,
+                        const H5L_info_t*, void* arg)
+  {
+    static_cast<std::vector<String>*>(arg)->push_back (String(name));
+    return 0;
+  }
+
+  std::vector<String> HDF5Group::linkNames (const HDF5Object& parentHid)
+  {
+    // Now read all subrecords.
+    //# Use INDEX_NAME (using INDEX_CRT_ORDER results in a return of -1).
+    std::vector<String> names;
+    names.reserve (16);
+    hsize_t idx=0;
+    H5Literate (parentHid, H5_INDEX_NAME, H5_ITER_NATIVE, &idx,
+		&doAddLinkName, &names);
+    return names;
+  }
+
+  bool HDF5Group::exists (const HDF5Object& parentHid, const String& name)
+  {
+    return H5Lexists (parentHid, name.c_str(), H5P_LINK_ACCESS_DEFAULT) == 1;
+  }
+
   void HDF5Group::remove (const HDF5Object& parentHid, const String& name)
   {
     // The delete fails if the group does not exist, but that is no problem.
@@ -90,6 +115,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   void HDF5Group::close()
   {}
+
+  std::vector<String> HDF5Group::linkNames (const HDF5Object&)
+  {
+    return std::vector<String>();
+  }
+
+  bool HDF5Group::exists (const HDF5Object&, const String&)
+  {
+    return false;
+  }
 
   void HDF5Group::remove (const HDF5Object&, const String&)
   {

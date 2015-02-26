@@ -23,24 +23,24 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMSPolBuffer.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tMSPolBuffer.cc 21507 2014-11-21 12:17:24Z gervandiepen $
 
-#include <casa/aips.h>
-#include <casa/namespace.h>
-// #include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/namespace.h>
+// #include <casacore/casa/Exceptions/Error.h>
 // #include <aips/Exceptions/Excp.h>
-// #include <casa/Utilities/Assert.h>
-// #include <casa/BasicSL/String.h>
-// #include <casa/iostream.h>
+// #include <casacore/casa/Utilities/Assert.h>
+// #include <casacore/casa/BasicSL/String.h>
+// #include <casacore/casa/iostream.h>
 
 // #include <trial/MeasurementSets/MSPolBuffer.h>
-// #include <casa/Arrays/ArrayLogical.h>
-// #include <casa/Arrays/IPosition.h>
-// #include <casa/Arrays/Matrix.h>
-// #include <casa/Arrays/Vector.h>
-// // #include <casa/BasicSL/Constants.h>
-// // #include <casa/BasicMath/Math.h>
-// #include <measures/Measures/Stokes.h>
+// #include <casacore/casa/Arrays/ArrayLogical.h>
+// #include <casacore/casa/Arrays/IPosition.h>
+// #include <casacore/casa/Arrays/Matrix.h>
+// #include <casacore/casa/Arrays/Vector.h>
+// // #include <casacore/casa/BasicSL/Constants.h>
+// // #include <casacore/casa/BasicMath/Math.h>
+// #include <casacore/measures/Measures/Stokes.h>
 
 int main() {
 //   const String filename = "tMSPolBuffer_tmp.table";

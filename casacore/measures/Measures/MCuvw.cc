@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCuvw.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: MCuvw.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <casa/Exceptions.h>
-#include <measures/Measures/MCuvw.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Exceptions.h>
+#include <casacore/measures/Measures/MCuvw.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Statics
 uInt MCuvw::ToRef_p[N_Routes][3] = {
@@ -682,5 +682,5 @@ void MCuvw::fromPole(MVPosition &in) {
 		       -MVDIR1.getLong(), 3u)) * in;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

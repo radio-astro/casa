@@ -23,23 +23,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColData.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: ScaColData.tcc 21562 2015-02-16 07:03:44Z gervandiepen $
 
-#include <tables/Tables/ScaColData.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ColumnSet.h>
-#include <tables/Tables/ColumnDesc.h>
-#include <tables/Tables/RefRows.h>
-#include <casa/Arrays/Vector.h>
-#include <tables/Tables/DataManager.h>
-#include <casa/Utilities/ValType.h>
-#include <tables/Tables/TableError.h>
-#include <casa/Utilities/Sort.h>
-#include <casa/IO/AipsIO.h>
+#ifndef TABLES_SCACOLDATA_TCC
+#define TABLES_SCACOLDATA_TCC
+
+#include <casacore/tables/Tables/ScaColData.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ColumnSet.h>
+#include <casacore/tables/Tables/TableTrace.h>
+#include <casacore/tables/Tables/RefRows.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/tables/DataMan/DataManager.h>
+#include <casacore/casa/Utilities/ValType.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/IO/AipsIO.h>
 
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ScalarColumnData<T>::ScalarColumnData (const ScalarColumnDesc<T>* cd,
@@ -108,6 +111,9 @@ Bool ScalarColumnData<T>::isDefined (uInt rownr) const
 template<class T>
 void ScalarColumnData<T>::get (uInt rownr, void* val) const
 {
+    if (rtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'r', rownr);
+    }
     checkReadLock (True);
     dataColPtr_p->get (rownr, (T*)val);
     autoReleaseLock();
@@ -117,6 +123,9 @@ void ScalarColumnData<T>::get (uInt rownr, void* val) const
 template<class T>
 void ScalarColumnData<T>::getScalarColumn (void* val) const
 {
+    if (rtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'r');
+    }
     Vector<T>* vecPtr = (Vector<T>*)val;
     if (vecPtr->nelements() != nrow()) {
 	throw (TableArrayConformanceError("ScalarColumnData::getScalarColumn"));
@@ -130,6 +139,9 @@ template<class T>
 void ScalarColumnData<T>::getScalarColumnCells (const RefRows& rownrs,
 						void* val) const
 {
+    if (rtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'r', rownrs);
+    }
     Vector<T>& vec = *(Vector<T>*)val;
     uInt nr = rownrs.nrow();
     if (vec.nelements() != nr) {
@@ -144,6 +156,9 @@ void ScalarColumnData<T>::getScalarColumnCells (const RefRows& rownrs,
 template<class T>
 void ScalarColumnData<T>::put (uInt rownr, const void* val)
 {
+    if (wtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'w', rownr);
+    }
     checkValueLength ((const T*)val);
     checkWriteLock (True);
     dataColPtr_p->put (rownr, (const T*)val);
@@ -153,6 +168,9 @@ void ScalarColumnData<T>::put (uInt rownr, const void* val)
 template<class T>
 void ScalarColumnData<T>::putScalarColumn (const void* val)
 {
+    if (wtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'w');
+    }
     const Vector<T>* vecPtr = (const Vector<T>*)val;
     if (vecPtr->nelements() != nrow()) {
 	throw (TableArrayConformanceError("ScalarColumnData::putColumn"));
@@ -167,6 +185,9 @@ template<class T>
 void ScalarColumnData<T>::putScalarColumnCells (const RefRows& rownrs,
 						const void* val)
 {
+    if (wtraceColumn_p) {
+      TableTrace::trace (traceId(), columnDesc().name(), 'w', rownrs);
+    }
     const Vector<T>& vec = *(const Vector<T>*)val;
     if (vec.nelements() != rownrs.nrow()) {
 	throw (TableArrayConformanceError("ScalarColumnData::putColumn"));
@@ -304,4 +325,6 @@ void ScalarColumnData<T>::getFileDerived (AipsIO& ios,
     createDataManagerColumn();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
+
+#endif

@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSHistoryUtil.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tFITSHistoryUtil.cc 21513 2014-11-21 12:33:13Z gervandiepen $
 
 //# Includes
-#include <fits/FITS/FITSHistoryUtil.h>
+#include <casacore/fits/FITS/FITSHistoryUtil.h>
 
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <fits/FITS/fits.h>
-#include <casa/Logging.h>
-#include <tables/LogTables/LoggerHolder.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/casa/Logging.h>
+#include <casacore/tables/LogTables/LoggerHolder.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     try {	

@@ -23,17 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5LattIter.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5LattIter.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_HDF5LATTITER_H
 #define LATTICES_HDF5LATTITER_H
 
 //# Includes
-#include <lattices/Lattices/LatticeIterInterface.h>
-#include <lattices/Lattices/HDF5Lattice.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/LatticeIterInterface.h>
+#include <casacore/lattices/Lattices/HDF5Lattice.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // A read/write Lattice iterator for PagedArrays.
@@ -131,9 +132,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/HDF5LattIter.tcc>
+#include <casacore/lattices/Lattices/HDF5LattIter.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

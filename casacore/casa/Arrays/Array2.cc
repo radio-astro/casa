@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array2.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Array2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/ArrayError.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // This probably isn't of interest to normal users. It returns the "volume" of
 // an array (i.e. "nelements").
@@ -91,5 +91,5 @@ size_t ArrayIndexOffset (uInt Ndim, const ssize_t *Shape,
     return offset;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

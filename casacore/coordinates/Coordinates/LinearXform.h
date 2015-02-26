@@ -24,15 +24,15 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LinearXform.h 18823 2005-07-07 20:36:33Z ddebonis $
+//# $Id: LinearXform.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef COORDINATES_LINEARXFORM_H
 #define COORDINATES_LINEARXFORM_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 #include <wcslib/lin.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T> class Vector;
 template<class T> class Matrix;
@@ -48,7 +48,7 @@ class String;
 // </reviewed>
 
 // <prerequisite>
-//   <li> General knowledge of AIPS++ Arrays
+//   <li> General knowledge of Casacore Arrays
 //   <li> Knowledge of FITS terminology in coordinate transformations
 // </prerequisite>
 //
@@ -194,6 +194,6 @@ private:
     void set_linprm();
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

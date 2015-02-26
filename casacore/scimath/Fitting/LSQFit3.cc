@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQFit3.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: LSQFit3.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <scimath/Fitting/LSQFit.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Containers/Record.h>
-#include <casa/Containers/RecordFieldId.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/IO/AipsIO.h>
+#include <casacore/scimath/Fitting/LSQFit.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/RecordFieldId.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/IO/AipsIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Constants
   const String LSQFit::recid     = String("recid");
@@ -255,5 +255,5 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     in.getend();
   }
  
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

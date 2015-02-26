@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageStatistics.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageStatistics.h 21560 2015-02-11 14:00:31Z gervandiepen $
 
 #ifndef IMAGES_IMAGESTATISTICS_H
 #define IMAGES_IMAGESTATISTICS_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Utilities/DataType.h>
-#include <casa/Logging/LogIO.h>
-#include <lattices/Lattices/LatticeStatistics.h>
-#include <scimath/Mathematics/NumericTraits.h>
-#include <casa/iosstrfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Utilities/DataType.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/lattices/LatticeMath/LatticeStatistics.h>
+#include <casacore/scimath/Mathematics/NumericTraits.h>
+#include <casacore/casa/iosstrfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 template <class T> class ImageInterface;
@@ -231,10 +231,10 @@ public:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageStatistics.tcc>
+#include <casacore/images/Images/ImageStatistics.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif
 

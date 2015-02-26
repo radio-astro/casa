@@ -32,7 +32,7 @@
 
 #include <casa/aips.h>
 #include <synthesis/MeasurementEquations/LinearEquation.h>
-#include <lattices/Lattices/LatticeConvolver.h>
+#include <lattices/LatticeMath/LatticeConvolver.h>
 #include <lattices/Lattices/Lattice.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Array.h>

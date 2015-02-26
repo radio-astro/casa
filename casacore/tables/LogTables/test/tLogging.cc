@@ -23,29 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tLogging.cc 21005 2010-12-08 08:56:59Z gervandiepen $
+//# $Id: tLogging.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
 
-#include <casa/Logging/LogFilter.h>
-#include <tables/LogTables/LogFilterTaql.h>
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogOrigin.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/Logging/NullLogSink.h>
-#include <casa/Logging/MemoryLogSink.h>
-#include <casa/Logging/StreamLogSink.h>
-#include <tables/LogTables/TableLogSink.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/casa/Logging/LogFilter.h>
+#include <casacore/tables/LogTables/LogFilterTaql.h>
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogOrigin.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/Logging/NullLogSink.h>
+#include <casacore/casa/Logging/MemoryLogSink.h>
+#include <casacore/casa/Logging/StreamLogSink.h>
+#include <casacore/tables/LogTables/TableLogSink.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-#include <tables/Tables.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/OS/Directory.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/tables/Tables.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/OS/Directory.h>
+#include <casacore/casa/Utilities/Assert.h>
 
-#include <casa/sstream.h>
-#include <casa/iostream.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 void testLogFilter()
 {
     // LogFilter(LogMessage::Priority lowest=LogMessage::DEBUGGING);
@@ -330,9 +330,9 @@ void testLogSink()
     
     Table logTable(tableNames[0]);
     Table logTable2(tableNames[1]);
-    ROScalarColumn<String> messageColumn(logTable,
+    ScalarColumn<String> messageColumn(logTable,
 			 TableLogSink::columnName(TableLogSink::MESSAGE));
-    ROScalarColumn<String> messageColumn2(logTable2,
+    ScalarColumn<String> messageColumn2(logTable2,
 			  TableLogSink::columnName(TableLogSink::MESSAGE));
     AlwaysAssertExit(messageColumn(0) == "test");
     // LogSink(const LogSink &other);

@@ -23,29 +23,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFFTServer.cc 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: tFFTServer.cc 21510 2014-11-21 12:27:56Z gervandiepen $
 //# Includes
 
 
 
 
-#include <casa/aips.h>
-#include <scimath/Mathematics/FFTServer.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/Cube.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/scimath/Mathematics/FFTServer.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 
 
 #define AlwaysTrue(x, y)      \
@@ -2084,8 +2084,8 @@ class TestR2C   // real->complex and complex->real
         {
             Array<T> input          = P<T,S>::input();
             Array<S> expectedResult = P<T,S>::expectedResult();
-            Test<T, S, TServer, SServer> t1(server, False, epsilon, input, expectedResult);
-            Test<T, S, TServer, SServer> t2(server, True , epsilon, 
+            Test<T, S, TServer, SServer> (server, False, epsilon, input, expectedResult);
+            Test<T, S, TServer, SServer> (server, True , epsilon, 
                           shift<T>(input,          input.shape(), expectedResult.shape()), 
                           shift<S>(expectedResult, input.shape(), expectedResult.shape()));
 
@@ -2121,7 +2121,7 @@ class TestC2C
             const Array<T> &input,
             const Array<T> &expected) 
         {
-            Test<T, T, TServer, SServer> t1(server, shifted, epsilon1, input, expected);
+            Test<T, T, TServer, SServer> (server, shifted, epsilon1, input, expected);
 
 	    // For complex arrays, excersize in-place transform
 	    {
@@ -2180,7 +2180,7 @@ class TestC2C
                 server.fft0(p2, p1, False);
             }
             // Now input should be the forward transform of p2
-            Test<T, T, TServer, SServer> t2(server, shifted, epsilon2, p2, input);
+            Test<T, T, TServer, SServer> (server, shifted, epsilon2, p2, input);
         }
             
   public:
@@ -2216,7 +2216,7 @@ void run_tests()
     TestR2C<T, S, R2C1Dodd3, T, S> t7(server0);
     TestR2C<T, S, R2C2Deveneven1, T, S> t8(server0);
     TestR2C<T, S, R2C2Deveneven2, T, S> t9(server0);
-#if USE_FFTW
+#ifdef HAVE_FFTW3
     FFTServer<T, S> server(IPosition(1,8));
     server = server0;              // test assignment
 #else

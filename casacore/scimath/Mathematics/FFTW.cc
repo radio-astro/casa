@@ -22,17 +22,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTW.cc 21117 2011-07-27 09:08:53Z gervandiepen $
+//# $Id: FFTW.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
-#include <scimath/Mathematics/FFTW.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/VectorIter.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/OS/HostInfo.h>
+#include <casacore/scimath/Mathematics/FFTW.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/VectorIter.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/OS/HostInfo.h>
 
 #ifdef HAVE_FFTW3
 # include <fftw3.h>
@@ -41,7 +41,7 @@
 #include <iostream>
 
 
-namespace casa {
+namespace casacore {
 
   volatile Bool FFTW::is_initialized_fftw = False;
   Mutex FFTW::theirMutex;
@@ -116,9 +116,9 @@ namespace casa {
     }
     //    std::cerr << "will use " << nthreads << " threads " << std::endl;
 
-    //flags = FFTW_ESTIMATE;  
+    flags = FFTW_ESTIMATE;  
     
-    flags = FFTW_MEASURE;  // std::cerr << "Will FFTW_MEASURE..." << std::endl;
+    //flags = FFTW_MEASURE;  // std::cerr << "Will FFTW_MEASURE..." << std::endl;
     //flags = FFTW_PATIENT;   std::cerr << "Will FFTW_PATIENT..." << std::endl;
     //flags = FFTW_EXHAUSTIVE;   std::cerr << "Will FFTW_EXHAUSTIVE..." << std::endl;
   }
@@ -272,6 +272,14 @@ namespace casa {
 #else
 
   FFTW::FFTW()
+    : itsPlanR2Cf  (0),
+      itsPlanR2C   (0),
+      itsPlanC2Rf  (0),
+      itsPlanC2R   (0),
+      itsPlanC2CFf (0),
+      itsPlanC2CF  (0),
+      itsPlanC2CBf (0),
+      itsPlanC2CB  (0)
   {}
   FFTW::~FFTW()
   {}
@@ -306,4 +314,4 @@ namespace casa {
 
 #endif
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRow.h 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableRow.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_TABLEROW_H
 #define TABLES_TABLEROW_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <casa/Containers/Block.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class TableColumn;
@@ -193,7 +193,7 @@ public:
 
     // Get the number of the last row read.
     // -1 is returned when no Table is attached or no row has been read yet.
-    Int rowNumber() const;
+    Int64 rowNumber() const;
 
     // Get a vector consisting of all columns names.
     // This can, for instance, be used to construct a TableRow object
@@ -262,11 +262,10 @@ protected:
     //# A cache for itsRecord.nfields()
     uInt         itsNrused;
     //# The last rownr read (-1 is nothing read yet).
-    //# This is via a pointer to keep the get function const.
-    Int*         itsLastRow;
+    mutable Int64 itsLastRow;
     //# A switch to indicate that the last row has to be reread.
     //# This is the case when it has been put after being read.
-    Bool*        itsReread;
+    mutable Bool  itsReread;
 
 private:
     // Initialize the object.
@@ -504,9 +503,9 @@ inline const Table& ROTableRow::table() const
 {
     return itsTable;
 }
-inline Int ROTableRow::rowNumber() const
+inline Int64 ROTableRow::rowNumber() const
 {
-    return *itsLastRow;
+    return itsLastRow;
 }
 inline const TableRecord& ROTableRow::record() const
 {
@@ -527,6 +526,6 @@ inline void TableRow::put (uInt rownr)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTPack.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FFTPack.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <scimath/Mathematics/FFTPack.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/scimath/Mathematics/FFTPack.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 extern "C" {
   void cffti_(int*, float*);
@@ -258,5 +258,5 @@ void FFTPack::cosqb(Int n, Double* x, Double* wsave) {
 // compile-command: "gmake OPTLIB=1 FFTPack"
 // End: 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

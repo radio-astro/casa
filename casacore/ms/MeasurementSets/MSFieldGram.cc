@@ -23,32 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFieldGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSFieldGram.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 // MSUvDistGram; grammar for field command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on lattices.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSFieldGram.h>
-#include <ms/MeasurementSets/MSFieldParse.h>
-#include <ms/MeasurementSets/MSFieldIndex.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/ms/MeasurementSets/MSFieldColumns.h>
+#include <casacore/ms/MeasurementSets/MSFieldGram.h>
+#include <casacore/ms/MeasurementSets/MSFieldParse.h>
+#include <casacore/ms/MeasurementSets/MSFieldIndex.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
 
-#include <tables/Tables/TableParse.h>       // routines used by bison actions
-#include <tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/TableParse.h>       // routines used by bison actions
+#include <casacore/tables/Tables/TableError.h>
 
 //# stdlib.h is needed for bison 1.28 and needs to be included here
 //# (before the flex/bison files).
-#include <casa/stdlib.h>
-#include "MSFieldGram.ycc"                  // flex output
-#include "MSFieldGram.lcc"                  // bison output
+#include <casacore/casa/stdlib.h>
+//# Define register as empty string to avoid warnings in C++11 compilers
+//# because keyword register is not supported anymore.
+#define register
+#include "MSFieldGram.ycc"                  // bison output
+#include "MSFieldGram.lcc"                  // flex output
 
 // Define the yywrap function for flex.
 int MSFieldGramwrap()
@@ -56,7 +57,7 @@ int MSFieldGramwrap()
   return 1;
 }
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
   
   //# Declare a file global pointer to a char* for the input string.
   static const char*           strpMSFieldGram = 0;
@@ -209,4 +210,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //     return out;
   // }
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

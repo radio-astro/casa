@@ -16,12 +16,12 @@
 //# License along with this library; if not, write to the Free Software
 //# Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 
-//# $Id: generic.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: generic.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_GENERIC_H
 #define CASA_GENERIC_H
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 /*
  *	See the CPP manual, argument prescan section for explanation
@@ -62,6 +62,6 @@ typedef int (*GPT)(int,char*);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

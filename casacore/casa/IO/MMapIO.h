@@ -24,16 +24,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//#  $Id: MMapIO.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//#  $Id: MMapIO.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_MMAPIO_H
 #define CASA_MMAPIO_H
 
 //# Includes
-#include <casa/IO/MMapfdIO.h>
-#include <casa/OS/RegularFile.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/MMapfdIO.h>
+#include <casacore/casa/OS/RegularFile.h>
 
-namespace casa
+namespace casacore
 {
 
 // <summary>

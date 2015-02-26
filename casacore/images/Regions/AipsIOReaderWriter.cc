@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIOReaderWriter.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: AipsIOReaderWriter.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <images/Regions/ImageRegion.h>
-#include <tables/Tables/TableRecord.h>
-#include <images/Regions/AipsIOReaderWriter.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/images/Regions/AipsIOReaderWriter.h>
 
-namespace casa {
+namespace casacore {
 // AIPSIOREADERWRITER DEFINITIONS //
 
 //  Static Definitions //
@@ -71,7 +71,7 @@ bool AipsIOReaderWriter::read(Record& region){
 // currently only supports a single region contained within
 // the file.  It would be nice to be able to have multiple
 // regions in a single file.
-bool AipsIOReaderWriter::read(const ImageRegion *region){
+bool AipsIOReaderWriter::read(ImageRegion*& region){
 
     try {
 	// open the file
@@ -147,4 +147,4 @@ void AipsIOReaderWriter::setOptions(const Record*)
 }
 	
  
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

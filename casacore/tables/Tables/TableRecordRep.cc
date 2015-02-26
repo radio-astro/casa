@@ -23,23 +23,23 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableRecordRep.cc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableRecordRep.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableRecordRep.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableKeyword.h>
-#include <tables/Tables/TableAttr.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableDesc.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/IO/AipsIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/tables/Tables/TableRecordRep.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableKeyword.h>
+#include <casacore/tables/Tables/TableAttr.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/casa/Arrays/Array.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/IO/AipsIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableRecordRep::TableRecordRep ()
 : RecordRep()
@@ -529,5 +529,5 @@ void TableRecordRep::getTableKeySet (AipsIO& os, uInt version,
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

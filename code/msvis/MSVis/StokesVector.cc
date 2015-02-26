@@ -27,9 +27,9 @@
 
 //# Includes
 #include <msvis/MSVis/StokesVector.h>
-// #include <tables/Tables/RetypedArrayEngine.h>
-// #include <tables/Tables/RetypedArraySetGet.h>
-// #include <tables/Tables/DataManError.h>
+// #include <tables/DataMan/RetypedArrayEngine.h>
+// #include <tables/DataMan/RetypedArraySetGet.h>
+// #include <tables/DataMan/DataManError.h>
 #include <casa/Exceptions/Error.h>
 
 

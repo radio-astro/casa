@@ -16,18 +16,10 @@ MSUvDistGram
 MSStateGram
 )
 
-if (APPLE)
-    foreach (src ${parser_inputs})
-	    BISON_TARGET (${src} MeasurementSets/${src}.yy ${CMAKE_CURRENT_BINARY_DIR}/${src} COMPILE_FLAGS "-y -p ${src} --output-file=${src}.ycc")
-        execute_process (COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${src}.ycc WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-	    FLEX_TARGET (${src} MeasurementSets/${src}.ll ${CMAKE_CURRENT_BINARY_DIR}/${src}.lcc COMPILE_FLAGS "-P${src}")
-    endforeach (src)
-else (APPLE)
-    foreach (src ${parser_inputs})
-        BISON_TARGET (${src} MeasurementSets/${src}.yy ${CMAKE_CURRENT_BINARY_DIR}/${src}.ycc COMPILE_FLAGS "-y -p ${src} --output-file=${src}.ycc")
-        FLEX_TARGET (${src} MeasurementSets/${src}.ll ${CMAKE_CURRENT_BINARY_DIR}/${src}.lcc COMPILE_FLAGS "-P${src}")
-    endforeach (src)
-endif (APPLE)
+foreach (src ${parser_inputs})
+    BISON_TARGET (${src} MeasurementSets/${src}.yy ${CMAKE_CURRENT_BINARY_DIR}/${src}.ycc COMPILE_FLAGS "-y -p ${src} --output-file=${src}.ycc")
+    FLEX_TARGET (${src} MeasurementSets/${src}.ll ${CMAKE_CURRENT_BINARY_DIR}/${src}.lcc COMPILE_FLAGS "-P${src}")
+endforeach (src)
 
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
@@ -156,21 +148,16 @@ ${BISON_MSStateGram_OUTPUTS}
 ${FLEX_MSStateGram_OUTPUTS}
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_ms PROPERTIES SOVERSION ${casa_soversion} )
-endif()
-
 target_link_libraries (
 casa_ms casa_measures
-${Boost_LIBRARIES}
 )
 
 add_subdirectory (apps)
 
 install (TARGETS casa_ms
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
@@ -229,6 +216,8 @@ MeasurementSets/MSObsColumns.h
 MeasurementSets/MSObsEnums.h
 MeasurementSets/MSObsIndex.h
 MeasurementSets/MSObservation.h
+MeasurementSets/MSObservationGram.h
+MeasurementSets/MSObservationParse.h
 MeasurementSets/MSParse.h
 MeasurementSets/MSPointing.h
 MeasurementSets/MSPointingColumns.h
@@ -245,8 +234,6 @@ MeasurementSets/MSProcessorColumns.h
 MeasurementSets/MSProcessorEnums.h
 MeasurementSets/MSRange.h
 MeasurementSets/MSReader.h
-MeasurementSets/MSObservationGram.h
-MeasurementSets/MSObservationParse.h
 MeasurementSets/MSScanGram.h
 MeasurementSets/MSScanParse.h
 MeasurementSets/MSSelUtil.h
@@ -254,8 +241,8 @@ MeasurementSets/MSSelUtil.tcc
 MeasurementSets/MSSelUtil2.h
 MeasurementSets/MSSelUtil2.tcc
 MeasurementSets/MSSelection.h
-MeasurementSets/MSSelectableTable.h
 MeasurementSets/MSSelectableMainColumn.h
+MeasurementSets/MSSelectableTable.h
 MeasurementSets/MSSelectionError.h
 MeasurementSets/MSSelectionErrorHandler.h
 MeasurementSets/MSSelectionKeywords.h

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dMUString.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: dMUString.cc 21505 2014-11-21 11:43:02Z gervandiepen $
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVAngle.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/iostream.h>
-#include <casa/sstream.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/iostream.h>
+#include <casacore/casa/sstream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 int main()
 {
     try {

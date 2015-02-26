@@ -24,18 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Coordinate.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: Coordinate.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef COORDINATES_COORDINATE_H
 #define COORDINATES_COORDINATE_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
 #include <wcslib/wcs.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 template<class T> class Quantum;
@@ -66,7 +66,7 @@ class Projection;
 //        (Mark Calabretta's implementation of these conventions) will be
 //        revised for the new designs.  At that time, the Coordinate classes
 //        may also be revised.
-//   <li> Generic AIPS++ classes; especially those in the 
+//   <li> Generic Casacore classes; especially those in the 
 //        <linkto module=Arrays>Arrays</linkto> module.
 //   <li> Perhaps some of the information in the
 //        <linkto module=Measures>Measures</linkto> module.
@@ -574,6 +574,6 @@ inline const String& Coordinate::errorMessage() const
     return error_p;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

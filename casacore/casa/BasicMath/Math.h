@@ -1,4 +1,4 @@
-//# Math.h: AIPS++ interface to <math.h> and other scalar math functions
+//# Math.h: Casacore interface to <math.h> and other scalar math functions
 //# Copyright (C) 1993,1994,1995,1996,1997,1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,34 +23,34 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Math.h 21022 2011-03-01 10:07:47Z gervandiepen $
+//# $Id: Math.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MATH_H
 #define CASA_MATH_H
 
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 //# The following is to get abs(int) and (is)finite.
-#include <casa/math.h>
-#include <casa/stdlib.h>
+#include <casacore/casa/math.h>
+#include <casacore/casa/stdlib.h>
 
 // On some systems the following is needed to get the finite function
 #if defined (AIPS_SOLARIS) || defined(AIPS_IRIX)
 #include <ieeefp.h>
 #endif
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 // <summary>
-// AIPS++ interface to math.h and other scalar math functions
+// Casacore interface to math.h and other scalar math functions
 // </summary>
 // <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
 // </reviewed>
 
 // <synopsis> 
 
-// AIPS++ interface to <src><math.h></src>. You should include this file rather
-// than <src><math.h></src> directly.  It will be used to cover up any
+// Casacore interface to <src><math.h></src>. You should include this file
+// rather than <src><math.h></src> directly.  It will be used to cover up any
 // deficiencies in the system <src><math.h></src>.
 
 // This file does not include things like element-by-element
@@ -297,7 +297,7 @@ inline Bool isNaN (const Float& val)
 }
 inline Bool isNaN(Double val)
 {
-  return ( isnan(val) );
+  return ( std::isnan((double)val) );
 }
 // </group>
 
@@ -338,6 +338,6 @@ void setInf(Double& val);
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aipsrc.h 21067 2011-05-06 13:58:12Z gervandiepen $
+//# $Id: Aipsrc.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_AIPSRC_H
 #define CASA_AIPSRC_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Containers/Block.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 template <class T> class AipsrcValue;
@@ -69,12 +69,12 @@ typedef AipsrcVector<String> AipsrcVString;
 //
 // <synopsis>
 // The static Aipsrc class can get information from the casa resource files.
-// It has the same functionality as getrc (c program used for aips++ 
+// It has the same functionality as getrc (c program used for Casacore 
 // installation scripts).<br>
 // In addition it acts as a central clearing house between system and
-// software by providing functionality to obtain aips++ system parameters (like
-// AIPSPATH elements), and the possibility of storing system wide information
-// provided by a class for reference by other classes. <br>
+// software by providing functionality to obtain Casacore system parameters
+// (like AIPSPATH elements), and the possibility of storing system wide
+// information provided by a class for reference by other classes. <br>
 // The format of a line in a resource file is:
 // <srcblock>
 //	# Line starting with an # in column 1 is a comment (as is an empty line)
@@ -147,7 +147,7 @@ typedef AipsrcVector<String> AipsrcVString;
 //   <li> const String &Aipsrc::aipsArch()
 //   <li> const String &Aipsrc::aipsSite()
 //   <li> const String &Aipsrc::aipsHost()
-//   <li> const String &Aipsrc::aipsHome() -- <src>~/aips++</src>
+//   <li> const String &Aipsrc::aipsHome()
 //  </ul>
 // Other, numeric, system information can be found in
 // <linkto class=AipsrcValue>AipsrcValue</linkto>.<br>
@@ -314,7 +314,7 @@ public:
   // <src>[.]aipsrc</src> files.
   static void setAipsPath(const String &path = String());
 
-  // Returns the appropriate AIPS++ or system variable values
+  // Returns the appropriate Casacore or system variable values
   // <group>
   static const String &aipsRoot();
   static const String &aipsArch();
@@ -433,7 +433,7 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

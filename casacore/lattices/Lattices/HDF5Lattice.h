@@ -23,20 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: HDF5Lattice.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: HDF5Lattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_HDF5LATTICE_H
 #define LATTICES_HDF5LATTICE_H
 
 //# Includes
-#include <lattices/Lattices/Lattice.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/HDF5/HDF5File.h>
-#include <casa/HDF5/HDF5Group.h>
-#include <casa/HDF5/HDF5DataSet.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/Lattice.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/HDF5/HDF5File.h>
+#include <casacore/casa/HDF5/HDF5Group.h>
+#include <casacore/casa/HDF5/HDF5DataSet.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>
   // A Lattice that is read from or written to an HDF5 dataset.
@@ -55,9 +56,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // <synopsis> 
   // Astronomical data arrays (like images) have to be persistent.
-  // A Lattice is a templated abstract base class to hold any AIPS++ array.
+  // A Lattice is a templated abstract base class to hold any Casacore array.
   // The PagedArray class is a Lattice specialization which stores the data
-  // in an AIPS++ table.
+  // in a Casacore table.
   // <br>
   // HDF5Lattice ia another Lattice specialization making it possible to store
   // an array as a dataset in a group in an HDF5 file.
@@ -188,6 +189,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     const CountedPtr<HDF5File>& file() const
       { return itsFile; }
 
+    // Return the current HDF5Group object.
+    const CountedPtr<HDF5Group>& group() const
+      { return itsGroup; }
+
     // Returns the name of this HDF5Lattice.
     const String& arrayName() const
       { return itsDataSet->getName(); }
@@ -260,10 +265,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/HDF5Lattice.tcc>
+#include <casacore/lattices/Lattices/HDF5Lattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 
 #endif

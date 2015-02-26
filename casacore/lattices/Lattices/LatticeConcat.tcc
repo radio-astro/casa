@@ -23,24 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LatticeConcat.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LatticeConcat.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef LATTICES_LATTICECONCAT_TCC
+#define LATTICES_LATTICECONCAT_TCC
 
 
-#include <lattices/Lattices/LatticeConcat.h>
+#include <casacore/lattices/Lattices/LatticeConcat.h>
 
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
-#include <lattices/Lattices/LatticeStepper.h>
-#include <lattices/Lattices/TiledShape.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Arrays/Slicer.h>
-#include <casa/BasicMath/Math.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
+#include <casacore/lattices/LRegions/LCBox.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
+#include <casacore/lattices/Lattices/LatticeStepper.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Arrays/Slicer.h>
+#include <casacore/casa/BasicMath/Math.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 LatticeConcat<T>::LatticeConcat()
@@ -390,17 +393,16 @@ void LatticeConcat<T>::doPutSlice (const Array<T>& buffer, const IPosition& wher
       throw(AipsError("Some of the underlying lattices are not writable"));
    }
 //
-   Bool ok = False;
    if (dimUpOne_p) {
 
 // Increase dimensionality by one
 
-     ok = putSlice1 (buffer, where, stride, nLattices);
+     putSlice1 (buffer, where, stride, nLattices);
    } else {
 
 // No dimensionality increase
 
-     ok = putSlice2 (buffer, where, stride, nLattices);
+     putSlice2 (buffer, where, stride, nLattices);
    }
 }        
 
@@ -878,5 +880,7 @@ Bool LatticeConcat<T>::getMaskSlice2 (Array<Bool>& buffer,
    return False;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

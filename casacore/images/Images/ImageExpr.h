@@ -23,19 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageExpr.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: ImageExpr.h 21549 2015-01-28 10:01:12Z gervandiepen $
 
 #ifndef IMAGES_IMAGEEXPR_H
 #define IMAGES_IMAGEEXPR_H
 
 
 //# Includes
-#include <images/Images/ImageInterface.h>
-#include <lattices/Lattices/LatticeExpr.h>
-#include <casa/Containers/Record.h>
-#include <casa/Quanta/Unit.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/lattices/LEL/LatticeExpr.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Quanta/Unit.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class IPosition;
@@ -113,10 +114,18 @@ public:
   ImageExpr();
 
   // Construct an ImageExpr from a LatticeExpr.
-  // The name given could be the original expression string.
-  // The prefix "Expression: " is added to the name if not empty.
-  // The function name() returns this name (including possible prefix).
-  ImageExpr(const LatticeExpr<T>& latticeExpr, const String& name);
+  // The expr given should be the original expression string.
+  // The fileName argument is meant for ImageOpener.
+  // The coordinates are taken from the expression, usually the first image.
+  // An exception is thrown if the expression has no coordinates.
+  ImageExpr(const LatticeExpr<T>& latticeExpr, const String& expr,
+            const String& fileName = String());
+
+  // Same as previous constructor, but the coordinates are taken from the
+  // given LELImageCoord object.
+  ImageExpr(const LatticeExpr<T>& latticeExpr,
+            const String& expr, const String& fileName,
+            const LELImageCoord& imCoord);
 
   // Copy constructor (reference semantics)
   ImageExpr(const ImageExpr<T>& other);
@@ -129,6 +138,14 @@ public:
   
   // Make a copy of the object (reference semantics).
   virtual ImageInterface<T>* cloneII() const;
+
+  // Save the image in an AipsIO file with the given name.
+  // It can be opened by ImageOpener::openExpr.
+  virtual void save (const String& fileName) const;
+
+  // Set the file name.
+  void setFileName (const String& name)
+    { fileName_p = name; }
 
   // Get the image type (returns name of derived class).
   virtual String imageType() const;
@@ -159,8 +176,8 @@ public:
 			   const IPosition& where,
 			   const IPosition& stride);
 
-  // Return the name of the current ImageInterface object. 
-  // Returns the expression string given in the constructor.
+  // If the object is persistent, the file name is given.
+  // Otherwise it returns the expression string given in the constructor.
   virtual String name (Bool stripPath=False) const;
   
   // Check class invariants.
@@ -173,12 +190,15 @@ public:
 				 Bool useRef) const;
 
   // Returns False, as the ImageExpr is not writable.
-   virtual Bool isWritable() const;
+  virtual Bool isWritable() const;
+
+  // Is the lattice persistent and can it be loaded by other processes as well?
+  virtual Bool isPersistent() const;
 
   // Help the user pick a cursor for most efficient access if they only want
   // pixel values and don't care about the order or dimension of the
   // cursor. 
-   virtual IPosition doNiceCursorShape (uInt maxPixels) const;
+  virtual IPosition doNiceCursorShape (uInt maxPixels) const;
 
   // Handle the (un)locking and syncing.
   // <group>
@@ -198,25 +218,16 @@ public:
 private:  
   LatticeExpr<T> latticeExpr_p;
   Unit unit_p;
-
-// These are used to return null object by reference
-
-  Lattice<Bool>* pBool_p;  
-  Record rec_p;
-  String name_p;
-
-  //# Make members of parent class known.
-protected:
-  using ImageInterface<T>::setCoordsMember;
-  // using ImageInterface<T>::setImageInfoMember;
+  String exprString_p;
+  mutable String fileName_p;
 };
 
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <images/Images/ImageExpr.tcc>
+#include <casacore/images/Images/ImageExpr.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

@@ -34,7 +34,7 @@
 #include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
 #include <lattices/Lattices/ArrayLattice.h>
-#include <lattices/Lattices/LatticeFFT.h>
+#include <lattices/LatticeMath/LatticeFFT.h>
 #include <scimath/Mathematics/FFTServer.h>
 #include <ms/MeasurementSets/MSColumns.h> 	 
 #include <msvis/MSVis/VisSet.h>
@@ -722,18 +722,18 @@ void PlotMSCacheBase::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange,
 	switch (iteraxis) {
 	case PMS::SCAN: {
 		iterValues=scan_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 
 		break;
 	}
 	case PMS::SPW: {
 		iterValues=spw_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 		break;
 	}
 	case PMS::FIELD: {
 		iterValues=field_(goodChunk_).getCompressedArray();
-		nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
+		nIter=genSort(iterValues,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
 		break;
 	}
 	case PMS::BASELINE: {

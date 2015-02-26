@@ -24,12 +24,12 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PGPlotterInterface.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: PGPlotterInterface.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/System/PGPlotterInterface.h>
-#include <casa/Logging/LogIO.h>
+#include <casacore/casa/System/PGPlotterInterface.h>
+#include <casacore/casa/Logging/LogIO.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 PGPlotterInterface::~PGPlotterInterface()
 {
@@ -50,5 +50,5 @@ Bool PGPlotterInterface::isAttached() const
     return True;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

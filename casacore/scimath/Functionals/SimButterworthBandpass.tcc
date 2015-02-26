@@ -23,16 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SimButterworthBandpass.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: SimButterworthBandpass.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_SIMBUTTERWORTHBANDPASS_TCC
+#define SCIMATH_SIMBUTTERWORTHBANDPASS_TCC
 
 //# Includes
-#include <scimath/Functionals/SimButterworthBandpass.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Containers/RecordInterface.h>
+#include <casacore/scimath/Functionals/SimButterworthBandpass.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Containers/RecordInterface.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 template <class T>
@@ -117,7 +120,7 @@ Bool SimButterworthBandpass<T>::hasMode() const { return True; }
 
 template <class T>
 void SimButterworthBandpass<T>::setMode(const RecordInterface& in) {
-    uInt order;
+    uInt order=0;
 
     // min order
     if (in.isDefined(String("minOrder"))) {
@@ -155,5 +158,7 @@ void SimButterworthBandpass<T>::getMode(RecordInterface& out) const {
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

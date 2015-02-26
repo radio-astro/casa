@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionParam.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: FunctionParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <scimath/Functionals/FunctionParam.h>
-#include <casa/iostream.h>
+#ifndef SCIMATH_FUNCTIONPARAM_TCC
+#define SCIMATH_FUNCTIONPARAM_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/scimath/Functionals/FunctionParam.h>
+#include <casacore/casa/iostream.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 FunctionParam<T>::FunctionParam()
@@ -167,5 +170,7 @@ ostream &FunctionParam<T>::print(ostream &os) const {
   return os;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

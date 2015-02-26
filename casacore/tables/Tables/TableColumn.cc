@@ -23,15 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.cc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableColumn.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <tables/Tables/TableColumn.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableError.h>
-#include <casa/Arrays/Array.h>
+#include <casacore/tables/Tables/TableColumn.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/Arrays/Array.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableColumn::TableColumn ()
 : baseTabPtr_p     (0),
@@ -360,34 +360,26 @@ void TableColumn::throwNotWritable() const
                     baseTabPtr_p->tableName() + " is not writable");
 }
 
-Bool TableColumn::hasContent() const
+Bool TableColumn::hasContent (uInt rownr) const
 {
-  Bool retval = !isNull() && isDefined(0);
-  if(retval){
-	// The first cell seems to have something, but check for
-	// degenerate Arrays.
-      try{
-         uInt nDim = ndim(0);
-
-         if(nDim > 0){
-            IPosition shp(shape(0));
-
-            for(uInt i = 0; i < nDim; ++i){
-               if(shp[i] == 0){
-                  retval = False;
-                  break;
-               }
-            }
-         }
+  Bool retval = !isNull() && isDefined(rownr);
+  if (retval  &&  columnDesc().isArray()) {
+    // The first cell seems to have something, but check for
+    // degenerate Arrays.
+    IPosition shp(shape(rownr));
+    if (shp.empty()) {
+      retval = False;
+    } else {
+      for (uInt i=0; i<shp.size(); ++i){
+        if (shp[i] == 0) {
+          retval = False;
+          break;
+        }
       }
-      catch(AipsError x) {
-         // ndim(0) will throw an exception if the column is scalar.
-         // This seems like a kludgy way of distinguishing between the 2.
-         retval = True;
-      }
+    }
   }
   return retval;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

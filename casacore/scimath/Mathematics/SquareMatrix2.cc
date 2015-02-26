@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SquareMatrix2.cc 19081 2005-11-18 01:10:25Z gmoellen $
+//# $Id: SquareMatrix2.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Includes
-#include <scimath/Mathematics/SquareMatrix.h>
+#include <casacore/scimath/Mathematics/SquareMatrix.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 SquareMatrix<Complex,4>& 
 directProduct(SquareMatrix<Complex,4>& result,
@@ -135,5 +135,5 @@ SquareMatrix<Complex,2> conj(const SquareMatrix<Complex,2>& m) {
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

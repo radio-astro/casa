@@ -1,5 +1,7 @@
 set (datafiles
-
+imregion.fits
+imregion_dironly.fits
+imregion_nospec.fits
 )
 
 foreach (file ${datafiles})

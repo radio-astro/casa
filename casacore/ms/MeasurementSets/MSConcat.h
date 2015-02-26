@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSConcat.h 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: MSConcat.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef MS_MSCONCAT_H
 #define MS_MSCONCAT_H
 
-#include <casa/aips.h>
-#include <ms/MeasurementSets/MSColumns.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSColumns.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class TableDesc;
 class ROMSMainColumns;
@@ -196,7 +196,7 @@ Bool areEQ(const ROArrayColumn<T>& col, uInt row_i, uInt row_j)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

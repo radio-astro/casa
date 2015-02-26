@@ -24,17 +24,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TempLattice.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TempLattice.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef LATTICES_TEMPLATTICE_H
 #define LATTICES_TEMPLATTICE_H
 
 
 //# Includes
-#include <lattices/Lattices/TempLatticeImpl.h>
-#include <casa/Utilities/CountedPtr.h>
+#include <casacore/casa/aips.h>
+#include <casacore/lattices/Lattices/TempLatticeImpl.h>
+#include <casacore/casa/Utilities/CountedPtr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 
 // <summary>
@@ -274,9 +275,9 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <lattices/Lattices/TempLattice.tcc>
+#include <casacore/lattices/Lattices/TempLattice.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

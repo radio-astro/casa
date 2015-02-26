@@ -22,7 +22,7 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 //#  MA 02111-1307  USA
 //# $Id: $
-#include <tables/Tables/ExprNode.h>
+#include <tables/TaQL/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/Quanta/MVBaseline.h>
@@ -42,11 +42,11 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/GenSort.h>
 #include <casa/System/AppInfo.h>
-#include <tables/Tables/IncrementalStMan.h>
+#include <tables/DataMan/IncrementalStMan.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/StandardStMan.h>
+#include <tables/DataMan/StandardStMan.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
@@ -54,10 +54,10 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableRow.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledDataStMan.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/DataMan/TiledColumnStMan.h>
+#include <tables/DataMan/TiledShapeStMan.h>
+#include <tables/DataMan/TiledDataStMan.h>
+#include <tables/DataMan/TiledStManAccessor.h>
 #include <measures/Measures/MeasTable.h>
 #include <casa/sstream.h>
 #include <casa/iomanip.h>

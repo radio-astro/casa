@@ -24,19 +24,19 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogIO.h 21005 2010-12-08 08:56:59Z gervandiepen $
+//# $Id: LogIO.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_LOGIO_H
 #define CASA_LOGIO_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Logging/LogMessage.h>
-#include <casa/Logging/LogSink.h>
-#include <casa/BasicSL/Complex.h>
-#include <casa/iosstrfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Logging/LogMessage.h>
+#include <casacore/casa/Logging/LogSink.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/iosstrfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class LogSink;
@@ -70,7 +70,7 @@ class LogOrigin;
 // When you use the "<<" operator on a LogIO, you are building up a log message
 // inside the LogIO object. The message is posted when:
 // <ol>
-//    <li> <src>LogIO::post()</src> is called
+//    <li> <src>LogIO::POST()</src> is called
 //    <li> You send the <src>LogIO::POST</src> or <src>LogIO::EXCEPTION</src>
 //         commands to the LogIO with the shift (<src> << </src>) command.
 //    <li> The LogIO object is destructed.
@@ -113,6 +113,7 @@ class LogOrigin;
 // <srcblock>
 //   os << "Every good boy deserves" << 5 << " pieces of fudge!";
 // </srcblock>
+//
 // This accumulates the message but does not send it. If you want to force it
 // to be sent you can do so with either of the following methods:
 // <srcblock>
@@ -139,11 +140,11 @@ class LogOrigin;
 // </srcblock>
 //
 // A class which has an operator<< to std::ostream but not LogIO can be handled
-// like so:
+// as follows:
 // <srcblock>
-// os << LogIO::SEVERE << " at ";
-// os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
-// os << LogIO::POST;
+//   os << LogIO::SEVERE << " at ";
+//   os.output() << MEpoch::Convert(time_p, MEpoch::Ref(MEpoch::UTC))();
+//   os << LogIO::POST;
 // </srcblock>
 // </example>
 //
@@ -308,6 +309,6 @@ inline const LogSinkInterface &LogIO::localSink() const
 }
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

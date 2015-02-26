@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ReadAsciiTable.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ReadAsciiTable.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_READASCIITABLE_H
 #define TABLES_READASCIITABLE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/IPosition.h>
-#include <tables/Tables/Table.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/tables/Tables/Table.h>
 
 //# Forward Declarations
-#include <casa/iosfwd.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class Regex;
 class IPosition;
@@ -440,6 +440,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

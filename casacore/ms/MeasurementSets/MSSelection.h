@@ -24,26 +24,26 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSSelection.h 20750 2009-10-01 06:32:18Z Malte.Marquarding $
+//# $Id: MSSelection.h 21551 2015-01-29 09:15:47Z gervandiepen $
 
 #ifndef MS_MSSELECTION_H
 #define MS_MSSELECTION_H
 
-#include <casa/aips.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/Vector.h>
-#include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MRadialVelocity.h>
-#include <tables/Tables/ExprNode.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/Cube.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionErrorHandler.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
-#include <casa/Containers/OrderedMap.h>
-#include <casa/Containers/MapIO.h>
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/measures/Measures/MEpoch.h>
+#include <casacore/measures/Measures/MRadialVelocity.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/ms/MeasurementSets/MeasurementSet.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/Cube.h>
+#include <casacore/ms/MeasurementSets/MSSelectionError.h>
+#include <casacore/ms/MeasurementSets/MSSelectionErrorHandler.h>
+#include <casacore/ms/MeasurementSets/MSSelectableTable.h>
+#include <casacore/casa/Containers/OrderedMap.h>
+#include <casacore/casa/Containers/MapIO.h>
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary> 
 // MSSelection: Class to represent a selection on an MS
@@ -330,7 +330,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // The key in the ordered map returned by getCorrMap() is the
     // pol. in the Data Description ID (DDID) sub-table.  The value is
-    // a Vector of two Vectors.  
+    // a Vector of two Vectors.
     //
     // The returned Map<T> has a key that maps to two vectors:
     // Key  ---->    Vector1               Vector2
@@ -470,9 +470,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Parsing will be done later with a call to toTableExprNode().
     //
     // This version, here for backward compatibility reasons,
-    // internally constructs a <li> <linkto
-    // class="MSSelectableTable">MSSelectableTable</linkto> object and
-    // calls the reset() method below that works with
+    // internally constructs a
+    // <linkto class="MSSelectableTable">MSSelectableTable</linkto>
+    // object and calls the reset() method below that works with
     // MSSelectableTable.
     void reset(const MeasurementSet& ms,
 	       const MSSMode& mode           = PARSE_NOW,
@@ -580,7 +580,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool isMS_p,toTENCalled_p;
   };
   
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

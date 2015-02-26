@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnitMap.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: UnitMap.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_UNITMAP_H
 #define CASA_UNITMAP_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/BasicSL/Constants.h>
-#include <casa/stdmap.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Quanta/UnitDim.h>
-#include <casa/Quanta/UnitVal.h>
-#include <casa/Quanta/UnitName.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/casa/stdmap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Quanta/UnitDim.h>
+#include <casacore/casa/Quanta/UnitVal.h>
+#include <casacore/casa/Quanta/UnitName.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -66,7 +66,7 @@ const uInt N_FITS = 19;
 // </prerequisite>
 //
 // <etymology>
-// Based on Units and the Aips++ container classes called 'Map'
+// Based on Units and the Casacore container classes called 'Map'
 // </etymology>
 //
 // <synopsis> 
@@ -353,6 +353,6 @@ public:
 //# Inline Implementations
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

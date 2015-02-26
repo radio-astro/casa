@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.cc 21081 2011-05-09 11:36:20Z gervandiepen $
+//# $Id: fits.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 //# Partial implementation of little endian code by Kris Huber
 //# (kris@helios.ece.usu.edu)
 
-# include <fits/FITS/fits.h>
+# include <casacore/fits/FITS/fits.h>
 # include <string.h>
 # include <stdlib.h>
-# include <casa/sstream.h>
-# include <casa/BasicSL/Constants.h>
+# include <casacore/casa/sstream.h>
+# include <casacore/casa/BasicSL/Constants.h>
 
 
 # include <stdio.h>
 #include <assert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //	Discussion of Reserved FitsKeyword Table
 //
@@ -2588,5 +2588,5 @@ void FitsFPUtil::setNaN(float &val)
     }
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

@@ -642,7 +642,8 @@ message( STATUS "WCSLIB_INCLUDE_DIR = " ${WCSLIB_INCLUDE_DIR} )
 #
 # common include path
 #
-include_directories( ${CASACORE_INCLUDE_DIR}
+include_directories( ${CASACORE_INCLUDE_DIR}/..
+                     ${CASACORE_INCLUDE_DIR}
                      ${Boost_INCLUDE_DIR}
                      ${X11_INCLUDE_DIRS}
                      ${PGPLOT_INCLUDE_DIRS}

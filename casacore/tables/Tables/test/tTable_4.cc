@@ -23,32 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTable_4.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: tTable_4.cc 21506 2014-11-21 12:10:15Z gervandiepen $
 
-#include <tables/Tables/TableDesc.h>
-#include <tables/Tables/SetupNewTab.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/ScaColDesc.h>
-#include <tables/Tables/ArrColDesc.h>
-#include <tables/Tables/ScalarColumn.h>
-#include <tables/Tables/ArrayColumn.h>
-#include <tables/Tables/StManAipsIO.h>
-#include <tables/Tables/IncrementalStMan.h>
-#include <tables/Tables/StandardStMan.h>
-#include <tables/Tables/TiledShapeStMan.h>
-#include <tables/Tables/TiledColumnStMan.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Containers/Record.h>
-#include <casa/Utilities/Regex.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/iostream.h>
+#include <casacore/tables/Tables/TableDesc.h>
+#include <casacore/tables/Tables/SetupNewTab.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/ScaColDesc.h>
+#include <casacore/tables/Tables/ArrColDesc.h>
+#include <casacore/tables/Tables/ScalarColumn.h>
+#include <casacore/tables/Tables/ArrayColumn.h>
+#include <casacore/tables/DataMan/StManAipsIO.h>
+#include <casacore/tables/DataMan/IncrementalStMan.h>
+#include <casacore/tables/DataMan/StandardStMan.h>
+#include <casacore/tables/DataMan/TiledShapeStMan.h>
+#include <casacore/tables/DataMan/TiledColumnStMan.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Utilities/Regex.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/iostream.h>
 
-#include <casa/namespace.h>
+#include <casacore/casa/namespace.h>
 // <summary>
 // Interactive test program for adding/removing columns.
 // </summary>
@@ -172,12 +172,12 @@ void checkData (const Table& tab, const TableDesc& td,
   for (uInt i=0; i<td.ncolumn(); i++) {
     const ColumnDesc& cdesc = td.columnDesc(i);
     if (cdesc.isScalar()) {
-      ROScalarColumn<uInt> col (tab, cdesc.name());
+      ScalarColumn<uInt> col (tab, cdesc.name());
       for (uInt i=0; i<nrow; i++) {
 	AlwaysAssert (col(startrow+i) == startrow+i, AipsError);
       }
     } else {
-      ROArrayColumn<uInt> col (tab, cdesc.name());
+      ArrayColumn<uInt> col (tab, cdesc.name());
       Vector<uInt> vec(10);
       for (uInt i=0; i<nrow; i++) {
 	vec = startrow+i;

@@ -32,8 +32,6 @@
 
 #include <casa/aips.h>
 
-#include <tr1/memory>
-
 namespace casa {
 
 // <summary>

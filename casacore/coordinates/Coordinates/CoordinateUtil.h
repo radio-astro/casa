@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CoordinateUtil.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: CoordinateUtil.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef COORDINATES_COORDINATEUTIL_H
 #define COORDINATES_COORDINATEUTIL_H
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h>
-#include <measures/Measures/Stokes.h>
-#include <coordinates/Coordinates/Coordinate.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/measures/Measures/Stokes.h>
+#include <casacore/coordinates/Coordinates/Coordinate.h>
 
-#include <measures/Measures/MDirection.h>        //# For enums
-#include <measures/Measures/MFrequency.h>
-#include <measures/Measures/MeasConvert.h>
+#include <casacore/measures/Measures/MDirection.h>        //# For enums
+#include <casacore/measures/Measures/MFrequency.h>
+#include <casacore/measures/Measures/MeasConvert.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class CoordinateSystem;
 class DirectionCoordinate;
@@ -61,7 +61,7 @@ class Unit;
 // </prerequisite>
 //
 // <etymology> 
-// CoordinateUtils follows the AIPS++ naming convention for static functions
+// CoordinateUtils follows the Casacore naming convention for static functions
 // that are associated with a class.
 // </etymology>
 //
@@ -453,6 +453,28 @@ static Bool dropRemovedAxes (
    static Bool setVelocityState (String& errorMsg, CoordinateSystem& cSys, 
                                  const String& unit, const String& spcquant);
 
+  //#/// Kept setRestFrequency for CASA-4.2
+// Does the CoordinateSystem hold just the sky?
+// Returns True if CS pixel axis 0 is the longitude and 1 latitude  
+// else returns False
+   static Bool isSky (LogIO& os, const CoordinateSystem& cSys);
+
+  //#/// Kept setRestFrequency for CASA-4.2
+// Set rest frequency of SpectralCoordinate in CoordinateSystem.
+// Unit must be consistent with Hz or m.
+// Returns False if invalid inputs (and CS not changed) and an error message.
+   static Bool setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
+                                 const String& unit,
+                                 const Double& value);
+
+  //#/// Kept setSpectralConversion for old casarest
+// Set Spectral conversion layer of SpectralCoordinate in CoordinateSystem
+// so that pixel<->world go to the specified frequency system (a valid
+// MFrequency::Types string).  Returns False if frequency system invalid
+// or if no DirectionCoordinate or if cant get Date/Epoch
+   static Bool setSpectralConversion (String& errorMsg, CoordinateSystem& cSys,
+                                      const String frequencySystem);
+
 // Set default format unit and doppler velocity state of SpectralCoordinate in CoordinateSystem.
 // Unit can be consistent with Hz or m/s
 // Returns False if invalid inputs (and CS not changed) and an error message. 
@@ -520,6 +542,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

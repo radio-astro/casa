@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSObservationParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MSObservationParse.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef MS_MSOBSERVATIONPARSE_H
 #define MS_MSOBSERVATIONPARSE_H
 
 //# Includes
-#include <ms/MeasurementSets/MSParse.h>
-#include <measures/Measures/MEpoch.h>
+#include <casacore/casa/aips.h>
+#include <casacore/ms/MeasurementSets/MSParse.h>
+#include <casacore/measures/Measures/MEpoch.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 
@@ -93,12 +94,12 @@ public:
   // Associate the ms and the shorthand.
   MSObservationParse (const MeasurementSet* ms, const MSObservation& obsSubtable,
 		      const TableExprNode& colAsTEN);
-  ~MSObservationParse() {columnAsTEN_p=TableExprNode();};
+  ~MSObservationParse() {columnAsTEN_p=TableExprNode();}
 
   const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
   const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
   const TableExprNode *selectObservationIds(const Vector<Int>& scanids);
-  inline const TableExprNode *selectObservationIds() {return selectObservationIds(parsedIDList_p);};
+  inline const TableExprNode *selectObservationIds() {return selectObservationIds(parsedIDList_p);}
   const TableExprNode *selectObservationIdsGT(const Vector<Int>& scanids);
   const TableExprNode *selectObservationIdsLT(const Vector<Int>& scanids);
   const TableExprNode *selectObservationIdsGTEQ(const Vector<Int>& scanids);
@@ -110,10 +111,10 @@ public:
 
   Vector<Int> selectedIDs();
 
-  void reset(){idList.resize(0);};
-  void cleanup() {};
+  void reset(){idList.resize(0);}
+  void cleanup() {}
 
-  void setMaxObs(const Int& n) {maxObs_p=n;};
+  void setMaxObs(const Int& n) {maxObs_p=n;}
 
   static MSObservationParse* thisMSObsParser;
 
@@ -127,6 +128,6 @@ private:
   static TableExprNode columnAsTEN_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

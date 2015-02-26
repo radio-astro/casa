@@ -23,15 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: OrdPairIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: OrdPairIO.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef CASA_ORDPAIRIO_H
 #define CASA_ORDPAIRIO_H
 
-#include <casa/Containers/OrderedPair.h>
-#include <casa/iosfwd.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/OrderedPair.h>
+#include <casacore/casa/iosfwd.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 class AipsIO;
 
@@ -51,9 +52,9 @@ template<class key, class value> ostream& operator<<(ostream& ios, const Ordered
 // </group>
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/OrdPairIO.tcc>
+#include <casacore/casa/Containers/OrdPairIO.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

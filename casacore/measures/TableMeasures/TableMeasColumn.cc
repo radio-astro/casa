@@ -23,19 +23,19 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableMeasColumn.cc 21298 2012-12-07 14:53:03Z gervandiepen $
+//# $Id: TableMeasColumn.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <measures/TableMeasures/TableMeasColumn.h>
-#include <measures/TableMeasures/TableMeasDescBase.h>
-#include <tables/Tables/Table.h>
-#include <tables/Tables/TableRecord.h>
-#include <tables/Tables/TableError.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/measures/TableMeasures/TableMeasColumn.h>
+#include <casacore/measures/TableMeasures/TableMeasDescBase.h>
+#include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/BasicSL/String.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableMeasColumn::TableMeasColumn()
 : itsNvals      (0),
@@ -114,4 +114,4 @@ Bool TableMeasColumn::isScalar() const
   return False;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END

@@ -23,17 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RebinImage.tcc 19940 2007-02-27 05:35:22Z Malte.Marquarding $
+//# $Id: RebinImage.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
 
-#include <images/Images/RebinImage.h>
-#include <lattices/Lattices/RebinLattice.h>
-#include <lattices/Lattices/LatticeRegion.h>
-#include <coordinates/Coordinates/CoordinateUtil.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Exceptions/Error.h>
+#ifndef IMAGES_REBINIMAGE_TCC
+#define IMAGES_REBINIMAGE_TCC
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+#include <casacore/images/Images/RebinImage.h>
+#include <casacore/lattices/Lattices/RebinLattice.h>
+#include <casacore/lattices/LRegions/LatticeRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
+
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 RebinImage<T>::RebinImage ()
@@ -46,19 +49,19 @@ RebinImage<T>::RebinImage (const ImageInterface<T>& image,
                            const IPosition& factors)
 : itsImagePtr (image.cloneII())
 {
-	ThrowIf (
-		image.imageInfo().hasMultipleBeams()
-		&& image.coordinates().hasSpectralAxis()
-		&& factors[image.coordinates().spectralAxisNumber()] != 1,
-        "This image has multiple beams. The spectral axis cannot be rebinned"
-	);
-  itsRebinPtr.reset(new RebinLattice<T>(image, factors));
+  ThrowIf (
+           image.imageInfo().hasMultipleBeams()
+           && image.coordinates().hasSpectralAxis()
+           && factors[image.coordinates().spectralAxisNumber()] != 1,
+           "This image has multiple beams. The spectral axis cannot be rebinned"
+           );
+  itsRebinPtr = new RebinLattice<T>(image, factors);
 //
   CoordinateSystem cSys = 
      CoordinateUtil::makeBinnedCoordinateSystem (factors, image.coordinates(), True);
-  this->setCoordsMember (cSys);
+  setCoordsMember (cSys);
 //
-  this->setImageInfo (itsImagePtr->imageInfo());
+  this->setImageInfoMember (itsImagePtr->imageInfo());
   this->setMiscInfoMember (itsImagePtr->miscInfo());
   this->setUnitMember (itsImagePtr->units());
   logger().addParent (itsImagePtr->logger());
@@ -69,12 +72,14 @@ RebinImage<T>::RebinImage (const RebinImage<T>& other)
 : ImageInterface<T> (other),
   itsImagePtr (other.itsImagePtr->cloneII())
 {
-  itsRebinPtr.reset(new RebinLattice<T> (*other.itsRebinPtr));
+  itsRebinPtr = new RebinLattice<T> (*other.itsRebinPtr);
 }
 
 template<class T>
 RebinImage<T>::~RebinImage()
 {
+  delete itsImagePtr;
+  delete itsRebinPtr;
 }
 
 template<class T>
@@ -178,6 +183,12 @@ String RebinImage<T>::name (Bool stripPath) const
 }
   
 template<class T>
+ImageAttrHandler& RebinImage<T>::attrHandler (Bool createHandler)
+{
+  return itsImagePtr->attrHandler (createHandler);
+}
+
+template<class T>
 Bool RebinImage<T>::doGetSlice (Array<T>& buffer,
     			        const Slicer& section)
 {
@@ -259,5 +270,7 @@ void RebinImage<T>::reopen()
   itsImagePtr->reopen();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

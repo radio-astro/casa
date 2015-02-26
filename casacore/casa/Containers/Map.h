@@ -23,22 +23,22 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Map.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Map.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_MAP_H
 #define CASA_MAP_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 //
 // Work around bugs in SUN\'s stupid compiler
 //
 #define AIPS_STUPID_SUN 1
 
-namespace casa { //#Begin casa namespace
+namespace casacore { //#Begin casa namespace
 
 //# Forward Declarations
 class AipsIO;
@@ -775,6 +775,6 @@ protected:
 
 } //#End casa namespace
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Containers/Map.tcc>
+#include <casacore/casa/Containers/Map.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

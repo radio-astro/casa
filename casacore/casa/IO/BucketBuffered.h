@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketBuffered.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: BucketBuffered.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_BUCKETBUFFERED_H
 #define CASA_BUCKETBUFFERED_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/IO/BucketBase.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/IO/BucketBase.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   //# Forward Declarations.
   class FilebufIO;
@@ -122,6 +122,6 @@ private:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -26,7 +26,7 @@
 //# $Id$
 
 #include <casa/Arrays/ArrayMath.h>
-#include <lattices/Lattices/LatticeHistograms.h>
+#include <lattices/LatticeMath/LatticeHistograms.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/DisplayDatas/Histogram2dDM.h>

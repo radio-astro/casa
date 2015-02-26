@@ -23,37 +23,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageConcat.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageConcat.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef IMAGES_IMAGECONCAT_TCC
+#define IMAGES_IMAGECONCAT_TCC
 
 
-#include <images/Images/ImageConcat.h>
+#include <casacore/images/Images/ImageConcat.h>
+#include <casacore/images/Images/ImageOpener.h>
 
-#include <casa/OS/Timer.h>
+#include <casacore/casa/OS/Timer.h>
+#include <casacore/casa/OS/Path.h>
 
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayUtil.h>
-#include <casa/Containers/Block.h>
-#include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/Logging/LogIO.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/iostream.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayUtil.h>
+#include <casacore/casa/Containers/Block.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Exceptions/Error.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/Logging/LogIO.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/iostream.h>
 
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <coordinates/Coordinates/TabularCoordinate.h>
-#include <coordinates/Coordinates/StokesCoordinate.h>
-#include <images/Images/ImageSummary.h>
-#include <images/Images/ImageInterface.h>
-#include <images/Images/ImageInfo.h>
-#include <images/Images/LELImageCoord.h>
-#include <lattices/Lattices/LatticeConcat.h>
-#include <lattices/Lattices/MaskedLattice.h>
-#include <lattices/Lattices/LELCoordinates.h>
+#include <casacore/coordinates/Coordinates/CoordinateSystem.h>
+#include <casacore/coordinates/Coordinates/TabularCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/images/Images/ImageSummary.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/ImageInfo.h>
+#include <casacore/images/Images/LELImageCoord.h>
+#include <casacore/lattices/Lattices/LatticeConcat.h>
+#include <casacore/lattices/Lattices/MaskedLattice.h>
+#include <casacore/lattices/LEL/LELCoordinates.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 ImageConcat<T>::ImageConcat()
@@ -65,7 +70,8 @@ ImageConcat<T>::ImageConcat()
   warnRefVal_p(True),
   warnInc_p(True),
   warnTab_p(True),
-  isContig_p(True) {}
+  isContig_p(True)
+{}
 
 template<class T>
 ImageConcat<T>::ImageConcat (uInt axis, Bool tempClose)
@@ -78,7 +84,8 @@ ImageConcat<T>::ImageConcat (uInt axis, Bool tempClose)
   warnRefVal_p(True),
   warnInc_p(True),
   warnTab_p(True),
-  isContig_p(True) {}
+  isContig_p(True)
+{}
 
 template<class T>
 ImageConcat<T>::ImageConcat (const ImageConcat<T>& other) 
@@ -93,6 +100,7 @@ ImageConcat<T>::ImageConcat (const ImageConcat<T>& other)
   warnInc_p(other.warnInc_p),
   warnTab_p(other.warnTab_p),
   isContig_p(other.isContig_p),
+  fileName_p(other.fileName_p),
   pixelValues_p(other.pixelValues_p.copy()),
   worldValues_p(other.worldValues_p.copy()),
   originalAxisType_p(other.originalAxisType_p)
@@ -120,6 +128,7 @@ ImageConcat<T>& ImageConcat<T>::operator= (const ImageConcat<T>& other)
      warnInc_p = other.warnInc_p;
      warnTab_p = other.warnTab_p;
      isContig_p = other.isContig_p;
+     fileName_p = other.fileName_p;
      isImage_p.resize(other.isImage_p.nelements());
      isImage_p = other.isImage_p;
      pixelValues_p.resize(other.pixelValues_p.nelements());
@@ -135,6 +144,77 @@ template<class T>
 ImageInterface<T>* ImageConcat<T>::cloneII() const
 {
   return new ImageConcat(*this);
+}
+
+template<class T>
+ImageConcat<T>::ImageConcat (AipsIO& aio, const String& fileName)
+: latticeConcat_p(),
+  warnAxisNames_p(True),
+  warnAxisUnits_p(True),
+  warnImageUnits_p(True),
+  warnContig_p(True),
+  warnRefPix_p(True),
+  warnRefVal_p(True),
+  warnInc_p(True),
+  warnTab_p(True),
+  isContig_p(True),
+  fileName_p(fileName)
+{
+  // This must be the opposite of function save.
+  AlwaysAssert (aio.getstart ("ImageConcat") == 1, AipsError);
+  uInt axis, nlatt;
+  Bool tmpClose;
+  String name;
+  aio >> axis >> tmpClose >> nlatt;
+  latticeConcat_p.setTempClose (tmpClose);
+  for (uInt i=0; i<nlatt; ++i) {
+    aio >> name;
+    LatticeBase* latt = ImageOpener::openImage (name);
+    ImageInterface<T>* img = dynamic_cast<ImageInterface<T>*>(latt);
+    if (img == 0) {
+      delete latt;
+      throw AipsError ("ImageConcat " + fileName +
+                       " contains image " + name +
+                       " of another data type");
+    }
+    setImage (*img, True);
+    delete img;
+  }
+  aio.getend();
+}
+
+template<class T>
+void ImageConcat<T>::save (const String& fileName) const
+{
+  // Check that all images used are persistent.
+  for (uInt i=0; i<latticeConcat_p.nlattices(); ++i) {
+    if (! latticeConcat_p.lattice(i)->isPersistent()) {
+      throw AipsError ("ImageConcat cannot be made persistent, because one of "
+                       "its images is not persistent");
+    }
+  }
+  // Create the AipsIO file.
+  AipsIO aio(fileName, ByteIO::New);
+  // Start with a general header (used by ImageOpener)
+  // and the data type of the image.
+  aio.putstart ("CompoundImage-Conc", 0);
+  aio << Int(this->dataType());
+  // Now save all relevant info.
+  aio.putstart ("ImageConcat", 1);
+  aio << latticeConcat_p.axis() << latticeConcat_p.isTempClose();
+  aio << latticeConcat_p.nlattices();
+  for (uInt i=0; i<latticeConcat_p.nlattices(); ++i) {
+    aio << latticeConcat_p.lattice(i)->name(False);
+  }
+  aio.putend();
+  aio.putend();
+  fileName_p = fileName;
+}
+
+template<class T>
+Bool ImageConcat<T>::isPersistent() const
+{
+  return ! fileName_p.empty();
 }
 
 template<class T>
@@ -735,9 +815,16 @@ void ImageConcat<T>::reopen()
 }
 
 template<class T>
-String ImageConcat<T>::name (Bool) const
+String ImageConcat<T>::name (Bool stripPath) const
 {
-  return String("Concatenation :");
+  if (fileName_p.empty()) {
+    return "Concatenation :";
+  }
+  Path path(fileName_p);
+  if (!stripPath) {
+    return path.absoluteName();
+  } 
+  return path.baseName();
 }
 
 template<class T>
@@ -781,5 +868,7 @@ IPosition ImageConcat<T>::shape() const
   return latticeConcat_p.shape();
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

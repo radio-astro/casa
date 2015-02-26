@@ -23,21 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnDesc.h 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: ColumnDesc.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef TABLES_COLUMNDESC_H
 #define TABLES_COLUMNDESC_H
 
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/BaseColDesc.h>
-#include <casa/Containers/SimOrdMap.h>
-#include <casa/BasicSL/String.h>
-#include <casa/Arrays/IPosition.h>
-#include <casa/OS/Mutex.h>
+#include <casacore/casa/aips.h>
+#include <casacore/tables/Tables/BaseColDesc.h>
+#include <casacore/casa/Containers/SimOrdMap.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/Arrays/IPosition.h>
+#include <casacore/casa/OS/Mutex.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Envelope class for the description of a table column
@@ -441,6 +441,6 @@ protected:
 };
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

@@ -9,7 +9,6 @@ set( SRCDIR ${ASAPROOT}/src )
 # include path
 include_directories( ${SRCDIR} 
                      ${Boost_INCLUDE_DIR}
-                     ${COMPONENTS_INCLUDE_DIR}
                      ${ASAPROOT}/external-alma 
                      ${ASAPROOT}/external/libpyrap/pyrap-0.3.2 )
 
@@ -137,8 +136,7 @@ target_link_libraries( ${ASAPLIB}
                        ${PYRAPLIB} 
                        ${ATNFLIB} 
                        #${CASACORE_LIBRARIES} 
-                       ${WCSLIB} 
-                       ${COMPONENTS_LIBRARY} )
+                       ${WCSLIB} )
 target_link_libraries( ${ASAPPYLIB} 
                        ${ASAPLIB} )
 

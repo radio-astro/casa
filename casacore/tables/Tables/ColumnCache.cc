@@ -23,14 +23,14 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnCache.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnCache.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 //# Includes
-#include <tables/Tables/ColumnCache.h>
+#include <casacore/tables/Tables/ColumnCache.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 ColumnCache::ColumnCache()
 : itsIncr (1)
@@ -46,5 +46,5 @@ void ColumnCache::set (uInt startRow, uInt endRow, const void* dataPtr)
     itsData  = dataPtr;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

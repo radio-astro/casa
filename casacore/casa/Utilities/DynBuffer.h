@@ -23,17 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynBuffer.h 21090 2011-06-01 10:01:28Z gervandiepen $
+//# $Id: DynBuffer.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_DYNBUFFER_H
 #define CASA_DYNBUFFER_H
 
 //# Includes
-#include <casa/aips.h>
-#include <casa/Containers/Block.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Containers/Block.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Store data in dynamically allocated buffers
@@ -187,6 +187,6 @@ inline uInt DynBuffer::alloc (uInt nrOfValues, uInt valueSize, Char*& ptr)
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

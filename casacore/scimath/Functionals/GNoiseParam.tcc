@@ -23,12 +23,15 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GNoiseParam.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: GNoiseParam.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_GNOISEPARAM_TCC
+#define SCIMATH_GNOISEPARAM_TCC
 
 //# Includes
-#include <scimath/Functionals/GNoiseParam.h>
+#include <casacore/scimath/Functionals/GNoiseParam.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template<class T>
 GNoiseParam<T>::GNoiseParam() :
@@ -57,5 +60,7 @@ GNoiseParam<T> &GNoiseParam<T>::operator=(const GNoiseParam<T> &other) {
   return *this;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

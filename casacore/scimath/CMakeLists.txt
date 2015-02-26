@@ -3,10 +3,10 @@
 #
 
 add_library (casa_scimath
+Fitting/FittingProxy.cc
 Fitting/LSQFit.cc
 Fitting/LSQFit3.cc
 Fitting/LSQMatrix2.cc
-Fitting/FittingProxy.cc
 Fitting/LSQMatrix.cc
 Functionals/FuncExpression.cc
 Functionals/FuncExprData.cc
@@ -15,8 +15,8 @@ Functionals/FunctionalProxy.cc
 Functionals/SerialHelper.cc
 Mathematics/Combinatorics.cc
 Mathematics/FFTPack.cc
-Mathematics/FFTW.cc
 Mathematics/FFTServer.cc
+Mathematics/FFTW.cc
 Mathematics/GaussianBeam.cc
 Mathematics/Geometry.cc
 Mathematics/Interpolate2D.cc
@@ -34,11 +34,6 @@ Mathematics/VanVleck.cc
 Mathematics/ZScoreCalculator.cc
 )
 
-if( NOT NO_SOVERSION )
-    set_target_properties( casa_scimath PROPERTIES SOVERSION ${casa_soversion} )
-    set_target_properties( casa_scimath_f PROPERTIES SOVERSION ${casa_soversion} )
-endif()
-
 if (FFTW3_FOUND)
     target_link_libraries (casa_scimath casa_scimath_f ${FFTW3_LIBRARIES})
 else (FFTW3_FOUND)
@@ -47,8 +42,8 @@ endif (FFTW3_FOUND)
 
 install (TARGETS casa_scimath
 RUNTIME DESTINATION bin
-LIBRARY DESTINATION lib
-ARCHIVE DESTINATION lib
+LIBRARY DESTINATION lib${LIB_SUFFIX}
+ARCHIVE DESTINATION lib${LIB_SUFFIX}
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
@@ -97,6 +92,10 @@ Functionals/CompoundFunction.h
 Functionals/CompoundFunction.tcc
 Functionals/CompoundParam.h
 Functionals/CompoundParam.tcc
+Functionals/ConstantND.h
+Functionals/ConstantND.tcc
+Functionals/ConstantNDParam.h
+Functionals/ConstantNDParam.tcc
 Functionals/DiracDFunction.h
 Functionals/DiracDFunction.tcc
 Functionals/DiracDParam.h
@@ -159,11 +158,11 @@ Functionals/KaiserBFunction.h
 Functionals/KaiserBFunction.tcc
 Functionals/KaiserBParam.h
 Functionals/KaiserBParam.tcc
-Functionals/Lorentzian1D2.tcc
 Functionals/Lorentzian1D.h
+Functionals/Lorentzian1D.tcc
+Functionals/Lorentzian1D2.tcc
 Functionals/Lorentzian1DParam.h
 Functionals/Lorentzian1DParam.tcc
-Functionals/Lorentzian1D.tcc
 Functionals/MarshButterworthBandpass.h
 Functionals/MarshButterworthBandpass.tcc
 Functionals/MarshallableChebyshev.h
@@ -173,6 +172,11 @@ Functionals/OddPolynomial.tcc
 Functionals/OddPolynomial2.tcc
 Functionals/OddPolynomialParam.h
 Functionals/OddPolynomialParam.tcc
+Functionals/PoissonFunction.h
+Functionals/PoissonFunction.tcc
+Functionals/PoissonFunction2.tcc
+Functionals/PoissonParam.h
+Functionals/PoissonParam.tcc
 Functionals/Polynomial.h
 Functionals/Polynomial.tcc
 Functionals/Polynomial2.tcc
@@ -211,11 +215,6 @@ Functionals/WrapperBase.h
 Functionals/WrapperData.h
 Functionals/WrapperParam.h
 Functionals/WrapperParam.tcc
-Functionals/PoissonFunction.h
-Functionals/PoissonParam.h
-Functionals/PoissonParam.tcc
-Functionals/PoissonFunction.tcc
-Functionals/PoissonFunction2.tcc
 DESTINATION include/casacore/scimath/Functionals
 )
 
@@ -295,9 +294,9 @@ Mathematics/StatsDataProvider.h
 Mathematics/StatsDataProvider.tcc
 Mathematics/StatisticsAlgorithm.h
 Mathematics/StatisticsAlgorithm.tcc
+Mathematics/StatisticsData.h
 Mathematics/StatisticsIncrementer.h
 Mathematics/StatisticsIncrementer.tcc
-Mathematics/StatisticsData.h
 Mathematics/StatisticsTypes.h
 Mathematics/StatisticsTypes.tcc
 Mathematics/StatisticsUtilities.h

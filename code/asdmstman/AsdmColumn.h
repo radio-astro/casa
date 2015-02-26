@@ -33,7 +33,7 @@
 
 //# Includes
 #include <asdmstman/AsdmStMan.h> 
-#include <tables/Tables/StManColumn.h>
+#include <tables/DataMan/StManColumn.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Containers/Block.h>
 #include <casa/OS/Conversion.h>

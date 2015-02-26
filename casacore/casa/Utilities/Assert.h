@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Assert.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Assert.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ASSERT_H
 #define CASA_ASSERT_H
 
-#include <casa/aips.h>
-#include <casa/Exceptions/Error.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>Utility class for Assert macros.</summary>
 // <use visibility=export>
@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // In your class, write an <src>ok()</src> member function that
 // returns a <src>Bool</src>.  Allow for inheritance and make it a
 // virtual function (in fact, the derived class's <src>ok()</src> would
-// probably call the <src>ok()</src> from it's parent, as well as doing
+// probably call the <src>ok()</src> from its parent, as well as doing
 // specific stuff for the derived class).
 //
 // Then in every member function, place a call to <src>ok()</src> in
@@ -188,9 +188,9 @@ public:
 #endif
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/Assert.tcc>
+#include <casacore/casa/Utilities/Assert.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

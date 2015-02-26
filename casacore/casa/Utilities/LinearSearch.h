@@ -24,16 +24,16 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LinearSearch.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LinearSearch.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 
 #ifndef CASA_LINEARSEARCH_H
 #define CASA_LINEARSEARCH_H
 
 //# Includes
-#include <casa/aips.h>
+#include <casacore/casa/aips.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // <summary>
 // Linear search a linear data structure.
@@ -139,9 +139,9 @@ Int linearSearchBrackets (Bool& found, const Container& container,
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #ifndef CASACORE_NO_AUTO_TEMPLATES
-#include <casa/Utilities/LinearSearch.tcc>
+#include <casacore/casa/Utilities/LinearSearch.tcc>
 #endif //# CASACORE_NO_AUTO_TEMPLATES
 #endif

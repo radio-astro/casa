@@ -1,4 +1,4 @@
-//# Matrix2Math.cc: The AIPS++ linear algebra functions (non-templated)
+//# Matrix2Math.cc: The Casacore linear algebra functions (non-templated)
 //# Copyright (C) 1993,1994,1995,1996,1999,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,18 +23,18 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Matrix2Math.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Matrix2Math.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
-#include <casa/Arrays/MatrixMath.h>
-#include <casa/Arrays/ArrayLogical.h>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayError.h>
-#include <casa/iostream.h>
+#include <casacore/casa/BasicSL/Complex.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/Arrays/Matrix.h>
+#include <casacore/casa/Arrays/MatrixMath.h>
+#include <casacore/casa/Arrays/ArrayLogical.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayError.h>
+#include <casacore/casa/iostream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Matrix<Double> Rot3D(Int axis, Double angle) 
 {
@@ -354,5 +354,5 @@ Matrix<Float> adjoint (const Matrix<Float> &A){
 Matrix<Double> adjoint (const Matrix<Double> &A){
   return transpose(A);}
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 

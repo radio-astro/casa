@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImgParser.h 20495 2009-01-19 00:50:41Z Malte.Marquarding $
+//# $Id: FITSImgParser.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_FITSImgParser_H
 #define IMAGES_FITSImgParser_H
 
-#include <fits/FITS/fits.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/BasicSL/String.h>
+#include <casacore/casa/aips.h>
+#include <casacore/fits/FITS/fits.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <casacore/casa/BasicSL/String.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward Declarations
 class FITSExtInfo;
@@ -264,7 +265,7 @@ private:
 	FitsKeywordList kwlist_p;
 };
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif
 

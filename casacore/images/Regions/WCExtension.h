@@ -23,16 +23,17 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WCExtension.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: WCExtension.h 21538 2015-01-07 09:08:57Z gervandiepen $
 
 #ifndef IMAGES_WCEXTENSION_H
 #define IMAGES_WCEXTENSION_H
 
 //# Includes
-#include <images/Regions/WCCompound.h>
-#include <casa/Arrays/IPosition.h>
+#include <casacore/casa/aips.h>
+#include <casacore/images/Regions/WCCompound.h>
+#include <casacore/casa/Arrays/IPosition.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Forward declarations
 class WCBox;
@@ -144,6 +145,6 @@ private:
 
 
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
 #endif

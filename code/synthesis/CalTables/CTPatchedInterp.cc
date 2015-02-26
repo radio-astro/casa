@@ -130,7 +130,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     ROCTMainColumns ctmc(ct_);
     Vector<Int> obsid;
     ctmc.obsId().getColumn(obsid);
-    Int nctobsavail=genSort(obsid,
+    Int nctobsavail=genSort(obsid,Sort::Ascending,
 			    (Sort::QuickSort | Sort::NoDuplicates));
 
 
@@ -298,7 +298,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
     ROCTMainColumns ctmc(ct_);
     Vector<Int> obsid;
     ctmc.obsId().getColumn(obsid);
-    Int nctobsavail=genSort(obsid,
+    Int nctobsavail=genSort(obsid,Sort::Ascending,
 			    (Sort::QuickSort | Sort::NoDuplicates));
 
 
@@ -874,7 +874,7 @@ void CTPatchedInterp::setFldMap(const ROMSFieldColumns& fcol) {
    // Discern _available_ fields in the CT
    Vector<Int> ctFlds;
    ctcol.fieldId().getColumn(ctFlds);
-   Int nAvFlds=genSort(ctFlds,(Sort::QuickSort | Sort::NoDuplicates));
+   Int nAvFlds=genSort(ctFlds,Sort::Ascending,(Sort::QuickSort | Sort::NoDuplicates));
    ctFlds.resize(nAvFlds,True);
 
    //cout << "nAvFlds = " << nAvFlds << endl;
@@ -899,7 +899,7 @@ void CTPatchedInterp::setFldMap(const ROMSFieldColumns& fcol) {
        }
        // Sort separations
        Vector<uInt> ord;
-       Int nsep=genSort(ord,sep,(Sort::QuickSort | Sort::Ascending));
+       Int nsep=genSort(ord,sep,Sort::Ascending,(Sort::QuickSort | Sort::Ascending));
 
        //cout << iMSFld << ":" << endl;
        //cout << "    ord=" << ord << endl;

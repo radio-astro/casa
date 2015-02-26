@@ -23,34 +23,37 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ImageInterface.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ImageInterface.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef IMAGES_IMAGEINTERFACE_TCC
+#define IMAGES_IMAGEINTERFACE_TCC
 
 
-#include <casa/aips.h>
-#include <casa/Arrays/Vector.h> // Put these early to work around g++ bug
-#include <casa/Arrays/Matrix.h>
+#include <casacore/casa/aips.h>
+#include <casacore/casa/Arrays/Vector.h> // Put these early to work around g++ bug
+#include <casacore/casa/Arrays/Matrix.h>
 
-#include <coordinates/Coordinates/StokesCoordinate.h>
+#include <casacore/coordinates/Coordinates/StokesCoordinate.h>
 
-#include <images/Images/ImageInterface.h>
-#include <images/Images/LELImageCoord.h>
-#include <images/Regions/ImageRegion.h>
-#include <lattices/Lattices/LCRegion.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/LatticeIterator.h>
+#include <casacore/images/Images/ImageInterface.h>
+#include <casacore/images/Images/LELImageCoord.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/lattices/LRegions/LCRegion.h>
+#include <casacore/lattices/LRegions/LCBox.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/LatticeIterator.h>
 
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/ArrayIO.h>
-#include <casa/Containers/RecordInterface.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/sstream.h>
-#include <casa/Containers/Record.h>
-#include <lattices/Lattices/LCBox.h>
-#include <lattices/Lattices/SubLattice.h>
-#include <lattices/Lattices/TiledShape.h>
+#include <casacore/casa/Arrays/ArrayMath.h>
+#include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Containers/RecordInterface.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/sstream.h>
+#include <casacore/casa/Containers/Record.h>
+#include <casacore/lattices/LRegions/LCBox.h>
+#include <casacore/lattices/Lattices/SubLattice.h>
+#include <casacore/lattices/Lattices/TiledShape.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 template <class T> 
 ImageInterface<T>::ImageInterface()
@@ -110,7 +113,6 @@ MaskedLattice<T>* ImageInterface<T>::cloneML() const
 {
     return cloneII();
 }
-
 
 // reset coords
 template <class T> 
@@ -269,25 +271,26 @@ String ImageInterface<T>::makeUniqueRegionName (const String& rootName,
   return regHandPtr_p->makeUniqueRegionName (rootName, startNumber);
 }
 
+
+
 template<class T>
 void ImageInterface<T>::setImageInfoMember(const ImageInfo& info)
 {
   imageInfo_p = info;
   imageInfo_p.checkBeamSet (coords_p, shape(), name());
-}
+}    
 
 template<class T>
 Bool ImageInterface<T>::setImageInfo(const ImageInfo& info)
 //
 // Derived classes like PagedImage have to put this in the
 // permanent table keywordSet
-//
+// 
 {
   setImageInfoMember (info);
   return True;
-}
+}    
 
-   
 template<class T>
 Bool ImageInterface<T>::setMiscInfo(const RecordInterface& miscInfo)
 //
@@ -362,4 +365,12 @@ Bool ImageInterface<T>::fromRecord(String& error, const RecordInterface& inRec)
    return True;
 }
 
-} //# NAMESPACE CASA - END
+template<class T>
+ImageAttrHandler& ImageInterface<T>::attrHandler (Bool)
+{
+  return itsBaseAttrHandler;
+}
+
+} //# NAMESPACE CASACORE - END
+
+#endif

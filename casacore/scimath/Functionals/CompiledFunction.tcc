@@ -23,18 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: CompiledFunction.tcc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: CompiledFunction.tcc 21563 2015-02-16 07:05:15Z gervandiepen $
+
+#ifndef SCIMATH_COMPILEDFUNCTION_TCC
+#define SCIMATH_COMPILEDFUNCTION_TCC
 
 //# Includes
-#include <scimath/Functionals/CompiledFunction.h>
-#include <scimath/Functionals/FuncExpression.h>
-#include <scimath/Functionals/FunctionTraits.h>
-#include <casa/BasicSL/Constants.h>
-#include <scimath/Mathematics/NumericTraits.h>
-#include <casa/BasicSL/String.h>
-#include <casa/stdvector.h>
+#include <casacore/scimath/Functionals/CompiledFunction.h>
+#include <casacore/scimath/Functionals/FuncExpression.h>
+#include <casacore/scimath/Functionals/FunctionTraits.h>
+#include <casacore/casa/BasicSL/Constants.h>
+#include <casacore/scimath/Mathematics/NumericTraits.h>
+#include <casacore/casa/BasicSL/String.h>
+#include <casacore/casa/stdvector.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 //# Constructors
 
@@ -252,5 +255,7 @@ T CompiledFunction<T>::eval(typename Function<T>::FunctionArg x) const {
   return res;
 }
 
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
+
+#endif

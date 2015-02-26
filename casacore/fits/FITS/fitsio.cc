@@ -23,16 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fitsio.cc 21069 2011-05-06 13:59:44Z gervandiepen $
+//# $Id: fitsio.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
-# include <fits/FITS/hdu.h>
-# include <fits/FITS/fitsio.h>
-# include <casa/BasicSL/String.h>
-# include <casa/Containers/Block.h>
-# include <casa/string.h>
-# include <casa/sstream.h>
+# include <casacore/fits/FITS/hdu.h>
+# include <casacore/fits/FITS/fitsio.h>
+# include <casacore/casa/BasicSL/String.h>
+# include <casacore/casa/Containers/Block.h>
+# include <casacore/casa/string.h>
+# include <casacore/casa/sstream.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 // using cfitsio of NASA
 // can't use "" to replace <>.
@@ -1375,5 +1375,5 @@ FitsInput::FitsInput(FITSErrorHandler errhandler) :
             errhandler))) {
     init();
 }
-} //# NAMESPACE CASA - END
+} //# NAMESPACE CASACORE - END
 
