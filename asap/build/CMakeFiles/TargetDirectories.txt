@@ -1,7 +1,0 @@
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/src/CMakeFiles/_asap.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/src/CMakeFiles/asap.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/apps/CMakeFiles/asap2to3.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/external-alma/asdm2ASAP/CMakeFiles/asdm2ASAP.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/external-alma/atnf/CMakeFiles/atnf.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/CMakeFiles/inst.dir
-/home/warp/casa/dschieb/casa/trunk-gcmerge/trunk/asap/build/external/libpyrap/CMakeFiles/pyrap.dir
