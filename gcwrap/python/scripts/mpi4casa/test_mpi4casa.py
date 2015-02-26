@@ -1263,6 +1263,57 @@ class test_mpi4casa_uvcont(unittest.TestCase):
         compare_contsub = testhelper.compTables(self.ref[1],self.vis+".contsub",['FLAG_CATEGORY','WEIGHT','SIGMA'])
         self.assertTrue(compare_contsub)             
         
+        
+class test_mpi4casa_NullSelection(unittest.TestCase):
+
+    def setUp(self):
+        
+        self.vis = "Four_ants_3C286.mms"
+        setUpFile(self.vis,'vis')
+        
+        self.client = MPICommandClient()
+        self.client.set_log_mode('redirect')
+        self.client.start_services()       
+        
+        # Prepare list of servers
+        self.server_list = []
+        server_list = self.client.get_server_status()
+        for server in server_list:
+            if not server_list[server]['timeout']:
+                self.server_list.append(server_list[server]['rank'])          
+
+    def tearDown(self):
+
+        os.system('rm -rf ' + self.vis)
+    
+    def test_mpi4casa_NullSelection_entire_mms(self):
+        """Test filter out NullSelection exceptions"""
+        
+        # List of messages to be filtered out
+        text = ['MSSelectionNullSelection','NeverHappens']
+
+        # Change log file and logfilter afterwards because it is reset when the log file changes
+        # Both commands are compressed in a single one to avoid intermediate command handling msgs
+        for server in self.server_list:
+            logfile = 'MSSelectionNullSelection.log-server-%s' % str(server)
+            self.client.push_command_request("casalog.setlogfile('%s'); casalog.filter('SEVERE',%s)" % (logfile,str(text)),True,server) 
+        
+        # Run flagdata selecting a non-existing scan
+        flagdata(vis=self.vis, scan='99')  
+        
+        # Restore log file and filter
+        self.client.push_command_request("casalog.setlogfile(casa['files']['logfile']); casalog.filter('NORMAL')",True,self.server_list)
+        
+        # Iterate trough log files to see if we find the exception
+        # Take into accound that we are in the 'nosedir' subdirectory
+        self.client.push_command_request("import os",True,self.server_list)
+        for server in self.server_list:
+            # Get current working directory
+            cwd = self.client.push_command_request("os.getcwd()",True,server)[0]['ret']
+            logfile = '%s/MSSelectionNullSelection.log-server-%s' % (cwd,str(server))
+            content = open(logfile, 'r').read()
+            self.assertEqual(content.find("MSSelectionNullSelection")<0, True, "MSSelectionNullSelection should be filtered out")
+        
 
 def suite():
     return [test_MPICommandClient,
@@ -1271,4 +1322,5 @@ def suite():
             test_mpi4casa_setjy,
             test_mpi4casa_applycal,
             test_mpi4casa_uvcont,
-            test_MPICommandServer]
+            test_MPICommandServer,
+            test_mpi4casa_NullSelection]

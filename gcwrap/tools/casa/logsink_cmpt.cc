@@ -15,6 +15,7 @@
 #include <logsink_cmpt.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogFilter.h>
+#include <parallel/Logging/LogFilterParallel.h>
 #include <tools/casa/TSLogSink.h>
 #include <casa/Logging/NullLogSink.h>
 #include <casa/Logging/StreamLogSink.h>
@@ -134,7 +135,7 @@ bool logsink::processor_origin(const std::string &fromwhere)
     return rstat;
 }
 
-bool logsink::filter(const std::string &level)
+bool logsink::filter(const std::string &level, const std::vector<std::string>& excludeMsg)
 {
     if(!thelogsink){
        thelogsink = &LogSink().globalSink();
@@ -178,8 +179,27 @@ bool logsink::filter(const std::string &level)
 	else 
 		rstat = false;
 	if(rstat){
-	   LogFilter filter(priority);
-	   thelogsink->filter(filter);
+
+	   // By default SWIG create a vector of one empty string
+	   if ((excludeMsg.size() >= 1) and (excludeMsg[0].size() > 0))
+	   {
+		   LogFilterParallel filter(priority);
+		   for(std::vector<std::string>::const_iterator  it = excludeMsg.begin(); it != excludeMsg.end(); ++it)
+		   {
+			   if (it->size() > 0)
+			   {
+				   filter.filterOut(it->c_str());
+			   }
+		   }
+
+		   thelogsink->filter(filter);
+	   }
+	   // Normal operation filtering only on priority
+	   else
+	   {
+		   LogFilter filter(priority);
+		   thelogsink->filter(filter);
+	   }
 	   
 	   // Also set for any watchers.
 	   CasapyWatcher::logChanged_(priority);

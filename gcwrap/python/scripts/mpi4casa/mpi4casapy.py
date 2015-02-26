@@ -57,6 +57,9 @@ def run():
         # If log mode is separated activate showconsole to have all logs sorted by time at the terminal
         if request['logmode'] == 'redirect':
             casalog.showconsole(True)
+            
+        # Install filter to remove MSSelectionNullSelection errors
+        casalog.filter('NORMAL','MSSelectionNullSelection')
         
         # Post MPI welcome msg
         casalog.post(MPIEnvironment.mpi_info_msg,"INFO",casalog_call_origin)

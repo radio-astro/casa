@@ -743,6 +743,7 @@ else()
        asdmstman
        msvis
        casa_sakura
+       parallel
        )
 endif()
 

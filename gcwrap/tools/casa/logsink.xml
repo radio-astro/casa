@@ -65,20 +65,25 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 	<input>
 		<param type="string" direction="in" name="level">
 			<description> Level of messages to display to the console/log file</description>
-		<value>ERROR</value>
-		<value>WARN</value>
-		<value>INFO</value>
-		<value>INFO1</value>
-		<value>INFO2</value>
-		<value>INFO3</value>
-		<value>INFO4</value>
-		<value>INFO5</value>
-		<value>DEBUG</value>
-		<value>DEBUG1</value>
-		<value>DEBUG2</value>
-		<choice>INFO</choice>
+			<value>ERROR</value>
+			<value>WARN</value>
+			<value>INFO</value>
+			<value>INFO1</value>
+			<value>INFO2</value>
+			<value>INFO3</value>
+			<value>INFO4</value>
+			<value>INFO5</value>
+			<value>DEBUG</value>
+			<value>DEBUG1</value>
+			<value>DEBUG2</value>
+			<choice>INFO</choice>
 		</param>
+     	<param type="stringArray" name="exclueMsg">
+     		<description>Array of strings to filter out undesired messages </description>
+     		<value></value>
+     	</param>		
 	</input>
+	
   <returns type="bool"/>
 </method>
 <method type="function" direction="in" name="post">
